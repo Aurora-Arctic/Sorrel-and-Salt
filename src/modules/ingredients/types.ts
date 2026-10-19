@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type {
   CompendiumFacets,
+  CupboardEntryRow,
   FacetCount,
   IngredientFacets,
   IngredientRow,
@@ -12,7 +13,7 @@ import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
-import type { JarMerge, StockInput } from './validation/stock';
+import type { StockInput } from './validation/stock';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
 import type { ValidationIssue } from '../../lib/types';
 import type { CategoryGroupRow, CategoryRow, DeityRow } from '@/modules/vocabulary';
@@ -21,6 +22,7 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 // The repository's own, rather than a second `typeof …$inferSelect`.
 export type {
   CompendiumFacets,
+  CupboardEntryRow,
   FacetCount,
   IngredientFacets,
   IngredientRow,
@@ -68,13 +70,60 @@ export interface StockKey {
   workspaceId: string;
 }
 
+/**
+ * A compendium entry as `Ingredient.cupboardEntry`'s loader keys it (M12.14):
+ * the entry, and the coven whose cupboard is asked about, the argument the
+ * caller named, as `StockKey`'s is.
+ */
+export interface CupboardEntryKey {
+  ingredientId: string;
+  workspaceId: string;
+}
+
+/**
+ * A cupboard entry as `CupboardEntry` answers it on the wire (M12.14): the
+ * row, with the compendium entry's own name beside the coven's label.
+ */
+export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
+
+/**
+ * What a convert left behind, by name, each list sorted and without repeats.
+ * An own entry becoming a compendium entry (M12.21) lists the forms that
+ * matched no compendium form and held nothing, and the folk names,
+ * substitutes, categories, references and deities of the entry and its
+ * forms, whose rows stay on the soft-deleted entry. A compendium entry
+ * becoming the coven's own (M12.23) copies everything, so it lists only what
+ * the new entry could not hold: a folk name its new name took.
+ */
+export interface DroppedOnConvert {
+  forms: string[];
+  folkNames: string[];
+  substitutes: string[];
+  categories: string[];
+  /** Each as its bibliography entry reads. */
+  references: string[];
+  deities: string[];
+}
+
+/** What `convertLocalToCompendiumEntry` answers: the cupboard row it wrote, and what the coven lost. */
+export interface ConvertedLocal {
+  entry: CupboardEntryRow;
+  dropped: DroppedOnConvert;
+}
+
+/** What `convertCompendiumEntryToLocal` answers: the own entry it wrote, and what that could not carry. */
+export interface ConvertedCompendium {
+  entry: IngredientRow;
+  dropped: DroppedOnConvert;
+}
+
 /** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
 
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<
   LocalIngredientInput,
-  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants' | 'jarMerges'
+  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
 >;
 
 /** Where in the input an issue lands — `['variants', 1]` — as `ValidationIssue` paths it. */
@@ -275,6 +324,19 @@ export interface VariantDetail {
  */
 export interface IngredientDetail {
   entry: IngredientRow;
+  /**
+   * `entry` is a compendium entry the curators have retired, read because
+   * the coven's cupboard names it (M12.24): marked "No Longer in the
+   * Compendium". Always false on the public page, which reads no retired entry.
+   */
+  retired: boolean;
+  /**
+   * The cupboard entry of the coven the page is read in, for a compendium
+   * entry that coven holds (M12.14); null on the public page, for a coven's
+   * own entry, and for one the coven does not hold. `entry` is the
+   * compendium's row as it is: `applyCupboardEntry` lays this over it.
+   */
+  cupboardEntry: CupboardEntryRow | null;
   /** Names only: the page displays them and promotes none. */
   folkNames: string[];
   categories: CategoryDetail[];
@@ -295,20 +357,24 @@ export type CompendiumEntryPage =
     }
   | { kind: 'moved'; slug: string };
 
-/**
- * The amount a save chooses for a jar it merges into another (M12.8): the
- * moving jar's id and the figure the merged jar takes.
- */
-export type JarMergeChoice = z.output<typeof JarMerge>;
+/** A compendium entry an own entry is or may be, as its page links it (M12.22). */
+export interface ReplacedCompendiumEntry {
+  id: string;
+  slug: string;
+  name: string;
+  canonicalName: string | null;
+}
 
 /**
- * Two jars of one form that cannot be added because their units differ
- * (M12.8): the jar the coven's local ingredient holds, or is about to, and the
- * jar of a compendium form that is moving onto it. The whole row of each, so
- * a caller can show both amounts without a second read.
+ * The first few compendium entries an own entry is or may be, by name, and how
+ * many there are in all (M12.22). `same` shares the entry's formal name's
+ * identity, `similar` shares its label when it declares no formal name, and
+ * `none` is for a compendium entry. `canConvert` is whether the caller's
+ * role may turn the own entry into one of them.
  */
-export interface JarConflict {
-  reason: 'units';
-  localJar: StockRow;
-  movingJar: StockRow;
+export interface CompendiumMatches {
+  kind: 'same' | 'similar' | 'none';
+  entries: ReplacedCompendiumEntry[];
+  total: number;
+  canConvert: boolean;
 }

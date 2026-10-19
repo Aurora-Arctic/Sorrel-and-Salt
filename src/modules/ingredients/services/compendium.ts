@@ -6,6 +6,7 @@ import {
   findCompendiumEntryBySlug,
   findCompendiumPage,
   findCompendiumSlugRedirect,
+  countCovensUsing,
   findOneIngredient,
   withAudit,
 } from '../../../db/repository';
@@ -16,6 +17,7 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
+import { heldCompendiumEntry } from './cupboard-entries';
 import { ingredientDetailOf } from './ingredient-detail';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
@@ -106,7 +108,9 @@ export async function countCompendium(
  * One ingredient by id: a compendium entry for anyone, signed out included,
  * and — with `workspaceId` — that coven's own entry for its members, viewers
  * included. Without a coven the read is the compendium alone, so a coven's
- * row answers `NotFound` to whoever asks: its existence is private.
+ * row answers `NotFound` to whoever asks: its existence is private. A
+ * compendium entry the curators have retired answers only a coven whose
+ * cupboard names it (M12.24), and `NotFound` to everyone else.
  *
  * @throws {Forbidden} a coven is named and the caller is not in it, a site
  * admin and a signed-out caller included.
@@ -121,8 +125,11 @@ export async function getIngredient(
 
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   const row = RowId.safeParse(id).success ? await findOneIngredient(memberships, id) : undefined;
-  if (!row) throw new NotFound('No such ingredient');
-  return row;
+  if (row) return row;
+  const [membership] = memberships;
+  const held = membership && (await heldCompendiumEntry(membership, id));
+  if (!held) throw new NotFound('No such ingredient');
+  return held.entry;
 }
 
 /**
@@ -474,6 +481,23 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
     write.softDeleteByIdInCompendium(curator, ingredients, id),
   );
   expireCompendium();
+}
+
+/**
+ * How many covens hold this compendium entry in their cupboard, for the
+ * curator's delete confirm (M12.25): a count, never a coven's name or id.
+ * Lives here beside `deleteCompendiumEntry`, which the number is asked
+ * before; the cupboard's own services are the coven's, under a membership.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} no live compendium entry has this id — a coven's
+ * ingredient, one already deleted and an id that is not one included.
+ */
+export async function countCompendiumEntryUsers(session: Session, id: string): Promise<number> {
+  const curator = assertCurator(session);
+  const entry = RowId.safeParse(id).success ? await findOneIngredient([], id) : undefined;
+  if (!entry) throw new NotFound('No such compendium entry');
+  return countCovensUsing(curator, id);
 }
 
 /**

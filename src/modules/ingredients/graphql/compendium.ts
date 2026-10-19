@@ -79,6 +79,8 @@ builder.queryField('compendium', (t) =>
       ...facetArgs,
       // The admin's to-do list: live entries citing no live reference (M5.5).
       withoutReferences: t.arg.boolean({ required: false }),
+      // The admin's other to-do list: live entries with no live form (M12.30).
+      withoutForms: t.arg.boolean({ required: false }),
       // The formal names still to look up are the `unknown` entries (M5.5).
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
     },
@@ -108,6 +110,7 @@ builder.queryField('compendiumFacets', (t) =>
       ...categoryArgs,
       ...facetArgs,
       withoutReferences: t.arg.boolean({ required: false }),
+      withoutForms: t.arg.boolean({ required: false }),
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
     },
     resolve: (_root, args) => compendiumFacets(filterOf(args)),
@@ -139,6 +142,7 @@ function filterOf({
   elements,
   toxic,
   withoutReferences,
+  withoutForms,
   nomenclature,
 }: CompendiumFilterInput): CompendiumFilterInput {
   return {
@@ -152,6 +156,7 @@ function filterOf({
     elements,
     toxic,
     withoutReferences,
+    withoutForms,
     nomenclature,
   };
 }

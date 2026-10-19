@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import ProviderMark from '../ProviderMark';
+import Hint from './hint';
 import { CheckIcon, CrossIcon } from './icons';
 import type { MarkProps, ProviderLogoProps } from './types';
 import './index.scss';
@@ -24,13 +25,10 @@ export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
   return (
-    <span className="user-list__hint">
+    <Hint className="user-list__hint" label={label}>
       <ProviderMark id={id} />
       <span className="visually-hidden">{label}</span>
-      <span className="user-list__tip" aria-hidden="true">
-        {label}
-      </span>
-    </span>
+    </Hint>
   );
 };
 
@@ -40,22 +38,22 @@ export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
  * where `hint` asks, in a tip bubble on hover too, since the column's heading
  * does not say it. The bubble is the eye's copy, hidden from the reader.
  */
-export const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => (
-  <span
-    className={[
-      'user-list__mark',
-      `user-list__mark--${value ? 'yes' : 'no'}`,
-      hint && 'user-list__hint',
-    ]
-      .filter(Boolean)
-      .join(' ')}
-  >
-    {value ? <CheckIcon /> : <CrossIcon />}
-    <span className="visually-hidden">{label}</span>
-    {hint && (
-      <span className="user-list__tip" aria-hidden="true">
-        {label}
-      </span>
-    )}
-  </span>
-);
+export const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => {
+  const icon = value ? <CheckIcon /> : <CrossIcon />;
+  const className = ['user-list__mark', `user-list__mark--${value ? 'yes' : 'no'}`]
+    .concat(hint ? ['user-list__hint'] : [])
+    .join(' ');
+  const body = (
+    <>
+      {icon}
+      <span className="visually-hidden">{label}</span>
+    </>
+  );
+  return hint ? (
+    <Hint className={className} label={label}>
+      {body}
+    </Hint>
+  ) : (
+    <span className={className}>{body}</span>
+  );
+};

@@ -1,0 +1,34 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// As many columns as fit at `$ingredient-card-min` each, the width shared out
+// evenly (`1fr`), so a phone gets one card across and a desktop three or four.
+// `min(100%, ...)` keeps one column from overflowing a container narrower than
+// the minimum. The same grid draws the loading skeleton (`.tab-skeleton__cards`).
+.ingredient-card-list {
+  @include list-reset;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$ingredient-card-min}), 1fr));
+  gap: space(4);
+
+  // The grid stretches each item to its row's height; the card fills its item, and its
+  // foot (the jar lines and actions) sits at the bottom, so a row of cards ends on one line.
+  > li {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ingredient-card {
+    flex: 1 1 auto;
+  }
+
+  // Compact: a narrower column (more cards across) and a tighter gap, to go with the
+  // compact card the same attribute switches on (IngredientCard/_compact.scss).
+  // A stored Regular choice sets data-card-density="regular" on <html> (pre-paint script,
+  // CardDensitySwitch) and turns the compact look off.
+  &[data-density='compact']:not(:root[data-card-density='regular'] *) {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: space(3);
+  }
+}

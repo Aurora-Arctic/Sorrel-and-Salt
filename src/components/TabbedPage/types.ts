@@ -53,6 +53,8 @@ export interface TabActionProps {
 export interface TabPanelLoadingProps {
   /** Whether to draw a filter row above the table: the pressed tab's `filtered`. */
   filter?: boolean;
+  /** What the skeleton stands in for: `table` (the default), or `cards`, the grid of ingredient cards. */
+  shape?: 'table' | 'cards';
 }
 
 export interface SwapPanelProps {
@@ -62,6 +64,10 @@ export interface SwapPanelProps {
   className: string;
   /** Whether the skeleton draws a filter row, as `TabPanelLoading`'s. */
   filter?: boolean;
+  /** Which skeleton, as `TabPanelLoading`'s. */
+  shape?: 'table' | 'cards';
+  /** A minimum height for the skeleton's wrapper only, so the content it replaces keeps its room; the new content takes none. */
+  loadingMinHeight?: number;
   children: ReactNode;
 }
 

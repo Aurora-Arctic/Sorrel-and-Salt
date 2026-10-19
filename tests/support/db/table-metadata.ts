@@ -51,6 +51,7 @@ export const AUDITED_TABLES = [
   'spells',
   'user_privilege_changes',
   'users',
+  'workspace_compendium_entries',
   'workspace_members',
   'workspaces',
   'zodiac_signs',

@@ -2,7 +2,7 @@
 // (claude-docs/db/client-imports.md, "Who may import the client"). `db` is not re-exported and
 // callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
 // write mechanism, so no write can skip audit stamping. Rule 4: every exported
-// finder applies `deleted_at IS NULL` but the five named `…IncludingSoftDeleted`
+// finder applies `deleted_at IS NULL` but the six named `…IncludingSoftDeleted`
 // hatches, and the two read builders are not re-exported here — guarded by
 // tests/guards/soft-delete-finder-guard.test.ts.
 // Import this file, never a sibling: the rest of the folder is internal.
@@ -43,9 +43,20 @@ export {
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
+  findWorkspaceIngredientCount,
   findWorkspaceIngredientPage,
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
+export {
+  findCompendiumMatchPage,
+  findCompendiumMatchesByName,
+  countCovensUsing,
+  findCupboardEntriesOf,
+  findCupboardEntry,
+  findCupboardEntryByLabel,
+  findCupboardEntryIncludingSoftDeleted,
+  findWorkspaceIngredientByName,
+} from './cupboard-entries';
 export { COVEN_STOCK_LOCK_NAMESPACE, findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
@@ -110,6 +121,9 @@ export type {
   CommonNameSuggestion,
   CompendiumFacets,
   CompendiumScore,
+  SuggestionGroup,
+  SuggestionGroupTag,
+  CupboardEntryRow,
   DeityFilter,
   DeitySuggestion,
   FacetCount,
@@ -117,10 +131,10 @@ export type {
   GroupFilter,
   IngredientFacets,
   WorkspaceIngredientFacets,
+  WorkspaceListEdge,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
-  HiddenJar,
   IngredientRow,
   InvitableRole,
   InvitableSiteRole,

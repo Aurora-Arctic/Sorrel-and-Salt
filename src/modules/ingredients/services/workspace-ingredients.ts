@@ -1,22 +1,17 @@
 import 'server-only';
-import {
-  findOneByIdInWorkspace,
-  findWorkspaceIngredientByIdentity,
-  withAudit,
-} from '../../../db/repository';
+import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { addressTaken } from '../../../lib/text';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { ingredientSlug } from '../../../lib/slugify';
-import { carryJarsToLocal } from './carry-stock';
+import { refuseCupboardLabelAsName } from './cupboard-entries';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
   ingredientColumns,
   readPromotedFolkName,
+  refuseCollision,
   resolvePicks,
   softDeleteIngredient,
   splitChildren,
@@ -24,11 +19,7 @@ import {
   writeChildren,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { describeEntry } from '@/modules/vocabulary';
-import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
-
-/** What a collision is reported from: the label and the formal name alone. */
-type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
+import type { IngredientRow, IngredientValues } from '../types';
 
 // Story 15: a coven's own ingredients. Every read and write is under the
 // proof, so the tier is the proof's — `workspace_id` is never read from the
@@ -40,18 +31,13 @@ type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
  * deities, references, categories and forms, in one transaction. The slug is set here from the
  * label and the formal name.
  *
- * Where the ingredient hides a compendium entry the coven holds jars of, they
- * move onto it (M12.8, `carryJarsToLocal`).
- *
  * @throws {Forbidden} the caller may not write this coven's ingredients or
  * its stock.
- * @throws {JarMergeNeeded} two jars of one form differ in unit and
- * `jarMerges` names no amount; nothing is saved.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients, picks a form or deity no
+ * collides with another of the coven's ingredients or a label it gave a
+ * compendium entry, picks a form or deity no
  * curated row holds, files it under no live category, links a substitute
- * or cites a reference outside the compendium and this coven, or merges jars
- * past the largest amount a jar holds.
+ * or cites a reference outside the compendium and this coven.
  */
 export async function createWorkspaceIngredient(
   session: Session,
@@ -60,25 +46,18 @@ export async function createWorkspaceIngredient(
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['create'],
-    inventory: ['update'],
   });
-  const {
-    fields: parsed,
-    jarMerges,
-    lists,
-    picked,
-  } = splitChildren(parseInput(LocalIngredientInput, input));
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   const picks = await resolvePicks('coven', parsed, picked, []);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
   const columns = ingredientColumns(fields);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
-    await write.lockCovenStock(membership);
     const [row] = await write.insertInWorkspace(membership, ingredients, columns);
     await writeChildren(write, [membership], row.id, { ...lists, ...picks.children }, 'add');
-    await carryJarsToLocal(write, membership, row, jarMerges);
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, undefined));
 }
@@ -94,18 +73,12 @@ export async function createWorkspaceIngredient(
  * name, and nothing redirects from the old one: no route reads a coven
  * ingredient's slug.
  *
- * Jars the coven holds of a compendium entry the ingredient now hides move
- * onto it, as in `createWorkspaceIngredient`.
- *
  * @throws {Forbidden} the caller may not write this coven's ingredients or
  * its stock.
- * @throws {JarMergeNeeded} two jars of one form differ in unit and
- * `jarMerges` names no amount; nothing is saved.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
  * collides with another of the coven's ingredients, picks a form or deity no
  * curated row holds, files it under no live category, adds a substitute
- * link or a reference outside the compendium and this coven, or merges jars
- * past the largest amount a jar holds.
+ * link or a reference outside the compendium and this coven.
  * @throws {NotFound} no such ingredient in this coven — the compendium's and
  * other covens' included, and an id that is not one.
  */
@@ -117,14 +90,8 @@ export async function updateWorkspaceIngredient(
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['update'],
-    inventory: ['update'],
   });
-  const {
-    fields: parsed,
-    jarMerges,
-    lists,
-    picked,
-  } = splitChildren(parseInput(LocalIngredientInput, input));
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const held = await heldDeities([membership], id);
@@ -133,9 +100,9 @@ export async function updateWorkspaceIngredient(
   const { fields } = picks;
 
   const columns = ingredientColumns(fields);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
-    await write.lockCovenStock(membership);
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
     if (!row) throw new NotFound('No such ingredient in this coven');
     await writeChildren(
@@ -145,7 +112,6 @@ export async function updateWorkspaceIngredient(
       { ...lists, ...picks.children, heldDeities: held },
       'replace',
     );
-    await carryJarsToLocal(write, membership, row, jarMerges);
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
@@ -157,13 +123,8 @@ export async function updateWorkspaceIngredient(
  * `updateWorkspaceIngredient`). A row with a formal name keeps its identity
  * key; one without moves it, and may meet another entry's.
  *
- * A relabel can make the row hide a compendium entry; its jars then move
- * onto it, with no `jarMerges` to settle a clash: the refusal then asks for
- * the two jars to be put in one unit, which the member can do before promoting.
- *
  * @throws {Forbidden} the caller may not write this coven's ingredients or
  * its stock.
- * @throws {JarMergeNeeded} two jars of one form differ in unit.
  * @throws {ValidationError} the new display name collides with another of the
  * coven's ingredients.
  * @throws {NotFound} no such ingredient in this coven, or no such live folk
@@ -177,7 +138,6 @@ export async function promoteWorkspaceFolkName(
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['update'],
-    inventory: ['update'],
   });
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const current = await findOneByIdInWorkspace(membership, ingredients, id);
@@ -186,17 +146,15 @@ export async function promoteWorkspaceFolkName(
 
   const fields = { name: promoted.name, canonicalName: current.canonicalName };
   const slug = ingredientSlug(fields.name, fields.canonicalName);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
-    await write.lockCovenStock(membership);
     await swapFolkName(write, id, promoted.id, current.name, others);
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
       name: fields.name,
       slug,
     });
     if (!row) throw new NotFound('No such ingredient in this coven');
-    // A relabel can make the row hide a compendium entry, so its jars follow.
-    await carryJarsToLocal(write, membership, row, undefined, 'unit');
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, slug, id));
 }
@@ -239,59 +197,4 @@ export async function getWorkspaceIngredient(
   const row = await findOneByIdInWorkspace(membership, ingredients, id);
   if (!row) throw new NotFound('No such ingredient in this coven');
   return row;
-}
-
-/**
- * A write that broke one of the coven's unique indexes, as a `ValidationError`
- * on the field that caused it; any other error unchanged. An identity
- * collision — a second ingredient under a formal name the coven holds
- * (MB.215) — is reported on `canonicalName`, or on `name` for one with none,
- * whose label is its identity, naming the ingredient holding it, read after
- * the write rolled back, and pointing at adding the form to it — whichever
- * index Postgres names: the label and address indexes are older than the
- * identity one, so the oil written under the herb's label meets them first.
- * `slug` is the one this write set, `id` the ingredient an update writes,
- * never its own collision.
- */
-async function refuseCollision(
-  error: unknown,
-  membership: Membership,
-  fields: NameFields,
-  slug: string,
-  id: string | undefined,
-): Promise<never> {
-  const refuse = (path: string, message: string) => {
-    throw new ValidationError([{ path: [path], message }]);
-  };
-  const { name, canonicalName } = fields;
-  const index = violatedUniqueIndex(error);
-  if (
-    index === 'ingredients_workspace_identity_key_unique' ||
-    index === 'ingredients_workspace_label_unique' ||
-    index === 'ingredients_workspace_slug_unique'
-  ) {
-    const holder = await findWorkspaceIngredientByIdentity(membership, fields);
-    if (holder && holder.id !== id) {
-      refuse(
-        canonicalName == null ? 'name' : 'canonicalName',
-        `This coven already has ${describeEntry(holder)} — add this form to it instead`,
-      );
-    }
-  }
-
-  switch (index) {
-    case 'ingredients_workspace_label_unique':
-      return refuse('name', `This coven already has an ingredient called "${name}"`);
-    case 'ingredients_workspace_identity_key_unique':
-      return refuse(
-        canonicalName == null ? 'name' : 'canonicalName',
-        `This coven already has an ingredient that is ${canonicalName ?? name}`,
-      );
-    case 'ingredients_workspace_slug_unique':
-      return refuse(
-        'name',
-        addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
-      );
-  }
-  throw error;
 }

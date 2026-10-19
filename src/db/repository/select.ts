@@ -140,6 +140,7 @@ export async function selectFrom(
                   // the row: a table keyed on a pair breaks ties on one of its
                   // columns, not on an `id` it does not have.
                   keyId: sql<string>`cast(${keyset.id} as text)`,
+                  ...(keyset.leftJoined && { joined: getTableColumns(keyset.leftJoined.leftJoin) }),
                 }
               : joined && {
                   row: getTableColumns(relation),
@@ -155,6 +156,7 @@ export async function selectFrom(
       .from(source as never)
       .$dynamic();
     if (keyed?.join) query.innerJoin(keyed.join.source, keyed.join.on);
+    if (keyed?.leftJoined) query.leftJoin(keyed.leftJoined.leftJoin, keyed.leftJoined.on);
     if (joined) query.leftJoin(joined.leftJoin, joined.on);
     for (const { type, table, on } of aggregated?.joins ?? []) {
       const live = and(on, notSoftDeleted(table));
@@ -324,6 +326,26 @@ export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | und
       .select({ one: sql`1` })
       .from(table as never)
       .where(and(notSoftDeleted(table), where)),
+  );
+}
+
+/**
+ * `existsIn` without the parent's tombstone filter: a correlated `EXISTS`
+ * over `table` under `where` alone. Only for `inUseIngredientParent` in
+ * `ingredient-parent.ts`, which puts the filter back on one arm and, on the
+ * other, admits a retired compendium entry only while the reading coven's
+ * cupboard names it (M12.24). Named as the escape hatches are, so no other
+ * caller reaches it unnoticed.
+ */
+export function existsInIncludingSoftDeleted<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+): SQL {
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(table as never)
+      .where(where),
   );
 }
 

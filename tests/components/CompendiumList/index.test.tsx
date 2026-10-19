@@ -3,6 +3,8 @@ import { type ReactElement, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumListBase from '@/components/CompendiumList';
+import IngredientSearch from '@/components/IngredientSearch';
+import AudienceFilter from '@/components/CompendiumList/filter';
 import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import type {
@@ -38,6 +40,12 @@ const CompendiumList = (listProps: CompendiumListProps): ReactElement => (
   </QueryClientProvider>
 );
 
+const WARDS = {
+  id: 'g-ward',
+  name: 'Fixture Wards',
+  colorDark: '#4e8bc2',
+  colorLight: '#0c5393',
+};
 const ENTRIES: CompendiumListEntry[] = [
   {
     id: 'i1',
@@ -51,6 +59,11 @@ const ENTRIES: CompendiumListEntry[] = [
       { name: 'Fixture Herb', icon: 'botanical' },
       { name: 'Fixture Oil', icon: null },
     ],
+    categories: [
+      { category: { id: 'c-tw', name: 'Testward' }, group: WARDS },
+      { category: { id: 'c-tc', name: 'Testcraft' }, group: WARDS },
+      { category: { id: 'c-tb', name: 'Testbane' }, group: WARDS },
+    ],
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
   },
@@ -63,6 +76,7 @@ const ENTRIES: CompendiumListEntry[] = [
     nomenclature: 'unknown',
     canonicalName: null,
     forms: [],
+    categories: [],
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
   },
@@ -79,6 +93,7 @@ const NO_FILTER: CompendiumListFilter = {
   query: '',
   forms: [],
   withoutReferences: false,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -93,6 +108,7 @@ const SHOWN: CompendiumListFilter = {
   query: 'test',
   forms: ['Fixture Oil'],
   withoutReferences: true,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -103,12 +119,6 @@ const SHOWN: CompendiumListFilter = {
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */
-const WARDS = {
-  id: 'g-ward',
-  name: 'Fixture Wards',
-  colorDark: '#4e8bc2',
-  colorLight: '#0c5393',
-};
 const CATEGORIES = [
   { id: 'c-tw', slug: 'testward', name: 'Testward', group: WARDS },
   { id: 'c-tc', slug: 'testcraft', name: 'Testcraft', group: WARDS },
@@ -135,6 +145,7 @@ const FACETS: CompendiumFacetCounts = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
 };
 
 const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProps => ({
@@ -159,6 +170,49 @@ describe('CompendiumList', () => {
       within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' }),
     ).toBeInTheDocument();
     expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
+  });
+
+  // The dot between two forms is drawn in CSS; a reader still hears a list, and the visible
+  // text carries no comma of its own.
+  it('separates the forms without a drawn comma, and with a spoken one', () => {
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    const cell = within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' });
+    const separators = cell.querySelectorAll('.spoken-separator');
+    expect(separators).toHaveLength(1);
+    expect(separators[0]).toHaveTextContent(',');
+    expect(separators[0].parentElement?.firstChild?.textContent).toBe('Fixture Herb');
+  });
+
+  // Categories column: the card's chips, the first few shown and the rest behind +N.
+  it("shows each entry's categories as chips, the rest behind a +N button", () => {
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
+    expect(heads.indexOf('Categories')).toBe(heads.indexOf('Form') + 1);
+    expect(heads.indexOf('Updated')).toBe(heads.indexOf('Categories') + 1);
+    const list = within(rows[1]).getByRole('list', { name: 'Categories' });
+    expect(within(list).getByText('Testward')).toBeInTheDocument();
+    expect(within(list).getByText('Testcraft')).toBeInTheDocument();
+    // The category past the limit waits in the +N button's panel, hidden until it opens.
+    const more = within(list).getByRole('button', { name: '1 more category for Testwort' });
+    expect(more).toHaveTextContent('+1');
+    const panel = document.getElementById(more.getAttribute('aria-controls') ?? '');
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.click(more);
+    expect(panel).toHaveAttribute('aria-hidden', 'false');
+  });
+
+  it('shows a dash for an entry with no categories', () => {
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    expect(within(rows[2]).queryByRole('list', { name: 'Categories' })).toBeNull();
+    const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
+    const cells = within(rows[2]).getAllByRole('cell');
+    expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
   });
 
   // M12.7: each form wears its group's icon; a form with none wears the spoon.
@@ -224,6 +278,29 @@ describe('CompendiumList', () => {
       <CompendiumList {...props({ entries: [], filter: { ...NO_FILTER, query: 'nothing' } })} />,
     );
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('bolds each filter value in the empty sentence and leaves the joining words plain', () => {
+    const filter: CompendiumListFilter = {
+      ...NO_FILTER,
+      query: 'nothing',
+      forms: ['Fixture Oil'],
+      withoutReferences: true,
+      categories: ['testward', 'testcraft'],
+    };
+    render(<CompendiumList {...props({ entries: [], filter })} />);
+
+    // The search sentence above bolds its own values; the empty sentence is the one naming the quoted query.
+    const sentence = screen.getByText('“nothing”', { selector: 'strong' }).parentElement;
+    const bold = [...(sentence?.querySelectorAll('strong') ?? [])].map((each) => each.textContent);
+    expect(bold).toEqual(['“nothing”', '“Fixture Oil”', 'No Refs', 'Testward', 'Testcraft']);
+    // The sentence is more than its values: what joins them is not bold.
+    expect(sentence?.textContent?.length).toBeGreaterThan(bold.join('').length);
+  });
+
+  it('bolds nothing when the filter is empty and the compendium itself is', () => {
+    const { container } = render(<CompendiumList {...props({ entries: [] })} />);
+    expect(container.querySelectorAll('strong')).toHaveLength(0);
   });
 });
 
@@ -326,9 +403,38 @@ describe('CompendiumList filter', () => {
         elements: [],
         toxic: [],
         withoutReferences,
+        withoutForms: 0,
       },
     }));
   beforeEach(() => answerCounts(0));
+
+  it('draws no Compact switch in the admin list', () => {
+    render(<CompendiumList {...props()} />);
+    expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
+  });
+
+  it('draws no Compact switch in the public list', () => {
+    const { filter, facets, categories, vocabulary, total } = props();
+    render(
+      <QueryClientProvider client={client}>
+        <IngredientSearch
+          search={
+            <AudienceFilter
+              audience="public"
+              filter={filter}
+              facets={facets}
+              categories={categories}
+              vocabulary={vocabulary}
+              total={total}
+            />
+          }
+        >
+          {null}
+        </IngredientSearch>
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
+  });
 
   it('counts the chosen values on the Filters button, not the name typed', () => {
     const { rerender } = render(
@@ -451,6 +557,26 @@ describe('CompendiumList filter', () => {
     fireEvent.click(unsourcedSwitch());
     escape();
     expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=test&forms=Fixture+Oil');
+  });
+
+  it('writes No Form as 1 beside No Refs, and the toggle off by leaving it out', () => {
+    const { unmount } = render(
+      <CompendiumList {...props({ facets: { ...FACETS, withoutForms: 3 } })} />,
+    );
+    openPanel();
+    const formless = screen.getByRole('switch', { name: 'No Form 3' });
+    fireEvent.click(formless);
+    escape();
+    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?withoutForms=1');
+    unmount();
+
+    render(<CompendiumList {...props({ filter: { ...SHOWN, withoutForms: true } })} />);
+    openPanel();
+    fireEvent.click(screen.getByRole('switch', { name: /^No Form/ }));
+    escape();
+    expect(router.push).toHaveBeenLastCalledWith(
+      '/admin/compendium?query=test&forms=Fixture+Oil&withoutReferences=1',
+    );
   });
 
   // Counts stay live while the panel is open: each change asks the server what the held

@@ -35,6 +35,7 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'not_toxic', label: 'Not Toxic', count: 9 },
   ],
   withoutReferences: 3,
+  withoutForms: 2,
 };
 
 const NONE: FacetPanelFilter = {
@@ -47,6 +48,7 @@ const NONE: FacetPanelFilter = {
   elements: [],
   toxic: '',
   withoutReferences: false,
+  withoutForms: false,
 };
 
 const props = (
@@ -471,8 +473,8 @@ describe('FacetPanel', () => {
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
 
-  describe("the coven's Source and In Stock controls (M9.7)", () => {
-    const COVEN = { source: '', inStock: false } as const;
+  describe("the coven's Source, In Stock and Low Stock Only controls (M9.7, M9.8)", () => {
+    const COVEN = { source: '', inStock: false, lowStockOnly: false } as const;
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
       stubViewport(true);
       render(<FacetPanel {...props(filter, more)} />);
@@ -483,6 +485,7 @@ describe('FacetPanel', () => {
       open();
       expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
       expect(screen.queryByRole('switch', { name: 'In Stock' })).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'Low Stock Only' })).toBeNull();
     });
 
     const counted: Partial<FacetPanelProps> = {
@@ -493,6 +496,7 @@ describe('FacetPanel', () => {
           { value: 'compendium', label: 'Compendium', count: 2 },
         ],
         inStock: 3,
+        lowStockOnly: 2,
       },
     };
 
@@ -514,6 +518,7 @@ describe('FacetPanel', () => {
       expect(within(source).getByRole('radio', { name: /^Compendium 2/ })).toBeInTheDocument();
       expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
       expect(screen.getByRole('switch', { name: 'In Stock 3' })).toBeInTheDocument();
+      expect(screen.getByRole('switch', { name: 'Low Stock Only 2' })).toBeInTheDocument();
     });
 
     it('reports a chosen counted source and switch as a patch of only that part', () => {
@@ -524,6 +529,8 @@ describe('FacetPanel', () => {
       expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
       fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
       expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
+      fireEvent.click(screen.getByRole('switch', { name: /^Low Stock Only/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ lowStockOnly: true });
     });
 
     it('reports a chosen source and the switch as a patch of only that part', () => {
@@ -537,12 +544,15 @@ describe('FacetPanel', () => {
 
       fireEvent.click(screen.getByRole('switch', { name: 'In Stock' }));
       expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
+      fireEvent.click(screen.getByRole('switch', { name: 'Low Stock Only' }));
+      expect(onChange).toHaveBeenLastCalledWith({ lowStockOnly: true });
     });
 
     it('shows what is held', () => {
-      open({ source: 'local', inStock: true });
+      open({ source: 'local', inStock: true, lowStockOnly: true });
       expect(screen.getByRole('radio', { name: /^Local/ })).toBeChecked();
       expect(screen.getByRole('switch', { name: 'In Stock' })).toBeChecked();
+      expect(screen.getByRole('switch', { name: 'Low Stock Only' })).toBeChecked();
     });
 
     it('counts a chosen source and the switch on the Filters button', () => {
@@ -551,18 +561,21 @@ describe('FacetPanel', () => {
       expect(filtersButton()).toHaveAccessibleName('Filters');
       rerender(<FacetPanel {...props({ source: 'compendium', inStock: true })} />);
       expect(filtersButton()).toHaveAccessibleName('Filters 2');
+      rerender(<FacetPanel {...props({ ...COVEN, lowStockOnly: true })} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters 1');
     });
 
-    it('submits through the GET form around it, as source=local and inStock=1', () => {
+    it('submits through the GET form around it, as source=local, inStock=1 and lowStockOnly=1', () => {
       stubViewport(true);
       const { container } = render(
         <form method="get">
-          <FacetPanel {...props({ source: 'local', inStock: true })} />
+          <FacetPanel {...props({ source: 'local', inStock: true, lowStockOnly: true })} />
         </form>,
       );
       const data = new FormData(container.querySelector('form') as HTMLFormElement);
       expect(data.getAll('source')).toEqual(['local']);
       expect(data.getAll('inStock')).toEqual(['1']);
+      expect(data.getAll('lowStockOnly')).toEqual(['1']);
     });
   });
 
@@ -702,6 +715,21 @@ describe('FacetPanel', () => {
 
     fireEvent.click(screen.getByRole('switch', { name: /^No Refs/ }));
     expect(onChange).toHaveBeenLastCalledWith({ withoutReferences: true });
+  });
+
+  it('offers No Form with its count to an admin only, and reports it as a patch of its own', () => {
+    stubViewport(true);
+    const onChange = vi.fn();
+    const { unmount } = render(<FacetPanel {...props({}, { admin: true, onChange })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(screen.getByRole('switch', { name: /^No Form 2/ }));
+    expect(onChange).toHaveBeenLastCalledWith({ withoutForms: true });
+    unmount();
+
+    render(<FacetPanel {...props({})} />);
+    fireEvent.click(filtersButton());
+    expect(screen.queryByRole('switch', { name: /^No Form/ })).toBeNull();
   });
 
   it('renders inline and open before hydration, every control present, with Filters a link to the panel', () => {

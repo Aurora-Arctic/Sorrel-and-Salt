@@ -36,16 +36,16 @@ a coven's id writes that coven's new ingredient, and `null` writes the
 compendium — a new entry, or the `entry` given. A coven's edit is M8.17's,
 so the union cannot say one yet.
 
-| Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                                                                                                                                                                                                          |
-| `entry`         | With a null `workspaceId` only: the compendium entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`. Left out, the form creates.                                                                                                                                                                                                                                                                                             |
-| `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, which are the ones M12.8 moved onto it, each with its form, quantity and unit; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
-| `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                 |
-| `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                            |
-| `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                          |
-| `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true. It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                                                                    |
+| Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                                                                                                                                                                                                                                 |
+| `entry`         | With a null `workspaceId` only: the compendium entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`. Left out, the form creates.                                                                                                                                                                                                                                                                                                                    |
+| `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
+| `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                                        |
+| `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
+| `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
+| `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true. It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                                                                                           |
 
 ## The fields
 
@@ -346,7 +346,7 @@ at a time, around them (["The variants"](#the-variants)).
   sections are in view only while Variants is open, which already reads
   Close All, so a section open inside a card the Variants section hides
   never keeps it reading Close All.
-- **Copy From Ingredient** sits in its field's label row as before, so it is
+- **Copy From Ingredient** is an icon-only button (two sheets, tip "Copy From Ingredient", the owner's call, 2026-10-19) on the shared `.field__label-action` primitive, at the right end of its field's label row, so it is
   hidden with its section and pressed once the section is open. The
   skipped notice stays in the page with the list, so it outlasts its
   section closing and opening; what a copy adds shows on the closed line.
@@ -403,10 +403,13 @@ variants"); ["On the compendium"](#on-the-compendium) says how.
 
 A substitute row is the ingredient's label and formal name, "Mockwort
 (Fixtura vulgaris)", and a second line saying whose it is, "Compendium entry"
-or "This coven’s entry". The rows keep the search's ranking, best match
-first, so the tier is a note and not a heading, which would reorder them. Each
+or "This coven’s entry". The rows are the search's two groups (M12.19), under the headings
+"Your Ingredients", the coven's cupboard, then "Compendium", each in the
+search's order, best match first; the heading comes from the edge's `group`,
+and a form ranking never lifts a compendium row above a cupboard one. A held
+entry reads under the label the coven gave it. Each
 row carries its ingredient's id as its key, since a compendium entry and a
-coven's copy of it read alike until M8.3 suppresses the one shadowed, and as
+coven's copy of it can read alike, both offered since a name match hides nothing (M12.28), and as
 its `link`: picking one adds an entry linked to that ingredient, reading as
 the label and formal name, its tooltip telling its form and tier
 (MB.164; MB.115), and sent as `{ ingredientId }`. The lookup asks for
@@ -440,8 +443,9 @@ links. In both substitute lists, the ingredient's and each variant's:
 
 - **A linked chip is a button; a typed one is text.** The linked chip's
   text is a button led by a link mark (two chain links) in the accent, the
-  text underlined in the body ink, and the accent's hover on both when
-  pointed at. A typed chip has no mark, no underline and nothing to press
+  text in the body ink with no underline at rest (underlined while its summary
+  is open), and the accent's hover on both when pointed at. A typed chip has
+  no mark and nothing to press
   but its ×. So the two differ by shape, not by colour alone. A screen
   reader hears the linked one as a button, named by its text, that opens a
   dialog and says whether it is open (`aria-haspopup`, `aria-expanded`),
@@ -919,7 +923,7 @@ server, so it has no arrow.
 ### Copying from the ingredient
 
 A form often says much of what its ingredient says, so each of an open
-variant's fields but its Form has a **Copy From Ingredient** button
+variant's fields but its Form has a **Copy From Ingredient** icon button
 (`copy.tsx`, MB.115, the owner's call): Description, Safety Notes, Element, Celestial
 Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
 References. The ingredient's own fields have none, and nor has a form's
@@ -1036,7 +1040,8 @@ the same `useDebouncedValue` the lookups wait on, for the three closest
 entries in the compendium and this coven — on the compendium, the
 compendium's alone, less the entry being edited, which its own name always
 matches. A blank name asks nothing and drops
-the last warning, and so does the name the form opened with until it has
+the last warning, nor does a single letter, which resembles too much to warn
+of anything (the owner's call, 2026-10-18), and so does the name the form opened with until it has
 been typed in (MB.115, the owner's calls): opening an entry to fix something
 else never asks about its own name's neighbours, and a save that never
 touched the name is never held. Once typed in, the name asks as any does,
@@ -1045,12 +1050,49 @@ below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
-The warning sits beneath the field, a `.notice--warn`, the plain box with the red triangle: "Did you mean Cat's
-Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?", with a
-Create Anyway button, quiet and small (`.btn--quiet.btn--small`, the
-owner's call at MB.115), since it sets a question aside rather than acting. Each match is a link named by its label and its formal
-name, since the label alone can name five plants; one with no formal name
-shows its label. Each links where `duplicateHref` says — the admin's
+The warning sits beneath the field, a `.notice--warn`, the plain box with
+the red triangle: "Did you mean one of these?" and a list beneath it, one
+match a row (`.ingredient-form__matches`), then a Create Anyway button,
+medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
+2026-10-18, which took it off MB.115's quiet style). The rows' title links
+wear the body ink and the faded underline of the entry page's links, with
+typography-base's ◆ centred on the row. While another name's answer is on
+its way, each row stands as the skeleton's shape (`skeleton-shape`,
+`_mixins.scss`, as a tab's list does), a bar for the title and one in the
+small button's own size where the row had a Use It, so the box keeps its
+height and nothing jumps when the answer lands (the owner's call over a
+spinner, 2026-10-18). Row and shapes both stay mounted and cross-fade: the
+shapes wait 200ms before fading in over 300ms, so an answer back sooner never
+shows them, and fade out as slowly, so a late one never flashes (the owner's
+call); the region is `aria-busy` meanwhile. Whether or not the region is
+drawn, the name field itself shows the lookup, `busy` on its `TextField`
+([`field.md`](field.md)): the spinner inside the box at its right end, so
+nothing appears below the field until an answer has something to show (the
+owner's call, 2026-10-18). Rows are slots by place: when an
+answer has more rows than the last, the list's height slides down to show the
+new ones as they fade in; when it has fewer, the spare rows stay whole and
+fade while the list's bottom slides up over them, and they leave the list once
+the slide ends (the owner's call, over each row shrinking on its own). The
+height is set on the list by script for the slide, from its last measured
+height to its settled one, since an auto height cannot otherwise be moved;
+reduced motion swaps at once. A row whose place keeps but whose entry changes
+cross-fades its title: the new row fades in and the last entry's title and
+button lie over it as text alone, fading out, both linear so the place stays
+just covered and the old title in the link's own ink (the owner's call). An
+answer back while the shapes are still fading in waits under them, read off
+the shapes' own transition events, and the rows change once they are fully
+in, so the change is never seen; one back with the shapes in changes the
+rows under them, and one back before they began cross-fades (the owner's
+finding, 2026-10-18). The region itself, always in the page as a live region
+must be, opens by height round the first warning, grid rows 0fr to 1fr as
+the facet panel opens, while the notice fades in, and closes the same way
+round the last rows as they fade, so neither the first warning nor the last
+lands or leaves outright (the owner's calls). A list rather than a
+sentence, since the owner found the sentence with buttons run into it
+unreadable at the cupboard review (2026-10-18); a compendium match's Use It
+or Open It (below) sits at the right of its row. Each match is a link named
+by its label and its formal name, since the label alone can name five
+plants; one with no formal name shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and the shell's add button to
 `/coven/[slug]/ingredients/[id]`, DESIGN.md §9's coven page, which
 reaches compendium and coven entries alike. It opens in a new tab, so the
@@ -1060,6 +1102,32 @@ reader, as the substitute summary's Open Entry does. It is a plain anchor,
 since the caller hands back a plain string, where a typed `<Link>` wants a route
 the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.
+
+**An exact compendium name is a question, not a warning** (M12.20). A new
+coven entry's save also asks `compendiumMatches`
+([`graphql/schema.md`](../graphql/schema.md), "compendiumMatches") for the
+compendium entries bearing the typed name exactly, case aside, on the formal
+name too. If any come back that the person has not set aside, the save waits
+and the notice reads "The compendium already has an entry of this name."
+("entries", with several), over the same list: each row the entry's link
+with **Use It** at its right, or **Open It**, a link to its coven page, where
+the cupboard already holds it, and one **Create Anyway** beneath the list (the
+owner's word for both lists, 2026-10-18; M12.20 had named the question's Add
+Our Own). The
+block's id, the sentence and the list together, is what the button and the
+field are described by, so a focus landing on it still hears the names. It sets
+the entries aside and takes the focus the way the warning's does, so the next
+Save makes the coven's own entry as before. Use It calls `addCupboardEntry`
+(no jar, no form) and sends the typed name as `label` only when it differs
+from the entry's own name, string for string, plus whichever of the
+description, safety notes, elements, celestial bodies, zodiac signs and
+colours were filled as the coven's overrides. It then reports the entry
+through `onSaved` as `'open'`, so the modal closes and the page routes to the
+entry's coven page; a refused label lands beside Name. A near match in the
+did-you-mean list gets the same Use It or Open It at the right of its row when
+it is a compendium entry (`isGlobal`), and none when it is the coven's own
+(the owner's call, 2026-10-18). Both need `onUse`, which the compendium's
+form leaves out, since it has no cupboard. Viewers never reach the modal.
 
 **An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
 entry makes nothing new, so on an edit the warning names its matches and
@@ -1290,6 +1358,10 @@ inside this one, so the two must not share a list:
 So Ctrl+Z inside the open panel undoes a panel edit and leaves the ingredient's
 Undo exactly as it was. `Modal` exports `HeaderSlotContext` for this.
 
+## Forms are shown in title case
+
+A variant's `form` is stored as typed. Wherever the site shows one, it passes through `formLabel` (`src/modules/ingredients/validation/form-label.ts`), which calls `titleCase` in `src/lib/text.ts`: each word and each hyphenated part is capitalised, the small words (of, and, in, on, the, a, an, or, for, to, with, at, by, from) stay lowercase unless first, and a word with an inner capital is left alone. This is display only. A field the user is typing into keeps their text, a suggestion fills the stored text, and the GraphQL output, the services and the seeds are unchanged. A label folds (`lower(btrim(x))`) to the same identity as the stored text, apart from a run of inner spaces, which the label collapses. `tests/guards/form-label.test.ts` flags a component that renders `.form` without it.
+
 ## On the compendium
 
 With a null `workspaceId` the form writes a compendium entry (M5.5), the
@@ -1338,7 +1410,12 @@ site admin's, through the compendium mutations
   the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
-  as an alert above the fields.
+  as an alert above the fields. On a compendium entry the question also shows
+  how many covens use the entry (M12.25): `DeleteUsers` reads
+  `compendiumEntryUsers` when the question opens and renders a status line
+  only once the number arrives, so a slow or refused read leaves the question
+  as it was. It is a count and never names a coven, and Delete stays
+  unconditional.
 - **MB.82's question.** A save taking an address another entry still
   redirects from is refused at `['endRedirect']`
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient

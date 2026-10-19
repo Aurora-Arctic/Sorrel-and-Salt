@@ -21,7 +21,7 @@ const PagerLink = ({ href, label, soft }: PagerLinkProps): ReactElement => {
   function follow(event: MouseEvent<HTMLAnchorElement>) {
     if (opensElsewhere(event)) return;
     event.preventDefault();
-    go(href, soft ? 'soft' : 'full');
+    go(href, soft ? 'page' : 'full');
   }
 
   const content = <PagerEndContent label={label} />;

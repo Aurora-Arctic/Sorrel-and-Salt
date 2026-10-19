@@ -1,13 +1,16 @@
-import { render, screen } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { entryDetail } from '../../../support/entry-detail';
 
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
 // since what they decide is their own tests'. Here: that the coven in the
 // address is what the lookup is given, that a refusal is a 404, and which of
-// Edit and the canonical link each kind of entry gets.
+// Edit and the compendium link each kind of entry gets.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
@@ -25,7 +28,22 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 
 const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ getIngredient, ingredientDetailOf }));
+const compendiumMatchesOf = vi.fn();
+const getCupboardEntry = vi.fn();
+// Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
+const isRetired = vi.fn((_row: unknown) => false);
+vi.mock('@/modules/ingredients', () => ({
+  getIngredient,
+  ingredientDetailOf,
+  compendiumMatchesOf,
+  getCupboardEntry,
+  isRetired,
+  // The permission Make It Ours is offered on, as the service asserts it (M12.23).
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
+  // The pure merge: no cupboard entry, nothing laid over.
+  applyCupboardEntry: (entry: unknown) => entry,
+  isAnnotated: () => false,
+}));
 
 // The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
@@ -34,6 +52,11 @@ vi.mock('@/components/IngredientForm', () => ({
 
 const entryValues = vi.fn();
 vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+
+// The cupboard buttons (M12.17) are client parts that send mutations, so the page
+// renders under a query client.
+const renderPage = (ui: ReactElement) =>
+  render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
 const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/ingredients/[id]/page');
@@ -48,7 +71,16 @@ const params = (id = ID, search: Record<string, string> = {}) => ({
 
 const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
-const edits = () => screen.queryAllByRole('link', { name: /edit/i });
+// Edit, a plain link when it is the only choice, or Edit Entry in the Edit menu
+// beside the cupboard's choices (the owner's call, 2026-10-19), opened here.
+const edits = () => {
+  const menu = screen.queryByRole('button', { name: 'Edit', expanded: false });
+  if (menu) fireEvent.click(menu);
+  return [
+    ...screen.queryAllByRole('link', { name: /edit/i }),
+    ...screen.queryAllByRole('menuitem', { name: /edit/i }),
+  ];
+};
 
 const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
 
@@ -60,17 +92,20 @@ const open = async (
   getIngredient.mockResolvedValue(row);
   ingredientDetailOf.mockResolvedValue({ ...entryDetail(), entry: row });
   viewerOf.mockResolvedValue({ viewer: { name: 'Fixture Member', canCurate }, workspaces: [] });
-  render(await Page(params(ID, search)));
+  renderPage(await Page(params(ID, search)));
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getCupboardEntry.mockResolvedValue(null);
   requireCovenMembership.mockResolvedValue({
     workspace: WORKSPACE,
     membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role: 'member' },
   });
   requireSession.mockResolvedValue(SESSION);
   entryValues.mockResolvedValue(EMPTY_VALUES);
+  getCupboardEntry.mockResolvedValue(null);
+  compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0, canConvert: false });
 });
 
 describe('the coven ingredient page', () => {
@@ -118,7 +153,8 @@ describe('the coven ingredient page', () => {
   it('gives a compendium entry the link to its public page', async () => {
     await open(compendiumRow());
 
-    expect(screen.getByRole('link', { name: 'Compendium Entry' })).toHaveAttribute(
+    expect(screen.getByRole('list', { name: 'In the Compendium' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Testwort/ })).toHaveAttribute(
       'href',
       '/compendium/ingredients/testwort-fixtura-testalis',
     );
@@ -160,8 +196,24 @@ describe('the coven ingredient page', () => {
     await open(covenRow(), true);
 
     expect(screen.getByText('Local')).toBeVisible();
-    expect(screen.queryByRole('link', { name: 'Compendium Entry' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(edits()).toHaveLength(0);
+  });
+
+  it('gives a retired compendium entry neither the public link nor Edit, even to a curator', async () => {
+    // Why it could have had both: the same entry, live, gets both.
+    await open(compendiumRow(), true);
+    expect(screen.getByRole('list', { name: 'In the Compendium' })).toBeInTheDocument();
+    expect(edits()).toHaveLength(1);
+    cleanup();
+
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true });
+    renderPage(await Page(params()));
+
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    expect(edits()).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();
   });
 
   it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {
@@ -169,6 +221,127 @@ describe('the coven ingredient page', () => {
 
     expect(dialog()).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
+  });
+});
+
+describe('the coven ingredient page’s Annotate', () => {
+  const annotateDialog = () => screen.queryByRole('dialog', { name: 'Annotate This Entry' });
+  const held = () =>
+    getCupboardEntry.mockResolvedValue({
+      id: 'fixture-jar',
+      label: null,
+      description: null,
+      safetyNotes: null,
+      elements: null,
+      celestialBodies: null,
+      zodiacSigns: null,
+      colors: null,
+    });
+  const annotateLink = () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    return screen.getByRole('menuitem', { name: 'Annotate' });
+  };
+
+  it('links Annotate to this very page with a bare ?annotate, and draws no dialog until asked', async () => {
+    held();
+    await open(compendiumRow());
+
+    const target = new URL(annotateLink().getAttribute('href')!, 'http://fixture.test');
+    expect(target.pathname).toBe(`/coven/${WORKSPACE.slug}/ingredients/${ID}`);
+    expect(target.searchParams.has('annotate')).toBe(true);
+    expect(annotateDialog()).not.toBeInTheDocument();
+  });
+
+  it('opens the annotate dialog for a member of a coven that holds the entry, who asks with ?annotate', async () => {
+    held();
+    await open(compendiumRow(), false, { annotate: '' });
+
+    expect(annotateDialog()).toBeInTheDocument();
+  });
+
+  it('ignores ?annotate while the coven does not hold the entry', async () => {
+    // Why it could have opened: the same member, holding the entry, gets the dialog.
+    await open(compendiumRow(), false, { annotate: '' });
+
+    expect(annotateDialog()).not.toBeInTheDocument();
+  });
+
+  it('ignores ?annotate for a viewer, who may not annotate', async () => {
+    held();
+    requireCovenMembership.mockResolvedValue({
+      workspace: WORKSPACE,
+      membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role: 'viewer' },
+    });
+    await open(compendiumRow(), false, { annotate: '' });
+
+    expect(annotateDialog()).not.toBeInTheDocument();
+  });
+});
+
+describe('the coven ingredient page’s compendium matches', () => {
+  const replaced = (count: number, total: number, kind = 'same', canConvert = false) => ({
+    kind,
+    canConvert,
+    entries: Array.from({ length: count }, (_, at) => ({
+      id: `00000000-0000-4000-8000-00000000010${at}`,
+      slug: `fixture-replaced-${at}`,
+      name: `Fixture Replaced ${at}`,
+      canonicalName: at === 0 ? 'Fixtura replacata' : null,
+    })),
+    total,
+  });
+  const list = () => screen.queryByRole('list', { name: 'In the Compendium' });
+
+  it('passes the service’s entries and total to the component, each by title to its public page', async () => {
+    compendiumMatchesOf.mockResolvedValue(replaced(3, 4));
+
+    await open(covenRow());
+
+    expect(compendiumMatchesOf).toHaveBeenCalledWith(SESSION, covenRow());
+    const links = within(list()!).getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/compendium/ingredients/fixture-replaced-0',
+      '/compendium/ingredients/fixture-replaced-1',
+      '/compendium/ingredients/fixture-replaced-2',
+    ]);
+    expect(links[0]).toHaveAccessibleName(/Fixture Replaced 0 \(Fixtura replacata\)/);
+    // "See All" stands after the list, not in it: it is not a compendium entry.
+    const seeAll = screen.getByRole('link', { name: /4/ });
+    expect(list()).not.toContainElement(seeAll);
+    expect(seeAll.getAttribute('href')).toContain('/compendium?query=');
+  });
+
+  it('offers an unnamed own entry the matches as Similar, a radio for each to choose from', async () => {
+    compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar', true));
+
+    await open(covenRow());
+
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
+    expect(within(similar).getAllByRole('radio')).toHaveLength(2);
+  });
+
+  it('offers a role that may not convert the matches and no radios', async () => {
+    compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar', false));
+
+    await open(covenRow());
+
+    const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
+    expect(within(similar).getAllByRole('link')).toHaveLength(2);
+    expect(within(similar).queryByRole('radio')).toBeNull();
+  });
+
+  it('passes a compendium entry itself, once, to its public address, and no See All', async () => {
+    await open(compendiumRow());
+
+    // The service finds nothing replaced for a compendium entry; the page
+    // passes the entry itself.
+    expect(compendiumMatchesOf).toHaveBeenCalledWith(SESSION, compendiumRow());
+    const links = within(list()!).getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/compendium/ingredients/testwort-fixtura-testalis',
+    ]);
+    expect(screen.queryByRole('link', { name: /^See All/ })).toBeNull();
   });
 });
 
@@ -180,6 +353,16 @@ describe('the coven ingredient page title', () => {
       title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
       alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
     });
+  });
+
+  it('names no canonical for a retired compendium entry, whose public page is gone', async () => {
+    getIngredient.mockResolvedValue(compendiumRow());
+    isRetired.mockReturnValueOnce(true);
+
+    expect(await generateMetadata(params())).toEqual({
+      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
+    });
+    expect(isRetired).toHaveBeenCalledWith(compendiumRow());
   });
 
   it("names no canonical for the coven's own entry", async () => {

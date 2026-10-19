@@ -20,14 +20,15 @@ on the page you are on.
 
 ## The sections
 
-| Label    | Route                   | Icon     | Shown to                     | Built by |
-| -------- | ----------------------- | -------- | ---------------------------- | -------- |
-| Overview | `/coven/[slug]`         | overview | every role                   | M9.15    |
-| Members  | `/coven/[slug]/members` | members  | roles holding `member: read` | M6.13    |
+| Label       | Route                       | Icon        | Shown to                     | Built by |
+| ----------- | --------------------------- | ----------- | ---------------------------- | -------- |
+| Overview    | `/coven/[slug]`             | overview    | every role                   | M9.15    |
+| Ingredients | `/coven/[slug]/ingredients` | ingredients | every role                   | M9.6     |
+| Members     | `/coven/[slug]/members`     | members     | roles holding `member: read` | M6.13    |
 
 Members stays the open section on `/coven/[slug]/invitations` too, since
 Invitations is a tab on the same page (its `matches`, M7.6). Today an owner and
-a member see both sections and a viewer sees Overview alone.
+a member see all three sections and a viewer sees Overview and Ingredients.
 
 `sections.ts` holds the list as `covenSections(slug, canReadMembers)`, each
 entry a `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx`
@@ -36,8 +37,8 @@ draws `SectionNav` with it and stays a server component.
 ## Contracts
 
 - **Each later section is added by the task that builds its page.**
-  Ingredients (M9.6) and Grimoire (M10.11) each add their row to `sections.ts`
-  in their own PR, with the icon already drawn (`ingredients`, `grimoire`),
+  Ingredients (M9.6, added) and Grimoire (M10.11) each add their row to
+  `sections.ts` in their own PR, with the icon already drawn,
   because `typedRoutes`, Next's check that a link points at a built page,
   refuses a link to a route the build does not contain. The coven's four
   sections all fit a phone's bottom bar, so it never needs More.
@@ -65,8 +66,8 @@ All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
 `index.stories.tsx`, titled "Coven / Coven Nav", render-only, on the coven index:
 
-- `Default`: as a member sees it, Overview current and Members beside it.
-- `Viewer`: as a viewer sees it, Overview alone.
+- `Default`: as a member sees it, Overview current, Ingredients and Members beside it.
+- `Viewer`: as a viewer sees it, Overview and Ingredients.
 - `Phone`: a member's nav at 375px, the bar along the foot of the screen.
 
 The shapes the nav takes by width are `SectionNav`'s stories; the nav in its
@@ -76,4 +77,4 @@ row is `ContextRow`'s `Coven` story and the workshop's shell frame.
 
 `tests/components/CovenNav/index.test.tsx`: the nav, named "Coven", links the
 index at the slug's address, marks it current there and not on a page beneath
-it, and links the members page only for a caller who may read members.
+it, and links the ingredients page for every caller, and the members page only for one who may read members.

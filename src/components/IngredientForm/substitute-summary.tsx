@@ -1,5 +1,7 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import { useQuery } from '@tanstack/react-query';
 import { createContext, type ReactElement, type ReactNode, useContext } from 'react';
 import { graphql } from '../../gql';
@@ -102,7 +104,7 @@ export function SubstituteSummary({
           [
             'Form',
             <>
-              <FormIcon name={form.formChoice?.group.icon ?? null} /> {form.form}
+              <FormIcon name={form.formChoice?.group.icon ?? null} /> {formLabel(form.form)}
             </>,
           ] as [string, ReactNode],
         ]

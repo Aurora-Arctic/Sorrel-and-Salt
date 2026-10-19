@@ -93,6 +93,11 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ compendiumFacets { forms { value count } } }',
     outcome: 'answers',
   },
+  // A curator's count (M12.25): the scope refuses a null session before the id is read.
+  compendiumEntryUsers: {
+    source: `{ compendiumEntryUsers(id: "${NOWHERE}") }`,
+    outcome: 'refuses',
+  },
   ingredient: {
     source: 'query ($id: ID!) { ingredient(id: $id) { id } }',
     get variables() {
@@ -132,6 +137,13 @@ const PROBES: Record<string, ScopeProbe> = {
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {
       ingredientSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
+  compendiumMatches: {
+    source: `query ($workspaceId: ID!) {
+      compendiumMatches(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
     }`,
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
@@ -228,6 +240,14 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
       'query ($workspaceId: ID, $id: ID!) { reference(workspaceId: $workspaceId, id: $id) { id } }',
     variables: { workspaceId: null, id: NOWHERE },
     outcome: 'refuses',
+  },
+  // The question the add form asks is always asked in some coven (M12.20).
+  compendiumMatches: {
+    source: `query ($workspaceId: ID!) {
+      compendiumMatches(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: null },
+    outcome: 'invalid',
   },
   // The substitute picker always has a coven, so the SDL takes no null.
   ingredientSuggestions: {
@@ -366,6 +386,27 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   deleteStock: write(
     `mutation { deleteStock(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
+  ),
+  // Ids naming no compendium entry, so a caller past the scope is refused by
+  // the service before anything is written.
+  addCupboardEntry: write(
+    `mutation { addCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}") { id } }`,
+  ),
+  annotateCupboardEntry: write(
+    `mutation { annotateCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}", input: {}) { id } }`,
+  ),
+  removeCupboardEntry: write(
+    `mutation { removeCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}") }`,
+  ),
+  // Ids naming no own entry and no compendium entry, so a caller past the
+  // scope is refused by the service before anything is written.
+  convertLocalToCompendiumEntry: write(
+    `mutation { convertLocalToCompendiumEntry(workspaceId: "${WORKSPACE_W_ID}", localId: "${NOWHERE}", compendiumId: "${NOWHERE}") { entry { id } } }`,
+  ),
+  // An id naming no compendium entry the coven holds, so a caller past the
+  // scope is refused by the service before anything is written.
+  convertCompendiumEntryToLocal: write(
+    `mutation { convertCompendiumEntryToLocal(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}") { entry { id } } }`,
   ),
   createCompendiumIngredient: write(
     'mutation { createCompendiumIngredient(input: { name: "Testwort", nomenclature: none, variants: [] }) { id } }',
@@ -540,6 +581,11 @@ const OPEN_WRITES = [
   'addIngredientToWorkspace',
   'updateStock',
   'deleteStock',
+  'addCupboardEntry',
+  'annotateCupboardEntry',
+  'removeCupboardEntry',
+  'convertLocalToCompendiumEntry',
+  'convertCompendiumEntryToLocal',
   'createReference',
   'updateReference',
   'promoteFolkName',

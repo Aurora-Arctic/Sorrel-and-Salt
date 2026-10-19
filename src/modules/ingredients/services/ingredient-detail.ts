@@ -1,5 +1,7 @@
 import 'server-only';
+import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { getCupboardEntry, heldCompendiumEntry, isRetired } from './cupboard-entries';
 import {
   categoriesOf,
   categoriesOfVariants,
@@ -17,8 +19,10 @@ import {
   formChoicesOf,
   formGroupsOf,
 } from '@/modules/vocabulary';
+import { type Membership, assertMembership } from '@/modules/coven';
 import type {
   CategoryDetail,
+  CupboardEntryRow,
   CategoryRow,
   DeityDetail,
   IngredientDetail,
@@ -44,23 +48,45 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 /**
  * `entry` with everything its page lists beneath it: folk names, categories
  * with their groups, deities with their traditions, substitutes,
- * references, and one detail per live form in form order.
+ * references, one detail per live form in form order, and the cupboard entry
+ * of `workspaceId`, the coven the page is read in, when it holds this
+ * compendium entry (M12.14). No `workspaceId` is the public page, which
+ * reads no cupboard. A compendium entry the curators have retired is read
+ * only in a coven whose cupboard names it, and marked `retired`; its
+ * children are read on that coven's proof (M12.24).
  *
- * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven.
+ * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven,
+ * or `session` is not in `workspaceId`.
+ * @throws {NotFound} `entry` is retired and `workspaceId`'s cupboard does not
+ * name it, or no coven is named.
  */
 export async function ingredientDetailOf(
   session: Session | null,
   entry: IngredientRow,
+  workspaceId?: string,
 ): Promise<IngredientDetail> {
   const refs = [{ id: entry.id, workspaceId: entry.workspaceId }];
+  const retired = isRetired(entry);
+  // A retired entry's cupboard entry is its proof of use, read first: every
+  // child read below admits the entry only on it.
+  const held = retired ? await retiredEntryHeld(session, entry, workspaceId) : undefined;
+  const heldBy = held?.membership;
+  // The cupboard read runs beside the children but is awaited after them: its
+  // refusal is the quickest answer, and settling first would leave the
+  // children's reads running behind a request that has already failed.
+  const cupboard = held
+    ? Promise.resolve(held.cupboardEntry)
+    : cupboardEntryOf(session, entry, workspaceId);
+  cupboard.catch(() => {});
   const [folkNames, categories, deities, substitutes, references, variants] = await Promise.all([
-    folkNamesOf(session, refs).then(only),
-    categoriesOf(session, refs).then(only),
-    deitiesOf(session, refs).then(only),
-    substitutesOf(session, refs).then(only),
-    referencesOf(session, refs).then(only),
-    variantsOf(session, refs).then(only),
+    folkNamesOf(session, refs, heldBy).then(only),
+    categoriesOf(session, refs, heldBy).then(only),
+    deitiesOf(session, refs, heldBy).then(only),
+    substitutesOf(session, refs, heldBy).then(only),
+    referencesOf(session, refs, heldBy).then(only),
+    variantsOf(session, refs, heldBy).then(only),
   ]);
+  const cupboardEntry = await cupboard;
 
   // Each form's own children, one batch over the forms.
   const variantRefs = variants.map(({ id, ingredientId, workspaceId }) => ({
@@ -71,9 +97,15 @@ export async function ingredientDetailOf(
   const picked = deities.flatMap(({ deity }) => deity ?? []);
   const [variantCategories, variantSubstitutes, variantReferences, traditions, forms] =
     await Promise.all([
-      categoriesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
-      substitutesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
-      referencesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
+      categoriesOfVariants(session, variantRefs, heldBy).then((answers) =>
+        answers.map((a) => only([a])),
+      ),
+      substitutesOfVariants(session, variantRefs, heldBy).then((answers) =>
+        answers.map((a) => only([a])),
+      ),
+      referencesOfVariants(session, variantRefs, heldBy).then((answers) =>
+        answers.map((a) => only([a])),
+      ),
       deityTraditionsOf(picked.map((deity) => deity.traditionId)),
       formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
     ]);
@@ -144,6 +176,8 @@ export async function ingredientDetailOf(
 
   return {
     entry,
+    retired,
+    cupboardEntry,
     folkNames: folkNames.map(({ name }) => name),
     categories: withGroup(categories),
     deities: deities.map(({ name, deity }): DeityDetail => ({
@@ -163,6 +197,39 @@ export async function ingredientDetailOf(
       };
     }),
   };
+}
+
+/**
+ * The cupboard entry `workspaceId`'s page reads beside `entry`: none
+ * without a coven, and none for a coven's own entry, which no cupboard entry
+ * can name.
+ */
+async function cupboardEntryOf(
+  session: Session | null,
+  entry: IngredientRow,
+  workspaceId: string | undefined,
+): Promise<CupboardEntryRow | null> {
+  if (workspaceId === undefined || entry.workspaceId !== null) return null;
+  if (!session) throw new Forbidden();
+  return getCupboardEntry(session, workspaceId, entry.id);
+}
+
+/**
+ * The proof and cupboard entry by which `workspaceId` reads a retired
+ * compendium entry: none for the public page, and none for a coven whose
+ * cupboard does not name it, each a `NotFound` as any other gone entry is.
+ */
+async function retiredEntryHeld(
+  session: Session | null,
+  entry: IngredientRow,
+  workspaceId: string | undefined,
+): Promise<{ membership: Membership; cupboardEntry: CupboardEntryRow }> {
+  if (workspaceId === undefined) throw new NotFound('No such ingredient');
+  if (!session) throw new Forbidden();
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  const held = await heldCompendiumEntry(membership, entry.id);
+  if (!held) throw new NotFound('No such ingredient');
+  return { membership, cupboardEntry: held.cupboardEntry };
 }
 
 /** The name of a group or tradition, or null once it is gone. */

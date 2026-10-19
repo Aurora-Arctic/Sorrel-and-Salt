@@ -11,12 +11,15 @@ export * from './services/compendium';
 export * from './services/references';
 export * from './services/promote-folk-name';
 export * from './services/stock';
-export * from './services/jar-merge-needed';
 export * from './services/workspace-ingredient-list';
 export * from './services/ingredient-facets';
+export * from './services/replaced-entries';
+export * from './validation/cupboard-merge';
+export * from './services/cupboard-entries';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';
+export * from './loaders/cupboard-entries';
 export * from './graphql/common-names';
 export * from './graphql/duplicates';
 export * from './graphql/ingredient-suggestions';
@@ -28,6 +31,7 @@ export * from './graphql/references';
 export * from './graphql/workspace-ingredients';
 export * from './graphql/workspace-ingredient-list';
 export * from './graphql/stock';
+export * from './graphql/cupboard-entries';
 export { unitConvert } from './units/convert';
 export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
@@ -37,6 +41,8 @@ export type {
   CompendiumAddress,
   CompendiumEntryPage,
   CompendiumFacets,
+  CupboardEntryKey,
+  CupboardEntryRow,
   DeityDetail,
   FacetCount,
   IngredientDeityRow,
@@ -45,8 +51,8 @@ export type {
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
-  JarConflict,
-  JarMergeChoice,
+  CompendiumMatches,
+  ReplacedCompendiumEntry,
   StockKey,
   StockRow,
   StockValues,

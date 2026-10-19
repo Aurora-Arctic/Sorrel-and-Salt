@@ -6,6 +6,10 @@ import { recreateE2eDatabase } from '../database';
 import {
   type Coven,
   type Stock,
+  applyFilters,
+  cardsIn,
+  chipChoice,
+  chooseChip,
   compendiumVariant,
   filterOf,
   ingredientList,
@@ -14,6 +18,8 @@ import {
   localIngredient,
   lowBadge,
   markDocument,
+  nameSearch,
+  openFilters,
   outBadge,
   pickCategory,
   rowOf,
@@ -25,10 +31,11 @@ import {
 } from './coven-ingredients';
 
 // Stories 20–27: the coven's ingredient list at /coven/[slug]/ingredients,
-// and everything a member does from it. Scaffolds: the page is M9.6's, and
-// each story's own task, named in its annotation, turns its `fixme` into
-// `test` and makes it pass. Each story writes its own coven, so one story's
-// rows never decide another's counts.
+// and everything a member does from it. The page is M9.6's, and stories 20,
+// 21, 22 and 27 walk it; each scaffold still marked `fixme` waits on the
+// task named in its annotation, which turns it into `test` and makes it
+// pass. Each story writes its own coven, so one story's rows never decide
+// another's counts.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -64,12 +71,9 @@ function listPath(coven: Coven) {
   return `/coven/${coven.slug}/ingredients`;
 }
 
-test.fixme(
+test(
   "the coven's list holds its own ingredients and its compendium stock together, each with its forms",
-  {
-    tag: '@story-20',
-    annotation: { type: 'fixme', description: 'M9.6 builds /coven/[slug]/ingredients' },
-  },
+  { tag: '@story-20' },
   async ({ page }) => {
     const coven = await ownCoven(page, 20);
     await withSql(async (sql) => {
@@ -103,7 +107,7 @@ test.fixme(
     const response = await page.goto(listPath(coven));
     expect(response?.status()).toBe(200);
     const list = ingredientList(page);
-    const cards = list.getByRole('listitem');
+    const cards = cardsIn(list);
 
     await test.step('every entry is in the one list, in label order', async () => {
       // Sorted on (lower(name), identity_key, id), M8.14's order.
@@ -120,6 +124,13 @@ test.fixme(
       await expect(rowOf(list, 'Testwort')).toContainText('Root');
       await expect(rowOf(list, "Cat's Claw")).toContainText('Uncaria tomentosa');
       await expect(rowOf(list, "Cat's Claw")).toContainText('Bark');
+    });
+
+    await test.step('each stocked entry shows its jar, by quantity and unit', async () => {
+      await expect(rowOf(list, 'Testwort')).toContainText('4 piece');
+      await expect(rowOf(list, 'Rosemary')).toContainText('20 g');
+      await expect(rowOf(list, "Cat's Claw")).toContainText('30 g');
+      await expect(rowOf(list, 'Selenite')).toContainText('2 piece');
     });
 
     await test.step('the local entries are badged and the compendium stock is not', async () => {
@@ -140,15 +151,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'searching the list by name, folk name or formal name narrows it to what the coven holds',
-  {
-    tag: '@story-21',
-    annotation: {
-      type: 'fixme',
-      description: 'M9.6 composes M8.10’s search on /coven/[slug]/ingredients',
-    },
-  },
+  { tag: '@story-21' },
   async ({ page }) => {
     const coven = await ownCoven(page, 21);
     await withSql((sql) =>
@@ -161,7 +166,7 @@ test.fixme(
     );
     await page.goto(listPath(coven));
     const list = ingredientList(page);
-    const cards = list.getByRole('listitem');
+    const cards = cardsIn(list);
     // Why each search narrows: the coven holds four.
     await expect(cards).toHaveCount(4);
 
@@ -182,29 +187,24 @@ test.fixme(
     await test.step('a compendium entry the coven does not hold is not found', async () => {
       // Sweet Bay is Bay Laurel's folk name; the coven holds no Bay Laurel.
       await searchCovenList(page, 'Sweet Bay');
-      await expect(page).toHaveURL(/Sweet/);
       await expect(cards).toHaveCount(0);
     });
 
     await test.step('clearing the search brings the whole list back', async () => {
-      // FilterForm's Clear, shown while a filter is (claude-docs/components/filter-form.md).
-      await filterOf(page).getByRole('link', { name: 'Clear' }).click();
+      // The search box's own clear empties it and applies the empty search
+      // (claude-docs/components/ingredient-search.md).
+      await filterOf(page).getByRole('button', { name: 'Clear Name' }).click();
       await expect(cards).toHaveCount(4);
+      await expect(nameSearch(page)).toHaveValue('');
+      expect(new URL(page.url()).search).toBe('');
       await assertNoAccessibilityViolations(page);
     });
   },
 );
 
-test.fixme(
+test(
   'several categories at once keep only the entries filed under every one, and the address keeps the filter',
-  {
-    tag: '@story-22',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M9.6 composes M8.11’s category chips and M8.13’s URL state on /coven/[slug]/ingredients',
-    },
-  },
+  { tag: '@story-22' },
   async ({ page }) => {
     const coven = await ownCoven(page, 22);
     // Protection: Rosemary and Bay Laurel. Cleansing: Rosemary, Selenite and
@@ -219,18 +219,22 @@ test.fixme(
     );
     await page.goto(listPath(coven));
     const list = ingredientList(page);
-    const cards = list.getByRole('listitem');
+    const cards = cardsIn(list);
     await expect(cards).toHaveCount(4);
 
     await test.step('one category keeps every entry filed under it', async () => {
-      await pickCategory(page, 'Protection');
+      const panel = await openFilters(page);
+      await pickCategory(panel, 'Protection');
+      await applyFilters(page, panel);
       await expect(cards).toHaveCount(2);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       await expect(rowOf(list, 'Bay Laurel')).toBeVisible();
     });
 
     await test.step('a second keeps only the entries under both', async () => {
-      await pickCategory(page, 'Cleansing');
+      const panel = await openFilters(page);
+      await pickCategory(panel, 'Cleansing');
+      await applyFilters(page, panel);
       await expect(cards).toHaveCount(1);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       expect(new URL(page.url()).search).not.toBe('');
@@ -242,8 +246,12 @@ test.fixme(
       await expect(cards).toHaveCount(1);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       // A pick is a chip with its own Remove (claude-docs/components/category-picker.md).
-      await expect(filterOf(page).getByRole('button', { name: 'Remove Protection' })).toBeVisible();
-      await expect(filterOf(page).getByRole('button', { name: 'Remove Cleansing' })).toBeVisible();
+      const panel = await openFilters(page);
+      for (const name of ['Protection', 'Cleansing']) {
+        await expect(panel.getByRole('button', { name: `Remove Category: ${name}` })).toBeVisible();
+      }
+      await page.keyboard.press('Escape');
+      await expect(panel).toBeHidden();
     });
 
     await test.step('Back steps to the one-category view', async () => {
@@ -465,7 +473,7 @@ test.fixme(
     const rosemary = await withSql((sql) => compendiumVariant(sql, 'Rosemary', 'Herb'));
     await page.goto(listPath(coven));
     const list = ingredientList(page);
-    await expect(list.getByRole('listitem')).toHaveCount(2);
+    await expect(cardsIn(list)).toHaveCount(2);
     await markDocument(page);
 
     // The row's Delete is named for its item, as the members page's Remove
@@ -496,7 +504,7 @@ test.fixme(
       await deleteIngredient.getByRole('button', { name: 'Delete', exact: true }).click();
 
       await expect(rowOf(list, 'Testwort')).toHaveCount(0);
-      await expect(list.getByRole('listitem')).toHaveCount(1);
+      await expect(cardsIn(list)).toHaveCount(1);
       expect(await stillSameDocument(page)).toBe(true);
       // Soft: the row is marked deleted, not removed.
       const [row] = await withSql(
@@ -544,7 +552,7 @@ test.fixme(
       expect(response?.status()).toBe(200);
       await expect(firstAdd).toBeVisible();
       await expect(clearFilters).toHaveCount(0);
-      await expect(ingredientList(page).getByRole('listitem')).toHaveCount(0);
+      await expect(cardsIn(ingredientList(page))).toHaveCount(0);
       await expect(firstAdd).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
@@ -577,12 +585,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'the source filter and in-stock-only narrow the list, the address keeps both, and local entries stay badged',
-  {
-    tag: '@story-27',
-    annotation: { type: 'fixme', description: 'M9.7 builds the source and in-stock filters' },
-  },
+  { tag: '@story-27' },
   async ({ page }) => {
     const coven = await ownCoven(page, 27);
     await withSql(async (sql) => {
@@ -612,24 +617,25 @@ test.fixme(
     });
     await page.goto(listPath(coven));
     const list = ingredientList(page);
-    const cards = list.getByRole('listitem');
+    const cards = cardsIn(list);
     await expect(cards).toHaveCount(4);
 
-    // M9.7's three states as a choice chip in a fieldset, a `group` by role, All,
-    // Local and Compendium, and in-stock-only as a switch, as the admin's Without
-    // References is (claude-docs/components/compendium-list.md).
-    const source = filterOf(page).getByRole('group', { name: 'Source' });
-    const inStock = filterOf(page).getByRole('switch', { name: /^In Stock/ });
-    // Source is a choice chip: its radios sit in a menu the summary opens.
-    const chooseSource = async (name: string | RegExp) => {
-      const radio = source.getByRole('radio', { name });
-      await source.locator('summary').click();
-      await radio.locator('xpath=ancestor::label[1]').click({ position: { x: 10, y: 10 } });
-      await expect(radio).toBeChecked();
+    // M9.7's three states as a choice chip in the Filters panel, a `group` by
+    // role (All, Local and Compendium), and in-stock-only as a switch, as the
+    // admin's No Refs is (claude-docs/components/facet-panel.md). A change in
+    // the panel is held until Apply Filters. Found whether the panel is open or
+    // shut, so what it holds can be read after a reload without opening it.
+    const panel = page.getByRole('dialog', { name: 'Filters', includeHidden: true });
+    const source = panel.getByRole('group', { name: 'Source', includeHidden: true });
+    const inStock = panel.getByRole('switch', { name: /^In Stock/, includeHidden: true });
+    const filterBy = async (choose: () => Promise<void>) => {
+      await openFilters(page);
+      await choose();
+      await applyFilters(page, panel);
     };
 
     await test.step('local only: the two local entries, badged', async () => {
-      await chooseSource(/^Local/);
+      await filterBy(() => chooseChip(source, /^Local/));
       await expect(cards).toHaveCount(2);
       for (const name of ['Testwort', 'Fixture Emptywort']) {
         await expect(localBadge(rowOf(list, name))).toBeVisible();
@@ -637,11 +643,11 @@ test.fixme(
       expect(new URL(page.url()).search).not.toBe('');
       await page.reload();
       await expect(cards).toHaveCount(2);
-      await expect(source.getByRole('radio', { name: /^Local/ })).toBeChecked();
+      await expect(chipChoice(source, /^Local/)).toBeChecked();
     });
 
     await test.step('compendium only: the two jars, unbadged', async () => {
-      await chooseSource(/^Compendium/);
+      await filterBy(() => chooseChip(source, /^Compendium/));
       await expect(cards).toHaveCount(2);
       for (const name of ['Rosemary', 'Selenite']) {
         await expect(rowOf(list, name)).toBeVisible();
@@ -650,9 +656,9 @@ test.fixme(
     });
 
     await test.step('all again, then in stock only: the empty jars go, and Testwort stays badged', async () => {
-      await chooseSource('All');
+      await filterBy(() => chooseChip(source, /^All/));
       await expect(cards).toHaveCount(4);
-      await inStock.click();
+      await filterBy(() => inStock.check());
       await expect(cards).toHaveCount(2);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
@@ -660,17 +666,18 @@ test.fixme(
     });
 
     await test.step('local and in stock together, kept by a reload, and Back steps out of each', async () => {
-      await chooseSource(/^Local/);
+      await filterBy(() => chooseChip(source, /^Local/));
       await expect(cards).toHaveCount(1);
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
       await page.reload();
       await expect(cards).toHaveCount(1);
       await expect(inStock).toBeChecked();
-      await expect(source.getByRole('radio', { name: /^Local/ })).toBeChecked();
+      await expect(chipChoice(source, /^Local/)).toBeChecked();
 
       await page.goBack();
       await expect(cards).toHaveCount(2);
-      await expect(source.getByRole('radio', { name: 'All' })).toBeChecked();
+      await expect(inStock).toBeChecked();
+      await expect(chipChoice(source, /^All/)).toBeChecked();
     });
   },
 );

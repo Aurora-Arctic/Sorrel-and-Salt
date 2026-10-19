@@ -104,7 +104,7 @@ describe('Pager, once an end is followed', () => {
       fireEvent.click(end('Next'));
     });
 
-    expect(router.push).toHaveBeenCalledWith('/list?after=a');
+    expect(router.push).toHaveBeenCalledWith('/list?after=a', { scroll: false });
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(list()).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();

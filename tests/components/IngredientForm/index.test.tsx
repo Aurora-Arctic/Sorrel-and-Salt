@@ -11,6 +11,8 @@ import type {
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import type {
+  AddCupboardEntryFromFormMutation,
+  AddCupboardEntryFromFormMutationVariables,
   CreateWorkspaceIngredientMutation,
   CreateWorkspaceIngredientMutationVariables,
   PossibleDuplicatesQuery,
@@ -34,6 +36,7 @@ import {
   WORKSPACE_ID,
   acceptCreate,
   offerCategories,
+  offerCompendiumMatches,
   offerDeities,
   offerDuplicates,
   offerForms,
@@ -1028,6 +1031,12 @@ describe('IngredientForm', () => {
       vi.useRealTimers();
     });
     const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+    // The region once its last rows have faded: they leave on the slide's
+    // net, and the notice with them.
+    const emptied = async () => {
+      await act(() => vi.advanceTimersByTimeAsync(600));
+      expect(warning()).toHaveTextContent('');
+    };
     const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
 
     it('holds a save on a near match to this coven’s name as sent, the focus on Create Anyway, which lets the next save go', async () => {
@@ -1048,7 +1057,7 @@ describe('IngredientForm', () => {
       expect(saves).toHaveLength(0);
 
       fireEvent.click(createAnyway() as HTMLElement);
-      expect(warning()).toBeEmptyDOMElement();
+      await emptied();
       expect(textbox('Name')).toHaveFocus();
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -1081,7 +1090,7 @@ describe('IngredientForm', () => {
       release();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(saves[0].input.name).toBe('Fixture Nothingalike');
-      expect(warning()).toBeEmptyDOMElement();
+      await emptied();
     });
 
     it('lets an error elsewhere take the save first', async () => {
@@ -1098,6 +1107,76 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(textbox('Formal Name')).toHaveFocus());
       expect(createAnyway()).not.toHaveFocus();
       expect(saves).toHaveLength(0);
+    });
+  });
+
+  // M12.20: Use It, as only the whole form sends it.
+  describe('using a compendium entry of the name typed', () => {
+    const CLAW: DuplicateNode = {
+      id: 'claw-1',
+      name: "Cat's Claw",
+      canonicalName: 'Uncaria tomentosa',
+      slug: 'cats-claw-uncaria-tomentosa',
+      isGlobal: true,
+    };
+    const accept = () => {
+      const adds: AddCupboardEntryFromFormMutationVariables[] = [];
+      mockGraphQLMutation<
+        AddCupboardEntryFromFormMutation,
+        AddCupboardEntryFromFormMutationVariables
+      >('AddCupboardEntryFromForm', (variables) => {
+        adds.push(variables);
+        return { addCupboardEntry: { id: 'cupboard-1' } };
+      });
+      return adds;
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('puts the entry in the cupboard under the typed label and description, creates nothing, and opens it', async () => {
+      const creates = acceptCreate();
+      const adds = accept();
+      const onSaved = renderForm();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+
+      type('Name', 'Porch Claw');
+      type('Description', 'Dried from the porch.');
+      save();
+      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(adds).toEqual([
+        {
+          workspaceId: WORKSPACE_ID,
+          ingredientId: 'claw-1',
+          input: expect.objectContaining({
+            label: 'Porch Claw',
+            description: 'Dried from the porch.',
+          }),
+        },
+      ]);
+      expect(onSaved.mock.calls[0]).toEqual([expect.objectContaining({ id: 'claw-1' }), 'open']);
+      expect(creates).toHaveLength(0);
+    });
+
+    it("sends no label when the typed name differs from the entry's only in case", async () => {
+      const adds = accept();
+      const onSaved = renderForm();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+
+      type('Name', "  cat's claw ");
+      save();
+      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(adds[0].input?.label).toBeUndefined();
     });
   });
 
@@ -1278,8 +1357,8 @@ describe('IngredientForm', () => {
     });
   });
 
-  // M12.8 moves a coven's jars onto the local entry it hides; the save's
-  // result carries them for the dialog's status to name (M8.16).
+  // The save's result carries the new entry's jars for the dialog's status to
+  // name (M8.16). Since M12.27 a save moves none, so only a mock fills it.
   it('hands onSaved the jars the new entry holds', async () => {
     mockGraphQLMutation<
       CreateWorkspaceIngredientMutation,

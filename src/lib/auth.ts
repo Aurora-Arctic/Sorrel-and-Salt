@@ -120,8 +120,10 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
 
 // Per request rather than a `BETTER_AUTH_URL` env var: production spans three
 // origins, and one Preview-scoped variable cannot tell staging from a hotfix.
-// Outside production the origin is fixed: `next dev --hostname 0.0.0.0` derives
+// Outside production the host is fixed: `next dev --hostname 0.0.0.0` derives
 // it from its bind address, so every `redirect_uri` would be `0.0.0.0:8000`.
+// The port is the server's own (Next sets `PORT` from `--port`), so a second
+// dev server or an e2e slot is not refused as an invalid origin.
 function baseURL(): BetterAuthOptions['baseURL'] {
   if (process.env.NODE_ENV === 'production') {
     return {
@@ -135,7 +137,7 @@ function baseURL(): BetterAuthOptions['baseURL'] {
       protocol: 'https',
     };
   }
-  return 'http://localhost:8000';
+  return `http://localhost:${process.env.PORT || '8000'}`;
 }
 
 // The provider's fresh profile, carried from `validateUserInfo` — the one hook

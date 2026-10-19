@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   type StockRow,
+  findCupboardEntry,
   findOneIngredient,
   findReadableVariant,
   findStockById,
@@ -11,8 +12,8 @@ import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
-import { chooseHidingLocal, localFormFor } from './carry-stock';
 import { inventoryItems } from '../schema/inventory-items';
+import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
 import { type Unit, dimensionOf } from '../schema/units';
 import { unitConvert } from '../units/convert';
 import { StockInput } from '../validation/stock';
@@ -37,11 +38,10 @@ const HELD = 'Your coven already holds this form';
  * unit and no threshold gets §5's default: 3 of a count unit, 10 g or 15 ml in
  * its own unit.
  *
- * A form of a compendium entry that one of the coven's own ingredients hides
- * is stocked on that ingredient's form of the same name, made if it has none
- * (M12.8): the returned row names the local ingredient and form. Of two
- * ingredients hiding one entry, the one sharing its identity is taken, then
- * the older.
+ * The jar is stored on the form asked for, whatever the coven calls its own
+ * entries: an own entry sharing a compendium entry's name takes nothing from
+ * it (M12.28). A jar of a compendium form puts that entry in the coven's
+ * cupboard, in the same transaction, when it is not there already (M12.15).
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {ValidationError} the input breaks `StockInput`, or the coven
@@ -68,14 +68,17 @@ export async function createStock(
   try {
     const [row] = await withAudit(session, async (write) => {
       await write.lockCovenStock(membership);
-      // Only a compendium entry can be hidden; a coven's own is never.
-      const locals =
-        entry?.workspaceId === null ? await write.lockLocalsHiding(membership, entry.id) : [];
-      const local = entry && chooseHidingLocal(locals, entry);
-      const form = local ? await localFormFor(write, membership, local, variant) : variant;
+      // A jar of a compendium form puts the entry in the cupboard, once
+      // (M12.15). The lock above makes the read below see a concurrent
+      // create's row; the unique index backs it.
+      if (entry?.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
+        await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
+          ingredientId: entry.id,
+        });
+      }
       return write.insertInWorkspace(membership, inventoryItems, {
-        ingredientId: form.ingredientId,
-        variantId: form.id,
+        ingredientId: variant.ingredientId,
+        variantId: variant.id,
         ...stockColumns({ ...parsed, unit, lowStockThreshold }),
       });
     });

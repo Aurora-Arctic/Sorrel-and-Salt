@@ -68,13 +68,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                                                                  |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                 | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                              |
-| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                 | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `celestial_bodies`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                             | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                                                              |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                                                           |
+| Module        | Tables                                                                                                                                                                                                                                                         | Services today                                                                                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                                                          | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                              |
+| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                                                          | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `celestial_bodies`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`, `workspace_compendium_entries` (M12.13); `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`, `cupboard-entries.ts` (M12.14); `schema/units.ts` is the unit vocabulary                                              |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                                                              | `spell-visibility.ts`                                                                                                                                                                                           |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
@@ -257,10 +257,10 @@ declaration it is written in, and a private helper under its own name rather
 than credited to whichever export happens to sit above it. Review holds the
 list since MB.224 retired the guard that pinned it.
 
-It holds the predicate, the five builders over it, twenty functions and the
+It holds the predicate, the seven builders over it, twenty-three functions and the
 writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
 NULL` itself; `inTiers` and `readableInTiers` beside it,
-`readableIngredientParent` in `ingredient-parent.ts`, and `findPageInTiers`
+`readableIngredientParent` in `ingredient-parent.ts` with `inUseIngredientParent` and `inUseVariantParent` (M12.24), which also admit a retired compendium entry the reading coven's cupboard names, and `findPageInTiers`
 and `findPageCountInTiers` in `finders.ts`
 (MB.206); `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
@@ -275,6 +275,12 @@ public list, and `findCompendiumCount` (MB.105), its count;
 write names; `findCompendiumFormRenameClashes` (MB.220), the entries a
 curated form's rename would give two forms of one name; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
+`inCupboard` (M12.14), the private filter under `findCupboardEntry` and
+`findCupboardEntriesOf` that admits a coven's cupboard row only while it
+names a live compendium entry; `findCupboardEntryIncludingSoftDeleted` (M12.24),
+the escape hatch that reads a retired compendium entry for a coven whose live
+cupboard row names it; `findCompendiumMatchesByName` (M12.14), the
+compendium entries a typed name or formal name names exactly;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
 ingredient's or a variant's substitutes and the ingredients they link, deleted or not;
@@ -287,10 +293,10 @@ its converse; and `writerFor` (M5.2), the private builder of `withAudit`'s write
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
 curated form's rename onto the compendium variants picking it (`carryFormRename`, M5.6a, MB.220). The
-list, its count, the identity lookup, the rename's clash check, the two address finders and the writer
+list, its count, the identity lookup, the exact-name match, the rename's clash check, the two address finders and the writer
 touch the compendium tier alone, as do `citesNothing` and `cites`; each of the rest
 reads the compendium and the proofs' workspaces in a single statement. A later
-task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to
+task that adds such a finder adds its name to
 this list in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
 

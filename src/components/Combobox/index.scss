@@ -192,29 +192,17 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // The qualifier's detail, in InfoTip's bubble and its fade, above the control
 // with its left edge on the qualifier's (the owner's call at M6.16's review,
 // 2026-10-12, over MB.115's right edge), so the detail reads as the
-// qualifier's own, and never past the control's right edge. Positioned on
-// `.combobox`, so the percentages are the control's width; where the
-// qualifier starts is measured as the tip opens (`--combobox-qualifier-x`,
-// index.tsx), since CSS alone cannot place a box by one element and bound it
-// by another. On a phone it is centred over the control instead, as wide as
-// the control at most, and wraps (the owner's call): from the qualifier
-// there was too little room left to read. Not beneath the box: the list
-// opens there.
+// qualifier's own. Placed by `useTip` against the qualifier, and kept on the
+// screen: on a phone it is shifted back inside the window rather than centred
+// over the control, as it was before the shared placement. It wraps within
+// the measure. Not beneath the box: the list opens there.
 .combobox__qualifier-tip {
-  @include tip-above(start, 1, false);
+  @include tip-above(1, false);
 
-  // The fallback is a length with a unit on purpose: `calc()` refuses a bare 0.
-  left: var(--combobox-qualifier-x, 0);
   box-sizing: border-box;
-  max-width: calc(100% - var(--combobox-qualifier-x, 0px));
+  max-width: min($tip-width, calc(100vw - #{space(6)}));
   white-space: normal;
   overflow-wrap: anywhere;
-
-  @media (max-width: $shell-phone-width) {
-    left: 50%;
-    max-width: 100%;
-    translate: -50% 0;
-  }
 }
 
 // The clear and the separator with nothing to clear: hidden, but holding
@@ -508,15 +496,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     content: none;
   }
 
-  // In its group's colours (MB.126): the solid fill `chip()` draws selected,
-  // the pair read from the element where chipColors() sets it, since a wash
-  // of the colour cannot hold 4.5:1 (claude-docs/styling.md, "Chips, badges
-  // and the solid-fill rule"). Not the mixin itself, which draws a pill: the
-  // shape, padding and x stay the plain chip's, so a row mixes the two
-  // without a jump, and only the inks change.
+  // In its group's colours, the full level (2026-10-19): the wash chip() draws, read from
+  // the pair chipColors() sets (claude-docs/styling.md, "Category chips"). Not the mixin
+  // itself, which draws a pill: the shape, padding and x stay the plain chip's, so a row
+  // mixes the two without a jump. The entry has no border, so the edge is an inset ring.
   &.is-coloured {
-    background-color: light-dark(var(--chip-light), var(--chip-dark));
-    color: $text-on-color;
+    $group: light-dark(var(--chip-light), var(--chip-dark));
+
+    @include chip-wash($group);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, $group 35%, $surface-card);
   }
 
   // The neutral chips of a faceted filter (M12.4): no fill, an ink border. A
@@ -622,7 +610,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: inherit;
 
     &:focus-visible {
-      outline-color: $text-on-color;
+      outline-color: currentcolor;
     }
   }
 }
@@ -655,7 +643,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The ring sits on a coloured chip's fill, where only the inverted ink is
   // checked; `:where` keeps the held chip's rule above it.
   :where(.is-coloured) &:focus-visible {
-    outline-color: $text-on-color;
+    outline-color: currentcolor;
   }
 
   // Held, the chip's accent edge marks it, so the ring around the text
@@ -711,11 +699,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: $accent;
   }
 
-  .combobox__entry-text {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
   &:hover,
   &:hover .combobox__entry-mark {
     color: $accent-hover;
@@ -733,13 +716,17 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     }
 
     &:focus-visible {
-      outline-color: $text-on-color;
+      outline-color: currentcolor;
     }
   }
 
-  // Open, the underline thickens: the panel beneath is this chip's.
+  // No underline at rest: the link mark ahead of the text is what tells a
+  // linked chip from a typed one (the owner's call, 2026-10-19). Open, the text
+  // is underlined: the panel beneath is this chip's.
   &[aria-expanded='true'] .combobox__entry-text {
+    text-decoration: underline;
     text-decoration-thickness: $rule-medium;
+    text-underline-offset: 0.2em;
   }
 
   @include reduced-motion {
@@ -841,11 +828,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
 // chip from its left edge, as wide as its words up to InfoTip's own measure,
 // past the chip and the control alike, the owner's call during MB.126: only
-// being cut off is wrong. The entry shifts it left as it opens by however far
-// it would run off the screen. An unbroken text breaks anywhere to stay
-// inside the measure.
+// being cut off is wrong. `useTip` shifts it back onto the screen. An unbroken
+// text breaks anywhere to stay inside the measure.
 .combobox__entry-tip {
-  @include tip-above(var(--entry-tip-shift, 0));
+  @include tip-above;
 
   // Border-box, so the padding sits inside the measure rather than past it.
   box-sizing: border-box;

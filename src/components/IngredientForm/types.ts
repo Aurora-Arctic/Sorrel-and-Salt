@@ -80,7 +80,8 @@ type WorkspaceSaved = CreateWorkspaceIngredientMutation['createWorkspaceIngredie
 
 /**
  * What a save answers: the ingredient, and for a coven’s new one the jars it
- * holds, which are the ones M12.8 moved onto it. A compendium save carries none.
+ * holds. A save has moved no jar since M12.27, so the list comes back empty
+ * and the field is a leftover. A compendium save carries none.
  */
 export type SavedIngredient = Omit<WorkspaceSaved, 'stock'> &
   Partial<Pick<WorkspaceSaved, 'stock'>>;
@@ -583,6 +584,10 @@ export interface DuplicateWarning {
   shown: Duplicate[];
   /** A save is held on them: the warning is an error on the name. */
   blocking: boolean;
+  /** Another name's answer is on its way, and the list shown is the last name's. */
+  pending: boolean;
+  /** The compendium entries named exactly as the held save's name: the question's, empty when none. */
+  exact: Duplicate[];
   /** Asks about the name a save is sending, and holds it, answering true, when a match is not dismissed. */
   check: (name: string) => Promise<boolean>;
   /** Sets the matches shown aside and lifts the hold. */
@@ -593,6 +598,8 @@ export interface NameFieldProps {
   warning: DuplicateWarning;
   /** Where a match links: a coven's ingredient page, or the admin's compendium modal. */
   hrefOf: (match: Duplicate) => string;
+  /** Puts a compendium match in the cupboard (Use It); left out where there is no cupboard, the admin's, and no match offers it. */
+  onUse?: (match: Duplicate) => void;
   /** Whether a match holds a save, offering Create Anyway: a new entry's; an edit's only names its matches. True by default. */
   holds?: boolean;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */

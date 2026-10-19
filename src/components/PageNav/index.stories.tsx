@@ -32,6 +32,24 @@ export const Grouped: Story = () => (
   />
 );
 
+// A group set apart by its first entry, as References is when the page has
+// notes: the break and the short rule halfway through it.
+export const GroupedApart: Story = () => (
+  <PageNav
+    label="On this page"
+    entries={[
+      { href: '#one', label: 'Details' },
+      { href: '#two', label: 'Root', group: 'Forms' },
+      { href: '#three', label: 'Oil', group: 'Forms' },
+      { href: '#four', label: 'Notes', group: 'References', apart: true },
+      { href: '#five', label: 'Bibliography', group: 'References' },
+    ]}
+  />
+);
+
+export const GroupedApartPhone: Story = () => <GroupedApart />;
+GroupedApartPhone.meta = { width: 375 };
+
 export const GroupedPhone: Story = () => <Grouped />;
 GroupedPhone.meta = { width: 375 };
 

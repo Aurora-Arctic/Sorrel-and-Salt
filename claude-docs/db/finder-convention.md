@@ -60,9 +60,7 @@ each paging through `findPageInTiers` under no proofs, which reads the
 compendium alone as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
 compendium or a proof's coven (["The compendium read"](compendium-read.md)), and
 `findCompendiumEntryByIdentity` (M5.2) reads the entry holding an identity
-(["Compendium writes"](compendium-writes.md)); the local-beats-compendium
-resolution (§5) wants both tiers under an anti-join and
-is a further named finder, M8.3's. The point of the narrowing is that a read
+(["Compendium writes"](compendium-writes.md)). The point of the narrowing is that a read
 of that table has to say which tier it means instead of getting whichever the
 default was.
 

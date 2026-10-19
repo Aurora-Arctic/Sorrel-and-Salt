@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
+import StuckMark from './stuck-mark';
 import type { IngredientSearchProps } from './types';
 import './index.scss';
 
@@ -22,12 +23,14 @@ const IngredientSearch = ({
   nextHref,
   position,
   className,
+  shape,
 }: IngredientSearchProps): ReactElement => (
-  <ListFrame className={className}>
+  <ListFrame className={className ? `ingredient-search ${className}` : 'ingredient-search'}>
+    <StuckMark />
     {search}
     {action && <div className="ingredient-search__action">{action}</div>}
 
-    <ListBody>
+    <ListBody shape={shape}>
       {children}
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

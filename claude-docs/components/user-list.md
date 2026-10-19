@@ -351,7 +351,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   WCAG 2.2's 24px target, around a `$glyph-size` icon, in `$text-muted`;
   the history link's hit area reaches `$control-height` through a
   pseudo-element.
-- **The tips** are the `tip-bubble` mixin's: a mark's or logo's centred
+- **The tips** are placed by `useTip` (Floating UI: flipped and shifted to stay on screen; a mark's or logo's hover is `Hint`, `hint.tsx`, which uses it with hover only), and drawn by the `tip-bubble` mixin: a mark's or logo's centred
   above it (`.user-list__tip`), the history link's, the crown's and a locked
   control's from its left edge, no wider than `$tip-width` capped at the
   window. Each sits one layer above the sticky column (`_layers.scss`).
@@ -363,7 +363,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   description, re-announced as an alert and placed against the viewport,
   where IconTip's word is decoration hidden from a screen reader.
 - **The Impersonate column** is the shared `row-action-column` mixin
-  (`src/scss/_mixins.scss`), which MemberList's Remove column includes too, and has a 1px red rule down its left, red text and
+  (`src/scss/_mixins.scss`; its pinning and card resets are `sticky-action-column`, which the red layer wraps), which MemberList's Remove column includes too, and has a 1px red rule down its left, red text and
   a wax tint mixed into its opaque ground: 6% into the page, 5% into a banded
   row's `$surface-card`, since at 6% the dark card leaves the wax label at
   4.48:1, under the text floor (`tests/scss/tokens.test.ts` holds both). It

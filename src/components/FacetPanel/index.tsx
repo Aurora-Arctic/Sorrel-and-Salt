@@ -155,8 +155,10 @@ export default function FacetPanel({
     chosen +
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
+    (admin && filter.withoutForms ? 1 : 0) +
     (filter.source ? 1 : 0) +
-    (filter.inStock ? 1 : 0);
+    (filter.inStock ? 1 : 0) +
+    (filter.lowStockOnly ? 1 : 0);
 
   const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
@@ -349,6 +351,7 @@ export default function FacetPanel({
           (className ? ` ${className}` : '')
         }
         tabIndex={-1}
+        data-tip-boundary=""
         aria-labelledby={titleId}
         open={!hydrated}
         onKeyDown={onKeyDown}
@@ -504,6 +507,15 @@ export default function FacetPanel({
                       onChange={(inStock) => onChange({ inStock })}
                     />
                   )}
+                  {filter.lowStockOnly !== undefined && (
+                    <FacetSwitch
+                      label="Low Stock Only"
+                      count={facets.lowStockOnly}
+                      name="lowStockOnly"
+                      checked={filter.lowStockOnly}
+                      onChange={(lowStockOnly) => onChange({ lowStockOnly })}
+                    />
+                  )}
                   {admin && (
                     <FacetSwitch
                       label="No Refs"
@@ -511,6 +523,15 @@ export default function FacetPanel({
                       name="withoutReferences"
                       checked={filter.withoutReferences}
                       onChange={(withoutReferences) => onChange({ withoutReferences })}
+                    />
+                  )}
+                  {admin && (
+                    <FacetSwitch
+                      label="No Form"
+                      count={facets.withoutForms}
+                      name="withoutForms"
+                      checked={filter.withoutForms}
+                      onChange={(withoutForms) => onChange({ withoutForms })}
                     />
                   )}
                 </div>

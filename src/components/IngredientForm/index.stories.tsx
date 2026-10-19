@@ -690,11 +690,11 @@ function WhatToTry() {
           it or its section is folded, and both open on the error. Remove takes a variant out. In a
           variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
           oil first, one row for each of its forms, and never Mockleaf, which comes in none; pick a
-          form, and its pill names it. Each of a variant&rsquo;s fields has Copy From Ingredient,
-          shut while the ingredient&rsquo;s own field is empty: fill the ingredient&rsquo;s, and
-          press it to add what the variant lacks. Its Substitute Ingredients links the same form of
-          each, and names beneath the list those in no such form, with Copy Anyway to add them as
-          names.
+          form, and its pill names it. Each of a variant&rsquo;s fields has a Copy From Ingredient
+          icon button, shut while the ingredient&rsquo;s own field is empty: fill the
+          ingredient&rsquo;s, and press it to add what the variant lacks. Its Substitute Ingredients
+          links the same form of each, and names beneath the list those in no such form, with Copy
+          Anyway to add them as names.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what

@@ -1,0 +1,91 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The compact look of the card, as a mixin so a page can switch to it from its own
+// selector. The card takes no density prop: the look must be switchable before React
+// runs (M9.6 stores the choice and a pre-paint script sets `data-card-density="regular"` on <html>, which the `:not()` on the selectors honours), and a prop
+// would fix it at render and mismatch on hydration. index.scss applies it under
+// `[data-density='compact']`, which `IngredientCardList` sets; every rule is one class
+// deeper than the one it overrides, so it wins wherever it is included.
+// What stays: the content, the body order, the hover lift, and every target at 24px or
+// more (the tip badges keep their height; only their sides tighten). Text goes one step
+// down the type scale, to overline at the smallest. claude-docs/components/ingredient-card.md.
+@mixin ingredient-card-compact {
+  .ingredient-card {
+    padding: space(3) space(4);
+    gap: space(2);
+  }
+
+  // Name: h4's size, two steps under the card's h2 (h3 in the first sample).
+  .ingredient-card__name {
+    font-size: heading-size(4);
+    line-height: 1.15;
+  }
+
+  // Formal name: caption down to overline, the smallest size the site sets text in
+  // bar the bottom bar's tab labels.
+  .ingredient-card__formal {
+    font-size: type-size('overline');
+  }
+
+  .specimen__top {
+    // One step, 8px both ways, so a wrapped badge row sits 8px under the name as it does
+    // above the chips (it was 4px under the name).
+    gap: space(2);
+  }
+
+  // Badges: the sides tighten and the gaps close. The height stays at 24px,
+  // the smallest target a tipped badge may have.
+  .specimen__badges {
+    gap: space(1);
+    margin-block-end: 0;
+
+    .badge {
+      @include badge-size('small');
+    }
+  }
+
+  // Chips: tighter inside and between. The chip row has no control in it.
+  .specimen__chips {
+    gap: space(1);
+
+    .chip {
+      font-size: type-size('overline');
+      padding: 0.0625rem 0.5rem;
+    }
+  }
+
+  // Forms line: 8px above and (through the foot) below, a shorter dot gap.
+  .ingredient-card__forms {
+    --forms-gap: #{space(4)};
+
+    // Body down to small; the icons are in em, so they follow.
+    font-size: type-size('small');
+
+    margin-block-start: space(2);
+    row-gap: 0;
+  }
+
+  .specimen__foot {
+    padding-top: space(2);
+  }
+
+  // Jar lines: tighter rows, the rule nearer.
+  .specimen__stock {
+    // Small down to caption, and the stock badges beside the text to overline.
+    font-size: type-size('caption');
+    padding-block: space(2) space(1);
+
+    .badge {
+      @include badge-size('small');
+    }
+
+    > ul {
+      gap: space(1);
+    }
+  }
+
+  .specimen__actions {
+    margin-top: space(2);
+  }
+}

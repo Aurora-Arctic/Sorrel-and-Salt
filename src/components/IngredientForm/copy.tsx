@@ -1,8 +1,11 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { type FieldPath, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { plural } from '@/lib/text';
+import IconTip, { CopyIcon } from '../IconTip';
 import { RemoveIcon } from './icons';
 import { FIELD_NOUNS, entryText, fold } from './values';
 import type {
@@ -130,7 +133,7 @@ function merged(
  */
 function said(field: CopiedField, added: number, skipped = 0, form = ''): string {
   if (skipped > 0) {
-    const none = form.trim() === '' ? 'no form like this one' : `no ${form.trim()} form`;
+    const none = form.trim() === '' ? 'no form like this one' : `no ${formLabel(form)} form`;
     const why = `Skipped ${skipped} with ${none}`;
     return added === 0 ? why : `${said(field, added)}. ${why}`;
   }
@@ -183,16 +186,18 @@ export function CopyFromIngredient({
     <>
       {/* Named for its field, the visible words first, so the eight in an
         open variant are told apart. A button, never the form's submit. */}
-      <button
-        ref={buttonRef}
-        type="button"
-        className="btn btn--small btn--quiet ingredient-form__copy"
-        aria-label={`Copy From Ingredient: ${FIELD_NOUNS[field].label}`}
-        disabled={empty}
-        onClick={copy}
-      >
-        Copy From Ingredient
-      </button>
+      <IconTip tip="Copy From Ingredient" placement="below">
+        <button
+          ref={buttonRef}
+          type="button"
+          className="field__label-action"
+          aria-label={`Copy From Ingredient: ${FIELD_NOUNS[field].label}`}
+          disabled={empty}
+          onClick={copy}
+        >
+          <CopyIcon />
+        </button>
+      </IconTip>
       {announce === undefined && (
         <output className="visually-hidden" aria-label={`${FIELD_NOUNS[field].label} copy`}>
           {news}
@@ -240,6 +245,7 @@ export function SkippedNotice({
 }: SkippedNoticeProps): ReactElement {
   const { getValues, setValue } = useFormContext<IngredientFormValues>();
   const textId = useId();
+  const named = skipped ? formLabel(skipped.form) : '';
   const path = `${at}.substitutes` as const;
   const close = () => {
     onDone();
@@ -261,8 +267,8 @@ export function SkippedNotice({
       {skipped && (
         <div className="notice notice--warn">
           <p id={textId}>
-            {skipped.form ? `No ${skipped.form} form to link` : 'No form like this one to link'}, so
-            not copied: {skipped.entries.map(entryText).join(', ')}.
+            {named ? `No ${named} form to link` : 'No form like this one to link'}, so not copied:{' '}
+            {skipped.entries.map(entryText).join(', ')}.
           </p>
           <div className="ingredient-form__copy-skipped-actions">
             <button

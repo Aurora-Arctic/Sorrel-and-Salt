@@ -29,6 +29,21 @@ const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =
 );
 vi.mock('@/app/(shell)/admin/editors', () => ({ editorStamps }));
 
+// The categories are `readCardCategories`'s, tested with the public page; the page's part is
+// asking once for the entries it lists and handing each its own.
+const readCardCategories = vi.fn(async (ids: readonly string[]) =>
+  ids.map((id) => [
+    {
+      category: { id: `${id}-c`, name: 'Testward' },
+      group: { colorDark: '#000', colorLight: '#fff' },
+    },
+  ]),
+);
+vi.mock('@/app/compendium-reads', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/app/compendium-reads')>()),
+  readCardCategories,
+}));
+
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
@@ -141,11 +156,12 @@ const FILTERED = {
   query: 'test',
   forms: ['Fixture Oil', 'Fixture Powder'],
   withoutReferences: '1',
+  withoutForms: '1',
   // Read from the address alone, with no control for it (M8.13).
   elements: ['fire', 'earth'],
 };
 const FILTERED_HREF =
-  '/admin/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&elements=fire&elements=earth';
+  '/admin/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth';
 
 /** A curated form as its service lists it, keyed by name as the finder pages it. */
 const curatedForm = (name: string, index: number) =>
@@ -161,6 +177,7 @@ const NO_FACETS = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
 };
 const FORM_COUNTS = [
   { value: 'Fixture Oil', count: 2 },
@@ -243,7 +260,10 @@ describe('the /admin/compendium page', () => {
     expect(variantsOf).toHaveBeenCalledExactlyOnceWith(null, [
       { id: TESTWORT.id, workspaceId: null },
     ]);
+    // The page's categories, read in one batch too, and the entry shows its own.
+    expect(readCardCategories).toHaveBeenCalledExactlyOnceWith([TESTWORT.id]);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
+    expect(within(row).getByRole('list', { name: 'Categories' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Herb' })).toBeInTheDocument();
@@ -274,7 +294,7 @@ describe('the /admin/compendium page', () => {
     expect(formGroupsOf).toHaveBeenCalledWith(['group-1']);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
     const [curated, text] = within(row)
-      .getByRole('cell', { name: 'Fixture Shard, Herb' })
+      .getByRole('cell', { name: /Fixture Shard.*Herb/ })
       .querySelectorAll('svg');
     const glyph = (name: 'mineral' | null) =>
       render(<FormIcon name={name} />).container.querySelector('svg')?.innerHTML;
@@ -417,6 +437,21 @@ describe('the /admin/compendium filter', () => {
     expect(screen.getByRole('switch', { name: /^No Refs/ })).not.toBeChecked();
   });
 
+  it('reads ?withoutForms=1 into the list and its count, and nothing else as on', async () => {
+    await renderPage({ withoutForms: '1' });
+    expect(lastFilter()).toEqual({ ...NO_FILTER, withoutForms: true });
+    openPanel();
+    expect(screen.getByRole('switch', { name: /^No Form/ })).toBeChecked();
+  });
+
+  it('reads ?withoutForms= other than 1 as every entry', async () => {
+    await renderPage({ withoutForms: 'true' });
+
+    expect(lastFilter()).toEqual(NO_FILTER);
+    openPanel();
+    expect(screen.getByRole('switch', { name: /^No Form/ })).not.toBeChecked();
+  });
+
   it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {
     await renderPage({ categories: ['testward', 'testcraft'] });
 
@@ -545,10 +580,10 @@ describe('the /admin/compendium filter', () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&elements=fire&elements=earth&before=[^&]+$/,
+      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&elements=fire&elements=earth&after=[^&]+$/,
+      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&after=[^&]+$/,
     );
   });
 });

@@ -1,0 +1,42 @@
+import type { CompendiumListFilterProps, CompendiumListProps } from '../CompendiumList/types';
+import type { EntryKind } from '../EntryMarks/types';
+import type { CardCategory } from '../IngredientCard/types';
+import type { JarLine } from '../JarLines/types';
+import type { SafetyVariant } from '../SafetyNote/types';
+import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+
+/** One entry of a coven's cupboard as its card shows it, already merged with the coven's label. */
+export interface CovenCardEntry {
+  id: string;
+  /** What the coven calls it: its cupboard entry's label where one is set, else the entry's name. */
+  label: string;
+  /** The formal name, null for none; it tells two entries of one label apart. */
+  canonicalName: string | null;
+  nomenclature: NomenclatureKind;
+  categories: readonly CardCategory[];
+  /** Its live forms, each with its group's icon. */
+  variants: readonly SafetyVariant[];
+  toxic: boolean;
+  safetyNotes: string | null;
+  /** Whose entry it is: the coven's `own`, or a compendium entry its cupboard names (`cupboard`). */
+  kind: EntryKind;
+  /** The coven's cupboard row overrides a field of the compendium's. */
+  annotated: boolean;
+  /** The curators retired the entry. */
+  retired: boolean;
+  /** The coven's jars of it, one per form held. */
+  jars: readonly JarLine[];
+}
+
+export interface CovenCardsProps extends Pick<
+  CompendiumListProps,
+  'facets' | 'categories' | 'vocabulary' | 'previousHref' | 'nextHref' | 'position' | 'total'
+> {
+  /** The coven's address segment, which every link and the filter's submit are built under. */
+  covenSlug: string;
+  /** The coven's id, which the type-ahead and the live counts read. */
+  workspaceId: string;
+  entries: readonly CovenCardEntry[];
+  /** The filter the page shows, with the coven's Source, In Stock and Low Stock Only choices. */
+  filter: CompendiumListFilterProps['filter'];
+}

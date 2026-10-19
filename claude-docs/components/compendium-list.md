@@ -13,6 +13,8 @@ the formal name sits beside the label because it is the entry's identity
 one batch through `variantsOf(null, refs)`, the read `Ingredient.variants`
 resolves through, rather than one read per row.
 
+**The Categories column** (after Form, before Updated) draws the card's chips through the shared `CategoryChips` ([`category-chips.md`](category-chips.md)) at its `compact` size: the first two and a +N button, an entry with none showing a dash. The admin page reads them in one batch for the page (`readCardCategories`), and `CompendiumListEntry` carries them as `categories`. The +N panel is fixed-position, so the table frame's scrolling neither clips it nor grows the row; `tests/e2e/admin-compendium.spec.ts` measures both, on a desktop table and a phone card.
+
 ## Props
 
 `CompendiumListProps` (`types.ts`):
@@ -20,7 +22,7 @@ resolves through, rather than one read per row.
 | Prop           | What it is                                                                                                                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                 |
-| `filter`       | `{ query, forms, withoutReferences, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked                                                                                           |
+| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked                                                                             |
 | `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                             |
 | `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)                                                                                               |
 | `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts |
@@ -45,13 +47,16 @@ different groups, so the page offers each name once, whatever its case.
 
 ## Contracts
 
+- **The public page shares the filter.** `CompendiumListFilter` takes `audience` (`'admin'`, the default, or `'public'`). The public audience filters at `/compendium`, draws no No Refs control and no Classification facet, and words its empty sentence through the exported `emptyText(..., whenEmpty)`. The cards that page draws are [`compendium-cards.md`](compendium-cards.md).
+- **A coven’s Ingredients page shares it too (M9.6).** `audience="coven"`, with `covenSlug` and `workspaceId`, filters at `/coven/<slug>/ingredients` (`covenIngredientsHref`, `href.ts`), is labelled Filter Ingredients, and draws no No Refs control and no Classification facet. The filter it is given also carries `source`, `inStock` and `lowStockOnly`, so the panel draws Source, In Stock and Low Stock Only. The name search suggests from the coven’s cupboard and a pick opens `/coven/<slug>/ingredients/<id>`. The live counts ask `workspaceIngredientFacets` (the `CovenFacetCounts` document) with `workspaceId`, and the sentence names the three choices. The cards are [`coven-cards.md`](coven-cards.md).
+
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178),
   named "Filter the Compendium" inside a `<search>` landmark and `position: relative`
   (`.compendium-list__row`), because the panel opens just under it. In order: the Name
   type-ahead (`query`, [`ingredient-search.md`](ingredient-search.md)) with its own Search
   submit, then [`FacetPanel`](facet-panel.md) (M12.4) with `admin` on: the Filters (n)
   button, a quiet Clear All link beside it while any facet is in use, and the dialog of
-  facets (categories with Match, No Refs, forms, toxic, planets, zodiac, deities,
+  facets (categories with Match, No Refs, No Form, forms, toxic, planets, zodiac, deities,
   elements). Above the results, outside the form, sits [`SearchSentence`](search-sentence.md).
   The compendium search has no Classification filter (the column stays in the table); the
   `FilterForm` Clear link is turned off (`clear={false}`), since the panel carries Clear
@@ -64,7 +69,7 @@ different groups, so the page offers each name once, whatever its case.
   builds the address from the filter shown with the name typed (trimmed) and every facet
   set over it (`hrefFor`, through `COMPENDIUM_PARAMS.changed`, which drops the cursor).
   The lists are repeated parameters, categories and deities are slugs, No Refs is
-  `withoutReferences=1`, and `categoryMode` is written only from two categories up.
+  `withoutReferences=1`, No Form (M12.30, the entries with no live form) is `withoutForms=1`, and `categoryMode` is written only from two categories up.
   Picking a name in the dropdown instead opens that entry's `?edit=` modal over the filter
   as shown, the text typed not applied (the owner's call, M8.10).
 - **Before hydration** the dialog is drawn open inside the form, each facet a native
@@ -100,7 +105,7 @@ different groups, so the page offers each name once, whatever its case.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
   the modal is a soft navigation, and the page calls the admin guard on every
   render.
-- **The Form column lists the entry's forms**, joined: "Herb, Oil". Each form is one unit, its icon then its name with the comma after it, held on one line (`.compendium-list__form`): the icon sits a quarter of an em from its own name, and the forms sit in a wrapping flex row (`.compendium-list__forms`) with a wider gap, `space(2)`, between them, so an icon never reads as the previous form's (the owner's call, 2026-10-16). The gap is the row's, not a margin on each form, so a form that wraps onto a new line starts at the cell's edge like the first (the owner's call, 2026-10-17). The row is `vertical-align: top`: an inline-flex box takes its baseline from its first item, and the icon's svg has none, so left to that the names sit 4px above the row's other text (measured in Chromium: -4px, now 0). Top puts the first line level with the row's other text and lets a wrapped form hang below it.
+- **The Form column lists the entry's forms with a dot between them** (2026-10-19; commas before), the card's mechanism (`dotted-row`, [`styling.md`](../styling.md), "Dotted lists"), a spoken comma in each item for a screen reader. Each form is one unit, its icon then its name, held on one line (`.compendium-list__form`): the icon sits a quarter of an em from its own name, and the forms sit in a flex row (`.compendium-list__forms`, wrapping only as a card) with a wider gap, `space(4)` with the dot at its middle, between them, so an icon never reads as the previous form's (the owner's call, 2026-10-16). The gap is the row's, not a margin on each form, so a form that wraps onto a new line starts at the cell's edge like the first (the owner's call, 2026-10-17). The row is `vertical-align: top`: an inline-flex box takes its baseline from its first item, and the icon's svg has none, so left to that the names sit 4px above the row's other text (measured in Chromium: -4px, now 0). Top puts the first line level with the row's other text and lets a wrapped form hang below it.
 - **Each name links to its entry's own page**, `/compendium/ingredients/<slug>` by the entry's stored slug (M8.19), the public route, which offers a curator Edit over the page. The link (`.compendium-list__name`, drawn by the shared `icon-link` mixin in `scss/_mixins.scss`, which the entry page's Compendium Entry link uses too) is in the body ink with no underline at rest, followed by a chain icon (`LinkIcon`, in `IconTip/icons.tsx`, decorative) so it does not rest on colour alone, then the [`LinkHint`](link-hint.md) dot, as every link to another page has. Pointed at or keyboard-focused, the whole name fades to the link colour (`$accent`) and the icon alone grows to 1.2 times (a transform from its inline start, so nothing reflows; the owner's call, 2026-10-17); reduced motion snaps both. The pencil still opens the edit modal from the list. The link is in the Name cell, so the wide table and the stacked card draw it alike.
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
@@ -121,7 +126,11 @@ different groups, so the page offers each name once, whatever its case.
   filter to see more." The query and the form are quoted, the
   classification is its label, and Without
   References is the switch's (MB.115, the owner's call). The sentence is
-  `noMatchText` (`src/lib/text.ts`), one wording for every admin list.
+  built from the same two pieces as `noMatchText` (`noMatchLead` and `NO_MATCH_ADVICE`, `src/lib/text.ts`), one wording for every admin list. It is a node, not a
+  string: each filter value is bold (700), as the search sentence bolds its
+  values, while "the form", "the category", the joining words and the closing
+  advice stay regular, and the whole sentence is muted (`$text-muted`) through
+  `.compendium-list__empty`. The public cards share it.
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
@@ -175,3 +184,10 @@ workshop does not serve. Render-only, no test ids, no snapshots.
 covers the page's side: `?forms=` read trimmed into the list and its count,
 blank as none, the facet read under the same variables as the list, deities mapped from slugs to ids, zodiac, planets and toxic, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.
+
+## The pinned Edit column and the Categories floor (2026-10-19)
+
+- **The Edit column stays at the table's right edge** while the others scroll beneath it, in the neutral `sticky-action-column` mixin ([`styling.md`](../styling.md)): the page's or a banded row's own ground and a `$hairline` rule down its left, where the People table's Impersonate wears the same pinning in red. It is given to the column as `className` and `headingClassName` (`.compendium-list__edit`), and as a card it is static again. Layers: the column is `$sticky-column-layer` (1, `_layers.scss`); the +N panel is `layer('floating')`, so it passes over the pinned pencils of the rows beneath. The pencil's tip opens inside the cell's stacking context, to its left, so no later pinned cell reaches it.
+- **The Categories column has a floor where the table is wide.** At a frame of 75rem or more the column is at least 16.75rem of content (plus the cell inset), measured against the widest row of chips any of the 313 seeded entries shows with the final compact, dot-less chips: Aspen's Ancestor Work and Communication with its +8 button, 266px (16.625rem), rounded up to the next 0.25rem. Narrower, the floor does not apply and the table scrolls instead of wrapping the chips; as a card the rule never applies.
+- **A row stays on one line while the table is a table** (2026-10-19, the owner's call). The table takes `data-table--nowrap`, so no cell wraps and the table scrolls sideways in its frame. That class alone does not hold the two flex rows, so the Form column's `.compendium-list__forms` and the Categories cell's chip row are set to `flex-wrap: nowrap` too (the chip rule is scoped to the Categories cell, so cards elsewhere still wrap). As a card (the frame under `$table-stack-width`) the cells, the forms and the chips all wrap again.
+- **The dot between forms is centred on the form's own box** (`inset-block: 0; margin-block: auto`), and the table's form wrapper is a flex box so that box is as tall as the form. Measured in Chromium: the dot's centre equals the icon's centre on the card and in the table; the lowercase x-height centre sits 0.5px (card) and 1.5px (table) lower.

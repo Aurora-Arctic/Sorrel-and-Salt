@@ -19,6 +19,8 @@ import type {
 // `types.ts`. claude-docs/graphql/pagination.md, "Pagination".
 
 export const DEFAULT_PAGE_SIZE = 25;
+/** What a card list pages by: 24 divides by 1, 2, 3 and 4 columns, so the last row of the grid is full. */
+export const CARD_PAGE_SIZE = 24;
 /** The hard server-side maximum. A client asking for more gets this many, not an error. */
 export const MAX_PAGE_SIZE = 100;
 
@@ -103,7 +105,8 @@ export async function resolvePage<T, Edge extends object = {}>(
 }
 
 /**
- * One page of an admin list, `DEFAULT_PAGE_SIZE` rows after `after` or else
+ * One page of a list, `size` rows (`DEFAULT_PAGE_SIZE` unless a card list
+ * passes `CARD_PAGE_SIZE`) after `after` or else
  * before `before`, and where it stands, for the pager's "Page X of Y":
  * `count` reads the list's total and the rows before the page's first row —
  * none on an empty page — the total is returned beside it, for a list that says how many it
@@ -115,18 +118,17 @@ export async function resolveNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },
   fetch: (request: PageRequest) => PageEntry<T, Edge>[] | Promise<PageEntry<T, Edge>[]>,
   count: (start: Cursor | undefined) => Promise<PageCount>,
+  size: number = DEFAULT_PAGE_SIZE,
 ): Promise<Page<T, Edge> & { position: PagePosition; totalCount: number }> {
   const args: ConnectionArgs =
-    after === undefined && before !== undefined
-      ? { last: DEFAULT_PAGE_SIZE, before }
-      : { first: DEFAULT_PAGE_SIZE, after };
+    after === undefined && before !== undefined ? { last: size, before } : { first: size, after };
   const page = await resolvePage(args, fetch);
   const { totalCount, countBefore } = await count(
     page.pageInfo.startCursor ? decodeCursor(page.pageInfo.startCursor) : undefined,
   );
   const position = {
-    page: Math.floor((countBefore ?? 0) / DEFAULT_PAGE_SIZE) + 1,
-    pages: Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE)),
+    page: Math.floor((countBefore ?? 0) / size) + 1,
+    pages: Math.max(1, Math.ceil(totalCount / size)),
   };
   return { ...page, position, totalCount };
 }

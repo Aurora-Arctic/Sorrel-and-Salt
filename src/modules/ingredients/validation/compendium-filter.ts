@@ -89,6 +89,11 @@ export const CompendiumFilter = z.object({
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
+  // The admin's other to-do list: entries with no live form (M12.30). False is no filter.
+  withoutForms: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
   // How the entries are classified; `unknown` is the formal names still to look up (M5.5).
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)
@@ -121,6 +126,11 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
     .transform((source) => source ?? undefined),
   // M9.7: entries with a jar not at 0. False is no filter.
   inStock: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
+  // M9.8: entries with a jar badged Low Stock or Out of Stock. False is no filter.
+  lowStockOnly: z
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),

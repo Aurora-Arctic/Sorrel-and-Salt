@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
 import { WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
-import { COMPENDIUM_INGREDIENTS, identityOf } from '@/db/seed/standard';
+import { COMPENDIUM_INGREDIENTS, WORKSPACE_W_ID, identityOf } from '@/db/seed/standard';
 import { COMPENDIUM } from '@/db/seed/compendium/index';
 
 // What running the `demo` scenario, `standard` inside it, leaves between an
@@ -64,7 +64,7 @@ afterAll(async () => {
 });
 
 describe('seed(db, { scenario: "demo" })', () => {
-  it("writes each seeded entry's forms as its live variants: Rosemary's two, and W's uncurated rhizome", async () => {
+  it("writes each seeded entry's forms as its live variants, Rosemary's two among them", async () => {
     const forms = await formsPerEntry();
 
     // The curated compendium sits beside these rows (its own test below), so
@@ -75,11 +75,78 @@ describe('seed(db, { scenario: "demo" })', () => {
     ]);
     expect(new Map([...forms].filter(([entry]) => literals.has(entry)))).toEqual(literals);
     expect(forms.get('compendium|salvia rosmarinus')).toEqual(['Herb', 'Oil']);
-    expect(forms.get('W|zingiber officinale')).toEqual(['rhizome']);
-    const [ginger] = await sql`
-      select v.form_id from ingredient_variants v join ingredients i on i.id = v.ingredient_id
-      where i.workspace_id is not null and i.name = 'Ginger'`;
-    expect(ginger.form_id).toBeNull();
+  });
+
+  it('holds Garden Rosemary, House Chamomile and Ginger as cupboard rows with exactly their overrides, and no own row beside them', async () => {
+    const rows = await sql`
+      select i.identity_key, c.label, c.description, c.safety_notes, c.elements,
+             c.celestial_bodies, c.zodiac_signs, c.colors
+      from workspace_compendium_entries c join ingredients i on i.id = c.ingredient_id
+      where c.workspace_id = ${WORKSPACE_W_ID} and c.deleted_at is null
+      order by i.identity_key`;
+    const none = { safety_notes: null, elements: null, celestial_bodies: null, zodiac_signs: null };
+
+    expect(rows).toEqual([
+      {
+        ...none,
+        identity_key: 'matricaria chamomilla',
+        label: 'House Chamomile',
+        description: null,
+        colors: ['white', 'yellow'],
+      },
+      {
+        ...none,
+        identity_key: 'salvia rosmarinus',
+        label: 'Garden Rosemary',
+        description: 'Cut from the bush by the back door, dried in bunches over the stove.',
+        colors: null,
+      },
+      {
+        ...none,
+        identity_key: 'zingiber officinale',
+        label: null,
+        description: null,
+        colors: null,
+      },
+    ]);
+    const own = await sql`
+      select identity_key from ingredients
+      where workspace_id = ${WORKSPACE_W_ID} and deleted_at is null`;
+    expect(own.map((row) => row.identity_key).sort()).toEqual(["cat's claw", 'hearth ash']);
+  });
+
+  it('lays the compendium variants where a jar once named an own row, and leaves no jar on an entry the cupboard lacks', async () => {
+    const layers = await sql`
+      select i.identity_key, v.form
+      from spell_ingredients l
+      join ingredients i on i.id = l.ingredient_id and i.workspace_id is null
+      join ingredient_variants v on v.id = l.variant_id
+      where i.identity_key in ('salvia rosmarinus', 'matricaria chamomilla')`;
+    expect(layers).toHaveLength(2);
+    const unheld = await sql`
+      select s.id from inventory_items s
+      join ingredients i on i.id = s.ingredient_id and i.workspace_id is null
+      where s.deleted_at is null and not exists (
+        select 1 from workspace_compendium_entries c
+        where c.workspace_id = s.workspace_id and c.ingredient_id = s.ingredient_id
+          and c.deleted_at is null)`;
+    expect(unheld).toEqual([]);
+  });
+
+  it("keeps W's Cat's Claw an own stub with no formal name, and none of the five compendium Cat's Claws in the cupboard", async () => {
+    const [local] = await sql`
+      select id, canonical_name from ingredients
+      where workspace_id = ${WORKSPACE_W_ID} and name = 'Cat''s Claw' and deleted_at is null`;
+    const five = await sql`
+      select c.id from workspace_compendium_entries c join ingredients i on i.id = c.ingredient_id
+      where i.name = 'Cat''s Claw' and i.workspace_id is null`;
+    const [{ total }] = await sql`
+      select count(*)::int as total from ingredients
+      where name = 'Cat''s Claw' and workspace_id is null and deleted_at is null`;
+
+    expect(local.canonical_name).toBeNull();
+    expect(total).toBe(5);
+    expect(five).toEqual([]);
   });
 
   it('holds the curated compendium beside the fixtures, and a second run writes no further ingredient', async () => {

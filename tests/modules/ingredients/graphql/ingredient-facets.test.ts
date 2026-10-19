@@ -76,7 +76,9 @@ function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promis
 }
 
 function compendiumFacets(variables: Record<string, unknown> = {}) {
-  return runOperation<{ compendiumFacets: Facets & { withoutReferences: number } }>(
+  return runOperation<{
+    compendiumFacets: Facets & { withoutReferences: number; withoutForms: number };
+  }>(
     null,
     `query (
       $query: String
@@ -86,6 +88,7 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
       $toxic: ToxicFilter
       $nomenclature: Nomenclature
       $withoutReferences: Boolean
+      $withoutForms: Boolean
     ) {
       compendiumFacets(
         query: $query
@@ -95,7 +98,8 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
         toxic: $toxic
         nomenclature: $nomenclature
         withoutReferences: $withoutReferences
-      ) ${SELECTION.slice(0, -1)} withoutReferences }
+        withoutForms: $withoutForms
+      ) ${SELECTION.slice(0, -1)} withoutReferences withoutForms }
     }`,
     variables,
   );
@@ -103,7 +107,11 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
 
 function workspaceFacets(session: Session, variables: Record<string, unknown> = {}) {
   return runOperation<{
-    workspaceIngredientFacets: Facets & { source: FacetCount[]; inStock: number };
+    workspaceIngredientFacets: Facets & {
+      source: FacetCount[];
+      inStock: number;
+      lowStockOnly: number;
+    };
   }>(
     session,
     `query (
@@ -111,13 +119,15 @@ function workspaceFacets(session: Session, variables: Record<string, unknown> = 
       $forms: [String!]
       $source: IngredientSource
       $inStock: Boolean
+      $lowStockOnly: Boolean
     ) {
       workspaceIngredientFacets(
         workspaceId: $workspaceId
         forms: $forms
         source: $source
         inStock: $inStock
-      ) ${SELECTION.slice(0, -1)} source { value count } inStock }
+        lowStockOnly: $lowStockOnly
+      ) ${SELECTION.slice(0, -1)} source { value count } inStock lowStockOnly }
     }`,
     { workspaceId: WORKSPACE_W_ID, ...variables },
   );
@@ -152,6 +162,23 @@ describe('compendiumFacets', () => {
       expect(result.errors).toBeUndefined();
       // Betawort alone: Alphawort cites the book, and Covenwort is a coven's.
       expect(result.data?.compendiumFacets.withoutReferences).toBe(1);
+    }
+  });
+
+  it('counts the entries with no live form, the No Form switch on or off, signed out', async () => {
+    await add('Gammawort', { variants: [] });
+    const withoutForms = async (variables: Record<string, unknown>) => {
+      const result = await compendiumFacets(variables);
+      expect(result.errors).toBeUndefined();
+      return result.data?.compendiumFacets.withoutForms;
+    };
+
+    // Why it could have counted more: Alphawort and Betawort hold live forms
+    // and Covenwort is a coven's, so Gammawort is the only one without.
+    expect(await withoutForms({ query: 'alphawort' })).toBe(0);
+    expect(await withoutForms({})).toBe(1);
+    for (const switchOn of [null, true]) {
+      expect(await withoutForms({ withoutForms: switchOn })).toBe(1);
     }
   });
 
@@ -259,6 +286,16 @@ describe('workspaceIngredientFacets', () => {
     expect(chosen.data?.workspaceIngredientFacets.inStock).toBe(0);
     const local = await workspaceFacets(asUser(B), { source: 'local' });
     expect(local.data?.workspaceIngredientFacets.inStock).toBe(1);
+
+    // A jar of 3 with no threshold is not low; at 0 it is out, and the count follows.
+    expect(chosen.data?.workspaceIngredientFacets.lowStockOnly).toBe(0);
+    await sql`update inventory_items set quantity_on_hand = 0 where ingredient_id = ${ingredientId as string}`;
+    const spent = await workspaceFacets(asUser(B), { source: 'local' });
+    expect(spent.data?.workspaceIngredientFacets.lowStockOnly).toBe(1);
+    const narrowed = await workspaceFacets(asUser(B), { lowStockOnly: true });
+    expect(narrowed.data?.workspaceIngredientFacets.forms).toEqual([
+      { value: 'Covenform', count: 1 },
+    ]);
   });
 
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {

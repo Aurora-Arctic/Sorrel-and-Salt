@@ -49,7 +49,7 @@ function offer(matches: IngredientSearchMatch[], hasNextPage = false) {
 /** A slot field that reads the text typed, as a filter applying on its change would. */
 const SlotField = (): ReactElement => <output aria-label="Typed">{useSearchText()}</output>;
 
-function renderSearch(query = '') {
+function renderSearch(query = '', workspaceId?: string) {
   return renderWithClient(
     <IngredientSearch
       search={
@@ -60,6 +60,7 @@ function renderSearch(query = '') {
           shown={[query]}
           searchHref={searchHref}
           pickHref={pickHref}
+          workspaceId={workspaceId}
         >
           <SlotField />
         </IngredientSearchForm>
@@ -108,6 +109,14 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeInTheDocument();
     expect(screen.getByText('Results go here')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute('href', `${PATH}?after=x`);
+  });
+
+  it('names the box without a visible label and says in its placeholder what the search reads', () => {
+    renderSearch();
+
+    expect(box()).toHaveAttribute('placeholder', 'Search names, forms & descriptions');
+    expect(screen.getAllByText('Name', { selector: 'label' })).toHaveLength(1);
+    expect(box()).toHaveAccessibleName('Name');
   });
 
   it('works before hydration as a GET form to the page, the box sending its text as query', () => {
@@ -344,5 +353,79 @@ describe('IngredientSearch', () => {
     typeIn(box(), 'wortle');
 
     expect(screen.getByLabelText('Typed')).toHaveTextContent('wortle');
+  });
+
+  describe('inside a coven', () => {
+    const WORKSPACE = 'workspace-w';
+
+    /** Answers the coven's lookup with `nodes`, recording the compendium lookup if it is ever sent. */
+    function offerCupboard(
+      nodes: (IngredientSearchMatch & { label?: string | null })[],
+      hasNextPage = false,
+    ) {
+      asked = [];
+      const cupboardAsked: Record<string, unknown>[] = [];
+      mockGraphQLQuery('IngredientSearchMatches', (variables) => {
+        asked.push(variables);
+        return { compendium: { pageInfo: { hasNextPage: false }, edges: [] } };
+      });
+      mockGraphQLQuery('IngredientSearchCupboardMatches', (variables) => {
+        cupboardAsked.push(variables);
+        return {
+          workspaceIngredients: {
+            pageInfo: { hasNextPage },
+            edges: nodes.map(({ label, ...node }) => ({
+              node: { ...node, cupboardEntry: label === undefined ? null : { label } },
+            })),
+          },
+        };
+      });
+      return cupboardAsked;
+    }
+
+    it("asks the coven's ingredients with its id, and never the compendium", async () => {
+      const cupboardAsked = offerCupboard([match(1)]);
+      renderSearch('', WORKSPACE);
+
+      typeName('wort');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      await waitFor(() => expect(cupboardAsked.length).toBeGreaterThan(0));
+
+      expect(cupboardAsked[cupboardAsked.length - 1]).toMatchObject({
+        workspaceId: WORKSPACE,
+        query: 'wort',
+      });
+      expect(asked).toHaveLength(0);
+      expect(await screen.findByRole('option', { name: /Testwort 1/ })).toBeInTheDocument();
+    });
+
+    it("names a row by the coven's label where the cupboard sets one", async () => {
+      const cupboardAsked = offerCupboard([{ ...match(2), label: 'Granny Wort' }, match(3)]);
+      renderSearch('', WORKSPACE);
+
+      typeName('wort');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      await waitFor(() => expect(cupboardAsked.length).toBeGreaterThan(0));
+
+      expect(await screen.findByRole('option', { name: 'Granny Wort' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Testwort 2' })).not.toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Testwort 3' })).toBeInTheDocument();
+    });
+
+    it('asks the compendium, and not the coven, when no coven is given', async () => {
+      const cupboardAsked = offerCupboard([]);
+      offer([match(1)]);
+      renderSearch();
+
+      typeName('wort');
+      await settle();
+
+      expect(asked.length).toBeGreaterThan(0);
+      expect(cupboardAsked).toHaveLength(0);
+    });
   });
 });

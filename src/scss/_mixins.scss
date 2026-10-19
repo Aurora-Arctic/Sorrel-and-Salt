@@ -176,13 +176,25 @@
   }
 }
 
-// A pill edged in its group's colour; `selected` fills solid and inverts the
-// label, since a wash cannot hold 4.5:1. Both states share edge and padding.
-// The pair is the group row's `colorDark` and `colorLight`, by default read
-// from the element, where chipColors() sets them; `light-dark()` picks one off
-// the theme's `color-scheme`, since a group an admin adds has no build-time
-// token. claude-docs/styling.md, "Chips, badges and the solid-fill rule".
-@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: unselected) {
+// The full level's three colours, for a chip of any shape. The category chip everywhere
+// (2026-10-19): an 8% wash of the group colour (14% at first; the owner asked for more
+// transparency), a border at 35%, and the label in the colour with 30% of the body ink
+// stirred in. The pure colour on its own wash falls under
+// 4.5:1 for some groups (Mind & Spirit, light: 3.56); with the ink it holds at least
+// 5.37:1 for all eight seeded groups on both surfaces of both themes (styling.md,
+// "Category chips"). The mix is of the pair's members, so a group an admin adds gets it too.
+@mixin chip-wash($color) {
+  background-color: color-mix(in srgb, $color 5%, $surface-card);
+  border-color: color-mix(in srgb, $color 35%, $surface-card);
+  color: color-mix(in srgb, $text-primary 30%, $color);
+}
+
+// A pill in its group's colours, at one of two emphasis levels: `full` (a wash, the
+// category chip everywhere) and `quiet` (neutral: the +N control's look, not a category chip). The pair is the group
+// row's `colorDark` and `colorLight`, by default read from the element, where chipColors()
+// sets them; `light-dark()` picks one off the theme's `color-scheme`, since a group an
+// admin adds has no build-time token. claude-docs/styling.md, "Category chips".
+@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: full, $size: regular) {
   @each $color in ($dark, $light) {
     @if meta.type-of($color) != color and string.index('#{$color}', 'var(') != 1 {
       @error 'chip() takes a colour pair, dark then light, not "#{$color}": a group\'s ' +
@@ -194,24 +206,38 @@
 
   display: inline-flex;
   align-items: center;
-  padding: 0.1875rem 0.6875rem;
   border: 1px solid $color;
   border-radius: radius('pill');
   font-family: $font-body;
-  font-size: type-size('caption');
+
+  // `@if` rather than Sass's `if()` function, which Dart Sass deprecates.
+  @if $size == compact {
+    padding: 0 0.4375rem;
+    font-size: type-size('overline');
+  } @else {
+    padding: 0.1875rem 0.6875rem;
+    font-size: type-size('caption');
+  }
   // A step over Lexend's 300, so the label holds its colour at chip size.
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
 
-  @if $state == selected {
-    background-color: $color;
-    color: $text-on-color;
-  } @else if $state == unselected {
+  @if $state == full {
+    @include chip-wash($color);
+  } @else if $state == quiet {
+    // The quiet level: neutral ink and a hairline, no group colour at all. Only the card's +N
+    // control wears it; a category is always full. The group colour sits on the full level's
+    // wash, border and label, with no dot (the owner's call, 2026-10-19).
     background-color: transparent;
-    color: $color;
+    border-color: $hairline;
+    color: $text-primary;
   } @else {
-    @error 'Unknown chip state "#{$state}". Expected selected or unselected.';
+    @error 'Unknown chip state "#{$state}". Expected full or quiet.';
+  }
+
+  @if $size != regular and $size != compact {
+    @error 'Unknown chip size "#{$size}". Expected regular or compact.';
   }
 
   @include theme-transition(background-color, border-color, color);
@@ -252,6 +278,26 @@
 
   @include reduced-motion {
     transition: none;
+  }
+}
+
+// A badge's size: text, sides and the height it holds. The badge mixin sets the
+// default; the card applies medium and small to the badges inside it, on a deeper
+// selector. claude-docs/styling.md, "Badge sizes".
+@mixin badge-size($name) {
+  $size: map.get($badge-sizes, $name);
+
+  @if $size == null {
+    @error 'Unknown badge size "#{$name}". The sizes are: #{map.keys($badge-sizes)}.';
+  }
+
+  font-size: type-size(map.get($size, font-size));
+  padding-block: map.get($size, padding-block);
+  padding-inline: map.get($size, padding-inline);
+
+  @if map.get($size, min-block-size) {
+    min-block-size: map.get($size, min-block-size);
+    box-sizing: border-box;
   }
 }
 
@@ -342,25 +388,23 @@
   color: $text-primary;
 }
 
-// A tip's bubble above its anchor, from the anchor's `start` or `end` edge or
-// its `center` (any other `$align` is taken as the left offset). `$layer` is
-// its z-index. `$capped` keeps it to `$tip-width` and the window, so it never
-// runs off a phone. The caller's anchor is the nearest positioned ancestor.
-@mixin tip-above($align: start, $layer: 1, $capped: true) {
-  position: absolute;
-  bottom: 100%;
-
-  @if $align == start {
-    left: 0;
-  } @else if $align == end {
-    right: 0;
-  } @else if $align == center {
-    left: 50%;
-    translate: -50% 0;
-  } @else {
-    left: $align;
-  }
-
+// A tip's bubble: the surface, layer and width cap. Where it sits is not CSS's
+// to say: `useTip` places it when it opens, inline, on Floating UI, so it stays
+// on the screen whatever the control's position (InfoTip/use-tip.ts,
+// claude-docs/components/info-tip.md, "Placement"). `position: fixed` at the
+// origin is the rest state: out of the flow, so a closed bubble takes no room
+// in its anchor, and unclipped by a scrolling ancestor. `$layer` is its
+// z-index. `$capped` keeps it to `$tip-width` and the window.
+//
+// `$align` (`start`, `end`, `center`, or a left offset) is the old way, a bubble
+// pinned to one edge of its anchor, which runs off the screen wherever the
+// anchor moves. Nothing new takes it; it stays only for EntryMarks and
+// IngredientCard until they adopt `useTip`'s placement, and goes with them
+// (tests/guards/tip-placement.test.ts, `PENDING`).
+@mixin tip-above($layer: 1, $capped: true, $align: null) {
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: $layer;
   width: max-content;
 
@@ -368,9 +412,65 @@
     max-width: min($tip-width, calc(100vw - #{space(6)}));
   }
 
-  margin-bottom: space(1);
+  @if $align != null {
+    position: absolute;
+    top: auto;
+    bottom: 100%;
+    margin-bottom: space(1);
+
+    @if $align == start {
+      left: 0;
+    } @else if $align == end {
+      left: auto;
+      right: 0;
+    } @else if $align == center {
+      left: 50%;
+      translate: -50% 0;
+    } @else {
+      left: $align;
+    }
+  }
 
   @include tip-bubble;
+}
+
+// A wrapping row of items with a dot between each pair, for the card's forms line and the
+// Compendium table's Form cell. The dot is not text but a circle drawn on every item after the
+// first, in the margin to its left, and the row is clipped by that margin (`clip-path`, with a
+// matching negative margin so nothing shifts). A dot that would lead a wrapped line falls in the
+// clipped band and is never seen, and no line ends in one, since each dot belongs to the item
+// after it. CSS cannot tell which item starts a wrapped line, so a rule on the item cannot do
+// this. A screen reader gets a `.spoken-separator` comma at the end of each item but the last,
+// inside the label's inline span (a flex child would be read with spaces round it), as the
+// circle is announced as nothing. Include it on the row; `$item` is the class of its direct children.
+// claude-docs/styling.md, "Dotted lists".
+@mixin dotted-row($item, $gap: space(5), $dot: space(1)) {
+  --dots-gap: #{$gap};
+  --dots-dot: #{$dot};
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-inline-start: calc(-1 * var(--dots-gap));
+  clip-path: inset(0 0 0 var(--dots-gap));
+
+  > #{$item} {
+    position: relative;
+    margin-inline-start: var(--dots-gap);
+  }
+
+  > #{$item} + #{$item}::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(-0.5 * (var(--dots-gap) + var(--dots-dot)));
+    // Centred on the item's own box, the line its icon and name share, with no offset to tune.
+    inset-block: 0;
+    margin-block: auto;
+    inline-size: var(--dots-dot);
+    block-size: var(--dots-dot);
+    border-radius: 50%;
+    background-color: currentcolor;
+  }
 }
 
 // The new content of a list or tab, faded in as it replaces the skeleton
@@ -457,41 +557,35 @@
   gap: space(2) space(3);
 }
 
-// A stacking table's dangerous row action as a column of its own, Impersonate
-// or Remove (MB.115, the owner's call): a red hairline down its left, a faded
-// red tint and red text, since it acts on someone else. It stays at the
-// table's right edge while the other columns scroll beneath it, so its ground
-// is opaque: the tint mixed into the band it sits on, the page or a banded
-// row's card. `$layer` is its z-index. At phone width the cell gives up its
-// sticky place and stands at the card's top right on the card's own ground,
-// placed by the grid (`StackColumn.action: 'corner'`). Include it in the
-// class given to the column as both `className` and `headingClassName`.
-// claude-docs/styling.md, "Tables at phone width".
-@mixin row-action-column($layer: 1) {
+// A stacking table's row action as a column of its own, pinned to the table's right edge while
+// the other columns scroll beneath it (the admin People table's Impersonate, the Compendium
+// table's Edit). Its ground is opaque and follows the row it sits in, the page or a banded row's
+// card, so scrolled text never shows through, and a `$hairline` rule runs down its left. `$layer`
+// is its z-index. At phone width the cell gives up its sticky place and stands at the card's top
+// right on the card's own ground, placed by the grid (`StackColumn.action: 'corner'`). Include it
+// in the class given to the column as both `className` and `headingClassName`. A caller adds a
+// tone through the content block, which lands before the stacked resets so the resets win in a
+// card (`row-action-column` is the red one). claude-docs/styling.md, "Tables at phone width".
+@mixin sticky-action-column($layer: 1) {
   position: sticky;
   right: 0;
   z-index: $layer;
-  // A hairline, as the headings' rule is: the red marks it, not the weight.
-  border-left: 1px solid $secondary;
-  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
-  color: $secondary;
+  // The hairline is an inset shadow, not a border: the table collapses its borders, and a
+  // collapsed border is the table's to paint, so it stays where the cell began and the
+  // scrolling columns slide over it. A shadow belongs to the cell and travels with it.
+  box-shadow: inset 1px 0 0 $hairline;
+  background-color: $surface-page;
 
   @at-root .data-table tbody tr:nth-child(even) #{&} {
-    // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
-    // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
-    background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+    background-color: $surface-card;
   }
 
-  // Its heading's hairline red too, where every other column's is the muted
-  // ink; scoped past the primitive's own `thead th` rule.
-  @at-root .data-table thead th#{&} {
-    border-bottom-color: $secondary;
-  }
+  @content;
 
   @container data-table (max-width: #{$table-stack-width}) {
     @at-root .data-table--stack > tbody > tr > #{&} {
       position: static;
-      border-left: 0;
+      box-shadow: none;
       background-color: transparent;
     }
 
@@ -503,6 +597,36 @@
     // Past the banded row's rule above, so the card's ground wins.
     @at-root .data-table--stack tbody tr:nth-child(even) #{&} {
       background-color: transparent;
+    }
+  }
+}
+
+// A stacking table's dangerous row action as a column of its own, Impersonate or Remove (MB.115,
+// the owner's call): the pinned column of `sticky-action-column` in red, a red hairline down its
+// left, a faded red tint and red text, since it acts on someone else. The tint is mixed into the
+// band it sits on, so it stays opaque.
+@mixin row-action-column($layer: 1) {
+  @include sticky-action-column($layer) {
+    // A hairline, as the headings' rule is: the red marks it, not the weight.
+    box-shadow: inset 1px 0 0 $secondary;
+    background-color: color-mix(in srgb, $secondary 6%, $surface-page);
+    color: $secondary;
+
+    @at-root .data-table tbody tr:nth-child(even) #{&} {
+      // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
+      // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
+      background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+    }
+
+    // Its heading's hairline red too, where every other column's is the muted
+    // ink; scoped past the primitive's own `thead th` rule. Drawn as a shadow, which travels
+    // with the cell as the left hairline does; the collapsed grey border beneath it, which stays
+    // put as the columns scroll, is made transparent so only the red shows.
+    @at-root .data-table thead th#{&} {
+      border-bottom-color: transparent;
+      box-shadow:
+        inset 1px 0 0 $secondary,
+        inset 0 -1px 0 $secondary;
     }
   }
 }
@@ -635,6 +759,9 @@
   --secondary-hover: #{$wax-glow};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
+  // Between floating and elevated: a card that rises under the pointer.
+  --shadow-lifted: 0 8px 20px #{$shadow-dark};
+  --surface-card-hover: #{$soot-lifted};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -656,6 +783,8 @@
   --secondary-hover: #{$wax-deep};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
+  --shadow-lifted: 0 8px 20px #{$shadow-light};
+  --surface-card-hover: #{$parchment-lifted};
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 
@@ -737,7 +866,7 @@
 // A short decorative hairline, drawn by a pseudo-element so the markup gains no
 // element: the caller makes the box it sits in `position: relative` and says
 // where, with the insets. Used by the jump menu's gap above References and the
-// entry page's gap under the Compendium Entry link.
+// entry page's gap under the In the Compendium block.
 @mixin short-hairline {
   content: '';
   position: absolute;

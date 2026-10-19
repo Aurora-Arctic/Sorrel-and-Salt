@@ -13,6 +13,7 @@ import { fold, inCompendium, listFolds, notSoftDeleted, scopedTo } from './predi
 import { adminRoleWrites } from './admin-roles';
 import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
+import { spellLayerWrites } from './spells';
 import { stockWrites } from './stock';
 import { existsIn } from './select';
 import type { Membership } from '@/modules/coven';
@@ -155,6 +156,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...adminRoleWrites(context),
     ...invitationWrites(context),
     ...membershipWrites(context),
+    ...spellLayerWrites(context),
     ...stockWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {

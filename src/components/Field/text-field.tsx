@@ -29,6 +29,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   action,
   format,
   autoComplete,
+  busy,
 }: TextFieldProps<V>): ReactElement {
   const { register, setValue, getFieldState } = useFormContext<V>();
   const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
@@ -68,8 +69,18 @@ export function TextField<V extends FieldValues = FieldValues>({
     >
       {multiline ? (
         <textarea className="textarea" rows={rows} {...control} />
-      ) : (
+      ) : busy === undefined ? (
         <input className="input" type={type} {...control} />
+      ) : (
+        // A field that looks its text up (the name's duplicate check) says so
+        // in the box itself, the owner's call (2026-10-18): the spinner at
+        // the input's right end, the input busy, and nothing else drawn until
+        // the answer has something to show. Wrapped only when the caller
+        // says, so every other text field keeps its bare input.
+        <span className="field__control">
+          <input className="input" type={type} aria-busy={busy || undefined} {...control} />
+          {busy && <span className="spinner field__busy" aria-hidden="true" />}
+        </span>
       )}
     </FieldShell>
   );

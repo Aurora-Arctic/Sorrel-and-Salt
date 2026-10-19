@@ -30,3 +30,10 @@ export const WorkshopPathname = createContext('/admin/users');
 export function usePathname(): string {
   return useContext(WorkshopPathname);
 }
+
+// The address's query, always empty: no story opens on one. The shell's
+// Add Ingredient button reads `?new` from it to open its dialog (M8.16), and
+// with no query its stories draw the button closed, as a plain address does.
+export function useSearchParams(): URLSearchParams {
+  return new URLSearchParams();
+}

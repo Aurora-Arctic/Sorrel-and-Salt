@@ -1,0 +1,105 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The menu as the bar's Add Ingredient menu draws it (app-shell's
+// `.app-shell__menu`), hung from the button's end edge.
+// claude-docs/components/menu-button.md.
+
+.menu-button {
+  position: relative;
+  display: inline-flex;
+}
+
+// The chevron after the label, turned over while the menu is open.
+.menu-button__chevron {
+  @include chevron-flip("[aria-expanded='true'] >");
+}
+
+.menu-button__menu {
+  position: absolute;
+  top: calc(100% + #{space(2)});
+  right: 0;
+  z-index: layer('floating');
+  min-width: 11rem;
+  // Clips a hovered first or last item to the rounded corners.
+  overflow: hidden;
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  box-shadow: $shadow-floating;
+  // Fades in as it comes and out as it goes, over the short motion (the
+  // owner's call, 2026-10-19); the script unmounts it when the fade-out ends.
+  animation: menu-button-fade-in $motion-short ease-out both;
+
+  &.is-closing {
+    animation: menu-button-fade-out $motion-short ease-in both;
+  }
+
+  @include reduced-motion {
+    animation: none;
+
+    &.is-closing {
+      animation: none;
+    }
+  }
+}
+
+@keyframes menu-button-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes menu-button-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.menu-button__item {
+  @include button-reset;
+
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: space(2) space(4);
+  color: $text-primary;
+  font-size: type-size('small');
+  text-align: start;
+  text-decoration: none;
+  white-space: nowrap;
+  @include theme-transition(background-color);
+
+  &:hover,
+  &:focus-visible {
+    background-color: $fill-quiet;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}
+
+// What destroys something, in the colour `.btn--destructive` wears, and
+// filled with it on hover and focus as that button is (the owner's call,
+// 2026-10-19).
+.menu-button__item--destructive {
+  color: $secondary;
+  @include theme-transition(background-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: $secondary;
+    color: $text-on-color;
+  }
+}

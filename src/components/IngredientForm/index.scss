@@ -1,6 +1,11 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The duplicate list's skeleton: how long an answer may take before the
+// shapes fade in, and how long the fade is either way.
+$skeleton-delay: 200ms;
+$skeleton-fade: 300ms;
+
 // What the ingredient form draws beyond the form primitives (_primitives.scss)
 // and the Combobox, which own its fields, label rows, notices, buttons, the
 // confirm in place of the saves and Delete set apart: the form's column, its
@@ -200,20 +205,71 @@
 
 // The duplicate warning beneath the name. The region is always in the page,
 // as a live region must be, so it cancels the field's gap while empty and its
-// notice puts the gap back.
+// notice puts the gap back. Being always there, it opens by height round the
+// first warning, grid rows 0fr to 1fr as the facet panel opens, while the
+// notice fades in (the owner's call, 2026-10-18), and closes the same way
+// round the last rows as they fade.
 .ingredient-form__duplicates {
-  display: block;
+  display: grid;
+  grid-template-rows: 0fr;
   margin-top: calc(-1 * #{space(2)});
+  transition: grid-template-rows $skeleton-fade ease-in-out;
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  &--open {
+    grid-template-rows: 1fr;
+  }
+
+  .ingredient-form__duplicates-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
 
   .notice {
+    @include arrived($skeleton-fade);
+
     display: flex;
+    // Backwards only, so that the close can fade it out.
+    animation-fill-mode: backwards;
+    transition: opacity $skeleton-fade ease-in-out;
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  &:not(.ingredient-form__duplicates--open) .notice {
+    opacity: 0;
+  }
+
+  .notice {
     flex-direction: column;
     align-items: flex-start;
     gap: space(2);
     margin-top: space(2);
-    // A step deeper beneath the button than the notice's own padding, so
-    // the button does not sit on the box's edge.
+    // A step deeper beneath the button than the notice's own padding, so the
+    // button sits clear of the box's edge without a well beneath it (the
+    // owner's calls, the second on 2026-10-18); and no margin under the box
+    // in the held state, where the error notice's own would double the
+    // form's gap and leave the two states different heights.
     padding-bottom: space(4);
+    margin-bottom: 0;
+  }
+
+  // The list and the button out of the triangle's gutter, flush with the
+  // triangle itself (the owner's call): the notice indents everything past
+  // its icon, and only the sentence stays there.
+  .ingredient-form__matches + .btn {
+    will-change: transform;
+    margin-inline-start: calc(-1 * (1.0125rem + #{space(2)}));
+  }
+
+  // The button a step further from the list than the notice's gap.
+  .ingredient-form__matches + .btn {
+    margin-top: space(2);
   }
 
   // The warning's text tight to the box's top, and its triangle set to that
@@ -224,6 +280,231 @@
 
   .notice--warn::before {
     inset-block-start: space(4);
+  }
+
+  // One match a row, its title at the left and its Use It or Open It at the
+  // right, rather than buttons run into a sentence (the owner's call at the
+  // cupboard review).
+  .ingredient-form__matches {
+    display: grid;
+    gap: space(2);
+    align-self: stretch;
+
+    p {
+      margin: 0;
+    }
+
+    // Clear of the sentence above and the button below (the owner's call).
+    // The ◆ on the list's own edge and the title a step in, as typography-base
+    // lays a list out.
+    ul {
+      display: grid;
+      // The start margin is the gutter pull above, stated here because this
+      // rule's own margin would otherwise override it.
+      margin: space(2) 0 space(2) calc(-1 * (1.0125rem + #{space(2)}));
+      padding: 0 0 0 1.25rem;
+      list-style: none;
+      // The rows' offsets are measured against the list for its slide.
+      position: relative;
+    }
+
+    // Another name's answer on its way: each row the answer will replace
+    // cross-fades to the skeleton's shapes (`skeleton-shape`, _mixins.scss),
+    // laid over the row, a bar where the title was and, where the row had a
+    // Use It, a bar in the small button's own padding, border and type, so
+    // the row keeps its height and nothing jumps when the answer lands. The
+    // fade in waits $skeleton-delay, so an answer back sooner never shows the
+    // shapes at all, and the fade out is as slow, so a late one never flashes
+    // (the owner's findings). Under reduced motion the swap is instant but
+    // still waits.
+    // Between answers the list's own height slides, set on it by script
+    // (duplicates.tsx, as a height that is otherwise auto can be moved), and
+    // clips meanwhile: a row the answer dropped stays whole and fades while
+    // the list's bottom slides up over it, and a new row fades in as the
+    // bottom slides down to show it (the owner's call, over each row
+    // shrinking on its own, which ended in a jump). On its own layer: text
+    // below a moving edge snapped to whole pixels, a jitter (the owner's
+    // finding); composited, it glides. The button under the list goes the
+    // same way, above.
+    .ingredient-form__match {
+      position: relative;
+      will-change: transform;
+      transition: opacity $skeleton-fade ease-in-out;
+
+      @include reduced-motion {
+        transition: none;
+      }
+
+      &--entering,
+      &--leaving {
+        opacity: 0;
+      }
+    }
+
+    .ingredient-form__body {
+      position: relative;
+    }
+
+    // A place showing another entry now (the owner's call): the new row
+    // fades in while the last entry's text lies over it fading out, as text
+    // alone, until the slide settles. Both linear, so that between them the
+    // place is always just covered: eased, both sit half-faded together in
+    // the middle and the text dims and brightens (the owner's finding). The
+    // fade in is only for a row over a fading one, so a list's first rows
+    // fade in once, as their places do. Filled backwards only: filled
+    // forwards too, the fade's end would hold the row opaque over the
+    // cross-fade to the shapes above.
+    .ingredient-form__row--arriving {
+      animation: list-frame-fade-in $skeleton-fade linear backwards;
+
+      @include reduced-motion {
+        animation: none;
+      }
+    }
+
+    .ingredient-form__row--gone {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      animation: duplicate-row-out $skeleton-fade linear both;
+
+      @include reduced-motion {
+        animation: none;
+        opacity: 0;
+      }
+    }
+
+    // The old title in the ink the title link wears, so the fade is from text
+    // to the same text and never through another colour.
+    .ingredient-form__was {
+      color: $accent;
+    }
+
+    @keyframes duplicate-row-out {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+      }
+    }
+
+    li + li .ingredient-form__body {
+      margin-block-start: space(1);
+    }
+
+    .ingredient-form__row,
+    .ingredient-form__shapes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: space(2);
+      align-items: center;
+      justify-content: space-between;
+      will-change: opacity;
+      transition:
+        opacity $skeleton-fade ease,
+        visibility 0s;
+
+      @include reduced-motion {
+        transition-duration: 0s;
+      }
+    }
+
+    // Hidden only once faded out: hidden at once would cut the fade and
+    // leave the text fading in alone.
+    .ingredient-form__shapes {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity $skeleton-fade ease,
+        visibility 0s linear $skeleton-fade;
+
+      @include reduced-motion {
+        transition-duration: 0s;
+        transition-delay: 0s;
+      }
+    }
+
+    .ingredient-form__match--pending {
+      .ingredient-form__row {
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity $skeleton-fade ease $skeleton-delay,
+          visibility 0s linear calc(#{$skeleton-fade} + #{$skeleton-delay});
+
+        @include reduced-motion {
+          transition:
+            opacity 0s linear $skeleton-delay,
+            visibility 0s linear $skeleton-delay;
+        }
+      }
+
+      .ingredient-form__shapes {
+        opacity: 1;
+        visibility: visible;
+        transition:
+          opacity $skeleton-fade ease $skeleton-delay,
+          visibility 0s linear $skeleton-delay;
+
+        @include reduced-motion {
+          transition-duration: 0s;
+        }
+      }
+    }
+
+    .ingredient-form__shape {
+      @include skeleton-shape;
+
+      inline-size: min(14rem, 60%);
+    }
+
+    .ingredient-form__shape--button {
+      box-sizing: border-box;
+      inline-size: 3.5rem;
+      block-size: auto;
+      padding: space(1) space(3);
+      border: 1px solid transparent;
+      font-size: type-size('caption');
+
+      &::after {
+        content: '\200b';
+      }
+    }
+
+    // typography-base sets its ◆ for a line of text; a row here is as tall
+    // as its Use It, so the mark is centred on the row instead.
+    li::before {
+      top: 50%;
+      translate: 0 -50%;
+    }
+
+    // The title link in the body ink with the faded underline the entry
+    // page's links wear (the owner's call), never the Open It `.btn`.
+    a:not(.btn) {
+      color: $text-primary;
+      text-decoration-color: color-mix(in srgb, currentcolor 55%, transparent);
+      @include theme-transition(color);
+
+      &:hover,
+      &:focus-visible,
+      &:hover:where(:visited),
+      &:focus-visible:where(:visited) {
+        color: $accent-hover;
+        text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
+      }
+
+      &:where(:visited) {
+        color: $text-primary;
+      }
+
+      @include reduced-motion {
+        transition: none;
+      }
+    }
   }
 }
 
@@ -511,18 +792,14 @@
 }
 
 // A variant field's Copy From Ingredient (MB.115, the owner's call), at the
-// right end of its label row or legend, which span the card for it; on a
-// phone it wraps beneath a long label rather than squeezing it.
+// right end of its label row or legend, which span the card for it. It is a
+// `.field__label-action` (_primitives.scss): it stays on the label's line at
+// every width and never changes the row's height (the owner's call, 2026-10-19).
 .ingredient-form .ingredient-form__variant-fields {
   .field__label-row,
   .fieldset__legend {
-    flex-wrap: wrap;
     width: 100%;
   }
-}
-
-.ingredient-form__copy {
-  margin-left: auto;
 }
 
 // The notice of what a variant's substitute copy skipped (MB.115, the

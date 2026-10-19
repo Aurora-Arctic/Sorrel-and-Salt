@@ -22,7 +22,7 @@ UserList, PrivilegeLedger and AdminInvitations each sit in one.
 | `ListNavigationContext` | The context itself, exported for the workshop, whose stub router goes nowhere               |
 
 `ListFrameProps` and `ListBodyProps` are in `types.ts`, with `ListNavigation`
-and `ListNavigationKind` (`soft` or `full`).
+and `ListNavigationKind` (`soft`, `page` or `full`).
 
 A list renders `<ListFrame className="user-list">`, its filter, then
 `<ListBody>` round the table or empty state and the `Pager`. The list
@@ -37,10 +37,27 @@ parts, and the table passes through them from the server.
   always `soft`, through FilterForm's `useApplyFilter`, on every list,
   the three that once filtered by a full load too, since every page under
   `/admin` runs the guard itself (`src/app/(shell)/admin/layout.tsx`; MB.115, the
-  owner's call). A pager's `soft` says which its ends take.
+  owner's call). A pager's `soft` says which its ends take: `page` for a soft
+  end, `full` for a plain one.
   - `soft` pushes the address inside a React transition (`useTransition`).
     Next runs its navigation inside the caller's transition, so `pending`
     stays true until the new page has rendered.
+  - `page` is a pager end's soft navigation. It pushes with `{ scroll: false }`,
+    so Next does not scroll to the page top (on `/admin/compendium` that
+    brings the Admin section menu back into view), and once the transition
+    ends it brings the start of `.list-frame__body` to the top of the visible
+    area, only if that start is above the line now. The line is the root's
+    `scroll-padding-top`, which the search row sets so a scrolled-to element
+    lands under the stuck row. The scroll is a plain `scrollIntoView({ block:
+'start' })`, so the site's smooth scrolling and its reduced-motion rule
+    apply; a list start already in view scrolls nothing. While the page is
+    pending the skeleton's wrapper takes a `min-height` of the body's height
+    at the press (`heldHeight` on the navigation, through `SwapPanel`'s
+    `loadingMinHeight`), because a skeleton far shorter than a page of cards
+    would shrink the document and make the browser pull the scroll position
+    up. The new page renders without it, so a short last page is not padded.
+    Filters and tab panels hold nothing. The filter's
+    `soft` keeps Next's own scroll.
   - `full` is `window.location.assign`, a whole page load, a plain pager
     end's, which runs the admin layout's guard again. It has no transition to wait on, so a flag
     holds `pending` from the press until the browser unloads the page: the
@@ -51,7 +68,8 @@ parts, and the table passes through them from the server.
 - **While a page is on its way** the body shows the tabs' own skeleton,
   `TabPanelLoading` from `TabbedPage/panel-loading.tsx` with no filter row,
   since the real filter row stays: a table's heading, six banded rows and a
-  pager, cards at a phone's width, one visually hidden `<output>` its one
+  pager (or, with `shape="cards"`, six card shapes in the
+  [`IngredientCardList`](ingredient-card-list.md) grid), cards at a phone's width, one visually hidden `<output>` its one
   status. The filter row greys out and is off
   ([`filter-form.md`](filter-form.md)).
 - **When the new page renders** the body shows it, keyed afresh so it fades
@@ -80,14 +98,17 @@ renders, in a tabbed page or not; reduced motion stills them there.
 
 [`index.stories.tsx`](../../src/components/ListFrame/index.stories.tsx),
 `Layout / List Frame`: `Default`, a small table and its pager, and
-`Pending`, the same with a page on its way. A whole list on its way, filter
+`Pending`, the same with a page on its way, and `PendingCards`, the card skeleton. A whole list on its way, filter
 row and all, inside its tabbed page, is GroupedValueList's
 `CategoriesPending` with `PendingPhoneDark` and `PendingPhoneLight`
 ([`grouped-value-list.md`](grouped-value-list.md)).
 
 ## Testing
 
-No file of its own (claude-docs/testing/layer-ownership.md, "What a test may
+`tests/components/ListFrame/index.test.tsx` owns the `page` kind's scroll: the
+push carrying `{ scroll: false }` where the filter's does not, and the body
+brought into view after the transition only when its top is above the padding
+line. Beyond that, no file of its own (claude-docs/testing/layer-ownership.md, "What a test may
 assert", rule 6): the soft filter's skeleton, greyed row, refused second
 press and the list's return are `CompendiumList`'s, and a pager press of
 either kind, the full load's Back from the cache included, `Pager`'s, each

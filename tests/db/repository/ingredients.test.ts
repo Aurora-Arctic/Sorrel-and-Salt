@@ -144,6 +144,30 @@ describe('findCompendiumPage', () => {
     expect(page.edges).toHaveLength(3);
   });
 
+  // M8.14: the card declares no sort of its own. Rows sharing a label keep a
+  // stable order because the id breaks the tie, across page boundaries too.
+  it('keeps rows sharing a label in id order, a page of one apart', async () => {
+    for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
+      await add('Fixture Cat Claw', { nomenclature: 'botanical', canonicalName });
+    }
+    const expected = await expectedOrder();
+    // The precondition: three rows, one label, so only the id can order them.
+    const [{ labels }] = await sql`
+      select count(distinct name)::int as labels from ingredients where workspace_id is null`;
+    expect(labels).toBe(1);
+    expect(expected).toHaveLength(3);
+
+    const ids: string[] = [];
+    let after: string | undefined;
+    for (let step = 0; step < 3; step += 1) {
+      const page = await pageOf({}, { first: 1, after });
+      ids.push(...page.edges.map((edge) => edge.node.id));
+      after = page.edges[page.edges.length - 1]?.cursor;
+    }
+
+    expect(ids).toEqual(expected);
+  });
+
   describe('search', () => {
     beforeEach(async () => {
       // No forms: the search reaches a form too (MB.218), and the fixture's
@@ -1577,6 +1601,34 @@ describe('a variant read under its ingredient', () => {
     expect(await offered(inW)).toEqual([localId]);
 
     expect(await offered(inX)).toEqual([]);
+  });
+});
+
+describe('form ranking of the picker', () => {
+  it('lists an entry holding the form first, then one holding a form of its group, then the rest', async () => {
+    const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    await add('Fixture A Plain', { variants: [makeVariant({ form: 'Powder' })] });
+    await add('Fixture B Group', { variants: [makeVariant({ form: 'Resin' })] });
+    await add('Fixture C Exact', { variants: [makeVariant({ form: 'ROOT' })] });
+    await add('Fixture D Bare', { variants: [] });
+    const groups = await sql`
+      select f.name, f.group_id from ingredient_forms f
+      where f.name in ('Root', 'Powder', 'Resin') and f.deleted_at is null`;
+    const groupOf = new Map(groups.map((row) => [row.name as string, row.group_id as string]));
+    // Why the group could have ranked them: Root and Resin share one group, Powder another.
+    expect(groupOf.get('Root')).toBe(groupOf.get('Resin'));
+    expect(groupOf.get('Root')).not.toBe(groupOf.get('Powder'));
+
+    const page = await resolvePage({ first: 100 }, (request) =>
+      findIngredientSuggestions(inW, '', request, 'root'),
+    );
+
+    expect(page.edges.map(({ node }) => node.name)).toEqual([
+      'Fixture C Exact',
+      'Fixture B Group',
+      'Fixture A Plain',
+      'Fixture D Bare',
+    ]);
   });
 });
 

@@ -10,12 +10,23 @@ import type { SwapPanelProps } from './types';
 // skeleton as the press takes the old content away, and the new content as
 // it replaces the skeleton. Content that was there from the server's render,
 // before any press, is not marked as arrived and is shown at once.
-const SwapPanel = ({ pending, className, filter, children }: SwapPanelProps): ReactElement => {
+const SwapPanel = ({
+  pending,
+  className,
+  filter,
+  shape,
+  loadingMinHeight,
+  children,
+}: SwapPanelProps): ReactElement => {
   const [swapped, setSwapped] = useState(false);
   if (pending && !swapped) setSwapped(true);
   return pending ? (
-    <div key="loading" className={className}>
-      <TabPanelLoading filter={filter} />
+    <div
+      key="loading"
+      className={className}
+      style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
+    >
+      <TabPanelLoading filter={filter} shape={shape} />
     </div>
   ) : (
     <div key="content" className={className} data-arrived={swapped || undefined}>

@@ -5,6 +5,7 @@ import type {
 } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type {
   CategoryFacetChoice,
   CompendiumCategoryChoice,
@@ -51,21 +52,22 @@ const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: va
 /**
  * A coven's counts as the props its panel takes (M9.7): the compendium's kinds mapped as
  * `compendiumFacetCounts` maps them, and the Source strip and In Stock switch beside
- * them. A coven has no No Refs switch, so that count reads zero and nothing shows it. Not yet
- * called by a page: M9.6 builds the coven's list and reads `workspaceIngredientFacets` here.
+ * them. A coven has no No Refs or No Form switch, so those counts read zero and nothing shows it. The
+ * coven Ingredients page (M9.6) reads `workspaceIngredientFacets` and maps it here.
  */
 export function covenFacetCounts(
   facets: WorkspaceIngredientFacets,
   vocabularies: FacetVocabularies,
 ): CompendiumFacetCounts {
   return {
-    ...compendiumFacetCounts({ ...facets, withoutReferences: 0 }, vocabularies),
+    ...compendiumFacetCounts({ ...facets, withoutReferences: 0, withoutForms: 0 }, vocabularies),
     source: facets.source.map(({ value, count }) => ({
       value,
       label: SOURCE_LABELS[value],
       count,
     })),
     inStock: facets.inStock,
+    lowStockOnly: facets.lowStockOnly,
   };
 }
 
@@ -84,7 +86,7 @@ export function compendiumFacetCounts(
     forms: facets.forms
       .map(({ value, count }): FormFacetChoice => ({
         value,
-        label: value,
+        label: formLabel(value),
         count,
         icon: formIcons.get(value.toLocaleLowerCase()) ?? null,
       }))
@@ -118,5 +120,6 @@ export function compendiumFacetCounts(
       count,
     })),
     withoutReferences: facets.withoutReferences,
+    withoutForms: facets.withoutForms,
   };
 }

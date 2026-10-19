@@ -34,9 +34,9 @@ to.
 - **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
   No Sass token restates them, and retuning one takes a data migration as well
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
-- **Never wash a chip or badge ground with its own group colour.** The eight
+- **Never wash a chip or badge ground with its own group colour and leave the label in that colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
-  under; solid is the only treatment that holds.
+  under; solid holds, and so does a wash with the body ink stirred into the label ("Category chips").
 - **A badge palette declares `solid` or `tinted` and emits only that treatment's
   parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
   an oversight. A ninth palette picks its treatment first — solid needs 4.5:1
@@ -229,12 +229,17 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Five palettes, deliberately not equals. Two appear on an IngredientCard.
+Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
-alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
-exactly one alarming badge in the app and spends no hue, which matters because every
-hue not already reserved belongs to one of the eight groups. **Last used** marks
+alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
+(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its label on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. It also keeps its word, drawing and heavier border, so its meaning never rests on colour. That keeps
+exactly one alarming badge in the app and spends no new hue, which matters because every
+hue not already reserved belongs to one of the eight groups.
+
+**Caution** (M8.14) marks an ingredient or form that carries safety notes. It is the safety red as a tint with a red edge (`$wax-caution-dark`, `$wax-caution-light`: the wax at +15% saturation, lifted 30% for dark and darkened 4% for light), so Toxic stays the one solid badge. Its label on its tint measures 4.94:1 dark and 6.49:1 light, and its edge 3.68:1 and 4.47:1 on the dark and light cards (3.89:1 and 4.18:1 on the pages). Beside Out of Stock it differs only in saturation, so the word, not the colour, tells them apart.
+
+**Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
 dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.
@@ -256,6 +261,16 @@ than solid, so it never reads as last-used's pointer. Dark takes
 because `$sorrel-vivid` on its own tint measured 4.42:1, under 4.5. As drawn,
 its label on its tint is 5.60:1 dark and 6.98:1 light, and its edge 4.23:1 and
 4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
+
+**Annotated** (M8.14) marks a compendium entry with the coven's own changes. It wears Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens (the same idea as an entry of its own), tinted, with Local's contrast. It is its own palette, never `badge--local`.
+
+**Retired** (M12.24) marks a compendium entry the curators have retired, on
+the ingredient page of a coven whose cupboard still names it. It is a fact
+about the entry, not a hazard, so it takes low stock's treatment and inks
+exactly (tinted, `$chalk-muted` dark, `$ink-muted` light), which spends no hue
+and needs no new contrast check. It is its own palette so that the entry page
+does not name a retired entry after stock, and so that the section's design
+review can give it a look of its own.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -316,19 +331,51 @@ same 400ms as every other colour. Decorative, so no contrast table: nothing is
 read against them, and `prefers-contrast: more` removes the ornaments entirely
 ([`components/backdrop.md`](components/backdrop.md)).
 
+## Category chips
+
+Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one
+of two emphasis levels. Neither draws a dot: the group colour sits on the full level's wash, border and label (the owner dropped the dot, 2026-10-19):
+
+- **`full`**: the category chip, everywhere a category shows (the card, the entry page,
+  pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
+  (5% over `$surface-card`; 14% at first, lowered twice the same day on the owner's call — the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of
+  `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
+  own shape).
+- **`quiet`**: neutral ink and a `$hairline` border, no group colour. It is the +N control's look, not a category chip. For a control
+  rather than a category: the +N button, its one user. The colour field's preview shows `full` only.
+
+**Size (2026-10-19).** `chip()` takes `$size: regular | compact`, alongside `$state`. Regular is the shape above. **Compact** is for a table cell (the admin Compendium's Categories column): no block padding and 7px inline (was 3px and 11px), and the card's `overline` text size. The wash, the 1px border and the label's colour mix are unchanged, so the contrast figures below hold. A compact chip measures about 18.8px tall in Chromium. The shared chip row takes it as `compact` (`category-chips--compact`: `claude-docs/components/category-chips.md`); a compact +N button keeps a 24px hit area through a transparent pseudo-element (WCAG 2.5.8) without growing its pill.
+
+## Dotted lists
+
+`dotted-row($item, $gap, $dot)` (`_mixins.scss`) lays a wrapping row of items with a dot between each pair: the card's forms line and the admin Compendium's Form cell. The dot is a circle drawn on every item after the first, in the margin to its left, and the row is clipped by that margin (`clip-path`, with a matching negative margin so nothing shifts), so a dot that would lead a wrapped line is never seen and none ends one. CSS cannot tell which item starts a line, so a rule on the item cannot do this. Each item holds a `.spoken-separator` comma, so a screen reader hears a list. `$item` is the class of the row's direct children.
+
+**Why the ink is stirred in.** The old rule below says a wash of a group's own colour cannot
+hold 4.5:1, and it was right for the colour as text: with the pure colour on a 14% wash, the
+worst of the eight seeded groups (Mind & Spirit, light theme, on the parchment page) reads
+3.56:1. Mixing 30% of the body ink into the label lifts it. Checked with a node script against all
+eight seeded pairs on both surfaces of each theme, the lowest ratio in each is:
+
+| Theme | Surface          | Lowest | Group            |
+| ----- | ---------------- | ------ | ---------------- |
+| Dark  | card (`#1f1c16`) | 5.51:1 | Practice & Place |
+| Dark  | page (`#14120e`) | 6.16:1 | Practice & Place |
+| Light | card (`#f9f5ea`) | 5.92:1 | Mind & Spirit    |
+| Light | page (`#efe9da`) | 5.37:1 | Mind & Spirit    |
+
+A group an admin adds is held to 4.5:1 for its colour alone (M5.6b), a looser test than the
+eight seeded ones passed; the stirred label is checked against the seeded eight only, so a very
+pale or very dark admin colour is worth a look in the colour field's preview.
+
 ## Chips, badges and the solid-fill rule
 
-`chip()` draws a pill, always edged in its group's colour, in one of two states:
-`unselected` leaves the ground transparent and lets the label wear the colour;
-`selected` fills solid and inverts the label onto `$text-on-color`. Both states
-carry the same 1px edge and the same padding, so a row can mix them without the
-selected ones jumping half a pixel out of rhythm.
+The two levels above replaced `selected` and `unselected`; the badge palettes still declare
+`solid` or `tinted`.
 
-**Solid is not decoration.** The obvious loud treatment — the group colour as a
-low-opacity wash behind a coloured label — cannot hold 4.5:1: the eight hues were
-tuned to land just above the floor, so washing the ground with the same colour
-closes exactly the gap they were tuned for. A solid fill sidesteps it and needs
-no new arithmetic, per `$text-on-color` above.
+**Solid is not decoration for a badge.** The obvious loud treatment, the group colour as a
+low-opacity wash behind a label wearing the same colour, cannot hold 4.5:1: the eight hues
+were tuned to land just above the floor. A solid fill sidesteps it; the chip's answer is to
+move the label towards the body ink (above).
 
 **The colour comes from the row, on the element.** `chip($dark, $light, $state)`
 takes the pair rather than a slug, and by default reads it from the element's
@@ -366,6 +413,23 @@ until the check follows it.
 Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
 Lexend's 300 body weight, so a small label holds its colour at chip size.
+
+### Badge sizes
+
+A badge has three sizes, set in one place: `$badge-sizes` in `_variables.scss`, applied by
+`badge-size($name)` in `_mixins.scss` (a mistyped name is a compile error). `badge()` itself
+draws the `default` size, so a badge outside the ingredient card is unchanged. The two smaller
+sizes are the card's alone, applied to the `.badge`s inside it. The components that draw
+badges (`EntryMarks`, `CautionMark`, `ToxicMark`, `StockBadge`) take no size prop: the card
+decides, from its own selector, so one badge reads the same wherever it is rendered.
+
+| Size      | Text            | Padding (block, inline) | Least height | Used by                 |
+| --------- | --------------- | ----------------------- | ------------ | ----------------------- |
+| `default` | caption (13px)  | 2px, 7px                | none         | every badge, everywhere |
+| `medium`  | overline (12px) | 2px, 7px                | 24px         | the regular card        |
+| `small`   | overline (12px) | 2px, 5px                | 24px         | the compact card        |
+
+The 24px floor is the least a badge with a tip may be as a target.
 
 ## Brand colours
 
@@ -1076,9 +1140,10 @@ heavier than the reverse; light reverts to the browser default.
   reads, which the `.visually-hidden` class includes); `button-reset` (a
   button with its box taken away); `stack($step)` (a column a step of space
   apart); `busy-faded` (colour out and `$opacity-disabled` left);
-  `tip-anchor` and `tip-above($align, $layer, $capped)` (what a tip is
-  placed against, and a bubble above it, capped to `$tip-width` and the
-  window); `tip-bubble-open` (a bubble's open state alone, for one opened
+  `tip-anchor` and `tip-above($layer, $capped)` (a fixed bubble, placed by
+  `useTip` through Floating UI and kept on screen; capped to `$tip-width` and
+  the window; a `$align` still pins the old way and is for EntryMarks and
+  IngredientCard until they adopt the hook); `tip-bubble-open` (a bubble's open state alone, for one opened
   by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
   and `icon-button-remove` (the accent and the wax); `chevron-flip` (the
@@ -1094,8 +1159,9 @@ heavier than the reverse; light reverts to the browser default.
   `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
   modifiers a table takes by class; `value-and-control` (a cell's value on
   the left and the control that changes it on the right); and
-  `row-action-column($layer)` (a stacking table's red, sticky row-action
-  column, Impersonate or Remove, and its card placement).
+  `sticky-action-column($layer)` (a stacking table's pinned row-action
+  column on a neutral `$hairline` rule: the Compendium's Edit, and its card placement) and
+  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate or Remove).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at
@@ -1107,7 +1173,7 @@ heavier than the reverse; light reverts to the browser default.
     `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
     `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
-    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
+    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*` (the `IngredientCard`'s look; Foundations renders the card itself),
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
     screen reader reads and nothing draws, such as a live region's news, and `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it in the name (MB.115).
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,

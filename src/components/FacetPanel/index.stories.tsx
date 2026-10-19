@@ -54,9 +54,10 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'not_toxic', label: 'Not Toxic', count: 21 },
   ],
   withoutReferences: 7,
+  withoutForms: 4,
 };
 
-// The coven's counts: Source's two values, one at zero as Toxic's may be, and the In Stock count.
+// The coven's counts: Source's two values, one at zero as Toxic's may be, the In Stock count and the Low Stock Only count.
 const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
@@ -64,6 +65,7 @@ const COVEN_FACETS: CompendiumFacetCounts = {
     { value: 'compendium', label: 'Compendium', count: 7 },
   ],
   inStock: 9,
+  lowStockOnly: 4,
 };
 
 const NONE: FacetPanelFilter = {
@@ -76,6 +78,7 @@ const NONE: FacetPanelFilter = {
   elements: [],
   toxic: '',
   withoutReferences: false,
+  withoutForms: false,
 };
 
 function Panel({
@@ -216,10 +219,13 @@ export const SourceStuck: Story = () => (
 // The admin list also has the No Refs switch, after Toxic on the Forms row.
 export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list also has a Source chip and the In Stock switch, on the Forms row beside Toxic.
-// Their values count on the Filters button, so the two chosen here make 2.
+// The coven's list also has a Source chip, the In Stock switch and the Low Stock Only switch, on the Forms row beside Toxic.
+// Their values count on the Filters button, so the three chosen here make 3.
 export const Coven: Story = () => (
-  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
+  <Panel
+    facets={COVEN_FACETS}
+    start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
+  />
 );
 
 // The coven's controls with nothing chosen: Source rests on All and the switch is off.
@@ -237,7 +243,11 @@ export const MatchMenu: Story = () => (
 
 // The coven's Source chip open: Local and Compendium with their counts, no brackets.
 export const SourceMenu: Story = () => (
-  <Panel menu="Source" facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
+  <Panel
+    menu="Source"
+    facets={COVEN_FACETS}
+    start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
+  />
 );
 
 // The admin's Toxic chip open, with No Refs on the same row.

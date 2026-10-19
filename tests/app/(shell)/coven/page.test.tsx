@@ -166,10 +166,22 @@ describe('the /coven/[slug] page', () => {
       },
     );
 
-    it('draws no Contents for a viewer, who can reach none of its pages', async () => {
+    it.each<WorkspaceRole>(['owner', 'member', 'viewer'])(
+      'lists the ingredients page in Contents for a %s',
+      async (role) => {
+        await renderAs(role);
+
+        const contents = screen.getByRole('region', { name: 'Contents' });
+        expect(within(contents).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+          'href',
+          '/coven/fixture-coven/ingredients',
+        );
+      },
+    );
+
+    it('lists no Members for a viewer, who cannot read it', async () => {
       await renderAs('viewer');
 
-      expect(screen.queryByRole('region', { name: 'Contents' })).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: 'Members' })).not.toBeInTheDocument();
     });
 
@@ -191,14 +203,14 @@ describe('the /coven/[slug] page', () => {
   });
 
   // The jump menu (PageNav): an entry per section shown, each landing on a
-  // section that exists. A viewer has Your Membership alone.
+  // section that exists. A viewer has Contents and Your Membership.
   describe('the jump menu', () => {
     const menu = () => screen.queryByRole('navigation', { name: 'On this page' });
 
     it.each<[WorkspaceRole, number]>([
       ['owner', 3],
       ['member', 2],
-      ['viewer', 1],
+      ['viewer', 2],
     ])('has an entry for each of a %s’s sections', async (role, count) => {
       await renderAs(role);
 

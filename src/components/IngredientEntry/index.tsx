@@ -1,5 +1,7 @@
+import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
+import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
@@ -10,12 +12,13 @@ import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
 import { LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
-import SafetyNote, { ToxicMark } from '../SafetyNote';
+import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
 import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import {
-  BINOMIAL_KINDS,
+  isBinomial,
   NAMELESS_KIND,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -26,9 +29,19 @@ import type {
   SubstituteDetail,
   VariantDetail,
 } from '@/modules/ingredients';
+import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
+import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
-import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
+import {
+  BIBLIOGRAPHY_ID,
+  DETAILS,
+  NOTES_ID,
+  NoteMarks,
+  ReferencesSection,
+  referenceNotes,
+} from './references';
 import EntryDialog from './entry-dialog';
+import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
 
@@ -99,8 +112,8 @@ function correspondences(source: Correspondences, deities?: readonly DeityDetail
 
 /**
  * The formal name beside the label, never blank (MB.161): italics only for a
- * binomial; an unsettled kind's name upright and marked unconfirmed; and a
- * sentence where there is none, saying why.
+ * binomial; an unsettled kind's name upright and marked unconfirmed; and
+ * "None" where there is none, the tip beside it saying why.
  */
 function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
   const formal = (entry.canonicalName ?? '').trim();
@@ -111,10 +124,10 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
       : (NAME_TIPS[entry.nomenclature] ?? FORMAL_NAME_TIP);
   let value: ReactNode;
   if (entry.nomenclature === NAMELESS_KIND) {
-    value = <span className="ingredient-entry__empty">None — no naming system names it</span>;
+    value = <span className="ingredient-entry__empty">None</span>;
   } else if (formal === '') {
     value = <span className="ingredient-entry__empty">Not yet looked up</span>;
-  } else if (BINOMIAL_KINDS.has(entry.nomenclature)) {
+  } else if (isBinomial(entry.nomenclature)) {
     // `i` rather than `em`: a taxonomic name is set apart, not stressed.
     value = <i className="binomial">{formal}</i>;
   } else if (NAME_LABELS[entry.nomenclature]) {
@@ -145,7 +158,7 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
 }
 
 const substituteLabel = ({ name, form }: SubstituteDetail): string =>
-  form ? `${name} (${form})` : name;
+  form ? `${name} (${formLabel(form)})` : name;
 
 /** The ids one block of a section takes: its heading's, and what names its content. */
 interface Block {
@@ -299,7 +312,7 @@ function FormSection({
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
       <h3 className="ingredient-entry__form-heading">
-        <FormIcon name={icon} /> <span id={nameId}>{capitalise(variant.form)}</span>{' '}
+        <FormIcon name={icon} /> <span id={nameId}>{formLabel(variant.form)}</span>{' '}
         <ToxicMark toxic={variant.toxic} />
       </h3>
       <div className="ingredient-entry__text">
@@ -346,21 +359,115 @@ function FormSection({
   );
 }
 
+// The side column's link to the compendium (M12.12), for both cases: a coven's
+// own entry lists the compendium entries it replaces, and a compendium entry
+// viewed in a coven lists itself, once, at its public page. The page chooses the
+// ⓘ sentence for each, so the component does not branch on tier. A block headed
+// like its siblings (an h3, and no entry in the jump menu, which lists sections),
+// with one ⓘ beside the heading saying why they are shown, and not one per
+// link; the list is described by it, as a field is by its hint. Each link is the
+// entry's own title, so the titles tell them apart and nothing is hidden.
+// Three at most, then "See All" to the compendium search for the label: a
+// paragraph after the list, not an item in it, since it is not an entry.
+function ReplacesBlock({
+  replaces,
+  heading = 'In the Compendium',
+  convert,
+}: {
+  replaces: {
+    tip: string;
+    entries: { title: string; href: Route; id?: string; thenHref?: Route }[];
+    total: number;
+    allHref?: Route;
+  };
+  heading?: string;
+  /** Given for "Similar in the Compendium" to a role that may convert: a radio beside each entry and Link to Selected. `name` is the own entry's, for the question. */
+  convert?: { workspaceId: string; localId: string; name: string };
+}): ReactElement {
+  const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
+  const whyId = `${block.id}-why`;
+  // The entries a conversion can name: those with an id and a page in the coven.
+  const convertible = replaces.entries.flatMap(({ title, href, id, thenHref }) =>
+    id && thenHref ? [{ title, href, id, thenHref }] : [],
+  );
+  // Directly under the list, before Link to Selected, in both blocks (the owner's call, 2026-10-19).
+  const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
+    <p className="ingredient-entry__see-all">
+      <Link href={replaces.allHref}>
+        See All {replaces.total}
+        <LinkHint />
+      </Link>
+    </p>
+  );
+  return (
+    <div className="ingredient-entry__block ingredient-entry__replaces">
+      <div className="ingredient-entry__heading-row">
+        <h3 id={block.id}>{heading}</h3>
+        <InfoTip id={whyId} label={heading}>
+          {replaces.tip}
+        </InfoTip>
+      </div>
+      {convert ? (
+        <LinkToCompendium
+          workspaceId={convert.workspaceId}
+          localId={convert.localId}
+          name={convert.name}
+          entries={convertible}
+          labelledBy={block.id}
+          describedBy={whyId}
+          seeAll={seeAll}
+        />
+      ) : (
+        <ul
+          className="ingredient-entry__list ingredient-entry__replaced"
+          aria-labelledby={block.id}
+          aria-describedby={whyId}
+        >
+          {replaces.entries.map(({ title, href }) => (
+            <li key={href}>
+              <Link href={href}>
+                <span className="ingredient-entry__entry-title">{title}</span>
+                <LinkIcon />
+                <LinkHint />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {convert ? null : seeAll}
+    </div>
+  );
+}
+
 const IngredientEntry = ({
   detail,
   hrefOf,
   edit,
   movedAway,
-  canonical,
+  replaces,
+  similar,
+  cupboard,
 }: IngredientEntryProps): ReactElement => {
-  const { entry, folkNames, categories, deities, substitutes, variants } = detail;
+  const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
+  // `entry` is the row as the compendium has it, which edit and identity use;
+  // `shown` lays the coven's cupboard entry over it for what the page says.
+  // Three kinds: ours (a coven's row, Local), the compendium's held in this
+  // cupboard (the marks), and the compendium's not held (neither).
+  const { entry } = detail;
+  const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
+  const held = !local && cupboardEntry != null;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
+  // Caution as the card counts it (M8.14): notes on the entry, as this coven
+  // reads them, or on any form (the owner's call, 2026-10-19).
+  const caution = [shown.safetyNotes, ...variants.map(({ variant }) => variant.safetyNotes)].some(
+    (notes) => said(notes),
+  );
   const anchors = formAnchors(variants);
   const notes = referenceNotes(
     detail,
     anchors,
-    variants.map(({ variant }) => capitalise(variant.form)),
+    variants.map(({ variant }) => formLabel(variant.form)),
   );
 
   // Only the fields the client parts use cross to them, not the whole row.
@@ -380,12 +487,52 @@ const IngredientEntry = ({
       <header className="ingredient-entry__head">
         <FormalName entry={entry} />
         <PageHeader
-          title={entry.name}
-          action={edit && <EditButton href={edit.href} entry={editable} />}
+          title={shown.name}
+          action={
+            (edit || cupboard) && (
+              <>
+                {edit && !(cupboard && !local) && <EditButton href={edit.href} entry={editable} />}
+                {cupboard && !local && (
+                  <CupboardActions
+                    {...cupboard}
+                    edit={edit ? { href: edit.href, entry: editable } : undefined}
+                    ingredientId={entry.id}
+                    held={held}
+                    compendium={{
+                      name: entry.name,
+                      description: entry.description,
+                      safetyNotes: entry.safetyNotes,
+                      elements: entry.elements ?? [],
+                      celestialBodies: entry.celestialBodies ?? [],
+                      zodiacSigns: entry.zodiacSigns ?? [],
+                      colors: entry.colors ?? [],
+                    }}
+                    overrides={{
+                      label: cupboardEntry?.label ?? null,
+                      description: cupboardEntry?.description ?? null,
+                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
+                      elements: cupboardEntry?.elements ?? null,
+                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
+                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
+                      colors: cupboardEntry?.colors ?? null,
+                    }}
+                  />
+                )}
+              </>
+            )
+          }
         />
-        {(local || toxic) && (
+        {(local || held || caution || toxic || retired) && (
           <div className="badges">
-            {local && <span className="badge badge--local">Local</span>}
+            <EntryMarks
+              kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
+              annotated={held && isAnnotated(cupboardEntry)}
+              retired={retired}
+            />
+            <CautionMark
+              safetyNotes={shown.safetyNotes}
+              variants={variants.map(({ variant }) => variant)}
+            />
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
@@ -407,10 +554,29 @@ const IngredientEntry = ({
             { href: '#details', label: 'Details' },
             ...variants.map(({ variant }, at) => ({
               href: `#${anchors[at]}` as const,
-              label: capitalise(variant.form),
+              label: formLabel(variant.form),
               group: 'Forms',
+              // The forms take the line References takes, so each part of
+              // the menu opens the same way.
+              apart: at === 0,
             })),
-            { href: '#references', label: 'References', apart: true },
+            // With notes the section has two blocks to list; with none it has
+            // nothing to list, so it is one link.
+            ...(notes.notes.length > 0
+              ? [
+                  {
+                    href: `#${NOTES_ID}` as const,
+                    label: 'Notes',
+                    group: 'References',
+                    apart: true,
+                  },
+                  {
+                    href: `#${BIBLIOGRAPHY_ID}` as const,
+                    label: 'Bibliography',
+                    group: 'References',
+                  },
+                ]
+              : [{ href: '#references' as const, label: 'References', apart: true }]),
           ]}
         />
       )}
@@ -418,29 +584,28 @@ const IngredientEntry = ({
       <section id="details" className="ingredient-entry__section" aria-labelledby="details-heading">
         <h2 id="details-heading">Details</h2>
         <div className="ingredient-entry__text">
-          {said(entry.description) ? (
-            <p className="ingredient-entry__description">{entry.description}</p>
+          {said(shown.description) ? (
+            <p className="ingredient-entry__description">{shown.description}</p>
           ) : (
             <p className="ingredient-entry__empty">No description recorded.</p>
           )}
-          <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
+          <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
           <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
         </div>
         {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
-          {canonical && (
-            <p className="ingredient-entry__canonical">
-              <Link href={canonical}>
-                Compendium Entry
-                <LinkIcon />
-                <LinkHint />
-              </Link>
-            </p>
+          {replaces && <ReplacesBlock replaces={replaces} />}
+          {similar && (
+            <ReplacesBlock
+              replaces={similar}
+              heading="Similar in the Compendium"
+              convert={similar.convert && { ...similar.convert, name: shown.name }}
+            />
           )}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
-            rows={correspondences(entry, deities)}
+            rows={correspondences(shown, deities)}
             level={3}
           />
           <ListBlock
@@ -499,11 +664,11 @@ const IngredientEntry = ({
   // The provider holds a pressed Edit on its way, shared by the link and the
   // dialog (M9.18). The admin layout has one above its pages; these two routes
   // have none, and a provider already above is kept, so this one is safe
-  // beneath any. Only an entry that can be edited needs it.
-  return edit ? (
+  // beneath any. An entry that can be edited, or annotated from a coven, needs it.
+  return edit || cupboard ? (
     <RouteModalProvider>
       {page}
-      <EntryDialog entry={editable} edit={edit} />
+      {edit && <EntryDialog entry={editable} edit={edit} />}
     </RouteModalProvider>
   ) : (
     page

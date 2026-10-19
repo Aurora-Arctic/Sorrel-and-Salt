@@ -99,6 +99,11 @@ type CompendiumFacets {
   toxic: [ToxicFacetCount!]!
 
   """
+  How many entries have no live form, under the rest of the filter: the same whether withoutForms is chosen or not.
+  """
+  withoutForms: Int!
+
+  """
   How many entries cite no live reference, on themselves or a live form, under the rest of the filter: the same whether withoutReferences is chosen or not.
   """
   withoutReferences: Int!
@@ -166,10 +171,62 @@ input CompendiumIngredientUpdateInput {
   zodiacSigns: [String!]!
 }
 
+"""
+A compendium entry made the coven's own: the own entry written, and what it could not carry.
+"""
+type ConvertedCompendium {
+  dropped: DroppedOnConvert!
+  entry: Ingredient!
+}
+
+"""
+An own entry turned into a compendium entry: the cupboard entry written, and what was lost.
+"""
+type ConvertedLocal {
+  dropped: DroppedOnConvert!
+  entry: CupboardEntry!
+}
+
 type CorrespondenceSuggestion {
   curated: Boolean!
   description: String
   value: String!
+}
+
+"""
+A coven's own say over one compendium entry it holds. A null field is the compendium's value; an empty list is one the coven cleared.
+"""
+type CupboardEntry {
+  """True when the coven has set any of the seven overrides."""
+  annotated: Boolean!
+  celestialBodies: [String!]
+  colors: [String!]
+
+  """The compendium entry's own name, whatever the coven's label."""
+  compendiumName: String!
+  description: String
+  elements: [IngredientElement!]
+  id: ID!
+
+  """What the coven calls the entry; null is the compendium's name."""
+  label: String
+  safetyNotes: String
+  zodiacSigns: [String!]
+}
+
+"""
+The coven's overrides of a compendium entry. On an add, a field left out is no override. On an annotate, a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
+"""
+input CupboardEntryInput {
+  celestialBodies: [String!]
+  colors: [String!]
+  description: String
+  elements: [IngredientElement!]
+
+  """What the coven calls the entry; unique in the coven."""
+  label: String
+  safetyNotes: String
+  zodiacSigns: [String!]
 }
 
 """
@@ -211,6 +268,25 @@ type DeityTradition {
 input DeityTraditionInput {
   description: String!
   name: String!
+}
+
+"""
+What a convert left behind, by name, each list sorted. An own entry made a compendium entry lists what the compendium entry does not carry, whose rows stay on the deleted own entry; a compendium entry made the coven's own lists what its copy could not hold.
+"""
+type DroppedOnConvert {
+  """The entry's and its forms'."""
+  categories: [String!]!
+  deities: [String!]!
+  folkNames: [String!]!
+
+  """Forms that matched no compendium form and held no jar or spell layer."""
+  forms: [String!]!
+
+  """The entry's and its forms', each as its bibliography entry reads."""
+  references: [String!]!
+
+  """The entry's and its forms'."""
+  substitutes: [String!]!
 }
 
 """An element, and how many entries it would list."""
@@ -274,15 +350,30 @@ type Ingredient {
   categories: [Category!]!
   celestialBodies: [String!]
   colors: [String!]
+
+  """
+  The coven's cupboard entry for this compendium entry; null for one it does not hold and for a coven's own ingredient.
+  """
+  cupboardEntry(workspaceId: ID!): CupboardEntry
   deities: [IngredientDeity!]!
   description: String
   elements: [IngredientElement!]
   folkNames: [FolkName!]!
   id: ID!
+
+  """
+  Whether the coven's cupboard names this compendium entry: false for one it does not hold and for a coven's own ingredient, and with no coven named.
+  """
+  inCupboard(workspaceId: ID): Boolean!
   isGlobal: Boolean!
   name: String!
   nomenclature: Nomenclature!
   references: [ReferenceLink!]!
+
+  """
+  A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
+  """
+  retired: Boolean!
   safetyNotes: String
   slug: String!
 
@@ -358,7 +449,12 @@ type IngredientFacets {
   inStock: Int!
 
   """
-  local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock included.
+  How many entries the list would hold with lowStockOnly on, the rest of the filter kept, source included: the same whether lowStockOnly is chosen or not.
+  """
+  lowStockOnly: Int!
+
+  """
+  local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock and lowStockOnly included.
   """
   source: [SourceFacetCount!]!
 
@@ -617,9 +713,29 @@ type Mutation {
   acceptInvitationById(id: ID!): Invitation!
 
   """
+  Adds a compendium entry to the coven's cupboard, with the overrides given. Creates no jar and no form; an entry the coven already holds is refused.
+  """
+  addCupboardEntry(ingredientId: ID!, input: CupboardEntryInput, workspaceId: ID!): CupboardEntry!
+
+  """
   Starts the coven's jar of one form; a form it already holds is refused beside variantId.
   """
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
+
+  """
+  Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
+  """
+  annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
+
+  """
+  Makes a compendium entry the coven holds its own: a new own entry from the coven's reading of it, with copies of its forms, folk names, substitutes, categories, references and deities; its jars and spell layers move to the copy's forms of the same name, and the cupboard entry is removed. Works on an entry the compendium has retired. The compendium entry is not changed.
+  """
+  convertCompendiumEntryToLocal(ingredientId: ID!, workspaceId: ID!): ConvertedCompendium!
+
+  """
+  Turns one of the coven's own entries into the compendium entry it duplicates: its jars and spell layers move to the compendium's forms of the same name, a cupboard entry carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no match, or a jar or a layer would meet one of the compendium's.
+  """
+  convertLocalToCompendiumEntry(compendiumId: ID!, localId: ID!, workspaceId: ID!): ConvertedLocal!
 
   """
   Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
@@ -729,6 +845,11 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """
+  Takes the entry out of the coven's cupboard; refused while the coven holds a jar of any of its forms.
+  """
+  removeCupboardEntry(ingredientId: ID!, workspaceId: ID!): ID!
 
   """
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
@@ -932,11 +1053,17 @@ type Query {
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
     """
     toxic: ToxicFilter
+    withoutForms: Boolean
     withoutReferences: Boolean
 
     """Keeps entries listing any one of these zodiac signs, ignoring case."""
     zodiacSigns: [String!]
   ): QueryCompendiumConnection!
+
+  """
+  How many covens hold this compendium entry in their cupboard; a count, never who. Curators and admins only.
+  """
+  compendiumEntryUsers(id: ID!): Int!
 
   """
   How many compendium entries each search filter value would list under the rest of the filter.
@@ -973,11 +1100,17 @@ type Query {
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
     """
     toxic: ToxicFilter
+    withoutForms: Boolean
     withoutReferences: Boolean
 
     """Keeps entries listing any one of these zodiac signs, ignoring case."""
     zodiacSigns: [String!]
   ): CompendiumFacets!
+
+  """
+  The compendium entries whose name or formal name is exactly the typed one, case aside: what the Add Ingredient form asks about before it makes a second copy.
+  """
+  compendiumMatches(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryCompendiumMatchesConnection!
 
   """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
@@ -1061,6 +1194,11 @@ type Query {
     Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.
     """
     inStock: Boolean
+
+    """
+    Keeps entries with a jar at 0 (Out of Stock) or at or below a threshold above 0 (Low Stock); false, or leaving it out, keeps all.
+    """
+    lowStockOnly: Boolean
     query: String
 
     """
@@ -1111,6 +1249,11 @@ type Query {
     """
     inStock: Boolean
     last: Int
+
+    """
+    Keeps entries with a jar at 0 (Out of Stock) or at or below a threshold above 0 (Low Stock); false, or leaving it out, keeps all.
+    """
+    lowStockOnly: Boolean
     query: String
 
     """
@@ -1211,6 +1354,16 @@ type QueryCompendiumConnectionEdge {
   score: Float
 }
 
+type QueryCompendiumMatchesConnection {
+  edges: [QueryCompendiumMatchesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCompendiumMatchesConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+}
+
 type QueryDeitiesConnection {
   """
   How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
@@ -1292,6 +1445,11 @@ type QueryIngredientSuggestionsConnection {
 
 type QueryIngredientSuggestionsConnectionEdge {
   cursor: String!
+
+  """
+  Yours: an entry of the coven, its own or one it holds from the compendium. Compendium: an entry it does not hold. Yours is listed first, then the compendium, each ranked by match.
+  """
+  group: SuggestionGroup!
   node: Ingredient!
 }
 
@@ -1512,6 +1670,14 @@ input SubstituteInput {
 type SuggestionClaimant {
   canonicalName: String
   name: String!
+}
+
+"""
+Where the substitute picker lists an entry: the coven's own cupboard (yours), or the rest of the compendium.
+"""
+enum SuggestionGroup {
+  compendium
+  yours
 }
 
 """A toxic setting other than any, and how many entries it would list."""

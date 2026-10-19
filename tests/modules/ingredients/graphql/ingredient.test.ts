@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { liveFolkNames } from '../../../support/db/folk-names';
 import {
   insertIngredient,
@@ -85,6 +86,32 @@ describe('ingredient', () => {
       expect(result.errors).toBeUndefined();
       expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
     }
+  });
+
+  // The transport's half of M12.24: `retired` reaches the wire. Who reads a
+  // retired entry is services/retired-entry.test.ts's.
+  it('marks a retired entry retired to a coven whose cupboard names it', async () => {
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: compendiumId },
+      A.id,
+    );
+    const retired = () =>
+      runOperation<{ ingredient: { retired: boolean } }>(
+        asUser(B),
+        `query ($id: ID!, $workspaceId: ID) { ingredient(id: $id, workspaceId: $workspaceId) { retired } }`,
+        { id: compendiumId, workspaceId: WORKSPACE_W_ID },
+      );
+    expect((await retired()).data?.ingredient).toEqual({ retired: false });
+
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${E.id}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${compendiumId}`;
+    });
+
+    const result = await retired();
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.ingredient).toEqual({ retired: true });
   });
 
   describe("refuses a coven's entry to everyone else", () => {

@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
@@ -11,13 +12,15 @@ import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
 // The `workspaceIngredients` query (M9.4): a coven's ingredients, a page at a
-// time, with each entry's stock and categories batched. Which rows the list
+// time, with each entry's stock and categories batched and its cupboard row
+// read by the page itself. Which rows the list
 // holds, and who may read it, is services/workspace-ingredient-list.test.ts's;
 // this file holds the transport's half — the arguments reaching the read, the
 // page, one read per page, and the one refusal on the wire.
 
 // The reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({
+  findCupboardEntriesOf: vi.fn(),
   findManyOfIngredients: vi.fn(),
   findStockOfIngredients: vi.fn(),
 }));
@@ -63,6 +66,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $toxic: ToxicFilter
       $source: IngredientSource
       $inStock: Boolean
+      $lowStockOnly: Boolean
       $first: Int
       $after: String
     ) {
@@ -79,6 +83,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         toxic: $toxic
         source: $source
         inStock: $inStock
+        lowStockOnly: $lowStockOnly
         first: $first
         after: $after
       ) {
@@ -105,7 +110,8 @@ async function names(variables: Record<string, unknown>): Promise<string[]> {
 
 /**
  * W's own entry, linked to Hecate and listing a sign and a planet, and a
- * compendium entry W holds the oil of, its oil flagged toxic; each in Protection.
+ * compendium entry in W's cupboard, W holding a jar of its oil, its oil flagged
+ * toxic; each in Protection.
  */
 let hecate: string;
 let own: string;
@@ -142,6 +148,7 @@ beforeEach(async () => {
     }),
     A.id,
   );
+  await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: held }, A.id);
   jar = await insertStock(
     sql,
     {
@@ -238,8 +245,13 @@ describe('workspaceIngredients', () => {
     expect(await badges({ inStock: true })).toEqual([['Heldwort', true]]);
     expect(await badges({ inStock: false })).toHaveLength(2);
 
+    // A jar with no quantity is held, never low.
+    expect(await names({ lowStockOnly: true })).toEqual([]);
+
     await sql`update inventory_items set quantity_on_hand = 0 where id = ${jar}`;
     expect(await names({ inStock: true })).toEqual([]);
+    expect(await names({ lowStockOnly: true })).toEqual(['Heldwort']);
+    expect(await names({ lowStockOnly: false })).toHaveLength(2);
 
     const refused = await run(asUser(B), { source: 'both' });
     expect(refused.errors).toHaveLength(1);
@@ -253,6 +265,32 @@ describe('workspaceIngredients', () => {
     expect(repository.findStockOfIngredients).toHaveBeenCalledTimes(1);
     // One for the categories, one for the forms the jars name.
     expect(repository.findManyOfIngredients).toHaveBeenCalledTimes(2);
+  });
+
+  it("answers each entry's cupboard row from the page's own read, with no read of its own", async () => {
+    await sql`
+      update workspace_compendium_entries set label = 'Heldlabel' where ingredient_id = ${held}`;
+
+    const result = await runOperation<{
+      workspaceIngredients: {
+        edges: { node: { id: string; cupboardEntry: { label: string | null } | null } }[];
+      };
+    }>(
+      asUser(B),
+      `query ($workspaceId: ID!) {
+        workspaceIngredients(workspaceId: $workspaceId) {
+          edges { node { id cupboardEntry(workspaceId: $workspaceId) { label } } }
+        }
+      }`,
+      { workspaceId: WORKSPACE_W_ID },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.workspaceIngredients.edges.map(({ node }) => node)).toEqual([
+      { id: own, cupboardEntry: null },
+      { id: held, cupboardEntry: { label: 'Heldlabel' } },
+    ]);
+    expect(repository.findCupboardEntriesOf).not.toHaveBeenCalled();
   });
 
   it('is FORBIDDEN to a caller naming a coven they are not in', async () => {

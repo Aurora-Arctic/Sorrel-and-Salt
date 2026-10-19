@@ -57,13 +57,11 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   }
 
   // Only the pages the caller can open are listed, so none is a link to a
-  // 404. Today that is Members, and a viewer cannot read it: a viewer has no
-  // Contents section and no entry for it, rather than an empty list, until
-  // the ingredients and grimoire pages (MB.121) give every role something to
-  // open. The section and its menu entry are built together, so they agree.
-  const showContents = canReadMembers;
+  // 404. Every role can open Ingredients, so Contents shows for all of them,
+  // viewers included; Members is listed only for a role that may read it.
+  // The section and its menu entry are built together, so they agree.
   const entries: PageNavEntry[] = [
-    ...(showContents ? [{ href: '#coven-contents' as const, label: 'Contents' }] : []),
+    { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
     ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete This Coven' }] : []),
   ];
@@ -79,14 +77,25 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
         </p>
       </div>
       <PageNav label="On this page" entries={entries} />
-      {showContents && (
-        <section
-          id="coven-contents"
-          className="page-frame__section"
-          aria-labelledby="coven-contents-heading"
-        >
-          <h2 id="coven-contents-heading">Contents</h2>
-          <ul className="admin-contents__list">
+      <section
+        id="coven-contents"
+        className="page-frame__section"
+        aria-labelledby="coven-contents-heading"
+      >
+        <h2 id="coven-contents-heading">Contents</h2>
+        <ul className="admin-contents__list">
+          <li>
+            <Link
+              href={`/coven/${slug}/ingredients` as Route}
+              aria-describedby="coven-contents-ingredients"
+            >
+              Ingredients
+            </Link>
+            <span id="coven-contents-ingredients" className="admin-contents__description">
+              What the coven has in its cupboard, and what it can add from the compendium.
+            </span>
+          </li>
+          {canReadMembers && (
             <li>
               <Link
                 href={`/coven/${slug}/members` as Route}
@@ -100,9 +109,9 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
                   : 'Who is in the coven and what each may do.'}
               </span>
             </li>
-          </ul>
-        </section>
-      )}
+          )}
+        </ul>
+      </section>
       {/* One place for a refusal, above both sections' buttons. Leave is here,
           not on the members page, because a viewer cannot open that page and
           must still be able to go. Delete asks for the permission M6.14's

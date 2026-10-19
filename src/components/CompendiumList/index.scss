@@ -1,24 +1,37 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use 'layers' as *;
 
-// The forms in the Form column, one wrapping row: the gap sets each form off
-// from the comma before it by more than a word space, so an icon reads as its
-// own name's and not the last one's (the owner's call, 2026-10-16). A gap
-// rather than a margin on each form, so a form that wraps starts its line at
-// the cell's edge and is not indented by the space that separated it from the
-// one before. `vertical-align: top` because an inline-flex box sits on its first
-// item's baseline, and the icon's svg has none, so its bottom edge would sit on
-// the line and lift every name 4px; top puts the first line level with the
-// row's other text, and a form that wraps hangs below it.
+// The forms in the Form column, one row (wrapping only as a card) with a dot between forms (the card's
+// `dotted-row` mixin). A gap rather than a margin on each form, so a form that wraps starts
+// its line at the cell's edge. `vertical-align: top` because an inline-flex box sits on its
+// first item's baseline, and the icon's svg has none, so its bottom edge would sit on the line
+// and lift every name 4px; top puts the first line level with the row's other text, and a form
+// that wraps hangs below it.
 .compendium-list__forms {
+  @include dotted-row('.compendium-list__item', $gap: space(4));
+
   display: inline-flex;
   vertical-align: top;
-  flex-wrap: wrap;
-  gap: space(1) space(2);
+  row-gap: space(1);
+
+  // A table row stays one line (the table scrolls in its frame); only a card wraps the forms.
+  flex-wrap: nowrap;
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    flex-wrap: wrap;
+  }
 }
 
-// A form: its icon and its name as one unit that never wraps apart, the icon a
-// quarter em from the name.
+// A form's wrapper is a flex box so it is exactly as tall as the form inside it. As a plain
+// block it took a line's height, which stood taller than the form and left the dot below the
+// icon's centre; the mixin centres the dot on this box.
+.compendium-list__item {
+  display: flex;
+}
+
+// A form: its icon and its name as one unit that never wraps apart, the icon a quarter em
+// from the name.
 .compendium-list__form {
   display: inline-flex;
   align-items: center;
@@ -35,4 +48,49 @@
 // A name linking to its entry's page, drawn by the shared `icon-link` mixin.
 .compendium-list__name {
   @include icon-link;
+}
+
+// The Edit column, pinned to the right edge while the others scroll beneath it (the shared
+// `sticky-action-column`, neutral where the People table's Impersonate is red). The +N panel
+// in the Categories cell is `layer('floating')`, above it, so it passes over the pinned
+// pencils of the rows beneath. The pencil's own tip lives inside this cell's stacking context
+// and opens to its left, over the scrolling columns, so no later pinned cell reaches it.
+.compendium-list__edit {
+  @include sticky-action-column($sticky-column-layer);
+}
+
+// The Categories column's floor: the widest row of chips any seeded entry shows, measured in
+// Chromium at a 16px root with the final compact, dot-less chips: Aspen's Ancestor Work and
+// Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to
+// the next 0.25rem. The cell's own inset is added each side. Only where the table is wide:
+// below that the table scrolls rather than wraps its chips, so the floor keeps the column from
+// being squeezed under them; as a card (under `$table-stack-width`) it never applies and the
+// chips wrap.
+$categories-floor: 16.75rem;
+$categories-wide: 75rem;
+
+.compendium-list__categories {
+  // The chips stay on one line while this is a table; a card wraps them (the shared
+  // `.specimen__chips` row wraps).
+  .category-chips {
+    flex-wrap: nowrap;
+
+    @container data-table (max-width: #{$table-stack-width}) {
+      flex-wrap: wrap;
+    }
+  }
+
+  @container data-table (min-width: #{$categories-wide}) {
+    min-inline-size: calc(#{$categories-floor} + 2 * #{$table-cell-inset});
+  }
+}
+
+// The empty sentence: muted as a whole, its filter values bold in the same ink, like the
+// search sentence's values (claude-docs/components/compendium-list.md).
+.compendium-list__empty {
+  color: $text-muted;
+
+  strong {
+    font-weight: 700;
+  }
 }

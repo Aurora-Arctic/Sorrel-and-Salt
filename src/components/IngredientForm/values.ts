@@ -1,3 +1,4 @@
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type {
   FieldError,
@@ -305,8 +306,18 @@ export function entryDetail(entry: AnyListEntry): string | undefined {
 }
 
 /** The text of the linked ingredient's form `id`, when it knows one by that id. */
+const formDisplay = (form: string | undefined): string | undefined =>
+  form === undefined ? undefined : formLabel(form);
+
 const formNamed = (link: SubstituteLink, id: string | undefined): string | undefined =>
-  link.variants?.find((variant) => variant.id === id)?.form;
+  formDisplay(link.variants?.find((variant) => variant.id === id)?.form);
+
+/** The substitute picker's two headings (M12.19), in the order they list. */
+export const YOUR_INGREDIENTS = 'Your Ingredients';
+export const COMPENDIUM_HEADING = 'Compendium';
+
+/** The picker's own cupboard group lists first and stays first, whatever a form ranks (M12.19). */
+const groupOf = ({ heading }: ListOption): number => (heading === YOUR_INGREDIENTS ? 0 : 1);
 
 /**
  * A variant's substitute suggestions, ranked for `form` (MB.215): the
@@ -330,7 +341,7 @@ export function rankForForm(
   };
   return options
     .map((option, index) => ({ option, index, tier: rankOf(option) }))
-    .sort((a, b) => a.tier - b.tier || a.index - b.index)
+    .sort((a, b) => groupOf(a.option) - groupOf(b.option) || a.tier - b.tier || a.index - b.index)
     .map(({ option }) => option);
 }
 
@@ -367,7 +378,8 @@ export function formRows(
       .sort((a, b) => a.tier - b.tier || a.index - b.index);
     return ranked.map(({ variant }) => ({
       value: option.value,
-      label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
+      label: `${name} · ${variant.group ? `${formLabel(variant.form)} (${variant.group})` : formLabel(variant.form)}`,
+      heading: option.heading,
       key: `${option.key ?? link.id}/${variant.id}`,
       link,
       variantId: variant.id,

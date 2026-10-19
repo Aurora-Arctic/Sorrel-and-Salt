@@ -11,14 +11,15 @@ ingredients list (M9.6) and the spell builder follow.
 `IngredientSearch` (the default, a server component) draws the list. Its props
 (`IngredientSearchProps`, `types.ts`):
 
-| Prop                       | What it is                                                       |
-| -------------------------- | ---------------------------------------------------------------- |
-| `search`                   | The filter row, normally an `IngredientSearchForm`               |
-| `action`                   | Optional: the page's Add or Create, drawn beneath the filter row |
-| `children`                 | The results: a table, cards or an empty state                    |
-| `previousHref`, `nextHref` | Optional: the pager's links, as for any paged list               |
-| `position`                 | Optional: where this page stands among them all                  |
-| `className`                | Optional: the list's own root class, beside `list-frame`         |
+| Prop                       | What it is                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `search`                   | The filter row, normally an `IngredientSearchForm`                                             |
+| `action`                   | Optional: the page's Add or Create, drawn beneath the filter row                               |
+| `children`                 | The results: a table, cards or an empty state                                                  |
+| `shape`                    | Optional: `'table'` (default) or `'cards'`; the shape of the loading skeleton `ListBody` draws |
+| `previousHref`, `nextHref` | Optional: the pager's links, as for any paged list                                             |
+| `position`                 | Optional: where this page stands among them all                                                |
+| `className`                | Optional: the list's own root class, beside `list-frame`                                       |
 
 `IngredientSearchForm` (a client component, re-exported from `index.tsx`) is
 the filter row. Its props (`IngredientSearchFormProps`):
@@ -51,12 +52,41 @@ in the filter slot to carry.
   name, and the other filters the consumer carries in `searchHref` stay.
 - **The magnifier Search button is the form's one submit.** It sits inside
   the box at its start (Combobox's `leading` slot), with the clear alone at the
-  end: `[magnifier  Search names…  x]`. There is no chevron (`toggle={false}`),
+  end: `[magnifier  Search names, forms & descriptions  x]`. There is no chevron (`toggle={false}`),
   since typing opens the dropdown already. This is the owner's call of
   2026-10-16, after a survey of design systems; Nielsen Norman Group's
   [magnifying-glass article](https://www.nngroup.com/articles/magnifying-glass-icon/)
   says a magnifier must submit when clicked. Without JavaScript the box is a
   plain GET form to `action`, sending its text as `query`.
+- **The box has no visible label, and its placeholder says what the search reads**
+  (the owner, 2026-10-19): "Search names, forms & descriptions", the fields the
+  ranked search matches (label, formal name, folk names, forms and descriptions;
+  [`compendium-read.md`](../db/compendium-read.md)). The accessible name is still
+  "Name": the box is drawn without `FieldShell`, and Combobox draws its own
+  visually hidden label, so no second hide mechanism exists. The clear keeps its
+  name, "Clear Name", and the status region "Name results".
+- **The search row sticks once scrolled to** (the owner, 2026-10-19), holding the
+  box, the Filters button and Clear All with it, and the Filters tray, which opens
+  inside the form and travels with it. `IngredientSearch` marks its root
+  `.ingredient-search`, and its `<search>` is `position: sticky` there (the form
+  inside would stop at its own end; the sticky box's parent must span the
+  results), with an opaque page background and the `sticky-row` layer, above the
+  cards and below the bar, tips and dialogs. The offset is one custom property,
+  `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
+  PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
+  above, cancelled at rest by an equal negative margin so the page lays out as
+  before, and `space(2)` below, real space between the row and the cards with no
+  cancelling margin (changed 2026-10-19, back to what it was). The search sentence
+  under the row takes that `space(2)` back from the frame's gap, so it sits a gap
+  from the input as the cards sit a gap from it. The tray hangs from the form
+  inside, so the padding never moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
+  child, watches a one-pixel sentinel at the row's resting place with an
+  IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
+  Without the API (past the browser floor) the row simply has no shadow. The
+  root's `scroll-padding-top` leaves room for the stuck row, padding included,
+  when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
+  sticks too. The phone sheet is unchanged.
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file
@@ -65,6 +95,14 @@ in the filter slot to carry.
   show; once anything is typed it says "Keep typing to search" instead, at once
   and announced by the status region, so one character is not met by silence
   (the owner, 2026-10-16). It is a message rather than a label, so sentence case.
+- **Given a `workspaceId`, the type-ahead suggests from the cupboard, not the
+  compendium.** `IngredientSearchForm` and the box take it as an optional prop
+  (M9.6). The box then asks `workspaceIngredients(workspaceId:, query:, first: 25)`
+  (the `IngredientSearchCupboardMatches` document) and never the compendium
+  query; without it, the reverse. Both answers become the same
+  `IngredientSearchMatch`, and where the coven's cupboard entry sets a label
+  (`cupboardEntry(workspaceId:)`), the label is the row's name. Everything
+  else about the box, the floor, the 25 rows and See all results., is the same.
 - **The dropdown shows at most 25 rows, the first page, in the server's
   order.** It never asks for a second. When there is another page, a last row, See all results., ends the
   listbox and applies the debounced text to the list. It is selectable like
@@ -80,7 +118,7 @@ in the filter slot to carry.
   through the list frame's transition, which would grey the list and swap it
   for a skeleton. The heading is opt-in so a consumer whose pick is a page
   (M8.18) does not show a loading modal.
-- **The source is the compendium only.** M9.6 adds the workspace source.
+- **The source is the compendium, or the coven’s cupboard.** Given a `workspaceId` the box reads the cupboard (above); the coven Ingredients page does so.
 
 ## The parameter table
 
@@ -108,7 +146,7 @@ The table gives four functions, and every caller uses only these:
   dropped.
 
 **Adding a filter is one new entry** and touches none of those callers;
-`tests/lib/search-param-table.test.ts` proves it by adding one, and the coven's table is the first real one: `COVEN_PARAMS` ([`IngredientSearch/coven-params.ts`](../../src/components/IngredientSearch/coven-params.ts)) spreads the compendium's entries and adds `source` and `inStock` (M9.7), with `tests/components/IngredientSearch/coven-params.test.ts` showing the compendium's table unchanged. The pieces
+`tests/lib/search-param-table.test.ts` proves it by adding one, and the coven's table is the first real one: `COVEN_PARAMS` ([`IngredientSearch/coven-params.ts`](../../src/components/IngredientSearch/coven-params.ts)) spreads the compendium's entries and adds `source`, `inStock` (M9.7) and `lowStockOnly` (M9.8), with `tests/components/IngredientSearch/coven-params.test.ts` showing the compendium's table unchanged. The pieces
 that do change are the filter's own control, the service and the GraphQL
 argument it reaches.
 
@@ -144,6 +182,7 @@ address cannot reject it the way `listParam` rejects a word outside its set.
 | `query`             | text                   | `query`             |                                            |
 | `forms`             | text list              | `forms`             | The compendium read folds the case         |
 | `withoutReferences` | on or off              | `withoutReferences` | Written `1`                                |
+| `withoutForms`      | on or off              | `withoutForms`      | Written `1` (M12.30)                       |
 | `elements`          | list of elements       | `elements`          | Dropped when outside `INGREDIENT_ELEMENTS` |
 | `categories`        | slug list              | `categoryIds`       | Through the `categories` lookup            |
 | `categoryMode`      | `all` or `any`         | `categoryMode`      | Written only for `any`                     |
@@ -240,7 +279,7 @@ true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`)
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
 swaps the pair), then one clause per kind, always in this order whatever order
 the address holds them: text query, categories, forms, deities, zodiac, planets,
-elements, toxic, then the admin-only nomenclature and No Refs. Clauses are
+elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
 > 3 ingredients, matching “rue”, in the Protection and Healing categories, in the
@@ -256,7 +295,14 @@ separated by a comma. An example with every kind:
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   planets, which belongs to the linked value ("the Sun").
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
-- **Nomenclature and No Refs** are named only when `admin` is true; otherwise
+- **Source, In Stock and Low Stock Only** belong to a coven's list and are named
+  whenever the filter holds them. `source` (`local` or `compendium`) reads "from
+  the Local source" or "from the Compendium source"; `inStock` reads "in stock";
+  `lowStockOnly` reads "low or out of stock", the two badges it keeps. A false flag
+  or a null source says nothing. Their fragments carry the facets `source`,
+  `inStock` and `lowStockOnly` (`value` `true` for the two flags), so the component's
+  link away drops just that one. The coven's list passes `noun` as it likes.
+- **Nomenclature, No Refs and No Form** ("without forms") are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
 - **A value with no label** is named by its raw value, so a stale link still reads.
   Blank values and empty lists are not chosen.

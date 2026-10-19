@@ -148,8 +148,28 @@ const DREAMS = category('Testdreams', '#c79bd8', '#6d3d82');
 
 const MOCKROOT = { id: nextId(), slug: 'fixture-mockroot', workspaceId: null };
 
+/** A coven's cupboard row over FULL's entry; every override null unless given. */
+const cupboardEntry = (
+  overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {},
+): NonNullable<IngredientDetail['cupboardEntry']> => ({
+  id: nextId(),
+  workspaceId: '00000000-0000-4000-8000-0000000000c1',
+  ingredientId: '00000000-0000-4000-8000-000000000001',
+  label: null,
+  description: null,
+  safetyNotes: null,
+  elements: null,
+  celestialBodies: null,
+  zodiacSigns: null,
+  colors: null,
+  ...STAMPS,
+  ...overrides,
+});
+
 const FULL: IngredientDetail = {
   entry: entryRow(),
+  retired: false,
+  cupboardEntry: null,
   folkNames: ['Fixture Bane', 'Grey Testing Weed'],
   categories: [WARDING, DREAMS],
   deities: [
@@ -189,6 +209,23 @@ const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) =>
   `/compendium/ingredients/${ingredient.slug}` as Route;
 
 /** A page's main, as the routes give it. */
+const COMPENDIUM_CASE: NonNullable<IngredientEntryProps['replaces']> = {
+  tip: 'This is the compendium’s entry. The link opens its public page.',
+  entries: [
+    {
+      title: 'Testwort (Fixtura testalis)',
+      href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+    },
+  ],
+  total: 1,
+};
+
+const LOCAL_TIP =
+  'The compendium holds an entry with this same formal name. Your coven’s entry and it stay separate; compare them here.';
+
+const SIMILAR_TIP =
+  'Your entry has no formal name, so these compendium entries only share its name. If one is the same ingredient, Link to Selected makes yours that entry.';
+
 const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
 );
@@ -263,6 +300,65 @@ export const NothingRecorded: Story = () => (
   />
 );
 
+// A compendium entry this coven holds in its cupboard, with nothing changed
+// (M12.16): marked Compendium, and no Local badge.
+export const FromTheCompendium: Story = () => (
+  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />
+);
+
+// The same, annotated: the coven's label heads the page with the compendium's
+// name beneath it, its own description stands, the planets are cleared on
+// purpose, and the rest is the compendium's.
+export const Annotated: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      cupboardEntry: cupboardEntry({
+        label: 'Hedgewort',
+        description: 'What our coven makes of it.',
+        celestialBodies: [],
+      }),
+    }}
+  />
+);
+
+// The cupboard choices beside the title (M12.17). The workshop has no API, so
+// a press answers with the generic error. A member sees Add to Cupboard while
+// the coven does not hold the entry; an Edit menu of Annotate, Make It Ours
+// (M12.23) and Remove once it does; a viewer sees none.
+const CUPBOARD = {
+  workspaceId: nextId(),
+  covenSlug: 'fixture-coven',
+  canAdd: true,
+  canAnnotate: true,
+  canRemove: true,
+  canMakeOurs: true,
+  annotate: {
+    href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
+    closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
+    opened: false,
+  },
+};
+
+export const AddToCupboard: Story = () => <Entry cupboard={CUPBOARD} />;
+
+export const AnnotateOrRemove: Story = () => (
+  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
+);
+
+export const ViewerSeesNoCupboardButtons: Story = () => (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={{
+      ...CUPBOARD,
+      canAdd: false,
+      canAnnotate: false,
+      canRemove: false,
+      canMakeOurs: false,
+    }}
+  />
+);
+
 // A coven's own entry, badged Local. Its Edit is M8.17's, so none yet.
 export const CovenEntry: Story = () => (
   <Entry
@@ -275,7 +371,7 @@ export const CovenEntry: Story = () => (
 
 // A compendium entry as a curator reads it on a coven's route: Edit opens the
 // compendium's edit modal over the page (it has no router here, so a press
-// follows the link), and the link to its public page.
+// follows the link), and the "In the Compendium" block linking its public page.
 export const CompendiumEntryForCurator: Story = () => (
   <Entry
     edit={{
@@ -283,7 +379,89 @@ export const CompendiumEntryForCurator: Story = () => (
       closeHref: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
       deletedHref: '/compendium' as Route,
     }}
-    canonical={'/compendium/ingredients/testwort-fixtura-testalis' as Route}
+    replaces={COMPENDIUM_CASE}
+  />
+);
+
+// A compendium entry seen from a coven: the same block, listing the entry
+// itself once, with no See All.
+export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_CASE} />;
+
+// A compendium entry the curators retired, read on a coven's route because the
+// coven's cupboard still names it (M12.24): marked, and with neither the
+// public link nor Edit, since the compendium no longer holds it.
+export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
+
+// The same, to a member: Make It Ours is the one cupboard choice left, a plain button
+// (M12.23), since the cupboard services no longer find the entry.
+export const RetiredOffersMakeItOurs: Story = () => (
+  <Entry
+    detail={{ ...FULL, retired: true, cupboardEntry: cupboardEntry() }}
+    cupboard={{ ...CUPBOARD, canAdd: false, canAnnotate: false, canRemove: false }}
+  />
+);
+
+// A coven's own entry whose formal name a compendium entry shares: the
+// "In the Compendium" block with its one link and the ⓘ saying why it is shown.
+export const LocalReplacingCompendiumEntry: Story = () => (
+  <Entry
+    replaces={{
+      tip: LOCAL_TIP,
+      entries: [
+        {
+          title: 'Testwort (Fixtura testalis)',
+          href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+        },
+      ],
+      total: 1,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+    }}
+  />
+);
+
+// Four compendium entries share the formal name: the first three, then See All
+// to the compendium search.
+// An own entry with no formal name: the Similar block, a radio and title in a
+// label beside each entry's chain icon (the link), and one Link to Selected
+// button. The second title is long, to show it wrapping beside its radio with
+// the icon never alone on a line.
+export const SimilarInTheCompendium: Story = () => (
+  <Entry
+    similar={{
+      tip: SIMILAR_TIP,
+      entries: [
+        {
+          title: 'Testwort (Fixtura testalis)',
+          href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+          id: 'c1',
+          thenHref: '/coven/fixture-coven/ingredients/c1' as Route,
+        },
+        {
+          title: 'Fixture Wort of the Long Name (Fixtura longissima nominis extensissimi)',
+          href: '/compendium/ingredients/fixture-wort-long' as Route,
+          id: 'c2',
+          thenHref: '/coven/fixture-coven/ingredients/c2' as Route,
+        },
+      ],
+      total: 5,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+      convert: { workspaceId: 'w1', localId: 'l1' },
+    }}
+  />
+);
+
+export const LocalReplacingSeveral: Story = () => (
+  <Entry
+    replaces={{
+      tip: LOCAL_TIP,
+      entries: [
+        { title: 'Fixture Alpha', href: '/compendium/ingredients/fixture-alpha' as Route },
+        { title: 'Fixture Beta', href: '/compendium/ingredients/fixture-beta' as Route },
+        { title: 'Fixture Gamma', href: '/compendium/ingredients/fixture-gamma' as Route },
+      ],
+      total: 4,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+    }}
   />
 );
 

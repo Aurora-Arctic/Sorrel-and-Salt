@@ -1,3 +1,4 @@
+import type { CompendiumValues, CupboardOverrides } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
@@ -54,6 +55,82 @@ export interface IngredientEntryProps {
    * open (MB.82): its name, and its page now.
    */
   movedAway?: { name: string; href: Route };
-  /** The public page of a compendium entry, which the coven route links to. */
-  canonical?: Route;
+  /**
+   * The side column's "In the Compendium" block (M12.12). For a coven's own
+   * entry, the compendium entries of the same formal name: up to three links, each titled
+   * "Name (Formal Name)" (or the name alone) and going to the entry's public
+   * page. For a compendium entry, itself: one link to its public page. `tip`
+   * is the sentence in the ⓘ beside the heading, chosen by the page. `total`
+   * is how many are found in all; past the links shown, "See All" goes to
+   * `allHref`, the compendium search for the entry's label. `allHref` is left
+   * out where nothing matches, and then no See All shows. The block is left
+   * out for a local with no match.
+   */
+  replaces?: {
+    tip: string;
+    entries: { title: string; href: Route }[];
+    total: number;
+    allHref?: Route;
+  };
+  /**
+   * The side column's "Similar in the Compendium" block (M12.22), for an own
+   * entry that declares no formal name: the compendium entries sharing its
+   * label, three then See All, in the shape `replaces` has. `convert` is
+   * left out for a role that may not convert (a viewer), and then no
+   * radios and **Link to Selected** show; given, each entry names the coven's
+   * page for it, where a successful conversion goes.
+   */
+  similar?: {
+    tip: string;
+    entries: { title: string; href: Route; id: string; thenHref: Route }[];
+    total: number;
+    allHref?: Route;
+    convert?: { workspaceId: string; localId: string };
+  };
+  /**
+   * The cupboard buttons (M12.17), for a compendium entry seen from a coven:
+   * Add to Cupboard, or Annotate This Entry and Remove from Cupboard once the
+   * coven holds it, each only for a member whose role permits it. Left out on
+   * the public page and for a coven's own entry.
+   */
+  cupboard?: CupboardProps;
+}
+
+/**
+ * What a coven's member may do about a compendium entry in their cupboard
+ * (M12.17). Left out on the public page and for a coven's own entry.
+ */
+export interface CupboardProps {
+  workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
+  /** What the member may do, from their role: add needs create, annotate update, remove delete. */
+  canAdd: boolean;
+  canAnnotate: boolean;
+  canRemove: boolean;
+  /**
+   * Make It Ours (M12.23), on the permission the service asserts, read from
+   * `MAKE_IT_OURS_PERMISSION`; offered once the coven holds the entry, a
+   * retired one included.
+   */
+  canMakeOurs: boolean;
+  /**
+   * Annotate opens its dialog from the address, as the curator's Edit does:
+   * the link and the `?annotate` it names, where closing goes back to, and
+   * whether the address asks for it now. Only set `opened` for a member who
+   * may annotate and a coven that holds the entry; otherwise the page ignores
+   * the parameter.
+   */
+  annotate: { href: Route; closeHref: Route; opened: boolean };
+}
+
+/** What the client buttons need to draw: the props above, and the entry's two sides for the form. */
+export interface CupboardActionsProps extends CupboardProps {
+  ingredientId: string;
+  /** The coven holds the entry now. */
+  held: boolean;
+  compendium: CompendiumValues;
+  overrides: CupboardOverrides;
+  /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
+  edit?: { href: Route; entry: EditableEntry };
 }

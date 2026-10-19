@@ -64,6 +64,13 @@ describe('ChipColorField', () => {
   });
   afterAll(() => vi.unstubAllGlobals());
 
+  it('previews the sample as one chip, the full level', () => {
+    render(<Controlled />);
+
+    const samples = screen.getAllByText('Fixture Wards', { ignore: 'label' });
+    expect(samples.filter((chip) => chip.classList.contains('chip'))).toHaveLength(1);
+  });
+
   it("shows the hex in a text box named by its label, beside the picker's area and hue slider", () => {
     render(<Controlled />);
 

@@ -46,6 +46,7 @@ const EMPTY: CompendiumFacets = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
 };
 
 describe('the facet counts as the list takes them', () => {
@@ -178,6 +179,7 @@ describe('the facet counts as the list takes them', () => {
           { value: 'not_toxic', count: 4 },
         ],
         withoutReferences: 7,
+        withoutForms: 5,
       },
       VOCABULARIES,
     );
@@ -190,6 +192,7 @@ describe('the facet counts as the list takes them', () => {
       ['not_toxic', 4],
     ]);
     expect(counts.withoutReferences).toBe(7);
+    expect(counts.withoutForms).toBe(5);
   });
 });
 
@@ -201,6 +204,7 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
       { value: 'compendium', count: 0 },
     ],
     inStock: 3,
+    lowStockOnly: 2,
   };
 
   it('carries both Source values, zero kept, and the In Stock count beside the shared kinds', () => {
@@ -214,6 +218,7 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
       ['compendium', 0],
     ]);
     expect(counts.inStock).toBe(3);
+    expect(counts.lowStockOnly).toBe(2);
     expect(counts.toxic.map(({ value, count }) => [value, count])).toEqual([['toxic', 2]]);
   });
 
@@ -221,5 +226,6 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
     const counts = compendiumFacetCounts(EMPTY, VOCABULARIES);
     expect(counts).not.toHaveProperty('source');
     expect(counts).not.toHaveProperty('inStock');
+    expect(counts).not.toHaveProperty('lowStockOnly');
   });
 });

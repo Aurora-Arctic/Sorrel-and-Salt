@@ -11,7 +11,7 @@ import { references } from '../../modules/ingredients/schema/references';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { findPageInTiers } from './finders';
-import { readableIngredientParent, readableVariantParent } from './ingredient-parent';
+import { inUseIngredientParent, inUseVariantParent } from './ingredient-parent';
 import { foldedWordMatch, inCompendium, notSoftDeleted, readableInTiers } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type {
@@ -48,6 +48,7 @@ export async function findReferencesOf(
   memberships: readonly Membership[],
   key: SourcedKey,
   ids: readonly string[],
+  heldBy?: Membership,
 ): Promise<CitingLink[]> {
   if (ids.length === 0) return [];
   const column = referenceLinks[key];
@@ -60,9 +61,9 @@ export async function findReferencesOf(
   );
   const readable =
     table === ingredients
-      ? readableIngredientParent(memberships, column, inParentsTier)
+      ? inUseIngredientParent(memberships, column, heldBy, inParentsTier)
       : table === ingredientVariants
-        ? readableVariantParent(memberships, column, inParentsTier)
+        ? inUseVariantParent(memberships, column, heldBy, inParentsTier)
         : and(existsIn(table, eq(table.id, column)), inCompendium(references));
   const rows: JoinedRow<ReferenceLinkRow, ReferenceRow>[] = await selectFrom(
     referenceLinks,

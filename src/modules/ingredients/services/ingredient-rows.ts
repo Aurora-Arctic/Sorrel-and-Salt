@@ -8,11 +8,13 @@ import {
   findManyReferences,
   findOneIngredient,
   findReferencesOf,
+  findWorkspaceIngredientByIdentity,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
+import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId } from '../../../lib/validation';
 import { ingredientCategories } from '../schema/ingredient-categories';
@@ -22,7 +24,7 @@ import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { referenceLinks } from '../schema/reference-links';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { curatedNames, foldVocabularyValue } from '@/modules/vocabulary';
+import { curatedNames, describeEntry, foldVocabularyValue } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
 import type {
@@ -96,10 +98,9 @@ export function ingredientColumns(fields: IngredientFields) {
  * so a service passes each on without naming them. Either tier's parse.
  */
 export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
-  const { folkNames, substitutes, references, deities, variants, jarMerges, ...fields } = parsed;
+  const { folkNames, substitutes, references, deities, variants, ...fields } = parsed;
   return {
     fields,
-    jarMerges,
     lists: { folkNames, substitutes, references },
     picked: { deities: deities ?? [], variants } satisfies PickedLists,
   };
@@ -989,4 +990,62 @@ export async function swapFolkName(
   const folded = previousName.toLowerCase();
   if (others.some((name) => name.toLowerCase() === folded)) return;
   await write.insert(ingredientFolkNames, { ingredientId, name: previousName });
+}
+
+/** What a collision is reported from: the label and the formal name alone. */
+type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
+
+/**
+ * A write that broke one of the coven's unique indexes, as a `ValidationError`
+ * on the field that caused it; any other error unchanged. An identity
+ * collision — a second ingredient under a formal name the coven holds
+ * (MB.215) — is reported on `canonicalName`, or on `name` for one with none,
+ * whose label is its identity, naming the ingredient holding it, read after
+ * the write rolled back, and pointing at adding the form to it — whichever
+ * index Postgres names: the label and address indexes are older than the
+ * identity one, so the oil written under the herb's label meets them first.
+ * `slug` is the one this write set, `id` the ingredient an update writes,
+ * never its own collision.
+ */
+export async function refuseCollision(
+  error: unknown,
+  membership: Membership,
+  fields: NameFields,
+  slug: string,
+  id: string | undefined,
+): Promise<never> {
+  const refuse = (path: string, message: string) => {
+    throw new ValidationError([{ path: [path], message }]);
+  };
+  const { name, canonicalName } = fields;
+  const index = violatedUniqueIndex(error);
+  if (
+    index === 'ingredients_workspace_identity_key_unique' ||
+    index === 'ingredients_workspace_label_unique' ||
+    index === 'ingredients_workspace_slug_unique'
+  ) {
+    const holder = await findWorkspaceIngredientByIdentity(membership, fields);
+    if (holder && holder.id !== id) {
+      refuse(
+        canonicalName == null ? 'name' : 'canonicalName',
+        `This coven already has ${describeEntry(holder)} — add this form to it instead`,
+      );
+    }
+  }
+
+  switch (index) {
+    case 'ingredients_workspace_label_unique':
+      return refuse('name', `This coven already has an ingredient called "${name}"`);
+    case 'ingredients_workspace_identity_key_unique':
+      return refuse(
+        canonicalName == null ? 'name' : 'canonicalName',
+        `This coven already has an ingredient that is ${canonicalName ?? name}`,
+      );
+    case 'ingredients_workspace_slug_unique':
+      return refuse(
+        'name',
+        addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
+      );
+  }
+  throw error;
 }

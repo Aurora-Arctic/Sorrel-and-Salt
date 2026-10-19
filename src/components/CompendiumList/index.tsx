@@ -2,11 +2,13 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import { EditLink, LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
-import { Fragment, type ReactElement } from 'react';
+import { Fragment, type ReactElement, type ReactNode } from 'react';
+import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { noMatchText } from '../../lib/text';
+import { NO_MATCH_ADVICE, noMatchLead } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
@@ -56,27 +58,45 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   },
   {
     heading: 'Form',
-    // Each form led by its group's icon, the generic where it has none, the
-    // two held together as one unit that never wraps apart: the icon close
-    // to its name and the next form farther off (the owner's call,
-    // 2026-10-16). The forms sit in one wrapping row whose gap sets them
-    // apart, so a form that wraps starts its line at the cell's edge. The
-    // comma stays, on the name before it, so a screen reader hears a list; the
-    // space between two forms draws nothing in a flex row, and keeps the
-    // cell's name reading "Herb, Oil" and not "Herb,Oil".
+    // Each form led by its group's icon, the generic where it has none, the two held
+    // together as one unit that never wraps apart: the icon close to its name and the
+    // next form farther off (the owner's call, 2026-10-16). A dot is drawn between two
+    // forms by the `dotted-row` mixin, the card's mechanism, so a form that wraps
+    // starts its line at the cell's edge. The spoken comma ends the form before the
+    // dot and a space parts the two, which draws nothing in a flex row, so the cell's
+    // name reads "Herb, Oil" and a screen reader hears a list.
     cell: (entry) =>
       entry.forms.length ? (
         <span className="compendium-list__forms">
           {entry.forms.map(({ name, icon }, i) => (
             <Fragment key={name}>
               {i > 0 && ' '}
-              <span className="compendium-list__form">
-                <FormIcon name={icon} />
-                {i < entry.forms.length - 1 ? `${name},` : name}
+              <span className="compendium-list__item">
+                <span className="compendium-list__form">
+                  <FormIcon name={icon} />
+                  {/* The comma inside the label's inline span, not a flex child: Chrome
+                      sets a flex child apart with spaces, which read "Herb , Oil". */}
+                  <span>
+                    {formLabel(name)}
+                    {i < entry.forms.length - 1 && <span className="spoken-separator">,</span>}
+                  </span>
+                </span>
               </span>
             </Fragment>
           ))}
         </span>
+      ) : (
+        NONE
+      ),
+  },
+  {
+    heading: 'Categories',
+    className: 'compendium-list__categories',
+    headingClassName: 'compendium-list__categories',
+    // The card's chips: the first two, the rest behind +N (CategoryChips).
+    cell: (entry) =>
+      entry.categories.length ? (
+        <CategoryChips categories={entry.categories} label={entry.name} compact />
       ) : (
         NONE
       ),
@@ -86,6 +106,8 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     heading: 'Edit',
     hiddenHeading: true,
     action: 'corner',
+    className: 'compendium-list__edit',
+    headingClassName: 'compendium-list__edit',
     // Named with the formal name too, as two entries can share a label but
     // never a formal name.
     cell: (entry) => (
@@ -98,13 +120,47 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   },
 ];
 
+/** A filter's value, bold as the search sentence bolds its values. */
+const value = (text: string): ReactNode => <strong>{text}</strong>;
+
+/** "A", "A and B", "A, B and C" over nodes: `joinAnd`'s rule, for parts that are not strings. */
+const andNodes = (items: readonly ReactNode[]): ReactNode =>
+  items.map((item, index) => (
+    <Fragment key={index}>
+      {index === 0 ? null : index === items.length - 1 ? ' and ' : ', '}
+      {item}
+    </Fragment>
+  ));
+
+/** Values joined by a word, each bold: “a” or “b”. */
+const orValues = (values: readonly string[]): ReactNode =>
+  values.map((each, index) => (
+    <Fragment key={index}>
+      {index === 0 ? null : ' or '}
+      {value(`“${each}”`)}
+    </Fragment>
+  ));
+
+/** Bold names after a joining word: Fire or Water. */
+const joinedNames = (names: readonly string[], word: string): ReactNode =>
+  names.map((each, index) => (
+    <Fragment key={index}>
+      {index === 0 ? null : word}
+      {value(each)}
+    </Fragment>
+  ));
+
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
  * an admin sees what to change: "No entries match “wort”, the form “Oil” and
  * the element Fire. Change or clear the filter to see more." With no
- * filter, the compendium itself is empty, and says how to begin it.
+ * filter, the compendium itself is empty, and says how to begin it. The values
+ * are bold, as the search sentence's are, and the whole sentence is muted. A
+ * node rather than a string for that; `noMatchText` stays the string form
+ * for the other admin lists, and both build from `noMatchLead` and
+ * `NO_MATCH_ADVICE`.
  */
-function emptyText(
+export function emptyText(
   {
     query,
     forms,
@@ -113,40 +169,77 @@ function emptyText(
     planets,
     toxic,
     withoutReferences,
+    withoutForms,
     elements,
     categories,
     categoryMode,
   }: Filter,
   known: readonly CompendiumCategoryChoice[],
   facets: CompendiumFacetCounts,
-): string {
+  /** What an unfiltered empty list says: the admin's tells how to begin it. */
+  whenEmpty = 'The compendium is empty. Add the first entry with Add Ingredient.',
+): ReactElement {
   // A deity by its name and tradition, the pair that tells two of one name apart.
   const deityNames = deities.flatMap((slug) => {
     const deity = facets.deities.find(({ value }) => value === slug);
     return deity ? `${deity.label} (${deity.tradition})` : [];
   });
   const toxicLabel = facets.toxic.find(({ value }) => value === toxic)?.label;
-  const quoted = (values: readonly string[]) => values.map((each) => `“${each}”`).join(' or ');
   // By name, the ones the page knows; a slug it does not is not filtering anything.
   const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
-    query && `“${query}”`,
-    forms.length > 0 && `the ${forms.length === 1 ? 'form' : 'forms'} ${quoted(forms)}`,
-    deityNames.length > 0 &&
-      `the ${deityNames.length === 1 ? 'deity' : 'deities'} ${quoted(deityNames)}`,
-    zodiac.length > 0 && `the ${zodiac.length === 1 ? 'sign' : 'signs'} ${quoted(zodiac)}`,
-    planets.length > 0 && `the ${planets.length === 1 ? 'planet' : 'planets'} ${quoted(planets)}`,
-    toxicLabel && `the toxic setting ${toxicLabel}`,
-    withoutReferences && 'No Refs',
-    elements.length > 0 &&
-      `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
-    named.length > 0 &&
-      `the ${named.length === 1 ? 'category' : 'categories'} ${named.join(categoryMode === 'any' ? ' or ' : ' and ')}`,
-  ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText(
-    'entries',
-    filters,
-    'The compendium is empty. Add the first entry with Add Ingredient.',
+    query && value(`“${query}”`),
+    forms.length > 0 && (
+      <>
+        the {forms.length === 1 ? 'form' : 'forms'} {orValues(forms)}
+      </>
+    ),
+    deityNames.length > 0 && (
+      <>
+        the {deityNames.length === 1 ? 'deity' : 'deities'} {orValues(deityNames)}
+      </>
+    ),
+    zodiac.length > 0 && (
+      <>
+        the {zodiac.length === 1 ? 'sign' : 'signs'} {orValues(zodiac)}
+      </>
+    ),
+    planets.length > 0 && (
+      <>
+        the {planets.length === 1 ? 'planet' : 'planets'} {orValues(planets)}
+      </>
+    ),
+    toxicLabel && <>the toxic setting {value(toxicLabel)}</>,
+    withoutReferences && value('No Refs'),
+    withoutForms && value('No Form'),
+    elements.length > 0 && (
+      <>
+        the {elements.length === 1 ? 'element' : 'elements'}{' '}
+        {joinedNames(
+          elements.map((each) => labelOf(ELEMENT_OPTIONS, each)),
+          ' or ',
+        )}
+      </>
+    ),
+    named.length > 0 && (
+      <>
+        the {named.length === 1 ? 'category' : 'categories'}{' '}
+        {joinedNames(named, categoryMode === 'any' ? ' or ' : ' and ')}
+      </>
+    ),
+  ].filter((filter): filter is Exclude<typeof filter, false | '' | undefined> => Boolean(filter));
+  return (
+    <span className="compendium-list__empty">
+      {filters.length ? (
+        <>
+          {noMatchLead('entries')}
+          {andNodes(filters)}
+          {NO_MATCH_ADVICE}
+        </>
+      ) : (
+        whenEmpty
+      )}
+    </span>
   );
 }
 
@@ -183,6 +276,7 @@ const CompendiumList = ({
       rows={entries}
       rowKey={(entry) => entry.id}
       empty={emptyText(filter, categories, facets)}
+      className="data-table--nowrap"
     />
   </IngredientSearch>
 );

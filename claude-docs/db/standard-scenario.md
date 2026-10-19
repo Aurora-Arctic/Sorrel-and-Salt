@@ -82,10 +82,9 @@ the 26 entries carry §5's own hard cases:
   (`Herb`, not `herb`), since the compendium may hold nothing else. A few
   entries carry signs and deities — Bay Laurel's `Leo` and `Apollo`,
   Lavender's `Gemini` and `Virgo`, Mugwort's `Artemis` and `Diana` — so
-  each list is in use. §5's uncurated `rhizome`, a value a member writes
-  before an admin curates it and the second bucket of M4.7a's suggestion list,
-  is a coven's: `demo` seeds it on W's own Ginger, and Ginger here is
-  `Root`.
+  each list is in use. Ginger here is `Root`, the curated value; the compendium
+  holds nothing else (MB.162), and `demo` seeds no coven entry with an
+  uncurated one.
 - **One entry with two forms**: Rosemary is `Herb` and `Oil` (MB.222), the
   oil with its own description, "Sprigs steeped in olive oil for a month, then
   strained, for anointing.", and its own safety note, "Dry the sprigs first: a
@@ -96,9 +95,9 @@ the 26 entries carry §5's own hard cases:
   argument for demanding a formal name in the curated tier is that those two
   are confused in the field.
 
-M4.7/M4.7a (fuzzy duplicates, scoped suggestions) and M8.3/M8.3a
-(local-beats-compendium resolution, folk-name promotion) resolve against these
-rows. None of those tasks can be tested against tidy data, which is why the
+M4.7/M4.7a (fuzzy duplicates, scoped suggestions), M8.3a (folk-name
+promotion) and the compendium matches an own entry's page offers (M12.12,
+M12.22) resolve against these rows. None of those tasks can be tested against tidy data, which is why the
 mess is seeded rather than left for each test to build.
 
 Entries also carry folk names (M4.4a's child table — "Uña de Gato" on both
@@ -120,8 +119,14 @@ variant's unique index, through `insertMissingBy`: a variant an admin removed
 counts as present and is not restored, and one already there is not
 rewritten. `tests/db/seed/demo.test.ts` proves, after a `demo` run with
 `standard` inside it, that every seeded entry holds exactly the live variants
-its literal names — Rosemary's `Herb` and `Oil`, W's Ginger's `rhizome` with
-no pick — and that a second run writes no variant.
+its literal names, Rosemary's `Herb` and `Oil` among them, and that a second run writes no variant.
+
+### No cupboard rows
+
+`standard` seeds no `workspace_compendium_entries` rows (M12.26), and no coven
+ingredients: W and X start with empty cupboards, so a test that wants an entry
+in one inserts the row itself (`tests/support/db/insert-cupboard-entry.ts`).
+`demo` seeds W's ([demo-scenario.md](demo-scenario.md)).
 
 ### One transaction, every vocabulary
 
@@ -175,9 +180,8 @@ It was `(name, canonicalName, form)` until MB.222, and the identity was chosen
 over `(name, canonicalName)` for two reasons. An entry a person relabelled is
 still the one the seed wrote, where a key on the label would insert it again,
 and the identity index would refuse that second row and fail the scenario.
-And a `demo` database seeded when W's Ginger was "Fresh Ginger" finds it
-present under the same formal name, so it keeps its old label rather than
-failing ([demo-scenario.md](demo-scenario.md)).
+And a database seeded when an entry carried an older label finds it present
+under the same formal name, so it keeps that label rather than failing.
 
 ### A reseed of `standard` puts a deity pick back; `demo` does not
 

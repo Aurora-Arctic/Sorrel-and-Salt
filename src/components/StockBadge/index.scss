@@ -1,0 +1,45 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Low Stock wears the muted `.badge--low-stock` palette and Out of Stock a muted
+// red of its own, `.badge--out-of-stock` (both from the primitives); safety stays
+// the only solid, alarming badge. The states are also told apart by word and icon,
+// and Out of Stock by a heavier border, so the difference survives without colour.
+.stock-badge {
+  gap: space(1);
+}
+
+.stock-badge--out {
+  border-width: 2px;
+  // Keeps the heavier border from making this badge taller than a Low Stock one.
+  padding-block: 0;
+  font-weight: 700;
+}
+
+.stock-badge__icon {
+  inline-size: 0.875em;
+  block-size: 0.875em;
+  flex: none;
+}
+
+// The Low badge and its tip together: the tip's anchor, and the box the pointer
+// may cross onto the tip within.
+.stock-badge-tip {
+  @include tip-anchor;
+}
+
+// The badge as a button: only the tip opens from it, so it keeps the badge look
+// and shows the help cursor and a focus ring.
+.stock-badge--low {
+  font-family: inherit;
+  cursor: help;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// InfoTip's bubble, placed by `useTip` above the badge.
+.stock-badge__tip {
+  @include tip-above;
+}

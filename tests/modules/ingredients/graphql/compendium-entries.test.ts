@@ -8,6 +8,7 @@ import { A, B, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import {
   type IngredientFixture,
@@ -364,6 +365,26 @@ describe('deleteCompendiumIngredient', () => {
     expect((await remove(asUser(E), 'not-an-ingredient')).errors?.[0]?.extensions?.code).toBe(
       'NOT_FOUND',
     );
+  });
+});
+
+describe('compendiumEntryUsers', () => {
+  const USERS = 'query ($id: ID!) { compendiumEntryUsers(id: $id) }';
+
+  it('answers the number of covens for a curator, and FORBIDDEN for a member of one of them', async () => {
+    const id = await seed();
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: id }, A.id);
+
+    const curator = await run<{ compendiumEntryUsers: number }>(asUser(E), USERS, { id });
+    expect(curator.data).toEqual({ compendiumEntryUsers: 1 });
+    const member = await run(asUser(B), USERS, { id });
+    expect(member.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+  });
+
+  it("is NOT_FOUND for a coven's ingredient", async () => {
+    const id = await seed({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' });
+
+    expect((await run(asUser(E), USERS, { id })).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 });
 

@@ -2,6 +2,7 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissing, insertMissingBy, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
+import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
@@ -27,24 +28,10 @@ import type {
 
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
-// It adds W's own ingredients, so the jars mix both tiers and W holds the
-// uncurated form the compendium may not, and one custom one-off layer with no
-// `ingredient_id` (claude-docs/db/demo-scenario.md, "The demo scenario").
+// It adds W's cupboard (three compendium entries held, two of them annotated),
+// W's own ingredients, so the jars mix both kinds, and one custom one-off layer
+// with no `ingredient_id` (claude-docs/db/demo-scenario.md, "The demo scenario").
 // Writes go through the handle `seed()` was given — see minimal.ts.
-
-/**
- * Rosemary the coven grows, beside the compendium's entry for the same species
- * — the pair local-beats-compendium has to collapse. Two tiers, so both partial
- * indexes permit it.
- */
-const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
-  name: 'Garden Rosemary',
-  canonicalName: 'Salvia rosmarinus',
-  nomenclature: 'botanical',
-  variants: [{ form: 'herb' }],
-  description: 'Cut from the bush by the back door, dried in bunches over the stove.',
-  elements: ['fire'],
-};
 
 /** Story 29's one-field stub: a thing no naming system names, so `none`. */
 const HEARTH_ASH: SeedWorkspaceIngredient = {
@@ -55,51 +42,63 @@ const HEARTH_ASH: SeedWorkspaceIngredient = {
   elements: ['fire'],
 };
 
-const HOUSE_CHAMOMILE: SeedWorkspaceIngredient = {
-  name: 'House Chamomile',
-  canonicalName: 'Matricaria chamomilla',
-  nomenclature: 'botanical',
-  variants: [{ form: 'flower' }],
-  description: 'Heads picked through the summer and dried on a screen.',
-  elements: ['water'],
+/**
+ * The "Similar in the Compendium" case (M12.22): bought as "cat's claw" with no
+ * formal name, so it is an own stub beside the compendium's five Cat's Claws
+ * (four plants and the animal claw). A member can declare it to be one of the
+ * five (M12.21). It is the one own entry here that shares a name with the
+ * compendium, and it hides none of the five: a name match hides nothing
+ * (M12.28).
+ */
+const CATS_CLAW: SeedWorkspaceIngredient = {
+  name: "Cat's Claw",
+  nomenclature: 'unknown',
+  variants: [{ form: 'bark' }],
+  description:
+    'Bought as "cat\'s claw" from a market stall, and the seller could not say which plant it was.',
+  elements: ['earth'],
 };
 
 /**
- * §5's uncurated form: `rhizome` is nowhere in the curated vocabulary, and a
- * coven's form is free text so this variant can exist before it is. The
- * compendium may hold only curated forms (MB.162), so its Ginger's form is
- * `Root`. One identity, _Zingiber officinale_, in two tiers, which the
- * identity indexes permit, so W's entry shadows the compendium's as Garden
- * Rosemary does (MB.215, MB.222).
+ * A compendium entry W's cupboard holds, by the entry's formal name, with the
+ * coven's own say over it (M12.13). Each override is null, so the compendium's
+ * value shows, unless set here. An entry with none is in the cupboard and not
+ * annotated.
  */
-const GINGER: SeedWorkspaceIngredient = {
-  name: 'Ginger',
-  canonicalName: 'Zingiber officinale',
-  nomenclature: 'botanical',
-  variants: [
-    {
-      form: 'rhizome',
-      description: 'Knobbed rhizome bought fresh at the market, sliced and dried on the rack.',
-    },
-  ],
-  description: 'The coven’s own ginger, kept for warming jars.',
-  elements: ['fire'],
-};
+export interface SeedCupboardEntry {
+  entry: { name: string; canonicalName: string };
+  label?: string;
+  description?: string;
+  colors?: string[];
+}
 
-/** Everything W keeps of its own. Seeded into W, and invisible from X. */
-export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
-  GARDEN_ROSEMARY,
-  HEARTH_ASH,
-  HOUSE_CHAMOMILE,
-  GINGER,
+export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
+  // Rosemary the coven grows, under its own label and its own description.
+  {
+    entry: { name: 'Rosemary', canonicalName: 'Salvia rosmarinus' },
+    label: 'Garden Rosemary',
+    description: 'Cut from the bush by the back door, dried in bunches over the stove.',
+  },
+  // The compendium's German Chamomile, relabelled, with a colour it does not list.
+  {
+    entry: { name: 'German Chamomile', canonicalName: 'Matricaria chamomilla' },
+    label: 'House Chamomile',
+    colors: ['white', 'yellow'],
+  },
+  // In the cupboard and not annotated: the row alone.
+  { entry: { name: 'Ginger', canonicalName: 'Zingiber officinale' } },
 ];
 
+/** Everything W has of its own. Seeded into W, and invisible from X. */
+export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [HEARTH_ASH, CATS_CLAW];
+
 /**
- * A compendium entry `standard` seeds, looked up at module load so a layer
- * naming a missing entry fails on import rather than at a foreign key later.
+ * A compendium entry, `standard` or the curated list, looked up at module load
+ * so a layer naming a missing entry fails on import rather than at a foreign
+ * key later.
  */
 function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredient {
-  const entry = COMPENDIUM_INGREDIENTS.find(
+  const entry = [...COMPENDIUM_INGREDIENTS, ...COMPENDIUM.flatMap((shard) => shard.entries)].find(
     (candidate) =>
       candidate.name === name && (candidate.canonicalName ?? undefined) === canonicalName,
   );
@@ -112,7 +111,6 @@ function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredie
 
   return { tier: 'compendium', entry };
 }
-
 function fromWorkspace(entry: SeedWorkspaceIngredient): SeedLayerIngredient {
   return { tier: 'workspace', entry };
 }
@@ -159,7 +157,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         note: 'Swept from our own doorstep at dusk. Not something to go on a shelf.',
       },
       {
-        ingredient: fromWorkspace(GARDEN_ROSEMARY),
+        ingredient: fromCompendium('Rosemary', 'Salvia rosmarinus'),
         quantity: null,
         unit: null,
         note: 'A sprig laid on top, whole, before the wax goes on.',
@@ -192,7 +190,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         note: null,
       },
       {
-        ingredient: fromWorkspace(HOUSE_CHAMOMILE),
+        ingredient: fromCompendium('German Chamomile', 'Matricaria chamomilla'),
         quantity: '2.000',
         unit: 'tsp',
         note: null,
@@ -231,6 +229,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
         return ingredientId ? [{ ingredientId, variants: entry.variants }] : [];
       }),
     );
+    await insertMissingCupboardEntries(tx);
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
@@ -245,8 +244,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
 
 /**
  * W's entries, keyed by identity over W's rows, deleted or not, as the
- * compendium's are: a database seeded when Ginger was Fresh Ginger holds it
- * under the same formal name, so it is present, and keeps its label.
+ * compendium's are.
  */
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
   await insertMissing(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
@@ -264,6 +262,34 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
       slug: ingredientSlug(entry.name, entry.canonicalName),
     }),
   });
+}
+
+/**
+ * W's cupboard rows, keyed by the coven and the entry, ignoring `deleted_at` so
+ * a row the coven removed is not put back. The seed writes the rows directly,
+ * as it writes every other, not through the cupboard service.
+ */
+async function insertMissingCupboardEntries(tx: SeedTransaction): Promise<void> {
+  const compendium = await tx
+    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
+    .from(ingredients)
+    .where(and(isNull(ingredients.workspaceId), isNull(ingredients.deletedAt)));
+  const ids = new Map(compendium.map((row) => [row.identityKey, row.id]));
+
+  await insertMissingBy(
+    tx,
+    workspaceCompendiumEntries,
+    WORKSPACE_W_CUPBOARD.map(({ entry, ...overrides }) => ({
+      workspaceId: WORKSPACE_W_ID,
+      ingredientId: requireFrom(
+        ids,
+        identityOf(entry),
+        () => `The demo cupboard holds "${entry.name}", which is not in the compendium.`,
+      ),
+      ...overrides,
+    })),
+    { columns: ['workspaceId', 'ingredientId'], toRow: (row) => row },
+  );
 }
 
 /**
@@ -292,10 +318,8 @@ async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Every live id a layer could name, keyed by its tier and `identityOf`: two
- * tiers share an identity (Garden Rosemary and the compendium's Rosemary, W's
- * Ginger and the compendium's), so a layer naming either finds the row of the
- * tier it names.
+ * Every live id a layer could name, keyed by its tier and `identityOf`, so a
+ * layer finds the row of the tier it names.
  */
 async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx

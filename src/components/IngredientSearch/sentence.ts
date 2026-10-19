@@ -1,3 +1,4 @@
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type {
   SearchSentence,
   SearchSentenceFacet,
@@ -11,7 +12,7 @@ import type {
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
 // text query, categories, forms, deities, zodiac, planets, elements, toxic,
-// then the admin-only nomenclature and No Refs
+// then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
 // `Intl.ListFormat` is Baseline Widely Available, so no guard line is needed.
@@ -98,7 +99,10 @@ export function buildSearchSentence({
 
   const forms = picked(filter.forms);
   if (forms.length > 0) {
-    clause(text('in the form '), ...valueList('forms', forms, OR, (v) => label('forms', v)));
+    clause(
+      text('in the form '),
+      ...valueList('forms', forms, OR, (v) => formLabel(label('forms', v))),
+    );
   }
 
   const deities = picked(filter.deities);
@@ -142,6 +146,29 @@ export function buildSearchSentence({
     });
   }
 
+  if (filter.source === 'local' || filter.source === 'compendium') {
+    clause(text('from the '), {
+      kind: 'value',
+      text: filter.source === 'local' ? 'Local' : 'Compendium',
+      facet: 'source',
+      value: filter.source,
+    });
+    parts.push(text(' source'));
+  }
+
+  if (filter.inStock) {
+    clause({ kind: 'value', text: 'in stock', facet: 'inStock', value: 'true' });
+  }
+
+  if (filter.lowStockOnly) {
+    clause({
+      kind: 'value',
+      text: 'low or out of stock',
+      facet: 'lowStockOnly',
+      value: 'true',
+    });
+  }
+
   if (admin && filter.nomenclature) {
     clause(text('classified as '), {
       kind: 'value',
@@ -156,6 +183,15 @@ export function buildSearchSentence({
       kind: 'value',
       text: 'without references',
       facet: 'withoutReferences',
+      value: 'true',
+    });
+  }
+
+  if (admin && filter.withoutForms) {
+    clause({
+      kind: 'value',
+      text: 'without forms',
+      facet: 'withoutForms',
       value: 'true',
     });
   }

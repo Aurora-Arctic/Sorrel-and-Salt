@@ -11,6 +11,7 @@ import {
 } from '@/modules/ingredients';
 import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import {
   insertDeityLink,
   insertIngredient,
@@ -250,6 +251,8 @@ describe('ingredientDetailOf', () => {
       substitutes: [],
       references: [],
       variants: [],
+      cupboardEntry: null,
+      retired: false,
     });
   });
 
@@ -294,6 +297,23 @@ describe('ingredientDetailOf', () => {
     }
     await expect(ingredientDetailOf(asUser(D), entry)).rejects.toThrow(Forbidden);
     await expect(ingredientDetailOf(null, entry)).rejects.toThrow(Forbidden);
+  });
+
+  it("carries the coven's cupboard entry for a compendium entry read in that coven, and refuses an outsider", async () => {
+    const id = await seed({ variants: [] });
+    const row = await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: id, label: 'Hedgewort' },
+      A.id,
+    );
+    const entry = await entryOf(id);
+
+    expect((await ingredientDetailOf(asUser(B), entry, WORKSPACE_W_ID)).cupboardEntry?.id).toBe(
+      row,
+    );
+    // Read outside a coven, as the public route reads it, there is none.
+    expect((await ingredientDetailOf(null, entry)).cupboardEntry).toBeNull();
+    await expect(ingredientDetailOf(asUser(D), entry, WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
   });
 });
 

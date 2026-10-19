@@ -1,5 +1,7 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useMemo, useState } from 'react';
@@ -32,7 +34,7 @@ import type {
   SubstituteForm,
   UseSuggestions,
 } from './types';
-import { draftOf, tierOf } from './values';
+import { COMPENDIUM_HEADING, YOUR_INGREDIENTS, draftOf, tierOf } from './values';
 
 // The lookups on the form's boxes: the form and folk names M4.7a serves, and
 // the celestial bodies, signs, deities and substitutes MB.131 adds. Each waits for the
@@ -126,9 +128,13 @@ const IngredientSuggestionsDocument = graphql(`
   query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {
     ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
+        group
         node {
           id
           name
+          cupboardEntry(workspaceId: $workspaceId) {
+            label
+          }
           canonicalName
           description
           isGlobal
@@ -226,7 +232,7 @@ const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
   data.formSuggestions.edges.map(({ node }) => ({
     value: node.value,
     // The group is what tells two same-named forms apart (M4.2a).
-    label: qualified(node.value, node.group),
+    label: qualified(formLabel(node.value), node.group),
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
     // Null for a form only in use, which `FormIcon` draws as the generic.
@@ -286,7 +292,9 @@ const formsOf = (
   }));
 
 const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
-  data.ingredientSuggestions.edges.map(({ node }) => {
+  data.ingredientSuggestions.edges.map(({ node, group }) => {
+    // A held compendium entry reads under the label the coven gave it.
+    const name = node.cupboardEntry?.label ?? node.name;
     const canonicalName = node.canonicalName ?? null;
     const link = {
       id: node.id,
@@ -299,10 +307,11 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
     return {
       // The label is what a linked entry reads as; the link is what is saved,
       // and what its pill's tooltip tells.
-      value: node.name,
-      label: qualified(node.name, canonicalName),
-      // Kept in the search's ranked order, so the tier is a note rather than
-      // a bucket that would reorder the rows.
+      value: name,
+      label: qualified(name, canonicalName),
+      // The server lists the cupboard first, then the compendium (M12.19), so
+      // the headings are the two groups; the tier stays a note.
+      heading: group === 'yours' ? YOUR_INGREDIENTS : COMPENDIUM_HEADING,
       note: tierOf(link),
       key: node.id,
       link,
@@ -317,7 +326,7 @@ const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
     return {
       value: node.name,
       label: qualified(node.name, canonicalName),
-      note: forms.length ? forms.join(', ') : undefined,
+      note: forms.length ? forms.map(formLabel).join(', ') : undefined,
       key: node.id,
       link: {
         id: node.id,

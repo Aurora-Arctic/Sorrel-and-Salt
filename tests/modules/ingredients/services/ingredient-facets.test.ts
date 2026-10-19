@@ -12,6 +12,8 @@ import {
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
+import type { CupboardEntryFixture } from '../../../support/db/insert-cupboard-entry';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
@@ -47,9 +49,23 @@ async function stock(
   workspaceId: string,
   form: string,
   quantityOnHand: string | null = null,
+  lowStockThreshold: string | null = null,
 ): Promise<void> {
   const variantId = await variantIdOf(sql, ingredientId, form);
-  await insertStock(sql, { workspaceId, ingredientId, variantId, quantityOnHand }, A.id);
+  await insertStock(
+    sql,
+    { workspaceId, ingredientId, variantId, quantityOnHand, lowStockThreshold },
+    A.id,
+  );
+}
+
+/** The compendium entry `ingredientId` in `workspaceId`'s cupboard, with `overrides`. */
+async function hold(
+  ingredientId: string,
+  workspaceId = WORKSPACE_W_ID,
+  overrides: Omit<CupboardEntryFixture, 'workspaceId' | 'ingredientId'> = {},
+): Promise<void> {
+  await insertCupboardEntry(sql, { workspaceId, ingredientId, ...overrides }, A.id);
 }
 
 /** A live vocabulary row's id, by name. */
@@ -90,7 +106,7 @@ describe('workspaceIngredientFacets', () => {
   let protection: string;
 
   /**
-   * W's own entry and a compendium entry W holds, each with values no other
+   * W's own entry and a compendium entry W's cupboard holds, each with values no other
    * row carries; X's own entry; and a compendium entry no coven holds.
    */
   async function seedCovens(): Promise<void> {
@@ -109,6 +125,7 @@ describe('workspaceIngredientFacets', () => {
       celestialBodies: ['Sun'],
       elements: ['fire'],
     });
+    await hold(held);
     await stock(held, WORKSPACE_W_ID, 'Heldform');
     await add('Elsewort', {
       workspaceId: WORKSPACE_X_ID,
@@ -143,6 +160,59 @@ describe('workspaceIngredientFacets', () => {
     ]);
   });
 
+  it('counts Local and Compendium to the list total, by cupboard row and not by jar', async () => {
+    await seedCovens();
+    await hold(await add('Jarlesswort'));
+    const jarOnly = await add('Jaronlywort', { variants: [makeVariant({ form: 'Jaronlyform' })] });
+    await stock(jarOnly, WORKSPACE_W_ID, 'Jaronlyform');
+
+    const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+
+    expect(facets.source).toEqual([
+      { value: 'local', count: 1 },
+      { value: 'compendium', count: 2 },
+    ]);
+    expect(facets.source[0].count + facets.source[1].count).toBe(await listedCount(asUser(B), {}));
+  });
+
+  it("counts a list override as the cupboard row states it, a null one as the compendium's, a cleared one under none", async () => {
+    const moved = await add('Movedwort', {
+      elements: ['fire'],
+      zodiacSigns: ['Leo'],
+      celestialBodies: ['Sun'],
+    });
+    await hold(moved, WORKSPACE_W_ID, { elements: ['water'], zodiacSigns: ['Aries'] });
+    const cleared = await add('Clearedwort', {
+      elements: ['fire'],
+      zodiacSigns: ['Leo'],
+      celestialBodies: ['Sun'],
+    });
+    await hold(cleared, WORKSPACE_W_ID, { elements: [], zodiacSigns: [], celestialBodies: [] });
+    // X's override of the same entry is X's alone.
+    await hold(moved, WORKSPACE_X_ID, { elements: ['air'] });
+    const countIn = (facets: IngredientFacets, kind: keyof IngredientFacets, value: string) =>
+      facets[kind].find((entry) => entry.value === value)?.count;
+
+    const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+
+    expect(countedOf(facets, 'elements')).toEqual(['water']);
+    expect(countedOf(facets, 'zodiacSigns')).toEqual(['Aries']);
+    expect(countIn(facets, 'celestialBodies', 'Sun')).toBe(1);
+    // Why the overrides could have been missed: the compendium counts the entries' own.
+    const compendium = await compendiumFacets({});
+    expect(countIn(compendium, 'elements', 'fire')).toBe(2);
+    expect(countIn(compendium, 'zodiacSigns', 'Leo')).toBe(2);
+    expect(countIn(compendium, 'celestialBodies', 'Sun')).toBe(2);
+    // The list filters as the facets count.
+    expect(await listedCount(asUser(B), { elements: ['water'] })).toBe(1);
+    expect(await listedCount(asUser(B), { elements: ['fire'] })).toBe(0);
+    expect(await listedCount(asUser(B), { zodiacSigns: ['leo'] })).toBe(0);
+    expect(await listedCount(asUser(B), { celestialBodies: ['sun'] })).toBe(1);
+    expect(
+      countIn(await workspaceIngredientFacets(asUser(D), WORKSPACE_X_ID, {}), 'elements', 'air'),
+    ).toBe(1);
+  });
+
   it("counts each value as the coven's list reads it with that value chosen", async () => {
     await seedCovens();
     const bases = [{}, { zodiacSigns: ['leo'] }, { forms: ['root'] }, { query: 'heldwort' }];
@@ -173,11 +243,13 @@ describe('workspaceIngredientFacets', () => {
   it('counts each value as the list reads it under source and inStock', async () => {
     await seedCovens();
     const spent = await add('Spentwort', { variants: [makeVariant({ form: 'Spentform' })] });
+    await hold(spent);
     await stock(spent, WORKSPACE_W_ID, 'Spentform', '0');
     const full = await add('Fullwort', {
       variants: [makeVariant({ form: 'Fullform' })],
       toxic: true,
     });
+    await hold(full);
     await stock(full, WORKSPACE_W_ID, 'Fullform', '4');
     const bases = [
       { source: 'local' as const },
@@ -235,8 +307,10 @@ describe('workspaceIngredientFacets', () => {
       await stock(unweighed, WORKSPACE_W_ID, 'Unweighedwortform');
       await form('Barewort', WORKSPACE_W_ID);
       const held = await form('Heldwort');
+      await hold(held);
       await stock(held, WORKSPACE_W_ID, 'Heldwortform', '2');
       const heldSpent = await form('Heldspentwort');
+      await hold(heldSpent);
       await stock(heldSpent, WORKSPACE_W_ID, 'Heldspentwortform', '0');
       await form('Unheldwort');
       const elsewhere = await form('Elsewort', WORKSPACE_X_ID);
@@ -356,6 +430,71 @@ describe('workspaceIngredientFacets', () => {
         { value: 'compendium', count: 0 },
       ]);
       expect(elsewhere.inStock).toBe(1);
+    });
+  });
+
+  describe('the Low Stock Only count (M9.8)', () => {
+    /** W: a low jar, an out jar, a healthy jar, an unweighed one, a held compendium entry low; X: its own out jar. */
+    async function seedLow(): Promise<void> {
+      const form = (name: string, workspaceId?: string) =>
+        add(name, { workspaceId, variants: [makeVariant({ form: `${name}form` })] });
+      const jar = async (name: string, quantity: string | null, workspaceId = WORKSPACE_W_ID) => {
+        const id = await form(name, workspaceId);
+        await stock(id, workspaceId, `${name}form`, quantity, '3');
+      };
+      await jar('Lowwort', '2');
+      await jar('Outwort', '0');
+      await jar('Fullwort', '50');
+      await jar('Unweighedwort', null);
+      await jar('Elsewort', '0', WORKSPACE_X_ID);
+      const held = await form('Heldlowwort');
+      await hold(held);
+      await stock(held, WORKSPACE_W_ID, 'Heldlowwortform', '1', '3');
+    }
+
+    it('counts the entries with a Low Stock or Out of Stock jar, in this coven alone', async () => {
+      await seedLow();
+
+      const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+      const elsewhere = await workspaceIngredientFacets(asUser(D), WORKSPACE_X_ID, {});
+
+      // Why it could have been larger: W lists five entries, and X holds a jar that is out.
+      expect(facets.source.reduce((sum, { count }) => sum + count, 0)).toBe(5);
+      expect(facets.lowStockOnly).toBe(3);
+      expect(elsewhere.lowStockOnly).toBe(1);
+    });
+
+    it("equals the list's total with the switch on, whatever the rest of the filter and the switch itself", async () => {
+      await seedLow();
+      const bases = [{}, { query: 'low' }, { source: 'local' as const }, { inStock: true }];
+
+      for (const base of bases) {
+        for (const on of [{}, { lowStockOnly: true }]) {
+          const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+            ...base,
+            ...on,
+          });
+          expect({ base, on, count: facets.lowStockOnly }).toEqual({
+            base,
+            on,
+            count: await listedCount(asUser(B), { ...base, lowStockOnly: true }),
+          });
+        }
+      }
+    });
+
+    it('counts the other values under the switch as the list reads them', async () => {
+      await seedLow();
+
+      const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+        lowStockOnly: true,
+      });
+
+      expect(countedOf(facets, 'forms')).toEqual(['Heldlowwortform', 'Lowwortform', 'Outwortform']);
+      expect(facets.source).toEqual([
+        { value: 'local', count: 2 },
+        { value: 'compendium', count: 1 },
+      ]);
     });
   });
 

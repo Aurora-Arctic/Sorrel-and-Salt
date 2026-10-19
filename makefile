@@ -9,7 +9,7 @@
 .PHONY: help install dev dev-debug build start \
 	lint lint-fix format format-check typecheck check-destructive-ddl check-migration-order pre-commit \
 	test-stories test-debug test-ui e2e-ui e2e-trace \
-	db-generate db-migrate db-seed db-drop db-reset db-studio db-psql codegen \
+	db-generate db-migrate db-seed db-drop db-reset db-reset-demo db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down docker-codegen \
@@ -115,6 +115,10 @@ db-drop:
 ## Drop, migrate and reseed — the one command for a wedged local database
 db-reset:
 	npm run db:reset
+
+## Drop, migrate and reseed with the demo scenario — covens, spells and the curated compendium
+db-reset-demo:
+	npm run db:reset:demo
 
 ## Drizzle Studio on 4983 — browse the local database
 db-studio:

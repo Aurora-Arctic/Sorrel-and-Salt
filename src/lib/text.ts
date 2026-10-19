@@ -32,6 +32,12 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** The start of a no-match sentence, before the filters. A list that draws its filters as nodes (CompendiumList) builds from the same two pieces, so the wording has one source. */
+export const noMatchLead = (noun: string): string => `No ${noun} match `;
+
+/** The end of a no-match sentence, after the filters. */
+export const NO_MATCH_ADVICE = '. Change or clear the filter to see more.';
+
 /**
  * What an admin list says when it shows no rows (MB.115). With a filter in
  * force, `parts` names each filter as the caller phrases it — `“wort”`, `the
@@ -49,7 +55,50 @@ export function capitalise(text: string): string {
  * so an admin sees which one to change.
  */
 export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
-  return parts.length
-    ? `No ${noun} match ${joinAnd(parts)}. Change or clear the filter to see more.`
-    : emptyText;
+  return parts.length ? `${noMatchLead(noun)}${joinAnd(parts)}${NO_MATCH_ADVICE}` : emptyText;
+}
+
+/** The short words a title leaves lower-case unless they open it. */
+const SMALL_WORDS: ReadonlySet<string> = new Set([
+  'of',
+  'and',
+  'in',
+  'on',
+  'the',
+  'a',
+  'an',
+  'or',
+  'for',
+  'to',
+  'with',
+  'at',
+  'by',
+  'from',
+]);
+
+/** `part` with its first letter raised, unless a capital already sits inside it ("pH", "CBD"). */
+function raised(part: string): string {
+  if (/\p{Lu}/u.test(part.slice(1))) return part;
+  return part.replace(/\p{L}/u, (letter) => letter.toUpperCase());
+}
+
+/**
+ * `text` in title case, for display only: "dried leaf" is "Dried Leaf", "oil of
+ * cloves" is "Oil of Cloves". The small words of, and, in, on, the, a, an, or,
+ * for, to, with, at, by and from stay lower-case unless they come first; each
+ * part of a hyphenated word is raised ("cold-pressed" is "Cold-Pressed"); a
+ * word that already holds a capital past its first letter is left as written.
+ * Runs of whitespace become one space, so the result is a label and never a
+ * value to store: a stored form keeps what was typed, and matching folds case.
+ */
+export function titleCase(text: string): string {
+  return text
+    .split(/\s+/u)
+    .filter((word) => word !== '')
+    .map((word, at) => {
+      const lower = word.toLowerCase();
+      if (at > 0 && SMALL_WORDS.has(lower) && word === lower) return word;
+      return word.split('-').map(raised).join('-');
+    })
+    .join(' ');
 }

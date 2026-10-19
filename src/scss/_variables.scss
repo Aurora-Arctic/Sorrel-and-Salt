@@ -57,6 +57,23 @@ $wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 $chalk-muted: color.mix($chalk, $soot, 80%);
 $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 
+// The muted red of Out of Stock (M9.8), a tint of the sealing wax with its
+// saturation pulled down, so it is plainly a red but quieter than safety's solid
+// fill. Dark lifts lightness for text on soot; light darkens slightly.
+$wax-muted-dark: color.adjust($wax, $saturation: -10%, $lightness: 30%);
+$wax-muted-light: color.adjust($wax, $saturation: -8%, $lightness: -2%);
+
+// The red of Caution (M8.14): the same wax with its saturation raised instead of
+// lowered, so it reads as the fuller safety red beside Out of Stock's greyed one.
+$wax-caution-dark: color.adjust($wax, $saturation: 15%, $lightness: 30%);
+$wax-caution-light: color.adjust($wax, $saturation: 15%, $lightness: -4%);
+
+// A card under the pointer (M8.14): its own surface a step lighter, and in
+// light "lighter" is brighter, toward white, not darker. Small steps, so text
+// contrast holds (claude-docs/components/ingredient-card.md has the ratios).
+$soot-lifted: color.adjust($soot-raised, $lightness: 3%);
+$parchment-lifted: color.adjust($parchment-raised, $lightness: 2.5%);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -92,6 +109,10 @@ $badge-treatments: (
 $wax-badge-dark: color.adjust($wax, $saturation: 22%, $lightness: 18%);
 $wax-badge-light: color.adjust($wax, $saturation: 22%);
 
+// The two inks Local's tint is made of, so Annotated cannot drift from it.
+$local-badge-dark: $sorrel-bright;
+$local-badge-light: $sorrel-deep;
+
 $badge-palettes: (
   // Both inks carry +22% saturation, holding the two halves the same red. The
   // dark lift is +18%, sized for the label ($soot) on the fill, not for text on soot.
@@ -113,6 +134,35 @@ $badge-palettes: (
     dark: $chalk-muted,
     light: $ink-muted,
   ),
+  // A jar at nothing (M9.8): a muted red tint, owner's call 2026-10-18. Tinted,
+  // so safety stays the one solid, alarming badge. Label on tint 5.10:1 dark,
+  // 6.18:1 light; edge at least 3.70:1.
+  'out-of-stock': (
+      treatment: tinted,
+      dark: $wax-muted-dark,
+      light: $wax-muted-light,
+    ),
+  // An ingredient or a form that carries safety notes (M8.14, owner's call
+  // 2026-10-18): the safety red as a tint with a red edge, so Toxic stays the
+  // one solid, alarming badge. Inks are the wax at +15% saturation, lifted 30%
+  // for dark and darkened 4% for light. Label on tint 4.94:1 dark, 6.49:1 light;
+  // edge on the card 3.68:1 dark, 4.47:1 light (3.89 and 4.18 on the page).
+  // Beside Out of Stock (same family, 5.10 and 6.18) it differs only in
+  // saturation, 88% against 80% in dark and 54% against 49% in light, so the
+  // word, never the colour, tells them apart.
+  'caution': (
+      treatment: tinted,
+      dark: $wax-caution-dark,
+      light: $wax-caution-light,
+    ),
+  // A compendium entry the curators retired, still read by a coven that uses
+  // it (M12.24): a fact about the entry, not a hazard, so low-stock's muted
+  // tint and its checked inks, until the section's design review.
+  'retired': (
+      treatment: tinted,
+      dark: $chalk-muted,
+      light: $ink-muted,
+    ),
   // The accent's own inks: $text-on-color on them is 7.95:1 dark, 4.68:1 light.
   'last-used': (
       treatment: solid,
@@ -126,9 +176,41 @@ $badge-palettes: (
   // was 4.42:1. Label on tint 5.60:1 dark, 6.98:1 light; edge at least 4.01:1.
   'local': (
       treatment: tinted,
-      dark: $sorrel-bright,
-      light: $sorrel-deep,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
+    ),
+  // A compendium entry with this coven's own changes (M8.14): the same idea as
+  // an entry of its own, so Local's inks, already contrast-checked.
+  'annotated': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
     )
+);
+
+// The three sizes of a badge (the owner, M8.14), set in one place. Default is what a
+// badge has everywhere; medium and small are for the ingredient card only (regular and
+// compact), one step down in text. The two smaller sizes hold 24px (1.5rem) tall, the
+// least a tipped badge may be as a target; default needs no floor, its text sets it.
+$badge-sizes: (
+  'default': (
+    font-size: caption,
+    padding-block: 0.125rem,
+    padding-inline: 0.4375rem,
+    min-block-size: null,
+  ),
+  'medium': (
+    font-size: overline,
+    padding-block: 0.125rem,
+    padding-inline: 0.4375rem,
+    min-block-size: 1.5rem,
+  ),
+  'small': (
+    font-size: overline,
+    padding-block: 0.125rem,
+    padding-inline: 0.3125rem,
+    min-block-size: 1.5rem,
+  ),
 );
 
 // Named once, so the mixin's loop and the accessor's validation agree.
@@ -258,6 +340,8 @@ $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
+$shadow-lifted: var(--shadow-lifted);
+$surface-card-hover: var(--surface-card-hover);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks
@@ -436,6 +520,10 @@ $glyph-size: 1rem;
 // them reads at a glance. A form keeps `$icon-size`, where its pencils sit
 // beside its fields' text.
 $icon-size-large: 2rem;
+
+// The ring of a radio, shared so what must line up with a radio's text
+// (a row's indent) is worked out from it, not typed again.
+$radio-size: 1.125rem;
 $glyph-size-large: 1.25rem;
 
 // A tip's widest line, written as `min($tip-width, calc(100vw - space(6)))`
@@ -468,6 +556,9 @@ $close-target: 2.5rem;
 // table in a narrow column stacks too. claude-docs/styling.md, "Tables at
 // phone width".
 $table-stack-width: 40rem;
+// The narrowest an ingredient card is drawn: the grid of cards (IngredientCardList)
+// and the skeleton standing in for it both fill a row with as many as fit.
+$ingredient-card-min: 20rem;
 
 // The heavy rule, for a line that must read by its weight as well as its
 // colour: the impersonation banner's foot, the owner's call in MB.53, where it
@@ -550,8 +641,10 @@ $add-below-width: 21.875rem;
 // context (a combobox's list over its field) keeps a small local index; these
 // are the layers that meet each other at the window. `floating` is a popover
 // or list opened from the shell, over the bars; `dialog` is a non-native
-// overlay, since a <dialog> sits in the browser's top layer above every one.
+// overlay, since a <dialog> sits in the browser's top layer above every one. `sticky-row` is a
+// page's own row stuck under the bar: above the cards, below the bar and everything opened from it.
 $layers: (
+  'sticky-row': 5,
   'shell': 10,
   'banner': 11,
   'toggle': 12,
@@ -591,6 +684,10 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The air added to the card's own 12px gap above and below the forms line (chips to
+// forms, forms to the jar rule): one token, so the two stay equal. 16px in all.
+$ingredient-card-forms-air: space(1);
 
 // Written after `space()` above: a Sass function is not in scope before its
 // definition, and inside `calc()` an unknown name is left as plain CSS text,

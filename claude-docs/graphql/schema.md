@@ -342,6 +342,20 @@ type DeitySuggestion {
 `suggestions.test.ts` holds, with each curated row's `id` and `tradition`;
 the rules are `services/deity-suggestions.test.ts`'s.
 
+### `compendiumMatches`
+
+M12.20's question before a duplicate: `compendiumMatches(workspaceId, name)`
+lists the compendium entries whose name or formal name is exactly the typed
+one, folded to lower case, and no other tier, so no coven's own entry is ever
+offered. `findCompendiumMatches` asserts read membership of the coven first,
+so a viewer is answered and a non-member is `FORBIDDEN` by direct id. It is
+paged (`t.pagedConnection`, ordered by name, the form asks for five), and a
+blank name answers empty. Its node is the `Ingredient`, whose
+`inCupboard(workspaceId)` says whether that coven's cupboard holds it
+(through the batched `cupboardEntryByIngredient` loader, so a page is one
+read); `possibleDuplicates` nodes carry it too. `workspaceId` is nullable
+there, answering false, so the admin's call shares the document.
+
 ### `possibleDuplicates`
 
 Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's
@@ -409,11 +423,8 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   descriptions, accents folded, so a typed prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
   `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
   first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
-  A blank `query` lists both tiers by name, so an opened box lists something.
-- **Local beats compendium, and `form` ranks (M8.3).** A coven's own ingredient
-  hides the compendium entry it names, and a `form` lists entries holding it
-  first, then those holding a form of its curated group
-  ([`db/compendium-read.md`](../db/compendium-read.md)).
+  A blank `query` lists both groups by name, so an opened box lists something.
+- **Each edge carries a `group` (M12.19)**, the `SuggestionGroup` enum, `yours` or `compendium`. `yours` is the coven's cupboard, its own entries and the compendium entries it holds, listed first; `compendium` is the rest. Each group is ranked by score within itself and holds up to eight to start. A coven's own entry and a compendium entry sharing its name both appear: a name match hides nothing (M12.28). A held entry's node answers `cupboardEntry(workspaceId)` for the label the coven gave it. `group` is on the edge, not the node, because it depends on the viewing coven, as `score` does on `compendium`. `form` ranks within each group ([`db/compendium-read.md`](../db/compendium-read.md)).
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
   A viewer is answered, a coven the caller is not in is refused, and so is a
@@ -459,8 +470,10 @@ type QueryCompendiumConnectionEdge {
   entries citing no live compendium reference, so an entry whose one link is
   unlinked, or cites a soft-deleted reference, is on it, as its bibliography
   reads empty; and `nomenclature` (M5.5), only the entries so classified, so
-  `unknown` is the formal names still to look up. Either left out, or
-  `withoutReferences: false`, is no filter, and `totalCount` counts under
+  `unknown` is the formal names still to look up. A third, `withoutForms: true`
+  (M12.30), keeps only the entries with no live form, so one whose forms are all
+  soft-deleted is on it, and it is public as the rest of the query is (MB.80).
+  Any left out, or `withoutReferences: false` or `withoutForms: false`, is no filter, and `totalCount` counts under
   the same filter.
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`, its rank: the
@@ -747,9 +760,12 @@ Two more arguments are the coven's alone (M9.7), left out of `compendium`: `sour
 `IngredientSource` of `local` (the coven's own entries) or `compendium` (the
 compendium entries it holds), where leaving it out lists both; and `inStock`, which keeps an
 entry only when one of the coven's jars of it is not at 0, a jar with no quantity counting as
-held, so a local entry with no jar leaves. A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+held, so a local entry with no jar leaves; and `lowStockOnly` (M9.8), which keeps an
+entry only when one of its jars is at 0 or at or under a threshold above 0 (Out of Stock or Low Stock). A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
 may read it. An entry's jars are its `stock` field, below, so a page reads its
 stock in one batch whatever its length.
+
+**The coven's pages are numbered on the server only (M9.6).** The Ingredients page shows "Page X of Y" like the compendium's, from `countWorkspaceIngredients`, which `workspaceIngredients` does not expose: the connection carries no `totalCount`, because only the server-rendered page counts. The count is not cached, as the data is the coven's.
 
 `tests/modules/ingredients/graphql/workspace-ingredient-list.test.ts` holds the
 transport's half: the page and its cursor, the arguments reaching the read,
@@ -762,11 +778,11 @@ The numbers beside each choice in the search's filter panel (M12.3): for
 every value of every filter, how many entries the list would hold with that
 value picked. `compendiumFacets` sits in `graphql/compendium.ts` and takes
 exactly `compendium`'s filter arguments (`query`, `categoryIds`,
-`categoryMode`, the six facet arguments, `withoutReferences` and
+`categoryMode`, the six facet arguments, `withoutReferences`, `withoutForms` and
 `nomenclature`), with no page. `workspaceIngredientFacets` sits in
 `graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
 (`workspaceId`, `query`, the category arguments, the six facet
-arguments, and the coven-only `source` and `inStock`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
+arguments, and the coven-only `source`, `inStock` and `lowStockOnly`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
 `compendiumFacets` or `workspaceIngredientFacets` in
 `services/ingredient-facets.ts`, and checks nothing itself. How each value
 is counted is [`db/compendium-read.md`](../db/compendium-read.md),
@@ -781,7 +797,7 @@ vocabularies and by the forms, deities and categories the counted entries
 carry. Each item's `value` has the type of the argument it would be sent
 back as, so a client can put a picked value straight into the next query.
 `CompendiumFacets` adds `withoutReferences`, how many entries cite no live
-reference under the rest of the filter, the same whether the switch is on or
+reference under the rest of the filter, and `withoutForms`, how many have no live form, each the same whether its switch is on or
 off; a coven's list has no such switch. The seven shared fields are written
 once, in `facetFields`, which both types spread.
 
@@ -790,18 +806,19 @@ switch for (M9.7), so the two answers are two types and the fields are non-null 
 the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
 `compendium`, `count` an `Int!`) that always holds both values, zeros kept, each
 counted with the Source setting blanked and everything else, In Stock
-included, kept. `inStock` is one `Int!`: how many entries the list would
-hold with the switch on, under the rest of the filter and the chosen Source. A
+included, kept. `inStock` and `lowStockOnly` are each one `Int!`: how many entries the list would
+hold with that switch on, under the rest of the filter and the chosen Source. A
 count equals the list's `totalCount` under the same filter.
 
 ```graphql
 type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
   withoutReferences: Int!
+  withoutForms: Int!
 }
 
 type IngredientFacets {
-  # a coven's also has source: [SourceFacetCount!]! and inStock: Int!
+  # a coven's also has source: [SourceFacetCount!]!, inStock: Int! and lowStockOnly: Int!
   forms: [NameFacetCount!]!
   deities: [IdFacetCount!]!
   categories: [IdFacetCount!]!
@@ -887,6 +904,92 @@ each answer equal to a fresh read, the loader cleared between two updates in
 one request, and per field one refusal per error code it can answer. Which
 roles are refused at which jars is `services/stock.test.ts`'s.
 
+### Cupboard entries: `CupboardEntry` and `Ingredient.cupboardEntry`
+
+A coven's own say over a compendium entry it holds (M12.14), registered by
+`ingredients` in `graphql/cupboard-entries.ts` over the cupboard-entry service
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Reading it").
+
+- **`CupboardEntry`** is one row of `workspace_compendium_entries`: its `id`,
+  the seven overrides (`label`, `description`, `safetyNotes`, `elements`,
+  `celestialBodies`, `zodiacSigns`, `colors`), and two fields worked out on
+  read. A null override means "the compendium's value", and an empty list is
+  one the coven cleared on purpose. `annotated` is true when any of the seven
+  is set, so a list can mark the entries a coven has said something about.
+  `compendiumName` is the compendium entry's own name, read off the parent
+  `Ingredient`, so a page can show it beside the coven's label.
+- **`Ingredient.cupboardEntry(workspaceId)`** is that coven's live row for the
+  entry, or null: null for an entry the coven does not hold, and for a coven's
+  own ingredient, which has no cupboard entry. It reads through the
+  `cupboardEntryByIngredient` loader ([`loaders.md`](loaders.md)), so a page of
+  entries makes one read per coven named. A coven the caller is not in refuses
+  at the field, `FORBIDDEN` with the field's path, as `Ingredient.stock` does.
+  Any member reads it, viewers included.
+
+The field answers the row beside the entry rather than merged into it, so
+`Ingredient` itself still answers the compendium's values and `isGlobal` stays
+true for a compendium entry. Forms, folk names, substitutes, categories,
+references and `toxic` have no override and always read from the compendium.
+
+**`Ingredient.retired: Boolean!`** (M12.24) is true for a compendium entry
+the curators have retired, which `ingredient(id, workspaceId)` still answers
+to a member of a coven whose cupboard names it, and false for every other
+entry. It resolves through the service's `isRetired` off the row. The
+entry's child fields read through the loaders, whose keys carry no reading
+coven, so they answer nothing for a retired entry yet; the entry page reads
+them through `ingredientDetailOf` instead
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"When the compendium retires the entry").
+`tests/modules/ingredients/graphql/ingredient.test.ts` holds its transport
+half.
+
+`tests/modules/ingredients/graphql/cupboard-entries.test.ts` holds the
+transport's half: the answer and its `annotated`, a viewer answered, the
+refusal at the field, the nulls, and one repository read for a page of entries,
+counted by a spy.
+
+**The three writes** (M12.15) take the coven and the compendium entry's id, and
+answer through the same `nodeOf` as the read, so the loader is cleared and the
+answer is a fresh read:
+
+- **`addCupboardEntry(workspaceId, ingredientId, input)`** answers the new
+  `CupboardEntry`. `input` is optional.
+- **`annotateCupboardEntry(workspaceId, ingredientId, input)`** answers the
+  row after the change. A field left out keeps its value, `null` hands it back
+  to the compendium, and a list, even empty, is the coven's own.
+- **`removeCupboardEntry(workspaceId, ingredientId)`** answers the
+  `ingredientId`, as the other deletes answer the id. It is refused with
+  `VALIDATION` while the coven holds a jar of the entry.
+
+A viewer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
+and a taken label is `VALIDATION` beside `label`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Writing it").
+
+**The convert** (M12.21), `convertLocalToCompendiumEntry(workspaceId, localId,
+compendiumId)`, turns one of the coven's own entries into a compendium entry
+and answers a `ConvertedLocal`: `entry`, the new `CupboardEntry` through the
+same `nodeOf`, and `dropped`, a `DroppedOnConvert` listing by name the
+`forms`, `folkNames`, `substitutes`, `categories`, `references` (each as its
+bibliography entry reads) and `deities` the coven no longer sees. A viewer is
+`FORBIDDEN`, a missing own entry or compendium entry `NOT_FOUND`, and each
+refusal that moves nothing is `VALIDATION` beside `ingredientId`, `label`,
+`forms`, `jars` or `layers`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Converting an own entry").
+
+**The reverse** (M12.23), `convertCompendiumEntryToLocal(workspaceId,
+ingredientId)`, makes a compendium entry the coven holds into the coven's
+own, the entry page's Make It Ours, and answers a `ConvertedCompendium`:
+`entry`, the new own `Ingredient`, and `dropped`, the same
+`DroppedOnConvert`, in which only `folkNames` can be non-empty (a folk name
+the new name took). A viewer is `FORBIDDEN`, an entry the coven does not
+hold `NOT_FOUND`, and a taken label or an own entry of the same identity
+`VALIDATION` beside `label`, `canonicalName` or `name`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Converting a compendium entry into our own").
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
@@ -921,6 +1024,14 @@ curated values.
   does; a spell holding the entry still reaches it. A coven's ingredient, a
   deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
   reaches no coven's row by id.
+
+**`compendiumEntryUsers(id: ID!): Int!`** (M12.25) answers how many covens
+hold a compendium entry in their cupboard, for the delete confirm. It carries
+`authScopes: { curator: true }` and the service's `assertCurator` refuses
+again; an id that is not a live compendium entry (a coven's ingredient, a
+deleted entry, an unknown id) is `NOT_FOUND`. It is a count and never names a
+coven ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Counting covens").
 
 `tests/modules/ingredients/graphql/compendium-entries.test.ts` holds the three
 writes' half: the input left short refused before any resolver runs, the

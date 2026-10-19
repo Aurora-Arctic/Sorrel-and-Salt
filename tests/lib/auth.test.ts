@@ -178,6 +178,19 @@ describe('baseURL', () => {
     expect(auth.options.baseURL).toBe('http://localhost:8000');
   });
 
+  it('follows the port the server was given outside production', async () => {
+    // Next sets PORT from `--port`, so a second dev server (8001) or an e2e slot
+    // is its own origin; a fixed 8000 made Better Auth refuse its POSTs as an
+    // invalid origin, which is what Stop Impersonating hit on 8001.
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('PORT', '8001');
+    vi.resetModules();
+
+    const { auth } = await import('@/lib/auth');
+
+    expect(auth.options.baseURL).toBe('http://localhost:8001');
+  });
+
   it('allows sorrelandsalt.com, the staging alias, and any hotfix-* preview at production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');

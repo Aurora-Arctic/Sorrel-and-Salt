@@ -1,4 +1,4 @@
-import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
+import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { invitations } from '../../modules/coven/schema/invitations';
@@ -17,7 +17,9 @@ import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
+import type { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
+import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
@@ -118,6 +120,13 @@ export interface KeyOrder {
   /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
   join?: { source: SQL; on: SQL };
   /**
+   * A table left-joined after `join`, which a sort part or the `where` may
+   * read, null where `on` matched none: a coven's cupboard row beside the
+   * entry it names (M12.18). A page carries the joined row onto each entry as
+   * `joined`; `on` holds the joined table's own filters.
+   */
+  leftJoined?: LeftJoin<PgTable>;
+  /**
    * The `where` holds a `<%` search, so the read runs in a transaction
    * under `select.ts`'s `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the
    * server's.
@@ -201,7 +210,7 @@ export interface Similarity {
  */
 export interface Aggregate<TRow extends Record<string, unknown>> {
   aggregate: { [K in keyof TRow]: SQL<TRow[K]> };
-  over: Pick<KeyOrder, 'join' | 'wordMatch'>;
+  over: Pick<KeyOrder, 'join' | 'leftJoined' | 'wordMatch'>;
   /**
    * Tables joined after the search join, in order, each ANDing its own
    * `deleted_at IS NULL` into `on`. A right join keeps every row of its table
@@ -534,21 +543,13 @@ export interface AuditWriter {
    */
   lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
-   * Takes the proof's coven's stock lock until the transaction ends (M12.8): a
-   * save that moves jars onto a local and a create that adds a jar queue on it,
-   * so neither misses the other's write. Taken first, before any read or write.
-   * Per coven: another coven's call is not held up.
+   * Takes the proof's coven's stock lock until the transaction ends: a create
+   * that adds a jar, a cupboard remove that counts them (M12.15), and the two
+   * conversions that move them (M12.21, M12.23) queue on it, so none misses
+   * another's write. Taken first, before any read or write. Per coven: another
+   * coven's call is not held up.
    */
   lockCovenStock(membership: Membership): Promise<void>;
-  /**
-   * The proof's coven's live jars of live forms of the compendium entries its
-   * ingredient `localId` hides (M12.8), each with its form and entry, locked
-   * `for update` in jar-id order until the transaction ends: what a local
-   * entry's save moves onto its own forms. A read, and in the writer because
-   * the move must hold the jars it decided on. Another coven's jars are never
-   * read, and neither is a jar of a deleted form.
-   */
-  lockJarsOnHiddenEntries(membership: Membership, localId: string): Promise<HiddenJar[]>;
   /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
@@ -558,12 +559,26 @@ export interface AuditWriter {
   /** The proof's coven's live jars of its ingredient `ingredientId`, locked in jar-id order. */
   lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
   /**
-   * The proof's coven's live ingredients that hide the compendium entry
-   * `entryId`, locked in id order; the caller ranks them by
-   * identity match and age, which a lock order cannot. Empty for an id that is not a
-   * compendium entry.
+   * The live layers, in live spells of the proof's coven, that lay any of
+   * these forms, locked in layer-id order until the transaction ends: what a
+   * convert moves and checks for a spell that would hold one form twice
+   * (M12.21). Private spells included, whoever wrote them; another coven's
+   * layers never.
    */
-  lockLocalsHiding(membership: Membership, entryId: string): Promise<IngredientRow[]>;
+  lockLayersOfVariants(
+    membership: Membership,
+    variantIds: readonly string[],
+  ): Promise<SpellLayerRow[]>;
+  /**
+   * Points these layers, each in a live spell of the proof's coven, at another
+   * ingredient's form, stamped from the session, and answers the rows moved.
+   * Nothing else on the layer changes.
+   */
+  moveLayers(
+    membership: Membership,
+    layerIds: readonly string[],
+    to: { ingredientId: string; variantId: string },
+  ): Promise<SpellLayerRow[]>;
   /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
@@ -716,8 +731,17 @@ export interface IngredientFilter {
    * own read ignores it.
    */
   inStock?: boolean;
+  /**
+   * A coven's list only (M9.8): keep an entry when any live jar of the coven's
+   * is badged Out of Stock (at 0) or Low Stock (above 0, at or below a
+   * threshold above 0). A jar with no quantity never is. The compendium's own
+   * read ignores it.
+   */
+  lowStockOnly?: boolean;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
+  /** Only entries with no live form: the admin's other to-do list, entries nobody can stock yet (M12.30). */
+  withoutForms?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
 }
@@ -746,22 +770,26 @@ export interface IngredientFacets {
 /**
  * A coven's facets (M9.7): the seven kinds, and the two settings only a coven's
  * list has. `source` lists both values, zeros kept, in the enum's order;
- * `inStock` is how many entries the list would hold with the switch on.
+ * `inStock` and `lowStockOnly` are how many entries the list would hold with the
+ * switch on.
  * Each is counted with its own setting left out and every other kept.
  */
 export interface WorkspaceIngredientFacets extends IngredientFacets {
   source: FacetCount<'local' | 'compendium'>[];
   inStock: number;
+  lowStockOnly: number;
 }
 
 /**
  * The compendium's facets, and how many entries cite no live reference under
  * the rest of the filter: the No Refs switch's count (M12.3), the same with
- * the switch on or off. A coven's list has no such switch, so its facets do
- * not carry it.
+ * the switch on or off. `withoutForms` is the same for entries with no live
+ * form (M12.30). A coven's list has neither switch, so its facets do not carry
+ * them.
  */
 export interface CompendiumFacets extends IngredientFacets {
   withoutReferences: number;
+  withoutForms: number;
 }
 
 /**
@@ -772,6 +800,39 @@ export interface CompendiumFacets extends IngredientFacets {
  */
 export interface CompendiumScore {
   score: number | null;
+}
+
+/** Which of the substitute picker's two groups an entry is listed in (M12.19). */
+export type SuggestionGroup = 'yours' | 'compendium';
+
+/** What each row of the substitute picker carries beside its entry. */
+export interface SuggestionGroupTag {
+  group: SuggestionGroup;
+}
+
+/**
+ * What an entry of a coven's ingredient list carries beside its rank: the
+ * coven's live cupboard row for it, read by the list's own join, so
+ * `Ingredient.cupboardEntry` is answered without a second read. Null for the
+ * coven's own entries (M12.18).
+ */
+export interface WorkspaceListEdge extends CompendiumScore {
+  cupboardEntry: CupboardEntryRow | null;
+}
+
+/**
+ * The columns a list filters, sorts and counts that a coven's cupboard row
+ * may restate (M12.18): each the row's value where it holds one, else the
+ * entry's. On the compendium's own list they are the entry's columns, and
+ * there is no join.
+ */
+export interface ListColumns {
+  name: SortPart;
+  elements: SQLWrapper;
+  celestialBodies: SQLWrapper;
+  zodiacSigns: SQLWrapper;
+  /** The cupboard row's join, which every read of the columns needs. */
+  leftJoined?: LeftJoin<PgTable>;
 }
 
 /**
@@ -879,18 +940,14 @@ export type IngredientRow = typeof ingredients.$inferSelect;
 /** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;
 
+/** A `workspace_compendium_entries` row — a compendium entry's presence in one coven's cupboard (M12.13) — as a finder or a write returns it. */
+export type CupboardEntryRow = typeof workspaceCompendiumEntries.$inferSelect;
+
 /** A form of an ingredient, as a finder or a write returns it. */
 export type VariantRow = typeof ingredientVariants.$inferSelect;
 
-/**
- * A jar a coven holds on a compendium entry its own ingredient hides (M12.8),
- * with the form it sits on and the entry that form belongs to.
- */
-export interface HiddenJar {
-  jar: StockRow;
-  variant: VariantRow;
-  entry: IngredientRow;
-}
+/** One `spell_ingredients` row, a layer of a spell, as the writer reads it. */
+export type SpellLayerRow = typeof spellIngredients.$inferSelect;
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {

@@ -19,7 +19,7 @@ test(
     await expect(page).toHaveURL(/\/compendium$/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Sign In' }).click();
+    await page.getByRole('banner').getByRole('link', { name: 'Sign In' }).click();
 
     await expect(page).toHaveURL(/\/sign-in/);
   },

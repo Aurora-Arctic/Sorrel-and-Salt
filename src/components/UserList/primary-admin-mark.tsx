@@ -13,11 +13,11 @@ import './controls.scss';
 // button's name, so it is hidden from assistive technology while closed, as
 // InfoTip's is (claude-docs/components/user-list.md).
 const PrimaryAdminMark = (): ReactElement => {
-  const { open, show, hide, hideSoon } = useTip();
+  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
     // Hover on the wrapper, which holds the tip as well as the mark.
-    <span className="user-list__primary" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span ref={anchor} className="user-list__primary" onMouseEnter={show} onMouseLeave={hideSoon}>
       {/* A tap opens rather than toggles, as InfoTip's: on touch the emulated
           hover has already opened it. */}
       <button
@@ -31,9 +31,11 @@ const PrimaryAdminMark = (): ReactElement => {
         <CrownIcon />
       </button>
       <span
+        ref={bubble}
         role="tooltip"
         className={open ? 'user-list__control-tip is-open' : 'user-list__control-tip'}
         aria-hidden={!open}
+        style={bubbleStyle}
       >
         Primary Admin
       </span>

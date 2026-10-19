@@ -497,8 +497,8 @@ so that every list draws the same one:
   inside its measure. It runs from the chip's left edge as wide as its
   words, up to InfoTip's measure (18rem, or the screen less its gutters),
   past the chip and the control alike, the owner's call during MB.126: only
-  being cut off is wrong. The entry shifts it left as it opens, through
-  `--entry-tip-shift`, by however far it would run off the screen.
+  being cut off is wrong. `useTip` places it as it opens (Floating UI, `top-start`), shifting it
+  until it is inside the screen, and the qualifier's tip the same way.
 - **A detail tells what the chip leaves out** (MB.164). `detail`, a string
   such as a linked substitute's "Dried leaf · Compendium entry", sits on its own line beneath the text in the tooltip, at the
   caption size and in the bubble's own colour, since a muted one is not
@@ -510,14 +510,14 @@ so that every list draws the same one:
   `aria-hidden` while closed.
 - **A coloured chip wears its group's pair** (MB.126). `colors`, a group
   row's `{ colorDark, colorLight }`, sets both on the chip inline through
-  `chipColors()` and marks it `is-coloured`, and the stylesheet fills it
-  solid with the theme's one, `light-dark()`, its text and × in
-  `$text-on-color` — the solid-fill rule, since a wash of the colour cannot
-  hold 4.5:1 (`styling.md`, "Chips, badges and the solid-fill rule"). It is
-  the fill `chip()` draws selected, not the mixin, which draws a pill: the
+  `chipColors()` and marks it `is-coloured`, and the stylesheet gives it
+  the full chip level (2026-10-19; `chip-wash()`, an inset ring for the edge): a wash of
+  the theme's colour, `light-dark()`, its text and × in the stirred label ink that holds
+  4.5:1 (`styling.md`, "Category chips"). It is
+  the wash `chip()` draws, not the mixin, which draws a pill: the
   chip keeps its shape, padding and 24px ×, so a row mixes coloured and
   plain chips without a jump. The ×'s and a sortable handle's focus rings
-  are drawn in the same inverted ink on the fill, and the grip in it too;
+  are drawn in the same ink as the label (`currentcolor`), and the grip in it too;
   the ×'s hover keeps its own wash and ink, the error edge stays, and a
   held chip takes the body ink back with the accent's wash. A sortable
   entry passes `colors` the same way.
@@ -543,7 +543,7 @@ so that every list draws the same one:
   whether or not the count has arrived, so a reader never meets a label that
   changes under them. `outlined` draws the chip as an outline on the card
   instead of a wash (the `outlined-chip` mixin, `_mixins.scss`); a coloured
-  chip stays filled, since its group's colour is its look.
+  chip stays washed, since its group's colour is its look.
 
 ### An action on an entry
 
@@ -560,7 +560,8 @@ one per row or none; the Combobox knows nothing of what it does.
 gives one to each substitute that links an ingredient
 ([`ingredient-form.md`](ingredient-form.md), "A linked substitute's
 summary"). The chip's text becomes a button, `.combobox__entry-open`, led by
-a link mark (`LinkIcon`) in the accent and underlined in the body ink, both
+a link mark (`LinkIcon`) in the accent, the text in the body ink with no underline at rest (underlined
+while its summary is open; the owner's call, 2026-10-19), both
 in the accent's hover when pointed at; it is named by the text, described as
 the × is, and says it opens a dialog and whether it is open
 (`aria-haspopup="dialog"`, `aria-expanded`, `aria-controls` while open).
@@ -730,8 +731,8 @@ a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
 hovers in the warning's wash and ink. A linked entry's text is a button
-led by a link mark in the accent, underlined in the body ink, both in the
-accent's hover when pointed at; the accent clears only the 3:1 a mark needs
+led by a link mark in the accent, the text in the body ink and not underlined
+at rest, both in the accent's hover when pointed at; the accent clears only the 3:1 a mark needs
 on the chip's wash, so the text keeps the body ink (`tests/scss/tokens.test.ts`).
 Its summary is the list's floating surface and edge. A box stands at `$control-height`, level with a text field and a button
 (MB.154): its text line, `$text-height`, is the control's height less its

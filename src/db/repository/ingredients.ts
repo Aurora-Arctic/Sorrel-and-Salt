@@ -2,8 +2,10 @@ import {
   and,
   arrayOverlaps,
   eq,
+  gt,
   inArray,
   isNull,
+  lte,
   ne,
   not,
   or,
@@ -23,6 +25,7 @@ import type {
   IngredientElement,
 } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
+import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
@@ -32,7 +35,11 @@ import {
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInTiers, findPageInTiers } from './finders';
-import { readableIngredientParent, readableVariantParent } from './ingredient-parent';
+import {
+  inUseIngredientParent,
+  inUseVariantParent,
+  readableIngredientParent,
+} from './ingredient-parent';
 import {
   fold,
   foldedWordMatch,
@@ -48,17 +55,22 @@ import { existsIn, selectFrom, selectOne } from './select';
 import { curated, inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
+  CupboardEntryRow,
   IngredientFilter,
   IngredientIdentity,
   IngredientRow,
   IngredientScoped,
   JoinedRow,
+  ListColumns,
   ListOrder,
   NotSpellScoped,
   SimilarityScore,
   SortPart,
+  SuggestionGroup,
+  SuggestionGroupTag,
   Unscoped,
   VariantScoped,
+  WorkspaceListEdge,
 } from './types';
 
 /**
@@ -70,7 +82,8 @@ import type {
  * compendium alone. No such table carries a `workspace_id`, so the correlated
  * `EXISTS` over the parent is where the tier comes from, and a caller naming
  * another coven's ingredient gets no rows rather than a filter applied after
- * the fetch (rule 7).
+ * the fetch (rule 7). With `heldBy`, a retired compendium entry that coven's
+ * cupboard names is read too (`inUseIngredientParent`, M12.24).
  */
 export function findManyOfIngredients<
   TTable extends PgTable & IngredientScoped & Unscoped & NotSpellScoped,
@@ -78,6 +91,7 @@ export function findManyOfIngredients<
   memberships: readonly Membership[],
   table: TTable,
   ingredientIds: readonly string[],
+  heldBy?: Membership,
 ): Promise<TTable['$inferSelect'][]> {
   if (ingredientIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -86,7 +100,7 @@ export function findManyOfIngredients<
       notSoftDeleted(table),
       ownedByIngredient(table),
       inArray(table.ingredientId, [...ingredientIds]),
-      readableIngredientParent(memberships, table.ingredientId),
+      inUseIngredientParent(memberships, table.ingredientId, heldBy),
     ),
   );
 }
@@ -94,7 +108,9 @@ export function findManyOfIngredients<
 /**
  * The live variant with this id, while its ingredient is live and in the
  * compendium or a coven one of `memberships` proves: the form a jar may name
- * (M9.3), so another coven's form is no form at all here.
+ * (M9.3), so another coven's form is no form at all here. Never a retired
+ * compendium entry's, even for a coven whose cupboard names it: a retired
+ * entry takes no new jar (M12.24), so this takes no `heldBy`.
  */
 export function findReadableVariant(
   memberships: readonly Membership[],
@@ -116,6 +132,7 @@ export function findReadableVariant(
  * ingredient live and in the compendium or a coven one of `memberships`
  * proves (`readableVariantParent`, MB.218). Never by a bare id: a variant has
  * no `workspace_id`, so its ingredient's tier is the only scope it has.
+ * With `heldBy`, as `findManyOfIngredients` reads with it.
  */
 export function findManyOfVariants<
   TTable extends PgTable & VariantScoped & IngredientScoped & Unscoped & NotSpellScoped,
@@ -123,6 +140,7 @@ export function findManyOfVariants<
   memberships: readonly Membership[],
   table: TTable,
   variantIds: readonly string[],
+  heldBy?: Membership,
 ): Promise<TTable['$inferSelect'][]> {
   if (variantIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -130,7 +148,7 @@ export function findManyOfVariants<
     and(
       notSoftDeleted(table),
       inArray(table.variantId, [...variantIds]),
-      readableVariantParent(memberships, table.variantId),
+      inUseVariantParent(memberships, table.variantId, heldBy),
     ),
   );
 }
@@ -141,12 +159,13 @@ export function findManyOfVariants<
  * and null for a typed name or a deity since retired, which reads as the name
  * the row holds. Not an escape hatch: the retired deity is filtered, as
  * any finder filters it, and the row kept. Readable exactly when the parent
- * is, as `findManyOfIngredients` reads it. Unordered; a caller sorts by
- * `position`.
+ * is, as `findManyOfIngredients` reads it, `heldBy` included. Unordered; a
+ * caller sorts by `position`.
  */
 export function findDeitiesOfIngredients(
   memberships: readonly Membership[],
   ingredientIds: readonly string[],
+  heldBy?: Membership,
 ): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
   if (ingredientIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -154,7 +173,7 @@ export function findDeitiesOfIngredients(
     and(
       notSoftDeleted(ingredientDeities),
       inArray(ingredientDeities.ingredientId, [...ingredientIds]),
-      readableIngredientParent(memberships, ingredientDeities.ingredientId),
+      inUseIngredientParent(memberships, ingredientDeities.ingredientId, heldBy),
     ),
     {
       leftJoin: deities,
@@ -178,12 +197,14 @@ export function findDeitiesOfIngredients(
  * parent's own coven — so a row written past the service's tier rule shows
  * nothing. One statement for the whole batch: the linked ingredient is a left
  * join, under an alias, since the parent's correlated subquery reads
- * `ingredients` itself.
+ * `ingredients` itself. With `heldBy`, a retired compendium entry's, as
+ * `findManyOfIngredients` reads with it.
  */
 export function findSubstitutesIncludingSoftDeleted(
   memberships: readonly Membership[],
   of: 'ingredient' | 'variant',
   ids: readonly string[],
+  heldBy?: Membership,
 ): Promise<JoinedRow<typeof ingredientSubstitutes.$inferSelect, IngredientRow>[]> {
   if (ids.length === 0) return Promise.resolve([]);
   const linked = alias(ingredients, 'linked');
@@ -200,11 +221,16 @@ export function findSubstitutesIncludingSoftDeleted(
         ? [
             ownedByIngredient(ingredientSubstitutes),
             inArray(ingredientSubstitutes.ingredientId, [...ids]),
-            readableIngredientParent(memberships, ingredientSubstitutes.ingredientId, linkReadable),
+            inUseIngredientParent(
+              memberships,
+              ingredientSubstitutes.ingredientId,
+              heldBy,
+              linkReadable,
+            ),
           ]
         : [
             inArray(ingredientSubstitutes.variantId, [...ids]),
-            readableVariantParent(memberships, ingredientSubstitutes.variantId, linkReadable),
+            inUseVariantParent(memberships, ingredientSubstitutes.variantId, heldBy, linkReadable),
           ]),
     ),
     { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
@@ -285,137 +311,199 @@ export function findCompendiumCount(
 }
 
 /**
- * One page of a coven's ingredients under `filter` (M9.4): its own live
- * entries, and every live compendium entry it holds a live jar of, minus any
- * a local entry hides. Matched, ordered and keyed as the compendium is, by
- * the same arms, but under the proof rather than the compendium tier
- * (claude-docs/db/stock.md, "The workspace ingredient list").
+ * One page of a coven's ingredients under `filter` (M9.4, M12.18): its own
+ * live entries, and every live compendium entry its cupboard names. Matched,
+ * ordered and keyed as the compendium is, by the same arms, but under the
+ * proof, over the coven's overrides, and with each entry's cupboard row beside
+ * it, null for the coven's own (claude-docs/db/stock.md, "The workspace
+ * ingredient list").
  */
-export function findWorkspaceIngredientPage(
+export async function findWorkspaceIngredientPage(
   membership: Membership,
   filter: IngredientFilter,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  const list = compendiumList(filter);
-  return findPageInTiers(
+): Promise<PageEntry<IngredientRow, WorkspaceListEdge>[]> {
+  const list = compendiumList(filter, membership);
+  // The order's left join carries the cupboard row onto each entry as
+  // `joined`; the finder's type knows the carried score alone.
+  const entries = (await findPageInTiers(
     [membership],
     ingredients,
     list.order,
     page,
     and(list.arms, workspaceListScope(membership, filter)),
+  )) as PageEntry<IngredientRow, CompendiumScore & { joined: CupboardEntryRow | null }>[];
+  return entries.map(({ joined, ...entry }) => ({ ...entry, cupboardEntry: joined }));
+}
+
+/**
+ * How many rows a coven's ingredient list holds under `filter`, and how many
+ * of them come before `start` in its pages' order: the twin of
+ * `findCompendiumCount` over the same arms and the coven's scope, so the
+ * count and the page cannot disagree (M9.6).
+ */
+export function findWorkspaceIngredientCount(
+  membership: Membership,
+  filter: IngredientFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const list = compendiumList(filter, membership);
+  return findPageCountInTiers(
+    [membership],
+    ingredients,
+    list.order,
+    start,
+    and(list.arms, workspaceListScope(membership, filter)),
   );
 }
 
 /**
- * Which readable rows a coven's ingredient list holds (M9.4): its own, and
- * the compendium entries it holds, minus any a local entry hides. The page
- * and the facets (M12.3) both read it, so they hold the same rows. The
- * coven-only `source` and `inStock` settings (M9.7) are read here, not
- * in `compendiumList`, which the compendium's page and count share and
- * where a coven's jars mean nothing.
+ * Which readable rows a coven's ingredient list holds (M9.4, M12.18): its
+ * own, and the compendium entries a live cupboard row of its names, one keyed
+ * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar does
+ * not decide it, and an own entry sharing a compendium entry's name leaves
+ * both listed: the coven chose both. The page and the facets (M12.3) both read
+ * it, so they hold the same rows. The coven-only `source`, `inStock` and
+ * `lowStockOnly` settings (M9.7, M9.8) are read here, not in `compendiumList`, which the
+ * compendium's page and count share and where a coven's jars mean nothing.
  */
 export function workspaceListScope(
   membership: Membership,
-  filter: Pick<IngredientFilter, 'source' | 'inStock'> = {},
+  filter: Pick<IngredientFilter, 'source' | 'inStock' | 'lowStockOnly'> = {},
 ): SQL | undefined {
   return and(
-    notHiddenByLocal(membership),
-    or(scopedTo(membership, ingredients), heldBy(membership)),
+    or(
+      scopedTo(membership, ingredients),
+      and(
+        inCompendium(ingredients),
+        existsIn(
+          workspaceCompendiumEntries,
+          and(
+            eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
+            scopedTo(membership, workspaceCompendiumEntries),
+          ),
+        ),
+      ),
+    ),
     filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
     filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
-    filter.inStock ? heldBy(membership, true) : undefined,
+    filter.inStock ? holdsJarInStock(membership) : undefined,
+    filter.lowStockOnly ? holdsJarLowOrOut(membership) : undefined,
   );
 }
 
 /**
- * The coven holds a live jar of the row, of a live form. The row is already
- * the readable ingredient, so a plain live-variant `EXISTS` rather than
- * `readableVariantParent`'s tier check, as `categoryArms` reads it. With
- * `inStock`, the jar must also not be at 0: a jar with no quantity is held
- * unweighed, so it is an `OR` with null rather than `<> 0` alone, which
- * SQL reads as unknown for null and would drop it.
+ * The `inStock` filter (M9.7): the coven holds a live jar of the row, of a
+ * live form, and the jar is not at 0. The row is already the readable
+ * ingredient, so a plain live-variant `EXISTS` rather than
+ * `readableVariantParent`'s tier check, as `categoryArms` reads it. A jar
+ * with no quantity is held unweighed, so it is an `OR` with null rather than
+ * `<> 0` alone, which SQL reads as unknown for null and would drop it.
  */
-function heldBy(membership: Membership, inStock = false): SQL {
+function holdsJarInStock(membership: Membership): SQL {
   return existsIn(
     inventoryItems,
     and(
       eq(inventoryItems.ingredientId, ingredients.id),
       scopedTo(membership, inventoryItems),
-      inStock
-        ? or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0'))
-        : undefined,
+      or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0')),
       existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
   );
 }
 
 /**
- * One page of the live ingredients a coven's substitute may link — the
- * compendium's and the proof's workspace's (MB.138) — matched and ordered as
- * the compendium search is, best match first, so a typed prefix finds its
- * entry where `findSimilarIngredients`' whole-string 0.4 would not. A blank
- * `query` lists both tiers by name (claude-docs/db/compendium-read.md,
- * "The ingredient picker's search").
+ * The `lowStockOnly` filter (M9.8): the coven holds a live jar of the row, of
+ * a live form, badged Out of Stock (at 0, whatever its threshold) or Low Stock
+ * (above 0 and at or below a threshold above 0). A jar with no quantity is held
+ * unweighed and never matches, as SQL comparisons against null already read.
+ * The same rule as `stockState` in `src/components/StockBadge/stock-state.ts`;
+ * `tests/support/jar-states.ts` is the shared list both are tested against.
  */
-export function findIngredientSuggestions(
-  membership: Membership,
-  query: string,
-  page: PageRequest,
-  form?: string,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  const list = compendiumList({ query });
-  const ranked = formRank(form);
-  const order = ranked ? { ...list.order, sort: [ranked, ...list.order.sort] } : list.order;
-  return findPageInTiers(
-    [membership],
-    ingredients,
-    order,
-    page,
-    and(list.arms, notHiddenByLocal(membership)),
-  );
-}
-
-/**
- * The row is not a compendium entry the proof's coven already has its own of:
- * one anti-join over the coven's live rows, so a hidden entry never leaves the
- * database (DESIGN.md §5). A local row hides an entry sharing its `identity_key`
- * (the formal name, whatever forms either holds), and, only when the local row
- * declares no formal name, one sharing its label, folded. A coven row passes.
- * `ingredientSuggestions` and the workspace ingredient list (M9.4) apply it.
- */
-export function notHiddenByLocal(membership: Membership): SQL {
-  const local = alias(ingredients, 'local');
-  // The compendium test sits inside the subquery, not beside it as an `OR`: a
-  // bare `NOT EXISTS` is what Postgres can plan as an anti-join, and an `OR`
-  // around it would make it a per-row subplan.
-  return not(
-    existsIn(
-      local,
-      and(scopedTo(membership, local), inCompendium(ingredients), hides(local, ingredients)),
+function holdsJarLowOrOut(membership: Membership): SQL {
+  return existsIn(
+    inventoryItems,
+    and(
+      eq(inventoryItems.ingredientId, ingredients.id),
+      scopedTo(membership, inventoryItems),
+      or(
+        eq(inventoryItems.quantityOnHand, '0'),
+        and(
+          gt(inventoryItems.lowStockThreshold, '0'),
+          gt(inventoryItems.quantityOnHand, '0'),
+          lte(inventoryItems.quantityOnHand, inventoryItems.lowStockThreshold),
+        ),
+      ),
+      existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
   );
 }
 
-/** The columns of an `ingredients` row `hides` compares, whatever alias the row is read under. */
-interface HidingColumns {
-  identityKey: AnyPgColumn;
-  canonicalName: AnyPgColumn;
-  name: AnyPgColumn;
-}
+/** How many entries each group of the substitute picker offers (M12.19): an estimate, tuned in the e2e test. */
+const SUGGESTION_GROUP_LIMIT = 8;
 
 /**
- * `local` hides the compendium entry `entry` (DESIGN.md §5, "Local beats
- * compendium"): they share an `identity_key`, or `local` declares no formal
- * name and shares the entry's label, folded. The one spelling of the match, so
- * the lists that drop a hidden entry (`notHiddenByLocal`) and the save that
- * moves a coven's jars off it (M12.8) cannot disagree. The tiers are the
- * caller's to test.
+ * The substitute picker's rows (MB.138, M12.19), in two groups. `yours` is the
+ * coven's cupboard: its own live entries, and each compendium entry it holds a
+ * live cupboard row for, found by the label it gave the entry as well as the
+ * compendium's name. `compendium` is every other live compendium entry, those
+ * with no row here, through a keyed `NOT EXISTS` on that row. An entry is in
+ * one group, and an own entry and a compendium entry sharing a name are both
+ * offered. A retired (soft-deleted) compendium entry is in
+ * neither, as the tombstone filter drops it first. Each group is matched and
+ * ordered as the compendium search is, best match first, and cut at
+ * `SUGGESTION_GROUP_LIMIT`; the result lists `yours` first and pages by
+ * cursor over those rows, each carrying its `group`. A blank `query` lists
+ * both by name (claude-docs/db/compendium-read.md, "The ingredient picker's
+ * search").
  */
-export function hides(local: HidingColumns, entry: HidingColumns): SQL {
-  return or(
-    eq(local.identityKey, entry.identityKey),
-    and(isNull(local.canonicalName), eq(sql`lower(${local.name})`, sql`lower(${entry.name})`)),
-  ) as SQL;
+export async function findIngredientSuggestions(
+  membership: Membership,
+  query: string,
+  page: PageRequest,
+  form?: string,
+): Promise<PageEntry<IngredientRow, CompendiumScore & SuggestionGroupTag>[]> {
+  const list = compendiumList({ query }, membership);
+  const ranked = formRank(form);
+  const sort = ranked ? [ranked, ...list.order.sort] : list.order.sort;
+  const order = { ...list.order, sort };
+  // The coven holds a live cupboard row for the compendium entry.
+  const held = existsIn(
+    workspaceCompendiumEntries,
+    and(
+      scopedTo(membership, workspaceCompendiumEntries),
+      eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
+    ),
+  );
+  const yours = or(scopedTo(membership, ingredients), held) as SQL;
+  const top = async (scope: SQL) =>
+    (
+      await findPageInTiers(
+        [membership],
+        ingredients,
+        order,
+        { limit: SUGGESTION_GROUP_LIMIT, inverted: false },
+        and(list.arms, scope),
+      )
+    ).map(({ node }) => node.id);
+  const ids = (
+    await Promise.all([top(yours), top(and(inCompendium(ingredients), not(held)) as SQL)])
+  ).flat();
+  if (ids.length === 0) return [];
+  return findPageInTiers(
+    [membership],
+    ingredients,
+    {
+      ...order,
+      sort: [{ expression: sql`case when ${yours} then 0 else 1 end`, type: 'integer' }, ...sort],
+      carry: {
+        score: list.order.carry?.score as SQL<number | null>,
+        group: sql<SuggestionGroup>`case when ${yours} then 'yours' else 'compendium' end`,
+      },
+    },
+    page,
+    inArray(ingredients.id, ids),
+  );
 }
 
 /**
@@ -544,22 +632,28 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * row comparison bounds it, and the position where its best field holds the
  * query, so Wood Ash leads Sandalwood for `wood`; a browse keys `[name]`.
  */
-export function compendiumList(filter: IngredientFilter): {
+export function compendiumList(
+  filter: IngredientFilter,
+  cupboardOf?: Membership,
+): {
   arms: SQL | undefined;
   order: ListOrder<CompendiumScore>;
 } {
-  const match = searchMatch(filter.query);
+  const columns = listColumns(cupboardOf);
+  const match = searchMatch(filter.query, cupboardOf);
+  const leftJoined = columns.leftJoined && { leftJoined: columns.leftJoined };
   return {
     arms: and(
       ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
       formArm(filter.forms),
       pickedFormArm(filter.formId),
-      listArm(ingredients.celestialBodies, filter.celestialBodies),
-      listArm(ingredients.zodiacSigns, filter.zodiacSigns),
-      elementArm(filter.elements),
+      listArm(columns.celestialBodies, filter.celestialBodies),
+      listArm(columns.zodiacSigns, filter.zodiacSigns),
+      elementArm(filter.elements, columns.elements),
       deityArm(filter.deityIds),
       toxicArm(filter.toxic),
       filter.withoutReferences ? citesNowhere() : undefined,
+      filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
     order: match
@@ -567,16 +661,61 @@ export function compendiumList(filter: IngredientFilter): {
           sort: [
             { expression: sql`-${match.score}`, type: 'real' },
             { expression: match.position, type: 'integer' },
-            ingredients.name,
+            columns.name,
           ],
           wordMatch: true,
           join: match.join,
+          ...leftJoined,
           carry: { score: match.score },
         }
       : {
-          sort: [ingredients.name],
+          sort: [columns.name],
+          ...leftJoined,
           carry: { score: sql<number | null>`null` },
         },
+  };
+}
+
+/**
+ * A coven's cupboard row for the entry, left-joined beside it in the coven's
+ * list. Aliased, since the list's scope reads the table itself in an `EXISTS`.
+ */
+const cupboard = alias(workspaceCompendiumEntries, 'cupboard');
+
+/**
+ * The name, elements, celestial bodies and zodiac signs a list reads (M12.18).
+ * Under a coven's proof each is `coalesce(cupboard row's, entry's)`, so an
+ * override sorts, filters and counts where the coven put it, and an empty
+ * list it cleared matches nothing: `coalesce` takes `[]` as a value, as
+ * `applyCupboardEntry`'s `??` does. The join matches the proof's live row
+ * for a live compendium entry, so a coven's own entry reads its own columns.
+ * Without a proof, the compendium's own list, each is the entry's column.
+ * Raw, since `coalesce` has no builder.
+ */
+export function listColumns(membership?: Membership): ListColumns {
+  if (!membership) {
+    return {
+      name: ingredients.name,
+      elements: ingredients.elements,
+      celestialBodies: ingredients.celestialBodies,
+      zodiacSigns: ingredients.zodiacSigns,
+    };
+  }
+  const over = (own: AnyPgColumn, entry: AnyPgColumn) => sql`coalesce(${own}, ${entry})`;
+  return {
+    name: { expression: over(cupboard.label, ingredients.name), type: 'text' },
+    elements: over(cupboard.elements, ingredients.elements),
+    celestialBodies: over(cupboard.celestialBodies, ingredients.celestialBodies),
+    zodiacSigns: over(cupboard.zodiacSigns, ingredients.zodiacSigns),
+    leftJoined: {
+      leftJoin: cupboard,
+      on: and(
+        eq(cupboard.ingredientId, ingredients.id),
+        scopedTo(membership, cupboard),
+        notSoftDeleted(cupboard),
+        inCompendium(ingredients),
+      ) as SQL,
+    },
   };
 }
 
@@ -622,6 +761,7 @@ const SEARCH_WEIGHTS = {
  */
 function searchMatch(
   query: string | undefined,
+  cupboardOf?: Membership,
 ): { join: { source: SQL; on: SQL }; score: SQL<number>; position: SQL<number> } | undefined {
   const trimmed = query?.trim();
   if (!trimmed) return undefined;
@@ -643,6 +783,22 @@ function searchMatch(
       from ${from}
       where ${and(matches(text), live)}`;
   const entries = sql`${ingredients} as ${candidate}`;
+  // With a coven's proof, a sixth arm: the label that coven gave a compendium
+  // entry it holds, ranked as a label is (M12.19). That coven's live rows only.
+  const cupboardArm = cupboardOf
+    ? sql`
+      union all
+      ${arm(
+        workspaceCompendiumEntries.ingredientId,
+        workspaceCompendiumEntries.label,
+        SEARCH_WEIGHTS.name,
+        workspaceCompendiumEntries,
+        and(
+          scopedTo(cupboardOf, workspaceCompendiumEntries),
+          notSoftDeleted(workspaceCompendiumEntries),
+        ),
+      )}`
+    : sql``;
   // The position is the best-scoring arm's, not `min(position)`: a weaker
   // field holding the query earlier — a folk name starting with it, under a
   // label holding it mid-word — must not move the entry it did not rank.
@@ -658,7 +814,7 @@ function searchMatch(
       union all
       ${arm(ingredientVariants.ingredientId, ingredientVariants.form, SEARCH_WEIGHTS.form, ingredientVariants, notSoftDeleted(ingredientVariants))}
       union all
-      ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}
+      ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}${cupboardArm}
     ) as ${arms}
     group by ${arms}.id) as ${matched}`;
   return {
@@ -673,7 +829,7 @@ function searchMatch(
  * admin's to-do list (M5.5). An entry whose only source is on its oil is
  * sourced, under the union rule (MB.215, MB.218), so it is not on the list.
  */
-function citesNowhere(): SQL | undefined {
+export function citesNowhere(): SQL | undefined {
   return and(
     citesNothing('ingredientId'),
     not(
@@ -683,6 +839,15 @@ function citesNowhere(): SQL | undefined {
       ),
     ),
   );
+}
+
+/**
+ * The entry has no live form: the admin's to-do list of entries nobody can
+ * stock or put in a spell yet (MB.215, M12.30). A soft-deleted variant is none,
+ * through `existsIn`.
+ */
+export function hasNoForm(): SQL {
+  return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));
 }
 
 /**
@@ -743,7 +908,7 @@ export function stated(values: readonly string[] | undefined): string[] {
  * by entry, which `listFolds` does, and an overlap would compare the raw
  * spellings. Blank values are skipped, and none means no filter.
  */
-function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL | undefined {
+function listArm(list: SQLWrapper, values: readonly string[] | undefined): SQL | undefined {
   const wanted = stated(values);
   if (wanted.length === 0) return undefined;
   return or(...wanted.map((value) => listHolds(list, value)));
@@ -753,7 +918,7 @@ function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL 
  * `list` holds an entry folding as `value` does: one value of `listArm`, and
  * how a facet matches a curated row's name to the list (M12.3).
  */
-export function listHolds(list: AnyPgColumn, value: SQLWrapper | string): SQL {
+export function listHolds(list: SQLWrapper, value: SQLWrapper | string): SQL {
   return inArray(fold(value), listFolds(list));
 }
 
@@ -765,11 +930,16 @@ export function listHolds(list: AnyPgColumn, value: SQLWrapper | string): SQL {
  * nothing. The toxic filter's reading. Elements are a closed set, so there is
  * nothing to fold. Empty means no filter.
  */
-export function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
+export function elementArm(
+  elements: readonly IngredientElement[] | undefined,
+  own: SQLWrapper = ingredients.elements,
+): SQL | undefined {
   if (!elements?.length) return undefined;
   const wanted = [...elements];
   return or(
-    arrayOverlaps(ingredients.elements, wanted),
+    // Bound as one array through the column's encoder: an expression has none,
+    // and Drizzle would otherwise spread the values into a row.
+    arrayOverlaps(own, sql`${sql.param(wanted, ingredients.elements)}`),
     existsIn(
       ingredientVariants,
       and(
