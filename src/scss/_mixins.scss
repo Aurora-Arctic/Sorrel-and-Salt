@@ -255,6 +255,26 @@
   }
 }
 
+// A badge's size: text, sides and the height it holds. The badge mixin sets the
+// default; the card applies medium and small to the badges inside it, on a deeper
+// selector. claude-docs/styling.md, "Badge sizes".
+@mixin badge-size($name) {
+  $size: map.get($badge-sizes, $name);
+
+  @if $size == null {
+    @error 'Unknown badge size "#{$name}". The sizes are: #{map.keys($badge-sizes)}.';
+  }
+
+  font-size: type-size(map.get($size, font-size));
+  padding-block: map.get($size, padding-block);
+  padding-inline: map.get($size, padding-inline);
+
+  @if map.get($size, min-block-size) {
+    min-block-size: map.get($size, min-block-size);
+    box-sizing: border-box;
+  }
+}
+
 // A tip's bubble: drawn as the low-stock badge is, square-cornered at caption
 // size, and faded in and out over 500ms, the owner's pace, rising 2px as it
 // opens. `.is-open` shows it; closed, it takes no pointer once the fade ends.

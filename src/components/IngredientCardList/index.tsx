@@ -7,8 +7,12 @@ import './index.scss';
 // each in an `li`, filling a row with as many as fit. Presentational: it
 // decides nothing about what is listed and does not page (the caller's
 // `findPage` and `Pager` do). claude-docs/components/ingredient-card-list.md.
-const IngredientCardList = ({ label, children }: IngredientCardListProps): ReactElement => (
-  <ul className="ingredient-card-list" aria-label={label}>
+const IngredientCardList = ({
+  label,
+  density = 'regular',
+  children,
+}: IngredientCardListProps): ReactElement => (
+  <ul className="ingredient-card-list" aria-label={label} data-density={density}>
     {Children.toArray(children).map((child, at) => (
       <li key={at}>{child}</li>
     ))}

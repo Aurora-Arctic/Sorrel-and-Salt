@@ -382,6 +382,23 @@ Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
 Lexend's 300 body weight, so a small label holds its colour at chip size.
 
+### Badge sizes
+
+A badge has three sizes, set in one place: `$badge-sizes` in `_variables.scss`, applied by
+`badge-size($name)` in `_mixins.scss` (a mistyped name is a compile error). `badge()` itself
+draws the `default` size, so a badge outside the ingredient card is unchanged. The two smaller
+sizes are the card's alone, applied to the `.badge`s inside it. The components that draw
+badges (`EntryMarks`, `CautionMark`, `ToxicMark`, `StockBadge`) take no size prop: the card
+decides, from its own selector, so one badge reads the same wherever it is rendered.
+
+| Size      | Text            | Padding (block, inline) | Least height | Used by                 |
+| --------- | --------------- | ----------------------- | ------------ | ----------------------- |
+| `default` | caption (13px)  | 2px, 7px                | none         | every badge, everywhere |
+| `medium`  | overline (12px) | 2px, 7px                | 24px         | the regular card        |
+| `small`   | overline (12px) | 2px, 5px                | 24px         | the compact card        |
+
+The 24px floor is the least a badge with a tip may be as a target.
+
 ## Brand colours
 
 A sign-in provider's button wears the provider's colours, not ours:

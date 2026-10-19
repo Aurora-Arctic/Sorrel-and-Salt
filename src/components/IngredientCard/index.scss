@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use 'compact' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the
 // layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
@@ -8,9 +9,13 @@
 .ingredient-card {
   @include modal-surface($shadow-floating);
 
-  padding: space(5);
+  // 16px: one step under the 24px it was, with the type a step smaller.
+  padding: space(4);
   // The containing block for the name link's stretched `::after` below.
   position: relative;
+  // Its own stacking context at rest, so the raised actions and tips inside it
+  // (z-index 1 above) stay inside the card instead of painting over the next card.
+  isolation: isolate;
   cursor: pointer;
 }
 
@@ -44,12 +49,17 @@
   }
 }
 
-// Under the pointer, or with the link focused, the card lightens and rises. No
+// Under the pointer, or with the link focused, the card lightens and rises. The lift needs no
 // `:has()`: `:focus-within` catches the link's focus, and also a click's, which
 // is harmless; only `:focus-visible` on the link itself draws the ring.
 .ingredient-card {
+  // The lift moves `inset-block-start`, not `transform`: a transformed ancestor becomes
+  // the containing block of a `position: fixed` tip bubble inside it (the Low badge's,
+  // the marks'), and Floating UI does not re-place a bubble when an ancestor's transform
+  // starts or ends, so a quick move between cards left a bubble in the wrong place.
+  inset-block-start: 0;
   transition:
-    transform 150ms ease,
+    inset-block-start 150ms ease,
     box-shadow 150ms ease,
     background-color 150ms ease,
     color $theme-transition-duration $theme-transition-easing;
@@ -58,7 +68,16 @@
   &:focus-within {
     background-color: $surface-card-hover;
     box-shadow: $shadow-lifted;
-    transform: translateY(-2px);
+    inset-block-start: -2px;
+    // Above its neighbours while a tip may be open (hover or keyboard focus), so a
+    // tip that spills over the card above is not painted under that card's buttons.
+    z-index: 1;
+  }
+
+  // A tip outlives the hover (it stays open a moment after the pointer leaves), so the
+  // card stays raised while one of its tips is open.
+  &:has([role='tooltip'].is-open) {
+    z-index: 1;
   }
 
   // The colour and shadow change stay; the movement and the fade go.
@@ -67,7 +86,7 @@
 
     &:hover,
     &:focus-within {
-      transform: none;
+      inset-block-start: 0;
     }
   }
 }
@@ -83,6 +102,9 @@
 
 .ingredient-card__name {
   hyphens: auto;
+  // h3's size, down from the h2 default (2.15rem): the card is one of many in a grid,
+  // so its name needs less than a page heading. Site sizes only, no new one.
+  font-size: heading-size(3);
 }
 
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
@@ -108,6 +130,9 @@
 // `.spoken-separator` in each item instead, as the circle is announced as nothing.
 .ingredient-card__forms {
   --forms-gap: #{space(5)};
+
+  // Body down to small; the icons are in em, so they follow.
+  font-size: type-size('small');
   --forms-dot: #{space(1)};
 
   display: flex;
@@ -164,4 +189,22 @@
 .ingredient-card .specimen__actions {
   position: relative;
   z-index: 1;
+}
+
+// Chip text on the card, one step under the caption it takes elsewhere, and the badges
+// (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
+// badge size, which holds them 24px tall.
+.ingredient-card {
+  .chip {
+    font-size: type-size('overline');
+  }
+
+  .badge {
+    @include badge-size('medium');
+  }
+}
+
+// The compact look, wherever an ancestor says `data-density="compact"`.
+[data-density='compact'] {
+  @include ingredient-card-compact;
 }

@@ -41,6 +41,28 @@ describe('IngredientCardList', () => {
   });
 });
 
+describe('IngredientCardList density', () => {
+  it('states the regular density unless told compact', () => {
+    const { rerender } = render(
+      <IngredientCardList label="Ingredients">
+        {card('Fixture Testwort', 'testwort')}
+      </IngredientCardList>,
+    );
+    expect(screen.getByRole('list', { name: 'Ingredients' }).getAttribute('data-density')).toBe(
+      'regular',
+    );
+
+    rerender(
+      <IngredientCardList label="Ingredients" density="compact">
+        {card('Fixture Testwort', 'testwort')}
+      </IngredientCardList>,
+    );
+    expect(screen.getByRole('list', { name: 'Ingredients' }).getAttribute('data-density')).toBe(
+      'compact',
+    );
+  });
+});
+
 describe('ListBody with the cards shape', () => {
   it('shows the loading status, and not the content, while a page is on its way', () => {
     render(

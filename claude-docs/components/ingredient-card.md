@@ -57,6 +57,16 @@ the jar-line dot gets the same, and the slot's CSS takes that separator out of t
 The Low badge's tip opens from the badge's right edge on the card only (`.ingredient-card .stock-badge__tip`, the same `tip-above($align: end)` the Retired tip uses), since the badge sits at the card's right edge and a left-anchored bubble would run off the screen; `StockBadge` keeps its own default elsewhere. Nothing focusable sits in the line, so the clip
 cuts no focus ring.
 
+### Sizes and padding (changed 2026-10-19)
+
+The owner asked for smaller type, about half way to the compact look, with the spacing scaled to match but not compacted. Site tokens only. The name is `heading-size(3)` (1.8rem, was the `h2` default 2.15rem); the forms line is `type-size('small')` (0.875rem, was 1rem; its icons are in `em` and follow). Chip and badge text (the marks, Caution, Toxic, Low and Out of Stock) is `type-size('overline')` (0.75rem, was caption 0.8125rem), ; the badges take the `medium` badge size ([`styling.md`](../styling.md), "Badge sizes"), which holds them at 24px. Their padding and gaps stay. The formal name and jar lines keep their sizes. Card padding is `space(4)` (16px, was 24px); the forms line's air `space(1)` (4px, was 8px); the badge group's air below it `space(1)` (4px, was 8px). The card's own 12px gap, the 24px dot gap in the forms line and the 24px badges are unchanged.
+
+### Compact
+
+The same card in a tighter look, for a long list. It is not a prop. The look must be switchable before React runs (M9.6 stores the choice and a script sets an attribute before the first paint), and a prop fixes the look at render, which would then disagree with the server's markup on hydration. So the look is a Sass mixin, `ingredient-card-compact` (`_compact.scss`), applied in `index.scss` under `[data-density='compact']`: it applies wherever an ancestor carries that attribute. `IngredientCardList` sets it from its `density` prop; a card on its own is wrapped in an element that carries it (stories `Compact`, `Compact Long Name`).
+
+What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the hover lift, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact. M8.14 makes compact a real option and builds no switch.
+
 ### Jar-section spacing
 
 Every gap is a `space()` token. Before and after (px), changed 2026-10-18:
@@ -80,7 +90,15 @@ round the card. Under the pointer, or with focus inside it, the card lightens
 (`$surface-card-hover`: a step lighter in dark, brighter in light) and rises 2px
 with a stronger shadow (`$shadow-lifted`, between floating and elevated), over 150ms.
 Under reduced motion the move and the fade go and the colour and shadow change
-stay. It uses `:focus-within`, not `:has()`, so a click's focus lifts it too.
+stay. The lift moves `inset-block-start`, never `transform`: a transformed ancestor becomes the
+containing block of the `position: fixed` tip bubbles inside the card, and Floating UI does not
+re-place a bubble when an ancestor's transform starts or ends, so a quick move between cards left
+a bubble in the wrong place. Keep `transform`, `filter`, `will-change`, `contain` and
+`backdrop-filter` off the card for the same reason. Each card is `isolation: isolate`, so its raised
+actions and tips stay inside it, and the card under the pointer or with focus inside it (or with
+one of its tips still open, through `:has()`, since a tip lingers about 150ms after the pointer
+leaves) takes `z-index: 1`, so its tips paint over the cards before and after it. The lift uses
+`:focus-within`, so a click's focus lifts it too.
 Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
 
@@ -106,4 +124,4 @@ Styling stops at the tokens until the section's design review (MB.84).
 
 ### A long name
 
-The top row (`.specimen__top`) wraps, in the primitive, so it holds wherever the primitive is used. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, at the left (the name block grows, so beside it the badges sit at the right; the group itself takes only its content's width, with no auto margin). Badges that wrap among themselves start each row at the left, beside the name as under it (changed 2026-10-18: CSS cannot tell the two apart, and a full-width group wrapping within itself had its rows start part-way across the card). The wrapped group is 12px (`space(3)`, the row gap) below the formal name and 20px above the chips (the 12px card gap plus `space(2)` on the group). The forms line sits 20px from the chips and from the jar rule (`$ingredient-card-forms-air`, `space(2)`, plus the 12px gap). A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.
+The top row (`.specimen__top`) wraps, in the primitive, so it holds wherever the primitive is used. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, at the left (the name block grows, so beside it the badges sit at the right; the group itself takes only its content's width, with no auto margin). Badges that wrap among themselves start each row at the left, beside the name as under it (changed 2026-10-18: CSS cannot tell the two apart, and a full-width group wrapping within itself had its rows start part-way across the card). The wrapped group is 12px (`space(3)`, the row gap) below the formal name and 16px above the chips (the 12px card gap plus `space(1)` on the group). The forms line sits 16px from the chips and from the jar rule (`$ingredient-card-forms-air`, `space(1)`, plus the 12px gap). A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.
