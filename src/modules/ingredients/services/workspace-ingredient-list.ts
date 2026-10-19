@@ -1,7 +1,11 @@
 import 'server-only';
-import { type WorkspaceListEdge, findWorkspaceIngredientPage } from '../../../db/repository';
+import {
+  type WorkspaceListEdge,
+  findWorkspaceIngredientCount,
+  findWorkspaceIngredientPage,
+} from '../../../db/repository';
 import type { Session } from '../../../lib/session';
-import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
 import {
   WorkspaceIngredientFilter,
@@ -33,5 +37,28 @@ export async function listWorkspaceIngredients(
     membership,
     parseInput(WorkspaceIngredientFilter, filter),
     page,
+  );
+}
+
+/**
+ * How many entries a coven's ingredient list holds under `filter`, and how
+ * many come before `start`, the page's first row: the "Page X of Y" of the
+ * page `listWorkspaceIngredients` serves (M9.6). Not cached: the data is the
+ * coven's (CLAUDE.md rule 6).
+ *
+ * @throws {Forbidden} the caller may not read this coven's ingredients.
+ * @throws {ValidationError} as `listWorkspaceIngredients`.
+ */
+export async function countWorkspaceIngredients(
+  session: Session,
+  workspaceId: string,
+  filter: WorkspaceIngredientFilterInput,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  return findWorkspaceIngredientCount(
+    membership,
+    parseInput(WorkspaceIngredientFilter, filter),
+    start,
   );
 }

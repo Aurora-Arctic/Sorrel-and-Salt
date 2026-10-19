@@ -763,6 +763,8 @@ entry only when one of its jars is at 0 or at or under a threshold above 0 (Out 
 may read it. An entry's jars are its `stock` field, below, so a page reads its
 stock in one batch whatever its length.
 
+**The coven's pages are numbered on the server only (M9.6).** The Ingredients page shows "Page X of Y" like the compendium's, from `countWorkspaceIngredients`, which `workspaceIngredients` does not expose: the connection carries no `totalCount`, because only the server-rendered page counts. The count is not cached, as the data is the coven's.
+
 `tests/modules/ingredients/graphql/workspace-ingredient-list.test.ts` holds the
 transport's half: the page and its cursor, the arguments reaching the read,
 one read each for a page's stock, its categories and its jars' forms, and the
