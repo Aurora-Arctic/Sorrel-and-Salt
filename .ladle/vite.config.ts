@@ -14,7 +14,31 @@ import { defineConfig } from 'vite';
 // provides and Vite does not, and a story only needs the link to render.
 // `next/navigation` is stubbed for the same reason: its `useRouter` throws
 // with no App Router mounted.
+//
+// `leave-auth-requests-pending` answers nothing to a request under /api/auth made
+// from one of the two stories that show a button waiting on Better Auth
+// (M12.33). The window's own `fetch` cannot be replaced for them: Better Auth's
+// client takes hold of `fetch` once, when it is created, so a story's stand-in
+// is never called. Every other story still gets the workshop's plain 404.
+const WAITING_ON_AUTH = /[?&]story=[a-z-]+--(adding|signing-in)(&|$)/;
+
 export default defineConfig({
+  plugins: [
+    {
+      name: 'leave-auth-requests-pending',
+      configureServer(server) {
+        server.middlewares.use((request, _response, next) => {
+          if (
+            request.url?.startsWith('/api/auth') &&
+            WAITING_ON_AUTH.test(request.headers.referer ?? '')
+          ) {
+            return;
+          }
+          next();
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       // The components import `@/modules/...` at runtime, as `tsconfig.json`'s paths say.

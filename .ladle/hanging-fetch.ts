@@ -4,8 +4,10 @@ import { useLayoutEffect } from 'react';
 // can be looked at as long as needed. While the story is mounted, a request
 // whose path starts with `prefix` is left pending; every other request goes to
 // the real `fetch`, which the workshop has no server to answer. The original is
-// put back on unmount, so no other story sees the stand-in. The GraphQL client
-// and Better Auth's client both look `fetch` up on each call, never at import.
+// put back on unmount, so no other story sees the stand-in. This reaches only
+// clients that look `fetch` up on each call, such as the GraphQL client. Better
+// Auth's client takes hold of `fetch` when it is created, so the sign-in stories
+// hold their request open from the workshop's server instead (vite.config.ts).
 
 /** Leaves requests under `prefix` pending for as long as the story is mounted. */
 export function useHangingFetch(prefix: string): void {

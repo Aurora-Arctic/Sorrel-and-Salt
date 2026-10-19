@@ -1,5 +1,4 @@
 import type { Story } from '@ladle/react';
-import { useHangingFetch } from '../../../.ladle/hanging-fetch';
 import { usePressOnMount } from '../../../.ladle/press';
 import { authClient } from '../../lib/auth-client';
 import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '../../lib/sign-in';
@@ -74,7 +73,6 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // as while the browser is on its way to the provider (M12.33).
 export const SigningIn: Story = () => {
   lastUsed(null);
-  useHangingFetch('/api/auth');
   usePressOnMount('Continue with Google');
   return <Page next="/" configured={ALL_PROVIDERS} />;
 };
