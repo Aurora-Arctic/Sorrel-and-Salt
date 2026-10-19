@@ -227,6 +227,11 @@
   font-size: type-size('overline');
   cursor: pointer;
 
+  // No dot: the button stands for no group (the owner's call, 2026-10-19).
+  &::before {
+    content: none;
+  }
+
   &:hover,
   &[aria-expanded='true'] {
     background-color: $hairline;
