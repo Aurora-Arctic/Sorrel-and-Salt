@@ -1,0 +1,51 @@
+'use client';
+
+import Link from 'next/link';
+import type { ComponentProps, MouseEvent, ReactElement } from 'react';
+import type { NavigationTarget } from './types';
+import { usePendingNavigation } from './use-navigation';
+
+// `navigationTarget`, not `target`: an anchor's own `target="_blank"` keeps its name.
+type PendingLinkProps = ComponentProps<typeof Link> & { navigationTarget?: NavigationTarget };
+
+/**
+ * The one link the site draws. A plain press navigates through the shared
+ * hook, so the page bar and the destination's skeleton follow. A press the
+ * browser means for a new tab or window, or a link that opens elsewhere, is
+ * left to the browser untouched.
+ */
+export function PendingLink({
+  navigationTarget,
+  onClick,
+  href,
+  replace,
+  scroll,
+  target,
+  ...rest
+}: PendingLinkProps): ReactElement {
+  const { navigate } = usePendingNavigation();
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    onClick?.(event);
+    if (event.defaultPrevented || typeof href !== 'string') return;
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    if ((target && target !== '_self') || rest.download !== undefined) return;
+    event.preventDefault();
+    navigate(href, {
+      replace: replace === true,
+      ...(scroll === undefined ? {} : { scroll }),
+      ...(navigationTarget ? { target: navigationTarget } : {}),
+    });
+  };
+  return (
+    <Link
+      {...rest}
+      href={href}
+      replace={replace}
+      scroll={scroll}
+      target={target}
+      onClick={handleClick}
+    />
+  );
+}
