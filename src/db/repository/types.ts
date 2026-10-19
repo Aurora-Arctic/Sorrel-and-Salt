@@ -400,6 +400,24 @@ export interface AuditWriter {
     id: string,
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * Moves the one live compendium row's `updated_at` with no column changed,
+   * for a parent whose child rows just changed (MB.106). The `set_updated_at()`
+   * trigger leaves an UPDATE that changed nothing alone, so this publishes
+   * `app.touch_row` for its own statement to say the touch is meant. Reaches
+   * the compendium tier only, on the same terms as the update above.
+   */
+  touchByIdInCompendium<TTable extends PgTable & TwoTier & Generic & Identified>(
+    curator: Curator,
+    table: TTable,
+    id: string,
+  ): Promise<TTable['$inferSelect'][]>;
+  /** The same, for the one live row of the proof's workspace. */
+  touchByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic & Identified>(
+    membership: Membership,
+    table: TTable,
+    id: string,
+  ): Promise<TTable['$inferSelect'][]>;
   /** Soft-delete the one live compendium row with this id, on the same terms. */
   softDeleteByIdInCompendium<
     TTable extends PgTable & TwoTier & SoftDeletable & Generic & Identified,
@@ -1098,4 +1116,15 @@ export interface UserName {
 export interface LinkedProvider {
   userId: string;
   providerId: string;
+}
+
+/** One live compendium entry's address, as the sitemap and `llms.txt` list it (MB.84). */
+export interface CompendiumSlugEntry {
+  slug: string;
+  name: string;
+  canonicalName: string | null;
+  /** The entry's own description, for `llms.txt` notes (M12.2); the sitemap ignores it. */
+  description: string | null;
+  /** When the entry last really changed: its `updated_at` (MB.106). */
+  lastModified: Date;
 }

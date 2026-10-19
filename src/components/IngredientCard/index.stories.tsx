@@ -201,3 +201,9 @@ export const CompactLongName: Story = () => (
     </IngredientCard>
   </div>
 );
+
+export const NewEntry: Story = () => <IngredientCard {...BASE} kind="compendium" recency="new" />;
+
+export const UpdatedEntry: Story = () => (
+  <IngredientCard {...BASE} kind="compendium" recency="updated" />
+);

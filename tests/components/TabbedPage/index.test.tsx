@@ -51,6 +51,18 @@ describe('TabbedPage', () => {
     expect(within(screen.getByRole('main')).getByRole('table', { name: 'Users' })).toBeVisible();
   });
 
+  it('draws no tab row for a page with one tab, and still shows its action and content', () => {
+    render(
+      <TabbedPage title="People" tabs={[TABS[0]]} action={<a href="/admin/users?pause">Pause</a>}>
+        <p>Content</p>
+      </TabbedPage>,
+    );
+
+    expect(screen.queryByRole('navigation', { name: 'People' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Pause' })).toBeVisible();
+    expect(screen.getByText('Content')).toBeVisible();
+  });
+
   it("puts the tabs on the heading's line, between the heading and the action", () => {
     render(
       <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>

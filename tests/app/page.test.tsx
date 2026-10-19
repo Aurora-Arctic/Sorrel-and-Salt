@@ -14,7 +14,7 @@ vi.mock('@/lib/request-session', () => ({ getSession }));
 const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
 
-const { default: HomePage } = await import('@/app/page');
+const { default: HomePage, metadata } = await import('@/app/page');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
@@ -22,6 +22,32 @@ beforeEach(() => {
   getSession.mockReset();
   firstCovenSlugOf.mockReset();
   firstCovenSlugOf.mockResolvedValue(undefined);
+});
+
+describe('the / page metadata', () => {
+  const scripts = () => document.querySelectorAll('script[type="application/ld+json"]');
+
+  it('names the site alone, untemplated, with the bare origin as canonical', () => {
+    expect(metadata.title).toEqual({ absolute: 'Sorrel & Salt' });
+    expect(metadata.alternates?.canonical).toBe('https://sorrelandsalt.com/');
+    expect(metadata.description).toBeTruthy();
+  });
+
+  it('marks a signed-out visitor’s page up as the website', async () => {
+    getSession.mockResolvedValue(null);
+    render(await HomePage());
+    expect(JSON.parse(scripts()[0].textContent ?? '{}')).toMatchObject({
+      '@type': 'WebSite',
+      name: 'Sorrel & Salt',
+      url: 'https://sorrelandsalt.com/',
+    });
+  });
+
+  it('adds no markup for a signed-in visitor', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'admin' });
+    render(await HomePage());
+    expect(scripts()).toHaveLength(0);
+  });
 });
 
 describe('the / page', () => {

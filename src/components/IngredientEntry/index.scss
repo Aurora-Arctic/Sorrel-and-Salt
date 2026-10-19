@@ -67,6 +67,79 @@ $jump-link-line: 1.25;
   padding-block-start: space(4);
 }
 
+// A quiet way back above the heading: small, muted, a chevron before it, and
+// no underline; the ink deepens on hover and focus. The head is a stack, so
+// it keeps to its own width rather than stretching across the column.
+// The row holding the back link (left) and the New / Updated marker (right: the top right of the
+// text column, which the head's grid keeps it in beside a side column). Lifted to the head's
+// top edge by `top`, which moves it without making room; the bottom margin then does make
+// room, so the heading and all under it sit lower than before (the owner's call, 2026-10-19).
+// The two share one centre line, so the marker adds no row of its own.
+.ingredient-entry__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
+  position: relative;
+  top: calc(-1 * #{space(4)});
+  margin-block-end: space(3);
+}
+
+.ingredient-entry__bar > .recency-mark {
+  // Right end even with no back link beside it.
+  margin-inline-start: auto;
+}
+
+.ingredient-entry__back {
+  // The chevron's drawing starts inside its box, which reads as an indent;
+  // this pulls the stroke to the column's edge, a little past it to the eye
+  // (the owner's call, 2026-10-19).
+  margin-inline-start: -0.5em;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+  text-decoration: none;
+  @include theme-transition(color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  // The chevron steps back and grows a little on hover and focus, pointing
+  // the way the link goes, in place of an underline (the owner's call,
+  // 2026-10-19). Twice the short motion, which read as a twitch here: this is
+  // a flourish, not a control answering a press. Motion only: under reduced
+  // motion it holds still.
+  > svg {
+    flex: none;
+    transition: transform calc(#{$motion-short} * 2) ease-out;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+
+    > svg {
+      transform: translateX(-0.2em) scale(1.25);
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  @include reduced-motion {
+    > svg,
+    &:hover > svg,
+    &:focus-visible > svg {
+      transition: none;
+      transform: none;
+    }
+  }
+}
+
 .ingredient-entry__formal + .page-header {
   margin-block-start: calc(-1 * #{space(4)});
 }
@@ -83,9 +156,59 @@ $jump-link-line: 1.25;
   // leaves the heading-to-action gap where it was when the action wraps.
   row-gap: space(1);
 
-  > :not(h1) {
+  > :not(h1, .page-header__title) {
     margin-block-end: space(4);
     top: calc(0.25rem + #{space(2)});
+  }
+}
+
+// In Your Cupboard: the shelf before the name, at the heading's size and in
+// the muted ink, so it reads as a mark on the name and not part of it (the
+// owner's mock-up, 2026-10-19). A button only to carry its tip (held-mark.tsx).
+.ingredient-entry__held {
+  display: inline-flex;
+  flex: none;
+  margin-inline-end: 0.04em;
+  padding: 0;
+  border: 0;
+  border-radius: radius('control');
+  background: none;
+  color: $text-muted;
+  font-size: heading-size(1);
+  cursor: default;
+
+  > svg {
+    width: 0.72em;
+    height: 0.72em;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Beside a jump menu the shelf hangs out into the menu's column, so the name
+// keeps its line with the text beneath it, held or not (the owner's call,
+// 2026-10-19). With no menu column, as on a phone, it stays on the line.
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .ingredient-entry--with-nav .page-header__title {
+    position: relative;
+  }
+
+  // Its right end, the shelf's, on the menu's right edge (the owner's call):
+  // across the article's gap, less the icon's own margin past the shelf's
+  // end (x 30.1 of its 32, stroke included). The tip's wrapper is what moves,
+  // not the button: the tip is placed against the wrapper, and a wrapper
+  // left behind at the heading's start put the tip over the icon.
+  .ingredient-entry--with-nav .page-header__title > .icon-tip {
+    position: absolute;
+    inset-inline-end: calc(100% + #{space(6)} - #{heading-size(1)} * 0.72 * 1.9 / 32);
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  .ingredient-entry--with-nav .ingredient-entry__held {
+    margin-inline-end: 0;
   }
 }
 

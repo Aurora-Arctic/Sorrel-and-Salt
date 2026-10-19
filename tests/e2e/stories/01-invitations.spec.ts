@@ -352,9 +352,8 @@ test(
     await signInAgainAs(page, people.member.id);
     await page.goto(`/coven/${COVEN_SLUG}/members`);
     await expect(rollRow(page, people.member.name)).toBeVisible();
-    const tabs = page.getByRole('navigation', { name: 'Members' });
-    await expect(tabs.getByRole('link', { name: 'Members' })).toBeVisible();
-    await expect(tabs.getByRole('link', { name: 'Invitations' })).toHaveCount(0);
+    // One tab is no choice, so the pill navigation is left out altogether.
+    await expect(page.getByRole('navigation', { name: 'Members' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
 

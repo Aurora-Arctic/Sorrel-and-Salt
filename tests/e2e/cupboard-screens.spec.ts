@@ -71,7 +71,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page).toHaveURL(/\/ingredients\/[^?]+$/);
   await expect(heading('Fixture Our Screenwort')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
 
   // The form opens on the coven's label; handing it back restores the compendium's.
   await choose('Annotate');
@@ -93,5 +93,5 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await choose('Remove');
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Add to Cupboard' })).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
 });

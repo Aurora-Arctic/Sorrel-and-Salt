@@ -185,6 +185,20 @@ $badge-palettes: (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
+    ),
+  // A compendium entry added in the last 30 days (MB.106): last-used's solid accent
+  // inks, already contrast-checked, until the section's design review.
+  'new': (
+      treatment: solid,
+      dark: $sorrel-bright,
+      light: $sorrel-vivid,
+    ),
+  // A compendium entry changed in the last 30 days (MB.106): Local's tinted inks,
+  // already contrast-checked. Never beside Local, which marks a coven's own entry.
+  'updated': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
     )
 );
 

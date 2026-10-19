@@ -1,4 +1,5 @@
 import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
+import type { EntryRecency } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
@@ -17,6 +18,8 @@ export interface CompendiumCardEntry {
   variants: readonly SafetyVariant[];
   toxic: boolean;
   safetyNotes: string | null;
+  /** New or Updated, from the entry's stamps; none once 30 days have passed. */
+  recency: EntryRecency | null;
 }
 
 /**

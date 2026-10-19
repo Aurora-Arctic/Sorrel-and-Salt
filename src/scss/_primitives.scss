@@ -339,17 +339,25 @@
     margin-bottom: space(5);
     container: page-header / inline-size;
 
-    > h1 {
+    > h1,
+    > .page-header__title > h1 {
       margin: 0;
     }
 
     // Brought down to the heading's letters; relative, not a translate, which
     // would make the wrapper a stacking context and hold the Add's tip under
     // the shell's bar.
-    > :not(h1) {
+    > :not(h1, .page-header__title) {
       position: relative;
       top: 0.25rem;
     }
+  }
+
+  // A mark before the heading (`lead`), kept on the heading's line.
+  .page-header__title {
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   // The shared Add (`add-action.tsx`) keeps its label in the page at every
@@ -378,7 +386,8 @@
   // owner's call at MB.7's review, 2026-10-12, which reverses MB.115's
   // review, where the admin area's actions spanned the line.
   @container page-header (max-width: #{$narrow-column}) {
-    .page-header > h1 {
+    .page-header > h1,
+    .page-header > .page-header__title {
       flex-basis: 100%;
     }
   }

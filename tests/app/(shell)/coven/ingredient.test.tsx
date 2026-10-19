@@ -71,7 +71,7 @@ const params = (id = ID, search: Record<string, string> = {}) => ({
 
 const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
-// Edit, a plain link when it is the only choice, or Edit Entry in the Edit menu
+// Edit, a plain link when it is the only choice, or Edit Compendium Entry in the Edit menu
 // beside the cupboard's choices (the owner's call, 2026-10-19), opened here.
 const edits = () => {
   const menu = screen.queryByRole('button', { name: 'Edit', expanded: false });
@@ -82,7 +82,7 @@ const edits = () => {
   ];
 };
 
-const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
 
 const open = async (
   row: ReturnType<typeof compendiumRow>,
@@ -278,6 +278,45 @@ describe('the coven ingredient page’s Annotate', () => {
   });
 });
 
+// Compendium on every compendium entry in a coven, and the shelf before the
+// name for one the cupboard holds (the owner's call, 2026-10-19).
+describe('the coven ingredient page’s marks', () => {
+  const compendiumMark = () => screen.queryByRole('status');
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+
+  it('marks a compendium entry the coven does not hold as from the Compendium, with no shelf', async () => {
+    await open(compendiumRow());
+
+    expect(compendiumMark()).toBeInTheDocument();
+    expect(shelf()).not.toBeInTheDocument();
+  });
+
+  it('draws the shelf beside the heading once the coven holds the entry, not inside it', async () => {
+    getCupboardEntry.mockResolvedValue({
+      id: 'fixture-jar',
+      label: null,
+      description: null,
+      safetyNotes: null,
+      elements: null,
+      celestialBodies: null,
+      zodiacSigns: null,
+      colors: null,
+    });
+    await open(compendiumRow());
+
+    expect(compendiumMark()).toBeInTheDocument();
+    expect(shelf()).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).not.toContainElement(shelf());
+  });
+
+  it("draws the shelf on the coven's own entry, which the cupboard always holds, and no Compendium", async () => {
+    await open(covenRow());
+
+    expect(compendiumMark()).not.toBeInTheDocument();
+    expect(shelf()).toBeInTheDocument();
+  });
+});
+
 describe('the coven ingredient page’s compendium matches', () => {
   const replaced = (count: number, total: number, kind = 'same', canConvert = false) => ({
     kind,
@@ -349,27 +388,28 @@ describe('the coven ingredient page title', () => {
   it('names the public page as canonical for a compendium entry', async () => {
     getIngredient.mockResolvedValue(compendiumRow());
 
-    expect(await generateMetadata(params())).toEqual({
-      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
-      alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
-    });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${compendiumRow().name} (${compendiumRow().canonicalName})`);
+    expect(result.alternates?.canonical).toBe(
+      'https://sorrelandsalt.com/compendium/ingredients/testwort-fixtura-testalis',
+    );
   });
 
   it('names no canonical for a retired compendium entry, whose public page is gone', async () => {
     getIngredient.mockResolvedValue(compendiumRow());
     isRetired.mockReturnValueOnce(true);
 
-    expect(await generateMetadata(params())).toEqual({
-      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
-    });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${compendiumRow().name} (${compendiumRow().canonicalName})`);
+    expect(result.alternates).toBeUndefined();
     expect(isRetired).toHaveBeenCalledWith(compendiumRow());
   });
 
   it("names no canonical for the coven's own entry", async () => {
     getIngredient.mockResolvedValue(covenRow());
 
-    expect(await generateMetadata(params())).toEqual({
-      title: `${covenRow().name} (${covenRow().canonicalName})`,
-    });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${covenRow().name} (${covenRow().canonicalName})`);
+    expect(result.alternates).toBeUndefined();
   });
 });

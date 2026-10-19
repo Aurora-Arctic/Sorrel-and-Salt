@@ -13,6 +13,7 @@ import { seedForms } from '@/db/seed/forms';
 import { SOURCES, seedSources } from '@/db/seed/sources';
 import { identityOf } from '@/db/seed/standard';
 import { citationText } from '@/lib/citation';
+import { entryRecency } from '@/lib/entry-recency';
 import { FIXTURE_SHARD } from './compendium-fixture';
 import type { SeedCompendiumShard } from '@/db/seed/types';
 
@@ -345,6 +346,26 @@ describe('seedCompendium', () => {
         .map(identityOf)
         .filter((identity) => !standard.has(identity))
         .sort(),
+    );
+  });
+});
+
+// MB.106, accepted on purpose: the marker reads its two stamps, a seed writes
+// both when it runs, so a freshly seeded database shows every entry as New for
+// its first 30 days. Naming it keeps it from being mistaken for a bug.
+describe('a freshly seeded compendium (accepted: every entry reads New)', () => {
+  it('marks every entry New', async () => {
+    await truncateAllTables(sql);
+    await seedVocabularies();
+    await seedCompendium(db, [FIXTURE_SHARD]);
+
+    const stamps = await sql<{ created_at: Date; updated_at: Date }[]>`
+      select created_at, updated_at from ingredients where workspace_id is null and deleted_at is null`;
+
+    // Why "every" could have been vacuous: the seed wrote entries.
+    expect(stamps.length).toBeGreaterThan(0);
+    expect(stamps.map((row) => entryRecency(row.created_at, row.updated_at))).toEqual(
+      stamps.map(() => 'new'),
     );
   });
 });

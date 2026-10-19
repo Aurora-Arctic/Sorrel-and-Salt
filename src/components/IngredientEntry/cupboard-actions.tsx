@@ -19,11 +19,12 @@ import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import Notice from '../Notice';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
+import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import type { CupboardActionsProps } from './types';
 
 // What a compendium entry offers a coven's member beside its title (M12.17):
 // Add to Cupboard while the coven does not hold it; Annotate, Make It Ours
-// (M12.23) and Remove once it does; and a curator's Edit Entry. Two or more
+// (M12.23) and Remove once it does; and a curator's Edit Compendium Entry. Two or more
 // share one Edit menu, the owner's call of 2026-10-19, so the title keeps its
 // line; one alone is a plain button. Make It Ours leads to the own entry it
 // writes, since the compendium entry's page is no longer the coven's; every
@@ -84,7 +85,10 @@ export default function CupboardActions({
   const returning = useRef(false);
   const openEdit = useOpenModalClick(
     edit?.href ?? ('' as Route),
-    editHeading(edit?.entry ?? { name: '', canonicalName: null, nomenclature: 'unknown' }),
+    editHeading(
+      edit?.entry ?? { name: '', canonicalName: null, nomenclature: 'unknown' },
+      EDIT_ENTRY_EYEBROW,
+    ),
   );
 
   const openAnnotate = useOpenModalClick(annotate.href, ANNOTATE_HEADING);
@@ -120,7 +124,11 @@ export default function CupboardActions({
   });
   const remove = useMutation({
     mutationFn: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),
-    onSuccess: () => refresh(),
+    onSuccess: () => {
+      // The page stays mounted as it reads again, so the question has to close.
+      settle();
+      refresh();
+    },
     onError: (error) => {
       // The jar refusal names its remedy, so it is shown as the service wrote it.
       settle();
@@ -147,12 +155,15 @@ export default function CupboardActions({
     setAsking(what);
   };
   const items: MenuButtonItem[] = [
-    ...(edit ? [{ key: 'edit', label: 'Edit Entry', href: edit.href, onClick: openEdit }] : []),
+    ...(edit
+      ? [{ key: 'edit', label: 'Edit Compendium Entry', href: edit.href, onClick: openEdit }]
+      : []),
     ...(!held && canAdd
       ? [
           {
             key: 'add',
             label: 'Add to Cupboard',
+            constructive: true,
             onSelect: () => {
               setAlert(undefined);
               add.mutate();

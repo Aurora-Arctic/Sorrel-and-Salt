@@ -142,6 +142,21 @@ describe('the public compendium page', () => {
   );
 });
 
+describe('the public compendium page structured data', () => {
+  const scripts = () => document.querySelectorAll('script[type="application/ld+json"]');
+
+  it('describes the unfiltered list as a collection', async () => {
+    await renderPage();
+    expect(scripts()).toHaveLength(1);
+    expect(JSON.parse(scripts()[0].textContent ?? '{}')['@type']).toBe('CollectionPage');
+  });
+
+  it('describes a filtered view as nothing', async () => {
+    await renderPage({ query: 'wort' });
+    expect(scripts()).toHaveLength(0);
+  });
+});
+
 describe('the public compendium page metadata', () => {
   const metadata = (params: Record<string, string | string[]>) =>
     generateMetadata({ searchParams: Promise.resolve(params) });
@@ -149,6 +164,12 @@ describe('the public compendium page metadata', () => {
   it('keeps the unfiltered page indexable', async () => {
     const result = await metadata({});
     expect(result.robots).toBeUndefined();
+  });
+
+  it('names the bare address as canonical on the indexable view too, with a description', async () => {
+    const result = await metadata({});
+    expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/compendium');
+    expect(result.description).toBeTruthy();
   });
 
   it('reads the same list with ?withoutForms=1 as without it', async () => {
@@ -180,7 +201,7 @@ describe('the public compendium page metadata', () => {
     async (params) => {
       const result = await metadata(params);
       expect(result.robots).toMatchObject({ index: false });
-      expect(result.alternates?.canonical).toBe('/compendium');
+      expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/compendium');
     },
   );
 });

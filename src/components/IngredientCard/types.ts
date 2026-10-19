@@ -2,7 +2,7 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { CardCategory } from '../CategoryChips/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
-import type { EntryKind } from '../EntryMarks/types';
+import type { EntryKind, EntryRecency } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 
 export type { CardCategory };
@@ -36,6 +36,8 @@ export interface IngredientCardProps {
   safetyNotes?: string | null;
   /** Whose entry it is (see `EntryKind`); the caller reads it from the data. */
   kind: EntryKind;
+  /** New or Updated for a compendium entry (`entryRecency`); none for a coven's own. */
+  recency?: EntryRecency | null;
   /** The cupboard row overrides a field of the compendium's. */
   annotated?: boolean;
   /** The curators retired the entry. */

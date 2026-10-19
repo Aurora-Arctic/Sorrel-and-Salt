@@ -4,6 +4,8 @@ import { cache } from 'react';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
+import { entryDescription } from '../../../../../../lib/page-metadata';
+import { siteUrl } from '../../../../../../lib/site';
 import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
@@ -69,20 +71,27 @@ const cupboardOf = cache(async (slug: string, id: string) => {
 });
 
 // A compendium entry names its public page as canonical, since that is the
-// address a search engine should index. The path is relative: the origin
-// varies by deployment, and MB.84 owns the public page's metadata. A retired
-// entry has no public page left to name (M12.24).
+// address a search engine should index, on the one origin (src/lib/site.ts). A
+// retired entry has no public page left to name (M12.24). The page is behind
+// sign-in and robots closes it, so it carries a description for the tab and
+// history alone, and no structured data or previews.
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { entry } = await entryOf(slug, id);
-  if (entry.workspaceId !== null) return { title: pageTitleOf(entry) };
+  if (entry.workspaceId !== null) {
+    return {
+      title: pageTitleOf(entry),
+      description: entryDescription(pageTitleOf(entry), entry.description),
+    };
+  }
   // The tab says what the page heading says: the coven's label when its
   // cupboard entry sets one (M12.16). The canonical address stays the
   // compendium's public page, whatever the coven calls the entry.
   const title = pageTitleOf(applyCupboardEntry(entry, await cupboardOf(slug, id)));
+  const description = entryDescription(title, entry.description);
   return isRetired(entry)
-    ? { title }
-    : { title, alternates: { canonical: publicAddress(entry.slug) } };
+    ? { title, description }
+    : { title, description, alternates: { canonical: siteUrl(publicAddress(entry.slug)) } };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
@@ -138,6 +147,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}
+        back={{ href: `/coven/${workspace.slug}/ingredients` as Route, label: 'Ingredients' }}
         edit={
           canEdit
             ? {

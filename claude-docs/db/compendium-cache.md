@@ -31,20 +31,21 @@ read, hit or miss, so both answer the same types.
 
 ### What is cached
 
-Twelve reads, every one taking no session and filtering to the compendium
+Thirteen reads, every one taking no session and filtering to the compendium
 tier or a curated vocabulary, which are public (MB.80): the list and its count
 of each of six things, the compendium's facet counts, how many entries
 each search filter value would list (M12.3), and the public page's read of one
-entry by its address (M8.19):
+entry by its address (M8.19), and every current slug for the sitemap and `llms.txt` (MB.84):
 
-| Service file                                                   | Reads                                                                                            |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `ingredients/services/compendium.ts`                           | `listCompendium`, `countCompendium`, and `readCompendiumEntry`, under the key `compendium-entry` |
-| `ingredients/services/ingredient-facets.ts`                    | `compendiumFacets`, under the key `compendium-facets`                                            |
-| `vocabulary/services/categories.ts`                            | `listCategories`, `countCategories`                                                              |
-| `vocabulary/services/ingredient-form-values.ts`                | `listIngredientFormValues`, `countIngredientFormValues`                                          |
-| `vocabulary/services/astrology.ts`, celestial bodies and signs | `listAstrologyValues`, `countAstrologyValues`                                                    |
-| `vocabulary/services/deities.ts`                               | `listDeities`, `countDeities`                                                                    |
+| Service file                                                   | Reads                                                                                                                                                                                        |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ingredients/services/compendium.ts`                           | `listCompendium`, `countCompendium`, and `readCompendiumEntry`, under the key `compendium-entry`                                                                                             |
+| `ingredients/services/compendium-slugs.ts`                     | `listCompendiumSlugs`, under the key `compendium-slugs`: slug, name, formal name, description (M12.2, for the `llms.txt` notes; the sitemap ignores it) and `updated_at` of every live entry |
+| `ingredients/services/ingredient-facets.ts`                    | `compendiumFacets`, under the key `compendium-facets`                                                                                                                                        |
+| `vocabulary/services/categories.ts`                            | `listCategories`, `countCategories`                                                                                                                                                          |
+| `vocabulary/services/ingredient-form-values.ts`                | `listIngredientFormValues`, `countIngredientFormValues`                                                                                                                                      |
+| `vocabulary/services/astrology.ts`, celestial bodies and signs | `listAstrologyValues`, `countAstrologyValues`                                                                                                                                                |
+| `vocabulary/services/deities.ts`                               | `listDeities`, `countDeities`                                                                                                                                                                |
 
 A `no-restricted-imports` path in `.oxlintrc.json` fails any import of
 `next/cache` outside the wrapper. This list is the review: adding a call of

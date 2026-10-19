@@ -3,7 +3,12 @@ import { expect, type Page } from '@playwright/test';
 
 // Settles first: a spec that switches the theme and scans straight after would
 // otherwise read a colour part-way along its ease (the account disc, MB.7).
+// The title is waited for too: a soft navigation (a filter, a router refresh)
+// swaps the metadata, and for a few milliseconds on a quiet machine, hundreds
+// under load, the document has no <title> while the new rows are already in,
+// so axe's document-title rule fails a page that is about to have one (MB.265).
 export async function assertNoAccessibilityViolations(page: Page) {
+  await expect(page).toHaveTitle(/\S/);
   await settleTransitions(page);
   const { violations } = await new AxeBuilder({ page }).analyze();
   const summary = violations

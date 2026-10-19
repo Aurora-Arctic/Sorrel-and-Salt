@@ -17,6 +17,7 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId } from '../../../lib/validation';
+import { ingredients } from '../schema/ingredients';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
@@ -24,6 +25,7 @@ import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { referenceLinks } from '../schema/reference-links';
 import { type Membership, assertMembership } from '@/modules/coven';
+import type { Curator } from '@/modules/identity';
 import { curatedNames, describeEntry, foldVocabularyValue } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
@@ -126,7 +128,23 @@ export async function writeChildren(
   memberships: readonly Membership[],
   ingredientId: string,
   children: IngredientChildren,
+  mode: 'add',
+): Promise<void>;
+export async function writeChildren(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  children: IngredientChildren,
+  mode: 'replace',
+  proof: Curator | Membership,
+): Promise<void>;
+export async function writeChildren(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  children: IngredientChildren,
   mode: 'add' | 'replace',
+  proof?: Curator | Membership,
 ): Promise<void> {
   const folkNames = children.folkNames ?? [];
   const substitutes = children.substitutes ?? [];
@@ -145,12 +163,42 @@ export async function writeChildren(
     await addVariants(write, memberships, ingredientId, variants);
     return;
   }
-  await replaceFolkNames(write, memberships, ingredientId, folkNames);
-  await replaceSubstitutes(write, memberships, parent, substitutes);
-  await replaceDeities(write, ingredientId, children.deities, children.heldDeities ?? []);
-  await replaceReferenceLinks(write, memberships, parent, references);
-  await replaceCategories(write, memberships, parent, categoryIds);
-  await replaceVariants(write, memberships, ingredientId, variants);
+  if (!proof) throw new Error("writeChildren replaces under a proof of the ingredient's tier");
+  const changes = watchWrites(write);
+  await replaceFolkNames(changes.write, memberships, ingredientId, folkNames);
+  await replaceSubstitutes(changes.write, memberships, parent, substitutes);
+  await replaceDeities(changes.write, ingredientId, children.deities, children.heldDeities ?? []);
+  await replaceReferenceLinks(changes.write, memberships, parent, references);
+  await replaceCategories(changes.write, memberships, parent, categoryIds);
+  await replaceVariants(changes.write, memberships, ingredientId, variants);
+  // The parent's own `updated_at` is what says the entry changed (MB.106), so a
+  // child list that changed moves it; a save that changed nothing leaves it.
+  if (!changes.changed()) return;
+  if ('workspaceId' in proof) await write.touchByIdInWorkspace(proof, ingredients, ingredientId);
+  else await write.touchByIdInCompendium(proof, ingredients, ingredientId);
+}
+
+/**
+ * `write` with a note of whether any write through it changed a row: a call
+ * that answered at least one row, since each `replace…` leaves a list that
+ * changes nothing unwritten and a writer that matches nothing answers none.
+ * Wrapped rather than counted in each `replace…`, so a seventh child table
+ * is watched with no line of its own.
+ */
+function watchWrites(write: AuditWriter): { write: AuditWriter; changed: () => boolean } {
+  let changed = false;
+  const watched = new Proxy(write, {
+    get(target, name, receiver) {
+      const member: unknown = Reflect.get(target, name, receiver);
+      if (typeof member !== 'function') return member;
+      return async (...args: unknown[]) => {
+        const rows: unknown = await member.apply(target, args);
+        if (Array.isArray(rows) && rows.length > 0) changed = true;
+        return rows;
+      };
+    },
+  });
+  return { write: watched, changed: () => changed };
 }
 
 /**
@@ -941,8 +989,11 @@ async function writeVariant(
       .catch(refuse);
     return inserted.id;
   }
+  // A list the input leaves out (undefined) and a row holding none (null) are
+  // the same answer; read as different, every save rewrote every form and the
+  // parent could never read as unchanged (MB.106).
   const differs = (Object.keys(columns) as (keyof typeof columns)[]).some(
-    (key) => JSON.stringify(columns[key]) !== JSON.stringify(row[key]),
+    (key) => JSON.stringify(columns[key] ?? null) !== JSON.stringify(row[key] ?? null),
   );
   if (differs) await write.updateById(ingredientVariants, row.id, columns).catch(refuse);
   return row.id;

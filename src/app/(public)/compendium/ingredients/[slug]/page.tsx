@@ -4,6 +4,8 @@ import IngredientEntry from '../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
 import { NotFound } from '../../../../../lib/errors';
+import { entryJsonLd } from '../../../../../lib/json-ld';
+import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
 import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
@@ -35,11 +37,18 @@ async function entryAt(slug: string) {
   }
 }
 
-// Only the title: MB.84 owns the description and the canonical link of this
-// page. A missing or moved address gets none, as it renders no page.
+// Title (the formal name tells two entries with one label apart), description and
+// canonical link. A missing or moved address gets none, as it renders no page.
 export async function generateMetadata({ params }: CompendiumEntryParams): Promise<Metadata> {
   const found = await entryAt((await params).slug);
-  return found?.kind === 'entry' ? { title: pageTitleOf(found.detail.entry) } : {};
+  if (found?.kind !== 'entry') return {};
+  const { entry } = found.detail;
+  const title = pageTitleOf(entry);
+  return publicPageMetadata(
+    title,
+    entryDescription(title, entry.description),
+    addressOf(entry.slug),
+  );
 }
 
 // A coven entry cannot be read here, so a link to one has no page to go to.
@@ -67,20 +76,30 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
       : undefined;
 
   return (
-    <IngredientEntry
-      detail={detail}
-      hrefOf={hrefOf}
-      edit={
-        canEdit
-          ? {
-              href: `${own}?edit` as Route,
-              closeHref: own,
-              deletedHref: '/compendium' as Route,
-              opened,
-            }
-          : undefined
-      }
-      movedAway={movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
+        dangerouslySetInnerHTML={{ __html: entryJsonLd({ ...entry, folkNames: detail.folkNames }) }}
+      />
+      <IngredientEntry
+        detail={detail}
+        hrefOf={hrefOf}
+        back={{ href: '/compendium' as Route, label: 'Compendium' }}
+        edit={
+          canEdit
+            ? {
+                href: `${own}?edit` as Route,
+                closeHref: own,
+                deletedHref: '/compendium' as Route,
+                opened,
+              }
+            : undefined
+        }
+        movedAway={
+          movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined
+        }
+      />
+    </>
   );
 }

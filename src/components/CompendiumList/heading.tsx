@@ -11,20 +11,23 @@ import type { ModalHeading } from '../Modal/types';
  * Name field's, and its formal name after it, as the list's rows name it.
  * A missing formal name is `null`.
  */
-export function editHeading({
-  name,
-  canonicalName,
-  nomenclature,
-}: {
-  name: string;
-  canonicalName: string | null;
-  nomenclature: string;
-}): ModalHeading {
+export function editHeading(
+  {
+    name,
+    canonicalName,
+    nomenclature,
+  }: {
+    name: string;
+    canonicalName: string | null;
+    nomenclature: string;
+  },
+  eyebrow = 'Edit Ingredient',
+): ModalHeading {
   const formal = (canonicalName ?? '').trim();
   const set = BINOMIAL_KINDS.has(nomenclature) ? (
     <span className="binomial">{formal}</span>
   ) : (
     formal
   );
-  return { eyebrow: 'Edit Ingredient', title: name, qualifier: formal ? set : undefined };
+  return { eyebrow, title: name, qualifier: formal ? set : undefined };
 }

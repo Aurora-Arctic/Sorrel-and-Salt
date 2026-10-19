@@ -76,7 +76,11 @@ export {
   findVocabularySuggestions,
 } from './vocabularies';
 export { findCommonNameSuggestions } from './common-names';
-export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
+export {
+  findCompendiumEntryBySlug,
+  findCompendiumSlugRedirect,
+  findCompendiumSlugs,
+} from './slugs';
 export {
   findMemberByEmail,
   findMemberEmails,
@@ -152,6 +156,7 @@ export type {
   SiteInvitationRow,
   SiteInvitationValues,
   SlugRedirect,
+  CompendiumSlugEntry,
   SortPart,
   StockRow,
   VariantRow,

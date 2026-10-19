@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
 import { useOpenModalClick } from '../Modal';
+import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import type { EditableEntry } from './types';
 
 /**
@@ -21,7 +22,7 @@ export default function EditButton({
   href: Route;
   entry: EditableEntry;
 }): ReactElement {
-  const onClick = useOpenModalClick(href, editHeading(entry));
+  const onClick = useOpenModalClick(href, editHeading(entry, EDIT_ENTRY_EYEBROW));
   return (
     <Link className="btn btn--quiet btn--medium" href={href} onClick={onClick}>
       Edit
