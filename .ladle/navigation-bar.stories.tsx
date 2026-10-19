@@ -1,5 +1,5 @@
 import type { Story } from '@ladle/react';
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useState } from 'react';
 import { BAR_FADE_MS, LOADING_DELAY_MS } from '../src/lib/navigation/timing';
 import '../src/lib/navigation/navigation-bar.scss';
 import { ShellFrame } from './shell-frame';
@@ -14,20 +14,29 @@ import { ShellFrame } from './shell-frame';
 // the OS "reduce motion" setting, or emulate `prefers-reduced-motion: reduce`
 // in devtools (Rendering tab). The theme follows the workshop's toolbar switch.
 export default {
-  title: 'Feedback / Navigation Bar',
+  title: 'Feedback / Loading / Navigation Bar',
 };
 
+// The bar is `position: fixed` against the window, but the frame pads the shell
+// in from the window's edge. A transformed box makes it the bar's containing
+// block, so the bar lands on the bottom edge of the global bar as in the app.
+const BarFrame = ({ children }: { children: ReactNode }): ReactElement => (
+  <div style={{ transform: 'translateZ(0)' }}>
+    <ShellFrame area="none">{children}</ShellFrame>
+  </div>
+);
+
 export const Shown: Story = () => (
-  <ShellFrame area="none">
+  <BarFrame>
     <div className="navigation-bar" aria-hidden="true" />
-  </ShellFrame>
+  </BarFrame>
 );
 
 // `hidden` and `data-leaving` together, the fade-out; reload to see it.
 export const Leaving: Story = () => (
-  <ShellFrame area="none">
+  <BarFrame>
     <div className="navigation-bar" aria-hidden="true" hidden data-leaving="" />
-  </ShellFrame>
+  </BarFrame>
 );
 
 type Step = 'idle' | 'waiting' | 'shown' | 'leaving';
@@ -75,7 +84,7 @@ const Looping = (): ReactElement => {
 };
 
 export const Navigating: Story = () => (
-  <ShellFrame area="none">
+  <BarFrame>
     <Looping />
-  </ShellFrame>
+  </BarFrame>
 );
