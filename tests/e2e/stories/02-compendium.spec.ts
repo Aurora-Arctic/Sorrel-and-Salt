@@ -1,9 +1,10 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import {
+  cardsIn,
   compendiumList,
   compendiumVariant,
   filterOf,
@@ -12,6 +13,7 @@ import {
   insertStock,
   localBadge,
   localIngredient,
+  openFilters,
   rowOf,
   seedCoven,
   stockEditor,
@@ -51,19 +53,6 @@ const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
 /** The cards page by `CARD_PAGE_SIZE`, 24, so the grid ends on a full row. */
 const PAGE_SIZE = 24;
-
-/**
- * Opens the Filters panel and returns it. The button only exists once the page has hydrated
- * (before it, Filters is a link to the open panel), so waiting for it waits for the script.
- */
-async function openFilters(page: Page): Promise<Locator> {
-  const button = page.getByRole('button', { name: /^Filters/ });
-  await expect(button).toBeVisible();
-  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
-  const panel = page.getByRole('dialog', { name: 'Filters' });
-  await expect(panel).toBeVisible();
-  return panel;
-}
 
 test(
   'anyone browses the compendium signed out, narrows it by folk name, category and form, and opens an entry',
@@ -178,15 +167,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   "a coven's own ingredient stays out of the public list and off the public entry, while its member reads it",
-  {
-    tag: '@story-14',
-    annotation: {
-      type: 'fixme',
-      description: 'M8.18 builds /compendium and M9.6 /coven/[slug]/ingredients',
-    },
-  },
+  { tag: '@story-14' },
   async ({ page, browser, baseURL }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fourteen', 'story-14-local.test', {
       A: 'owner',
@@ -223,9 +206,10 @@ test.fixme(
           await reader.goto('/compendium');
           await compendiumSearch(reader).fill('Cronewort');
           await compendiumSearch(reader).press('Enter');
+          await expect(reader).toHaveURL(/Cronewort/);
           await expect(rowOf(compendiumList(reader), 'Mugwort')).toBeVisible();
           await expect(rowOf(compendiumList(reader), 'Fixture Wroot')).toHaveCount(0);
-          await expect(compendiumList(reader).getByRole('listitem')).toHaveCount(1);
+          await expect(cardsIn(compendiumList(reader))).toHaveCount(1);
         });
 
         await test.step(`${who}: its slug at the public entry route is a 404`, async () => {
