@@ -6,21 +6,21 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File                       | What it holds                                                                                  |
-| -------------------------- | ---------------------------------------------------------------------------------------------- |
-| `modal.tsx`                | `Modal`, the default export                                                                    |
-| `route-modal.tsx`          | `RouteModal`                                                                                   |
-| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes             |
-| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once") |
-| `loading.tsx`              | `ModalLoading`, the skeleton a modal shows while its contents are on the way                   |
-| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                     |
-| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                           |
-| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                |
-| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                              |
-| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                           |
-| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                              |
-| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                |
-| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest   |
+| File                       | What it holds                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------- |
+| `modal.tsx`                | `Modal`, the default export                                                                     |
+| `route-modal.tsx`          | `RouteModal`                                                                                    |
+| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes              |
+| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once")  |
+| `loading.tsx`              | `ModalLoading`, a thin user of the shared `Skeleton` (`form` shape) a modal shows while loading |
+| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                      |
+| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                            |
+| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                 |
+| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                               |
+| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                            |
+| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                               |
+| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                 |
+| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest    |
 
 ## Props
 
@@ -370,7 +370,7 @@ destination by name, the compendium first (`add-ingredient-menu.tsx`; the
 repo had no ARIA menu, so it is written there with arrow keys, Escape and a
 press outside). The default is, on `/admin/*`, the compendium for a curator;
 otherwise the coven the address names, else the first coven they may write to.
-Choosing the compendium is a `router.push` to `/admin/compendium?new` (the
+Choosing the compendium is a `navigate` (`usePendingNavigation`) to `/admin/compendium?new` (the
 admin layout’s route-modal provider sits below the shell, so the button cannot
 open that dialog itself, and the page draws it for a direct request). A coven’s
 dialog is opened by the page’s address too (the owner’s call, 2026-10-18):
@@ -423,9 +423,10 @@ skipped the fade.
 | `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
-  `done` all fade the modal out, then `router.replace(closeHref)`, so Back
-  does not open it again, and `router.refresh()`, so the list beneath re-reads
-  after a save or a delete.
+  `done` all fade the modal out, then `navigate(closeHref, { replace: true })`,
+  so Back does not open it again, and `refresh()`, both from
+  `usePendingNavigation`, so the list beneath re-reads after a save or a
+  delete and the page bar shows if that is slow.
 - **`done` fades first.** It is `Modal`'s own close, so a form that closes
   the modal itself fades out as Close does, and the page goes back once the
   fade ends.
@@ -447,8 +448,10 @@ The form arrives in the same dialog.
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
   mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
   is given `edit` (M8.19; the two entry routes have no layout one). It keeps the heading of the
-  modal just pressed and runs `router.push(href)` inside `useTransition`
-  (a React call that marks a change as in progress until it finishes). It
+  modal just pressed and navigates through `usePendingNavigation`
+  (`src/lib/navigation/`), which runs `router.push(href)` inside a React
+  transition (a call that marks a change as in progress until it finishes);
+  the page bar shows as well ([`../loading.md`](../loading.md)). It
   offers `loading` (that heading while the push is pending, otherwise
   nothing), `open(href, heading)` and `cancel()`. The workshop, whose
   router goes nowhere, supplies its own value through the exported
@@ -472,7 +475,8 @@ The form arrives in the same dialog.
   modal are the same `<Modal>` at the same place in the page, so React keeps
   the one `<dialog>` and it fades in once, not twice. The form inside is
   keyed by the row's id, so opening another row starts a fresh form.
-- **The skeleton** (`ModalLoading`, `loading.tsx`) is a visually hidden
+- **The skeleton** (`ModalLoading`, `loading.tsx`) is the shared
+  [`Skeleton`](skeleton.md) in its `form` shape: a visually hidden
   `<output>Loading</output>` (a status a screen reader announces) and
   placeholder shapes hidden from it: four label-and-box pairs and a row of two
   buttons. While it shows, `Modal`'s `loading` prop marks the body
@@ -536,11 +540,8 @@ stable` so nothing shifts sideways as the scrollbar goes; the body's own
 scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
 out of reach.
 
-**The skeleton** (M9.18) draws its shapes with `.modal-skeleton*`
-(`Modal/index.scss`). Their shimmer is the shared Sass mixin `skeleton-shape`
-(`src/scss/_mixins.scss`), with its `skeleton-shimmer` keyframes in
-`src/scss/_primitives.scss`; the tab skeleton ([`tabbed-page.md`](tabbed-page.md))
-uses the same mixin, where it once kept a keyframes of its own.
+**The skeleton** (M9.18) is the shared `Skeleton` of the `form` shape
+([`skeleton.md`](skeleton.md)); `ModalLoading` only renders it.
 
 **On a phone it stays inset**, the same gap on every side, rather than
 becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.

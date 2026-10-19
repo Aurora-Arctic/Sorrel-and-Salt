@@ -1,7 +1,7 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -30,7 +30,7 @@ const AcceptInvitationByIdDocument = graphql(`
 const AcceptControl = ({
   invitation: { id, covenName, covenSlug },
 }: AcceptControlProps): ReactElement => {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<string>();
   // Where the page says a refusal once, above the list, so a phone card does
@@ -46,8 +46,8 @@ const AcceptControl = ({
       // Busy until the coven replaces this page. A cast: the built routes
       // know `/coven/[slug]`, not this literal. The refresh redraws the shell
       // too, whose layout a navigation keeps, so the menu's count drops.
-      router.push(`/coven/${covenSlug}` as Route);
-      router.refresh();
+      navigate(`/coven/${covenSlug}` as Route);
+      refresh();
     } catch (error) {
       setSending(false);
       // No fields of its own, so the reader always answers with an alert;

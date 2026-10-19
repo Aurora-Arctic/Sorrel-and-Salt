@@ -39,9 +39,11 @@ parts, and the table passes through them from the server.
   `/admin` runs the guard itself (`src/app/(shell)/admin/layout.tsx`; MB.115, the
   owner's call). A pager's `soft` says which its ends take: `page` for a soft
   end, `full` for a plain one.
-  - `soft` pushes the address inside a React transition (`useTransition`).
-    Next runs its navigation inside the caller's transition, so `pending`
-    stays true until the new page has rendered.
+  - `soft` pushes the address through `usePendingNavigation`
+    (`src/lib/navigation/`), which runs the router call inside a React
+    transition. Next runs its navigation inside the caller's transition, so
+    `pending` stays true until the new page has rendered. The same navigation
+    puts up the page bar ([`../loading.md`](../loading.md)).
   - `page` is a pager end's soft navigation. It pushes with `{ scroll: false }`,
     so Next does not scroll to the page top (on `/admin/compendium` that
     brings the Admin section menu back into view), and once the transition
@@ -66,7 +68,7 @@ parts, and the table passes through them from the server.
     restoring a page it kept whole) drops the flag, so Back does not land on
     a skeleton.
 - **While a page is on its way** the body shows the tabs' own skeleton,
-  `TabPanelLoading` from `TabbedPage/panel-loading.tsx` with no filter row,
+  `TabPanelLoading` (a thin user of [`Skeleton`](skeleton.md)) with no filter row,
   since the real filter row stays: a table's heading, six banded rows and a
   pager (or, with `shape="cards"`, six card shapes in the
   [`IngredientCardList`](ingredient-card-list.md) grid), cards at a phone's width, one visually hidden `<output>` its one
@@ -74,7 +76,7 @@ parts, and the table passes through them from the server.
   ([`filter-form.md`](filter-form.md)).
 - **When the new page renders** the body shows it, keyed afresh so it fades
   in over 200ms, as a tab's new content does: `ListBody` and the tabbed
-  page's `TabPanel` both swap through `SwapPanel` (`TabbedPage/swap-panel.tsx`). A list the server drew,
+  page's `TabPanel` both swap through `SwapPanel` (`Skeleton/swap-panel.tsx`). A list the server drew,
   before any press, carries no `data-arrived` and shows at once.
 - **Only the filter and the pager trigger it.** A row's Edit and the page's
   Add (`?edit=`, `?new`) are `next/link` soft navigations of their own and
@@ -90,9 +92,10 @@ In `_primitives.scss` beside `.list-frame`, under `body`, so the app's
 weights hold: `.list-frame__body` is a column `space(5)` apart, as the frame
 is, its empty-state paragraph with no margin; `[data-arrived]` runs the
 200ms fade, none under `prefers-reduced-motion: reduce`. The skeleton's
-shapes and 150ms fade are `TabbedPage/index.scss`'s (the shimmer is the shared `skeleton-shape` mixin), which
-`panel-loading.tsx` imports itself, so the shapes are drawn wherever a list
-renders, in a tabbed page or not; reduced motion stills them there.
+shapes, shimmer and 150ms fade are the shared [`Skeleton`](skeleton.md)'s
+(`Skeleton/index.scss`), which `TabPanelLoading` uses, so the shapes are drawn
+wherever a list renders, in a tabbed page or not. Under reduced motion the
+shimmer becomes the loading standard's slow opacity pulse, not a still shape.
 
 ## Stories
 

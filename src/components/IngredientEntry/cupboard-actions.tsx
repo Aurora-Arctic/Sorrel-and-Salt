@@ -1,9 +1,10 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -72,7 +73,7 @@ export default function CupboardActions({
   annotate,
   edit,
 }: CupboardActionsProps): ReactElement | null {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const [alert, setAlert] = useState<string>();
   // Which of the two questions is open, one at a time. The Annotate dialog is
   // the address's instead (`annotate.opened`), as the curator's Edit is.
@@ -118,7 +119,7 @@ export default function CupboardActions({
 
   const add = useMutation({
     mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
-    onSuccess: () => router.refresh(),
+    onSuccess: () => refresh(),
     onError: (error) => setAlert(readGraphqlFailure(error).alert),
   });
   const remove = useMutation({
@@ -126,7 +127,7 @@ export default function CupboardActions({
     onSuccess: () => {
       // The page stays mounted as it reads again, so the question has to close.
       settle();
-      router.refresh();
+      refresh();
     },
     onError: (error) => {
       // The jar refusal names its remedy, so it is shown as the service wrote it.
@@ -137,7 +138,9 @@ export default function CupboardActions({
   const makeOurs = useMutation({
     mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
     onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) =>
-      router.push(`/coven/${covenSlug}/ingredients/${entry.id}` as Route),
+      navigate(`/coven/${covenSlug}/ingredients/${entry.id}` as Route, {
+        target: ingredientLinkTarget(`/coven/${covenSlug}/ingredients/${entry.id}`),
+      }),
     onError: (error) => {
       // A refusal names the own entry in the way, so it is shown as the service wrote it.
       settle();

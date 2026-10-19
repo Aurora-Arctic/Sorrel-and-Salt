@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
@@ -38,7 +38,7 @@ const ConfirmedAction = ({
   closeOnSent = false,
   inModal = false,
 }: ConfirmedActionProps): ReactElement => {
-  const router = useRouter();
+  const { refresh } = usePendingNavigation();
   const warningId = useId();
 
   const [step, setStep] = useState<ConfirmStep>('idle');
@@ -78,7 +78,7 @@ const ConfirmedAction = ({
       // Busy until the re-read replaces this control with one offering the
       // other action, or until the page is left.
       if (onSent) onSent();
-      else router.refresh();
+      else refresh();
       // A control that survives the re-read (a member's Promote after a
       // promotion) is not replaced, so it closes its own modal.
       if (closeOnSent) setStep('idle');

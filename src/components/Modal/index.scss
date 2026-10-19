@@ -373,38 +373,3 @@ $confirm-flash: $motion-short * 4;
     outline: 0 solid transparent;
   }
 }
-
-// A route modal's skeleton while its page is on its way (`loading.tsx`,
-// M9.18): label-and-box pairs spaced as a form's fields, and its buttons at
-// the end of the last line, each shape the shared `skeleton-shape`. No fade
-// of its own: the dialog fades in around it.
-.modal-skeleton__shapes {
-  @include stack;
-}
-
-.modal-skeleton__shapes span {
-  @include skeleton-shape;
-}
-
-.modal-skeleton__field {
-  @include stack(2);
-}
-
-.modal-skeleton__label {
-  width: 7rem;
-}
-
-.modal-skeleton__shapes .modal-skeleton__box {
-  height: $control-height;
-}
-
-.modal-skeleton__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: space(3);
-
-  > span {
-    width: 6rem;
-    height: $control-height;
-  }
-}

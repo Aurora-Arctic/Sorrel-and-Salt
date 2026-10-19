@@ -1,7 +1,9 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from './site-target';
 import type { Route } from 'next';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useEffect, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -132,7 +134,7 @@ const AddIngredientButton = ({
 }: AddIngredientButtonProps): ReactElement | null => {
   const pathname = usePathname();
   const params = useSearchParams();
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const [saved, setSaved] = useState<string | null>(null);
   const main = useRef<HTMLButtonElement>(null);
   // Set by a close only, so Back and a first render take no focus.
@@ -173,9 +175,9 @@ const AddIngredientButton = ({
     // request: the route-modal provider that would open it at once sits below
     // the shell.
     if (destination.kind === 'compendium') {
-      router.push('/admin/compendium?new');
+      navigate('/admin/compendium?new');
     } else if (onAdmin) {
-      router.push(`/coven/${destination.workspace.slug}?${NEW}` as Route);
+      navigate(`/coven/${destination.workspace.slug}?${NEW}` as Route);
     } else {
       const slug =
         destination.workspace.id === defaultCoven?.id ? undefined : destination.workspace.slug;
@@ -224,7 +226,8 @@ const AddIngredientButton = ({
                 // Save Ingredient opens the new ingredient's page, an address
                 // without `?new`, which closes the dialog.
                 leaving.current = true;
-                router.push(`/coven/${adding.slug}/ingredients/${ingredient.id}` as Route);
+                const href = `/coven/${adding.slug}/ingredients/${ingredient.id}`;
+                navigate(href as Route, { target: ingredientLinkTarget(href, !onAdmin) });
               }}
             />
           )}

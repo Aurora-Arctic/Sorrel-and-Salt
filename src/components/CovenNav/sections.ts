@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import { covenTarget } from '../../lib/coven-path';
 import type { SectionNavItem } from '../SectionNav/types';
 
 // `Route<T>` checks a dynamic address against the built routes only when `T`
@@ -18,7 +19,14 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 // in as a boolean: this file loads in the workshop's browser build, where the
 // server-only access-control module cannot. Never by a rank, so a viewer is not offered a page
 // that answers them with a 404.
-export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] => [
+export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] =>
+  sectionsOf(slug, canReadMembers).map((section) => ({
+    ...section,
+    // The coven's body draws the wait (M12.33), as the page it is going to.
+    target: covenTarget(section.href),
+  }));
+
+const sectionsOf = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] => [
   { label: 'Overview', href: route(`/coven/${slug}`), icon: 'overview', exact: true },
   { label: 'Ingredients', href: route(`/coven/${slug}/ingredients`), icon: 'ingredients' },
   ...(canReadMembers

@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { NavigationTarget } from '../../lib/navigation';
 
 /** The icons the section navs draw, one per section (icons.tsx). */
 export type SectionIconName =
@@ -35,6 +36,8 @@ export interface SectionNavItem {
    * compendium's pages.
    */
   apart?: boolean;
+  /** What the page draws while it is on its way: its region and shape (M12.33). */
+  target?: NavigationTarget;
 }
 
 export interface SectionNavProps {

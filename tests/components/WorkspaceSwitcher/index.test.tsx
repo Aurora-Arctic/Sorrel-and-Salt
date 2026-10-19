@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Navigating } from '../../support/navigating';
 
 const pathname = vi.fn<() => string>();
 const push = vi.fn();
@@ -124,6 +125,66 @@ describe('WorkspaceSwitcher', () => {
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
 
       expect(box()).toHaveTextContent('Select Coven');
+    });
+  });
+
+  describe('while the switch is on its way (M12.33)', () => {
+    let arrive = () => {};
+    afterEach(async () => {
+      await act(async () => arrive());
+      push.mockReset();
+    });
+
+    it('marks the control busy and shows the picked coven as its value until the new coven renders', async () => {
+      const arrives = new Promise<void>((resolve) => {
+        arrive = resolve;
+      });
+      render(
+        <Navigating push={push} arrives={arrives}>
+          <WorkspaceSwitcher workspaces={WORKSPACES} />
+        </Navigating>,
+      );
+      // Why the value below is the pick's: the address is still the old coven's.
+      expect(box()).toHaveTextContent('Fixture Coven');
+      expect(box()).not.toHaveAttribute('aria-busy', 'true');
+
+      fireEvent.click(box());
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+      });
+
+      expect(push).toHaveBeenCalledTimes(1);
+      expect(push.mock.calls[0]?.[0]).toBe('/coven/testwort-circle/ingredients');
+      expect(box()).toHaveAttribute('aria-busy', 'true');
+      expect(box()).toHaveTextContent('Testwort Circle');
+
+      // The new coven renders: the address is its, and the wait is over.
+      pathname.mockReturnValue('/coven/testwort-circle/ingredients');
+      await act(async () => arrive());
+
+      expect(box()).not.toHaveAttribute('aria-busy', 'true');
+      expect(box()).toHaveTextContent('Testwort Circle');
+    });
+
+    it('takes focus on arriving at the picked coven, but not on a mount elsewhere after a superseded switch', async () => {
+      const arrives = new Promise<void>((resolve) => {
+        arrive = resolve;
+      });
+      const first = render(
+        <Navigating push={push} arrives={arrives}>
+          <WorkspaceSwitcher workspaces={WORKSPACES} />
+        </Navigating>,
+      );
+      fireEvent.click(box());
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+      });
+      // Superseded: the page moves on to a place that is not the picked coven,
+      // and the switcher that started the switch goes away.
+      first.unmount();
+      pathname.mockReturnValue('/compendium');
+      render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
+      expect(box()).not.toHaveFocus();
     });
   });
 });

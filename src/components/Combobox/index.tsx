@@ -15,6 +15,7 @@ import {
   useState,
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
+import Spinner from '../Spinner';
 import { ChevronIcon, ClearIcon } from './icons';
 import { EmptyMessage, noMatch, Popup } from './popup';
 import { useListPosition } from './position';
@@ -227,6 +228,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     value.trim() !== '' &&
     items.length === 0;
   const popupOpen = isOpen || showEmpty;
+  // A lookup in flight: the visible spinner (shown after $loading-delay by its
+  // own stylesheet) and `aria-busy`, beside the status that already says it.
+  const busy = suggestions?.pending === true;
   // With an empty message the listbox is one part of a popup, and
   // the popup is what is placed; otherwise the list is, as it always was.
   const wrapped = message !== undefined;
@@ -449,6 +453,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                     .filter(Boolean)
                     .join(' ') || undefined,
                 'aria-invalid': invalid,
+                'aria-busy': busy || undefined,
                 onKeyDown,
                 onFocus: () => {
                   tip.show();
@@ -495,7 +500,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             </span>
           )}
         </div>
-        {(clear || (hasSource && toggle)) && (
+        {(clear || (hasSource && toggle) || busy) && (
           <div className="combobox__indicators">
             {/* Always drawn once the caller has a clear, and hidden while
                 there is nothing to clear, rather than left out: its room,
@@ -514,6 +519,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 <ClearIcon />
               </button>
             )}
+            {/* After the clear, as react-select draws it, so the spinner
+                sits by the chevron rather than across the clear's held room. */}
+            {busy && <Spinner />}
             {clear && hasSource && toggle && (
               <span
                 className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}

@@ -82,6 +82,7 @@ one's own id) throws.
   Out alone, and the theme disc, a site nav holding the Compendium alone, and no Add Ingredient. (The
   theme disc stays because the root's corner toggle is hidden on shell pages;
   without it the viewer could not change the theme.)
+- **The body** (`#main`) is wrapped in `main-body.tsx`, a client part (M12.33). While a navigation aimed at the `main` region is pending ([loading](../loading.md)), it swaps the page for one `Skeleton` of the target's shape inside a `main`, so the landmark survives the wait, with a visually hidden `<h1>Loading</h1>` because the skeleton replaced the page's heading (the owner's call, 2026-10-19: kept, so a screen reader hears it and the skeleton's "Loading" status). A `coven` or `admin` target is `SectionBody`'s (the page under that section's context row, which stays), and a navigation with no target (a refresh) leaves the page standing. The `main` is drawn in the frame the target names, top-aligned: `wide`, `with-nav` and `entry` in `page-column` (the last two with the side menu drawn, `entry` in the ingredient page's wide grid), `narrow` in `page-frame--narrow`, with a `panel` under a form. When the wait ends, the skeleton stays over the arrived page for 200ms and fades out ([`SkeletonFade`](skeleton-fade.md)); the body is wrapped in a plain block `div` (the fade's `position: relative` host) to hold it, and the overlay carries no heading or landmark of its own. The site links get their target from `siteLinkTarget(base, href)`.
 - **The skip link** ("Skip to Content") is the first element and targets
   `#main`, a wrapper around the page's children, since each page owns its own
   `main`.
@@ -121,7 +122,8 @@ the coven layout's column, "Admin" in the admin layout's, "Your Account" or
 "Your Email" in the narrow page frame, and "Create Coven" on its panel.
 `CovenPage`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
 context row, with no section nav), `AccountPage`, `Unverified` (the email page's
-bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
+bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`. The body swap has its own, `Feedback / Loading / Main Body`
+(`.ladle/main-body.stories.tsx`): `AtRest`, `LoadingPage`, `LoadingWide`, `LoadingNarrow`, `LoadingWithMenu` and `LoadingForm` ([loading](../loading.md), "Stories").
 
 ## Testing
 

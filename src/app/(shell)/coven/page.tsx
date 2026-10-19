@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import Notice from '../../../components/Notice';
 import { NEW_COVEN_PATH } from '../../../lib/coven-path';
+import { PendingLink } from '../../../lib/navigation';
 import { requireSession } from '../../../lib/request-session';
 import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
@@ -56,14 +56,23 @@ export default async function CovenLandingPage() {
             {pending === 1
               ? 'You have an invitation waiting. '
               : `You have ${pending} invitations waiting. `}
-            <Link href={ACCOUNT_INVITATIONS_PATH}>See your invitations</Link>
+            <PendingLink
+              href={ACCOUNT_INVITATIONS_PATH}
+              navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav', head: 'title' }}
+            >
+              See your invitations
+            </PendingLink>
           </Notice>
         )}
         {viewer.canCreate ? (
           <p>
-            <Link className="btn btn--solid" href={NEW_COVEN_PATH}>
+            <PendingLink
+              className="btn btn--solid"
+              href={NEW_COVEN_PATH}
+              navigationTarget={{ region: 'main', shape: 'form', frame: 'narrow' }}
+            >
               Create Coven
-            </Link>
+            </PendingLink>
           </p>
         ) : pending > 0 ? (
           <p>

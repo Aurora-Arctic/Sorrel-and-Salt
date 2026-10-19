@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '@/lib/navigation';
 import type { ReactElement } from 'react';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import IngredientForm from '../../../../components/IngredientForm';
@@ -17,7 +17,7 @@ import type { CompendiumDialogProps } from './types';
 // the address opens, so a press's skeleton and the form that replaces it are
 // one dialog (M9.18).
 export default function CompendiumDialog({ place, opened }: CompendiumDialogProps): ReactElement {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const entry = opened?.entry;
   return (
     <RouteModal
@@ -38,8 +38,9 @@ export default function CompendiumDialog({ place, opened }: CompendiumDialogProp
               // now spells; Save & Add Another stays on the new form, which clears
               // itself, and the list beneath gains the entry.
               onSaved={(saved, next) => {
-                if (next === 'open') router.replace(compendiumHref(place, { edit: saved.slug }));
-                router.refresh();
+                if (next === 'open')
+                  navigate(compendiumHref(place, { edit: saved.slug }), { replace: true });
+                refresh();
               }}
               // The modal's own close, so a delete or Cancel fades it out as Close
               // does (M5.5).

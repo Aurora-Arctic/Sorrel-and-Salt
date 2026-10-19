@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import ProviderMark from '../ProviderMark';
 import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
@@ -15,6 +16,7 @@ export function ProviderRow({
   state,
   removal,
   pending,
+  busy,
   error,
   onAdd,
   onRemove,
@@ -38,15 +40,17 @@ export function ProviderRow({
         // this only keeps the offer honest. The last says why in its row; a
         // withheld one is explained once, above the list.
         removal === 'offered' ? (
-          <button
-            type="button"
+          // The name stays "Remove Discord" while busy: the aria-label holds it.
+          <BusyButton
             className="btn btn--destructive btn--small"
             aria-label={`Remove ${provider.label}`}
+            busy={busy}
+            busyLabel="Removing"
             disabled={pending}
             onClick={onRemove}
           >
             Remove
-          </button>
+          </BusyButton>
         ) : removal === 'last' ? (
           // Greyed rather than gone, as an unavailable Add is: the reason
           // beneath it then sits under the control it explains (the owner,
@@ -62,8 +66,7 @@ export function ProviderRow({
           </button>
         ) : null
       ) : (
-        <button
-          type="button"
+        <BusyButton
           // Small and quiet, as Remove is small and in the wax: a row's action,
           // not a page's (the owner, 2026-10-11).
           className="btn btn--quiet btn--small"
@@ -71,10 +74,13 @@ export function ProviderRow({
           // Not `disabled`, as on /sign-in: it stays in the tab order.
           aria-disabled={unavailable || undefined}
           aria-describedby={unavailable ? noteId : undefined}
-          onClick={onAdd}
+          busy={busy}
+          busyLabel="Adding"
+          // Once pressed, the button waits out the hop and a second press does nothing.
+          onClick={busy ? undefined : onAdd}
         >
           Add
-        </button>
+        </BusyButton>
       )}
       {unavailable && <ProviderUnavailableNote id={noteId} className="sign-in-methods__line" />}
       {state === 'linked' && removal === 'last' && (

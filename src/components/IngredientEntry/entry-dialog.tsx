@@ -1,7 +1,7 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
 import IngredientForm from '../IngredientForm';
@@ -28,7 +28,7 @@ export default function EntryDialog({
   entry: EditableEntry;
   edit: IngredientEntryEdit;
 }): ReactElement | null {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const { opened, closeHref, deletedHref, savedHref } = edit;
   // Annotate's press shares this page's skeleton; that one belongs to it.
   const annotating = useRouteModalOpener()?.loading?.title === ANNOTATE_HEADING.title;
@@ -51,11 +51,13 @@ export default function EntryDialog({
               // the public address, so the page follows it, `?edit` kept; the
               // coven's address names the id, which a save leaves be.
               onSaved={(saved) => {
-                router.replace(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route));
-                router.refresh();
+                navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
+                  replace: true,
+                });
+                refresh();
               }}
               // Not `done`, which would go back to this page: it is gone.
-              onDeleted={() => router.replace(deletedHref)}
+              onDeleted={() => navigate(deletedHref, { replace: true })}
               onCancel={done}
               duplicateHref={({ slug }) => publicAddress(slug)}
               // A linked substitute's summary opens its entry in a new tab, every

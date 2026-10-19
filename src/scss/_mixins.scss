@@ -366,6 +366,71 @@
   gap: space($step);
 }
 
+// The grid of a page whose jump menu stands to the left of content that fills
+// the rest of the wide column (an ingredient's entry), from a tablet up. The
+// children are the head, the menu, then the sections; the menu spans the last
+// three rows and sticks under the shell bar. The breakpoint and offset are
+// `.page-with-nav`'s (_primitives.scss). One mixin for the page and for its
+// wait (Skeleton), so the two cannot differ in width. The menu's width is that
+// layout's 12rem while the article is wide; below that the content keeps 60rem
+// and the menu gives way first, but never goes narrower than its longest label.
+@mixin entry-nav-grid {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns:
+      minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
+      minmax(0, 1fr);
+    align-content: start;
+
+    > :not(.page-nav) {
+      grid-column: 2;
+    }
+
+    > .page-nav {
+      position: sticky;
+      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      grid-column: 1;
+      grid-row: 2 / span 3;
+      align-self: start;
+    }
+  }
+}
+
+// An ingredient entry's section (Details, or a form): its heading, its text,
+// then its side column, one under the other on a phone. Past a tablet's width
+// the side column stands to the right of the text, the heading across both;
+// not from the menu's breakpoint, where the text would be a few words wide.
+// `$heading` is the selector of the heading. Shared by IngredientEntry and its
+// wait (Skeleton), so the two cannot differ in columns.
+@mixin entry-section($heading: 'h2, h3') {
+  @include stack(4);
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    // A wide gutter between the text and its details (the owner's call).
+    gap: space(4) space(8);
+    align-items: start;
+
+    > #{$heading} {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// The side column of that section: a clear step under the text on a phone,
+// the second column beside it past a tablet's width.
+@mixin entry-side {
+  @include stack(6);
+
+  margin-block-start: space(4);
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    grid-column: 2;
+    margin-block-start: 0;
+  }
+}
+
 // The look of a box that floats over the page, the combobox's list and a
 // linked entry's summary: the card surface and the floating shadow, edged in
 // the muted ink.
@@ -476,7 +541,7 @@
 // The new content of a list or tab, faded in as it replaces the skeleton
 // that stood in for it (`list-frame-fade-in`, _primitives.scss, the one
 // keyframe); under reduced motion it shows at once.
-@mixin arrived($duration: 200ms) {
+@mixin arrived($duration: $arrive-duration) {
   animation: list-frame-fade-in $duration ease both;
 
   @include reduced-motion {
@@ -484,11 +549,38 @@
   }
 }
 
+// The motion of a piece that says something is loading: its own animation,
+// and under reduced motion the one slow opacity pulse (`loading-pulse`,
+// _primitives.scss) in its place, so no wait is ever a still mark and no piece
+// invents its own fallback. A wait that shows only after `$delay` (an
+// indicator, not a skeleton) is hidden until then by `loading-appear`, which
+// moves `visibility` only, so it holds under the pulse, which moves opacity.
+@mixin loading-motion($animation, $delay: null) {
+  @if $delay {
+    animation:
+      $animation,
+      loading-appear 0s linear $delay both;
+  } @else {
+    animation: $animation;
+  }
+
+  @include reduced-motion {
+    @if $delay {
+      animation:
+        loading-pulse $pulse-duration ease-in-out infinite,
+        loading-appear 0s linear $delay both;
+    } @else {
+      animation: loading-pulse $pulse-duration ease-in-out infinite;
+    }
+  }
+}
+
 // A skeleton's placeholder shape (MB.115, shared since M9.18): a rounded
 // bar of the muted ink a little way into the card surface, as the combobox's
 // quiet fills are, so both themes carry it on the page and on a card, with a
 // lighter step of the same passing across it (`skeleton-shimmer`,
-// _primitives.scss). Still, with no shimmer, where motion is reduced. The
+// _primitives.scss), which becomes the shared pulse where motion is reduced
+// (`loading-motion`). The
 // tab's list skeleton and the route modal's form skeleton draw their shapes
 // with it.
 @mixin skeleton-shape {
@@ -502,11 +594,7 @@
     $fill-quiet 100%
   );
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
 }
 
 // The two row tweaks a data table's owner asks for, each emitted once as a

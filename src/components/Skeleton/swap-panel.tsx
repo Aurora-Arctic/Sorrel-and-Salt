@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import TabPanelLoading from './panel-loading';
+import TabPanelLoading from '../TabbedPage/panel-loading';
 import type { SwapPanelProps } from './types';
 
 // The swap a tab's panel and a list's body share (MB.115): the content, or

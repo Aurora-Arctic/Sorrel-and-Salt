@@ -218,6 +218,14 @@ describe('CategoryPicker', () => {
     expect(box()).not.toBeInvalid();
   });
 
+  it('marks its box busy while the categories are read', () => {
+    const { rerender } = render(<CategoryPicker {...PROPS} categories={[]} pending />);
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-busy', 'true');
+
+    rerender(<CategoryPicker {...PROPS} />);
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-busy');
+  });
+
   // An edit's picks arrive before the categories do.
   it('holds a pick the categories do not name yet while they are read, then draws it by its id', () => {
     const { rerender } = render(

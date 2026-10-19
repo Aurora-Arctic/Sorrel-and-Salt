@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumListBase from '@/components/CompendiumList';
@@ -20,6 +20,7 @@ import { drawnOnServer, sent } from '../../support/filter-form';
 import { waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
+import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -268,6 +269,35 @@ describe('CompendiumList', () => {
       'href',
       '/compendium/ingredients/fixture-salt',
     );
+  });
+
+  it("names the entry page it leads to, so that page's frame is drawn while it loads", async () => {
+    let target: unknown;
+    function Probe() {
+      const state = useNavigationState();
+      useEffect(() => {
+        target = state.target;
+      });
+      return null;
+    }
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <CompendiumList {...props()} />
+        <Probe />
+      </Navigating>,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Fixture Salt' }), { button: 0 });
+    });
+
+    expect(router.push.mock.calls[0]?.[0]).toBe('/compendium/ingredients/fixture-salt');
+    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    await act(async () => arrive());
   });
 
   it('draws no table when there are none, filtered or not', () => {

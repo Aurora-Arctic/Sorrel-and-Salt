@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
+import { usePressOnMount } from '../../../.ladle/press';
 import ActionFailure from '../ActionFailure';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
@@ -157,3 +158,11 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <AtPhoneWidth />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// Add pressed on Google, as a person would, with the link request left
+// unanswered: the row's button reads "Adding" and waits, as it does while the
+// browser is on its way to the provider (M12.33).
+export const LoadingAdd: Story = () => {
+  usePressOnMount('Add Google');
+  return <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
+};

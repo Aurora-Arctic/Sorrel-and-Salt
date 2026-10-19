@@ -1,15 +1,15 @@
 'use client';
 
+import { PendingLink, usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import type { Route } from 'next';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import IconTip, { LinkIcon } from '../IconTip';
-import LinkHint from '../LinkHint';
+import IconTip from '../IconTip';
+import { LinkIconHint } from '../LinkHint';
 import Modal from '../Modal';
 import Notice from '../Notice';
 
@@ -65,7 +65,7 @@ export default function LinkToCompendium({
   /** The block's See All, drawn directly under the list and above Link to Selected (the owner's call, 2026-10-19: it belongs to the list). */
   seeAll?: ReactNode;
 }): ReactElement {
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const [chosenId, setChosenId] = useState<string>();
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -78,7 +78,7 @@ export default function LinkToCompendium({
     try {
       await graphqlRequest(ConvertLocalDocument, { workspaceId, localId, compendiumId: target.id });
       // Busy until the page is left; the own entry no longer exists.
-      router.push(target.thenHref);
+      navigate(target.thenHref, { target: ingredientLinkTarget(target.thenHref) });
     } catch (error) {
       setFailure(
         readGraphqlIssues(error)
@@ -110,11 +110,10 @@ export default function LinkToCompendium({
                 {title}
               </label>
               <IconTip tip="Open">
-                <Link href={href}>
-                  <LinkIcon />
-                  <LinkHint />
+                <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+                  <LinkIconHint />
                   <span className="visually-hidden">Open {title}</span>
-                </Link>
+                </PendingLink>
               </IconTip>
             </li>
           ))}

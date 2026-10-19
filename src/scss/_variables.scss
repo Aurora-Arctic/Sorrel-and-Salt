@@ -600,6 +600,18 @@ $switch-width: 2.75rem;
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
 
+// The loading standard (M12.33; claude-docs/design-decisions/m12.33-plan.md).
+// How long a wait must last before an indicator shows (the spinner, the link
+// dot and the page bar), so an answer that is quick never flashes one;
+// skeletons are not held back. The spinner's turn, the shimmer's pass, the one
+// slow pulse every piece falls back to under reduced motion, and the fade
+// that brings new content in over its skeleton (`arrived`, _mixins.scss).
+$loading-delay: 100ms;
+$spin-duration: 0.8s;
+$shimmer-duration: 1.4s;
+$pulse-duration: 2s;
+$arrive-duration: 200ms;
+
 // The application shell (MB.7, drawn in its design review): the global bar
 // across the top of every signed-in page, the context row beneath it that
 // names the coven (as the switcher) or the admin area and carries the section
@@ -698,6 +710,11 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The width an ingredient entry's side column takes beside its text: room for
+// a row of two or three category chips and a correspondence's list of colours.
+// Shared with the entry's wait (Skeleton) so the two lay out alike.
+$side-column: calc(#{space(8)} * 5);
 
 // The air added to the card's own 12px gap above and below the forms line (chips to
 // forms, forms to the jar rule): one token, so the two stay equal. 16px in all.

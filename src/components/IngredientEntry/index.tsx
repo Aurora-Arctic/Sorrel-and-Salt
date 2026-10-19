@@ -1,5 +1,6 @@
 import type { Route } from 'next';
-import Link from 'next/link';
+import { PendingLink } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import type { ReactElement, ReactNode } from 'react';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
@@ -11,8 +12,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
-import { LinkIcon } from '../IconTip';
-import LinkHint from '../LinkHint';
+import LinkHint, { LinkIconHint } from '../LinkHint';
 import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
@@ -264,9 +264,9 @@ function substituteItems(
       // A typed name may repeat, so its place keys it.
       <li key={`${at}-${label}`}>
         {href ? (
-          <Link href={href}>
+          <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
             {label} <LinkHint />
-          </Link>
+          </PendingLink>
         ) : (
           label
         )}
@@ -395,10 +395,13 @@ function ReplacesBlock({
   // Directly under the list, before Link to Selected, in both blocks (the owner's call, 2026-10-19).
   const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
     <p className="ingredient-entry__see-all">
-      <Link href={replaces.allHref}>
+      <PendingLink
+        href={replaces.allHref}
+        navigationTarget={ingredientLinkTarget(replaces.allHref)}
+      >
         See All {replaces.total}
         <LinkHint />
-      </Link>
+      </PendingLink>
     </p>
   );
   return (
@@ -427,11 +430,10 @@ function ReplacesBlock({
         >
           {replaces.entries.map(({ title, href }) => (
             <li key={href}>
-              <Link href={href}>
+              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
                 <span className="ingredient-entry__entry-title">{title}</span>
-                <LinkIcon />
-                <LinkHint />
-              </Link>
+                <LinkIconHint />
+              </PendingLink>
             </li>
           ))}
         </ul>
@@ -495,7 +497,11 @@ const IngredientEntry = ({
           // marker (right: the top right of the text column).
           <div className="ingredient-entry__bar">
             {back && (
-              <Link className="ingredient-entry__back" href={back.href}>
+              <PendingLink
+                className="ingredient-entry__back"
+                href={back.href}
+                navigationTarget={ingredientLinkTarget(back.href)}
+              >
                 <svg
                   viewBox="0 0 16 16"
                   width="1em"
@@ -513,7 +519,7 @@ const IngredientEntry = ({
                   />
                 </svg>
                 Back to {back.label} <LinkHint />
-              </Link>
+              </PendingLink>
             )}
             <RecencyMark recency={recency} />
           </div>
@@ -575,9 +581,12 @@ const IngredientEntry = ({
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
             The ingredient that was at this address has been moved to{' '}
-            <Link href={movedAway.href}>
+            <PendingLink
+              href={movedAway.href}
+              navigationTarget={ingredientLinkTarget(movedAway.href)}
+            >
               {movedAway.name} <LinkHint />
-            </Link>
+            </PendingLink>
           </Notice>
         )}
       </header>

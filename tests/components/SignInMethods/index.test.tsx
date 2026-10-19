@@ -84,6 +84,35 @@ describe('SignInMethods', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_LINK_ERROR);
   });
 
+  it('shows the same sentence when the link call rejects, and frees the button', async () => {
+    linkSocialMock.mockRejectedValue(new Error('offline'));
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_LINK_ERROR);
+    expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy');
+  });
+
+  it('frees a link whose page is restored from the back-forward cache', async () => {
+    linkSocialMock.mockResolvedValue({});
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      ),
+    );
+
+    fireEvent(window, Object.assign(new Event('pageshow'), { persisted: true }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy'),
+    );
+  });
+
   // aria-disabled rather than disabled keeps it in the tab order, as on /sign-in.
   it('greys out an unconfigured provider, keeping it reachable, and starts nothing', () => {
     render(<SignInMethods linked={[DISCORD]} configured={['discord', 'google']} />);
@@ -152,6 +181,40 @@ describe('SignInMethods', () => {
     expect(screen.getByRole('button', { name: 'Remove Discord' })).toHaveAttribute(
       'aria-disabled',
       'true',
+    );
+  });
+
+  it('marks a removal busy while it is in flight, then frees the list', async () => {
+    let finish: (value: unknown) => void = () => {};
+    unlinkAccountMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Microsoft' }));
+
+    expect(await screen.findByRole('button', { name: 'Remove Microsoft' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Remove Discord' })).toBeDisabled();
+    finish({ data: { status: true }, error: null });
+    await screen.findByRole('status');
+    expect(screen.getByRole('button', { name: 'Add Microsoft' })).not.toHaveAttribute('aria-busy');
+  });
+
+  it('marks a link busy while its hop is under way, and frees it on a failure', async () => {
+    let finish: (value: unknown) => void = () => {};
+    linkSocialMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+
+    expect(await screen.findByRole('button', { name: 'Add Google' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    finish({ error: { message: 'x' } });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy'),
     );
   });
 

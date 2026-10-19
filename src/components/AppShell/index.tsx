@@ -1,9 +1,10 @@
-import Link from 'next/link';
+import { PendingLink } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
 import AddIngredientButton from './add-ingredient-button';
+import MainBody from './main-body';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
@@ -56,9 +57,13 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           {/* Plain text while the address is unverified: every page the
               brand could lead to would send the viewer back to the email page. */}
           {viewer.verified ? (
-            <Link href="/" className="app-shell__brand">
+            <PendingLink
+              href="/"
+              className="app-shell__brand"
+              navigationTarget={{ region: 'main', shape: 'page' }}
+            >
               {brand}
-            </Link>
+            </PendingLink>
           ) : (
             <span className="app-shell__brand">{brand}</span>
           )}
@@ -83,7 +88,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           own `main` and there is no one place a page could be asked to put an
           id. Focusable by script only, so the link moves focus here. */}
       <div id="main" className="app-shell__main" tabIndex={-1}>
-        {children}
+        <MainBody>{children}</MainBody>
       </div>
     </div>
   );

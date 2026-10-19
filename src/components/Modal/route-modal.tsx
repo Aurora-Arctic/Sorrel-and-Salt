@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
+import { usePendingNavigation } from '../../lib/navigation';
 import ModalLoading from './loading';
 import Modal from './modal';
 import { useRouteModalOpener } from './route-modal-provider';
@@ -25,7 +25,7 @@ export default function RouteModal({
   size,
   content,
 }: RouteModalProps): ReactElement | null {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
   const heading = content?.heading ?? opener?.loading;
   if (!heading) return null;
@@ -33,8 +33,8 @@ export default function RouteModal({
     // A close while it loads forgets the press; the navigation back
     // supersedes the one on its way, which Next then discards.
     opener?.cancel();
-    router.replace(closeHref);
-    router.refresh();
+    navigate(closeHref, { replace: true });
+    refresh();
   };
   return (
     <Modal {...heading} size={size} loading={!content} onClose={close}>

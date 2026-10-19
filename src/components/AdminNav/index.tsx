@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import SectionNav from '../SectionNav';
 import type { SectionNavItem } from '../SectionNav/types';
 import { adminSections } from './sections';
+import { adminTarget } from './target';
 import type { AdminNavProps } from './types';
 
 export { default as AdminContents } from './contents';
@@ -23,6 +24,7 @@ const items = (managesPeople: boolean): readonly SectionNavItem[] =>
       href: first.href,
       matches: rest.map(({ href }) => href),
       apart: section > 0 && at === 0,
+      target: adminTarget(first.href),
     })),
   );
 

@@ -1,4 +1,5 @@
 import { type ReactNode, Suspense, use, useState } from 'react';
+import { NavigationProvider } from '@/lib/navigation';
 import type { NavigatingProps } from './types';
 
 // A navigation as the App Router runs one, for a test that mocks
@@ -21,7 +22,7 @@ export function Navigating({ push, children, arrives = never }: NavigatingProps)
   push.mockImplementation(() => setGoing(true));
   return (
     <>
-      {children}
+      <NavigationProvider>{children}</NavigationProvider>
       <Suspense fallback={null}>{going && <Hang until={arrives} />}</Suspense>
     </>
   );

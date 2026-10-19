@@ -1,3 +1,5 @@
+import type { NavigationTarget } from './navigation';
+
 // A workspace is named by the address alone, never by session state, so two
 // tabs can sit in two workspaces without disagreeing (M6.9). These read and
 // rewrite that address: the segment after `/coven/` is the slug.
@@ -52,4 +54,37 @@ export function pathInCoven(pathname: string, slug: string, canReadMembers = tru
   // The people pages answer a viewer with a 404, so a viewer lands on the index instead.
   if (section && PEOPLE_SECTIONS.has(section) && !canReadMembers) return `/${COVEN}/${slug}`;
   return section ? `/${COVEN}/${slug}/${section}` : `/${COVEN}/${slug}`;
+}
+
+/**
+ * What each section's page draws while it is on its way (M12.33): the page
+ * that arrives, its heading and then what it holds. Ingredients is its cards
+ * under a filter; the people pages are a table under the tab row (Members and,
+ * for an owner, Invitations; the row draws for a lone tab too). The Invite
+ * action is an owner's alone and the address does not say who is asking, so
+ * it is left out.
+ */
+const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
+  ingredients: { shape: 'cards', title: true, filter: true },
+  members: { shape: 'table', title: true, tabs: true },
+  invitations: { shape: 'table', title: true, tabs: true },
+};
+
+/**
+ * What a coven page draws while it is on its way: the parts of the section the
+ * address names. The coven's home is a page with its contents menu beside it,
+ * and so is one ingredient's page (the address has an id beneath
+ * `ingredients`: its jump menu stands beside it, not the list's cards); a
+ * section not named is a plain page. One mapping for the switcher, the
+ * section nav, the home's Contents and the links into an ingredient.
+ */
+export function covenTarget(pathname: string): NavigationTarget {
+  const slug = covenSlugOf(pathname);
+  const section = slug ? pathname.split('/')[3] : undefined;
+  const beneath = slug ? pathname.split('/')[4] : undefined;
+  if (slug && !section)
+    return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
+  if (slug && section === 'ingredients' && beneath)
+    return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
+  return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

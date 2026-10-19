@@ -1,17 +1,8 @@
 'use client';
 
-import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import {
-  type ReactElement,
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from 'react';
-import SwapPanel from '../TabbedPage/swap-panel';
+import { type ReactElement, createContext, useContext, useEffect, useRef, useState } from 'react';
+import { usePendingNavigation } from '../../lib/navigation';
+import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation } from './types';
 
 // A list page's root, `.list-frame`, and the one record of whether another
@@ -43,8 +34,7 @@ export const ListNavigationContext = createContext<ListNavigation | null>(null);
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);
-  const router = useRouter();
-  const [moving, startMoving] = useTransition();
+  const { pending: moving, navigate } = usePendingNavigation();
   const [leaving, setLeaving] = useState(false);
   const pending = moving || leaving;
   const root = useRef<HTMLDivElement>(null);
@@ -99,11 +89,7 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
           ? root.current?.querySelector('.list-frame__body')?.getBoundingClientRect().height
           : undefined,
       );
-      startMoving(() =>
-        kind === 'page'
-          ? router.push(href as Route, { scroll: false })
-          : router.push(href as Route),
-      );
+      navigate(href, kind === 'page' ? { scroll: false } : undefined);
     },
   };
   return (
@@ -125,7 +111,7 @@ export function useListNavigation(): ListNavigation {
  * The list under its filter, the table or its empty state and the pager, or
  * the tabs' skeleton in its place while another page is on its way: rows and
  * a pager, no filter row, since the real one stays. Swapped as a tab's
- * panel is (`TabbedPage/swap-panel.tsx`).
+ * panel is (`Skeleton/swap-panel.tsx`).
  */
 export const ListBody = ({ shape, children }: ListBodyProps): ReactElement => {
   const { pending, heldHeight } = useListNavigation();

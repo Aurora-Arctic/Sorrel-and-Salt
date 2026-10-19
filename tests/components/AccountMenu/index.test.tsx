@@ -3,7 +3,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => pathname(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AccountMenu } = await import('@/components/AccountMenu');

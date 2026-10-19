@@ -1,15 +1,8 @@
 'use client';
 
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import {
-  type MouseEvent,
-  type ReactElement,
-  createContext,
-  useContext,
-  useState,
-  useTransition,
-} from 'react';
+import { type MouseEvent, type ReactElement, createContext, useContext, useState } from 'react';
+import { usePendingNavigation } from '../../lib/navigation';
 import type { ModalHeading, RouteModalOpener, RouteModalProviderProps } from './types';
 
 // A route modal pressed open and on its way (M9.18, the owner's call: a press
@@ -36,14 +29,13 @@ export const RouteModalContext = createContext<RouteModalOpener | null>(null);
  */
 export const RouteModalProvider = ({ children }: RouteModalProviderProps): ReactElement => {
   const outer = useContext(RouteModalContext);
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, navigate } = usePendingNavigation();
   const [opening, setOpening] = useState<ModalHeading>();
   const value = outer ?? {
     loading: pending ? opening : undefined,
     open: (href, heading) => {
       setOpening(heading);
-      startTransition(() => router.push(href));
+      navigate(href);
     },
     cancel: () => setOpening(undefined),
   };

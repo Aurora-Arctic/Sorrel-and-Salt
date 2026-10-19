@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { PendingLink } from '../../../../lib/navigation';
+import { covenTarget } from '../../../../lib/coven-path';
 import type { Route } from 'next';
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
@@ -85,24 +86,26 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
         <h2 id="coven-contents-heading">Contents</h2>
         <ul className="admin-contents__list">
           <li>
-            <Link
+            <PendingLink
               href={`/coven/${slug}/ingredients` as Route}
+              navigationTarget={covenTarget(`/coven/${slug}/ingredients`)}
               aria-describedby="coven-contents-ingredients"
             >
               Ingredients
-            </Link>
+            </PendingLink>
             <span id="coven-contents-ingredients" className="admin-contents__description">
               What the coven has in its cupboard, and what it can add from the compendium.
             </span>
           </li>
           {canReadMembers && (
             <li>
-              <Link
+              <PendingLink
                 href={`/coven/${slug}/members` as Route}
+                navigationTarget={covenTarget(`/coven/${slug}/members`)}
                 aria-describedby="coven-contents-members"
               >
                 Members
-              </Link>
+              </PendingLink>
               <span id="coven-contents-members" className="admin-contents__description">
                 {canInvite
                   ? 'Who is in the coven, what each may do, and the invitations still waiting.'

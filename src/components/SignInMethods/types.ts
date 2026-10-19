@@ -46,6 +46,8 @@ export interface ProviderRowProps {
   removal: ProviderRemoval;
   /** A removal is in flight somewhere in the list, so every Remove waits for it. */
   pending: boolean;
+  /** This row's own action is in flight: its button shows the spinner and `aria-busy`. */
+  busy: boolean;
   /** This provider's own failure, shown in its row. */
   error?: string;
   onAdd: () => void;

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink } from '../../lib/navigation';
 import { usePathname } from 'next/navigation';
 import {
   type ReactElement,
@@ -224,14 +224,15 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
             key={section.href}
             className={`section-nav__item${apart(section)}${at >= shown ? ' section-nav__item--extra' : ''}`}
           >
-            <Link
+            <PendingLink
               href={section.href}
+              navigationTarget={section.target}
               className="section-nav__link"
               aria-current={isCurrent(pathname, section) ? 'page' : undefined}
             >
               <SectionIcon name={section.icon} />
               <span className="section-nav__label">{section.label}</span>
-            </Link>
+            </PendingLink>
           </li>
         ))}
         {extras.length > 0 && (
@@ -263,14 +264,15 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
             <ul id={listId} className="section-nav__sheet" hidden={!open}>
               {extras.map((section) => (
                 <li key={section.href} className={`section-nav__sheet-item${apart(section)}`}>
-                  <Link
+                  <PendingLink
                     href={section.href}
+                    navigationTarget={section.target}
                     className="section-nav__link"
                     aria-current={isCurrent(pathname, section) ? 'page' : undefined}
                   >
                     <SectionIcon name={section.icon} />
                     <span className="section-nav__label">{section.label}</span>
-                  </Link>
+                  </PendingLink>
                 </li>
               ))}
             </ul>

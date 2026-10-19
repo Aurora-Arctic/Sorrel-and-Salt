@@ -1094,6 +1094,19 @@ What each section review (MB.115 to MB.124) designs to:
   phone width, with every text pairing at 4.5:1 and every edge a control
   depends on at 3:1.
 
+## Smooth scrolling
+
+The root sets `scroll-behavior: smooth` (`src/app/globals.scss`), so a jump to
+a section glides. Next scrolls to the top on a route change too, and it turns
+smooth scrolling off for that jump only if `<html>` carries
+`data-scroll-behavior="smooth"` (`src/app/layout.tsx`). Without the attribute
+the jump glides, then Next's scroll-into-view glides on and stops part-way
+down: 62px at a desktop's width, 40px at a phone's, after a move from an
+admin page to the Compendium. Keep the attribute for as long as the stylesheet
+sets the behaviour. `tests/e2e/route-scroll.spec.ts` proves it, with reduced
+motion switched off for that spec alone, because the suite's default turns
+the smooth scrolling off and hides the bug.
+
 ## Theme resolution
 
 `globals.scss` resolves **three** states, not two, and `.ladle/theme.scss`,
@@ -1123,7 +1136,9 @@ heavier than the reverse; light reverts to the browser default.
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
   colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
   width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
-  `$measure`, and the four scales with their accessors — `type-size()`,
+  `$measure`, the loading tokens (`$loading-delay` 100ms, `$spin-duration`
+  0.8s, `$shimmer-duration` 1.4s, `$pulse-duration` 2s, `$arrive-duration`
+  200ms; see [`loading.md`](loading.md)), and the four scales with their accessors — `type-size()`,
   `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
@@ -1153,7 +1168,13 @@ heavier than the reverse; light reverts to the browser default.
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new
-  content comes in with, the one `list-frame-fade-in` keyframe); and
+  content comes in with, the one `list-frame-fade-in` keyframe,
+  `$arrive-duration` by default); `loading-motion($animation, $delay)`
+  (applies a loading animation and, under `reduced-motion`, swaps it for the
+  `loading-pulse` keyframe at `$pulse-duration`: the one slow opacity pulse
+  every wait falls back to; a `$delay` adds `loading-appear`, which holds
+  `visibility: hidden` until then and so survives the pulse; both keyframes
+  are in `_primitives.scss`); and
   `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
   rows; its one-line cells, wrapping again as cards), each emitted once by
   `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`

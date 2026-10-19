@@ -6,10 +6,6 @@
 // section"); the layout is the owner's, given at M8.19.
 // claude-docs/components/ingredient-entry.md, "Layout".
 
-// The width a section's side column takes beside its text: room for a row
-// of two or three category chips and a correspondence's list of colours.
-$side-column: calc(#{space(8)} * 5);
-
 // The menu's top-level links: 1.125rem (PageNav's grouped size), on a stated
 // line so the Details link can be centred on the h2 beside it.
 $jump-link-size: 1.125rem;
@@ -40,24 +36,11 @@ $jump-link-line: 1.25;
 // goes narrower than its longest label. The children are the head,
 // the menu, Details, the forms and References; the menu spans the last
 // three rows, so it sticks for the length of the page.
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-  .ingredient-entry--with-nav {
-    display: grid;
-    grid-template-columns:
-      minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
-      minmax(0, 1fr);
-    align-content: start;
+.ingredient-entry--with-nav {
+  @include entry-nav-grid;
 
-    > :not(.page-nav) {
-      grid-column: 2;
-    }
-
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     > .page-nav {
-      position: sticky;
-      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
-      grid-column: 1;
-      grid-row: 2 / span 3;
-      align-self: start;
       // The menu's first link ("Details") level with the Details h2 beside it:
       // the menu starts on the h2's top, so it drops by half of what the h2's
       // line (its size and `_typography.scss`'s 1.15) has over the link's (its
@@ -271,7 +254,7 @@ $jump-link-line: 1.25;
 // A section: its heading, its text (description and caution), then its side
 // column (the correspondences and lists), one under the other on a phone.
 .ingredient-entry__section {
-  @include stack(4);
+  @include entry-section;
 
   // A jump from the menu lands clear of the top inset, and of the shell's
   // sticky bar where there is one, as `.page-frame__section` does.
@@ -293,39 +276,13 @@ $jump-link-line: 1.25;
 }
 
 // The side column's blocks stand further apart than the text's parts, so
-// each heading reads as its own list and not as the last one's tail.
+// each heading reads as its own list and not as the last one's tail; under the
+// text it stands a clear step off it, beside the text past a tablet's width.
 .ingredient-entry__side {
-  @include stack(6);
+  @include entry-side;
 }
 
-// Under the text, the side column stands a clear step off it, so the
-// details read as a second part of the section and not as its next line.
-.ingredient-entry__side {
-  margin-block-start: space(4);
-}
-
-// Past a tablet's width the side column stands to the right of the text,
-// the heading across both. Not from the menu's breakpoint: there the text
-// beside a side column would be a few words wide.
 @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-  .ingredient-entry__section {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) $side-column;
-    // A wide gutter between the text and its details (the owner's call).
-    gap: space(4) space(8);
-    align-items: start;
-
-    > h2,
-    > h3 {
-      grid-column: 1 / -1;
-    }
-  }
-
-  .ingredient-entry__side {
-    grid-column: 2;
-    margin-block-start: 0;
-  }
-
   // The head keeps to the text column, so Edit at the end of the heading's
   // line ends where the text does (the owner's call).
   .ingredient-entry__head {
@@ -582,7 +539,7 @@ $replaces-gap: space(5);
     margin-inline-start: auto;
   }
 
-  a svg {
+  a .link-icon-hint {
     margin-inline-start: 0;
   }
 }
@@ -607,7 +564,7 @@ $replaces-gap: space(5);
     hyphens: auto;
   }
 
-  svg {
+  .link-icon-hint {
     flex: none;
     margin-inline-start: auto;
     margin-block-start: 0.125em;

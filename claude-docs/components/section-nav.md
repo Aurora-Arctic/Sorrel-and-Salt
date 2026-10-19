@@ -23,6 +23,11 @@ A section is `{ label, href, icon, exact?, matches?, apart? }`:
 - `exact` marks a section current only at its own address (the coven index).
 - `matches` lists the other addresses it is current on (Categories on its
   Groups tab's address).
+- `target` says what the page draws while it is on its way: a region and a
+  shape (M12.33), handed on to each link as its `navigationTarget`. The
+  wrappers set it: the coven's sections with `covenTarget`, the admin's
+  with `adminTarget`. See [`loading.md`](../loading.md), "Where the pieces are
+  used".
 - `apart` starts a new group: the row draws a hairline before it and the More
   list above it. The admin nav's People, after the compendium's pages. (The
   brief for MB.7 named four fields; `apart` is the fifth, since the nav cannot
@@ -40,8 +45,11 @@ icon set.
   accent rule (`$rule-heavy`); its icon takes the accent and a heavier
   stroke. A section is current by `exact` (its own address only) or else by
   `isAtPath` (`src/lib/at-path.ts`) on its `href` and each of its `matches`.
-- **Every section is a link.** Each is a `next/link` at its address, in every
-  shape. The nav is an ordinary `<nav>` of links; no `role="menu"`, no
+- **Every section is a link.** Each is a `PendingLink` at its address
+  (`src/lib/navigation/`), in every shape, in the row and in More's list. A
+  `PendingLink` starts the navigation through the shared hook, passes the
+  section's `target` as its `navigationTarget`, and sets `aria-busy` on the
+  link while the navigation runs ([`loading.md`](../loading.md)). The nav is an ordinary `<nav>` of links; no `role="menu"`, no
   `role="tablist"`.
 - **More is a disclosure, not a menu.** A button with `aria-expanded` and
   `aria-controls` opens a list of links beneath it (wider than the phone) or above the bar

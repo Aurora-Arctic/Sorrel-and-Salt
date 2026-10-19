@@ -1,8 +1,11 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
+import { useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LinkToCompendium from '@/components/IngredientEntry/link-to-compendium';
 import { GraphQLClientError } from '@/lib/graphql-client-error';
+import { useNavigationState } from '@/lib/navigation';
+import { Navigating } from '../../support/navigating';
 
 // Link to Selected sends M12.21's conversion for the entry chosen, after a
 // question in a dialog, and moves on only when it succeeds; a refusal shows in
@@ -49,6 +52,42 @@ const dialog = () => screen.getByRole('dialog');
 beforeEach(() => vi.clearAllMocks());
 
 describe('LinkToCompendium', () => {
+  it("names the compendium page an Open link leads to, so that page's frame is drawn while it loads", async () => {
+    let target: unknown;
+    function Probe() {
+      const state = useNavigationState();
+      useEffect(() => {
+        target = state.target;
+      });
+      return null;
+    }
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <h3 id="similar-heading">Similar in the Compendium</h3>
+        <LinkToCompendium
+          workspaceId="w-1"
+          localId="l-1"
+          name="Fixture Own"
+          entries={entries}
+          labelledBy="similar-heading"
+        />
+        <Probe />
+      </Navigating>,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Open Fixture One' }), { button: 0 });
+    });
+
+    expect(router.push.mock.calls[0]?.[0]).toBe(entries[0].href);
+    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    await act(async () => arrive());
+  });
+
   it('offers one radio for each entry beside its link, and Link to Selected only once one is chosen', () => {
     show();
 

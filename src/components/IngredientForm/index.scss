@@ -847,6 +847,15 @@ $skeleton-fade: 300ms;
   gap: space(3);
 }
 
+// The summary while it reads: a tip's width, which a summary with a
+// description grows to. The panel is as wide as its content, and the
+// skeleton is as wide as its container, so neither can set the width and
+// both collapse without a width given here.
+.entry-summary__loading {
+  width: $tip-width;
+  max-width: 100%;
+}
+
 // A linked substitute's summary (MB.115), inside the Combobox's panel: the
 // name, the formal name muted beneath it, the description cut to three
 // lines, then a term and its value to a

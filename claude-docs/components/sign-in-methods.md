@@ -45,12 +45,16 @@ is still in the button's accessible name, as an `aria-label` beginning with
 the visible word, so a screen reader hears "Add Microsoft" and the tests
 locate it by that name.
 
-`ProviderRow` takes `{ provider, state, removal, pending, error, onAdd,
+`ProviderRow` takes `{ provider, state, removal, pending, busy, error, onAdd,
 onRemove }` (`ProviderRowProps`, `types.ts`). `removal` (`ProviderRemoval`)
 is whether a linked row offers Remove: `offered` while another method is
 left and the session is fresh, `last` for the only method, and `withheld`
 from a stale session. `pending` is whether a removal is in flight anywhere
-in the list; `error` is this provider's own failure. The list works out each row's
+in the list; `busy` is whether this row's own action (its Remove, or the hop
+of its Add) is in flight: its button is a `BusyButton` with the spinner and
+`aria-busy` ("Removing", "Adding"; the `aria-label` keeps the name). A link that
+starts the redirect calls `reportLeaving()` so the page bar stays up until the
+browser leaves. `error` is this provider's own failure. The list works out each row's
 state and hands it down; the row holds no state of its own.
 
 ## Adding one leaves the page

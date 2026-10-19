@@ -22,8 +22,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   // CSS variables rather than className: the Sass stacks read --font-* document-wide.
   // suppressHydrationWarning on <html> alone, the one element the theme script mutates.
+  // data-scroll-behavior="smooth" tells Next the page smooth-scrolls (globals.scss), so
+  // it switches that off for its own jump to the top on a route change; without it the
+  // jump glides and stops part-way down (claude-docs/styling.md, "Smooth scrolling").
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable}`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <PrePaintScripts />
       </head>

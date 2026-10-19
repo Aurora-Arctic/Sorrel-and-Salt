@@ -199,29 +199,7 @@
     padding: space(1) space(4);
   }
 
-  // A save in flight, the owner's call for every Save button (M5.6): a ring
-  // in the button's ink, open on one side so its turn reads, ahead of the
-  // label, the button `aria-busy`. Slowed rather than stopped where motion is
-  // reduced, since a still ring says nothing is happening.
-  .spinner {
-    width: 1em;
-    height: 1em;
-    flex-shrink: 0;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
-    border-radius: radius('pill');
-    animation: spinner-turn 0.8s linear infinite;
-
-    @include reduced-motion {
-      animation-duration: 2.4s;
-    }
-  }
-
-  @keyframes spinner-turn {
-    to {
-      transform: rotate(1turn);
-    }
-  }
+  // The spinner a save in flight shows is `Spinner`'s (src/components/Spinner).
 
   // The side padding is sized for a word, and reads as a gap before a small
   // round mark, so the left side comes in a step while the spinner shows.
@@ -504,13 +482,12 @@
 
   // The row while the list it filters is on its way, greyed as a tabbed
   // page's tabs are (claude-docs/components/filter-form.md): every field,
-  // and Clear, faded to 55% with its colour taken out and the not-allowed
+  // and Clear, faded (`busy-faded`) with its colour taken out and the not-allowed
   // cursor, and hover changing nothing. Here, under `body`, so it outweighs
   // the fields' own hover.
   .filter-row[aria-busy='true'] {
     > * {
-      opacity: 0.55;
-      filter: grayscale(1);
+      @include busy-faded;
     }
 
     *,
@@ -549,6 +526,25 @@
   @keyframes list-frame-fade-in {
     from {
       opacity: 0;
+    }
+  }
+
+  // What `loading-motion` (_mixins.scss) swaps in under reduced motion, and the
+  // step that holds an indicator back until its delay is over.
+  @keyframes loading-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes loading-appear {
+    from {
+      visibility: hidden;
     }
   }
 
@@ -1577,8 +1573,9 @@
 
   // A text field looking its text up (TextField's `busy`): the `.spinner`
   // inside the box at its right end, in the muted ink, the text kept clear of
-  // it. It fades in after a short wait, as the duplicate warning's shapes do,
-  // so an answer back sooner never flashes it; the turn is the primitive's.
+  // it. The spinner's own wait (`$loading-delay`) and motion, reduced-motion
+  // pulse included, apply: this class sets none, so a lookup answered sooner
+  // never flashes it.
   .field__control {
     position: relative;
     display: block;
@@ -1590,13 +1587,6 @@
     right: space(3);
     color: $text-muted;
     translate: 0 -50%;
-    animation:
-      spinner-turn 0.8s linear infinite,
-      list-frame-fade-in 300ms ease 200ms both;
-
-    @include reduced-motion {
-      animation: spinner-turn 2.4s linear infinite;
-    }
   }
 
   .input[aria-busy='true'] {
