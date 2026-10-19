@@ -340,7 +340,7 @@ of two emphasis levels, both leading with a 6px dot in the group colour (`chip-d
 
 - **`full`**: the category chip, everywhere a category shows (the card, the entry page,
   pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
-  (14% over `$surface-card`), a border at 35%, and the label in the group colour with 30% of
+  (8% over `$surface-card`; 14% at first, lowered the same day on the owner's call — the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of
   `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
   own shape).
 - **`quiet`**: neutral ink and a `$hairline` border, the colour kept to the dot. For a control
@@ -372,7 +372,7 @@ of two emphasis levels, both leading with a 6px dot in the group colour (`chip-d
 
 - **`full`**: the category chip, everywhere a category shows (the card, the entry page,
   pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
-  (14% over `$surface-card`), a border at 35%, and the label in the group colour with 30% of
+  (8% over `$surface-card`), a border at 35%, and the label in the group colour with 30% of
   `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
   own shape).
 - **`quiet`**: neutral ink and a `$hairline` border, the colour kept to the dot. For a control

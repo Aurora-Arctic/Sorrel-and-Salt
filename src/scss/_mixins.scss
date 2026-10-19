@@ -191,13 +191,14 @@
 }
 
 // The full level's three colours, for a chip of any shape. The category chip everywhere
-// (2026-10-19): a 14% wash of the group colour, a border at 35%, and the label in the
-// colour with 30% of the body ink stirred in. The pure colour on its own wash falls under
+// (2026-10-19): an 8% wash of the group colour (14% at first; the owner asked for more
+// transparency), a border at 35%, and the label in the colour with 30% of the body ink
+// stirred in. The pure colour on its own wash falls under
 // 4.5:1 for some groups (Mind & Spirit, light: 3.56); with the ink it holds at least
 // 5.37:1 for all eight seeded groups on both surfaces of both themes (styling.md,
 // "Category chips"). The mix is of the pair's members, so a group an admin adds gets it too.
 @mixin chip-wash($color) {
-  background-color: color-mix(in srgb, $color 14%, $surface-card);
+  background-color: color-mix(in srgb, $color 8%, $surface-card);
   border-color: color-mix(in srgb, $color 35%, $surface-card);
   color: color-mix(in srgb, $text-primary 30%, $color);
 }
