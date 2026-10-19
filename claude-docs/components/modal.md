@@ -536,11 +536,8 @@ stable` so nothing shifts sideways as the scrollbar goes; the body's own
 scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
 out of reach.
 
-**The skeleton** (M9.18) draws its shapes with `.modal-skeleton*`
-(`Modal/index.scss`). Their shimmer is the shared Sass mixin `skeleton-shape`
-(`src/scss/_mixins.scss`), with its `skeleton-shimmer` keyframes in
-`src/scss/_primitives.scss`; the tab skeleton ([`tabbed-page.md`](tabbed-page.md))
-uses the same mixin, where it once kept a keyframes of its own.
+**The skeleton** (M9.18) is the shared `Skeleton` of the `form` shape
+([`skeleton.md`](skeleton.md)); `ModalLoading` only renders it.
 
 **On a phone it stays inset**, the same gap on every side, rather than
 becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.

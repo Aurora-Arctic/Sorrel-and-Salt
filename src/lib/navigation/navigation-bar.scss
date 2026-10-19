@@ -1,0 +1,52 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The page bar (M12.33): a thin strip along the bottom edge of the global bar,
+// with a segment sweeping across it while a navigation is on its way. The
+// component (navigation-bar.tsx) decides when it shows; this only draws it.
+// It is `hidden` until then, and the 100ms hold-back is the component's timer,
+// so no `animation-delay` is set here.
+.navigation-bar {
+  position: fixed;
+  top: calc(#{$top-inset} + #{$shell-bar-height} - 3px);
+  right: 0;
+  left: 0;
+  z-index: layer('banner');
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+
+  // The moving segment: 40% of the width, passing from off the left edge to
+  // off the right. Under reduced motion `loading-motion` swaps this for a
+  // pulse, so the segment fills the bar then and does not travel.
+  &::before {
+    content: '';
+    display: block;
+    width: 40%;
+    height: 100%;
+    background-color: $accent;
+    @include loading-motion(navigation-bar-sweep $shimmer-duration ease-in-out infinite);
+
+    @include reduced-motion {
+      width: 100%;
+    }
+  }
+
+  // Fading out: `hidden` and `data-leaving` together. `hidden` alone would
+  // remove the bar at once, so this rule keeps it drawn while it fades.
+  &[data-leaving] {
+    display: block;
+    opacity: 0;
+    transition: opacity $motion-short;
+  }
+}
+
+@keyframes navigation-bar-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
