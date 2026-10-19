@@ -98,7 +98,13 @@ export default defineConfig({
   ...baseConfig,
   testDir: './tests/e2e',
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
+  // Under Claude Code the html report alone prints no failure text, so a dot
+  // line is added and html stays (MB.142, M12.37). CI and the host are unchanged.
+  reporter: process.env.CI
+    ? [['list'], ['json'], ['html', HTML_REPORT]]
+    : process.env.CLAUDECODE
+      ? [['dot'], ['html', HTML_REPORT]]
+      : [['html', HTML_REPORT]],
   // Production build, against the e2e databases rather than the dev one.
   webServer: allServers,
   projects: [
