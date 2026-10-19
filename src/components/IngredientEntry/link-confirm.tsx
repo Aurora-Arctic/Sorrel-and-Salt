@@ -25,6 +25,13 @@ import Notice from '../Notice';
 // second dialog stacked on the first, and it adds that the form's unsaved
 // changes are not kept, since the page they were typed over goes.
 
+/**
+ * Said in a question asked over a form whose page goes with the answer: Link
+ * to the Compendium's over the edit dialog, and Make It Ours's over the
+ * Annotate dialog (M8.17).
+ */
+export const UNSAVED_CHANGES_NOT_KEPT = 'Changes you have not saved here are not kept.';
+
 const ConvertLocalDocument = graphql(`
   mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {
     convertLocalToCompendiumEntry(
@@ -93,7 +100,7 @@ export default function LinkConfirm({
   const body = (close: () => void) => (
     <>
       <p>Your jars and spells move to the compendium’s entry, and your own entry is removed.</p>
-      {over === 'form' && <p>Changes you have not saved here are not kept.</p>}
+      {over === 'form' && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
       {failure && <Notice kind="error">{failure}</Notice>}
       <div className="modal__actions">
         <BusyButton

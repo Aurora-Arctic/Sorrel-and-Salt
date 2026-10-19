@@ -270,7 +270,7 @@ const CupboardEntryForm = ({
             dirty={dirty}
             submitting={save.isPending}
             onCancel={() => discard.request(onDone)}
-            aside={aside?.({ onRefused: setAlert })}
+            aside={aside?.({ onRefused: setAlert, dirty })}
           />
           {discard.asking && <DiscardQuestion guard={discard} />}
         </form>

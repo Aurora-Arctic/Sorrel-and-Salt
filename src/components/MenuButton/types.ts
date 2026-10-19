@@ -31,6 +31,12 @@ export interface MenuButtonProps {
   busy?: boolean;
   /** What is happening while busy, in title case: "Adding". */
   busyLabel?: string;
+  /**
+   * Which side of the button the menu opens on: below, the default, or above,
+   * for a button at the foot of a dialog, whose menu would run past its edge.
+   * Either way it lines up with the button's end edge.
+   */
+  opens?: 'below' | 'above';
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
 }

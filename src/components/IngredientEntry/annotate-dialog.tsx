@@ -13,7 +13,8 @@ import type { AnnotateDialogProps } from './types';
 // while the address asks for it (`opened`), or at once while an Annotate press is loading
 // it, with the skeleton under Annotate's heading; Edit's press loads its own. Closing goes
 // to `closeHref`, and the focus goes back the way RouteModal gives it. `more` adds Make
-// It Ours and Remove in a More menu at the form's foot (M8.17).
+// It Ours and Remove at the form's foot (M8.17): a More menu with both, a
+// button with one.
 
 export default function AnnotateDialog({
   closeHref,
@@ -36,7 +37,7 @@ export default function AnnotateDialog({
               onDone={done}
               aside={
                 more &&
-                (({ onRefused }) => (
+                (({ onRefused, dirty }) => (
                   <AnnotateMore
                     {...more}
                     workspaceId={opened.workspaceId}
@@ -44,6 +45,7 @@ export default function AnnotateDialog({
                     name={opened.overrides.label ?? opened.compendium.name}
                     closeHref={closeHref}
                     onRefused={onRefused}
+                    dirty={dirty}
                   />
                 ))
               }

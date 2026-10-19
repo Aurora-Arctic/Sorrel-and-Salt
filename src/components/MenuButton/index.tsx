@@ -13,7 +13,8 @@ import './index.scss';
 // hands the focus back; Tab and a press outside close. An item is a link or
 // an action, and choosing either closes the menu first. It fades in and out
 // over the short motion (the owner's call, 2026-10-19): a closing menu stays
-// drawn, inert and hidden from assistive technology, until its fade ends.
+// drawn, inert and hidden from assistive technology, until its fade ends. It
+// opens below the button, or above it (`opens`) at the foot of a dialog.
 // claude-docs/components/menu-button.md.
 
 const Chevron = (): ReactElement => (
@@ -60,6 +61,7 @@ export default function MenuButton({
   items,
   busy = false,
   busyLabel,
+  opens = 'below',
   ref,
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
@@ -156,7 +158,13 @@ export default function MenuButton({
           aria-label={label}
           aria-hidden={!open || undefined}
           inert={!open}
-          className={open ? 'menu-button__menu' : 'menu-button__menu is-closing'}
+          className={[
+            'menu-button__menu',
+            opens === 'above' && 'menu-button__menu--above',
+            !open && 'is-closing',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           onKeyDown={onMenuKey}
           onAnimationEnd={(event) => {
             if (!open && event.target === event.currentTarget) setDrawn(false);

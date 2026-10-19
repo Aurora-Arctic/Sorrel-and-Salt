@@ -57,9 +57,10 @@ export interface CupboardEntryFormProps {
   onDone: () => void;
   /**
    * Further choices at the foot, set apart in Delete's place: the Annotate
-   * dialog's More menu (M8.17). Given the form's alert, for a refusal.
+   * dialog's Make It Ours and Remove (M8.17). Given the form's alert, for a
+   * refusal, and whether it holds unsaved changes, which Make It Ours warns of.
    */
-  aside?: (form: { onRefused: (message: string) => void }) => ReactNode;
+  aside?: (form: { onRefused: (message: string) => void; dirty: boolean }) => ReactNode;
 }
 
 /** What a changed field sends: its new value, or null for the compendium's. */

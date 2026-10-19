@@ -12,15 +12,10 @@ import BusyButton from '../BusyButton';
 import { editHeading } from '../CompendiumList/heading';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
-import Modal, { useOpenModalClick } from '../Modal';
+import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import AnnotateDialog from './annotate-dialog';
-import {
-  MAKE_IT_OURS_DETAILS,
-  MakeItOursQuestion,
-  RemoveQuestion,
-  useCupboardWrites,
-} from './cupboard-writes';
+import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-writes';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
@@ -175,68 +170,13 @@ export default function CupboardActions({
           {only.label}
         </button>
       )}
+      {/* Asked in a dialog over the page, as Leave Coven asks (the owner's
+          call, 2026-10-19), rather than in the title's row. */}
       {asking === 'own' && (
-        // Asked in a modal over the page, as Leave Coven asks (the owner's
-        // call, 2026-10-19), rather than in the title's row.
-        <Modal title="Make It Ours" onClose={settle} returnTo={back}>
-          {(close) => (
-            <>
-              <p>
-                <MakeItOursQuestion name={name} />
-              </p>
-              <p>{MAKE_IT_OURS_DETAILS}</p>
-              <div className="modal__actions">
-                <BusyButton
-                  className="btn btn--solid"
-                  busy={writes.makeOurs.pending}
-                  busyLabel="Making It Ours"
-                  disabled={writes.makeOurs.pending}
-                  onClick={() => writes.makeOurs.run()}
-                >
-                  Make It Ours
-                </BusyButton>
-                <button
-                  type="button"
-                  className="btn btn--quiet"
-                  disabled={writes.makeOurs.pending}
-                  onClick={close}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </Modal>
+        <MakeItOursDialog name={name} write={writes.makeOurs} onClose={settle} returnTo={back} />
       )}
       {asking === 'remove' && (
-        <Modal title="Remove from Cupboard" onClose={settle} returnTo={back}>
-          {(close) => (
-            <>
-              <p>
-                <RemoveQuestion name={name} />
-              </p>
-              <div className="modal__actions">
-                <BusyButton
-                  className="btn btn--destructive"
-                  busy={writes.remove.pending}
-                  busyLabel="Removing"
-                  disabled={writes.remove.pending}
-                  onClick={() => writes.remove.run()}
-                >
-                  Remove
-                </BusyButton>
-                <button
-                  type="button"
-                  className="btn btn--quiet"
-                  disabled={writes.remove.pending}
-                  onClick={close}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </Modal>
+        <RemoveDialog name={name} write={writes.remove} onClose={settle} returnTo={back} />
       )}
       <AnnotateDialog
         closeHref={annotate.closeHref}

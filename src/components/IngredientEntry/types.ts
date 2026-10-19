@@ -204,8 +204,24 @@ export interface CupboardWrites {
   makeOurs: CupboardWrite;
 }
 
+/** One of the two confirmation dialogs, as the entry page and the Annotate dialog open it. */
+export interface CupboardQuestionProps {
+  /** The entry as the coven calls it. */
+  name: string;
+  write: CupboardWrite;
+  /** Asked to close it: Cancel, the Close button, Escape or a click outside. */
+  onClose: () => void;
+  /** Where the focus goes back to, the menu item that opened it having gone with the menu. */
+  returnTo: () => HTMLElement | null | undefined;
+}
+
+export interface MakeItOursDialogProps extends CupboardQuestionProps {
+  /** Asked over a form holding unsaved changes, which the dialog says are not kept. */
+  unsaved?: boolean;
+}
+
 /**
- * The Annotate dialog's More menu (M8.17): the coven's address segment, which
+ * The Annotate dialog's Make It Ours and Remove (M8.17): the coven's address segment, which
  * of Make It Ours and Remove the member may use, from the same permissions the
  * entry page reads, and where a remove leads, `closeHref` when left out.
  */

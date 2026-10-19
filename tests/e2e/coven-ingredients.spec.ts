@@ -502,8 +502,9 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
 // M8.17: Annotate on the card of a compendium entry the coven holds opens the
 // entry page's dialog over the list, and a close or a save comes back to the
 // list as it was, its search kept and the focus on the card's Annotate. The
-// dialog's More menu removes the entry from the cupboard, back onto the same
-// search without its card.
+// dialog's More menu, opening upward inside it, removes the entry from the
+// cupboard behind the confirmation dialog, back onto the same search without
+// its card.
 test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
   page,
 }) => {
@@ -564,13 +565,49 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await expect(annotated.getByRole('button', { name: 'Annotated' })).toBeVisible();
 
   // More, then Remove: asked first, then gone from the cupboard and the list.
+  // The menu opens upward from the dialog's foot and stays inside the dialog,
+  // at a phone's width too, where More is as wide as Save above it.
   await annotated.getByRole('link', { name: /^Annotate Fixture Our Notewort/ }).click();
-  await dialog.getByRole('button', { name: 'More' }).click();
+  const moreButton = dialog.getByRole('button', { name: 'More' });
   const menu = dialog.getByRole('menu', { name: 'More' });
+  const expectMenuInsideDialog = async () => {
+    const outer = (await dialog.boundingBox())!;
+    const inner = (await menu.boundingBox())!;
+    expect(inner.y).toBeGreaterThanOrEqual(outer.y);
+    expect(inner.x).toBeGreaterThanOrEqual(outer.x);
+    expect(inner.y + inner.height).toBeLessThanOrEqual(outer.y + outer.height);
+    expect(inner.x + inner.width).toBeLessThanOrEqual(outer.x + outer.width);
+  };
+  await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+  await expectMenuInsideDialog();
   await assertNoAccessibilityViolations(page);
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+
+  const wide = page.viewportSize()!;
+  await page.setViewportSize({ width: 375, height: 800 });
+  await moreButton.scrollIntoViewIfNeeded();
+  const save = (await dialog.getByRole('button', { name: 'Save Annotation' }).boundingBox())!;
+  expect((await moreButton.boundingBox())!.width).toBeCloseTo(save.width, 0);
+  await moreButton.click();
+  await expectMenuInsideDialog();
+  await page.keyboard.press('Escape');
+  await page.setViewportSize(wide);
+
+  // The question is the entry page's confirmation dialog, over this one:
+  // Escape closes it alone, the focus back on More.
+  const question = page.getByRole('dialog', { name: 'Remove from Cupboard' });
+  await moreButton.click();
   await menu.getByRole('menuitem', { name: 'Remove' }).click();
-  const question = page.getByRole('group', { name: /Remove Fixture Our Notewort/ });
+  await expect(question).toContainText('Remove Fixture Our Notewort from your cupboard?');
+  await page.keyboard.press('Escape');
+  await expect(question).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await expect(moreButton).toBeFocused();
+
+  await moreButton.click();
+  await menu.getByRole('menuitem', { name: 'Remove' }).click();
   await question.getByRole('button', { name: 'Remove', exact: true }).click();
 
   await expect(dialog).toHaveCount(0);

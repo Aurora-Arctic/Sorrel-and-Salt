@@ -6,16 +6,24 @@ import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
+import BusyButton from '../BusyButton';
+import Modal from '../Modal';
+import { UNSAVED_CHANGES_NOT_KEPT } from './link-confirm';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import type { CupboardWritesOptions, CupboardWrites } from './types';
+import type {
+  CupboardQuestionProps,
+  CupboardWritesOptions,
+  CupboardWrites,
+  MakeItOursDialogProps,
+} from './types';
 
 // Make It Ours (M12.23) and Remove (M12.17), the two writes a coven's member
 // makes to a compendium entry it holds, shared by the entry page's Edit menu
 // and the Annotate dialog's More menu (M8.17), so the two ask the same
-// question and land in the same place. Each caller draws the question its own
-// way: the page in a modal over itself, the dialog as a question over its form,
-// since a second native dialog inside the first would take its Escape.
+// question, in the same confirmation dialog, and land in the same place. The
+// Annotate dialog opens it over itself, a dialog inside a dialog, as the owner
+// asked on 2026-10-19 (Modal answers only its own Escape).
 
 /**
  * The Annotate dialog's menu of further cupboard writes. "More", the owner's
@@ -59,6 +67,91 @@ export function RemoveQuestion({ name }: { name: string }): ReactElement {
     <>
       Remove <strong>{name}</strong> from your cupboard? Your annotations get deleted too.
     </>
+  );
+}
+
+/**
+ * Make It Ours asked in a dialog, as Leave Coven asks (the owner's call,
+ * 2026-10-19). Over the Annotate form with unsaved changes it adds Link to the
+ * Compendium's sentence: the copy takes the saved annotations alone.
+ */
+export function MakeItOursDialog({
+  name,
+  write,
+  unsaved = false,
+  onClose,
+  returnTo,
+}: MakeItOursDialogProps): ReactElement {
+  return (
+    <Modal title="Make It Ours" onClose={onClose} returnTo={returnTo}>
+      {(close) => (
+        <>
+          <p>
+            <MakeItOursQuestion name={name} />
+          </p>
+          <p>{MAKE_IT_OURS_DETAILS}</p>
+          {unsaved && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
+          <div className="modal__actions">
+            <BusyButton
+              className="btn btn--solid"
+              busy={write.pending}
+              busyLabel="Making It Ours"
+              disabled={write.pending}
+              onClick={write.run}
+            >
+              Make It Ours
+            </BusyButton>
+            <button
+              type="button"
+              className="btn btn--quiet"
+              disabled={write.pending}
+              onClick={close}
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
+/** Remove asked in a dialog, the same way. */
+export function RemoveDialog({
+  name,
+  write,
+  onClose,
+  returnTo,
+}: CupboardQuestionProps): ReactElement {
+  return (
+    <Modal title="Remove from Cupboard" onClose={onClose} returnTo={returnTo}>
+      {(close) => (
+        <>
+          <p>
+            <RemoveQuestion name={name} />
+          </p>
+          <div className="modal__actions">
+            <BusyButton
+              className="btn btn--destructive"
+              busy={write.pending}
+              busyLabel="Removing"
+              disabled={write.pending}
+              onClick={write.run}
+            >
+              Remove
+            </BusyButton>
+            <button
+              type="button"
+              className="btn btn--quiet"
+              disabled={write.pending}
+              onClick={close}
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
+    </Modal>
   );
 }
 

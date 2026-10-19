@@ -2,12 +2,18 @@
 @use '../../scss/mixins' as *;
 
 // The menu as the bar's Add Ingredient menu draws it (app-shell's
-// `.app-shell__menu`), hung from the button's end edge.
+// `.app-shell__menu`), hung from the button's end edge, below it or above.
 // claude-docs/components/menu-button.md.
 
 .menu-button {
   position: relative;
   display: inline-flex;
+}
+
+// The button fills the box when a layout stretches it, as a narrow form's
+// stacked foot does (M8.17); otherwise the box is the button's own width.
+.menu-button > [aria-haspopup] {
+  flex-grow: 1;
 }
 
 // The chevron after the label, turned over while the menu is open.
@@ -42,6 +48,15 @@
       animation: none;
     }
   }
+}
+
+// Above the button instead (`opens="above"`), for one at the foot of a dialog,
+// where a menu below would run past the dialog's edge and be cut off. Still
+// hung from the end edge, which keeps it inside a narrow dialog too, where the
+// stacked foot makes the button full width (M8.17).
+.menu-button__menu--above {
+  top: auto;
+  bottom: calc(100% + #{space(2)});
 }
 
 @keyframes menu-button-fade-in {

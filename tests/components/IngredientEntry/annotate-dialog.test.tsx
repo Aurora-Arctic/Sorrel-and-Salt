@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
 import { CUPBOARD_MENU_LABEL } from '@/components/IngredientEntry/cupboard-writes';
+import { UNSAVED_CHANGES_NOT_KEPT } from '@/components/IngredientEntry/link-confirm';
 import type { AnnotateDialogProps } from '@/components/IngredientEntry/types';
 import type { MakeItOursMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -13,10 +14,12 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Annotate dialog's More menu (M8.17; claude-docs/components/ingredient-entry.md):
-// Make It Ours and Remove from the dialog's foot, each behind the same question
-// the entry page asks, each offered only on the member's permission. A remove
-// leaves for where the dialog closes to; Make It Ours for the own entry it writes.
+// The Annotate dialog's foot (M8.17; claude-docs/components/ingredient-entry.md):
+// Make It Ours and Remove, each offered only on the member's permission, in a
+// More menu when both are and as a button of its own when one is, and each
+// asked in the same confirmation dialog the entry page opens, over this one.
+// A remove leaves for where the dialog closes to; Make It Ours for the own
+// entry it writes, warning first when the form holds unsaved changes.
 
 const CLOSE = '/coven/fixture-coven/ingredients?q=test' as Route;
 
@@ -59,6 +62,7 @@ function renderDialog(props: Partial<AnnotateDialogProps> = {}) {
 
 const dialog = () => screen.getByRole('dialog', { name: 'Annotate This Entry' });
 const more = () => within(dialog()).queryByRole('button', { name: CUPBOARD_MENU_LABEL });
+const asked = (title: string) => screen.getByRole('dialog', { name: title });
 
 function choices(): string[] {
   fireEvent.click(more()!);
@@ -73,35 +77,45 @@ function choose(name: string): void {
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
 
-describe('AnnotateDialog: the More menu', () => {
+describe('AnnotateDialog: Make It Ours and Remove', () => {
   beforeEach(() => {
     router.push.mockClear();
     router.replace.mockClear();
     router.refresh.mockClear();
   });
 
-  it('offers Make It Ours and Remove in the More menu, in that order', () => {
+  it('offers Make It Ours and Remove in the More menu, in that order, when both are permitted', () => {
     renderDialog();
 
     expect(choices()).toEqual(['Make It Ours', 'Remove']);
   });
 
-  it('offers each only on its permission, and no menu with neither', () => {
+  it('offers the one permitted as a button of its own, with no menu, and neither with neither', () => {
     const view = renderDialog({ more: { ...MORE, canMakeOurs: false } });
-    expect(choices()).toEqual(['Remove']);
+    expect(more()).not.toBeInTheDocument();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Remove' }));
+    expect(asked('Remove from Cupboard')).toBeInTheDocument();
 
     view.unmount();
+    const ours = renderDialog({ more: { ...MORE, canRemove: false } });
+    expect(more()).not.toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: 'Remove' })).toBeNull();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Make It Ours' }));
+    expect(asked('Make It Ours')).toBeInTheDocument();
+
+    ours.unmount();
     renderDialog({ more: { ...MORE, canMakeOurs: false, canRemove: false } });
     expect(more()).not.toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: /Remove|Make It Ours/ })).toBeNull();
   });
 
-  it('draws no menu where the caller gives none', () => {
+  it('draws neither where the caller gives none', () => {
     renderDialog({ more: undefined });
 
     expect(more()).not.toBeInTheDocument();
   });
 
-  it('asks before removing, and removes nothing on Cancel', async () => {
+  it('asks before removing, and on Cancel removes nothing and keeps the Annotate dialog', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
       'RemoveCupboardEntry',
@@ -113,10 +127,12 @@ describe('AnnotateDialog: the More menu', () => {
     renderDialog();
 
     choose('Remove');
-    const ask = screen.getByRole('group', { name: /Remove Testwort from your cupboard/ });
-    press(within(ask).getByRole('button', { name: 'Cancel' }));
+    expect(asked('Remove from Cupboard')).toHaveTextContent(/Remove Testwort from your cupboard/);
+    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('group', { name: /Remove/ })).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Remove from Cupboard' })).toBeNull(),
+    );
     expect(dialog()).toBeInTheDocument();
     expect(calls).toEqual([]);
   });
@@ -133,9 +149,7 @@ describe('AnnotateDialog: the More menu', () => {
     renderDialog();
 
     choose('Remove');
-    press(
-      within(screen.getByRole('group', { name: /Remove/ })).getByRole('button', { name: 'Remove' }),
-    );
+    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
     expect(router.push).not.toHaveBeenCalled();
@@ -150,16 +164,14 @@ describe('AnnotateDialog: the More menu', () => {
     renderDialog({ more: { ...MORE, removedHref: '/coven/fixture-coven/ingredients' as Route } });
 
     choose('Remove');
-    press(
-      within(screen.getByRole('group', { name: /Remove/ })).getByRole('button', { name: 'Remove' }),
-    );
+    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven/ingredients'),
     );
   });
 
-  it("shows the service's refusal in the form and keeps the dialog open", async () => {
+  it("shows the service's refusal in the form, closes the question and keeps the dialog open", async () => {
     mockGraphQLError('RemoveCupboardEntry', {
       code: 'VALIDATION',
       fieldErrors: [{ path: ['ingredientId'], message: 'Fixture refusal: a jar is held' }],
@@ -167,12 +179,10 @@ describe('AnnotateDialog: the More menu', () => {
     renderDialog();
 
     choose('Remove');
-    press(
-      within(screen.getByRole('group', { name: /Remove/ })).getByRole('button', { name: 'Remove' }),
-    );
+    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Remove' }));
 
     expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: /Remove/ })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Remove from Cupboard' })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
@@ -185,12 +195,28 @@ describe('AnnotateDialog: the More menu', () => {
     renderDialog();
 
     choose('Make It Ours');
-    const ask = screen.getByRole('group', { name: /Make Testwort your coven's own/ });
-    press(within(ask).getByRole('button', { name: 'Make It Ours' }));
+    expect(asked('Make It Ours')).toHaveTextContent(/Make Testwort your coven's own/);
+    press(within(asked('Make It Ours')).getByRole('button', { name: 'Make It Ours' }));
 
     await waitFor(() =>
       expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven/ingredients/fixture-own'),
     );
     expect(calls).toEqual([{ workspaceId: OPENED.workspaceId, ingredientId: OPENED.ingredientId }]);
+  });
+
+  // Make It Ours copies the saved annotations, so the form's unsaved ones are
+  // lost with the dialog: the question says so, as Link to the Compendium's does.
+  it('warns that unsaved changes are not kept only while the form holds some', () => {
+    renderDialog();
+
+    choose('Make It Ours');
+    expect(within(asked('Make It Ours')).queryByText(UNSAVED_CHANGES_NOT_KEPT)).toBeNull();
+    press(within(asked('Make It Ours')).getByRole('button', { name: 'Cancel' }));
+
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Description' }), {
+      target: { value: 'Fixture unsaved note' },
+    });
+    choose('Make It Ours');
+    expect(within(asked('Make It Ours')).getByText(UNSAVED_CHANGES_NOT_KEPT)).toBeInTheDocument();
   });
 });

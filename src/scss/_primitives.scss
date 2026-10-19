@@ -1111,6 +1111,13 @@
     .form .modal__actions > * {
       margin-inline: 0;
     }
+
+    // What the aside holds stretches too, a menu's button or a lone button
+    // alike (M8.17), as wide as Save and Cancel above it.
+    .form .form__aside {
+      display: flex;
+      flex-direction: column;
+    }
   }
 
   .form__actions {
