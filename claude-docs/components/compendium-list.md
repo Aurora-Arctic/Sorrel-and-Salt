@@ -45,6 +45,8 @@ different groups, so the page offers each name once, whatever its case.
 
 ## Contracts
 
+- **The public page shares the filter.** `CompendiumListFilter` takes `audience` (`'admin'`, the default, or `'public'`). The public audience filters at `/compendium`, draws no No Refs control and no Classification facet, and words its empty sentence through the exported `emptyText(..., whenEmpty)`. The cards that page draws are [`compendium-cards.md`](compendium-cards.md).
+
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178),
   named "Filter the Compendium" inside a `<search>` landmark and `position: relative`
   (`.compendium-list__row`), because the panel opens just under it. In order: the Name

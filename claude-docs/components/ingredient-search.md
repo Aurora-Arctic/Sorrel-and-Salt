@@ -11,14 +11,15 @@ ingredients list (M9.6) and the spell builder follow.
 `IngredientSearch` (the default, a server component) draws the list. Its props
 (`IngredientSearchProps`, `types.ts`):
 
-| Prop                       | What it is                                                       |
-| -------------------------- | ---------------------------------------------------------------- |
-| `search`                   | The filter row, normally an `IngredientSearchForm`               |
-| `action`                   | Optional: the page's Add or Create, drawn beneath the filter row |
-| `children`                 | The results: a table, cards or an empty state                    |
-| `previousHref`, `nextHref` | Optional: the pager's links, as for any paged list               |
-| `position`                 | Optional: where this page stands among them all                  |
-| `className`                | Optional: the list's own root class, beside `list-frame`         |
+| Prop                       | What it is                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `search`                   | The filter row, normally an `IngredientSearchForm`                                             |
+| `action`                   | Optional: the page's Add or Create, drawn beneath the filter row                               |
+| `children`                 | The results: a table, cards or an empty state                                                  |
+| `shape`                    | Optional: `'table'` (default) or `'cards'`; the shape of the loading skeleton `ListBody` draws |
+| `previousHref`, `nextHref` | Optional: the pager's links, as for any paged list                                             |
+| `position`                 | Optional: where this page stands among them all                                                |
+| `className`                | Optional: the list's own root class, beside `list-frame`                                       |
 
 `IngredientSearchForm` (a client component, re-exported from `index.tsx`) is
 the filter row. Its props (`IngredientSearchFormProps`):
