@@ -1123,6 +1123,8 @@ export interface CompendiumSlugEntry {
   slug: string;
   name: string;
   canonicalName: string | null;
+  /** The entry's own description, for `llms.txt` notes (M12.2); the sitemap ignores it. */
+  description: string | null;
   /** When the entry last really changed: its `updated_at` (MB.106). */
   lastModified: Date;
 }

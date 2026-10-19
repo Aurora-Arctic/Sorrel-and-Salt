@@ -67,6 +67,25 @@ describe('M12.2: what the public files list', () => {
     expect(text).not.toContain('Fixture Coven Own');
   });
 
+  it("notes a link with the entry's stored description, and only that entry's", async () => {
+    await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Described',
+        nomenclature: 'none',
+        description: 'A fixture herb.',
+      }),
+      A.id,
+    );
+    await seed('Fixture Bare');
+
+    const lines = (await (await llms()).text()).split('\n');
+    const line = (name: string) => lines.find((l) => l.startsWith(`- [${name}]`))!;
+
+    expect(line('Fixture Described')).toMatch(/\): A fixture herb\.$/);
+    expect(line('Fixture Bare')).toMatch(/\)$/);
+  });
+
   it('names no coven, admin or API path, nor the coven, in any file', async () => {
     const { coven } = await seedWorld();
     expect(coven.name.length).toBeGreaterThan(0);

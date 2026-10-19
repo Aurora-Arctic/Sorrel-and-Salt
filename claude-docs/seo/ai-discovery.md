@@ -30,7 +30,11 @@ media type; the handler answers `text/markdown; charset=utf-8`.
 
 Ours has a Compendium section (the list page, then one link per entry, named
 with `pageTitleOf` so two entries sharing a label are told apart by formal
-name) and an Optional section holding the sitemap.
+name) and an Optional section holding the sitemap. Each entry link carries a
+note, the entry's description cut by `describe` in `src/lib/page-metadata.ts`
+(the cutter the meta description uses) with brackets escaped; an entry with no
+description has no note. The description comes from `listCompendiumSlugs()`,
+which carries it for this alone (`claude-docs/db/compendium-cache.md`).
 
 ## The catalog
 

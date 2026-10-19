@@ -70,6 +70,9 @@ export async function findCompendiumSlugRedirect(
  * `llms.txt` list. `lastModified` is the row's `updated_at`, which since MB.106
  * moves only on a real change (claude-docs/db/updated-at.md). Soft-deleted
  * entries and every coven's rows are left out here, in SQL.
+ *
+ * M12.2 added `description` so `llms.txt` can note each link; the sitemap
+ * ignores it. Still one cached, sessionless read.
  */
 export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
   const rows = await selectFrom(
@@ -77,10 +80,11 @@ export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
     and(inCompendium(ingredients), notSoftDeleted(ingredients)),
   );
   return rows
-    .map(({ slug, name, canonicalName, updatedAt }) => ({
+    .map(({ slug, name, canonicalName, description, updatedAt }) => ({
       slug,
       name,
       canonicalName,
+      description,
       lastModified: updatedAt,
     }))
     .sort((a, b) => a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug));

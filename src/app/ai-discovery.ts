@@ -1,4 +1,5 @@
 import { pageTitleOf } from '../components/IngredientEntry/page-title';
+import { describe } from '../lib/page-metadata';
 import { SITE_NAME, siteUrl } from '../lib/site';
 import type { CompendiumSlugEntry } from '@/modules/ingredients';
 
@@ -32,7 +33,7 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
     `- [Compendium](${siteUrl('/compendium')}): every ingredient in the reference, searchable and filterable`,
     ...entries.map(
       (entry) =>
-        `- [${linkText(pageTitleOf(entry))}](${siteUrl(`/compendium/ingredients/${entry.slug}`)})`,
+        `- [${linkText(pageTitleOf(entry))}](${siteUrl(`/compendium/ingredients/${entry.slug}`)})${note(entry.description)}`,
     ),
     '',
     '## Optional',
@@ -45,6 +46,16 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
 
 // A bracket in a name would end the link text early.
 const linkText = (text: string) => text.replace(/[[\]\\]/g, (char) => `\\${char}`);
+
+/**
+ * The `: note` after a link, from the entry's description, cut by the same
+ * function the page's meta description uses (`describe`, which also joins the
+ * text onto one line). An entry with no description gets no note at all.
+ */
+function note(description: string | null): string {
+  const text = description ? describe(description) : '';
+  return text ? `: ${linkText(text)}` : '';
+}
 
 /** The catalog's media type: the AI Catalog draft's SHOULD; ARD names none for `ard.json`. */
 export const CATALOG_MEDIA_TYPE = 'application/ai-catalog+json';
