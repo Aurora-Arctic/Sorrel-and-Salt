@@ -242,8 +242,9 @@
   position: absolute;
   z-index: 1;
   inset-inline: 0;
-  // The row is the containing block (the wrapper is static), so this clears its top.
-  inset-block-end: calc(100% + #{space(2)});
+  // The row is the containing block (the wrapper is static), so this clears its bottom:
+  // the panel hangs below the chips, over the forms and jar lines (the owner's call).
+  inset-block-start: calc(100% + #{space(2)});
   display: flex;
   flex-wrap: wrap;
   gap: space(2);
