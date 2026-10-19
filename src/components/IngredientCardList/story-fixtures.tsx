@@ -3,12 +3,12 @@ import { StockBadge } from '../StockBadge';
 import type { EntryKind } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
-import { Dot } from './story-jars';
-import type { CardCategory } from './types';
+import { Dot } from '../IngredientCard/story-jars';
+import type { CardCategory } from '../IngredientCard/types';
 
-// Story-only data for the compact grid comparison (compact.stories.tsx). Invented
+// Story-only data for the grid stories (index.stories.tsx). Invented
 // names; one set of entries, so a current grid and its compact twin differ in
-// spacing alone. Deleted with the sample.
+// spacing alone. Used by the grid stories.
 
 const GROUPS = {
   protect: { colorDark: '#7aa7d9', colorLight: '#1f4f8a' },

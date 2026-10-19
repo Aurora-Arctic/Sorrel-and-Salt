@@ -22,4 +22,11 @@
   .ingredient-card {
     flex: 1 1 auto;
   }
+
+  // Compact: a narrower column (more cards across) and a tighter gap, to go with the
+  // compact card the same attribute switches on (IngredientCard/_compact.scss).
+  &[data-density='compact'] {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: space(3);
+  }
 }

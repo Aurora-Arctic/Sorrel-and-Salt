@@ -188,6 +188,31 @@ $badge-palettes: (
     )
 );
 
+// The three sizes of a badge (the owner, M8.14), set in one place. Default is what a
+// badge has everywhere; medium and small are for the ingredient card only (regular and
+// compact), one step down in text. The two smaller sizes hold 24px (1.5rem) tall, the
+// least a tipped badge may be as a target; default needs no floor, its text sets it.
+$badge-sizes: (
+  'default': (
+    font-size: caption,
+    padding-block: 0.125rem,
+    padding-inline: 0.4375rem,
+    min-block-size: null,
+  ),
+  'medium': (
+    font-size: overline,
+    padding-block: 0.125rem,
+    padding-inline: 0.4375rem,
+    min-block-size: 1.5rem,
+  ),
+  'small': (
+    font-size: overline,
+    padding-block: 0.125rem,
+    padding-inline: 0.3125rem,
+    min-block-size: 1.5rem,
+  ),
+);
+
 // Named once, so the mixin's loop and the accessor's validation agree.
 @function badge-parts($palette) {
   $spec: map.get($badge-palettes, $palette);

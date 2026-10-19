@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use 'compact' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the
 // layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
@@ -173,18 +174,20 @@
   z-index: 1;
 }
 
-// Chip and badge text on the card, one step under the caption they take elsewhere
-// (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`). Their own padding
-// and gaps stay; the smaller text would shrink a badge to under 24px, the least a
-// tipped badge may be as a target, so the height is held there.
+// Chip text on the card, one step under the caption it takes elsewhere, and the badges
+// (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
+// badge size, which holds them 24px tall.
 .ingredient-card {
-  .chip,
-  .badge {
+  .chip {
     font-size: type-size('overline');
   }
 
   .badge {
-    min-block-size: 1.5rem;
-    box-sizing: border-box;
+    @include badge-size('medium');
   }
+}
+
+// The compact look, wherever an ancestor says `data-density="compact"`.
+[data-density='compact'] {
+  @include ingredient-card-compact;
 }

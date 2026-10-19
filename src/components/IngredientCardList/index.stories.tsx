@@ -1,98 +1,69 @@
 import type { Story } from '@ladle/react';
 import IngredientCard from '../IngredientCard';
-import { Jars } from '../IngredientCard/story-jars';
-import type { SafetyVariant } from '../SafetyNote/types';
+import { ENTRIES, JarLines } from './story-fixtures';
 import IngredientCardList from '.';
 
-// Render-only; the wrapping is asserted in tests/components/IngredientCardList.
-// About six mixed cards, to see the grid at a phone, a tablet and a desktop
-// width: the preview ignores `meta.width`, so set the viewport to check.
+// Render-only; the wrapping and the density are asserted in tests/components/IngredientCardList.
+// The same nine entries in every grid, for the two pages that use the list: the public
+// compendium (M8.18: no marks of whose, no jars, no actions) and the coven's Ingredients
+// page (M9.6: marks, jar lines, Edit and Delete). The preview ignores `meta.width`, so set
+// the viewport to see the columns change.
 export default {
   title: 'Surfaces / Ingredient Card List',
 };
 
-const GROUP = { colorDark: '#7aa7d9', colorLight: '#1f4f8a' };
-const CHIPS = [{ category: { id: 'c1', name: 'Protection' }, group: GROUP }];
-const LEAF: SafetyVariant = {
-  form: 'dried leaf',
-  formChoice: { group: { icon: 'botanical' } },
-  safetyNotes: '',
-};
-const OIL: SafetyVariant = {
-  form: 'oil',
-  formChoice: { group: { icon: 'fluid' } },
-  safetyNotes: 'Dilute before it touches skin.',
-  toxic: true,
-};
-
-const href = (slug: string) => `/compendium/ingredients/${slug}` as const;
-
-// Mixed on purpose: some with jar lines and some without, with and without
-// marks and chips, one with actions, so rows of unequal height show the foot
-// landing on one line.
-const Cards = () => (
-  <IngredientCardList label="Ingredients">
-    <IngredientCard
-      href={href('testwort')}
-      label="Testwort"
-      formalName="Fixtura testalis"
-      nomenclature="botanical"
-      kind="compendium"
-      categories={CHIPS}
-      variants={[LEAF, OIL]}
-    />
-    <IngredientCard
-      href={href('testroot')}
-      label="Testroot"
-      kind="own"
-      categories={CHIPS}
-      variants={[LEAF]}
-    >
-      <Jars jars={['leaf']} />
-    </IngredientCard>
-    <IngredientCard
-      href={href('testite')}
-      label="Testite"
-      formalName="Fixtura testite"
-      nomenclature="mineral"
-      kind="compendium"
-    />
-    <IngredientCard
-      href={href('testbark')}
-      label="Our Testbark"
-      formalName="Fixtura corticalis"
-      nomenclature="botanical"
-      kind="cupboard"
-      annotated
-      retired
-      categories={CHIPS}
-      variants={[LEAF]}
-      actions={
-        <>
-          <button type="button" className="btn btn--small">
-            Use
-          </button>
-          <button type="button" className="btn btn--small">
-            Restock
-          </button>
-        </>
-      }
-    >
-      <Jars jars={['leaf']} />
-    </IngredientCard>
-    <IngredientCard href={href('testflower')} label="Testflower" kind="own" variants={[OIL]}>
-      <Jars jars={['oil']} />
-    </IngredientCard>
-    <IngredientCard
-      href={href('testseed')}
-      label="Testseed"
-      formalName="Fixtura seminalis"
-      nomenclature="botanical"
-      kind="compendium"
-      categories={CHIPS}
-      variants={[LEAF]}
-    />
+const CompendiumCards = () => (
+  <IngredientCardList label="Compendium">
+    {ENTRIES.map((e) => (
+      <IngredientCard
+        key={e.slug}
+        href={`/compendium/ingredients/${e.slug}` as const}
+        label={e.label}
+        formalName={e.formalName}
+        nomenclature={e.nomenclature}
+        categories={e.categories}
+        variants={e.variants}
+        toxic={e.toxic}
+        safetyNotes={e.safetyNotes}
+        kind="compendium"
+      />
+    ))}
   </IngredientCardList>
 );
 
-export const Grid: Story = () => <Cards />;
+const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
+  <IngredientCardList label="Ingredients" density={density}>
+    {ENTRIES.map((e) => (
+      <IngredientCard
+        key={e.slug}
+        href={`/coven/test-coven/ingredients/${e.slug}` as const}
+        label={e.label}
+        formalName={e.formalName}
+        nomenclature={e.nomenclature}
+        categories={e.categories}
+        variants={e.variants}
+        toxic={e.toxic}
+        safetyNotes={e.safetyNotes}
+        kind={e.kind}
+        annotated={e.annotated}
+        retired={e.retired}
+        actions={
+          <>
+            <button type="button" className="btn btn--small">
+              Edit
+            </button>
+            <button type="button" className="btn btn--small btn--destructive">
+              Delete
+            </button>
+          </>
+        }
+      >
+        <JarLines jars={e.jars} />
+      </IngredientCard>
+    ))}
+  </IngredientCardList>
+);
+
+export const CompendiumGrid: Story = () => <CompendiumCards />;
+export const CupboardGrid: Story = () => <CupboardCards />;
+export const CupboardGridCompact: Story = () => <CupboardCards density="compact" />;

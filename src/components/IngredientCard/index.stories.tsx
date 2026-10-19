@@ -39,7 +39,8 @@ const BASE = {
   variants: VARIANTS,
 };
 
-// The public compendium: no cupboard mark, no jar lines.
+// The public compendium: no cupboard mark, no jar lines. The oil form carries notes and
+// the Toxic flag, so Caution and Toxic show together.
 export const Compendium: Story = () => <IngredientCard {...BASE} kind="compendium" />;
 
 // A coven's own entry, with the jar lines M9.6 will fill the slot with.
@@ -49,11 +50,8 @@ export const OwnWithJars: Story = () => (
   </IngredientCard>
 );
 
-// Caution and Toxic together: the oil form carries notes and the flag.
-export const CautionAndToxic: Story = () => <IngredientCard {...BASE} kind="compendium" />;
-
 // Caution alone: notes on the entry, no form flagged.
-export const CautionAlone: Story = () => (
+export const Caution: Story = () => (
   <IngredientCard
     {...BASE}
     kind="compendium"
@@ -81,21 +79,7 @@ export const InCupboardAnnotated: Story = () => (
 
 export const Retired: Story = () => <IngredientCard {...BASE} kind="cupboard" retired />;
 
-export const PhoneDark: Story = () => (
-  <IngredientCard {...BASE} kind="own">
-    <Jars />
-  </IngredientCard>
-);
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => (
-  <IngredientCard {...BASE} kind="own">
-    <Jars />
-  </IngredientCard>
-);
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// Many forms in a narrow column, so the forms line wraps: no dot leads or ends a line.
+// Many forms, so the forms line wraps in a narrow column: no dot leads or ends a line.
 const MANY_FORMS = [
   'dried leaf',
   'fresh leaf',
@@ -112,23 +96,15 @@ const MANY_FORMS = [
   safetyNotes: '',
 }));
 
-export const ManyFormsNarrow: Story = () => (
+export const ManyForms: Story = () => (
   <IngredientCard {...BASE} kind="own" variants={MANY_FORMS}>
     <Jars />
   </IngredientCard>
 );
-ManyFormsNarrow.meta = { theme: 'dark', width: 280 };
-
-export const ManyFormsPhone: Story = () => (
-  <IngredientCard {...BASE} kind="own" variants={MANY_FORMS}>
-    <Jars />
-  </IngredientCard>
-);
-ManyFormsPhone.meta = { theme: 'light', width: 375 };
 
 // Retired, Annotated, Caution and Toxic together: the badges wrap and every row
-// start at the left edge.
-export const AllMarks: Story = () => (
+// starts at the left edge in a narrow column.
+export const RetiredAnnotated: Story = () => (
   <IngredientCard
     {...BASE}
     kind="cupboard"
@@ -139,7 +115,6 @@ export const AllMarks: Story = () => (
     <Jars />
   </IngredientCard>
 );
-AllMarks.meta = { theme: 'dark', width: 300 };
 
 // A long name and a long formal name with all four top badges: the name block
 // and the badges cannot sit side by side, so the badges wrap beneath.
@@ -156,7 +131,13 @@ export const LongName: Story = () => (
     <Jars />
   </IngredientCard>
 );
-LongName.meta = { theme: 'dark', width: 300 };
+
+// No formal name: the label stands alone.
+export const NoFormalName: Story = () => (
+  <IngredientCard {...BASE} kind="own" formalName={undefined} nomenclature="none">
+    <Jars />
+  </IngredientCard>
+);
 
 // Two buttons in the foot, right-aligned beneath the jar lines (M9.9, M9.10). Each
 // sits above the card's link, so pressing one never opens the entry page.
@@ -177,4 +158,30 @@ export const WithActions: Story = () => (
   >
     <Jars />
   </IngredientCard>
+);
+
+// The compact look, which the coven's Ingredients page can choose (M9.6). The card has no
+// density prop: an ancestor's `data-density` switches it, as `IngredientCardList` sets it.
+export const Compact: Story = () => (
+  <div data-density="compact">
+    <IngredientCard {...BASE} kind="own">
+      <Jars />
+    </IngredientCard>
+  </div>
+);
+
+export const CompactLongName: Story = () => (
+  <div data-density="compact">
+    <IngredientCard
+      {...BASE}
+      kind="cupboard"
+      annotated
+      retired
+      label="Testwort Longer Nameicanicusmus"
+      formalName="Fixtura testalis longissimanicusmus"
+      safetyNotes="Keep away from open flame."
+    >
+      <Jars />
+    </IngredientCard>
+  </div>
 );
