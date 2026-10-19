@@ -1,0 +1,296 @@
+import type { Locator, Page, Route } from '@playwright/test';
+import { test, expect } from './fixtures';
+import { assertNoAccessibilityViolations } from './axe';
+import { recreateE2eDatabase } from './database';
+import { signInAgainAs } from './session';
+import { slotUrl } from './slots';
+import { slugify } from '@/lib/slugify';
+import {
+  type Coven,
+  cardsIn,
+  compendiumList,
+  ingredientList,
+  localIngredient,
+  rowOf,
+  seedCoven,
+  withSql,
+} from './stories/coven-ingredients';
+
+// Every wait looks the same (M12.33; claude-docs/design-decisions/m12.33-plan.md),
+// against the built server with the server's answer held back, so the wait
+// lasts until the test lets it end. Three navigations, each a different part
+// of the page: a coven switch (the coven's body), a section link (the same),
+// and a site link (the shell's whole body). During each, the pressed control
+// is busy, the old page is gone, one status stands in its place, and axe
+// passes; once it ends the new page is there, and after a switch the focus
+// is back on the switcher, whose layout remounted under it. A run under
+// reduced motion proves every moving loading mark is the one shared pulse.
+//
+// What this does not repeat: a direct request to a coven by a non-member is
+// still a 404, which a Suspense boundary above the guard would turn into a
+// 200. tests/e2e/coven-ingredients.spec.ts ("a non-member is told the page
+// does not exist") and tests/e2e/coven.spec.ts prove it on every run.
+//
+// M12.33 scaffold: every test is a `test.fixme` naming the lane that makes
+// it pass; the last of them unskips it (grep "M12.33 scaffold").
+
+/** The keyframes every loading mark pulses with under reduced motion (the owner's call). */
+const PULSE = 'loading-pulse';
+
+const HOLLOW = 'Fixture Coven Hollow';
+const WILLOW = 'Fixture Coven Willow';
+// Invented, so no seed can ever hold them (M1.25).
+const HOLLOW_ENTRY = 'Hollowwort';
+const WILLOW_ENTRY = 'Willowwort';
+
+let hollow: Coven;
+let willow: Coven;
+let viewer = '';
+
+test.beforeAll(async ({ browser, slot }) => {
+  await recreateE2eDatabase();
+
+  // Only the rows matter: the page and its session are thrown away, and each
+  // test signs in again for itself.
+  const setup = await browser.newPage({ baseURL: slotUrl(slot) });
+  try {
+    hollow = await seedCoven(setup, HOLLOW, 'navigation-wait.test', { A: 'owner' });
+    viewer = hollow.users.A;
+    // A owns a second coven too, so the switcher has somewhere to go.
+    const willowId = await withSql(async (sql) => {
+      const [workspace] = await sql<{ id: string }[]>`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values (${WILLOW}, ${slugify(WILLOW)}, ${viewer}, ${viewer})
+        returning id`;
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${workspace.id}, ${viewer}, 'owner', ${viewer}, ${viewer})`;
+      await localIngredient(sql, hollow.id, viewer, { name: HOLLOW_ENTRY });
+      await localIngredient(sql, workspace.id, viewer, { name: WILLOW_ENTRY });
+      return workspace.id;
+    });
+    willow = { id: willowId, slug: slugify(WILLOW), users: { A: viewer } };
+  } finally {
+    await setup.close();
+  }
+});
+
+/**
+ * Holds back every React Server Components answer from the moment `hold()`
+ * is called, so a client navigation stays on its way until `release()`. A
+ * prefetch is held too, so none can answer the navigation early; `navigations`
+ * counts only the requests a navigation made, which is how a test knows its
+ * press has actually set one off.
+ */
+async function holdServerAnswers(page: Page) {
+  const held: Route[] = [];
+  let holding = false;
+  let navigations = 0;
+  await page.route('**/*', async (route) => {
+    const request = route.request();
+    const headers = request.headers();
+    const rsc = headers.rsc === '1' || new URL(request.url()).searchParams.has('_rsc');
+    if (!holding || !rsc) return route.fallback();
+    if (headers['next-router-prefetch'] !== '1') navigations += 1;
+    held.push(route);
+  });
+  return {
+    hold() {
+      holding = true;
+      navigations = 0;
+    },
+    navigations: () => navigations,
+    async release() {
+      holding = false;
+      for (const route of held.splice(0)) await route.fallback();
+    },
+  };
+}
+
+const switcher = (page: Page): Locator =>
+  page.getByRole('combobox', { name: 'Coven', exact: true });
+const covenNav = (page: Page): Locator => page.getByRole('navigation', { name: 'Coven' });
+const siteNav = (page: Page): Locator => page.getByRole('navigation', { name: 'Site' });
+
+/** The one status the waiting region carries, in the page's one main landmark. */
+const statuses = (page: Page): Locator => page.getByRole('main').getByRole('status');
+
+/** Opens a coven's Ingredients page signed in as A, its one card drawn. */
+async function openIngredients(page: Page, coven: Coven, entry: string): Promise<void> {
+  await signInAgainAs(page, viewer);
+  const response = await page.goto(`/coven/${coven.slug}/ingredients`);
+  expect(response?.status()).toBe(200);
+  await expect(rowOf(ingredientList(page), entry)).toHaveCount(1);
+}
+
+/**
+ * Nothing loading moves on a page at rest, so whatever moves during a wait is
+ * the wait's; this also lets the last page's fade-in finish first.
+ */
+async function expectStill(page: Page): Promise<void> {
+  await expect.poll(async () => (await runningAnimations(page)).length).toBe(0);
+}
+
+/** Picks another coven in the switcher. */
+async function pickCoven(page: Page, name: string): Promise<void> {
+  await switcher(page).click();
+  await page.getByRole('option', { name, exact: true }).click();
+}
+
+/**
+ * The page's running loading animations: each CSS animation on the
+ * document's own timeline (a scroll-driven one, the sorrel's, is not a wait),
+ * by its keyframes' name and whether it sits in the main landmark.
+ */
+function runningAnimations(page: Page) {
+  return page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter(
+        (animation): animation is CSSAnimation =>
+          animation instanceof CSSAnimation &&
+          animation.playState === 'running' &&
+          animation.timeline === document.timeline,
+      )
+      .map((animation) => {
+        const target = (animation.effect as KeyframeEffect | null)?.target;
+        return {
+          name: animation.animationName,
+          inMain: Boolean(target instanceof Element && target.closest('main')),
+        };
+      }),
+  );
+}
+
+test.fixme(
+  'a coven switch takes the old coven away at once, marks the switcher busy, and gives the focus back once the new coven renders',
+  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B and C' } },
+  async ({ page }) => {
+    await openIngredients(page, hollow, HOLLOW_ENTRY);
+    const server = await holdServerAnswers(page);
+    // Why the switch could go: A is a member of both, and the switcher is idle.
+    await expect(switcher(page)).toHaveText(HOLLOW);
+    await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
+
+    server.hold();
+    await pickCoven(page, WILLOW);
+    await expect.poll(server.navigations).toBeGreaterThan(0);
+
+    // Control: busy, showing the pick.
+    await expect(switcher(page)).toHaveAttribute('aria-busy', 'true');
+    await expect(switcher(page)).toHaveText(WILLOW);
+    // Region: the old coven's cards are gone, one status in their place.
+    await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+    await expect(statuses(page)).toHaveCount(1);
+    // Still the old address: the new coven has not rendered.
+    expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+    await assertNoAccessibilityViolations(page);
+
+    await server.release();
+
+    await expect(page).toHaveURL(`/coven/${willow.slug}/ingredients`);
+    await expect(rowOf(ingredientList(page), WILLOW_ENTRY)).toHaveCount(1);
+    await expect(rowOf(ingredientList(page), HOLLOW_ENTRY)).toHaveCount(0);
+    await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
+    await expect(switcher(page)).toHaveText(WILLOW);
+    await expect(switcher(page)).toBeFocused();
+  },
+);
+
+test.fixme(
+  "a section link takes the coven's page away at once and puts one status in its place",
+  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B, C and D' } },
+  async ({ page }) => {
+    await openIngredients(page, hollow, HOLLOW_ENTRY);
+    const server = await holdServerAnswers(page);
+
+    server.hold();
+    await covenNav(page).getByRole('link', { name: 'Members', exact: true }).click();
+    await expect.poll(server.navigations).toBeGreaterThan(0);
+
+    await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+    await expect(statuses(page)).toHaveCount(1);
+    expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+    await assertNoAccessibilityViolations(page);
+
+    await server.release();
+
+    await expect(page).toHaveURL(`/coven/${hollow.slug}/members`);
+    await expect(page.getByRole('main').getByRole('table')).toBeVisible();
+  },
+);
+
+test.fixme(
+  "a site link takes the shell's page away at once and puts one status in its place",
+  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B and D' } },
+  async ({ page }) => {
+    await openIngredients(page, hollow, HOLLOW_ENTRY);
+    const server = await holdServerAnswers(page);
+
+    server.hold();
+    await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
+    await expect.poll(server.navigations).toBeGreaterThan(0);
+
+    await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+    await expect(statuses(page)).toHaveCount(1);
+    expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+    await assertNoAccessibilityViolations(page);
+
+    await server.release();
+
+    await expect(page).toHaveURL('/compendium');
+    await expect(compendiumList(page)).toBeVisible();
+  },
+);
+
+test.fixme(
+  'under reduced motion, every loading mark of a wait pulses with the one shared keyframes',
+  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B and C' } },
+  async ({ page }) => {
+    await openIngredients(page, hollow, HOLLOW_ENTRY);
+    const server = await holdServerAnswers(page);
+
+    // Why the names below are reduced motion's doing: with motion allowed,
+    // the same wait moves with marks of other keyframes (the spinner's
+    // turn, the skeleton's shimmer).
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await expectStill(page);
+    server.hold();
+    await pickCoven(page, WILLOW);
+    await expect.poll(server.navigations).toBeGreaterThan(0);
+    // The bar and the spinner come after their 100ms delay.
+    await expect
+      .poll(async () => {
+        const running = await runningAnimations(page);
+        return running.some(({ inMain }) => inMain) && running.some(({ inMain }) => !inMain);
+      })
+      .toBe(true);
+    const moving = await runningAnimations(page);
+    expect(moving.some(({ name }) => name !== PULSE)).toBe(true);
+    await server.release();
+    await expect(page).toHaveURL(`/coven/${willow.slug}/ingredients`);
+    await expect(rowOf(ingredientList(page), WILLOW_ENTRY)).toHaveCount(1);
+    await expectStill(page);
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    server.hold();
+    await pickCoven(page, HOLLOW);
+    await expect.poll(server.navigations).toBeGreaterThan(0);
+    // The skeleton in the main landmark; the bar and the switcher's spinner outside it.
+    await expect
+      .poll(async () => {
+        const running = await runningAnimations(page);
+        return {
+          inMain: running.some(({ inMain }) => inMain),
+          outside: running.filter(({ inMain }) => !inMain).length >= 2,
+        };
+      })
+      .toEqual({ inMain: true, outside: true });
+    const pulsing = await runningAnimations(page);
+    expect([...new Set(pulsing.map(({ name }) => name))]).toEqual([PULSE]);
+    await assertNoAccessibilityViolations(page);
+
+    await server.release();
+    await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
+  },
+);
