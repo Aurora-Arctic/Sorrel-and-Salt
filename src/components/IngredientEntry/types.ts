@@ -28,6 +28,20 @@ export interface IngredientEntryEdit {
    * `?edit` arrives (M9.18).
    */
   opened?: EditedIngredient;
+  /**
+   * A coven's own entry (M8.17): the form writes to this coven, and its
+   * near matches open in it. `mayPromote` and `mayLink` are the role's
+   * answers, which the page works out: making a folk name the display name,
+   * and Link to the Compendium beneath the form. Left out, the entry is the
+   * compendium's.
+   */
+  coven?: {
+    workspaceId: string;
+    /** The coven's ingredient list; an entry's page in the coven is beneath it, by id. */
+    ingredientsHref: Route;
+    mayPromote: boolean;
+    mayLink: boolean;
+  };
 }
 
 /** What a substitute names when it links an ingredient, which is what its page is found by. */

@@ -33,6 +33,7 @@ import type {
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
+import { editEyebrow } from './edit-heading';
 import {
   BIBLIOGRAPHY_ID,
   DETAILS,
@@ -531,7 +532,9 @@ const IngredientEntry = ({
           action={
             (edit || cupboard) && (
               <>
-                {edit && !(cupboard && !local) && <EditButton href={edit.href} entry={editable} />}
+                {edit && !(cupboard && !local) && (
+                  <EditButton href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
+                )}
                 {cupboard && !local && (
                   <CupboardActions
                     {...cupboard}
