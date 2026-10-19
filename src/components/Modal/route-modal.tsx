@@ -20,10 +20,26 @@ import type { RouteModalProps } from './types';
 // modal pressed open (`RouteModalProvider`) shows here at once over a
 // skeleton, and its contents arrive in the same dialog: one element from the
 // press to the form, which fades in once rather than twice.
+/** A link in the page, outside any dialog, to exactly this address. */
+function linkTo(href: string): HTMLElement | undefined {
+  return Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).find(
+    (a) => a.getAttribute('href') === href && !a.closest('dialog'),
+  );
+}
+
+/** The page's heading, made focusable by script alone so Tab never stops on it. */
+function pageHeading(): HTMLElement | null {
+  const heading =
+    document.querySelector<HTMLElement>('main h1') ?? document.querySelector<HTMLElement>('h1');
+  if (heading && !heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+  return heading;
+}
+
 export default function RouteModal({
   closeHref,
   size,
   content,
+  returnTo,
 }: RouteModalProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
@@ -36,8 +52,18 @@ export default function RouteModal({
     navigate(closeHref, { replace: true });
     refresh();
   };
+  // Modal gives the focus back to what opened it while that is in the page.
+  // A link a close draws afresh, or a press that focused nothing, as a click
+  // in WebKit does not, leaves the address it opened: a link to it takes the
+  // focus. With none, as on a pasted address or a reload, the owner's place
+  // or the page's heading does, rather than the focus being lost to the
+  // page (claude-docs/components/modal.md, "Giving the focus back").
+  const backTo = (gone: Element | null): HTMLElement | null | undefined => {
+    const href = gone instanceof HTMLAnchorElement ? gone.getAttribute('href') : opener?.opened;
+    return (href && linkTo(href)) || returnTo?.() || pageHeading();
+  };
   return (
-    <Modal {...heading} size={size} loading={!content} onClose={close}>
+    <Modal {...heading} size={size} loading={!content} onClose={close} returnTo={backTo}>
       {(done) => (content ? content.body(done) : <ModalLoading />)}
     </Modal>
   );

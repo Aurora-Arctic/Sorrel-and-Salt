@@ -109,6 +109,12 @@ export interface RouteModalProps {
   size?: ModalProps['size'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
+  /**
+   * Where the focus goes as it closes when neither what opened it nor a link
+   * to the address it opened is in the page, before the page's heading: a
+   * menu's button, when the link pressed was one of the menu's items.
+   */
+  returnTo?: () => HTMLElement | null | undefined;
 }
 
 /**
@@ -122,6 +128,11 @@ export interface RouteModalOpener {
   open: (href: Route, heading: ModalHeading) => void;
   /** Forgets the modal on its way, which a close while it loads asks for. */
   cancel: () => void;
+  /**
+   * The address the last press opened, which a link drawn afresh shares: the
+   * focus goes back to it as the modal closes. Absent in the workshop's stub.
+   */
+  opened?: Route;
 }
 
 export interface RouteModalProviderProps {

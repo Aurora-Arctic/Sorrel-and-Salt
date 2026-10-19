@@ -158,6 +158,95 @@ describe('RouteModalProvider', () => {
   });
 });
 
+// The focus goes back to the link that opened it (Modal's own), or, once that
+// is drawn afresh or was never there, to a link to the address it opened, or
+// to the page's heading (claude-docs/components/modal.md, "Giving the focus
+// back"; the owner's call, 2026-10-19). The page here is drawn again by hand,
+// as the close's navigation would draw it.
+describe('RouteModal giving the focus back', () => {
+  function Page({ open, drawn }: { open: boolean; drawn: number }) {
+    return (
+      <main>
+        <h1>Categories</h1>
+        {/* Keyed, so a new drawing is a new element, as a list read again may be. */}
+        <EditLink key={drawn} href={EDIT} name="Testcraft" heading={HEADING} />
+        <RouteModal closeHref={CLOSE} content={open ? content : undefined} />
+      </main>
+    );
+  }
+  const link = () => screen.getByRole('link', { name: 'Edit Testcraft' });
+
+  it('goes to a link to the address the provider opened, once the link pressed is gone', async () => {
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    const page = (open: boolean, drawn: number) => (
+      <Navigating push={router.push} arrives={arrives}>
+        <RouteModalProvider>
+          <Page open={open} drawn={drawn} />
+        </RouteModalProvider>
+      </Navigating>
+    );
+    const view = render(page(false, 1));
+    // A press that leaves the focus where it was, as a click in WebKit does:
+    // only the provider knows which link it was.
+    await act(async () => {
+      fireEvent.click(link());
+    });
+    expect(link()).not.toHaveFocus();
+    await act(async () => {
+      arrive();
+      await arrives;
+    });
+    view.rerender(page(true, 1));
+    expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
+
+    const pressed = link();
+    view.rerender(page(false, 2));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(link()).not.toBe(pressed);
+    expect(link()).toHaveFocus();
+  });
+
+  it('goes to a link to the address the focused link opened, once that link is gone, outside a provider', async () => {
+    const view = render(<Page open={false} drawn={1} />);
+    act(() => link().focus());
+    view.rerender(<Page open drawn={1} />);
+    await act(async () => {});
+
+    const pressed = link();
+    view.rerender(<Page open={false} drawn={2} />);
+
+    expect(link()).not.toBe(pressed);
+    expect(link()).toHaveFocus();
+  });
+
+  // A pasted address or a reload: nothing opened it.
+  it("goes to the page's heading when nothing opened it", async () => {
+    const view = render(
+      <main>
+        <h1>Categories</h1>
+        <RouteModal closeHref={CLOSE} content={content} />
+      </main>,
+    );
+    await act(async () => {});
+
+    view.rerender(
+      <main>
+        <h1>Categories</h1>
+        <RouteModal closeHref={CLOSE} />
+      </main>,
+    );
+
+    const heading = screen.getByRole('heading', { level: 1, name: 'Categories' });
+    expect(heading).toHaveFocus();
+    // Focusable by script alone, so Tab never stops on it.
+    expect(heading).toHaveAttribute('tabindex', '-1');
+  });
+});
+
 describe('EditLink outside a provider', () => {
   it('is a plain link', () => {
     render(<EditLink href={EDIT} name="Testcraft" heading={HEADING} />);
