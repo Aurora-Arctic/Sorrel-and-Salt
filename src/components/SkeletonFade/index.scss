@@ -35,7 +35,13 @@
   }
 
   // It has already faded in once; it must not do so again as it is mounted.
-  .skeleton {
+  // Nothing inside moves either: the fade is the one animation, on this
+  // element as a whole. The bars' shimmer (and, under reduced motion, their
+  // pulse) kept running through it, so each bar's highlight band sat in a
+  // different place from its neighbours' as the group faded, which read as
+  // parts fading at different rates. Frozen, every bar is the same fill.
+  .skeleton,
+  .skeleton * {
     animation: none;
   }
 }
