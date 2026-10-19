@@ -7,17 +7,39 @@ import type { SlotEnv } from './types';
 // (claude-docs/testing/e2e.md, "E2E"). The servers are declared up front, so the
 // worker count is fixed here rather than chosen by Playwright.
 
-/** Not the dev server's 8000, so `npm run dev` and an e2e run sit side by side. */
-const FIRST_SLOT_PORT = 8001;
+/** The cache server sits this far above the first slot: the layout is fixed, only the base moves. */
+const CACHE_OFFSET = 100;
+
+/**
+ * The first slot's port: 8001, not the dev server's 8000, so `npm run dev` and an
+ * e2e run sit side by side. `E2E_PORT_BASE` moves the whole block (slots, then the
+ * two special servers above them), for when something else already listens on 8001.
+ * Playwright reuses a server it finds on a slot's port when not on CI, so a stray dev
+ * server there would silently answer the tests instead of the production build.
+ * Read by the runner and by every worker alike, which inherit its environment.
+ */
+export function portBase(env: SlotEnv = process.env): number {
+  const raw = env.E2E_PORT_BASE;
+  if (raw === undefined) return 8001;
+
+  const base = Number(raw);
+  if (!/^\d+$/.test(raw) || base < 1024 || base + CACHE_OFFSET > 65535)
+    throw new Error(
+      `E2E_PORT_BASE must be a whole number from 1024 to ${65535 - CACHE_OFFSET}, got "${raw}"`,
+    );
+  return base;
+}
+
+const FIRST_SLOT_PORT = portBase();
 /** Above every slot's port, so no slot can reach — or locally reuse — it. */
-export const CONFIGURED_PROVIDERS_PORT = 8100;
+export const CONFIGURED_PROVIDERS_PORT = FIRST_SLOT_PORT + 99;
 /**
  * The one server that keeps its data cache (M8.6): the slots' servers turn it
  * off, since a slot's reseed would leave it answering what the last spec file
  * wrote (claude-docs/db/compendium-cache.md, "In tests"). Above the
  * configured-providers server's, for the same reason that one is above the slots'.
  */
-export const COMPENDIUM_CACHE_PORT = 8101;
+export const COMPENDIUM_CACHE_PORT = FIRST_SLOT_PORT + CACHE_OFFSET;
 export const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
 
 /**

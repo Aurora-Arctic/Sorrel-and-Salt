@@ -71,6 +71,17 @@ describe('the compendium entry page', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Testwort');
   });
 
+  it('carries the entry as structured data in the page itself', async () => {
+    const { container } = await show();
+
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const data = JSON.parse(script?.textContent ?? '{}');
+    expect(data['@graph'].map((node: { '@type': string }) => node['@type'])).toEqual([
+      'DefinedTerm',
+      'BreadcrumbList',
+    ]);
+  });
+
   it('answers 404 when there is no such entry', async () => {
     readCompendiumEntry.mockRejectedValue(new NotFound('ingredient'));
 
@@ -158,7 +169,35 @@ describe('the compendium entry page title', () => {
   it('is the entry name with its formal name', async () => {
     const { name, canonicalName } = entryDetail().entry;
 
-    expect(await generateMetadata(params())).toEqual({ title: `${name} (${canonicalName})` });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${name} (${canonicalName})`);
+    // The canonical is the absolute public address, with no query string.
+    expect(result.alternates?.canonical).toBe(
+      `https://sorrelandsalt.com/compendium/ingredients/${entryDetail().entry.slug}`,
+    );
+    expect(result.description).toBeTruthy();
+  });
+
+  it('describes two entries that share a label differently', async () => {
+    const base = entryDetail();
+    readCompendiumEntry.mockResolvedValue({
+      kind: 'entry',
+      detail: {
+        ...base,
+        entry: { ...base.entry, description: null, canonicalName: 'Fixtura altera' },
+      },
+      movedAway: null,
+    });
+    const other = await generateMetadata(params());
+    readCompendiumEntry.mockResolvedValue({
+      kind: 'entry',
+      detail: {
+        ...base,
+        entry: { ...base.entry, description: null, canonicalName: 'Fixtura tertia' },
+      },
+      movedAway: null,
+    });
+    expect((await generateMetadata(params())).description).not.toBe(other.description);
   });
 
   it('is empty for an address that renders no page', async () => {

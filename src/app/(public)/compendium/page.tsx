@@ -6,6 +6,8 @@ import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/Comp
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
 import PageHeader from '../../../components/PageHeader';
+import { listJsonLd } from '../../../lib/json-ld';
+import { publicPageMetadata } from '../../../lib/page-metadata';
 import { entryRecency } from '../../../lib/entry-recency';
 import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
@@ -36,21 +38,27 @@ const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSea
   return rest;
 };
 
+const LIST_DESCRIPTION =
+  'Browse the Sorrel & Salt compendium of ingredients for spellwork: formal and folk names, categories, deities, forms and sources.';
+
+/** Whether the address narrows the list, once the curators' own filters are dropped. */
+const isFiltered = (params: PublicCompendiumSearchParams) =>
+  JSON.stringify(COMPENDIUM_PARAMS.read(publicParams(params))) !==
+  JSON.stringify(COMPENDIUM_PARAMS.read({}));
+
 /**
  * A filtered view is a thin copy of the page: kept out of search results, with the unfiltered
- * page as the canonical address. The unfiltered list, and its pages, stay indexable.
+ * page as the canonical address. The unfiltered list, and its pages, stay indexable. Every
+ * view names the bare address as canonical: a canonical never carries a query string, and
+ * the sitemap reaches each entry the later pages list.
  */
 export async function generateMetadata({
   searchParams,
 }: PublicCompendiumPageProps): Promise<Metadata> {
-  const filter = COMPENDIUM_PARAMS.read(publicParams(await searchParams));
-  const filtered = JSON.stringify(filter) !== JSON.stringify(COMPENDIUM_PARAMS.read({}));
+  const filtered = isFiltered(await searchParams);
   return {
-    title: 'Compendium',
-    ...(filtered && {
-      robots: { index: false, follow: true },
-      alternates: { canonical: PUBLIC_COMPENDIUM_PATH },
-    }),
+    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, PUBLIC_COMPENDIUM_PATH),
+    ...(filtered && { robots: { index: false, follow: true } }),
   };
 }
 
@@ -98,6 +106,13 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
 
   return (
     <>
+      {!isFiltered(params) && (
+        <script
+          type="application/ld+json"
+          // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
+          dangerouslySetInnerHTML={{ __html: listJsonLd() }}
+        />
+      )}
       <PageHeader title="Compendium" />
       <CompendiumCards
         entries={entries}

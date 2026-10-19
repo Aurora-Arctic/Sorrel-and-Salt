@@ -113,6 +113,7 @@ worker starts for itself, and one server picking a database per request.
   `baseURL` with the slot's server for any project that sets none, so the
   default `chromium` project reaches its own slot's; there is no top-level
   `use.baseURL`.
+- **`E2E_PORT_BASE` moves the whole port block.** It sets the first slot's port (default 8001); the configured-providers server sits at base + 99 and the cache server at base + 100. It exists because Playwright reuses whatever already answers on a slot's port when not on CI: another session's dev server on 8001 was silently used as slot 0, and its tests failed with sessions that did not take. The value must be a whole number from 1024 to 65435, or `tests/e2e/slots.ts` throws. Workers inherit the runner's environment, so every reader sees the same block.
 - **A further slot costs about half a second and 180 MB**, MB.112's
   measurement of one more `next start` over the built `.next-e2e`; the
   servers start in turn, so the half seconds add to startup.

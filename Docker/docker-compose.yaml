@@ -5,6 +5,7 @@
 #   make docker-studio    also Drizzle Studio (profile: studio)
 #   make docker-e2e       run the Playwright suite once (profile: e2e)
 #   make playwright-audit-up  the WebKit/Firefox/phone audit's browsers (profile: audit)
+#   make lighthouse-up    the Chromium `npm run lighthouse:seo` drives (profile: audit)
 #   make docker-down      stop and remove everything, profiles included
 #
 # Mailpit comes up with the app: every message the app sends locally lands in
@@ -269,3 +270,25 @@ services:
     init: true
     ipc: host
     command: ['npx', '-y', 'playwright@1.64.0', 'run-server', '--host', '0.0.0.0', '--port', '4444']
+
+  lighthouse-chrome:
+    # A Chromium with an open DevTools port, for `npm run lighthouse:seo` from
+    # the devcontainer (MB.84), because Lighthouse needs a raw DevTools port and
+    # the Playwright servers launch Chromium over a pipe, so none is ever open
+    # there. On the `audit` profile, raised by `make lighthouse-up` on its own.
+    # The same image as `playwright-audit`, so nothing new is pulled.
+    #
+    # NO PORT IS PUBLISHED, and none may be: DevTools has no authentication, so
+    # anything that reaches it controls the browser. It is reachable on the
+    # compose network alone, as `lighthouse-chrome:9222`
+    # (.devcontainer/docker-compose.yml names it for the devcontainer).
+    # Docker/lighthouse-chrome.sh starts Chromium and the forwarder that
+    # publishes its loopback-only port on the network; it is bind-mounted, as
+    # `playwright-entrypoint.sh` is, so an edit needs no image build.
+    profiles: ['audit']
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    init: true
+    ipc: host
+    volumes:
+      - ./lighthouse-chrome.sh:/lighthouse-chrome.sh:ro
+    command: ['/lighthouse-chrome.sh']
