@@ -276,7 +276,9 @@ test("an admin nav link keeps the admin page's wait until the server answers, th
   await server.release();
 
   await expect(page).toHaveURL(href!);
-  await expect(statuses(page)).toHaveCount(0);
+  // The arrived page is the Forms list, which has a status of its own (its
+  // Group field's choices), so the wait is told gone by the table it drew.
+  await expect(page.getByRole('main').getByRole('table')).toBeVisible();
   await expect(pills).toHaveCount(0);
 });
 
