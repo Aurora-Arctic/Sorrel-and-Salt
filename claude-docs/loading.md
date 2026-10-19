@@ -54,7 +54,7 @@ The region is the part of the page that is about to change. While it changes,
 the old content is taken away and the [`Skeleton`](components/skeleton.md) of
 the new content stands in its place. The skeleton has five shapes: `table`,
 `cards`, `form` and `page` for a whole page, and `line` for one line of text
-that is still being fetched. When the real content arrives, it fades in over
+that is still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. When the real content arrives, it fades in over
 the skeleton for 200ms (`arrived`).
 
 A skeleton shows **at once**, with no wait, because the press has already
@@ -200,7 +200,7 @@ exported from its `index.ts`.
   router sees options **only when a caller gives some**, so a plain call is a
   plain `push(href)`.
 - `target` says where the page is headed:
-  `{ region: 'coven' | 'admin' | 'main', shape }`. Whatever draws the region's skeleton
+  `{ region: 'coven' | 'admin' | 'main', shape, title?, action?, filter? }`. Whatever draws the region's skeleton
   reads it from the store. On `PendingLink` the same thing is the prop
   `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
 

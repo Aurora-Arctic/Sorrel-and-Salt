@@ -52,9 +52,12 @@ only too.
   layout, so the layout's guard does not run on a click either, which is why
   every page under `/admin` runs the guard itself.
 - **Each link names what its page draws on the way** (M12.33). `target.ts`
-  holds `adminTarget(href)`, which gives the `admin` region and a shape: `page`
-  for `/admin`, `cards` for `/admin/compendium` and `table` for every other
-  page. `index.tsx` sets it on each section from the page's first tab, and
+  holds `adminTarget(href)`, which gives the `admin` region and the parts of the
+  page that arrives, from one table keyed by the page's first-tab address: `page` for
+  `/admin`, which draws its own heading; for every other page a heading row
+  (`title`), its Add or other action (`action`) and its filter row (`filter`), over
+  `cards` for `/admin/compendium` or a `table` for the rest. The tab row is not
+  drawn: there is no tab placeholder. `index.tsx` sets it on each section from the page's first tab, and
   `AdminContents` passes the same function for its links. The `Admin` lead in
   the context row is a `PendingLink` to `/admin` that names `admin` and `page`
   directly. The `admin` region is the `/admin` layout's `SectionBody` (see

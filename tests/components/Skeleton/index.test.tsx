@@ -21,3 +21,49 @@ describe('Skeleton', () => {
     expect(container.querySelectorAll('span').length).toBeGreaterThan(before);
   });
 });
+
+// A page's heading row, with its action where it has one, so a list's wait
+// looks like the page that arrives (M12.33).
+describe('Skeleton heading row', () => {
+  const bars = (container: HTMLElement): number =>
+    container.querySelectorAll('.skeleton__header > span').length;
+
+  it.each(['table', 'cards'] as const)(
+    'draws a heading on the %s shape only when asked',
+    (shape) => {
+      const { container, rerender } = render(<Skeleton shape={shape} />);
+      expect(container.querySelector('.skeleton__header')).toBeNull();
+      rerender(<Skeleton shape={shape} title />);
+      expect(bars(container)).toBe(1);
+    },
+  );
+
+  it('adds an action beside the heading only when asked', () => {
+    const { container, rerender } = render(<Skeleton shape="table" title />);
+    expect(bars(container)).toBe(1);
+    rerender(<Skeleton shape="table" title action />);
+    expect(bars(container)).toBe(2);
+  });
+
+  it('draws no action without a heading', () => {
+    const { container } = render(<Skeleton shape="table" action />);
+    expect(container.querySelector('.skeleton__header')).toBeNull();
+  });
+
+  it('puts the heading above the filter and the list', () => {
+    const { container } = render(<Skeleton shape="table" title filter />);
+    const order = [
+      ...container.querySelectorAll('.skeleton__header, .skeleton__filter, .skeleton__table'),
+    ];
+    expect(order.map((node) => node.className)).toEqual([
+      'page-header skeleton__header',
+      'skeleton__filter',
+      'skeleton__table',
+    ]);
+  });
+
+  it('still announces once', () => {
+    render(<Skeleton shape="table" title action filter />);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+});

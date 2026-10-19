@@ -28,13 +28,25 @@ const Bars = ({ of: length, className }: { of: number; className: string }): Rea
   </>
 );
 
-const Skeleton = ({ shape, filter = false, count }: SkeletonProps): ReactElement => {
+const Skeleton = ({
+  shape,
+  filter = false,
+  title = false,
+  action = false,
+  count,
+}: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
   const listed = shape === 'table' || shape === 'cards';
   return (
     <div className={`skeleton skeleton--${shape}`}>
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
+        {listed && title && (
+          <div className="page-header skeleton__header">
+            <span className="skeleton__title" />
+            {action && <span className="skeleton__action" />}
+          </div>
+        )}
         {listed && filter && (
           <div className="skeleton__filter">
             <span className="skeleton__field" />

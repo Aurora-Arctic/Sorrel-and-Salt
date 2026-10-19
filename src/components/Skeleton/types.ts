@@ -8,6 +8,10 @@ export interface SkeletonProps {
   shape: SkeletonShape;
   /** Whether a `table` or `cards` skeleton draws a filter row above the list. */
   filter?: boolean;
+  /** Whether a `table` or `cards` skeleton draws the page's heading row above everything else. */
+  title?: boolean;
+  /** With `title`: a button-sized block at the heading's end, for a page with an Add. */
+  action?: boolean;
   /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
   count?: number;
 }

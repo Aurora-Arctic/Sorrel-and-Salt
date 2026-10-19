@@ -20,3 +20,7 @@ export const Form: Story = () => <Skeleton shape="form" />;
 export const Page: Story = () => <Skeleton shape="page" />;
 
 export const Line: Story = () => <Skeleton shape="line" />;
+
+export const TableWithTitleAndFilter: Story = () => <Skeleton shape="table" title action filter />;
+
+export const CardsWithTitleAndFilter: Story = () => <Skeleton shape="cards" title action filter />;

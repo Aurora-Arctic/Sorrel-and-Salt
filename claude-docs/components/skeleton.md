@@ -8,11 +8,13 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 
 `SkeletonProps` (`types.ts`).
 
-| Prop     | What it is                                                                 |
-| -------- | -------------------------------------------------------------------------- |
-| `shape`  | `table`, `cards`, `form`, `page` or `line`                                 |
-| `filter` | Optional, `table` and `cards` only: a filter row above the list            |
-| `count`  | Optional: how many rows, cards, fields or blocks (6, 6, 4 and 3 otherwise) |
+| Prop     | What it is                                                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shape`  | `table`, `cards`, `form`, `page` or `line`                                                                                                     |
+| `filter` | Optional, `table` and `cards` only: a filter row above the list                                                                                |
+| `title`  | Optional, `table` and `cards` only: the page's heading row above everything else, a heading bar (`skeleton__title`) laid out by `.page-header` |
+| `action` | Optional, with `title`: a button-sized block at the heading's end, for a page with an Add                                                      |
+| `count`  | Optional: how many rows, cards, fields or blocks (6, 6, 4 and 3 otherwise)                                                                     |
 
 ## Contracts
 
@@ -35,11 +37,12 @@ transition runs (`ListFrame`, `TabbedPage`).
 
 ## Stories
 
-`Feedback / Loading / Skeleton`: `Table`, `TableWithFilter`, `Cards`, `CardsWithFilter`,
+`Feedback / Loading / Skeleton`: `Table`, `TableWithFilter`, `TableWithTitleAndFilter`, `Cards`, `CardsWithFilter`, `CardsWithTitleAndFilter`,
 `Form`, `Page` and `Line`. `line` is one bar the height of a line of text, for a sentence
 that loads in place (the substitute summary's); it ignores `count`.
 
 ## Testing
 
 `tests/components/Skeleton/index.test.tsx`: each shape renders exactly one
-status.
+status. The heading row is drawn only when `title` is asked for, and the action only
+with a heading.

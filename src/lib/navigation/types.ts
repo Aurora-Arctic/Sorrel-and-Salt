@@ -2,6 +2,12 @@
 export type NavigationTarget = {
   region: 'coven' | 'admin' | 'main';
   shape: 'table' | 'cards' | 'form' | 'page';
+  /** A `table` or `cards` wait draws the page's heading row above the list. */
+  title?: boolean;
+  /** With `title`: the page has an action (Add) at the heading's end. */
+  action?: boolean;
+  /** A `table` or `cards` wait draws the page's filter row. */
+  filter?: boolean;
 };
 
 /** What `navigate` takes beyond the address. */

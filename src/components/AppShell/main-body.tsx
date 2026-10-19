@@ -19,7 +19,12 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
     return (
       <main className="page-frame">
         <h1 className="visually-hidden">Loading</h1>
-        <Skeleton shape={target.shape} />
+        <Skeleton
+          shape={target.shape}
+          title={target.title}
+          action={target.action}
+          filter={target.filter}
+        />
       </main>
     );
   }
