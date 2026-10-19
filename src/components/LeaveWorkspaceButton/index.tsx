@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -23,7 +23,7 @@ const LeaveWorkspaceButton = ({
   name,
   successors,
 }: LeaveWorkspaceButtonProps): ReactElement => {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   // Said above the page's buttons when it gives a place for that.
   const failure = useActionFailure();
   // The sole owner would be refused, so they are shown the ways out instead.
@@ -50,8 +50,8 @@ const LeaveWorkspaceButton = ({
       // replace it with the landing, and refresh so the shell's switcher stops
       // listing it (a client-side replace does not re-run the layout).
       onSent={() => {
-        router.replace(COVEN_LANDING_PATH);
-        router.refresh();
+        navigate(COVEN_LANDING_PATH, { replace: true });
+        refresh();
       }}
     />
   );

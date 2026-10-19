@@ -9,70 +9,15 @@ import { fromRoot } from '../support/paths';
 // `refresh` moves the page with no signal, so a later task that adds one
 // fails here, in its own diff. Next's `<Link>` is not covered.
 //
-// The baseline is today's offenders, counted by call. Lanes C and D move
-// them onto the hook and take their entries out; a count that no longer
-// matches fails too, so the list can only shrink.
+// The baseline is the offenders, counted by call, and it is empty: every
+// call moved onto the hook. A file that must keep one lists it here with
+// why; a count that no longer matches fails too, so the list can only shrink.
 
 const ROUTER_CALL = /\b\w*[rR]outer\.(?:push|replace|refresh)\b/g;
 const MECHANISM = 'src/lib/navigation/';
 
 /** File to the number of bare router calls it may still hold, with why. */
-const BASELINE: Record<string, { calls: number; reason: string }> = {
-  'src/components/AppShell/add-ingredient-button.tsx': {
-    calls: 3,
-    reason: 'bare pushes after choosing a destination',
-  },
-  'src/components/IngredientSearch/search-box.tsx': {
-    calls: 2,
-    reason: 'bare pushes from the search box',
-  },
-  'src/components/IngredientEntry/cupboard-actions.tsx': {
-    calls: 3,
-    reason: 'refresh after a stock change, push to the new entry',
-  },
-  'src/components/IngredientEntry/entry-dialog.tsx': {
-    calls: 3,
-    reason: 'replace and refresh after a save or delete',
-  },
-  'src/components/IngredientEntry/link-to-compendium.tsx': {
-    calls: 1,
-    reason: 'push after linking an entry',
-  },
-  'src/components/CupboardEntryForm/index.tsx': { calls: 1, reason: 'refresh after a save' },
-  'src/components/DeleteWorkspaceButton/index.tsx': {
-    calls: 2,
-    reason: 'replace and refresh after a delete',
-  },
-  'src/components/LeaveWorkspaceButton/index.tsx': {
-    calls: 2,
-    reason: 'replace and refresh after leaving',
-  },
-  'src/components/LeaveWorkspaceButton/owner-exit.tsx': {
-    calls: 2,
-    reason: 'replace and refresh after an owner leaves',
-  },
-  'src/components/ReceivedInvitations/accept-control.tsx': {
-    calls: 2,
-    reason: 'push and refresh after accepting',
-  },
-  'src/components/InvitationAcceptance/index.tsx': {
-    calls: 1,
-    reason: 'push to the landing page after accepting',
-  },
-  'src/components/InviteDialog/index.tsx': {
-    calls: 1,
-    reason: 'refresh after an invitation is sent',
-  },
-  'src/components/UserList/confirmed-action.tsx': {
-    calls: 1,
-    reason: 'refresh after a confirmed action',
-  },
-  'src/components/UserList/pause-control.tsx': { calls: 1, reason: 'refresh after a pause' },
-  'src/app/(shell)/admin/compendium/compendium-dialog.tsx': {
-    calls: 2,
-    reason: 'replace and refresh after a save',
-  },
-};
+const BASELINE: Record<string, { calls: number; reason: string }> = {};
 
 function bareCalls(): Map<string, number> {
   const counts = new Map<string, number>();
@@ -87,8 +32,9 @@ function bareCalls(): Map<string, number> {
 describe('M12.33: the site navigates through one mechanism', () => {
   const found = bareCalls();
 
-  it('finds the baseline calls, so a clean result is not an empty scan', () => {
-    expect(found.size).toBeGreaterThan(0);
+  it('recognises a bare router call, so a clean result is not a blind scan', () => {
+    const sample = 'router.push(a); router.replace(b); router.refresh(); appRouter.push(c);';
+    expect(sample.match(ROUTER_CALL)).toHaveLength(4);
   });
 
   it('holds no bare router call beyond the baseline', () => {

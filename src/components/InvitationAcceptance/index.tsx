@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -50,7 +50,7 @@ const Accept = ({
   token,
   landing,
 }: Extract<InvitationAcceptanceProps, { status: 'acceptable' }>): ReactElement => {
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<string>();
 
@@ -60,7 +60,7 @@ const Accept = ({
     try {
       await graphqlRequest(AcceptInvitationDocument, { token });
       // Busy until the landing replaces this page.
-      router.push(landing);
+      navigate(landing);
     } catch (error) {
       setSending(false);
       // No fields of its own, so the reader always answers with an alert;

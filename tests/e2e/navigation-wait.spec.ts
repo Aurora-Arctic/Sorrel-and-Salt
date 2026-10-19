@@ -195,51 +195,47 @@ test('a coven switch takes the old coven away at once, marks the switcher busy, 
   await expect(switcher(page)).toBeFocused();
 });
 
-test.fixme(
-  "a section link takes the coven's page away at once and puts one status in its place",
-  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B, C and D' } },
-  async ({ page }) => {
-    await openIngredients(page, hollow, HOLLOW_ENTRY);
-    const server = await holdServerAnswers(page);
+test("a section link takes the coven's page away at once and puts one status in its place", async ({
+  page,
+}) => {
+  await openIngredients(page, hollow, HOLLOW_ENTRY);
+  const server = await holdServerAnswers(page);
 
-    server.hold();
-    await covenNav(page).getByRole('link', { name: 'Members', exact: true }).click();
-    await expect.poll(server.navigations).toBeGreaterThan(0);
+  server.hold();
+  await covenNav(page).getByRole('link', { name: 'Members', exact: true }).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
 
-    await expect(cardsIn(ingredientList(page))).toHaveCount(0);
-    await expect(statuses(page)).toHaveCount(1);
-    expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
-    await assertNoAccessibilityViolations(page);
+  await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+  await expect(statuses(page)).toHaveCount(1);
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  await assertNoAccessibilityViolations(page);
 
-    await server.release();
+  await server.release();
 
-    await expect(page).toHaveURL(`/coven/${hollow.slug}/members`);
-    await expect(page.getByRole('main').getByRole('table')).toBeVisible();
-  },
-);
+  await expect(page).toHaveURL(`/coven/${hollow.slug}/members`);
+  await expect(page.getByRole('main').getByRole('table')).toBeVisible();
+});
 
-test.fixme(
-  "a site link takes the shell's page away at once and puts one status in its place",
-  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B and D' } },
-  async ({ page }) => {
-    await openIngredients(page, hollow, HOLLOW_ENTRY);
-    const server = await holdServerAnswers(page);
+test("a site link takes the shell's page away at once and puts one status in its place", async ({
+  page,
+}) => {
+  await openIngredients(page, hollow, HOLLOW_ENTRY);
+  const server = await holdServerAnswers(page);
 
-    server.hold();
-    await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
-    await expect.poll(server.navigations).toBeGreaterThan(0);
+  server.hold();
+  await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
 
-    await expect(cardsIn(ingredientList(page))).toHaveCount(0);
-    await expect(statuses(page)).toHaveCount(1);
-    expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
-    await assertNoAccessibilityViolations(page);
+  await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+  await expect(statuses(page)).toHaveCount(1);
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  await assertNoAccessibilityViolations(page);
 
-    await server.release();
+  await server.release();
 
-    await expect(page).toHaveURL('/compendium');
-    await expect(compendiumList(page)).toBeVisible();
-  },
-);
+  await expect(page).toHaveURL('/compendium');
+  await expect(compendiumList(page)).toBeVisible();
+});
 
 test.fixme(
   'under reduced motion, every loading mark of a wait pulses with the one shared keyframes',

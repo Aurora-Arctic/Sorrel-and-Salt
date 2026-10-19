@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { normaliseEmail, validateEmailAddress } from '../../lib/email-address';
@@ -47,7 +47,7 @@ const INVITE_TITLE = 'Invite Someone';
  * place of the form, so the same invitation cannot be sent twice from here.
  */
 const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement => {
-  const router = useRouter();
+  const { refresh } = usePendingNavigation();
   const emailId = useId();
 
   const [email, setEmail] = useState('');
@@ -79,7 +79,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
       setSending(false);
       setSentTo(address);
       // The pending list behind the dialog reads again, so the new invitation is on it.
-      router.refresh();
+      refresh();
     } catch (error) {
       setSending(false);
       setFailure(readGraphqlFailure(error, ['email']));

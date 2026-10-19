@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
@@ -82,7 +82,7 @@ const Options = ({
   successors,
   onCancel,
 }: OwnerExitProps & { onCancel: () => void }): ReactElement => {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const failure = useActionFailure();
   const id = useId();
   const ownerField = fieldDescription({ id: `${id}-owner` });
@@ -121,8 +121,8 @@ const Options = ({
     }
     // The coven is closed to this user now, so the page cannot be read again;
     // the refresh brings the switcher's new list in, as Leave's does.
-    router.replace(COVEN_LANDING_PATH);
-    router.refresh();
+    navigate(COVEN_LANDING_PATH, { replace: true });
+    refresh();
   }
 
   return (
