@@ -1,7 +1,8 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import postgres from 'postgres';
 import { slugify } from '@/lib/slugify';
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
+import { insertCupboardEntry } from '../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import type { IngredientFixture, Overrides } from '../../support/fixtures/types';
 import { e2eDatabaseUrl } from '../database';
@@ -147,7 +148,9 @@ export interface Stock {
 /**
  * A stock row, the coven's jar of `held`, written by `author` as M9.3's
  * `createStock` would write it: the threshold stated on the row, never left to
- * a constant read later (M9.8).
+ * a constant read later (M9.8), and a jar of a compendium entry putting the
+ * entry in the coven's cupboard first when it is not there already (M12.15),
+ * since the coven's list holds only what its cupboard names.
  */
 export async function insertStock(
   sql: postgres.Sql,
@@ -156,6 +159,19 @@ export async function insertStock(
   { quantity, unit, threshold }: Stock,
   author: string,
 ): Promise<string> {
+  const [cupboard] = await sql<{ needed: boolean }[]>`
+    select i.workspace_id is null and not exists (
+      select 1 from workspace_compendium_entries e
+      where e.workspace_id = ${covenId} and e.ingredient_id = i.id and e.deleted_at is null
+    ) as needed
+    from ingredients i where i.id = ${held.ingredientId}`;
+  if (cupboard.needed) {
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: covenId, ingredientId: held.ingredientId },
+      author,
+    );
+  }
   return sql.begin(async (tx) => {
     await tx`select set_config('app.current_user_id', ${author}, true)`;
     const [row] = await tx<{ id: string }[]>`
@@ -237,18 +253,25 @@ export async function stillSameDocument(page: Page): Promise<boolean> {
   return page.evaluate(() => (window as unknown as { storyMark?: boolean }).storyMark === true);
 }
 
-// The locators of unbuilt pages. Each name is the one the task entry or a
-// component doc gives where there is one; where neither names it, the choice
-// is made here and says so, for the building task to confirm or correct.
+// The locators of the pages the stories walk. Each name is the one the task
+// entry or a component doc gives where there is one; where neither names it,
+// the choice is made here and says so, for the building task to confirm or
+// correct. The coven's list (M9.6) and the compendium's (M8.18) are built.
 
 /**
- * The coven's ingredient list (M9.6): a list named after its page,
- * "Ingredients", the CovenNav section's label (claude-docs/components/coven-nav.md).
- * A list of cards rather than a table, since M9.6 composes M8.14's
- * `IngredientCard`. The name is this file's choice.
+ * The coven's ingredient list (M9.6): CovenCards' `IngredientCardList`,
+ * named after its page, "Ingredients" (claude-docs/components/coven-cards.md).
  */
 export function ingredientList(page: Page): Locator {
   return page.getByRole('list', { name: 'Ingredients' });
+}
+
+/**
+ * The cards of a card list: its direct items only, since a card holds lists
+ * of its own (its category chips, and on the coven's list its jar lines).
+ */
+export function cardsIn(list: Locator): Locator {
+  return list.locator(':scope > li');
 }
 
 /**
@@ -266,7 +289,7 @@ export function compendiumList(page: Page): Locator {
  * not copy.
  */
 export function rowOf(list: Locator, name: string, canonicalName?: string): Locator {
-  const row = list.getByRole('listitem').filter({ hasText: name });
+  const row = cardsIn(list).filter({ hasText: name });
   return canonicalName ? row.filter({ hasText: canonicalName }) : row;
 }
 
@@ -295,31 +318,87 @@ export function outBadge(row: Locator): Locator {
 
 /**
  * The filter above a list: FilterForm's `<search>` landmark
- * (claude-docs/components/filter-form.md). The coven's list narrows by its
- * search box on submit (M8.10: "the workspace ingredients … consumers keep
- * narrowing their list by `query`"), a searchbox labelled "Name" as the
- * admin compendium's is (claude-docs/components/compendium-list.md).
+ * (claude-docs/components/filter-form.md), M8.10's search row. It holds the
+ * type-ahead named "Name", the Filters button that opens the facet panel,
+ * and on the coven's list the Compact switch.
  */
 export function filterOf(page: Page): Locator {
   return page.getByRole('search');
 }
 
-export async function searchCovenList(page: Page, text: string): Promise<void> {
-  const search = filterOf(page);
-  await search.getByRole('searchbox', { name: 'Name' }).fill(text);
-  await search.getByRole('button', { name: 'Search' }).click();
+/** The search row's type-ahead, labelled "Name" (claude-docs/components/ingredient-search.md). */
+export function nameSearch(page: Page): Locator {
+  return filterOf(page).getByRole('combobox', { name: 'Name' });
 }
 
 /**
- * Picks a category in the filter's CategoryPicker, the box named "Category"
- * with its options under their groups (claude-docs/components/category-picker.md;
- * M8.11 binds the picker to the search rather than building a second one).
- * An option's name starts with the category's and may carry its qualifier.
+ * Searches the coven's list for `text`: Enter applies the typed text to the
+ * paged list rather than picking a suggestion (M8.10). Waits for the address
+ * to carry the text, so the list asserted next is the searched one and not
+ * the one before it.
  */
-export async function pickCategory(page: Page, name: string): Promise<void> {
-  const box = filterOf(page).getByRole('combobox', { name: 'Category' });
-  await box.fill(name);
-  await page.getByRole('option', { name: new RegExp(`^${name}`) }).click();
+export async function searchCovenList(page: Page, text: string): Promise<void> {
+  await nameSearch(page).fill(text);
+  await nameSearch(page).press('Enter');
+  await page.waitForURL((url) => [...url.searchParams.values()].includes(text));
+}
+
+/**
+ * Opens the Filters panel and returns it (claude-docs/components/facet-panel.md).
+ * The button only exists once the page has hydrated (before it, Filters is a
+ * link to the open panel), so waiting for it waits for the script.
+ */
+export async function openFilters(page: Page): Promise<Locator> {
+  const button = page.getByRole('button', { name: /^Filters/ });
+  await expect(button).toBeVisible();
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  const panel = page.getByRole('dialog', { name: 'Filters' });
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
+/**
+ * Applies what the panel holds: a change in it is held, not applied, until
+ * Apply Filters (claude-docs/components/facet-panel.md). Waits for the address
+ * to change, so the list asserted next is the filtered one.
+ */
+export async function applyFilters(page: Page, panel: Locator): Promise<void> {
+  const before = page.url();
+  await panel.getByRole('button', { name: 'Apply Filters' }).click();
+  await page.waitForURL((url) => url.toString() !== before);
+}
+
+/**
+ * Picks a category in the panel's CategoryPicker, the box named "Category"
+ * with its options under their groups (claude-docs/components/category-picker.md).
+ * An option's name starts with the category's and carries its count.
+ */
+export async function pickCategory(panel: Locator, name: string): Promise<void> {
+  await panel.getByRole('combobox', { name: 'Category' }).fill(name);
+  await panel
+    .page()
+    .getByRole('option', { name: new RegExp(`^${name}`) })
+    .click();
+}
+
+/**
+ * Picks a choice in one of the panel's choice chips (Toxic, Source): opens its
+ * menu, then clicks the option's label, since the native radio under it is
+ * drawn invisible and a click on the input finds the label in the way. Shut,
+ * the menu's radios are out of the accessibility tree, so the option is found
+ * only once the summary has opened it.
+ */
+export async function chooseChip(group: Locator, name: string | RegExp): Promise<void> {
+  await group.locator('summary').click();
+  await group
+    .getByRole('radio', { name })
+    .locator('xpath=ancestor::label[1]')
+    .click({ position: { x: 10, y: 10 } });
+}
+
+/** A radio in a chip's menu whether the menu is open or shut, for what it holds rather than what is shown. */
+export function chipChoice(group: Locator, name: string | RegExp): Locator {
+  return group.getByRole('radio', { name, includeHidden: true });
 }
 
 /**
