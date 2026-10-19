@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ComponentProps, MouseEvent, ReactElement } from 'react';
 import type { NavigationTarget } from './types';
+import { LinkPendingContext } from './link-pending';
 import { usePendingNavigation } from './use-navigation';
 
 // `navigationTarget`, not `target`: an anchor's own `target="_blank"` keeps its name.
@@ -23,7 +24,7 @@ export function PendingLink({
   target,
   ...rest
 }: PendingLinkProps): ReactElement {
-  const { navigate } = usePendingNavigation();
+  const { navigate, pending } = usePendingNavigation();
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
     if (event.defaultPrevented || typeof href !== 'string') return;
@@ -45,7 +46,10 @@ export function PendingLink({
       replace={replace}
       scroll={scroll}
       target={target}
+      aria-busy={pending || undefined}
       onClick={handleClick}
-    />
+    >
+      <LinkPendingContext value={pending}>{rest.children}</LinkPendingContext>
+    </Link>
   );
 }

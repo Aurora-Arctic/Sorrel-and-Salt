@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // The page the test pretends to be on; Next's own hook reads the App
 // Router's state, which a component test does not mount.
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => pathname(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
 
 const { default: CovenNav } = await import('@/components/CovenNav');
 

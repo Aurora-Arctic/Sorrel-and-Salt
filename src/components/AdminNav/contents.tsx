@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { PendingLink } from '../../lib/navigation';
+import { adminTarget } from './target';
 import type { ReactElement } from 'react';
 import { adminSections } from './sections';
 import type { AdminNavProps } from './types';
@@ -22,9 +23,13 @@ const AdminContents = ({ managesPeople }: AdminNavProps): ReactElement => (
           {pages.map(({ label, description, tabs: [{ href }] }) => (
             // Each page at its first tab, as the nav links it.
             <li key={href}>
-              <Link href={href} aria-describedby={descriptionId(href)}>
+              <PendingLink
+                href={href}
+                navigationTarget={adminTarget(href)}
+                aria-describedby={descriptionId(href)}
+              >
                 {label}
-              </Link>
+              </PendingLink>
               <span id={descriptionId(href)} className="admin-contents__description">
                 {description}
               </span>

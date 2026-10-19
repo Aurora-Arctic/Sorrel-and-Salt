@@ -7,6 +7,7 @@ const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { PendingLink, useNavigationState } = await import('@/lib/navigation');
+const { default: LinkHint } = await import('@/components/LinkHint');
 
 // The one link the site draws (M12.33): a plain press navigates through the
 // shared hook, so the bar and the destination's skeleton follow; a press the
@@ -52,6 +53,29 @@ describe('PendingLink', () => {
 
     expect(link()).toHaveAttribute('href', '/coven/fixture-coven/members');
     expect(state?.busy).toBe(false);
+  });
+
+  it('answers the press at once: busy while it waits, with the hint inside shown pending', async () => {
+    const { container } = render(
+      <Navigating push={router.push} arrives={new Promise<void>((resolve) => (arrive = resolve))}>
+        <PendingLink href="/coven/fixture-coven/members">
+          Members <LinkHint />
+        </PendingLink>
+      </Navigating>,
+    );
+    const members = screen.getByRole('link', { name: 'Members' });
+    expect(members).not.toHaveAttribute('aria-busy');
+    expect(container.querySelector('.link-hint')).not.toHaveClass('is-pending');
+
+    await act(async () => {
+      fireEvent.click(members, { button: 0 });
+    });
+    expect(members).toHaveAttribute('aria-busy', 'true');
+    expect(container.querySelector('.link-hint')).toHaveClass('is-pending');
+
+    await act(async () => arrive());
+    expect(members).not.toHaveAttribute('aria-busy');
+    expect(container.querySelector('.link-hint')).not.toHaveClass('is-pending');
   });
 
   it('navigates through the shared hook on a plain press, so the page is busy', async () => {

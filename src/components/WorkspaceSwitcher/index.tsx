@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { NEW_COVEN_PATH, covenSlugOf, pathInCoven } from '../../lib/coven-path';
+import { NEW_COVEN_PATH, covenSectionShape, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
@@ -22,18 +22,9 @@ import './index.scss';
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
-// The shape of each section's page, so the skeleton that stands in for the
-// destination matches it. A section not named is the coven's home page.
-const SHAPE_OF_SECTION: Record<string, NavigationTarget['shape']> = {
-  ingredients: 'cards',
-  members: 'table',
-  invitations: 'table',
-};
-
 function targetOf(path: string): NavigationTarget {
   if (path === NEW_COVEN_PATH) return { region: 'main', shape: 'form' };
-  const section = path.split('/')[3];
-  return { region: 'coven', shape: (section && SHAPE_OF_SECTION[section]) || 'page' };
+  return { region: 'coven', shape: covenSectionShape(path) };
 }
 
 // Set when a switch to another coven starts, read once by the next switcher to
