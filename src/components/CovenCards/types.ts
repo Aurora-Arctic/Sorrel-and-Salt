@@ -39,4 +39,12 @@ export interface CovenCardsProps extends Pick<
   entries: readonly CovenCardEntry[];
   /** The filter the page shows, with the coven's Source, In Stock and Low Stock Only choices. */
   filter: CompendiumListFilterProps['filter'];
+  /** The viewer may add to this coven: an empty cupboard then offers the first add (M9.11). */
+  canAdd: boolean;
 }
+
+/** What the list draws with no card to show (M9.11): the filter decides which of its two states. */
+export interface EmptyCupboardProps extends Pick<
+  CovenCardsProps,
+  'covenSlug' | 'filter' | 'canAdd'
+> {}

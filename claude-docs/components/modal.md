@@ -383,7 +383,10 @@ server is needed to draw the form; closing replaces the address without
 to the new entry’s page closes it by leaving the address. On an admin page
 `?new` is the page’s own compendium dialog, so a coven chosen there is a
 navigation to that coven’s index with `?new`. A slug the viewer cannot write
-to opens nothing.
+to opens nothing. The address is built by `AppShell/add-href.ts` (`openHref`,
+`closedHref`), which a coven’s empty Ingredients list shares for its own Add
+Ingredient button (M9.11), so that button opens this same dialog rather than a
+second one.
 
 The modal’s head is the coven’s name in the eyebrow’s place over the title
 “Add Ingredient”, so the person always sees where the ingredient goes, and a

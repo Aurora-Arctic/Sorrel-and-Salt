@@ -35,8 +35,14 @@ export function capitalise(text: string): string {
 /** The start of a no-match sentence, before the filters. A list that draws its filters as nodes (CompendiumList) builds from the same two pieces, so the wording has one source. */
 export const noMatchLead = (noun: string): string => `No ${noun} match `;
 
+/**
+ * What to do when a filter matches nothing. A sentence of its own where something else has
+ * already said nothing matched, as a coven's list does under its search sentence (M9.11).
+ */
+export const NO_MATCH_HINT = 'Change or clear the filter to see more.';
+
 /** The end of a no-match sentence, after the filters. */
-export const NO_MATCH_ADVICE = '. Change or clear the filter to see more.';
+export const NO_MATCH_ADVICE = `. ${NO_MATCH_HINT}`;
 
 /**
  * What an admin list says when it shows no rows (MB.115). With a filter in
