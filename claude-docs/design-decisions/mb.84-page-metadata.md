@@ -13,7 +13,7 @@
 
 - **The rule `/$`.** `Allow: /` would open the whole site, and `Disallow: /` alone would shut the home page. RFC 9309 section 2.2.2 says the longest matching rule wins, and an allow beats a disallow of equal length; section 2.2.3 lets `$` end a pattern. Google's robots.txt specification ("URL matching based on path values") lists `/$` as matching the root alone. So `Allow: /$` opens `/` and nothing under it.
 - **Why the home page is crawlable.** Google's site-names documentation asks for `WebSite` markup on a home page it can crawl, with `name` and `url` required and `alternateName` optional. We give `name` and `url` only: nothing sourced supports an alternate name. The page shows no reference or workspace data, so `/compendium` stays the one page with reference content (MB.80, amended).
-- **`og:type` is `website` on every public page.** Open Graph's `article` type is for dated pieces with authors; an entry is neither. No `subjectOf` citations in the JSON-LD: the page already lists its references in HTML, and duplicating them in markup is a second thing to keep true.
+- **`og:type` is `website` on every public page.** `website` is the plain type for a site's pages and the owner approved it; an entry is a reference page, not a dated article. No `subjectOf` citations in the JSON-LD: the page already lists its references in HTML, and duplicating them in markup is a second thing to keep true.
 - **Every list view names `/compendium` as its canonical**, query string dropped, not only a filtered one. A filtered view is also `noindex, follow`, so category combinations are not a crawl trap while links on them are still followed.
 - **Canonical addresses are built on `SITE_ORIGIN`** (`src/lib/site.ts`), never on the request host, so staging and hotfix deploys point at production instead of indexing themselves.
 - **A retired slug answers 308**, permanent because a temporary status tells a crawler the old address is still canonical. Next sends `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`, which a browser cannot keep; the test pins `no-store`, no positive `max-age`, no `Expires` and no `Last-Modified`. An unknown slug is a 404.
@@ -21,7 +21,7 @@
 
 ## Not done here
 
-Search Console verification and sitemap submission are the owner's action. No Lighthouse dependency was added: it is not installed, and running it needs a Chrome the audit server's remote protocol does not hand to a local process. The Lighthouse SEO audits were checked by hand on the three pages (status 200, title, description, viewport, canonical, no `noindex`, no image without alt, valid `robots.txt`); see the task's report for the options.
+Search Console verification and sitemap submission are the owner's action. No Lighthouse dependency was added: it is not installed, and adding it is a new dependency for the owner to decide. The Lighthouse SEO audits were checked by hand on the three pages (status 200, title, description, viewport, canonical, no `noindex`, no image without alt, valid `robots.txt`); see the task's report for the options.
 
 ## Sources
 
