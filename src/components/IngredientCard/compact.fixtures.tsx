@@ -64,7 +64,7 @@ export interface FixtureEntry {
 }
 
 // Nine entries. Lengths on purpose: a long name (Testwort Longer Nameicanicusmus),
-// no formal name (Testseed), one form (Testite), five forms (Testflower), four
+// no formal name (Testseed, Testsalt), one form (Testite), five forms (Testflower), four
 // categories (Testroot).
 export const ENTRIES: FixtureEntry[] = [
   {
@@ -177,8 +177,7 @@ export const ENTRIES: FixtureEntry[] = [
   {
     slug: 'testsalt',
     label: 'Testsalt',
-    formalName: 'Sal testalis',
-    nomenclature: 'chemical',
+    nomenclature: 'none',
     categories: [CATS.banishing],
     variants: [form('coarse'), form('fine')],
     kind: 'cupboard',
