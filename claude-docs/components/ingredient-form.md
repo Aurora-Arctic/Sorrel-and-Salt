@@ -443,8 +443,9 @@ links. In both substitute lists, the ingredient's and each variant's:
 
 - **A linked chip is a button; a typed one is text.** The linked chip's
   text is a button led by a link mark (two chain links) in the accent, the
-  text underlined in the body ink, and the accent's hover on both when
-  pointed at. A typed chip has no mark, no underline and nothing to press
+  text in the body ink with no underline at rest (underlined while its summary
+  is open), and the accent's hover on both when pointed at. A typed chip has
+  no mark and nothing to press
   but its ×. So the two differ by shape, not by colour alone. A screen
   reader hears the linked one as a button, named by its text, that opens a
   dialog and says whether it is open (`aria-haspopup`, `aria-expanded`),

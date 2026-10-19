@@ -82,6 +82,8 @@ A curator's Edit opens the compendium's edit modal over the entry's own page, no
 
 ## Styling
 
+When a long name wraps the header's action onto its own line, `space(4)` stands between the action and the badges (the owner's call, 2026-10-19): the action's bottom margin, with `top` and the header's row gap taking half of it back so the action stays where it was; beside the heading it adds nothing.
+
 `index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` and `retired` badge palettes are new here (`retired` takes `low-stock`'s muted inks until the design review), in `_variables.scss` (`styling.md`, "Badge palettes").
 
 Running text stops at `$measure`: the description is a `<p>`, which `typography-base` caps, and a `dd` or list item takes `max-width: $measure` itself. A description keeps the line breaks typed into its textarea (`white-space: pre-line`).
