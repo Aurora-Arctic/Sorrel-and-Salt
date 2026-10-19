@@ -26,6 +26,7 @@ import {
 import { PromoteIcon } from './icons';
 import { DeleteUsers } from './delete-users';
 import Notice from '../Notice';
+import { COMPENDIUM_EDIT_NOTICE } from './compendium-notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
@@ -571,6 +572,9 @@ const IngredientForm = ({
               {/* Where each linked substitute's summary links its entry, read by
           the chips however deep their list sits (MB.115). */}
               <EntryHrefContext.Provider value={entryHref}>
+                {/* An edit of the compendium says so above the form (M8.17), drawn
+          here so every dialog that opens it shows it once. */}
+                {compendium && editing && <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>}
                 {/* `noValidate`: every refusal is the schema's, worded and placed like
           the rest, rather than the browser's own bubble. */}
                 <form

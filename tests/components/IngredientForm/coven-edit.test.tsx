@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
+import { COMPENDIUM_EDIT_NOTICE } from '@/components/IngredientForm/compendium-notice';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { mockGraphQLError } from '../../support/msw/graphql';
@@ -55,6 +56,12 @@ describe("IngredientForm editing a coven's own entry", () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('carries no notice that it edits the compendium', () => {
+    renderEdit();
+    expect(textbox('Name')).toHaveValue('Testwort');
+    expect(screen.queryByText(COMPENDIUM_EDIT_NOTICE)).not.toBeInTheDocument();
   });
 
   it('saves the whole entry over itself in the coven, and opens it', async () => {
