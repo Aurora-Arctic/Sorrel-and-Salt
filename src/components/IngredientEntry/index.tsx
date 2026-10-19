@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
-import EntryMarks from '../EntryMarks';
+import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import HeldMark from './held-mark';
 // From its own client file: the Modal index re-exports modules a server
@@ -41,6 +41,7 @@ import {
   ReferencesSection,
   referenceNotes,
 } from './references';
+import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
 import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
@@ -459,6 +460,8 @@ const IngredientEntry = ({
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
+  // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
+  const recency = local ? null : entryRecency(entry.createdAt, entry.updatedAt);
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   // Caution as the card counts it (M8.14): notes on the entry, as this coven
   // reads them, or on any form (the owner's call, 2026-10-19).
@@ -487,20 +490,33 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
-        {back && (
-          <Link className="ingredient-entry__back" href={back.href}>
-            <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
-              <path
-                d="M10 3.5L5.5 8l4.5 4.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Back to {back.label} <LinkHint />
-          </Link>
+        {(back || recency) && (
+          // One row for the way back (left, first for a screen reader) and the New / Updated
+          // marker (right: the top right of the text column).
+          <div className="ingredient-entry__bar">
+            {back && (
+              <Link className="ingredient-entry__back" href={back.href}>
+                <svg
+                  viewBox="0 0 16 16"
+                  width="1em"
+                  height="1em"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M10 3.5L5.5 8l4.5 4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Back to {back.label} <LinkHint />
+              </Link>
+            )}
+            <RecencyMark recency={recency} />
+          </div>
         )}
         <FormalName entry={entry} />
         <PageHeader

@@ -44,3 +44,9 @@ A retired entry shows **Retired** in place of Compendium (it was worded "No Long
 - **Local is a `span`; Compendium is an `output` element**, so it carries the
   `status` role: on the page from the start, never announced. Retired and Annotated are `button`s (not statuses) with the tip described by `aria-describedby`, so a screen reader hears the reason without opening it.
 - Meaning is the badge's words, never its tint alone.
+
+## New and Updated (MB.106)
+
+A compendium entry created in the last 30 days reads **New**; one changed in them reads **Updated**; New wins when both hold. These are **not badges** (the owner, 2026-10-19): `RecencyMark` (`recency-mark.tsx`, exported beside `EntryMarks`, which no longer takes `recency`) draws the words, which a screen reader hears, and a small icon hidden from assistive technology (a sparkle for New, a wand for Updated), in the accent ink with no container (the owner picked this shape from six, 2026-10-19), a half step larger than badge text (half way between overline and caption, icon 1.375em). Story: `Recency`. It sits at the **top right** of the card, above the name row, and in the entry page's back row (`ingredient-entry__bar`): the back link at the left, first in the DOM so a screen reader hears it before the marker, the marker at the right end, which is the top right of the text column (the middle of the page-nav menu, text and side columns), both on one centre line so it adds no row. With no back link the row holds the marker alone. The caller passes `recency` from `entryRecency(createdAt, updatedAt)` in `src/lib/entry-recency.ts`, so nothing is stored and nothing expires. `updated_at` moves only on a real change ([`db/updated-at.md`](../db/updated-at.md)). A coven's own entry carries none. A freshly seeded database reads every entry New, which is accepted.
+
+Inks are the `new` (accent fill) and `updated` (tint foreground) badge palettes' already contrast-checked tokens.

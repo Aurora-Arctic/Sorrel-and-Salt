@@ -317,3 +317,21 @@ describe('IngredientCard actions', () => {
     expect(screen.queryByRole('button')).toBeNull();
   });
 });
+
+describe('IngredientCard recency (MB.106)', () => {
+  it.each([
+    ['new', 'New'],
+    ['updated', 'Updated'],
+  ] as const)('shows %s as text on a compendium entry', (recency, shown) => {
+    render(<IngredientCard {...BASE} kind="compendium" recency={recency} />);
+
+    expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
+  });
+
+  it('shows neither with no recency', () => {
+    render(<IngredientCard {...BASE} kind="compendium" recency={null} />);
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  });
+});

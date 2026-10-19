@@ -1119,3 +1119,36 @@ describe('IngredientEntry on a coven page', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
+
+describe('IngredientEntry recency (MB.106)', () => {
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  it('marks a compendium entry created lately New', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ createdAt: daysAgo(2) }) }) });
+
+    expect(screen.getByText('New', { exact: true })).toBeInTheDocument();
+  });
+
+  it('marks an older compendium entry changed lately Updated', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ updatedAt: daysAgo(2) }) }) });
+
+    expect(screen.getByText('Updated', { exact: true })).toBeInTheDocument();
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+  });
+
+  it('marks neither on an entry unchanged for longer', () => {
+    renderEntry();
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  });
+
+  it("marks neither on a coven's own entry, however new", () => {
+    renderEntry({
+      detail: detail({ entry: entryRow({ workspaceId: COVEN, createdAt: daysAgo(1) }) }),
+    });
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  });
+});

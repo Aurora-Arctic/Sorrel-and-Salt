@@ -67,6 +67,7 @@ const entry = (
   variants: forms.map((form) => ({ form, formChoice: null })),
   toxic: false,
   safetyNotes: null,
+  recency: null,
 });
 
 // Two entries share a label; their formal names tell them apart.

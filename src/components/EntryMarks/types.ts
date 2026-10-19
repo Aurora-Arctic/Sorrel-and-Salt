@@ -6,6 +6,11 @@
  */
 export type EntryKind = 'own' | 'cupboard' | 'compendium';
 
+/** How recently a compendium entry was added or changed (MB.106); see `entryRecency`. */
+import type { EntryRecency } from '@/lib/entry-recency';
+
+export type { EntryRecency };
+
 export interface EntryMarksProps {
   /** The entry's kind; the caller reads it from the data, this component works nothing out. */
   kind: EntryKind;
@@ -19,4 +24,9 @@ export interface EntryMarksProps {
    * every entry is one, so it shows nothing.
    */
   inCoven?: boolean;
+}
+
+export interface RecencyMarkProps {
+  /** New or Updated, from `entryRecency`; none draws nothing. */
+  recency: EntryRecency | null | undefined;
 }

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import EntryMarks from '@/components/EntryMarks';
+import EntryMarks, { RecencyMark } from '@/components/EntryMarks';
 
 // The cupboard's three kinds and what each shows (M8.14;
 // claude-docs/components/entry-marks.md). Each mark is found by its exact
@@ -94,4 +94,37 @@ describe('EntryMarks', () => {
     const bare = render(<EntryMarks kind="compendium" annotated />);
     expect(bare.container).toBeEmptyDOMElement();
   });
+});
+
+describe('RecencyMark (MB.106)', () => {
+  it.each([
+    ['new', 'New', 'Updated'],
+    ['updated', 'Updated', 'New'],
+  ] as const)('shows %s as text, and not the other', (recency, shown, other) => {
+    render(<RecencyMark recency={recency} />);
+
+    expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
+    expect(screen.queryByText(other, { exact: true })).toBeNull();
+  });
+
+  it('hides its drawing from assistive technology', () => {
+    const { container } = render(<RecencyMark recency="new" />);
+
+    for (const drawing of container.querySelectorAll('svg')) {
+      expect(drawing).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
+
+  it('shows neither once the 30 days have passed', () => {
+    const { container } = render(<RecencyMark recency={null} />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+it('EntryMarks no longer draws New or Updated: the marker is its own component', () => {
+  render(<EntryMarks kind="cupboard" />);
+
+  expect(screen.queryByText('New', { exact: true })).toBeNull();
+  expect(screen.queryByText('Updated', { exact: true })).toBeNull();
 });

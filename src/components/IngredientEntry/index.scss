@@ -87,14 +87,27 @@ $jump-link-line: 1.25;
 // A quiet way back above the heading: small, muted, a chevron before it, and
 // no underline; the ink deepens on hover and focus. The head is a stack, so
 // it keeps to its own width rather than stretching across the column.
-.ingredient-entry__back {
-  place-self: start;
-  // Lifted to the head's top edge by `top`, which moves it without making
-  // room; the bottom margin then does make room, so the heading and all under
-  // it sit lower than before (the owner's call, 2026-10-19).
+// The row holding the back link (left) and the New / Updated marker (right: the top right of the
+// text column, which the head's grid keeps it in beside a side column). Lifted to the head's
+// top edge by `top`, which moves it without making room; the bottom margin then does make
+// room, so the heading and all under it sit lower than before (the owner's call, 2026-10-19).
+// The two share one centre line, so the marker adds no row of its own.
+.ingredient-entry__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
   position: relative;
   top: calc(-1 * #{space(4)});
   margin-block-end: space(3);
+}
+
+.ingredient-entry__bar > .recency-mark {
+  // Right end even with no back link beside it.
+  margin-inline-start: auto;
+}
+
+.ingredient-entry__back {
   // The chevron's drawing starts inside its box, which reads as an indent;
   // this pulls the stroke to the column's edge, a little past it to the eye
   // (the owner's call, 2026-10-19).

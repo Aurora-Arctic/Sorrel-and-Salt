@@ -4,7 +4,7 @@ import TipMark from './tip-mark';
 import './index.scss';
 
 // The badges saying whose an ingredient entry is: Local, Compendium,
-// Annotated, Retired. One component so the entry page's
+// Annotated, Retired (New and Updated are RecencyMark, which sits elsewhere). One component so the entry page's
 // head and the ingredient card cannot drift (M8.14). It takes the kind and the
 // two flags as props and works none of them out from the data. It renders the
 // badges bare, with no wrapper, so a caller can set the Toxic mark in the same
@@ -48,3 +48,5 @@ const EntryMarks = ({
 
 export default EntryMarks;
 export type { EntryKind, EntryMarksProps } from './types';
+export { default as RecencyMark } from './recency-mark';
+export type { RecencyMarkProps } from './types';

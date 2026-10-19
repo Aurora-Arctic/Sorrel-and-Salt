@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Fragment, type ReactElement } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import CategoryChips from '../CategoryChips';
-import EntryMarks from '../EntryMarks';
+import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import LinkHint from '../LinkHint';
 import { CautionMark, ToxicMark } from '../SafetyNote';
@@ -29,6 +29,7 @@ const IngredientCard = ({
   kind,
   annotated,
   retired,
+  recency,
   level = 2,
   actions,
   children,
@@ -51,6 +52,8 @@ const IngredientCard = ({
 
   return (
     <article className="ingredient-card specimen">
+      {/* The top right of the card, above the name row (the owner, 2026-10-19). */}
+      <RecencyMark recency={recency} />
       <div className="specimen__top">
         <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
