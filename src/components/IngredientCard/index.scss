@@ -8,7 +8,8 @@
 .ingredient-card {
   @include modal-surface($shadow-floating);
 
-  padding: space(5);
+  // 16px: one step under the 24px it was, with the type a step smaller.
+  padding: space(4);
   // The containing block for the name link's stretched `::after` below.
   position: relative;
   cursor: pointer;
@@ -83,6 +84,9 @@
 
 .ingredient-card__name {
   hyphens: auto;
+  // h3's size, down from the h2 default (2.15rem): the card is one of many in a grid,
+  // so its name needs less than a page heading. Site sizes only, no new one.
+  font-size: heading-size(3);
 }
 
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
@@ -108,6 +112,9 @@
 // `.spoken-separator` in each item instead, as the circle is announced as nothing.
 .ingredient-card__forms {
   --forms-gap: #{space(5)};
+
+  // Body down to small; the icons are in em, so they follow.
+  font-size: type-size('small');
   --forms-dot: #{space(1)};
 
   display: flex;
@@ -164,4 +171,20 @@
 .ingredient-card .specimen__actions {
   position: relative;
   z-index: 1;
+}
+
+// Chip and badge text on the card, one step under the caption they take elsewhere
+// (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`). Their own padding
+// and gaps stay; the smaller text would shrink a badge to under 24px, the least a
+// tipped badge may be as a target, so the height is held there.
+.ingredient-card {
+  .chip,
+  .badge {
+    font-size: type-size('overline');
+  }
+
+  .badge {
+    min-block-size: 1.5rem;
+    box-sizing: border-box;
+  }
 }
