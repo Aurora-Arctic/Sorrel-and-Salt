@@ -65,3 +65,13 @@ $categories-wide: 75rem;
     min-inline-size: calc(#{$categories-floor} + 2 * #{$table-cell-inset});
   }
 }
+
+// The empty sentence: muted as a whole, its filter values bold in the same ink, like the
+// search sentence's values (claude-docs/components/compendium-list.md).
+.compendium-list__empty {
+  color: $text-muted;
+
+  strong {
+    font-weight: 700;
+  }
+}
