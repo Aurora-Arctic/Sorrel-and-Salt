@@ -67,3 +67,36 @@ describe('Skeleton heading row', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 });
+
+// The tab row and the side menu are drawn where the page that arrives has them.
+describe('Skeleton tabs and menu', () => {
+  it('draws the tab track between the heading and the action, only when asked', () => {
+    const { container, rerender } = render(<Skeleton shape="table" title action />);
+    expect(container.querySelector('.skeleton__tabs')).toBeNull();
+    rerender(<Skeleton shape="table" title action tabs />);
+    const kids = [...container.querySelectorAll('.skeleton__header > span')];
+    expect(kids.map((node) => node.className.split(' ')[0])).toEqual([
+      'skeleton__title',
+      'skeleton__tabs',
+      'skeleton__action',
+    ]);
+  });
+
+  it('draws no tabs without a heading', () => {
+    const { container } = render(<Skeleton shape="table" tabs />);
+    expect(container.querySelector('.skeleton__tabs')).toBeNull();
+  });
+
+  it('draws a menu column beside the page shape only when asked', () => {
+    const { container, rerender } = render(<Skeleton shape="page" />);
+    expect(container.querySelector('.skeleton__menu')).toBeNull();
+    rerender(<Skeleton shape="page" menu />);
+    expect(container.querySelector('.skeleton__with-menu .skeleton__menu')).not.toBeNull();
+  });
+
+  it('keeps the menu out of other shapes and still announces once', () => {
+    const { container } = render(<Skeleton shape="table" menu />);
+    expect(container.querySelector('.skeleton__menu')).toBeNull();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+});

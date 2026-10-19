@@ -12,6 +12,10 @@ export interface SkeletonProps {
   title?: boolean;
   /** With `title`: a button-sized block at the heading's end, for a page with an Add. */
   action?: boolean;
+  /** With `title`: a tab track between the heading and the action, for a tabbed page. */
+  tabs?: boolean;
+  /** A `page` skeleton draws a side menu beside its heading and blocks, for a page with a jump or contents menu. */
+  menu?: boolean;
   /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
   count?: number;
 }

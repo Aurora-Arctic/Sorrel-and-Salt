@@ -33,6 +33,8 @@ const Skeleton = ({
   filter = false,
   title = false,
   action = false,
+  tabs = false,
+  menu = false,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
@@ -44,6 +46,7 @@ const Skeleton = ({
         {listed && title && (
           <div className="page-header skeleton__header">
             <span className="skeleton__title" />
+            {tabs && <span className="skeleton__tabs" />}
             {action && <span className="skeleton__action" />}
           </div>
         )}
@@ -90,9 +93,17 @@ const Skeleton = ({
         )}
         {shape === 'line' && <span className="skeleton__line" />}
         {shape === 'page' && (
-          <>
+          <div className={menu ? 'skeleton__with-menu' : 'skeleton__plain'}>
             <span className="skeleton__title" />
             <span className="skeleton__lede" />
+            {menu && (
+              <div className="skeleton__menu">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
             <div className="skeleton__blocks">
               {Array.from({ length: many }, (_, block) => (
                 <div key={block} className="skeleton__block">
@@ -102,7 +113,7 @@ const Skeleton = ({
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
