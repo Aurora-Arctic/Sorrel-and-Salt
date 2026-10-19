@@ -388,27 +388,28 @@ describe('the coven ingredient page title', () => {
   it('names the public page as canonical for a compendium entry', async () => {
     getIngredient.mockResolvedValue(compendiumRow());
 
-    expect(await generateMetadata(params())).toEqual({
-      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
-      alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
-    });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${compendiumRow().name} (${compendiumRow().canonicalName})`);
+    expect(result.alternates?.canonical).toBe(
+      'https://sorrelandsalt.com/compendium/ingredients/testwort-fixtura-testalis',
+    );
   });
 
   it('names no canonical for a retired compendium entry, whose public page is gone', async () => {
     getIngredient.mockResolvedValue(compendiumRow());
     isRetired.mockReturnValueOnce(true);
 
-    expect(await generateMetadata(params())).toEqual({
-      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
-    });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${compendiumRow().name} (${compendiumRow().canonicalName})`);
+    expect(result.alternates).toBeUndefined();
     expect(isRetired).toHaveBeenCalledWith(compendiumRow());
   });
 
   it("names no canonical for the coven's own entry", async () => {
     getIngredient.mockResolvedValue(covenRow());
 
-    expect(await generateMetadata(params())).toEqual({
-      title: `${covenRow().name} (${covenRow().canonicalName})`,
-    });
+    const result = await generateMetadata(params());
+    expect(result.title).toBe(`${covenRow().name} (${covenRow().canonicalName})`);
+    expect(result.alternates).toBeUndefined();
   });
 });
