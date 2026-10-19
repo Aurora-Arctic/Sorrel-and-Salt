@@ -13,7 +13,7 @@
 
 ## Placement
 
-The page puts it in the filter row inside the `search` landmark (story 12 counts editing controls outside it). Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
+The coven list's filter (`CompendiumListFilter` with `audience="coven"`, a client component like the switch) draws it in its row, inside the `search` landmark (story 12 counts editing controls outside it). The admin and public compendium lists draw none. Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
 
 ## Tests
 

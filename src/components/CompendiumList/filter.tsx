@@ -5,6 +5,7 @@ import { type ReactElement, useMemo, useState } from 'react';
 import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import type { SearchSentenceLabels } from '../IngredientSearch/types';
+import CardDensitySwitch from '../CardDensitySwitch';
 import FacetPanel from '../FacetPanel';
 import type { FacetPanelFilter } from '../FacetPanel/types';
 import { useApplyFilter } from '../FilterForm';
@@ -251,6 +252,10 @@ const CompendiumListFilterRow = ({
         panel={panel}
         onPanel={setPanel}
       />
+      {/* The coven's cards can be compact or regular (M9.6); a view setting, so it sits in the
+          row with the filters, inside the search landmark, and submits nothing. Rendered here, not
+          passed in as a slot: both are client components and the props stay plain data. */}
+      {coven ? <CardDensitySwitch /> : null}
     </IngredientSearchForm>
   );
 };

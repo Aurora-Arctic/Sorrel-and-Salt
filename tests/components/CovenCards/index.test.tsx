@@ -127,6 +127,15 @@ describe('CovenCards', () => {
     expect(within(list).queryAllByRole('button')).toHaveLength(0);
   });
 
+  it('puts the Compact switch, on by default, inside the search landmark', () => {
+    mockGraphQLQuery('CovenFacetCounts', () => ({}));
+    render(<Cards {...props()} />);
+    const compact = screen.getByRole('switch', { name: 'Compact' });
+    expect(compact.closest('search')).not.toBeNull();
+    expect(compact).toBeChecked();
+    expect(screen.getAllByRole('switch', { name: 'Compact' })).toHaveLength(1);
+  });
+
   it('shows plain text, and no list, for an empty cupboard', () => {
     render(<Cards {...props({ entries: [], total: 0 })} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
