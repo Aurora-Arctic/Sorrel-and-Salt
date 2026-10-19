@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { PendingLink } from '../../../../lib/navigation';
+import { covenSectionShape } from '../../../../lib/coven-path';
 import type { Route } from 'next';
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
@@ -11,6 +12,9 @@ import PageNav from '../../../../components/PageNav';
 import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
+
+const covenTarget = (path: string) =>
+  ({ region: 'coven', shape: covenSectionShape(path) }) as const;
 
 // The page a coven opens on (M9.15), where the switcher, an accepted
 // invitation and the shell's coven link all land. The layout's template
@@ -85,24 +89,26 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
         <h2 id="coven-contents-heading">Contents</h2>
         <ul className="admin-contents__list">
           <li>
-            <Link
+            <PendingLink
               href={`/coven/${slug}/ingredients` as Route}
+              navigationTarget={covenTarget(`/coven/${slug}/ingredients`)}
               aria-describedby="coven-contents-ingredients"
             >
               Ingredients
-            </Link>
+            </PendingLink>
             <span id="coven-contents-ingredients" className="admin-contents__description">
               What the coven has in its cupboard, and what it can add from the compendium.
             </span>
           </li>
           {canReadMembers && (
             <li>
-              <Link
+              <PendingLink
                 href={`/coven/${slug}/members` as Route}
+                navigationTarget={covenTarget(`/coven/${slug}/members`)}
                 aria-describedby="coven-contents-members"
               >
                 Members
-              </Link>
+              </PendingLink>
               <span id="coven-contents-members" className="admin-contents__description">
                 {canInvite
                   ? 'Who is in the coven, what each may do, and the invitations still waiting.'

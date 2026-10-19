@@ -1,3 +1,7 @@
+import type { NavigationTarget } from './navigation';
+
+type NavigationShape = NavigationTarget['shape'];
+
 // A workspace is named by the address alone, never by session state, so two
 // tabs can sit in two workspaces without disagreeing (M6.9). These read and
 // rewrite that address: the segment after `/coven/` is the slug.
@@ -52,4 +56,21 @@ export function pathInCoven(pathname: string, slug: string, canReadMembers = tru
   // The people pages answer a viewer with a 404, so a viewer lands on the index instead.
   if (section && PEOPLE_SECTIONS.has(section) && !canReadMembers) return `/${COVEN}/${slug}`;
   return section ? `/${COVEN}/${slug}/${section}` : `/${COVEN}/${slug}`;
+}
+
+/** The shape of each section's page, so a skeleton standing in for it matches (M12.33). */
+const SHAPE_OF_SECTION: Record<string, NavigationShape> = {
+  ingredients: 'cards',
+  members: 'table',
+  invitations: 'table',
+};
+
+/**
+ * What a coven page draws while it is on its way: the shape of the section
+ * the address names. A section not named, and the coven's home, are a page.
+ * One mapping for the switcher, the section nav and the home's Contents.
+ */
+export function covenSectionShape(pathname: string): NavigationShape {
+  const section = covenSlugOf(pathname) ? pathname.split('/')[3] : undefined;
+  return (section && SHAPE_OF_SECTION[section]) || 'page';
 }

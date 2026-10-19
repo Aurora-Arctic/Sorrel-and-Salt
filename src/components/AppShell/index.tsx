@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
@@ -57,9 +57,13 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           {/* Plain text while the address is unverified: every page the
               brand could lead to would send the viewer back to the email page. */}
           {viewer.verified ? (
-            <Link href="/" className="app-shell__brand">
+            <PendingLink
+              href="/"
+              className="app-shell__brand"
+              navigationTarget={{ region: 'main', shape: 'page' }}
+            >
               {brand}
-            </Link>
+            </PendingLink>
           ) : (
             <span className="app-shell__brand">{brand}</span>
           )}
