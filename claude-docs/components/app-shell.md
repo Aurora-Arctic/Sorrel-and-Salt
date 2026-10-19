@@ -122,7 +122,8 @@ the coven layout's column, "Admin" in the admin layout's, "Your Account" or
 "Your Email" in the narrow page frame, and "Create Coven" on its panel.
 `CovenPage`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
 context row, with no section nav), `AccountPage`, `Unverified` (the email page's
-bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
+bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`. The body swap has its own, `Feedback / Loading / Main Body`
+(`.ladle/main-body.stories.tsx`): `AtRest` and `LoadingPage` ([loading](../loading.md), "Stories").
 
 ## Testing
 
