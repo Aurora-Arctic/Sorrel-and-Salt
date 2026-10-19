@@ -570,7 +570,10 @@
   position: sticky;
   right: 0;
   z-index: $layer;
-  border-left: 1px solid $hairline;
+  // The hairline is an inset shadow, not a border: the table collapses its borders, and a
+  // collapsed border is the table's to paint, so it stays where the cell began and the
+  // scrolling columns slide over it. A shadow belongs to the cell and travels with it.
+  box-shadow: inset 1px 0 0 $hairline;
   background-color: $surface-page;
 
   @at-root .data-table tbody tr:nth-child(even) #{&} {
@@ -582,7 +585,7 @@
   @container data-table (max-width: #{$table-stack-width}) {
     @at-root .data-table--stack > tbody > tr > #{&} {
       position: static;
-      border-left: 0;
+      box-shadow: none;
       background-color: transparent;
     }
 
@@ -605,7 +608,7 @@
 @mixin row-action-column($layer: 1) {
   @include sticky-action-column($layer) {
     // A hairline, as the headings' rule is: the red marks it, not the weight.
-    border-left-color: $secondary;
+    box-shadow: inset 1px 0 0 $secondary;
     background-color: color-mix(in srgb, $secondary 6%, $surface-page);
     color: $secondary;
 
@@ -616,9 +619,12 @@
     }
 
     // Its heading's hairline red too, where every other column's is the muted
-    // ink; scoped past the primitive's own `thead th` rule.
+    // ink; scoped past the primitive's own `thead th` rule. Drawn as a shadow over the
+    // collapsed border, which stays put as the columns scroll, as the left hairline is.
     @at-root .data-table thead th#{&} {
-      border-bottom-color: $secondary;
+      box-shadow:
+        inset 1px 0 0 $secondary,
+        inset 0 -1px 0 $secondary;
     }
   }
 }
