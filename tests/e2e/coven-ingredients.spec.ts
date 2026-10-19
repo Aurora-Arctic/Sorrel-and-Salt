@@ -31,7 +31,8 @@ import {
 // icon and M9.8's badge, a retired compendium entry the coven holds keeps
 // its forms and categories and can be annotated and made its own, a held
 // compendium entry's card opens Annotate over the list and closes back to its
-// search (M8.17), and the page passes axe at both densities and at a phone's
+// search (M8.17), a coven's own entry is deleted from its edit dialog over
+// the list (M8.17), and the page passes axe at both densities and at a phone's
 // width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
@@ -558,6 +559,52 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await backAtSearch();
   const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
   await expect(annotated.getByRole('button', { name: 'Annotated' })).toBeVisible();
+});
+
+// M8.17 (moved from M9.10 by the owner, 2026-10-19): the coven's own entry
+// is deleted from its edit dialog over the list, which closes back onto the
+// list without the row, the focus on the page's heading since the card's Edit
+// went with it.
+test("a coven's own entry is deleted from its edit dialog over the list, back on the list without it", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate List Delete', 'gate-list-del.test', {
+    A: 'owner',
+  });
+  const gone = await withSql(async (sql) => {
+    await localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Keptwort',
+      canonicalName: 'Fixtura servata',
+    });
+    return localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Gonewort',
+      canonicalName: 'Fixtura abiens',
+    });
+  });
+
+  // Why it could stay: the entry is on the list, live, before the delete.
+  await page.goto(listPath(coven));
+  const list = ingredientList(page);
+  await expect(rowOf(list, 'Fixture Gonewort')).toHaveCount(1);
+
+  await rowOf(list, 'Fixture Gonewort')
+    .getByRole('link', { name: 'Edit Fixture Gonewort, Fixtura abiens' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: /Fixture Gonewort/ });
+  await dialog.getByRole('button', { name: 'Delete Ingredient' }).click();
+  const question = dialog.getByRole('group', { name: /Delete/ });
+  await expect(question).toContainText('Fixture Gonewort');
+  await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === listPath(coven) && !url.search);
+  await expect(rowOf(list, 'Fixture Gonewort')).toHaveCount(0);
+  await expect(rowOf(list, 'Fixture Keptwort')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
+  const [row] = await withSql(
+    (sql) => sql`select deleted_at from ingredients where id = ${gone.ingredientId}`,
+  );
+  expect(row.deleted_at).not.toBeNull();
 });
 
 test('a retired compendium entry the coven still holds can be removed, and leaves its list', async ({

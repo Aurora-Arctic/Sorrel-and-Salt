@@ -157,7 +157,7 @@ export default async function CovenIngredientsPage({
           edit={{
             href: listHref,
             closeHref: listHref,
-            // The dialog holds no Delete (D6); a save stays on the list, fetched again.
+            // A save or a delete (M8.17) stays on the list, fetched again.
             deletedHref: listHref,
             savedHref: listHref,
             opened: edited && { id: edited.entry.id, values: edited.values },

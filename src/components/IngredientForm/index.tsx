@@ -165,6 +165,14 @@ const DeleteCompendiumIngredientDocument = graphql(`
   }
 `);
 
+// A coven's own entry is deleted from its edit dialog too (M8.17, moved from
+// M9.10): from this coven alone, a spell holding it still reaching it (M5.3).
+const DeleteWorkspaceIngredientDocument = graphql(`
+  mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {
+    deleteIngredient(id: $id, workspaceId: $workspaceId)
+  }
+`);
+
 /** Keys pressed inside a reference panel are its own history's (M12.10). */
 const inReferencePanel = (target: HTMLElement): boolean =>
   target.closest('.ingredient-form__panel') !== null;
@@ -420,7 +428,12 @@ const IngredientForm = ({
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => graphqlRequest(DeleteCompendiumIngredientDocument, { id }),
+    // Each tier answers with its own field, and nothing reads the answer: a
+    // refusal throws, and success is the entry gone.
+    mutationFn: async (id: string): Promise<void> => {
+      if (workspaceId === null) await graphqlRequest(DeleteCompendiumIngredientDocument, { id });
+      else await graphqlRequest(DeleteWorkspaceIngredientDocument, { id, workspaceId });
+    },
   });
 
   /** Sends the input, and says what came of it: saved, asked about, or refused beside its fields. */
@@ -817,8 +830,7 @@ const IngredientForm = ({
               default Enter presses, opens what it made; Save & Add Another
               clears the form for the next. The one pressed says so, the
               owner's call during MB.131. An edit has the first alone, and
-              on the compendium Delete apart at the far end: a coven's own
-              entry is deleted from its page (M9.10). */}
+              Delete apart at the far end, in either tier (M8.17). */}
                   <FormActions
                     noun="Ingredient"
                     dirty={isDirty}
@@ -827,7 +839,7 @@ const IngredientForm = ({
                     saveValue="open"
                     onCancel={onCancel && (() => discard.request(onCancel))}
                     onDelete={
-                      editing && compendium
+                      editing
                         ? () => {
                             setRefusal(undefined);
                             setDeleting(true);
@@ -889,8 +901,9 @@ const IngredientForm = ({
                       asked={deleting}
                       question={
                         <>
-                          Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any
-                          spell that uses it keeps it.
+                          Delete &quot;{entry?.values.name}&quot;? It leaves the{' '}
+                          {compendium ? 'compendium' : 'coven'}, but any spell that uses it keeps
+                          it.
                         </>
                       }
                       details={compendium && entry ? <DeleteUsers id={entry.id} /> : undefined}

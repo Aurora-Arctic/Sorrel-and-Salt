@@ -1,10 +1,14 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import { COMPENDIUM_EDIT_NOTICE } from '@/components/IngredientForm/compendium-notice';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
-import { mockGraphQLError } from '../../support/msw/graphql';
+import type {
+  DeleteWorkspaceIngredientMutation,
+  DeleteWorkspaceIngredientMutationVariables,
+} from '@/gql/graphql';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
 import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
@@ -31,7 +35,7 @@ const TESTWORT: IngredientFormValues = {
   folkNames: [{ value: 'Hedge Fixture', id: FOLK_ID }],
 };
 
-function renderEdit(props: { mayPromote?: boolean } = {}) {
+function renderEdit(props: { mayPromote?: boolean; onDeleted?: () => void } = {}) {
   const onSaved = vi.fn();
   offerNothing();
   renderWithClient(
@@ -44,6 +48,18 @@ function renderEdit(props: { mayPromote?: boolean } = {}) {
     />,
   );
   return { onSaved };
+}
+
+function acceptCovenDelete() {
+  const calls: DeleteWorkspaceIngredientMutationVariables[] = [];
+  mockGraphQLMutation<
+    DeleteWorkspaceIngredientMutation,
+    DeleteWorkspaceIngredientMutationVariables
+  >('DeleteWorkspaceIngredient', (variables) => {
+    calls.push(variables);
+    return { deleteIngredient: String(variables.id) };
+  });
+  return calls;
 }
 
 const button = (name: string) => screen.getByRole('button', { name });
@@ -93,14 +109,35 @@ describe("IngredientForm editing a coven's own entry", () => {
     );
   });
 
-  // Deleting an own entry is M9.10's, from its page, never the form's.
-  it('offers no Delete', () => {
-    renderEdit();
+  // Delete sits at the dialog's foot as the compendium's does (M8.17, moved
+  // from M9.10 by the owner, 2026-10-19), and deletes from this coven alone.
+  it('deletes the entry from the coven once confirmed, naming it, and says why when refused', async () => {
+    const onDeleted = vi.fn();
+    renderEdit({ onDeleted });
 
-    type('Name', 'Mockwort');
-
+    press('Delete Ingredient');
+    expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+    expect(button('Keep It')).toHaveFocus();
+    press('Keep It');
     noButton('Delete');
-    noButton('Delete Ingredient');
+
+    mockGraphQLError('DeleteWorkspaceIngredient', {
+      code: 'NOT_FOUND',
+      message: 'No such ingredient',
+    });
+    press('Delete Ingredient');
+    await act(async () => {
+      press('Delete');
+    });
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(onDeleted).not.toHaveBeenCalled();
+
+    const calls = acceptCovenDelete();
+    press('Delete Ingredient');
+    press('Delete');
+
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledOnce());
+    expect(calls).toEqual([{ id: ENTRY_ID, workspaceId: WORKSPACE_ID }]);
   });
 
   it('places a refusal beside the field it names, and keeps what was typed', async () => {

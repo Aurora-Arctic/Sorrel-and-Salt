@@ -61,10 +61,9 @@ export type EntryHref = (ingredient: { slug: string; isGlobal: boolean }) => str
 
 /**
  * Where the form writes. With a `workspaceId`, the coven named: a new
- * ingredient, or the coven's own `entry` given, which it saves over
- * (M8.17) and never deletes, since that is the entry page's (M9.10). With a
- * null one, the compendium (M5.5): a new entry, or the `entry` given, which
- * it saves over and can delete.
+ * ingredient, or the coven's own `entry` given, which it saves over and
+ * can delete from the coven (M8.17). With a null one, the compendium (M5.5):
+ * a new entry, or the `entry` given, which it saves over and can delete.
  */
 export type IngredientFormProps = IngredientFormCallbacks &
   (

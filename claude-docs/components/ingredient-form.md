@@ -34,15 +34,16 @@ compendium page wrap it rather than containing their own form.
 The props are a union on `workspaceId` (`IngredientFormProps`, `types.ts`):
 a coven's id writes to that coven — a new ingredient, or the coven's own
 `entry` given, saved over itself through `updateIngredient` (M8.17) — and
-`null` writes the compendium — a new entry, or the `entry` given. A coven's
-edit has no Delete: a coven's own entry is deleted from its page (M9.10).
+`null` writes the compendium — a new entry, or the `entry` given. Either
+tier's edit offers Delete Ingredient (the coven's since M8.17, moved from
+M9.10 on the owner's call, 2026-10-19).
 
 | Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                                                                                                                                                                                                                                 |
 | `entry`         | The entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`: a compendium entry with a null `workspaceId`, or the coven's own with a coven's id (M8.17). Left out, the form creates.                                                                                                                                                                                                                                                                   |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
-| `onDeleted`     | Called once the compendium `entry` given has been deleted. A coven's edit offers no Delete.                                                                                                                                                                                                                                                                                                                                                                                                |
+| `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                                        |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
@@ -1428,14 +1429,17 @@ site admin's, through the compendium mutations
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
   `.btn--destructive`. Pressed, it asks `Delete
-"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, with
+"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, or
+  on a coven's own entry `Delete "Testwort"? It leaves the coven, but any spell
+that uses it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
   centred in the part in view however far the long form is scrolled, the
   form dimmed and held until it is answered, the focus on Keep It, its safe
   answer, and back on Delete Ingredient once Keep It puts it away (MB.115,
   the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
-  `deleteCompendiumIngredient`, busy until the answer, and calls
+  `deleteCompendiumIngredient`, or for a coven `deleteIngredient(id,
+workspaceId)`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
   as an alert above the fields. On a compendium entry the question also shows
   how many covens use the entry (M12.25): `DeleteUsers` reads

@@ -60,6 +60,7 @@ type Documents = {
     "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateCompendiumIngredientDocument,
     "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.UpdateCompendiumIngredientDocument,
     "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n": typeof types.DeleteCompendiumIngredientDocument,
+    "\n  mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceIngredientDocument,
     "\n  mutation PromoteFolkName($workspaceId: ID, $id: ID!, $folkNameId: ID!) {\n    promoteFolkName(workspaceId: $workspaceId, id: $id, folkNameId: $folkNameId) {\n      id\n      name\n      slug\n      folkNames {\n        id\n        name\n      }\n    }\n  }\n": typeof types.PromoteFolkNameDocument,
     "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": typeof types.CreateReferenceDocument,
     "\n  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {\n    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": typeof types.UpdateReferenceDocument,
@@ -140,6 +141,7 @@ const documents: Documents = {
     "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateCompendiumIngredientDocument,
     "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.UpdateCompendiumIngredientDocument,
     "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n": types.DeleteCompendiumIngredientDocument,
+    "\n  mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceIngredientDocument,
     "\n  mutation PromoteFolkName($workspaceId: ID, $id: ID!, $folkNameId: ID!) {\n    promoteFolkName(workspaceId: $workspaceId, id: $id, folkNameId: $folkNameId) {\n      id\n      name\n      slug\n      folkNames {\n        id\n        name\n      }\n    }\n  }\n": types.PromoteFolkNameDocument,
     "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": types.CreateReferenceDocument,
     "\n  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {\n    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": types.UpdateReferenceDocument,
@@ -372,6 +374,10 @@ export function graphql(source: "\n  mutation UpdateCompendiumIngredient(\n    $
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

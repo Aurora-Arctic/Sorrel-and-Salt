@@ -163,8 +163,8 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
             ? {
                 href: `${own}?edit` as Route,
                 closeHref: own,
-                // The coven's dialog has no Delete (M9.10's), so this is
-                // never reached; the list is where a gone entry would leave to.
+                // A delete from the dialog (M8.17) leaves for the coven's
+                // Ingredients, this page being gone.
                 deletedHref: ingredientsHref,
                 // A save closes the dialog back onto this page, whose address
                 // names the id a save leaves be.
