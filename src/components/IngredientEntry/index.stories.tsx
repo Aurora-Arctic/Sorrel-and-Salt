@@ -392,12 +392,13 @@ export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_C
 // public link nor Edit, since the compendium no longer holds it.
 export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
 
-// The same, to a member: Make It Ours is the one cupboard choice left, a plain button
-// (M12.23), since the cupboard services no longer find the entry.
+// The same, to a member: the Edit menu offers Annotate, Make It Ours (M12.23) and
+// Remove, and no Add, since the compendium no longer offers the entry (the
+// owner's decision, 2026-10-19).
 export const RetiredOffersMakeItOurs: Story = () => (
   <Entry
     detail={{ ...FULL, retired: true, cupboardEntry: cupboardEntry() }}
-    cupboard={{ ...CUPBOARD, canAdd: false, canAnnotate: false, canRemove: false }}
+    cupboard={{ ...CUPBOARD, canAdd: false }}
   />
 );
 

@@ -40,11 +40,7 @@ import {
   findPageInScopeIncludingSoftDeleted,
   findPageInTiers,
 } from './finders';
-import {
-  inUseIngredientParent,
-  inUseVariantParent,
-  readableIngredientParent,
-} from './ingredient-parent';
+import { inUseIngredientParent, inUseVariantParent } from './ingredient-parent';
 import {
   fold,
   foldedWordMatch,
@@ -113,20 +109,23 @@ export function findManyOfIngredients<
 /**
  * The live variant with this id, while its ingredient is live and in the
  * compendium or a coven one of `memberships` proves: the form a jar may name
- * (M9.3), so another coven's form is no form at all here. Never a retired
- * compendium entry's, even for a coven whose cupboard names it: a retired
- * entry takes no new jar (M12.24), so this takes no `heldBy`.
+ * (M9.3), so another coven's form is no form at all here. With `heldBy`, also
+ * a live form of a retired compendium entry whose cupboard row in `heldBy`'s
+ * coven is live (`inUseVariantParent`, M12.24), so that coven may start a new
+ * jar of an entry it still holds (the owner's decision, 2026-10-19). No
+ * `heldBy` reads the live tiers alone, as every other caller needs.
  */
 export function findReadableVariant(
   memberships: readonly Membership[],
   id: string,
+  heldBy?: Membership,
 ): Promise<typeof ingredientVariants.$inferSelect | undefined> {
   return selectOne(
     ingredientVariants,
     and(
       notSoftDeleted(ingredientVariants),
       eq(ingredientVariants.id, id),
-      readableIngredientParent(memberships, ingredientVariants.ingredientId),
+      inUseIngredientParent(memberships, ingredientVariants.ingredientId, heldBy),
     ),
   );
 }

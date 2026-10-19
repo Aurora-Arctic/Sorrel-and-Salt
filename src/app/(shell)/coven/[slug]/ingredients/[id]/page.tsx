@@ -118,6 +118,10 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // no longer holds it: no public page to link, and nothing for a curator to
   // edit, since the compendium's screens no longer read it.
   const inCompendium = entry.workspaceId === null && !detail.retired;
+  // Whether this coven's cupboard names the entry, retired or not: `detail`
+  // carries the cupboard entry the retired-entry read found, where
+  // `cupboardEntry` reads live entries only.
+  const held = entry.workspaceId === null && detail.cupboardEntry != null;
 
   // A compendium entry offers Edit to a curator, opening the compendium's edit modal
   // over this page (M8.19). A coven's own entry gets no Edit until M8.17's modal. The form's values are
@@ -132,8 +136,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // Annotate opens its dialog from the address the same way, but only for a
   // member who may annotate in a coven that holds the entry; any other asking
   // for `?annotate` is ignored.
-  const mayAnnotate =
-    inCompendium && cupboardEntry != null && rolePermits(role, { ingredient: ['update'] });
+  const mayAnnotate = held && rolePermits(role, { ingredient: ['update'] });
   const annotating = mayAnnotate && 'annotate' in (await searchParams);
 
   const hrefOf = ({ id, slug, workspaceId }: LinkedIngredient): Route | undefined => {
@@ -164,19 +167,24 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
         }
         // The buttons a member's role permits over a compendium entry; the
         // services refuse the rest whatever is drawn (M12.17). A retired one
-        // (M12.24) offers Make It Ours alone (M12.23): the cupboard services
-        // no longer find its row, and taking it as the coven's own is the way
-        // out of it. Make It Ours reads the permission its service asserts.
+        // the coven holds (M12.24) offers Annotate, Make It Ours (M12.23) and
+        // Remove, by the owner's decision of 2026-10-19, but no Add: the
+        // compendium no longer offers it, so a coven that removes it cannot
+        // take it back. Make It Ours reads the permission its service asserts.
         cupboard={
-          entry.workspaceId === null && (inCompendium || cupboardEntry != null)
+          entry.workspaceId === null && (inCompendium || held)
             ? {
                 workspaceId: workspace.id,
                 covenSlug: workspace.slug,
                 canAdd: inCompendium && rolePermits(role, { ingredient: ['create'] }),
-                canAnnotate: inCompendium && rolePermits(role, { ingredient: ['update'] }),
-                canRemove: inCompendium && rolePermits(role, { ingredient: ['delete'] }),
+                canAnnotate: rolePermits(role, { ingredient: ['update'] }),
+                canRemove: rolePermits(role, { ingredient: ['delete'] }),
                 canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
+                // A retired entry's page reads nothing once its row is gone.
+                removedHref: detail.retired
+                  ? (`/coven/${workspace.slug}/ingredients` as Route)
+                  : undefined,
               }
             : undefined
         }

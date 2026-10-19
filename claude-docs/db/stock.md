@@ -222,9 +222,16 @@ stock.
   with `findReadableVariant` under the coven's proof, so another coven's form,
   a deleted form, or a form of a deleted ingredient is `NotFound`. The
   composite foreign key alone would accept another coven's form, since it holds
-  only the variant to its ingredient.
+  only the variant to its ingredient. The one deleted parent it admits is a
+  compendium entry the curators retired while this coven's live cupboard row
+  names it: it passes the coven's proof as `heldBy`, and checks the row again
+  through `heldCompendiumEntry` under the stock lock, so a coven may still
+  start a jar of a retired entry it holds (the owner's decision, 2026-10-19;
+  [`m12.24-retired-entry-stays-readable.md`](../design-decisions/m12.24-retired-entry-stays-readable.md)).
+  A coven's own deleted ingredient's forms stay refused.
 - **A jar of a compendium form lists the entry (M12.15).** `createStock` also
-  inserts the coven's cupboard row for the entry when it has none, in the same
+  inserts the coven's cupboard row for the entry when it has none (never for a
+  retired entry, which is reached only through a live row), in the same
   transaction, under the coven's stock lock. The jar is stored on the
   compendium form asked for even when the coven's own entry shares the entry's
   name or formal name: a name match takes nothing from it (M12.28). A second jar of another form adds no second row

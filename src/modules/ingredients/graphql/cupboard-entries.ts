@@ -12,6 +12,7 @@ import {
   convertLocalToCompendiumEntry,
   removeCupboardEntry,
 } from '../services/cupboard-entries';
+import { getIngredient } from '../services/compendium';
 import type {
   ConvertedCompendium,
   CupboardEntryNode,
@@ -109,17 +110,24 @@ const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
   }),
 });
 
-/** The written row with the compendium entry's own name beside it, as the read answers. */
+/**
+ * The written row with the compendium entry's own name beside it, as the read
+ * answers. `read` fetches the entry where the loader cannot: the loader reads
+ * live entries only, and a coven annotates a retired entry it still holds.
+ */
 async function nodeOf(
   row: CupboardEntryRow,
   loaders: Built<{
     cupboardEntryByIngredient: typeof cupboardEntryByIngredient;
     ingredientsById: typeof ingredientsById;
   }>,
+  read?: () => Promise<{ name: string }>,
 ): Promise<CupboardEntryNode> {
   const { ingredientId, workspaceId } = row;
   clearCupboardEntry(loaders, { ingredientId, workspaceId });
-  const entry = await loaders.ingredientsById.load({ id: ingredientId, workspaceId });
+  const entry = read
+    ? await read()
+    : await loaders.ingredientsById.load({ id: ingredientId, workspaceId });
   if (!entry) throw new NotFound('No such compendium entry');
   return { ...row, compendiumName: entry.name };
 }
@@ -154,10 +162,14 @@ builder.mutationField('annotateCupboardEntry', (t) =>
       input: t.arg({ type: CupboardEntryInputRef, required: true }),
     },
     authScopes: { signedIn: true },
+    // The name is read through `getIngredient`, which reaches a retired entry
+    // the coven still holds (claude-docs/db/workspace-compendium-entries.md,
+    // "When the compendium retires the entry"); the loader would miss it.
     resolve: async (_root, { workspaceId, ingredientId, input }, { loaders, ...context }) =>
       nodeOf(
         await annotateCupboardEntry(sessionOf(context), workspaceId, ingredientId, input),
         loaders,
+        () => getIngredient(sessionOf(context), ingredientId, workspaceId),
       ),
   }),
 );

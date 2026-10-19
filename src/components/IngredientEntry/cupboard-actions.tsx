@@ -71,6 +71,7 @@ export default function CupboardActions({
   compendium,
   overrides,
   annotate,
+  removedHref,
   edit,
 }: CupboardActionsProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
@@ -127,7 +128,12 @@ export default function CupboardActions({
     onSuccess: () => {
       // The page stays mounted as it reads again, so the question has to close.
       settle();
-      refresh();
+      // A retired entry's page reads nothing once its row is gone, so a
+      // remove leads off it rather than reading it again, replacing the history
+      // entry the way every other delete-then-leave flow does, so Back does
+      // not return to a page that is gone.
+      if (removedHref) navigate(removedHref, { replace: true });
+      else refresh();
     },
     onError: (error) => {
       // The jar refusal names its remedy, so it is shown as the service wrote it.

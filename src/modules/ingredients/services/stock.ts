@@ -17,6 +17,7 @@ import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entri
 import { type Unit, dimensionOf } from '../schema/units';
 import { unitConvert } from '../units/convert';
 import { StockInput } from '../validation/stock';
+import { heldCompendiumEntry } from './cupboard-entries';
 import type { StockKey, StockValues } from '../types';
 import { type Membership, assertMembership } from '@/modules/coven';
 
@@ -42,12 +43,16 @@ const HELD = 'Your coven already holds this form';
  * entries: an own entry sharing a compendium entry's name takes nothing from
  * it (M12.28). A jar of a compendium form puts that entry in the coven's
  * cupboard, in the same transaction, when it is not there already (M12.15).
+ * A form of a retired compendium entry takes a jar while this coven's
+ * cupboard row names the entry, and never puts it back in the cupboard
+ * (M12.24, as changed 2026-10-19).
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {ValidationError} the input breaks `StockInput`, or the coven
  * already holds the form, beside `variantId`.
  * @throws {NotFound} no live form with this id the coven may read — another
- * coven's included, and an id that is not one.
+ * coven's included, a retired entry's this coven's cupboard does not name,
+ * and an id that is not one.
  */
 export async function createStock(
   session: Session,
@@ -59,7 +64,9 @@ export async function createStock(
   const parsed = parseInput(StockInput, input);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(variantId).success) throw new NotFound(NO_FORM);
-  const variant = await findReadableVariant([membership], variantId);
+  // With `membership` as `heldBy`: a retired compendium entry this coven's
+  // cupboard still names takes a new jar too (M12.24, as changed 2026-10-19).
+  const variant = await findReadableVariant([membership], variantId, membership);
   if (!variant) throw new NotFound(NO_FORM);
 
   const unit = parsed.unit ?? null;
@@ -70,8 +77,14 @@ export async function createStock(
       await write.lockCovenStock(membership);
       // A jar of a compendium form puts the entry in the cupboard, once
       // (M12.15). The lock above makes the read below see a concurrent
-      // create's row; the unique index backs it.
-      if (entry?.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
+      // create's row; the unique index backs it. A retired entry, which the
+      // live read of `entry` does not return, is never put back: its jar
+      // stands only on the cupboard row that admitted the form, read again
+      // here so a remove that tombstoned the row before the lock refuses it.
+      if (!entry) {
+        if (!(await heldCompendiumEntry(membership, variant.ingredientId)))
+          throw new NotFound(NO_FORM);
+      } else if (entry.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
         await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
           ingredientId: entry.id,
         });

@@ -235,6 +235,26 @@ describe('CupboardActions', () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 
+  it('leads to removedHref once a retired entry is removed, since its page reads nothing then', async () => {
+    mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
+      'RemoveCupboardEntry',
+      () => ({ removeCupboardEntry: BASE.ingredientId }),
+    );
+    router.refresh.mockClear();
+    router.replace.mockClear();
+    renderActions({ held: true, removedHref: '/coven/fixture-coven/ingredients' as Route });
+
+    choose('Remove');
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven/ingredients'),
+    );
+    // Replaced, not pushed: Back must not return to a page that is gone.
+    expect(router.push).not.toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
   it("shows the service's refusal when a jar is still held", async () => {
     mockGraphQLError('RemoveCupboardEntry', {
       code: 'VALIDATION',
