@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
 
 // The admin pages against the built server, for what no story walks: the
@@ -352,13 +353,22 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
   let name: string;
   try {
     [{ name }] = await sql`select name from users where id = ${userId}`;
-    const entries = await sql`
-      update ingredients set updated_by = ${userId} where workspace_id is null and deleted_at is null returning id`;
-    const forms = await sql`
-      update ingredient_forms set updated_by = ${userId} where deleted_at is null returning id`;
+    // Stamps alone: the trigger keeps them unless the write declares itself a touch (MB.106).
+    let entries = 0;
+    let forms = 0;
+    await asTouch(sql, async (tx) => {
+      entries = (
+        await tx`
+        update ingredients set updated_by = ${userId} where workspace_id is null and deleted_at is null returning id`
+      ).length;
+      forms = (
+        await tx`
+        update ingredient_forms set updated_by = ${userId} where deleted_at is null returning id`
+      ).length;
+    });
     // Without rows the pages name no editor, so the case would prove nothing.
-    expect(entries.length).toBeGreaterThan(0);
-    expect(forms.length).toBeGreaterThan(0);
+    expect(entries).toBeGreaterThan(0);
+    expect(forms).toBeGreaterThan(0);
   } finally {
     await sql.end();
   }
