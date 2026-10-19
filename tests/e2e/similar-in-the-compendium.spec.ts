@@ -8,8 +8,8 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 
 // A coven's own entry with no formal name (M12.22): a "Similar in the
-// Compendium" block, and a This Is It button that makes the own entry the
-// compendium entry it matches. Each test here proves what no story walks.
+// Compendium" block, and a radio for each entry with one Link to Selected button
+// that, after a question, makes the own entry the compendium entry it matches. Each test here proves what no story walks.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -76,7 +76,13 @@ test('a member makes an own entry the compendium entry it matches, jar and all',
   );
   await assertNoAccessibilityViolations(page);
 
-  await page.getByRole('button', { name: /^This Is It/ }).click();
+  await expect(page.getByRole('button', { name: 'Link to Selected' })).toBeDisabled();
+  await page.getByText('Fixture Similar Wort', { exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Fixture Similar Wort' })).toBeChecked();
+  await expect(page.getByRole('link', { name: /^Open Fixture Similar Wort/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Link to Selected' }).click();
+  await assertNoAccessibilityViolations(page);
+  await page.getByRole('dialog').getByRole('button', { name: 'Link', exact: true }).click();
 
   await expect(page).toHaveURL(`/coven/${coven.slug}/ingredients/${compendiumId}`);
   const [jar] = await withSql(
@@ -88,7 +94,7 @@ test('a member makes an own entry the compendium entry it matches, jar and all',
   expect(jar.ingredient_id).toBe(compendiumId);
 });
 
-test('a refusal shows inline and nothing moves', async ({ page, browser, baseURL }) => {
+test('a refusal shows in the dialog and nothing moves', async ({ page, browser, baseURL }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   const coven = await seedCoven(page, 'Fixture Coven Refused', 'coven-refused.test', {
     A: 'owner',
@@ -107,9 +113,11 @@ test('a refusal shows inline and nothing moves', async ({ page, browser, baseURL
   const url = `/coven/${coven.slug}/ingredients/${held.ingredientId}`;
 
   await page.goto(url);
-  await page.getByRole('button', { name: /^This Is It/ }).click();
+  await page.getByRole('radio', { name: 'Fixture Refused Wort' }).check();
+  await page.getByRole('button', { name: 'Link to Selected' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Link', exact: true }).click();
 
-  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('alert')).toBeVisible();
   await assertNoAccessibilityViolations(page);
   await expect(page).toHaveURL(url);
   const [row] = await withSql(

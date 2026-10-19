@@ -520,6 +520,10 @@ $glyph-size: 1rem;
 // them reads at a glance. A form keeps `$icon-size`, where its pencils sit
 // beside its fields' text.
 $icon-size-large: 2rem;
+
+// The ring of a radio, shared so what must line up with a radio's text
+// (a row's indent) is worked out from it, not typed again.
+$radio-size: 1.125rem;
 $glyph-size-large: 1.25rem;
 
 // A tip's widest line, written as `min($tip-width, calc(100vw - space(6)))`

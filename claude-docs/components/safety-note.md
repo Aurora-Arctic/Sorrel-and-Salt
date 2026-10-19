@@ -7,11 +7,13 @@ care (M8.13a, story 53). Three components share the directory:
   from its description, so a warning is noticed rather than skimmed past.
 - **`ToxicMark`** is the Toxic badge, shown when the ingredient or a form on
   show is flagged toxic. M11.21 added the flags and left the badge to Wave 12.
-- **`CautionMark`** is the Caution badge (M8.14), for a consumer that does not
-  show the notes: the word "Caution", no tip, nothing focusable, shown when the
+- **`CautionMark`** is the Caution badge (M8.14), a summary for a reader who has
+  not reached the notes yet: the word "Caution", no tip, nothing focusable, shown when the
   ingredient or a form on show has non-blank notes. It is independent of Toxic, so
   both can show. It wears the tinted `caution` palette, quieter than Toxic's
-  solid fill. The card uses it; the entry page keeps `SafetyNote`.
+  solid fill. The card uses it, and so does the entry page's head (the owner's call,
+  2026-10-19), so a note on one form shows before the reader scrolls to that form;
+  the page also keeps `SafetyNote` for the notes themselves.
 
 This directory owns safety presentation for the whole project. The card (M8.14),
 the entry page (M8.19) and the spell builder's toxic-ingredient warning (M10.18)

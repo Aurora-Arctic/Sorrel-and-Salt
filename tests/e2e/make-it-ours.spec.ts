@@ -57,10 +57,16 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
   await expect(page.getByRole('heading', { level: 1, name: 'Fixture Our Ownwort' })).toBeVisible();
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
 
-  // By keyboard, as the entry asks: focused, then Enter, both times.
-  await page.getByRole('button', { name: 'Make It Ours' }).focus();
+  // By keyboard, as the entry asks: the Edit menu opened by ArrowDown, its
+  // choice reached by the arrows and taken by Enter, then the dialog's answer.
+  await page.getByRole('button', { name: 'Edit', exact: true }).focus();
+  await page.keyboard.press('ArrowDown');
+  const ours = page.getByRole('menuitem', { name: 'Make It Ours' });
+  while (!(await ours.evaluate((item) => item === document.activeElement))) {
+    await page.keyboard.press('ArrowDown');
+  }
   await page.keyboard.press('Enter');
-  const ask = page.getByRole('group', { name: 'Make It Ours' });
+  const ask = page.getByRole('dialog', { name: 'Make It Ours' });
   await expect(ask).toBeVisible();
   await assertNoAccessibilityViolations(page);
   await ask.getByRole('button', { name: 'Make It Ours' }).focus();

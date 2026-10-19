@@ -6,6 +6,8 @@ import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
 import IngredientForm from '../IngredientForm';
 import { RouteModal } from '../Modal';
+import { useRouteModalOpener } from '../Modal/route-modal-provider';
+import { ANNOTATE_HEADING } from './annotate-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
 
 // The compendium edit modal over an entry's own page (M8.19), the shape the
@@ -24,9 +26,12 @@ export default function EntryDialog({
 }: {
   entry: EditableEntry;
   edit: IngredientEntryEdit;
-}): ReactElement {
+}): ReactElement | null {
   const router = useRouter();
   const { opened, closeHref, deletedHref, savedHref } = edit;
+  // Annotate's press shares this page's skeleton; that one belongs to it.
+  const annotating = useRouteModalOpener()?.loading?.title === ANNOTATE_HEADING.title;
+  if (annotating && !opened) return null;
   return (
     <RouteModal
       closeHref={closeHref}

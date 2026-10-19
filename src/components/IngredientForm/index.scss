@@ -792,18 +792,14 @@ $skeleton-fade: 300ms;
 }
 
 // A variant field's Copy From Ingredient (MB.115, the owner's call), at the
-// right end of its label row or legend, which span the card for it; on a
-// phone it wraps beneath a long label rather than squeezing it.
+// right end of its label row or legend, which span the card for it. It is a
+// `.field__label-action` (_primitives.scss): it stays on the label's line at
+// every width and never changes the row's height (the owner's call, 2026-10-19).
 .ingredient-form .ingredient-form__variant-fields {
   .field__label-row,
   .fieldset__legend {
-    flex-wrap: wrap;
     width: 100%;
   }
-}
-
-.ingredient-form__copy {
-  margin-left: auto;
 }
 
 // The notice of what a variant's substitute copy skipped (MB.115, the

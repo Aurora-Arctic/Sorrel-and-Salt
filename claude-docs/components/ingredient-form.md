@@ -346,7 +346,7 @@ at a time, around them (["The variants"](#the-variants)).
   sections are in view only while Variants is open, which already reads
   Close All, so a section open inside a card the Variants section hides
   never keeps it reading Close All.
-- **Copy From Ingredient** sits in its field's label row as before, so it is
+- **Copy From Ingredient** is an icon-only button (two sheets, tip "Copy From Ingredient", the owner's call, 2026-10-19) on the shared `.field__label-action` primitive, at the right end of its field's label row, so it is
   hidden with its section and pressed once the section is open. The
   skipped notice stays in the page with the list, so it outlasts its
   section closing and opening; what a copy adds shows on the closed line.
@@ -922,7 +922,7 @@ server, so it has no arrow.
 ### Copying from the ingredient
 
 A form often says much of what its ingredient says, so each of an open
-variant's fields but its Form has a **Copy From Ingredient** button
+variant's fields but its Form has a **Copy From Ingredient** icon button
 (`copy.tsx`, MB.115, the owner's call): Description, Safety Notes, Element, Celestial
 Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
 References. The ingredient's own fields have none, and nor has a form's

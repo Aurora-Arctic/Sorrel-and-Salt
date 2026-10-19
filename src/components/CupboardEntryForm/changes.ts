@@ -69,7 +69,7 @@ export function differs(field: CupboardField, a: CupboardValues, b: CupboardValu
 /**
  * True when the coven is saying something of `field` right now: it holds an
  * override that has not been handed back, or the person has typed one that
- * is not the compendium's own. "Use the Compendium's" is offered for these.
+ * is not the compendium's own. "Restore Original" is offered for these.
  */
 export function isOwn(
   field: CupboardField,

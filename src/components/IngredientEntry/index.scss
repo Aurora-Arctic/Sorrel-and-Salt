@@ -355,12 +355,6 @@ $jump-link-line: 1.25;
   color: $text-muted;
 }
 
-// The compendium's own name beneath a coven's label for it.
-.ingredient-entry__compendium-name {
-  margin: 0;
-  color: $text-muted;
-}
-
 // A short hairline under "In the Compendium", for a coven's own entry and for a
 // compendium entry alike, between its last line (the
 // last link, or See All when it is there) and the Correspondences heading,
@@ -381,15 +375,37 @@ $jump-link-line: 1.25;
   }
 }
 
-// "In the Compendium": the heading with its one ⓘ beside it, the gap a
-// label-row gives an InfoTip (`space(1)`), the pair centred on each other.
+// One space for both: heading to the first entry, and the list (with its See
+// All) to Link to Selected, equal in both blocks (the owner's call,
+// 2026-10-19). The block's own stack gap is dropped so these margins are the
+// whole of it.
+$replaces-gap: space(5);
+
+.ingredient-entry__replaces {
+  gap: 0;
+}
+
+// "In the Compendium" and "Similar in the Compendium": the heading with its one
+// ⓘ after it. The row is running text, not a flex row (the owner's call,
+// 2026-10-19): when the heading wraps, the ⓘ follows its last word on the last
+// line, never alone on a line of its own and never out at the right edge. The
+// heading ends in a word joiner (U+2060, drawn by CSS so the heading's name
+// stays its text), which forbids a break before the ⓘ.
 .ingredient-entry__heading-row {
-  display: flex;
-  align-items: center;
-  gap: space(1);
+  margin-block-end: $replaces-gap;
 
   > h3 {
+    display: inline;
     margin: 0;
+
+    &::after {
+      content: '\2060';
+    }
+  }
+
+  > .info-tip {
+    margin-inline-start: space(1);
+    vertical-align: middle;
   }
 }
 
@@ -398,40 +414,117 @@ $jump-link-line: 1.25;
   @include icon-link;
 }
 
-// An entry of "Similar in the Compendium" carries its This Is It beside the
-// link, and a refusal beneath; the row wraps on a narrow column.
+// An entry of "Similar in the Compendium" is three columns (the owner's call,
+// 2026-10-19): the radio and title in a label that takes the row's width and
+// wraps within itself (breaking and hyphenating a long title), then the chain
+// icon as a link of its own, `flex: none` and pushed to the right end, so
+// every row's icon stands in one column however its title breaks. Neither
+// the radio nor the icon can be left alone on a line, and the icon stays
+// level with the title's first line (Link to Selected, below the list).
+.ingredient-entry__replaced {
+  // More air between the options than a plain list has, so a row's radio is
+  // easy to tell from its neighbour's (the owner's call, 2026-10-19).
+  gap: space(3);
+}
+
 .ingredient-entry__replaced li {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: space(2);
+
+  > .radio {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-block: 0;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  > .icon-tip {
+    flex: none;
+    margin-inline-start: auto;
+  }
+
+  a svg {
+    margin-inline-start: 0;
+  }
+}
+
+// "In the Compendium" (the owner's call, 2026-10-19): no radios, so the whole
+// name stays the link, but laid out as the Similar rows are: the title wraps
+// within itself (breaking and hyphenating), then the chain icon `flex: none`
+// at the right end, level with the first line, so the icons stand in one
+// column. The dot (LinkHint) follows the icon, as it does in Similar's link, so the
+// two blocks' icons share one x.
+.ingredient-entry__replaced li > a {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+
+  .ingredient-entry__entry-title {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-inline-end: space(2);
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  svg {
+    flex: none;
+    margin-inline-start: auto;
+    margin-block-start: 0.125em;
+  }
+}
+
+// "Similar in the Compendium" only: See All starts where the options' text
+// does, past the radio and its gap, not under the radio (the owner's call,
+// 2026-10-19). The gap is the radio label's own, `space(3)`. In the Compendium
+// has no radios, so its See All stays flush.
+.ingredient-entry__replaces:has(.ingredient-entry__replaced .radio) .ingredient-entry__see-all {
+  padding-inline-start: #{$radio-size + space(3)};
+}
+
+// Link to Selected stands under the list, set off from it by a step.
+.ingredient-entry__link-action {
+  margin: 0;
+  margin-block-start: $replaces-gap;
 }
 
 // "See All N" is the way on to the rest, not one of the entries: a step
-// smaller and muted, underlined and without the chain icon, and set off by
-// `space(4)` more than the list's own gap, so it does not read as a fourth.
+// smaller, underlined and without the chain icon, and set close
+// under the list it belongs to, so it reads as the list's tail, not a fourth.
 .ingredient-entry__see-all {
   margin: 0;
-  margin-block-start: space(4);
+  // Close to the list it belongs to, but a step more than before (the owner's
+  // call, 2026-10-19): still less than the gap below it, which is a step more
+  // than the usual `$replaces-gap` (see the rule after this one).
+  margin-block-start: space(3);
   font-size: type-size('small');
   // The line the text itself fills, so the hairline under the block, centred
   // for a link, stands level under this too.
   line-height: 1.3;
 
+  // Underlined, in the body ink whether followed or not (the owner's call,
+  // 2026-10-19, after trying the accent green): the underline marks it as a
+  // link, and it points at the darker link colour on hover as body links do.
   a {
-    color: $text-muted;
+    color: $text-primary;
     text-decoration: underline;
-    @include theme-transition(color);
 
-    &:hover,
-    &:focus-visible {
-      color: $accent;
+    &:hover {
+      color: $accent-hover;
     }
 
     &:focus-visible {
       @include focus-ring;
     }
   }
+}
+
+// With See All between them, Link to Selected stands a step further off.
+.ingredient-entry__see-all + .ingredient-entry__link-action {
+  margin-block-start: space(6);
 }
 
 // Every link in the References section (a note's way on to its entry, an
@@ -476,16 +569,9 @@ $jump-link-line: 1.25;
   }
 }
 
-// The cupboard buttons beside the title (M12.17): in a row that wraps on a
-// phone, the remove question's sentence taking a line of its own.
+// The cupboard choices beside the title (M12.17): the Edit menu or one plain
+// button, and a refusal's notice, in a row that wraps on a phone.
 .ingredient-entry__cupboard {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(2);
-}
-
-.ingredient-entry__ask {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
