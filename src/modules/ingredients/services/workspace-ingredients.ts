@@ -111,6 +111,7 @@ export async function updateWorkspaceIngredient(
       id,
       { ...lists, ...picks.children, heldDeities: held },
       'replace',
+      membership,
     );
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
