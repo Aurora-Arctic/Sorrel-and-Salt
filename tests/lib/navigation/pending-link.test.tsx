@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
@@ -19,7 +20,12 @@ const COVEN_TABLE = { region: 'coven', shape: 'table' } as const;
 
 let state: { busy: boolean; target?: unknown } | undefined;
 function Probe() {
-  state = useNavigationState();
+  const current = useNavigationState();
+  // Read from committed renders only: a transition that suspends re-runs
+  // component bodies with the optimistic value already put back.
+  useEffect(() => {
+    state = current;
+  });
   return null;
 }
 

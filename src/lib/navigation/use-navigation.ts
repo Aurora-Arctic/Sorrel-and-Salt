@@ -1,62 +1,68 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useSyncExternalStore, useTransition } from 'react';
-import { begin, getServerSnapshot, getSnapshot, settle, subscribe } from './store';
+import {
+  startTransition,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
+import { ActiveNavigationContext, NavigationActionsContext } from './provider';
+import { getServerSnapshot, getSnapshot, subscribe } from './store';
 import type { NavigateOptions, NavigationState, PendingNavigation } from './types';
 
-/** The site-wide state: busy while any navigation is on its way, and where it is headed. */
+const IDLE: NavigationState = { busy: false, target: undefined };
+
+/**
+ * The site-wide state: busy while any navigation is on its way, and where it
+ * is headed. A navigation's part is the provider's optimistic value; a full
+ * page load's part is the external store's.
+ */
 export function useNavigationState(): NavigationState {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const active = useContext(ActiveNavigationContext);
+  const leaving = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const target = active?.target;
+  return useMemo(
+    () => (active || leaving ? { busy: true, target } : IDLE),
+    [active, leaving, target],
+  );
 }
 
 /**
- * The one way the site navigates. The router call runs inside a transition,
- * which Next keeps pending until the new page has rendered; that is the only
- * signal available, because a `loading.tsx` or route `<Suspense>` would turn
- * the guards' 404, 403 and 308 responses into 200s. `pending` is this
- * caller's own, and the site-wide store carries the same navigation for
- * everything else.
+ * The one way the site navigates. The router call runs inside a transition
+ * the provider owns, which Next keeps pending until the new page has
+ * rendered; that is the only signal available, because a `loading.tsx` or
+ * route `<Suspense>` would turn the guards' 404, 403 and 308 responses into
+ * 200s. `pending` is true for the caller whose navigation is showing, and the
+ * site-wide state carries the same navigation for everything else.
  */
 export function usePendingNavigation(): PendingNavigation {
+  const actions = useContext(NavigationActionsContext);
+  const active = useContext(ActiveNavigationContext);
+  const owner = useRef(Symbol('navigation'));
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const id = useRef(Symbol('navigation'));
-  const started = useRef(false);
 
-  // The transition's end is the settle. Waiting to see `pending` true first
-  // stops the effect clearing a navigation begun in the same render.
-  useEffect(() => {
-    if (pending) started.current = true;
-    else if (started.current) {
-      started.current = false;
-      settle(id.current);
-    }
-  }, [pending]);
-  useEffect(() => {
-    const own = id.current;
-    return () => settle(own);
-  }, []);
-
+  // Outside the provider (a Ladle story, a component test) a call is a plain
+  // router call in a transition: it navigates, and nothing shows a wait.
+  const start = actions?.navigate;
+  const reload = actions?.refresh;
   const navigate = useCallback(
     (href: string, options?: NavigateOptions) => {
-      begin(id.current, options?.target);
-      // Options reach the router only when given, so a plain call is a
-      // plain `push(href)`.
-      const routerOptions = options?.scroll === undefined ? undefined : { scroll: options.scroll };
+      if (start) return start(owner.current, href, options);
+      const go = options?.replace ? router.replace : router.push;
       startTransition(() => {
-        const go = options?.replace ? router.replace : router.push;
-        if (routerOptions) go(href as never, routerOptions);
-        else go(href as never);
+        if (options?.scroll === undefined) go(href as never);
+        else go(href as never, { scroll: options.scroll });
       });
     },
-    [router],
+    [start, router],
   );
-
   const refresh = useCallback(() => {
-    begin(id.current, undefined);
+    if (reload) return reload(owner.current);
     startTransition(() => router.refresh());
-  }, [router]);
+  }, [reload, router]);
 
-  return { pending, navigate, refresh };
+  return { pending: active?.owner === owner.current, navigate, refresh };
 }
