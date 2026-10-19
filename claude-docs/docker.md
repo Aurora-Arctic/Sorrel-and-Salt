@@ -180,6 +180,17 @@ no Neon connection and no host Node-version juggling.
     (`PLAYWRIGHT_AUDIT_WS_ENDPOINT`). `ipc: host` is Playwright's own Docker
     advice for Chromium. It is not built from `Docker/Dockerfile.e2e`, which
     stays Chromium alone.
+  - **`lighthouse-chrome`** (MB.84) — on the same **`audit` profile**, raised by
+    `make lighthouse-up` and stopped by `lighthouse-down`: a headless Chromium
+    from the same Microsoft image, with a DevTools port open, for the
+    devcontainer's `npm run lighthouse:seo`. It exists because the Playwright
+    servers launch Chromium over a pipe, so no DevTools port is ever open on
+    them. `Docker/lighthouse-chrome.sh` (bind-mounted) finds the image's
+    Chromium, starts it on loopback port 9223, and a Node forwarder publishes
+    that on 9222. **No port is published to the host**, because DevTools has no
+    authentication: only the devcontainer reaches it, at `lighthouse-chrome:9222`
+    (`LIGHTHOUSE_CDP_HOST` and `LIGHTHOUSE_CDP_PORT`, set in
+    `.devcontainer/docker-compose.yml` alone).
 
 - **`makefile`** — each target wraps
   `docker compose -f Docker/docker-compose.yaml` (via the `COMPOSE` variable):
@@ -200,7 +211,8 @@ no Neon connection and no host Node-version juggling.
   (`audit` has nothing to build, and rides on `docker-build` so the three
   stay one list). `playwright-server-up` / `-down` and
   `playwright-audit-up` / `-down` (M10.25) raise and stop the two browser
-  servers on their own. Plus `docker-update-token`
+  servers on their own, and `lighthouse-up` / `-down` (MB.84) the Chromium
+  Lighthouse drives. Plus `docker-update-token`
   (refreshes the devcontainer's `CLAUDE_CODE_OAUTH_TOKEN` in `Docker/.env` —
   standalone, not a prerequisite of `docker-up`), and `docker-codegen
 NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
