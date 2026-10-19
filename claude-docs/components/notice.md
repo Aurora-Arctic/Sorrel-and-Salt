@@ -9,13 +9,13 @@ MB.116, once the same markup had been written by hand in twenty-two files.
 
 `NoticeProps` (`types.ts`):
 
-| Prop        | What it is                                                                     |
-| ----------- | ------------------------------------------------------------------------------ |
-| `kind`      | `error`, `warn`, `caution`, `success` or `plain`: the look and the role        |
-| `quiet`     | Optional: an error, warning or caution on the page from the start, as a status |
-| `id`        | Optional, for a control that names the notice in its `aria-describedby`        |
-| `className` | Optional layout class from the caller, added after the notice's own            |
-| `children`  | The sentence; a link inside it stays inline                                    |
+| Prop        | What it is                                                                              |
+| ----------- | --------------------------------------------------------------------------------------- |
+| `kind`      | `error`, `warn`, `caution`, `success` or `plain`: the look and the role                 |
+| `quiet`     | Optional: an error, warning or caution on the page from the start, as a status          |
+| `id`        | Optional, for a control that names the notice in its `aria-describedby`                 |
+| `className` | Optional layout class from the caller, added after the notice's own                     |
+| `children`  | The sentence; a link inside it stays inline, in the notice's text colour and underlined |
 
 ## Contracts
 
