@@ -1,11 +1,11 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
-import { emptyText } from '../CompendiumList';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
+import EmptyCupboard from './empty';
 import type { CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
@@ -13,8 +13,8 @@ import '../CompendiumList/index.scss';
 // mode, one compact card per entry of the cupboard, and the pager. Render-only: the page reads
 // one page and hands it here. Each card links to the entry's page inside the coven, shows the
 // coven's own label, and holds its jars beneath the forms. The foot of a card (Edit, Delete)
-// stays empty until M8.17 and M9.10 fill it. An empty list is plain text until M9.11 builds
-// its empty state. claude-docs/components/coven-cards.md.
+// stays empty until M8.17 and M9.10 fill it. An empty list is EmptyCupboard's (M9.11).
+// claude-docs/components/coven-cards.md.
 
 const CovenCards = ({
   covenSlug,
@@ -28,6 +28,7 @@ const CovenCards = ({
   nextHref,
   position,
   total,
+  canAdd,
 }: CovenCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -48,7 +49,13 @@ const CovenCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, 'There are no ingredients here yet.')}</p>
+      <EmptyCupboard
+        covenSlug={covenSlug}
+        filter={filter}
+        categories={categories}
+        facets={facets}
+        canAdd={canAdd}
+      />
     ) : (
       <IngredientCardList label="Ingredients" density="compact">
         {entries.map((entry) => (

@@ -10,6 +10,7 @@
 | `entries`                                               | One `CovenCardEntry` per card: the coven's label, formal name, forms, categories, kind, flags and jars   |
 | `filter`, `facets`, `categories`, `vocabulary`, `total` | The filter state of [`compendium-list.md`](compendium-list.md), with Source, In Stock and Low Stock Only |
 | `previousHref`, `nextHref`, `position`                  | The pager's links and "Page X of Y"                                                                      |
+| `canAdd`                                                | The viewer may add to this coven, so an empty cupboard offers the first add                              |
 
 ## Contracts
 
@@ -18,7 +19,21 @@
 - The list is `density="compact"`. The Compact switch that lets a member turn it off is [`card-density-switch.md`](card-density-switch.md); the coven filter row draws it (`CompendiumListFilter`, `audience="coven"`), inside the search landmark; the admin and public lists have none.
 - The card's `children` hold the entry's jars as [`JarLines`](jar-lines.md), one line per jar. The `actions` foot stays empty until Edit and Delete exist.
 - The filter is `CompendiumListFilter audience="coven"`: it adds Source, In Stock and Low Stock Only, submits to `/coven/<slug>/ingredients`, suggests names from the coven's cupboard, and a pick opens the entry's page in the coven.
-- With no entries it draws the filter's empty sentence (`emptyText`) as plain text. The empty state proper is M9.11.
+- With no entries it draws `EmptyCupboard` (`empty.tsx`) instead of a list, below.
+
+## The empty and no-match states
+
+With no card to show, the list draws one of two regions (M9.11). Each is a `role="status"` region, so a screen reader announces it, and each has its own name, so a test tells them apart by which one is present rather than by its words:
+
+| Region           | When                                         | What it holds                                                                         |
+| ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `No Ingredients` | No filter is in force: the cupboard is empty | "There are no ingredients here yet." and, when `canAdd`, an Add Ingredient button     |
+| `No Matches`     | A filter is in force and matched nothing     | The no-match sentence and, when the filter has a search, a Search the Compendium link |
+
+- **Which state** is decided by `filterParts` (from `CompendiumList`), the list of the filters in force. It names the coven's own filters too (Source, In Stock, Low Stock Only), so an In Stock filter over a cupboard with nothing in stock reads as no match, not as an empty cupboard.
+- **The sentence** is `emptyText(filter, categories, facets, whenEmpty, 'ingredients')`, the same builder the admin and public lists use: "No ingredients match “Knitbone”. Change or clear the filter to see more." It points at the filter row's own clears (Clear Name in the search box, the facet panel's Clear All) and draws no clear control of its own.
+- **Add Ingredient** (`first-add.tsx`) does not build a dialog. It writes `?new=<slug>` into the address with `openHref` from `AppShell/add-href.ts`, and the shell's Add Ingredient control opens its dialog for this coven ([`modal.md`](modal.md), "Add Ingredient"). The page passes `canAdd` from the same permission that control checks (`ingredient: create` and `inventory: update`), so a viewer gets the sentence and no button.
+- **Search the Compendium** goes to `/compendium?query=<the search>`: a search that found nothing in the cupboard may still be in the Compendium. A filter with no search, such as In Stock alone, has nothing to hand on, so the link is not drawn.
 
 ## The page
 
@@ -28,4 +43,4 @@ The page hands the `Membership` that guard returns to `readCovenIngredients`, wh
 
 ## Stories and tests
 
-Stories: `Default`, `Mid List`, `Empty`. Tests: `tests/components/CovenCards/index.test.tsx` and `tests/app/(shell)/coven/[slug]/ingredients/page.test.tsx`.
+Stories: `Default`, `Mid List`, `Empty`, `Empty for a Viewer`, `No Matches`. Tests: `tests/components/CovenCards/index.test.tsx` and `tests/app/(shell)/coven/[slug]/ingredients/page.test.tsx`.
