@@ -12,7 +12,10 @@ const REDIRECTED = new Error('NEXT_REDIRECT');
 const redirect = vi.fn((_to: string): never => {
   throw REDIRECTED;
 });
-vi.mock('next/navigation', () => ({ redirect }));
+vi.mock('next/navigation', () => ({
+  redirect,
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
 const requireSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
 const viewerOf = vi.fn();

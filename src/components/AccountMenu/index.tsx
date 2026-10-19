@@ -35,7 +35,8 @@ const Chevron = (): ReactElement => (
   </svg>
 );
 
-const ACCOUNT_TARGET = { region: 'main', shape: 'page' } as const;
+// The account page: its sections beside the jump menu.
+const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav' } as const;
 
 const AccountMenu = ({
   name,
@@ -139,7 +140,7 @@ const AccountMenu = ({
             <li key={label} className="account-menu__link">
               <PendingLink
                 href={href}
-                navigationTarget={siteLinkTarget(base)}
+                navigationTarget={siteLinkTarget(base, href)}
                 className="account-menu__item"
                 onClick={close}
                 aria-current={isAtPath(pathname, base) ? 'page' : undefined}

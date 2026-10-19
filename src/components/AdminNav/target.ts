@@ -2,8 +2,8 @@ import type { NavigationTarget } from '../../lib/navigation';
 
 type Parts = Omit<NavigationTarget, 'region'>;
 
-/** A curated list's first tab: Add beside the heading, a filter, a table. */
-const CURATED: Parts = { shape: 'table', title: true, action: true, filter: true };
+/** A curated list's first tab: the tab row, Add beside the heading, a filter, a table. */
+const CURATED: Parts = { shape: 'table', title: true, tabs: true, action: true, filter: true };
 
 /**
  * What each admin page draws while it is on its way (M12.33), keyed by the
@@ -11,8 +11,9 @@ const CURATED: Parts = { shape: 'table', title: true, action: true, filter: true
  * its own body under its context row, so every wait is the `admin` region's
  * and the row with its nav stays. The wait is the page that arrives: its
  * heading, the action at the heading's end, its filter row, then the list.
- * The index is a page and draws its own heading. The tab row is not drawn
- * (there is no tab placeholder).
+ * The index is a page and draws its own heading. A tabbed page draws its tab
+ * row between the heading and the action; the Compendium has one tab and so
+ * no row.
  */
 const PARTS: Record<string, Parts> = {
   '/admin': { shape: 'page' },

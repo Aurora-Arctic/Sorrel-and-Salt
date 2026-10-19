@@ -1,5 +1,5 @@
 import { PendingLink } from '../../../../lib/navigation';
-import { covenSectionShape } from '../../../../lib/coven-path';
+import { covenTarget } from '../../../../lib/coven-path';
 import type { Route } from 'next';
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
@@ -12,9 +12,6 @@ import PageNav from '../../../../components/PageNav';
 import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
-
-const covenTarget = (path: string) =>
-  ({ region: 'coven', shape: covenSectionShape(path) }) as const;
 
 // The page a coven opens on (M9.15), where the switcher, an accepted
 // invitation and the shell's coven link all land. The layout's template

@@ -46,6 +46,20 @@ describe('adminTarget', () => {
     });
   });
 
+  it('draws the tab row for each tabbed page, and not for the compendium or the index', () => {
+    for (const href of [
+      '/admin/categories',
+      '/admin/forms',
+      '/admin/deities',
+      '/admin/celestial-bodies',
+      '/admin/users',
+    ]) {
+      expect(adminTarget(href).tabs).toBe(true);
+    }
+    expect(adminTarget('/admin/compendium').tabs).toBeFalsy();
+    expect(adminTarget('/admin').tabs).toBeFalsy();
+  });
+
   it('gives every page the nav links a heading', () => {
     for (const href of linked) expect(adminTarget(href).title).toBe(true);
   });

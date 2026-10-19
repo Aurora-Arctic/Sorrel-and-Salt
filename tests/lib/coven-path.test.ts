@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { NEW_COVEN_PATH, covenSlugOf, isReservedCovenSlug, pathInCoven } from '@/lib/coven-path';
+import {
+  NEW_COVEN_PATH,
+  covenSlugOf,
+  covenTarget,
+  isReservedCovenSlug,
+  pathInCoven,
+} from '@/lib/coven-path';
 
 describe('covenSlugOf', () => {
   it.each([
@@ -43,5 +49,36 @@ describe('pathInCoven for a viewer', () => {
     ['/coven/a/ingredients', '/coven/b/ingredients'],
   ])('takes %s to %s when members are unreadable there', (path, expected) => {
     expect(pathInCoven(path, 'b', false)).toBe(expected);
+  });
+});
+
+// While a coven page is on its way its region draws the page that arrives: the
+// heading and filter of the cupboard, the heading and tabs of the people, the
+// home's own contents menu.
+describe('covenTarget', () => {
+  it('draws Ingredients as cards under a heading and a filter', () => {
+    expect(covenTarget('/coven/a/ingredients')).toEqual({
+      region: 'coven',
+      shape: 'cards',
+      title: true,
+      filter: true,
+    });
+  });
+
+  it.each(['members', 'invitations'])(
+    'draws %s as a table under a heading and the tab row',
+    (section) => {
+      const target = covenTarget(`/coven/a/${section}`);
+      expect(target).toMatchObject({ region: 'coven', shape: 'table', title: true, tabs: true });
+      expect(target.filter).toBeFalsy();
+    },
+  );
+
+  it('draws the coven\x27s home as a page with its contents menu', () => {
+    expect(covenTarget('/coven/a')).toEqual({ region: 'coven', shape: 'page', frame: 'with-nav' });
+  });
+
+  it('draws a section it does not name as a plain page', () => {
+    expect(covenTarget('/coven/a/grimoire')).toEqual({ region: 'coven', shape: 'page' });
   });
 });

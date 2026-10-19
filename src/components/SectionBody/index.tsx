@@ -31,7 +31,9 @@ export default function SectionBody({
             shape={target.shape}
             title={target.title}
             action={target.action}
+            tabs={target.tabs}
             filter={target.filter}
+            menu={target.frame === 'with-nav'}
           />
         </main>
       ) : (
