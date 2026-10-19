@@ -103,12 +103,12 @@ describe('RouteModal', () => {
 describe('RouteModalProvider', () => {
   const renderPage = () =>
     render(
-      <RouteModalProvider>
-        <Navigating push={router.push}>
+      <Navigating push={router.push}>
+        <RouteModalProvider>
           <EditLink href={EDIT} name="Testcraft" heading={HEADING} />
           <RouteModal closeHref={CLOSE} />
-        </Navigating>
-      </RouteModalProvider>,
+        </RouteModalProvider>
+      </Navigating>,
     );
   const link = () => screen.getByRole('link', { name: 'Edit Testcraft' });
 

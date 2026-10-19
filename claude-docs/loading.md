@@ -102,7 +102,7 @@ layout and page both read from the database.
    once, with `aria-busy` on the box (`ComboboxSelect`'s `busy` prop).
 2. [`CovenBody`](components/coven-body.md) takes the old coven's page away at
    once, with no dimming, so nobody acts on the wrong coven's data. It does
-   this when the store is busy and the target's region is `coven`.
+   this when the site is busy and the target's region is `coven`.
 3. The **destination section's** skeleton takes its place, inside a `<main>`
    of its own, because the pages draw their own `<main>` and the landmark
    would otherwise vanish during the wait. That `<main>` also holds a visually
@@ -148,19 +148,32 @@ in a `<Suspense>` boundary and shows its fallback from the server straight away
    ([`components/tabbed-page.md`](components/tabbed-page.md), "Contracts").
 
 So every pending state on the site is a **client transition**. A router call
-made inside React's `useTransition` stays pending until the new page has
+made inside a React transition stays pending until the new page has
 rendered: React's reference says `isPending` "stays `true` until all Actions
 complete and the final state is shown to the user", and recommends marking page
-navigations as Transitions ([React, `useTransition`](#references)). The
-transition's own pending flag is the signal; the tab row already worked this way
-before M12.33.
+navigations as Transitions ([React, `useTransition`](#references)).
+
+The wait itself is held by `useOptimistic`. A value set with it inside a
+transition lasts as long as that transition and goes back by itself when the
+transition ends, whether the page arrived, another navigation took over, or the
+request failed ([React, `useOptimistic`](#references)). One component,
+`NavigationProvider` in `src/lib/navigation/provider.tsx`, is mounted once in
+`src/app/providers.tsx` and never unmounts. It holds that value and the
+router, and every navigation and refresh the site starts is a transition it
+opens. Nothing is ever settled by hand. The first version kept the transition
+in the component that pressed the link and cleared the wait when that component
+unmounted; `MainBody` and `CovenBody` swap their children for a skeleton,
+which unmounts the pressed link, so the wait ended at once and the old page came
+back (the admin navigation, the coven home contents links and Create Coven
+were all hit). Owning the wait above every region removes that whole class of
+bug.
 
 `useLinkStatus` from Next is the similar hook for a `<Link>`, and Next's
 documentation recommends it for a subtle inline hint, with a 100ms animation
 delay so that a fast navigation never flashes it ([Next.js,
 `useLinkStatus`](#references)). The site's `LinkHint` is that hint. `useLinkStatus`
 reports only the link it sits inside, and says nothing to the rest of the page;
-that is why the shared store below exists.
+that is why the provider's shared state below exists.
 
 ## How to adopt it
 
@@ -170,7 +183,7 @@ exported from its `index.ts`.
 | Piece                    | What it is, and when to use it                                                                                                                                                                                                                                                                                                                       |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PendingLink`            | The link the site draws, in place of a bare `next/link` where the press navigates. A plain press navigates through the shared hook; a press meant for a new tab or window, or a link with its own `target`, is left to the browser. It sets `aria-busy` on the anchor while its navigation is pending, and tells a `LinkHint` inside it (see below). |
-| `usePendingNavigation()` | Returns `{ pending, navigate(href, options), refresh() }`. Use it for any navigation that is not a link: a button that pushes, a redirect after a save, a refresh. `pending` is that caller's own; the site-wide store carries it for the rest.                                                                                                      |
+| `usePendingNavigation()` | Returns `{ pending, navigate(href, options), refresh() }`. Use it for any navigation that is not a link: a button that pushes, a redirect after a save, a refresh. `pending` is true while this caller's navigation is the one showing; the site-wide state carries it for the rest.                                                                 |
 | `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads.                                                                                                                                                                                               |
 | `NavigationBar`          | The bar. Mounted once in `src/app/providers.tsx`; a developer does not render it again.                                                                                                                                                                                                                                                              |
 | `Skeleton`               | The region. `shape` is `table`, `cards`, `form`, `page` or `line`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                                      |
@@ -188,9 +201,23 @@ exported from its `index.ts`.
   reads it from the store. On `PendingLink` the same thing is the prop
   `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
 
-Under the hood, a small external store holds the site-wide busy flag and the
-latest target, so the bar and the regions can follow a navigation that a button
-elsewhere in the tree started.
+Under the hood, `NavigationProvider` holds the site-wide wait (who started it
+and its target) in React context, so the bar and the regions can follow a
+navigation that a button elsewhere in the tree started.
+`useNavigationState()` joins it with the one thing React cannot see, the
+`leaving` flag of a small external store, set by `reportLeaving()` and cleared
+only by a restored page. Outside the provider (a Ladle story, a component test)
+`usePendingNavigation` makes a plain router call in a transition and shows no
+wait.
+
+**When navigations overlap.** The later navigation's wait shows, and its
+caller alone is `pending`; the earlier caller's `pending` goes false at once.
+React drops the wait only when the last overlapping transition has ended, so
+the first page to arrive does not clear a wait that a second navigation is
+still owed. A navigation that another supersedes ends with its transition,
+with no cleanup of ours. Component tests read this state from committed
+renders (an effect), because React re-runs a suspended transition's render
+with the value already put back.
 
 **Where the pieces are used.** The links that draw a skeleton name a target:
 
@@ -410,6 +437,7 @@ Chicago bibliography form. All accessed October 19, 2026.
 - Next.js. "loading.js." Vercel. Last updated September 23, 2026. Accessed October 19, 2026. https://nextjs.org/docs/app/api-reference/file-conventions/loading.
 - Next.js. "useLinkStatus." Vercel. Last updated September 2, 2025. Accessed October 19, 2026. https://nextjs.org/docs/app/api-reference/functions/use-link-status.
 - Nielsen, Jakob. "Response Times: The 3 Important Limits." Nielsen Norman Group. Originally published January 1, 1993 (from _Usability Engineering_, chapter 5). Accessed October 19, 2026. https://www.nngroup.com/articles/response-times-3-important-limits/. Cited above as Nielsen 1993.
+- React. "useOptimistic." react.dev. Accessed October 19, 2026. https://react.dev/reference/react/useOptimistic.
 - React. "useTransition." react.dev. Accessed October 19, 2026. https://react.dev/reference/react/useTransition.
 - Sherwin, Katie. "Progress Indicators Make a Slow System Less Insufferable." Nielsen Norman Group. October 26, 2014. Accessed October 19, 2026. https://www.nngroup.com/articles/progress-indicators/.
 - Tankala, Samhita. "Skeleton Screens 101." Nielsen Norman Group. June 4, 2023. Accessed October 19, 2026. https://www.nngroup.com/articles/skeleton-screens/.

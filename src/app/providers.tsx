@@ -3,7 +3,7 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { makeQueryClient } from '../lib/graphql-client';
-import { NavigationBar } from '../lib/navigation';
+import { NavigationBar, NavigationProvider } from '../lib/navigation';
 
 let browserClient: QueryClient | undefined;
 
@@ -20,8 +20,10 @@ function getQueryClient(): QueryClient {
 export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={getQueryClient()}>
-      <NavigationBar />
-      {children}
+      <NavigationProvider>
+        <NavigationBar />
+        {children}
+      </NavigationProvider>
     </QueryClientProvider>
   );
 }

@@ -1,40 +1,15 @@
-import type { NavigationState, NavigationTarget } from './types';
+// The one piece of navigation state kept outside React: the browser has been
+// told to leave for a full page load (an OAuth redirect, say). Nothing in
+// React ends that wait, since the next page replaces this one rather than
+// rendering into it, so it cannot ride a transition the way a navigation does.
+// Read with `useSyncExternalStore`. A navigation's own state is the provider's
+// optimistic value (`provider.tsx`), which `useSyncExternalStore` cannot see.
 
-// The site-wide navigation state, outside React so a caller deep in a page
-// and the bar in the providers read the same thing without a context
-// re-rendering the whole tree. Read with `useSyncExternalStore`.
-
-const IDLE: NavigationState = { busy: false, target: undefined };
-
-type Entry = { id: symbol; target: NavigationTarget | undefined };
-
-let entries: Entry[] = [];
 let leaving = false;
-let snapshot: NavigationState = IDLE;
 const listeners = new Set<() => void>();
 
 function publish(): void {
-  const busy = leaving || entries.length > 0;
-  const target = entries[entries.length - 1]?.target;
-  // The snapshot keeps its identity until something changes, as
-  // `useSyncExternalStore` requires.
-  if (busy !== snapshot.busy || target !== snapshot.target) {
-    snapshot = busy ? { busy, target } : IDLE;
-    for (const listener of listeners) listener();
-  }
-}
-
-/** A caller's navigation has begun; the latest target wins. */
-export function begin(id: symbol, target: NavigationTarget | undefined): void {
-  entries = [...entries.filter((entry) => entry.id !== id), { id, target }];
-  publish();
-}
-
-/** The caller's navigation has settled. */
-export function settle(id: symbol): void {
-  if (!entries.some((entry) => entry.id === id)) return;
-  entries = entries.filter((entry) => entry.id !== id);
-  publish();
+  for (const listener of listeners) listener();
 }
 
 export function subscribe(listener: () => void): () => void {
@@ -44,8 +19,8 @@ export function subscribe(listener: () => void): () => void {
   };
 }
 
-export const getSnapshot = (): NavigationState => snapshot;
-export const getServerSnapshot = (): NavigationState => IDLE;
+export const getSnapshot = (): boolean => leaving;
+export const getServerSnapshot = (): boolean => false;
 
 function onPageShow(event: PageTransitionEvent): void {
   // A page shown fresh is not this one come back; only a restore from the

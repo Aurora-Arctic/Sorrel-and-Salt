@@ -28,7 +28,7 @@ the class and its styling are unchanged.
   both this heading and the skeleton's `<output>` "Loading" status.
 - A `loading.tsx` would be wrong here: a route boundary turns the guards'
   404, 403 and 308 responses into 200s, so the wait is read from the
-  navigation store instead (`navigation-bar.md`).
+  navigation provider's state instead (`navigation-bar.md`).
 
 ## The switcher after the switch
 

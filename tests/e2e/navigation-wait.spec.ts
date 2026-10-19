@@ -2,7 +2,7 @@ import type { Locator, Page, Route } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAgainAs } from './session';
+import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import { slugify } from '@/lib/slugify';
 import {
@@ -43,6 +43,7 @@ const WILLOW_ENTRY = 'Willowwort';
 let hollow: Coven;
 let willow: Coven;
 let viewer = '';
+let admin = '';
 
 test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
@@ -53,6 +54,7 @@ test.beforeAll(async ({ browser, slot }) => {
   try {
     hollow = await seedCoven(setup, HOLLOW, 'navigation-wait.test', { A: 'owner' });
     viewer = hollow.users.A;
+    admin = (await signInAs(setup, 'admin@navigation-wait.test', ['discord'], 'admin')).userId;
     // A owns a second coven too, so the switcher has somewhere to go.
     const willowId = await withSql(async (sql) => {
       const [workspace] = await sql<{ id: string }[]>`
@@ -62,6 +64,11 @@ test.beforeAll(async ({ browser, slot }) => {
       await sql`
         insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
         values (${workspace.id}, ${viewer}, 'owner', ${viewer}, ${viewer})`;
+      // The switcher offers Create Coven only to a holder of the right.
+      await sql.begin(async (tx) => {
+        await tx`select set_config('app.privilege_route', 'manual', true)`;
+        await tx`update users set can_create_workspace = true where id = ${viewer}`;
+      });
       await localIngredient(sql, hollow.id, viewer, { name: HOLLOW_ENTRY });
       await localIngredient(sql, workspace.id, viewer, { name: WILLOW_ENTRY });
       return workspace.id;
@@ -232,6 +239,97 @@ test("a site link takes the shell's page away at once and puts one status in its
 
   await expect(page).toHaveURL('/compendium');
   await expect(compendiumList(page)).toBeVisible();
+});
+
+// The three below start from a control that the wait itself takes away: the
+// region they aim at holds the link that was pressed, so the swap unmounts it.
+// The wait must still last until the server answers (the navigation provider
+// owns it, not the link).
+
+test("an admin nav link keeps the admin page's wait until the server answers, though the nav is swapped out", async ({
+  page,
+}) => {
+  await signInAgainAs(page, admin);
+  await page.goto('/admin/categories');
+  const pills = page.getByRole('navigation', { name: 'Categories', exact: true });
+  await expect(pills).toBeVisible();
+  const link = page
+    .getByRole('navigation', { name: 'Admin', exact: true })
+    .getByRole('link', { name: 'Forms', exact: true });
+  const href = await link.getAttribute('href');
+  expect(href).toMatch(/^\/admin\//);
+  const server = await holdServerAnswers(page);
+
+  server.hold();
+  await link.click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+
+  await expect(statuses(page)).toHaveCount(1);
+  await expect(pills).toHaveCount(0);
+  // Held for a while, not flashed: the old page does not come back.
+  await page.waitForTimeout(500);
+  await expect(statuses(page)).toHaveCount(1);
+  await expect(pills).toHaveCount(0);
+  expect(new URL(page.url()).pathname).toBe('/admin/categories');
+  await assertNoAccessibilityViolations(page);
+
+  await server.release();
+
+  await expect(page).toHaveURL(href!);
+  await expect(statuses(page)).toHaveCount(0);
+  await expect(pills).toHaveCount(0);
+});
+
+test("a Contents link on the coven home keeps the coven's wait until the server answers, though the home is swapped out", async ({
+  page,
+}) => {
+  await signInAgainAs(page, viewer);
+  await page.goto(`/coven/${hollow.slug}`);
+  const contents = page.getByRole('heading', { name: 'Contents', exact: true });
+  await expect(contents).toBeVisible();
+  const server = await holdServerAnswers(page);
+
+  server.hold();
+  await page.getByRole('main').getByRole('link', { name: 'Ingredients', exact: true }).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+
+  await expect(statuses(page)).toHaveCount(1);
+  await expect(contents).toHaveCount(0);
+  await page.waitForTimeout(500);
+  await expect(statuses(page)).toHaveCount(1);
+  await expect(contents).toHaveCount(0);
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}`);
+  await assertNoAccessibilityViolations(page);
+
+  await server.release();
+
+  await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
+  await expect(rowOf(ingredientList(page), HOLLOW_ENTRY)).toHaveCount(1);
+});
+
+test("Create Coven in the switcher keeps the shell's wait until the server answers, though the switcher is swapped out", async ({
+  page,
+}) => {
+  await openIngredients(page, hollow, HOLLOW_ENTRY);
+  const server = await holdServerAnswers(page);
+
+  server.hold();
+  await switcher(page).click();
+  await page.getByRole('option', { name: 'Create Coven', exact: true }).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+
+  await expect(statuses(page)).toHaveCount(1);
+  await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+  await page.waitForTimeout(500);
+  await expect(statuses(page)).toHaveCount(1);
+  await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  await assertNoAccessibilityViolations(page);
+
+  await server.release();
+
+  await expect(page).toHaveURL('/coven/new');
+  await expect(page.getByRole('heading', { level: 1, name: 'Create Coven' })).toBeVisible();
 });
 
 test('under reduced motion, every loading mark of a wait pulses with the one shared keyframes', async ({

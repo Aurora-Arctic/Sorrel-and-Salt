@@ -347,6 +347,7 @@ describe('IngredientSearch', () => {
   });
 
   it('shows the text typed to a field in the filter slot', () => {
+    offer([]);
     renderSearch('wort');
     expect(screen.getByLabelText('Typed')).toHaveTextContent('wort');
 

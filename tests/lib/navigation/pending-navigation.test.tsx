@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { type ReactNode, Suspense, use, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
@@ -8,7 +9,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
-const { reportLeaving, useNavigationState, usePendingNavigation } =
+const { NavigationProvider, reportLeaving, useNavigationState, usePendingNavigation } =
   await import('@/lib/navigation');
 
 // The one way the site navigates (M12.33; claude-docs/design-decisions/m12.33-plan.md):
@@ -44,7 +45,12 @@ function Go({
 /** What every part of the page reads: the site-wide state, kept for the test to inspect. */
 let state: { busy: boolean; target?: unknown } | undefined;
 function Probe() {
-  state = useNavigationState();
+  const current = useNavigationState();
+  // Read from committed renders only: a transition that suspends re-runs
+  // component bodies with the optimistic value already put back.
+  useEffect(() => {
+    state = current;
+  });
   return null;
 }
 
@@ -196,17 +202,121 @@ describe('useNavigationState', () => {
   });
 
   it('reads the same state from a part mounted apart from the caller', async () => {
-    // Two trees: the bar sits in the providers, the caller deep in a page.
-    render(<Probe />);
+    // Two branches: the bar sits in the providers, the caller deep in a page.
     render(
       <Navigating push={router.push} arrives={arrival().arrives}>
-        <Go name="Go" href="/coven/fixture-coven/members" />
+        <Probe />
+        <section>
+          <Go name="Go" href="/coven/fixture-coven/members" />
+        </section>
       </Navigating>,
     );
 
     await press('Go');
 
     expect(state?.busy).toBe(true);
+  });
+});
+
+/** A region that takes its children away while a navigation is on its way, as `MainBody` does. */
+function Region({ children }: { children: ReactNode }) {
+  const { busy } = useNavigationState();
+  return busy ? <p role="status">Loading</p> : children;
+}
+
+function Hang({ until }: { until: Promise<void> }): ReactNode {
+  use(until);
+  return null;
+}
+
+describe('a navigation whose caller is taken off the page', () => {
+  it('stays busy until the new page arrives, though the pressed control is gone', async () => {
+    const { arrives, arrive } = arrival();
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <Probe />
+        <Region>
+          <Go name="Go" href="/admin/forms" options={{ target: COVEN_CARDS }} />
+        </Region>
+      </Navigating>,
+    );
+
+    await press('Go');
+
+    expect(screen.queryByRole('button', { name: 'Go' })).toBeNull();
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(state).toEqual({ busy: true, target: COVEN_CARDS });
+
+    // Still waiting a while on: nothing the swap did has ended the wait.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    await arrive();
+
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Go' })).toBeInTheDocument();
+    expect(state).toEqual({ busy: false, target: undefined });
+  });
+});
+
+describe('two navigations that overlap', () => {
+  it('shows the later one, and ends when both have arrived', async () => {
+    const first = arrival();
+    const second = arrival();
+    const arrivals = [first.arrives, second.arrives];
+    const TABLE = { region: 'main', shape: 'table' } as const;
+    function Router() {
+      const [started, setStarted] = useState<number[]>([]);
+      router.push.mockImplementation(() => setStarted((current) => [...current, current.length]));
+      return (
+        <Suspense fallback={null}>
+          {started.map((n) => (
+            <Hang key={n} until={arrivals[n]!} />
+          ))}
+        </Suspense>
+      );
+    }
+    render(
+      <NavigationProvider>
+        <Go name="A" href="/a" options={{ target: COVEN_CARDS }} />
+        <Go name="B" href="/b" options={{ target: TABLE }} />
+        <Probe />
+        <Router />
+      </NavigationProvider>,
+    );
+
+    await press('A');
+    await press('B');
+
+    expect(state).toEqual({ busy: true, target: TABLE });
+    expect(screen.getByRole('button', { name: 'B' })).toHaveAttribute('aria-busy', 'true');
+    // A was superseded: the wait is B's, so A's control is no longer the pressed one.
+    expect(screen.getByRole('button', { name: 'A' })).toHaveAttribute('aria-busy', 'false');
+
+    await first.arrive();
+    // A has arrived; B is still on its way, and the wait is still B's.
+    expect(state).toEqual({ busy: true, target: TABLE });
+
+    await second.arrive();
+    expect(state).toEqual({ busy: false, target: undefined });
+  });
+});
+
+describe('outside the provider', () => {
+  it('still navigates, and shows no wait', async () => {
+    render(
+      <>
+        <Go name="Go" href="/compendium" />
+        <Probe />
+      </>,
+    );
+
+    await press('Go');
+
+    expect(router.push).toHaveBeenCalledWith('/compendium');
+    expect(state?.busy).toBe(false);
   });
 });
 
