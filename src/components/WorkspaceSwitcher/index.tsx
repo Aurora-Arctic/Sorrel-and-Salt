@@ -32,8 +32,11 @@ function targetOf(path: string): NavigationTarget {
 // coven changes, and the focus that was on the box would drop to the page. A
 // module variable survives that remount, as component state cannot, and unlike
 // `sessionStorage` it dies with the page, so a reload never refocuses. A
-// switch that ends without a remount (a refusal) clears it, below.
-let focusAfterSwitch = false;
+// switch that ends without a remount (a refusal) clears it, below. It holds
+// the slug of the coven picked, not a bare yes: a switch that was superseded
+// (Compendium clicked mid-switch) leaves its slug behind, and a switcher that
+// mounts anywhere but that coven reads it as stale, clears it and takes no focus.
+let focusAfterSwitch: string | undefined;
 
 export default function WorkspaceSwitcher({
   workspaces,
@@ -47,15 +50,18 @@ export default function WorkspaceSwitcher({
   const choices = workspaces.map(({ slug, name }) => ({ value: slug, label: name }));
 
   useEffect(() => {
-    if (!focusAfterSwitch) return;
-    focusAfterSwitch = false;
-    box.current?.focus();
+    if (focusAfterSwitch === undefined) return;
+    const arrivedAt = focusAfterSwitch === covenSlugOf(pathname);
+    focusAfterSwitch = undefined;
+    if (arrivedAt) box.current?.focus();
+    // Read once, on mount: the address then is the mount's.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // The switch is over and this box is still here: the address changed
   // without a remount, or the move failed. Either way nothing is to be refocused.
   useEffect(() => {
     if (!pending) {
-      focusAfterSwitch = false;
+      focusAfterSwitch = undefined;
       setPicked(undefined);
     }
   }, [pending]);
@@ -73,7 +79,7 @@ export default function WorkspaceSwitcher({
           const href =
             value === CREATE.value ? value : pathInCoven(pathname, value, chosen?.canReadMembers);
           setPicked(value);
-          focusAfterSwitch = value !== CREATE.value;
+          focusAfterSwitch = value === CREATE.value ? undefined : value;
           navigate(href, { target: targetOf(href) });
         }}
         choices={canCreate ? [...choices, CREATE] : choices}

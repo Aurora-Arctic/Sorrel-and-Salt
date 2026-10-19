@@ -15,20 +15,19 @@
   opacity: 0;
   visibility: hidden;
 
+  // The fade-in and the pulse run after the delay. Under reduced motion
+  // `loading-motion` swaps both for the shared `loading-pulse`, so the dot
+  // pulses there too (the owner's call, 2026-10-19), as Spinner and Skeleton do.
   &.is-pending {
     visibility: visible;
-    animation-name: link-hint-in, link-hint-pulse;
-    animation-duration: 200ms, 1s;
-    animation-delay: $loading-delay, $loading-delay;
-    animation-timing-function: ease, ease-in-out;
-    animation-iteration-count: 1, infinite;
-    animation-fill-mode: forwards, none;
 
-    // Reduced motion keeps a still dot, shown after the same delay by a
-    // transition-free rule: no fade, no pulse.
-    @include reduced-motion {
-      animation: link-hint-still 0s $loading-delay forwards;
-    }
+    @include loading-motion(
+      (
+        link-hint-in 200ms ease $loading-delay forwards,
+        link-hint-pulse 1s ease-in-out $loading-delay infinite
+      ),
+      $loading-delay
+    );
   }
 }
 
@@ -41,11 +40,5 @@
 @keyframes link-hint-pulse {
   50% {
     opacity: 0.15;
-  }
-}
-
-@keyframes link-hint-still {
-  to {
-    opacity: 0.35;
   }
 }

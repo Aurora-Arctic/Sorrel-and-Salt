@@ -139,10 +139,7 @@ const AccountMenu = ({
             <li key={label} className="account-menu__link">
               <PendingLink
                 href={href}
-                navigationTarget={{
-                  region: 'main',
-                  shape: base === '/compendium' ? 'cards' : 'page',
-                }}
+                navigationTarget={siteLinkTarget(base)}
                 className="account-menu__item"
                 onClick={close}
                 aria-current={isAtPath(pathname, base) ? 'page' : undefined}

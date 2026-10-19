@@ -123,6 +123,18 @@ describe('SignInPanel', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
   });
 
+  it('surfaces a rejected signIn.social the same way and frees the buttons', async () => {
+    socialMock.mockRejectedValue(new Error('offline'));
+    render(<SignInPanel next="/" configured={['google']} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).not.toHaveAttribute(
+      'aria-busy',
+    );
+  });
+
   it('marks an unconfigured provider unavailable, described, reachable by keyboard, and inert', () => {
     render(<SignInPanel next="/" configured={['google']} />);
 

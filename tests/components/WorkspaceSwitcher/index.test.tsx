@@ -165,5 +165,26 @@ describe('WorkspaceSwitcher', () => {
       expect(box()).not.toHaveAttribute('aria-busy', 'true');
       expect(box()).toHaveTextContent('Testwort Circle');
     });
+
+    it('takes focus on arriving at the picked coven, but not on a mount elsewhere after a superseded switch', async () => {
+      const arrives = new Promise<void>((resolve) => {
+        arrive = resolve;
+      });
+      const first = render(
+        <Navigating push={push} arrives={arrives}>
+          <WorkspaceSwitcher workspaces={WORKSPACES} />
+        </Navigating>,
+      );
+      fireEvent.click(box());
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+      });
+      // Superseded: the page moves on to a place that is not the picked coven,
+      // and the switcher that started the switch goes away.
+      first.unmount();
+      pathname.mockReturnValue('/compendium');
+      render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
+      expect(box()).not.toHaveFocus();
+    });
   });
 });

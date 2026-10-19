@@ -35,9 +35,10 @@ it never shows.
   flashes it, then fades in and pulses.
 - Its delay is the `$loading-delay` token (100ms), the same hold-back the
   spinner and the page bar use.
-- Under `prefers-reduced-motion` it shows as a still dot after the same delay:
-  no fade, no pulse. This is the one exception to the loading standard's rule
-  that reduced motion pulses and never stops (the owner's call; see
+- Under `prefers-reduced-motion` it shows after the same delay and pulses,
+  through the shared `loading-motion` mixin and `loading-pulse` keyframes, as
+  the spinner and the skeleton do. It has no exception to the loading standard
+  (the owner's call, 2026-10-19; see
   [`../design-decisions/m12.33-loading-standard.md`](../design-decisions/m12.33-loading-standard.md)).
 
 ## In the loading standard
@@ -53,9 +54,6 @@ started, and a `PendingLink` navigates through the shared hook instead. So
 either `useLinkStatus` or `useEnclosingLinkPending()` says pending. Outside a
 `PendingLink` the context is `false`. The dot still says nothing about a
 navigation another control started.
-
-The dot under reduced motion is still the open departure from the standard,
-owed to the owner's decision.
 
 ## Accessibility
 

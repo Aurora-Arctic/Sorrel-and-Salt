@@ -84,6 +84,35 @@ describe('SignInMethods', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_LINK_ERROR);
   });
 
+  it('shows the same sentence when the link call rejects, and frees the button', async () => {
+    linkSocialMock.mockRejectedValue(new Error('offline'));
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_LINK_ERROR);
+    expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy');
+  });
+
+  it('frees a link whose page is restored from the back-forward cache', async () => {
+    linkSocialMock.mockResolvedValue({});
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      ),
+    );
+
+    fireEvent(window, Object.assign(new Event('pageshow'), { persisted: true }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy'),
+    );
+  });
+
   // aria-disabled rather than disabled keeps it in the tab order, as on /sign-in.
   it('greys out an unconfigured provider, keeping it reachable, and starts nothing', () => {
     render(<SignInMethods linked={[DISCORD]} configured={['discord', 'google']} />);
