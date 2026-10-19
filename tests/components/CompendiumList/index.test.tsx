@@ -277,6 +277,29 @@ describe('CompendiumList', () => {
     );
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
+
+  it('bolds each filter value in the empty sentence and leaves the joining words plain', () => {
+    const filter: CompendiumListFilter = {
+      ...NO_FILTER,
+      query: 'nothing',
+      forms: ['Fixture Oil'],
+      withoutReferences: true,
+      categories: ['testward', 'testcraft'],
+    };
+    render(<CompendiumList {...props({ entries: [], filter })} />);
+
+    // The search sentence above bolds its own values; the empty sentence is the one naming the quoted query.
+    const sentence = screen.getByText('“nothing”', { selector: 'strong' }).parentElement;
+    const bold = [...(sentence?.querySelectorAll('strong') ?? [])].map((each) => each.textContent);
+    expect(bold).toEqual(['“nothing”', '“Fixture Oil”', 'No Refs', 'Testward', 'Testcraft']);
+    // The sentence is more than its values: what joins them is not bold.
+    expect(sentence?.textContent?.length).toBeGreaterThan(bold.join('').length);
+  });
+
+  it('bolds nothing when the filter is empty and the compendium itself is', () => {
+    const { container } = render(<CompendiumList {...props({ entries: [] })} />);
+    expect(container.querySelectorAll('strong')).toHaveLength(0);
+  });
 });
 
 describe('compendiumHref', () => {

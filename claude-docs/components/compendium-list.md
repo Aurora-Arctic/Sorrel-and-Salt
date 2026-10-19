@@ -125,7 +125,11 @@ different groups, so the page offers each name once, whatever its case.
   filter to see more." The query and the form are quoted, the
   classification is its label, and Without
   References is the switch's (MB.115, the owner's call). The sentence is
-  `noMatchText` (`src/lib/text.ts`), one wording for every admin list.
+  built from the same two pieces as `noMatchText` (`noMatchLead` and `NO_MATCH_ADVICE`, `src/lib/text.ts`), one wording for every admin list. It is a node, not a
+  string: each filter value is bold (700), as the search sentence bolds its
+  values, while "the form", "the category", the joining words and the closing
+  advice stay regular, and the whole sentence is muted (`$text-muted`) through
+  `.compendium-list__empty`. The public cards share it.
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 

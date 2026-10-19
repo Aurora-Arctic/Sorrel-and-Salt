@@ -32,6 +32,12 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** The start of a no-match sentence, before the filters. A list that draws its filters as nodes (CompendiumList) builds from the same two pieces, so the wording has one source. */
+export const noMatchLead = (noun: string): string => `No ${noun} match `;
+
+/** The end of a no-match sentence, after the filters. */
+export const NO_MATCH_ADVICE = '. Change or clear the filter to see more.';
+
 /**
  * What an admin list says when it shows no rows (MB.115). With a filter in
  * force, `parts` names each filter as the caller phrases it — `“wort”`, `the
@@ -49,9 +55,7 @@ export function capitalise(text: string): string {
  * so an admin sees which one to change.
  */
 export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
-  return parts.length
-    ? `No ${noun} match ${joinAnd(parts)}. Change or clear the filter to see more.`
-    : emptyText;
+  return parts.length ? `${noMatchLead(noun)}${joinAnd(parts)}${NO_MATCH_ADVICE}` : emptyText;
 }
 
 /** The short words a title leaves lower-case unless they open it. */
