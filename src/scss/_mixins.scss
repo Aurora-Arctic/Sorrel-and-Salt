@@ -396,6 +396,41 @@
   }
 }
 
+// An ingredient entry's section (Details, or a form): its heading, its text,
+// then its side column, one under the other on a phone. Past a tablet's width
+// the side column stands to the right of the text, the heading across both;
+// not from the menu's breakpoint, where the text would be a few words wide.
+// `$heading` is the selector of the heading. Shared by IngredientEntry and its
+// wait (Skeleton), so the two cannot differ in columns.
+@mixin entry-section($heading: 'h2, h3') {
+  @include stack(4);
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    // A wide gutter between the text and its details (the owner's call).
+    gap: space(4) space(8);
+    align-items: start;
+
+    > #{$heading} {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// The side column of that section: a clear step under the text on a phone,
+// the second column beside it past a tablet's width.
+@mixin entry-side {
+  @include stack(6);
+
+  margin-block-start: space(4);
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    grid-column: 2;
+    margin-block-start: 0;
+  }
+}
+
 // The look of a box that floats over the page, the combobox's list and a
 // linked entry's summary: the card surface and the floating shadow, edged in
 // the muted ink.

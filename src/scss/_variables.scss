@@ -697,6 +697,11 @@ $space-steps: (
   @return map.get($space-steps, $step);
 }
 
+// The width an ingredient entry's side column takes beside its text: room for
+// a row of two or three category chips and a correspondence's list of colours.
+// Shared with the entry's wait (Skeleton) so the two lay out alike.
+$side-column: calc(#{space(8)} * 5);
+
 // The air added to the card's own 12px gap above and below the forms line (chips to
 // forms, forms to the jar rule): one token, so the two stay equal. 16px in all.
 $ingredient-card-forms-air: space(1);
