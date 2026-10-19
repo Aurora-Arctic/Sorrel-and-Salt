@@ -48,6 +48,12 @@ is the wrapper every admin page opens it through (below).
   shuts itself. A URL-driven modal closes by navigating away from its address.
   If the element closed itself first, the address would still say the modal
   was open.
+- **A dialog opened from inside another closes alone on Escape** (M8.17).
+  A confirmation asked from a dialog's contents, such as the Annotate
+  dialog's Remove, is a second `Modal` rendered inside the first. The browser
+  sends Escape's `cancel` event to the topmost dialog only, but React passes
+  it up its own tree to the outer dialog's handler too, which closed both.
+  Each dialog now answers only a `cancel` aimed at itself.
 - **It fades in and out** (M5.5, the owner's call), dialog and backdrop
   together over 150ms. In is CSS alone, `@starting-style` as `showModal()`
   shows it. Out is the component's, since the owner's unmount would take it

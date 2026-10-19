@@ -206,6 +206,10 @@ const Modal = ({
   };
 
   const handleCancel = (event: SyntheticEvent<HTMLDialogElement>): void => {
+    // A dialog's own Escape only: React carries a nested dialog's cancel (a
+    // confirmation opened from inside this one) up its tree to here, and the
+    // browser sends Escape to the topmost dialog alone.
+    if (event.target !== event.currentTarget) return;
     event.preventDefault();
     request();
   };

@@ -168,6 +168,28 @@ describe('Modal', () => {
   // the point; happy-dom lays nothing out, so every point is outside the box and
   // what is tested is where the press began and ended. Its own padding is
   // inside the box, which only a real layout shows (tests/e2e/admin-compendium.spec.ts).
+  // A confirmation opened from inside a dialog (M8.17's Annotate dialog) is a
+  // second Modal in the first's contents. React carries the inner dialog's
+  // cancel up its tree to the outer dialog's handler, so Escape closed both.
+  it("closes only the innermost of two nested dialogs on Escape, leaving the outer's owner unasked", () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    render(
+      <Modal title="Annotate This Entry" onClose={outer}>
+        <Modal title="Remove from Cupboard" onClose={inner}>
+          <p>Remove it?</p>
+        </Modal>
+      </Modal>,
+    );
+    const asked = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    expect(asked).toHaveAttribute('open');
+
+    fireEvent(asked, new Event('cancel', { cancelable: true }));
+
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+  });
+
   it('asks its owner to close it for a press and release on the backdrop, and for nothing else', () => {
     const onClose = renderModal();
     const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
