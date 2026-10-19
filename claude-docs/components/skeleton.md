@@ -13,6 +13,8 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 | `shape`  | `table`, `cards`, `form`, `page` or `line`                                                                                                     |
 | `filter` | Optional, `table` and `cards` only: a filter row above the list                                                                                |
 | `title`  | Optional, `table` and `cards` only: the page's heading row above everything else, a heading bar (`skeleton__title`) laid out by `.page-header` |
+| `tabs`   | Optional, with `title`: a tab track between the heading and the action, for a page with a tab row (`skeleton__tabs`)                           |
+| `menu`   | Optional, `page` only: a side menu column beside the page (`skeleton__menu`), laid out by a container query when the box is wide enough        |
 | `action` | Optional, with `title`: a button-sized block at the heading's end, for a page with an Add                                                      |
 | `count`  | Optional: how many rows, cards, fields or blocks (6, 6, 4 and 3 otherwise)                                                                     |
 
