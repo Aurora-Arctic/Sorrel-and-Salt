@@ -111,8 +111,8 @@ export const EmptyForAViewer: Story = () => (
   <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />
 );
 
-// A search that matched nothing: the sentence points at the filter row's clears, and the
-// search is handed on to the Compendium.
+// A search that matched nothing: the region says only what to do, pointing at the filter row's
+// clears (the search sentence above already names the search), and hands the search to the Compendium.
 export const NoMatches: Story = () => (
   <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
 );

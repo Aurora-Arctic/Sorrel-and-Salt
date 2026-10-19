@@ -46,5 +46,5 @@ export interface CovenCardsProps extends Pick<
 /** What the list draws with no card to show (M9.11): the filter decides which of its two states. */
 export interface EmptyCupboardProps extends Pick<
   CovenCardsProps,
-  'covenSlug' | 'filter' | 'categories' | 'facets' | 'canAdd'
+  'covenSlug' | 'filter' | 'canAdd'
 > {}

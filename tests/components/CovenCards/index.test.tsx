@@ -170,6 +170,9 @@ describe('CovenCards', () => {
     const state = noMatchState();
     expect(state).not.toBeNull();
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
+    // The search sentence above already names the search and says nothing matched; the state
+    // does not say it again.
+    expect(state).not.toHaveTextContent('Knitbone');
     // The filter form keeps the one clear; the state adds no control but the hand-off.
     expect(within(state!).queryByRole('button')).toBeNull();
     expect(within(state!).getAllByRole('link')).toHaveLength(1);

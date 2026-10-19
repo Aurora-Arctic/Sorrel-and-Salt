@@ -49,13 +49,7 @@ const CovenCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <EmptyCupboard
-        covenSlug={covenSlug}
-        filter={filter}
-        categories={categories}
-        facets={facets}
-        canAdd={canAdd}
-      />
+      <EmptyCupboard covenSlug={covenSlug} filter={filter} canAdd={canAdd} />
     ) : (
       <IngredientCardList label="Ingredients" density="compact">
         {entries.map((entry) => (

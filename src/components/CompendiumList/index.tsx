@@ -8,7 +8,7 @@ import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { NO_MATCH_ADVICE, capitalise, noMatchLead } from '../../lib/text';
+import { NO_MATCH_ADVICE, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
@@ -19,7 +19,6 @@ import type {
   CompendiumListEntry,
   CompendiumListFilter as Filter,
   CompendiumListProps,
-  CovenListFilter,
 } from './types';
 import './index.scss';
 
@@ -153,11 +152,16 @@ const joinedNames = (names: readonly string[], word: string): ReactNode =>
   ));
 
 /**
- * Each filter in force, named as the empty sentence names it: `“wort”`, the form “Oil”, the
- * element Fire, and on a coven's list its source, In Stock and Low Stock Only. None means the
- * list is unfiltered, so an empty one is empty rather than filtered to nothing (M9.11).
+ * The empty list, naming the filters in use (MB.115, on the owner's call), so
+ * an admin sees what to change: "No entries match “wort”, the form “Oil” and
+ * the element Fire. Change or clear the filter to see more." With no
+ * filter, the compendium itself is empty, and says how to begin it. The values
+ * are bold, as the search sentence's are, and the whole sentence is muted. A
+ * node rather than a string for that; `noMatchText` stays the string form
+ * for the other admin lists, and both build from `noMatchLead` and
+ * `NO_MATCH_ADVICE`.
  */
-export function filterParts(
+export function emptyText(
   {
     query,
     forms,
@@ -170,13 +174,12 @@ export function filterParts(
     elements,
     categories,
     categoryMode,
-    source,
-    inStock,
-    lowStockOnly,
-  }: Filter & Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>,
+  }: Filter,
   known: readonly CompendiumCategoryChoice[],
   facets: CompendiumFacetCounts,
-): ReactNode[] {
+  /** What an unfiltered empty list says: the admin's tells how to begin it. */
+  whenEmpty = 'The compendium is empty. Add the first entry with Add Ingredient.',
+): ReactElement {
   // A deity by its name and tradition, the pair that tells two of one name apart.
   const deityNames = deities.flatMap((slug) => {
     const deity = facets.deities.find(({ value }) => value === slug);
@@ -185,10 +188,7 @@ export function filterParts(
   const toxicLabel = facets.toxic.find(({ value }) => value === toxic)?.label;
   // By name, the ones the page knows; a slug it does not is not filtering anything.
   const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
-  const sourceLabel = source
-    ? (facets.source?.find(({ value }) => value === source)?.label ?? capitalise(source))
-    : undefined;
-  return [
+  const filters = [
     query && value(`“${query}”`),
     forms.length > 0 && (
       <>
@@ -228,37 +228,12 @@ export function filterParts(
         {joinedNames(named, categoryMode === 'any' ? ' or ' : ' and ')}
       </>
     ),
-    sourceLabel && <>the source {value(sourceLabel)}</>,
-    inStock && value('In Stock'),
-    lowStockOnly && value('Low Stock Only'),
   ].filter((filter): filter is Exclude<typeof filter, false | '' | undefined> => Boolean(filter));
-}
-
-/**
- * The empty list, naming the filters in use (MB.115, on the owner's call), so
- * an admin sees what to change: "No entries match “wort”, the form “Oil” and
- * the element Fire. Change or clear the filter to see more." With no
- * filter, the list itself is empty, and `whenEmpty` says so. The values
- * are bold, as the search sentence's are, and the whole sentence is muted. A
- * node rather than a string for that; `noMatchText` is the string form
- * for the other admin lists, and both build from `noMatchLead` and
- * `NO_MATCH_ADVICE`. `noun` is the plural the sentence opens on: a coven's
- * list says "No ingredients match".
- */
-export function emptyText(
-  filter: Parameters<typeof filterParts>[0],
-  known: readonly CompendiumCategoryChoice[],
-  facets: CompendiumFacetCounts,
-  /** What an unfiltered empty list says: the admin's tells how to begin it. */
-  whenEmpty = 'The compendium is empty. Add the first entry with Add Ingredient.',
-  noun = 'entries',
-): ReactElement {
-  const filters = filterParts(filter, known, facets);
   return (
     <span className="compendium-list__empty">
       {filters.length ? (
         <>
-          {noMatchLead(noun)}
+          {noMatchLead('entries')}
           {andNodes(filters)}
           {NO_MATCH_ADVICE}
         </>
