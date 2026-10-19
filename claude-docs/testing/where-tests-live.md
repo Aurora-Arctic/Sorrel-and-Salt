@@ -426,5 +426,16 @@ shell sets, switches the test reporter to `dot`, the coverage reporter to
 of passing tests — a green run printed ~12,000 lines of pg notices and React
 warnings, against ~200 for the coverage table. A failure still prints in full,
 with its console output, and the per-file numbers are read from
-`.reports/coverage/coverage-summary.json`. The host and CI see everything as
+`.reports/coverage/coverage-summary.json`. To see everything under Claude Code, run
+`env -u CLAUDECODE npx vitest run <file>`, which also shows `act()` warnings. The host and CI see everything as
 before — CI's own `--reporter` flags replace the config's list either way.
+
+Playwright follows the same flag (M12.37). The gate config's local reporter list
+is `html` alone, which prints no failure text; under `CLAUDECODE=1` with `CI`
+unset it becomes `dot` plus the same `html` entry, so a run prints dots, each
+failure's error and a summary, and `.reports/playwright-report/` is still
+written. The story config swaps `list` for `dot` the same way, keeping the
+story reporter; `PW_REPORTER=list` (or any reporter name) overrides that choice
+when the per-test lines and timings are wanted. CI's lists are unchanged. The
+config carries the list rather than a `--reporter` flag because a flag drops
+the html folder.

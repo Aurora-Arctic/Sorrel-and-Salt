@@ -22,34 +22,34 @@ The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate div
 
 ## Commands
 
-The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. `make help` lists the host's targets; claude-docs/commands.md is the full table.
+The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.
 
-| Command                         | Purpose                                                                  |
-| ------------------------------- | ------------------------------------------------------------------------ |
-| `npm run dev`                   | Dev server on **8000**, with Altair at `/api/graphql`                    |
-| `npm run build` / `start`       | Production build; e2e serves it on **8001** and up                       |
-| `npm run pre-commit`            | `lint`, `format:check`, `typecheck` on changed files — test-free (MB.38) |
-| `npm run test:coverage`         | Vitest's five projects, 80% threshold                                    |
-| `npm run test:stories`          | The story suite (Playwright), one line per v1 story                      |
-| `npm run e2e`                   | Playwright, a database and a server per worker                           |
-| `npm run codegen`               | `src/gql/` from the committed SDL; commit the output                     |
-| `npm run db:migrate`            | Applies migrations; `db:generate` writes one                             |
-| `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops, migrates and seeds                   |
-| `npm run check:destructive-ddl` | Flags destructive DDL in the branch's new migrations                     |
+| Command                         | Purpose                                          |
+| ------------------------------- | ------------------------------------------------ |
+| `npm run dev`                   | Dev server on **8000**, Altair at `/api/graphql` |
+| `npm run build` / `start`       | Production build; e2e serves it on **8001**+     |
+| `npm run pre-commit`            | Lint, format, types on changed files (MB.38)     |
+| `npm run test:coverage`         | Vitest's five projects, 80% threshold            |
+| `npm run test:stories`          | Story suite (Playwright), one line per story     |
+| `npm run e2e`                   | Playwright, a database and server per worker     |
+| `npm run codegen`               | `src/gql/` from the SDL; commit the output       |
+| `npm run db:migrate`            | Applies migrations; `db:generate` writes one     |
+| `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops first         |
+| `npm run check:destructive-ddl` | Flags destructive DDL in new migrations          |
 
 **Verify with `test:coverage`, not `test`**: a plain pass can still fail CI on the 80% threshold alone. **Deploys are CI-only** (M0.26), through `.github/workflows/deploy.yml`.
 
 ## Non-negotiable architecture rules
 
-The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9 `.claude/rules/graphql.md`; the argument is each subsystem's `claude-docs/` summary.
+The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9 `.claude/rules/graphql.md`.
 
-**1. Authorization lives in `src/modules/*/services/`. Never in resolvers, never in pages.** Server components call services directly (wrapped in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. Two transports, one set of rules, because both end at the same service function. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8). The OAuth handshake at `/api/auth/*` is outside both and carries no application data (M2.2). So are the three public-file route handlers, `/llms.txt`, `/.well-known/ai-catalog.json` and `/.well-known/ard.json`: like `robots.ts` and `sitemap.ts`, they take no session and serve only what the public compendium already shows, through its cached read (M12.2).
+**1. Authorization lives in `src/modules/*/services/`. Never in resolvers, never in pages.** Server components call services directly (in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8). Outside both: the OAuth handshake at `/api/auth/*`, with no application data (M2.2), and the sessionless public files `/llms.txt` and `/.well-known/*.json`, serving only the public compendium (M12.2).
 
 **2. Only `src/db/repository/` may import the database client.** Callers import its `index.ts`; three files outside it hold a named exemption, and a fourth is a decision (M1.17). Above services, `src/graphql/**`, `src/app/**` and `src/components/**` import nothing under `src/db` at runtime (M3.9), and every service opens with `import 'server-only'`.
 
 **3. All writes go through `withAudit(session, fn)`.** It opens the transaction, takes the audit ids from the session, never a request body, and publishes the actor as `app.current_user_id`. Tables spread `...auditColumns`; a trigger owns `updated_at`, added by each audited table's own migration (M1.18). Reads open no transaction. Only two identity bootstraps write outside it: the sign-up hook in `src/lib/auth.ts`, and `src/db/seed/`.
 
-**4. Soft-delete filtering happens in the repository, never at call sites.** No exported finder returns a `deleted_at IS NOT NULL` row and no writer touches one, bar named finders for what a spell holds (M5.3), for the ingredient a substitute links (MB.138), for a co-member's name (MB.10), and for a compendium entry a coven's cupboard still names (M12.24), and the one writer that revives a removed member's row (M6.15). Every unique index is partial (`WHERE deleted_at IS NULL`). Nothing outside the database layer imports `drizzle-orm` at runtime (MB.33); `import type` is legal.
+**4. Soft-delete filtering happens in the repository, never at call sites.** No exported finder returns a `deleted_at IS NOT NULL` row and no writer touches one, bar a short list of named exceptions (`.claude/rules/database.md`). Every unique index is partial (`WHERE deleted_at IS NULL`). Nothing outside the database layer imports `drizzle-orm` at runtime (MB.33); `import type` is legal.
 
 **5. Two authorization layers, deliberately: the service check, and the `Membership` proof it returns.** `assertMembership(session, workspaceId, permission)` returns a branded `Membership` only the membership service can build, and every workspace-scoped finder and writer takes it first and ANDs its `workspace_id` itself. `assertSiteAdmin` does the same for the compendium tier. A `permission` is a per-role statement, never a rank. RLS is deferred, not rejected (MB.29).
 
@@ -65,32 +65,32 @@ The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9
 
 ## Domain invariants that are easy to get wrong
 
-- **The site is invite-gated.** Signing in with any registered provider (Google, Discord, Facebook, Microsoft — M2.6) earns an account and _nothing else_. **The compendium is the one public surface** (MB.80): `/compendium` and `/compendium/ingredients/[slug]` are readable without an account and indexable by search engines, the compendium read takes no session, and nothing workspace-scoped follows them out — a workspace entry's slug at the public route is a 404. The home page `/` is also crawlable on production, for the site name alone, and shows no reference or workspace data (MB.84). `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5), an admin grant (M5.8), or being made admin or curator (MB.59, M11.20), and a CHECK makes every admin and curator hold it, so the gate reads the flag alone (MB.177). Once true it stays true until an admin revokes it, which leaves the workspaces already created (M5.8). Nothing in the OAuth flow sets it.
+- **The site is invite-gated.** Signing in with any registered provider (M2.6) earns an account and _nothing else_. **The compendium is the one public surface** (MB.80): `/compendium` and `/compendium/ingredients/[slug]` are readable without an account and indexable, the compendium read takes no session, and nothing workspace-scoped follows them out — a workspace entry's slug at the public route is a 404. `/` is crawlable on production too, showing only the site name (MB.84). `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5), an admin grant (M5.8), or being made admin or curator (MB.59, M11.20), and a CHECK makes every admin and curator hold it, so the gate reads the flag alone (MB.177). Once true it stays true until an admin revokes it, which leaves the workspaces already created (M5.8). Nothing in the OAuth flow sets it.
 - **There are no personal workspaces.** No `kind` column; every workspace can take members and be deleted by an owner.
-- **Admins and curators curate the compendium, global categories, the ingredient form vocabulary, the two group vocabularies that organise them, the celestial body and zodiac vocabularies, and the deity vocabulary with the traditions that group it — and nothing else.** A site admin or curator has no access to any workspace's ingredients or grimoire — asserted by test (M6.6). A **curator** (M11.20) may use every curation screen and reaches nothing on the People page; the workshop and the privilege ledger stay admin-only. `assertCurator` passes either role, `assertSiteAdmin` an admin only. An admin may read which covens a user belongs to, by name and role only (M9.19). `category_groups` and `ingredient_form_groups` are tables rather than enums precisely so an admin can add one without a migration (MB.35, §5); a category group carries `colorDark` and `colorLight` as hexes on the row, never Sass tokens, each contrast-checked on write against its theme's harder surface. Groups list alphabetically by name — there is no order column.
-- **What the compendium says, it sources.** Every compendium entry and every curated row drawn from somewhere records where, as `references` rows — Chicago bibliography form, linked from every row it supports, two-tiered as ingredients are (§5; MB.151–MB.156). An unsourced entry still saves, and sits on the admin's to-do list. A seed list compiled by hand records its sources in its seed doc the same way: without them it is not done.
-- **An ingredient's identity is its formal name alone; each form it comes in is a variant beneath it** (MB.215). `identity_key` is `lower(coalesce(canonical_name, name))`, unique per tier, and a variant is unique per ingredient and folded form; `name` is only what the ingredient is called _here_ and is freely relabellable, because identity moved off it. A variant adds to its ingredient and never removes from it. An ingredient with no variant is information only: a stock row or a spell layer names a variant. Deities and folk names stay on the ingredient; a variant carries its own references, substitutes and categories, and any variant of any ingredient may substitute for a form — a form's link always names a form, while the ingredient's own list may link an ingredient whole. The compendium declares a `nomenclature` for every entry — `none` and `unknown` are answers, not absences, the same way `unitConvert` refuses rather than guesses. A variant's `form` is text, **not a foreign key**: the curated vocabulary is an autofill, so an uncurated value stays writable. A coven's cupboard is its own entries plus the compendium entries it names in `workspace_compendium_entries`, and nothing is hidden on a name match: an own entry beside a same-named compendium entry shows twice, its page offers the link (on identity, or on the label only when it declares no formal name), and `createStock` stores a jar on the form the member picked (M12.28). Common-name and form lookups suggest from the compendium and the current workspace only — never another workspace, and that scoping covers the suggested strings themselves, not just their attribution.
+- **Admins and curators curate the compendium, global categories, the ingredient form vocabulary, the two group vocabularies that organise them, the celestial body and zodiac vocabularies, and the deity vocabulary with the traditions that group it — and nothing else.** A site admin or curator has no access to any workspace's ingredients or grimoire — asserted by test (M6.6). A **curator** (M11.20) may use every curation screen and reaches nothing on the People page; the workshop and the privilege ledger stay admin-only. `assertCurator` passes either role, `assertSiteAdmin` an admin only. An admin may read which covens a user belongs to, by name and role only (M9.19). `category_groups` and `ingredient_form_groups` are tables rather than enums precisely so an admin can add one without a migration (MB.35, §5). A category group's `colorDark` and `colorLight` are hexes on its row, never Sass tokens, each contrast-checked on write against its theme's harder surface (§5).
+- **What the compendium says, it sources.** Every compendium entry and every curated row drawn from somewhere records where, as `references` rows linked from every row it supports (§5; MB.151–MB.156). An unsourced entry still saves, and sits on the admin's to-do list. A seed list compiled by hand records its sources in its seed doc the same way: without them it is not done.
+- **An ingredient's identity is its formal name alone; each form it comes in is a variant beneath it** (MB.215). `name` is only what the ingredient is called _here_ and is freely relabellable. A variant adds to its ingredient and never removes from it. An ingredient with no variant is information only: a stock row or a spell layer names a variant. Deities and folk names stay on the ingredient; a variant carries its own references, substitutes and categories, and a form's link always names a form, while the ingredient's own list may link an ingredient whole (§5). The compendium declares a `nomenclature` for every entry — `none` and `unknown` are answers, not absences, the same way `unitConvert` refuses rather than guesses. A variant's `form` is text, **not a foreign key**: the curated vocabulary is an autofill, so an uncurated value stays writable. A coven's cupboard is its own entries plus the compendium entries it names in `workspace_compendium_entries`, and nothing is hidden on a name match (§5; M12.28). Common-name and form lookups suggest from the compendium and the current workspace only — never another workspace's, strings included.
 - **Invitations grant `viewer` or `member` only.** A DB check constraint rejects `owner`. Ownership is granted afterwards by an existing owner on the members page.
 - **Spell visibility widens only.** `private → workspace` is allowed; `workspace → private` is rejected with an explaining error, not a bare `Forbidden`. Enforced in the service and asserted by test — not merely absent from the UI. The rule governs visibility, not existence: a shared spell can still be deleted.
 - **Viewers write nothing.** With notes deferred to v2, there is no exception.
-- **An address changes only at verification.** `setEmail` writes nothing to `users.email`: it mails the new address Better Auth's change link, and `/verify-email` swaps the address and verifies it in one write, from a session holding the row. Marking the row unverified instead would put an established account under MB.67's sweep. An unverified account reaches no page but `/account/email`: `requireSession()` sends it there from every other (`claude-docs/auth/admin-bootstrap.md`, "The email page").
+- **An address changes only at verification.** `setEmail` writes nothing to `users.email`: it mails the new address Better Auth's change link, and `/verify-email` swaps the address and verifies it in one write. An unverified account reaches no page but `/account/email`: `requireSession()` sends it there from every other (`claude-docs/auth/admin-bootstrap.md`, "The email page").
 - **Unit conversion is within one dimension only.** weight↔weight and volume↔volume; anything crossing dimensions, and anything involving `count`, is refused as an explicit result the caller must handle — never null, NaN, or a guess. **No density table exists anywhere in the codebase.**
 - **Two kinds of spell category.** Assigned categories are what the spell _intends_; derived categories are the union of its ingredients'. Conflating them is a bug.
-- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored, and the link is mailed to the invited address (M7.3, on MB.65's transport) and accepted only by a signed-in account whose verified email matches it; it appears in no response and is never copied. A coven invitation is also listed on the account page (`/account`, its Invitations section) to that same verified account and accepted there by id, under the same address match in SQL, with `/coven` and the account menu linking to it; an admin invitation is accepted by its link alone (M10.32). Email verification itself uses Better Auth's signed, unstored token, which is the one token here that is neither hashed nor single-use (claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
-- **`/admin` returns a styled "not authorized" page** to a signed-in user who is neither a curator nor an admin, and to a curator on the People pages. `/coven/[slug]` returns **404** to a non-member — workspace existence is private to anyone but its members, and a site admin reading a user's covens, `/admin` is a path everyone already knows.
+- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored, and the link is mailed to the invited address (M7.3, on MB.65's transport) and accepted only by a signed-in account whose verified email matches it; it appears in no response and is never copied. A coven invitation is also accepted by id from the account page, under the same address match in SQL; an admin invitation is accepted by its link alone (§5; M10.32). Email verification's signed token is the one that is neither hashed nor single-use (claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
+- **`/admin` returns a styled "not authorized" page** to a signed-in user who is neither a curator nor an admin, and to a curator on the People pages. `/coven/[slug]` returns **404** to a non-member — workspace existence is private to anyone but its members.
 
 ## Testing
 
-TDD throughout: write the failing test, watch it fail, write the minimum, refactor. Each wave opens with an acceptance-test scaffold PR that lands red on purpose. Long form, with the harness: `.claude/rules/testing.md`.
+TDD throughout: write the failing test, watch it fail, write the minimum, refactor. Long form, with the harness: `.claude/rules/testing.md`.
 
 - **Every Vitest file lives under `tests/`, mirroring `src/`**, and every Playwright spec under `tests/e2e/` (MB.41); a test left in `src/` is a file nothing runs.
-- **Tests never touch Neon.** Local Postgres 18 everywhere else. Anything touching Postgres goes in the `db` project, under `tests/db/` or `tests/modules/`, and is never wrapped in a rolled-back transaction.
+- **Tests never touch Neon.** Local Postgres 18 everywhere else. Anything touching Postgres goes in the `db` project (`tests/db/`, `tests/modules/`), never in a rolled-back transaction.
 - Fixture users: **A** owner of W · **B** member of W · **C** viewer in W · **D** member of unrelated X · **E** site admin in no workspace · **F** site curator in no workspace. `asUser(A)` gives a session; services throw `Forbidden`.
-- **Fixture factory defaults are invented names, never real ones** (M1.25) — Testwort / _Fixtura testalis_, Fixture Coven.
+- **Fixture factory defaults are invented names, never real ones** (M1.25), e.g. Testwort.
 - **Setup rows go through the raw `postgres` client and the shared inserters, never `withAudit`** (MB.101).
-- **A story is proved by a browser flow** under `tests/e2e/stories/`, tagged `{ tag: '@story-N' }`, never by a service call (M9.1). `npm run test:stories` reads the tags into the checklist, a flaky story reads as failing, and the suite runs as the PR gate's `stories` job, never a required check, tracked apart from the 80% line. A gate spec proves only what no story walks.
+- **A story is proved by a browser flow** under `tests/e2e/stories/`, tagged `{ tag: '@story-N' }`, never by a service call (M9.1). A flaky story reads as failing; the suite is the PR gate's `stories` job, never a required check. A gate spec proves only what no story walks.
 - **Accessibility is asserted in Playwright** via `@axe-core/playwright`, not `vitest-axe`.
-- Component tests use role and label queries only. No test ids for anything a user can see. A test proves a functional requirement by the state it leaves, never by copy, class or layout; a regression test needs a bug that reached a PR.
+- Component tests use role and label queries only, with no test ids for anything a user can see. A test proves a requirement by the state it leaves, never by copy, class or layout; a regression test needs a bug that reached a PR.
 - **No snapshots** except design tokens and the GraphQL SDL.
 - Bug fixes start with a regression test.
 - Authorization tests must assert **direct-id** access is refused, not merely that a row is absent from a list.
@@ -99,31 +99,40 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 ## Conventions
 
 - **One task per PR.** Do not combine tasks, even small adjacent ones. A sub-hour fix noticed along the way rides in that task's PR and is named in its body, without an `MB` id (MB.31).
-- **The browser floor is Baseline Widely Available, and below it the app degrades, never breaks.** `package.json`'s `browserslist` is the one statement of it; the build lowers CSS to it and `npm run lint:css` refuses CSS past it. A feature past the floor is allowed only as a pure enhancement, inside `@supports` with a fallback, or in JavaScript behind a `typeof` or `in` check, and says so in a comment. `tests/guards/browser-floor.test.ts` holds client-reachable JavaScript. Playwright gates on Chromium alone. Long form: `.claude/rules/components.md` (M10.24).
+- **The browser floor is Baseline Widely Available, and below it the app degrades, never breaks.** `package.json`'s `browserslist` is the one statement of it; the build lowers CSS to it and `npm run lint:css` refuses CSS past it. A feature past it is allowed only as a pure enhancement, inside `@supports` with a fallback, or in JavaScript behind a `typeof` or `in` check, and says so in a comment. Long form: `.claude/rules/components.md` (M10.24).
 - **A table task, then a behaviour task.** Never bundle `CREATE TABLE` with the policy or service that governs it.
-- **The sweep-task rule.** A sweep over **database objects** lands once, right after the last object it covers, under a catalogue-introspection test. A sweep over **code** lands as a mechanism plus a mechanical guard, as early as it can be written, and each later task adopts it in its own PR. The tell: can the thing be made _impossible_, or only _absent_?
+- **The sweep-task rule.** A sweep over **database objects** lands once, after the last object it covers, under a catalogue-introspection test. A sweep over **code** lands as a mechanism plus a mechanical guard, as early as it can be written, and each later task adopts it in its own PR. The tell: can the thing be made _impossible_, or only _absent_?
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Modules:** `src/modules/<name>/` — `identity`, `coven`, `vocabulary`, `ingredients`, `grimoire` — each owns its tables and services, and another module reaches it only through `@/modules/<name>` (claude-docs/modules.md).
 - **A type lives in a type-only file** (MB.108), by default the `types.ts` beside its users (claude-docs/modules.md, "Where types live").
 - **Every slug comes from `src/lib/slugify.ts`** (M4.3), derived from the name and never written down beside it.
-- **Components and styling** follow `.claude/rules/components.md`: a directory, a story and a doc per component, Sass `@use` and never `@import`, and no styling past the tokens before the section's design review.
-- **Gitflow:** `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production.
-- **Document as you go** in `claude-docs/`, correcting a doc in the PR that makes it wrong (MB.31); `claude-docs/archive/` is frozen and never read. When a doc and the code disagree, establish which is wrong before reconciling them (claude-docs/README.md).
-- **Write plainly, for developers of every level of experience** — in replies, docs, PR bodies and comments. Say what a thing does before naming it, spell a term out on first use, prefer the everyday word, and keep a precise term only where precision is the point. Long form: `.claude/rules/writing.md`.
+- **Components and styling** follow `.claude/rules/components.md`: no styling past the tokens before the section's design review.
+- **Gitflow:** `feature/*` → `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` and `main-sync/*` as DESIGN.md §12 sets out; staging is protected like main.
+- **Document as you go** in `claude-docs/`, correcting a doc in the PR that makes it wrong (MB.31); `claude-docs/archive/` is frozen and never read. When a doc and the code disagree, establish which is wrong first.
+- **Write plainly, for developers of every level of experience** — in replies, docs, PR bodies and comments: say what a thing does before naming it, spell a term out on first use, and prefer the everyday word. Long form: `.claude/rules/writing.md`.
 - **A comment says what this is and why it is not the obvious alternative; the argument lives in `claude-docs/`** (MB.50). Never cut a fact the reader cannot recover, or a comment a tool reads (claude-docs/README.md, "Comments in code").
-- **Flag an architecture decision that costs more than it buys** — do not route around it, and do not change it unasked. Put it to the user with the code it made harder and the change you recommend, and keep to the current rules meanwhile. An accepted change corrects `DESIGN.md` or this file, recorded in `claude-docs/design-decisions/<id>-<slug>.md` in that task's PR.
+- **Flag an architecture decision that costs more than it buys** — do not route around it, and do not change it unasked. Put it to the user with the code it made harder and the change you recommend, and keep to the rules meanwhile. An accepted change corrects `DESIGN.md` or this file and is recorded in `claude-docs/design-decisions/<id>-<slug>.md` in that task's PR.
 
 ## GitHub task tracking
 
-The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & Salt** (number `1`), are what to work on; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form: `.claude/rules/task-tracking.md`, and claude-docs/task-tracking.md.
+The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & Salt** (number `1`), are what to work on; `TASKS.md` is the reasoning behind them. The repo is public, so every issue and comment is too. Long form, with the status table and minting: `.claude/rules/task-tracking.md` and claude-docs/task-tracking.md.
 
 - **Everything goes through `node scripts/task-board.mjs`** — `find`, `status`, `comment`, `estimate`, `sync`, `list`, `reorder`. Never hand-compose `gh issue`.
-- **An issue mirrors its entry.** Edit an entry in `claude-docs/tasks/`, and `sync <ID>` its issue in the same pass.
 - **`find <ID>` matches the title on `<ID> — ` exactly.** Zero matches, or several: stop and say so.
-- **Status moves forward, in the same turn as the event**: `Not Started` is the Project's; `In Progress` once the branch exists and work starts; `In Review` when the PR opens, with a comment carrying its link; `Done` is the merge's.
-- **Never close a task by hand.** A PR closed unmerged sends its task back to `In Progress`.
+- **Status moves forward, in the same turn as the event**: `In Progress` once work starts, `In Review` when the PR opens (with a comment carrying its link), `Done` at the merge.
+- **Never close a task by hand.**
 - **A PR body opens with `Closes #N`**, or `Refs #N` for a PR that does not finish the task.
 - **Comments name, never carry values**: an env var, a file or a provider, but never a value, token, connection string, address or dashboard URL.
+
+## Spending tokens
+
+- A passing run prints only its verdict; on a failure read the failing part (`tail`, `grep`, `jq`). Read a file over ~300 lines by section.
+- Never mask an exit code with a pipe: log to `.reports/<name>.log`, print `exit $?`, then tail the log.
+- Verify once: one spec while iterating, the full suites at task end.
+- At a task boundary, suggest `/clear` to the owner.
+- Each rule gives way when the owner asks otherwise, or when following it would thin a test.
+
+Long form: claude-docs/token-efficiency.md.
 
 ## Out of scope for v1
 
@@ -135,7 +144,7 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 
 ## Skills
 
-Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Each one's trigger is its own description, which every session lists; claude-docs/agent-skills.md tables them all with what each does.
+Skills live in `.claude/skills/<name>/SKILL.md`, invoked as `/<name>`; claude-docs/agent-skills.md tables them.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

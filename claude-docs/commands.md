@@ -103,6 +103,8 @@ widely available.
 
 ## Tests
 
+Keep run output small, and never mask an exit code with a pipe: see [`token-efficiency.md`](token-efficiency.md) for the build-log recipe.
+
 | npm (`make`)                                       | Purpose                                                                                                                                                                                                                                                                                                          |
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run test:coverage`                            | `vitest run --coverage` — the `unit` (node), `dom` (happy-dom), `db` and `db-mocking` (node/Postgres) and `rsc` projects, 80% threshold                                                                                                                                                                          |

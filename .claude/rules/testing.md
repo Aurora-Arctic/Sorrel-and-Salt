@@ -15,6 +15,8 @@ The acceptance scaffold that opens each wave is anchored to the wave rather than
 
 **`test:coverage`'s 80% threshold** (CLAUDE.md, Commands) holds lines, branches, functions and statements alike. Under Claude Code the run prints only the summary (MB.142), so when a threshold fails, read the files dragging it down from the last run's summary — here for branches, the fifteen with the most uncovered:
 
+Playwright is quiet the same way (M12.37): under Claude Code a run prints dots, each failure and a summary, and still writes `.reports/playwright-report/`. The story suite prints dots instead of its per-test lines, so for per-file timings run it with `PW_REPORTER=list` (claude-docs/testing/where-tests-live.md, "Quiet under Claude Code").
+
 ```sh
 jq -r --arg m branches 'del(.total) | to_entries | map({f: .key, miss: (.value[$m].total - .value[$m].covered), pct: .value[$m].pct}) | sort_by(-.miss) | .[:15][] | "\(.miss)\t\(.pct)%\t\(.f)"' .reports/coverage/coverage-summary.json
 ```
