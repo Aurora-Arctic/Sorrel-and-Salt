@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import IngredientCardList from '../IngredientCardList';
 import type { SafetyVariant } from '../SafetyNote/types';
+import { ENTRIES, JarLines } from './compact.fixtures';
 import { Jars } from './story-jars';
 import IngredientCard from '.';
 import './compact.stories.scss';
@@ -136,3 +137,72 @@ export const CompactPhone: Story = () => (
   </div>
 );
 CompactPhone.meta = { width: 375 };
+
+// Four grids on the same nine entries, for the two pages that use the card: the
+// public compendium (M8.18: no marks of whose, no jars, no actions) and the coven's
+// Ingredients page (M9.6: marks, jar lines, Edit and Delete). Current spacing and
+// compact spacing differ in nothing else.
+const CompendiumGrid = () => (
+  <IngredientCardList label="Compendium">
+    {ENTRIES.map((e) => (
+      <IngredientCard
+        key={e.slug}
+        href={`/compendium/ingredients/${e.slug}` as const}
+        label={e.label}
+        formalName={e.formalName}
+        nomenclature={e.nomenclature}
+        categories={e.categories}
+        variants={e.variants}
+        toxic={e.toxic}
+        safetyNotes={e.safetyNotes}
+        kind="compendium"
+      />
+    ))}
+  </IngredientCardList>
+);
+
+const CupboardGrid = () => (
+  <IngredientCardList label="Ingredients">
+    {ENTRIES.map((e) => (
+      <IngredientCard
+        key={e.slug}
+        href={`/coven/test-coven/ingredients/${e.slug}` as const}
+        label={e.label}
+        formalName={e.formalName}
+        nomenclature={e.nomenclature}
+        categories={e.categories}
+        variants={e.variants}
+        toxic={e.toxic}
+        safetyNotes={e.safetyNotes}
+        kind={e.kind}
+        annotated={e.annotated}
+        retired={e.retired}
+        actions={
+          <>
+            <button type="button" className="btn btn--small">
+              Edit
+            </button>
+            <button type="button" className="btn btn--small btn--destructive">
+              Delete
+            </button>
+          </>
+        }
+      >
+        <JarLines jars={e.jars} />
+      </IngredientCard>
+    ))}
+  </IngredientCardList>
+);
+
+export const CompendiumGridCurrent: Story = () => <CompendiumGrid />;
+export const CompendiumGridCompact: Story = () => (
+  <div className="compact-sample">
+    <CompendiumGrid />
+  </div>
+);
+export const CupboardGridCurrent: Story = () => <CupboardGrid />;
+export const CupboardGridCompact: Story = () => (
+  <div className="compact-sample">
+    <CupboardGrid />
+  </div>
+);
