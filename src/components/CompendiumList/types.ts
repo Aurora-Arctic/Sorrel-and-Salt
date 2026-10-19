@@ -7,6 +7,7 @@ import type {
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { PickerCategory } from '../CategoryPicker/types';
 import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
+import type { COVEN_PARAMS } from '../IngredientSearch/coven-params';
 import type { COMPENDIUM_PARAMS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
@@ -142,19 +143,37 @@ export interface CompendiumFacetCounts {
  */
 export type CompendiumListFilter = SearchFilter<typeof COMPENDIUM_PARAMS.entries>;
 
+/**
+ * The coven list's filter (M9.6): the compendium's, with the Source, In Stock and Low Stock Only
+ * choices only a coven has. Read from the address by `COVEN_PARAMS`.
+ */
+export type CovenListFilter = SearchFilter<typeof COVEN_PARAMS.entries>;
+
 /** Where the list stands: its filter, and the cursor of the page a modal opens over. */
 export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
-  'filter' | 'facets' | 'categories' | 'vocabulary'
+  'facets' | 'categories' | 'vocabulary'
 > & {
+  /**
+   * The filter the page shows. A coven list's also carries its Source, In Stock and Low Stock Only
+   * choices (`CovenListFilter`), which the other two lists leave out.
+   */
+  filter: CompendiumListFilter &
+    Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
   /**
    * Who the filter is for. The admin's (the default) opens an entry's edit modal on a pick, offers
    * No Refs, and submits to `/admin/compendium`; the public one (M8.18) links a pick to the entry's
-   * page, has no No Refs, and submits to `/compendium`. A flag, not functions, since the filter is
-   * a client component its server page passes props to.
+   * page, has no No Refs, and submits to `/compendium`; a coven's (M9.6) submits to
+   * `/coven/<covenSlug>/ingredients`, links a pick to the entry's page there, suggests from the
+   * coven's cupboard, and adds Source, In Stock and Low Stock Only. A flag and plain data, not
+   * functions, since the filter is a client component its server page passes props to.
    */
-  audience?: 'admin' | 'public';
+  audience?: 'admin' | 'public' | 'coven';
+  /** The coven's address segment, for `audience="coven"`. */
+  covenSlug?: string;
+  /** The coven's id, for `audience="coven"`: the type-ahead and the live counts read it. */
+  workspaceId?: string;
 };
