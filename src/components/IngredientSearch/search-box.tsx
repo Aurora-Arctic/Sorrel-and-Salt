@@ -39,6 +39,32 @@ const IngredientSearchMatchesDocument = graphql(`
   }
 `);
 
+// The same type-ahead over one coven's own ingredients: the entries it made and
+// the compendium entries its cupboard names, shown by the coven's label where
+// the cupboard sets one. Asked instead of the compendium when a `workspaceId`
+// is given, never alongside it.
+const IngredientSearchCupboardMatchesDocument = graphql(`
+  query IngredientSearchCupboardMatches($workspaceId: ID!, $query: String, $first: Int) {
+    workspaceIngredients(workspaceId: $workspaceId, query: $query, first: $first) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        node {
+          id
+          slug
+          name
+          canonicalName
+          nomenclature
+          cupboardEntry(workspaceId: $workspaceId) {
+            label
+          }
+        }
+      }
+    }
+  }
+`);
+
 /** The dropdown's rows: the first page of the ranked search, never a second. */
 const MATCH_ROWS = 25;
 
@@ -52,6 +78,7 @@ const IngredientSearchBox = ({
   searchHref,
   pickHref,
   pickHeading,
+  workspaceId,
 }: IngredientSearchBoxProps): ReactElement => {
   const controlId = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -67,29 +94,62 @@ const IngredientSearchBox = ({
   // Typed text under the floor is never asked about, so it waits on nothing:
   // the dropdown says to keep typing at once rather than staying shut.
   const belowFloor = text.trim() !== '' && !searchable(text.trim());
-  const { data, isFetching } = useQuery({
+  const compendium = useQuery({
     ...graphqlQuery(IngredientSearchMatchesDocument, { query, first: MATCH_ROWS }),
-    enabled: active && searchesNow,
+    enabled: active && searchesNow && !workspaceId,
     placeholderData: keepPreviousData,
     throwOnError: false,
   });
+  const cupboard = useQuery({
+    ...graphqlQuery(IngredientSearchCupboardMatchesDocument, {
+      workspaceId: workspaceId ?? '',
+      query,
+      first: MATCH_ROWS,
+    }),
+    enabled: active && searchesNow && !!workspaceId,
+    placeholderData: keepPreviousData,
+    throwOnError: false,
+  });
+  const isFetching = workspaceId ? cupboard.isFetching : compendium.isFetching;
+  // Both answers become the same match: the coven's label stands in for the name.
+  const answer = useMemo(() => {
+    if (workspaceId) {
+      const page = cupboard.data?.workspaceIngredients;
+      return page
+        ? {
+            hasNextPage: page.pageInfo.hasNextPage,
+            nodes: page.edges.map(({ node }) => ({
+              id: node.id,
+              slug: node.slug,
+              name: node.cupboardEntry?.label ?? node.name,
+              canonicalName: node.canonicalName,
+              nomenclature: node.nomenclature,
+            })),
+          }
+        : null;
+    }
+    const page = compendium.data?.compendium;
+    return page
+      ? { hasNextPage: page.pageInfo.hasNextPage, nodes: page.edges.map(({ node }) => node) }
+      : null;
+  }, [workspaceId, cupboard.data, compendium.data]);
 
   // Under the floor the service ignores the query and returns the unranked
   // browse list, so no rows are offered, and the kept previous answer is not
   // shown either.
   const options = useMemo(
     (): IngredientSearchOption[] =>
-      searchesNow && !belowFloor && data
-        ? data.compendium.edges.map(({ node }) => ({
+      searchesNow && !belowFloor && answer
+        ? answer.nodes.map((node) => ({
             key: node.id,
             value: node.name,
             label: node.canonicalName ? `${node.name} (${node.canonicalName})` : node.name,
             match: node,
           }))
         : [],
-    [data, searchesNow, belowFloor],
+    [answer, searchesNow, belowFloor],
   );
-  const hasMore = searchesNow && !belowFloor && data?.compendium.pageInfo.hasNextPage === true;
+  const hasMore = searchesNow && !belowFloor && answer?.hasNextPage === true;
   const seeAllHref = searchHref(query);
 
   // A pick opens the entry over the list as it stands, so the list is

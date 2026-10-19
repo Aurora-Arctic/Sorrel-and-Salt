@@ -57,6 +57,12 @@ export interface IngredientSearchFormProps {
    * over the list as it stands; left out, a pick is a plain navigation.
    */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
+  /**
+   * A coven's id. Given, the type-ahead suggests from that coven's own
+   * ingredients, by the coven's label where it sets one, instead of from the
+   * compendium.
+   */
+  workspaceId?: string;
   /** Draw the form's own Clear while a filter is shown. Default true. */
   clear?: boolean;
   /** Joins the form's class. */
@@ -72,6 +78,7 @@ export interface IngredientSearchBoxProps {
   searchHref: IngredientSearchFormProps['searchHref'];
   pickHref: IngredientSearchFormProps['pickHref'];
   pickHeading?: IngredientSearchFormProps['pickHeading'];
+  workspaceId?: IngredientSearchFormProps['workspaceId'];
 }
 
 /** The kinds of filter the search sentence can name, in the order it names them. */
@@ -84,6 +91,9 @@ export type SearchSentenceFacet =
   | 'planets'
   | 'elements'
   | 'toxic'
+  | 'source'
+  | 'inStock'
+  | 'lowStockOnly'
   | 'nomenclature'
   | 'withoutReferences';
 
@@ -102,6 +112,12 @@ export interface SearchSentenceFilter {
   elements?: readonly string[];
   /** The address's own choice: `toxic`, `not_toxic`, or `any` / left out for either. */
   toxic?: ToxicFilter | null;
+  /** A coven's list only: where the entry came from, `local` or `compendium`; left out for both. */
+  source?: 'local' | 'compendium' | null;
+  /** A coven's list only: entries with a jar not at 0. */
+  inStock?: boolean;
+  /** A coven's list only: entries with a jar badged Low Stock or Out of Stock. */
+  lowStockOnly?: boolean;
   /** Admin lists only. */
   nomenclature?: string | null;
   /** Admin lists only. */
