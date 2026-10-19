@@ -163,6 +163,15 @@ read. None of those names a provider, so all of them must read the same: the
 wrapper returns the roster provider whose id matches, else `null`. Strings
 compare by value, so a real provider id is stable too.
 
+## Busy
+
+Each provider button is a `BusyButton`. The one pressed goes busy ("Signing In",
+with the spinner and `aria-busy`) and the others are `disabled` while it is. Once
+`signIn.social` answers without an error the redirect has started, and the panel
+calls `reportLeaving()` so the page bar stays up until the browser leaves; a
+back-forward cache return (`pageshow` with `persisted`) clears the busy button.
+A failure before the redirect frees every button and shows the error.
+
 ## Error state
 
 One `message` field covers both sources: the server-rendered callback error

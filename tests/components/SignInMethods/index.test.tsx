@@ -155,6 +155,40 @@ describe('SignInMethods', () => {
     );
   });
 
+  it('marks a removal busy while it is in flight, then frees the list', async () => {
+    let finish: (value: unknown) => void = () => {};
+    unlinkAccountMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Microsoft' }));
+
+    expect(await screen.findByRole('button', { name: 'Remove Microsoft' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Remove Discord' })).toBeDisabled();
+    finish({ data: { status: true }, error: null });
+    await screen.findByRole('status');
+    expect(screen.getByRole('button', { name: 'Add Microsoft' })).not.toHaveAttribute('aria-busy');
+  });
+
+  it('marks a link busy while its hop is under way, and frees it on a failure', async () => {
+    let finish: (value: unknown) => void = () => {};
+    linkSocialMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+
+    expect(await screen.findByRole('button', { name: 'Add Google' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    finish({ error: { message: 'x' } });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy'),
+    );
+  });
+
   it('maps a refused removal to a sentence of its own and keeps the provider', async () => {
     unlinkAccountMock.mockResolvedValue({
       data: null,

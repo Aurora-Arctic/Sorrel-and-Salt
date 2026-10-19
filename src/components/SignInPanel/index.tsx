@@ -1,9 +1,11 @@
 'use client';
 
-import { type ReactElement, useState, useSyncExternalStore } from 'react';
+import { type ReactElement, useEffect, useState, useSyncExternalStore } from 'react';
 import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import { reportLeaving } from '../../lib/navigation';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
 import { PROVIDER_MARKS } from './icons';
@@ -37,16 +39,33 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // (claude-docs/components/sign-in-panel.md, "Last used").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
 
+  // The provider whose hop is under way. The page is left for the provider's
+  // own, so on success it stays set until the browser goes; a return from the
+  // back-forward cache (the page restored as it was left) clears it.
+  const [signingIn, setSigningIn] = useState<ProviderId | null>(null);
+  useEffect(() => {
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setSigningIn(null);
+    };
+    window.addEventListener('pageshow', restored);
+    return () => window.removeEventListener('pageshow', restored);
+  }, []);
+
   const handleClick = async (providerId: ProviderId): Promise<void> => {
-    if (!configured.includes(providerId)) return;
+    if (!configured.includes(providerId) || signingIn) return;
     setMessage(undefined);
+    setSigningIn(providerId);
     // errorCallbackURL carries `next` along: a failed attempt would otherwise
     // lose the destination and land back at plain /sign-in. With no `next`,
     // the callback lands the account by its role.
     const result = await signIn.social({ provider: providerId, ...socialSignInTarget(next) });
     if (result?.error) {
       setMessage(GENERIC_SIGN_IN_ERROR);
+      setSigningIn(null);
+      return;
     }
+    // The redirect has started: keep the page bar up until the browser leaves.
+    reportLeaving();
   };
 
   return (
@@ -70,8 +89,9 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
           const isLastUsed = provider.id === lastUsed;
           return (
             <div key={provider.id} className="sign-in-panel__provider">
-              <button
-                type="button"
+              <BusyButton
+                busy={signingIn === provider.id}
+                busyLabel="Signing In"
                 // The brand colour class is dropped entirely once
                 // unavailable, rather than layered under a disabled
                 // modifier: `.btn[aria-disabled='true']`
@@ -91,7 +111,14 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
                 aria-describedby={isAvailable ? undefined : noteId}
                 // Read as one phrase with a pause, where the text alone would
                 // run the label into the badge: "Discord Last Used".
-                aria-label={isLastUsed ? `Continue with ${provider.label}, last used` : undefined}
+                aria-label={
+                  isLastUsed && signingIn !== provider.id
+                    ? `Continue with ${provider.label}, last used`
+                    : undefined
+                }
+                // The others wait for the pressed one; `disabled`, since a page
+                // being left has no use for their tab stops.
+                disabled={signingIn !== null && signingIn !== provider.id}
                 onClick={() => handleClick(provider.id)}
               >
                 <Mark chip />
@@ -99,7 +126,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
                 {isLastUsed && (
                   <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
                 )}
-              </button>
+              </BusyButton>
               {!isAvailable && <ProviderUnavailableNote id={noteId} />}
             </div>
           );
