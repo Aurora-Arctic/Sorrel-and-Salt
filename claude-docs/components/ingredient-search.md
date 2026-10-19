@@ -74,8 +74,9 @@ in the filter slot to carry.
   cards and below the bar, tips and dialogs. The offset is one custom property,
   `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
   PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
-  above and below, cancelled at rest by equal negative margins so the page lays out
-  as before; the tray hangs from the form inside, so the padding never moves it
+  above, cancelled at rest by an equal negative margin so the page lays out as
+  before, and `space(2)` below, real space between the row and the cards with no
+  cancelling margin (changed 2026-10-19, back to what it was); the tray hangs from the form inside, so the padding never moves it
   from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
