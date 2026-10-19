@@ -30,9 +30,6 @@ import {
 // still a 404, which a Suspense boundary above the guard would turn into a
 // 200. tests/e2e/coven-ingredients.spec.ts ("a non-member is told the page
 // does not exist") and tests/e2e/coven.spec.ts prove it on every run.
-//
-// M12.33 scaffold: every test is a `test.fixme` naming the lane that makes
-// it pass; the last of them unskips it (grep "M12.33 scaffold").
 
 /** The keyframes every loading mark pulses with under reduced motion (the owner's call). */
 const PULSE = 'loading-pulse';
@@ -237,54 +234,55 @@ test("a site link takes the shell's page away at once and puts one status in its
   await expect(compendiumList(page)).toBeVisible();
 });
 
-test.fixme(
-  'under reduced motion, every loading mark of a wait pulses with the one shared keyframes',
-  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B and C' } },
-  async ({ page }) => {
-    await openIngredients(page, hollow, HOLLOW_ENTRY);
-    const server = await holdServerAnswers(page);
+test('under reduced motion, every loading mark of a wait pulses with the one shared keyframes', async ({
+  page,
+}) => {
+  await openIngredients(page, hollow, HOLLOW_ENTRY);
+  const server = await holdServerAnswers(page);
 
-    // Why the names below are reduced motion's doing: with motion allowed,
-    // the same wait moves with marks of other keyframes (the spinner's
-    // turn, the skeleton's shimmer).
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await expectStill(page);
-    server.hold();
-    await pickCoven(page, WILLOW);
-    await expect.poll(server.navigations).toBeGreaterThan(0);
-    // The bar and the spinner come after their 100ms delay.
-    await expect
-      .poll(async () => {
-        const running = await runningAnimations(page);
-        return running.some(({ inMain }) => inMain) && running.some(({ inMain }) => !inMain);
-      })
-      .toBe(true);
-    const moving = await runningAnimations(page);
-    expect(moving.some(({ name }) => name !== PULSE)).toBe(true);
-    await server.release();
-    await expect(page).toHaveURL(`/coven/${willow.slug}/ingredients`);
-    await expect(rowOf(ingredientList(page), WILLOW_ENTRY)).toHaveCount(1);
-    await expectStill(page);
+  // Why the names below are reduced motion's doing: with motion allowed,
+  // the same wait moves with marks of other keyframes (the spinner's
+  // turn, the skeleton's shimmer).
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expectStill(page);
+  server.hold();
+  await pickCoven(page, WILLOW);
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+  // The bar and the spinner come after their 100ms delay.
+  await expect
+    .poll(async () => {
+      const running = await runningAnimations(page);
+      return running.some(({ inMain }) => inMain) && running.some(({ inMain }) => !inMain);
+    })
+    .toBe(true);
+  const moving = await runningAnimations(page);
+  expect(moving.some(({ name }) => name !== PULSE)).toBe(true);
+  await server.release();
+  await expect(page).toHaveURL(`/coven/${willow.slug}/ingredients`);
+  await expect(rowOf(ingredientList(page), WILLOW_ENTRY)).toHaveCount(1);
+  await expectStill(page);
 
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    server.hold();
-    await pickCoven(page, HOLLOW);
-    await expect.poll(server.navigations).toBeGreaterThan(0);
-    // The skeleton in the main landmark; the bar and the switcher's spinner outside it.
-    await expect
-      .poll(async () => {
-        const running = await runningAnimations(page);
-        return {
-          inMain: running.some(({ inMain }) => inMain),
-          outside: running.filter(({ inMain }) => !inMain).length >= 2,
-        };
-      })
-      .toEqual({ inMain: true, outside: true });
-    const pulsing = await runningAnimations(page);
-    expect([...new Set(pulsing.map(({ name }) => name))]).toEqual([PULSE]);
-    await assertNoAccessibilityViolations(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  server.hold();
+  await pickCoven(page, HOLLOW);
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+  // The skeleton in the main landmark; the bar and the switcher's spinner outside it.
+  await expect
+    .poll(async () => {
+      const running = await runningAnimations(page);
+      return {
+        inMain: running.some(({ inMain }) => inMain),
+        outside: running.filter(({ inMain }) => !inMain).length >= 2,
+        // `loading-appear` holds a mark hidden for its delay: no motion, and
+        // it ends once the mark shows.
+        held: running.some(({ name }) => name === 'loading-appear'),
+      };
+    })
+    .toEqual({ inMain: true, outside: true, held: false });
+  const pulsing = await runningAnimations(page);
+  expect([...new Set(pulsing.map(({ name }) => name))]).toEqual([PULSE]);
+  await assertNoAccessibilityViolations(page);
 
-    await server.release();
-    await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
-  },
-);
+  await server.release();
+  await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
+});

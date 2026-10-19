@@ -11,7 +11,8 @@ import type { CovenBodyProps } from './types';
 // stands in its place. Not a dimmed page and not a `loading.tsx`: a boundary
 // would turn the guards' 404 and 403 into 200s (claude-docs/components/coven-body.md).
 // The pages own their `<main>`, so the skeleton brings one: without it the
-// landmark would vanish for the length of the wait.
+// landmark would vanish for the length of the wait, and so does the page's
+// level-one heading, so it brings a hidden one.
 export default function CovenBody({ children }: CovenBodyProps): ReactElement {
   const { busy, target } = useNavigationState();
 
@@ -19,6 +20,7 @@ export default function CovenBody({ children }: CovenBodyProps): ReactElement {
     <div className="coven-layout">
       {busy && target?.region === 'coven' ? (
         <main>
+          <h1 className="visually-hidden">Loading</h1>
           <Skeleton shape={target.shape} />
         </main>
       ) : (

@@ -9,13 +9,16 @@ import Skeleton from '../Skeleton';
 // page keeps its landmark during the wait (the pages draw their own `main`,
 // which the skeleton replaces). Only a `main` target is answered here; a
 // `coven` target is `CovenBody`'s, and no target at all (a refresh) leaves the
-// page standing. A client part, since the state is the browser's.
+// page standing. The page's own heading goes with it, so the wait carries a
+// hidden one: a page without a level-one heading fails the accessibility scan.
+// A client part, since the state is the browser's.
 // claude-docs/components/app-shell.md
 const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   const { busy, target } = useNavigationState();
   if (busy && target?.region === 'main') {
     return (
       <main className="page-frame">
+        <h1 className="visually-hidden">Loading</h1>
         <Skeleton shape={target.shape} />
       </main>
     );
