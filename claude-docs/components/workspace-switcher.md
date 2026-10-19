@@ -96,8 +96,8 @@ is outweighed by one more class, so no Combobox variant was needed.
 
 The switcher goes through `usePendingNavigation` with the target
 `{ region: 'coven', shape }`, the shape being the destination section's
-(`cards` Ingredients, `table` the people pages, `page` the home); `CovenBody`
-draws that skeleton in place of the old page (`coven-body.md`). The pick is
+(`cards` Ingredients, `table` the people pages, `page` the home); `SectionBody`
+draws that skeleton in place of the old page (`section-body.md`). The pick is
 held in state and shown as the value, and the box is `busy` (`aria-busy`, and
 a spinner after the delay), until the navigation settles. Create Coven targets
 `{ region: 'main', shape: 'form' }`.

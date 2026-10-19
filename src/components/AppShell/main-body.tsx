@@ -8,7 +8,7 @@ import Skeleton from '../Skeleton';
 // page that was there gives way to one skeleton, in a `main` of its own so the
 // page keeps its landmark during the wait (the pages draw their own `main`,
 // which the skeleton replaces). Only a `main` target is answered here; a
-// `coven` target is `CovenBody`'s, and no target at all (a refresh) leaves the
+// `coven` or `admin` target is `SectionBody`'s, and no target at all (a refresh) leaves the
 // page standing. The page's own heading goes with it, so the wait carries a
 // hidden one: a page without a level-one heading fails the accessibility scan.
 // A client part, since the state is the browser's.

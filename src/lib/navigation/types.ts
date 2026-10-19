@@ -1,6 +1,6 @@
 /** Where a navigation is headed, so the part of the page that will change can draw its own wait. */
 export type NavigationTarget = {
-  region: 'coven' | 'main';
+  region: 'coven' | 'admin' | 'main';
   shape: 'table' | 'cards' | 'form' | 'page';
 };
 

@@ -103,7 +103,7 @@ layout and page both read from the database.
 
 1. Choosing a coven in the switcher shows the picked name and a spinner at
    once, with `aria-busy` on the box (`ComboboxSelect`'s `busy` prop).
-2. [`CovenBody`](components/coven-body.md) takes the old coven's page away at
+2. [`SectionBody`](components/section-body.md) takes the old coven's page away at
    once, with no dimming, so nobody acts on the wrong coven's data. It does
    this when the site is busy and the target's region is `coven`.
 3. The **destination section's** skeleton takes its place, inside a `<main>`
@@ -165,7 +165,7 @@ request failed ([React, `useOptimistic`](#references)). One component,
 router, and every navigation and refresh the site starts is a transition it
 opens. Nothing is ever settled by hand. The first version kept the transition
 in the component that pressed the link and cleared the wait when that component
-unmounted; `MainBody` and `CovenBody` swap their children for a skeleton,
+unmounted; `MainBody` and `SectionBody` swap their children for a skeleton,
 which unmounts the pressed link, so the wait ended at once and the old page came
 back (the admin navigation, the coven home contents links and Create Coven
 were all hit). Owning the wait above every region removes that whole class of
@@ -200,7 +200,7 @@ exported from its `index.ts`.
   router sees options **only when a caller gives some**, so a plain call is a
   plain `push(href)`.
 - `target` says where the page is headed:
-  `{ region: 'coven' | 'main', shape }`. Whatever draws the region's skeleton
+  `{ region: 'coven' | 'admin' | 'main', shape }`. Whatever draws the region's skeleton
   reads it from the store. On `PendingLink` the same thing is the prop
   `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
 
@@ -227,8 +227,9 @@ with the value already put back.
 - The site bar's links, and their copies in the account menu, use
   `siteLinkTarget` (`src/components/AppShell/site-target.ts`): the `main`
   region, `cards` for `/compendium` and `page` otherwise.
-- The admin navigation uses `adminTarget` (`src/components/AdminNav/target.ts`):
-  `page` for `/admin`, `cards` for `/admin/compendium`, and `table` for the
+- The admin navigation, and the `Admin` lead in the admin context row, use
+  `adminTarget` (`src/components/AdminNav/target.ts`), the `admin` region, so
+  the row and its nav stay while the page changes: `page` for `/admin`, `cards` for `/admin/compendium`, and `table` for the
   rest.
 - The coven's section links (each carries a `target` in `SectionNav`'s props)
   and the Contents on the coven home name a `coven` target whose shape is
@@ -241,7 +242,7 @@ with the value already put back.
 answers a `main` target by replacing everything inside `#main` with one
 `<main className="page-frame">` holding the skeleton, so the page frame is
 replaced as well as the page's content. A navigation with no target, such as a
-refresh, leaves the page standing, and a `coven` target is `CovenBody`'s.
+refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 
 **The dot inside a `PendingLink`.** `LinkHint` reads Next's `useLinkStatus`,
 which only sees a navigation that Next's own `<Link>` started. A

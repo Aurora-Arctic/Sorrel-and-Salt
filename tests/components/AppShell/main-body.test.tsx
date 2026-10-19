@@ -12,7 +12,10 @@ const { default: MainBody } = await import('@/components/AppShell/main-body');
 // way to one status inside a main landmark; any other navigation leaves it.
 
 let arrive = () => {};
-let go: (target?: { region: 'coven' | 'main'; shape: 'page' | 'table' }) => void = () => {};
+let go: (target?: {
+  region: 'coven' | 'admin' | 'main';
+  shape: 'page' | 'table';
+}) => void = () => {};
 
 function Starter() {
   const { navigate } = usePendingNavigation();

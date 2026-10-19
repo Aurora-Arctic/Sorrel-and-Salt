@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import AdminNav from '../../../components/AdminNav';
 import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
+import SectionBody from '../../../components/SectionBody';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
@@ -34,7 +35,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           <PendingLink
             href="/admin"
             className="context-row__name"
-            navigationTarget={{ region: 'main', shape: 'page' }}
+            navigationTarget={{ region: 'admin', shape: 'page' }}
           >
             Admin
           </PendingLink>
@@ -42,7 +43,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       >
         <AdminNav managesPeople={role === 'admin'} />
       </ContextRow>
-      <div className="page-column">{children}</div>
+      <SectionBody region="admin" className="page-column">
+        {children}
+      </SectionBody>
     </RouteModalProvider>
   );
 }

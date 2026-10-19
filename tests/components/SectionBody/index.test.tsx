@@ -10,9 +10,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { usePendingNavigation } = await import('@/lib/navigation');
-const { default: CovenBody } = await import('@/components/CovenBody');
+const { default: SectionBody } = await import('@/components/SectionBody');
+const { default: AdminNav } = await import('@/components/AdminNav');
 
-// The coven's page under its context row (M12.33): while a navigation whose
+// A section's page under its context row, the coven's here (M12.33): while a navigation whose
 // target is the coven region is on its way, the old coven's page is taken
 // away at once and the destination's skeleton, with its one status, stands
 // in its place, so nobody acts on the wrong coven's data. A navigation aimed
@@ -41,14 +42,15 @@ function renderBody() {
     <Navigating push={router.push} arrives={arrives}>
       <Go name="Switch" target={{ region: 'coven', shape: 'cards' }} />
       <Go name="Leave" target={{ region: 'main', shape: 'page' }} />
+      <Go name="Admin" target={{ region: 'admin', shape: 'table' }} />
       <Go name="Filter" />
-      <CovenBody>
+      <SectionBody region="coven" className="coven-layout">
         <main>
           <ul aria-label="Ingredients">
             <li>Testwort</li>
           </ul>
         </main>
-      </CovenBody>
+      </SectionBody>
     </Navigating>,
   );
 }
@@ -68,7 +70,7 @@ afterEach(async () => {
   await act(async () => arrive());
 });
 
-describe('CovenBody', () => {
+describe('SectionBody', () => {
   it('shows its page, and no status, while nothing is on its way', () => {
     renderBody();
 
@@ -95,9 +97,10 @@ describe('CovenBody', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
+  // Admin: another section's, whose own body answers it.
   // Leave: the site nav's, whose skeleton fills the whole of the shell's body.
   // Filter: one within the page, whose own control and list show the wait.
-  it.each(['Leave', 'Filter'])(
+  it.each(['Leave', 'Admin', 'Filter'])(
     'leaves the page in place for a navigation not aimed at it (%s)',
     async (name) => {
       renderBody();
@@ -108,4 +111,48 @@ describe('CovenBody', () => {
       expect(oldPage()).toBeInTheDocument();
     },
   );
+});
+
+// The admin area's body, under its own context row: a move between admin pages
+// swaps the page and leaves the row, and its nav, standing.
+describe('SectionBody for the admin area', () => {
+  const renderAdmin = () => {
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    return render(
+      <Navigating push={router.push} arrives={arrives}>
+        <AdminNav managesPeople />
+        <Go name="Coven" target={{ region: 'coven', shape: 'cards' }} />
+        <SectionBody region="admin" className="page-column">
+          <main>
+            <ul aria-label="Categories">
+              <li>Testwort</li>
+            </ul>
+          </main>
+        </SectionBody>
+      </Navigating>,
+    );
+  };
+
+  it('answers a link of the admin nav by taking the page away and keeping the nav', async () => {
+    renderAdmin();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Forms' }));
+    });
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('list', { name: 'Categories' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
+  });
+
+  it('ignores a navigation aimed at the coven', async () => {
+    renderAdmin();
+
+    await press('Coven');
+
+    expect(screen.getByRole('list', { name: 'Categories' })).toBeInTheDocument();
+  });
 });

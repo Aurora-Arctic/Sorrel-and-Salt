@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { rolePermits } from '@/modules/coven';
-import CovenBody from '../../../../components/CovenBody';
+import SectionBody from '../../../../components/SectionBody';
 import ContextRow from '../../../../components/ContextRow';
 import CovenNav from '../../../../components/CovenNav';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
@@ -40,7 +40,9 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
       <ContextRow lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}>
         <CovenNav slug={slug} canReadMembers={rolePermits(membership.role, { member: ['read'] })} />
       </ContextRow>
-      <CovenBody>{children}</CovenBody>
+      <SectionBody region="coven" className="coven-layout">
+        {children}
+      </SectionBody>
     </>
   );
 }

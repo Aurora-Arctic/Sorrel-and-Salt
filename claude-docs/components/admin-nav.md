@@ -52,12 +52,16 @@ only too.
   layout, so the layout's guard does not run on a click either, which is why
   every page under `/admin` runs the guard itself.
 - **Each link names what its page draws on the way** (M12.33). `target.ts`
-  holds `adminTarget(href)`, which gives the `main` region and a shape: `page`
+  holds `adminTarget(href)`, which gives the `admin` region and a shape: `page`
   for `/admin`, `cards` for `/admin/compendium` and `table` for every other
   page. `index.tsx` sets it on each section from the page's first tab, and
   `AdminContents` passes the same function for its links. The `Admin` lead in
-  the context row is a `PendingLink` to `/admin` that names `main` and `page`
-  directly. What a target does is [`loading.md`](../loading.md)'s.
+  the context row is a `PendingLink` to `/admin` that names `admin` and `page`
+  directly. The `admin` region is the `/admin` layout's `SectionBody` (see
+  [`section-body.md`](section-body.md)): it swaps only the page under the
+  context row, so the row and this nav stay while the wait shows. Links into
+  admin from elsewhere (the site bar, the account menu) keep `main`, since
+  there the whole page changes. What a target does is [`loading.md`](../loading.md)'s.
 - **The page you are on is marked.** Its link carries `aria-current="page"`,
   which a screen reader announces, and no other link does. A page is current
   on any of its tabs, so Categories is current on `/admin/category-groups`,
