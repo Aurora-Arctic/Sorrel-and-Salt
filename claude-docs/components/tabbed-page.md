@@ -286,3 +286,5 @@ and `group-page.test.tsx` find the Add keeping the filter and cursor,
 `(people)/invitations/page.test.tsx` New Invitation and its `?invite`. How
 the layout keeps the heading in place and swaps the slot is Next's, and is
 the e2e suite's to see.
+
+With a single route the pill navigation is left out (MB.106's extra item): one pill to "navigate" between is noise. The heading and the tab's content still render.
