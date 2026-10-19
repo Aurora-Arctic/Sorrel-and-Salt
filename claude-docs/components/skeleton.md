@@ -10,7 +10,7 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 
 | Prop     | What it is                                                                 |
 | -------- | -------------------------------------------------------------------------- |
-| `shape`  | `table`, `cards`, `form` or `page`                                         |
+| `shape`  | `table`, `cards`, `form`, `page` or `line`                                 |
 | `filter` | Optional, `table` and `cards` only: a filter row above the list            |
 | `count`  | Optional: how many rows, cards, fields or blocks (6, 6, 4 and 3 otherwise) |
 
@@ -36,7 +36,8 @@ transition runs (`ListFrame`, `TabbedPage`).
 ## Stories
 
 `Feedback / Skeleton`: `Table`, `TableWithFilter`, `Cards`, `CardsWithFilter`,
-`Form` and `Page`.
+`Form`, `Page` and `Line`. `line` is one bar the height of a line of text, for a sentence
+that loads in place (the substitute summary's); it ignores `count`.
 
 ## Testing
 

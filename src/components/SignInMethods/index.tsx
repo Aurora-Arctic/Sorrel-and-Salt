@@ -9,6 +9,7 @@ import {
   signInPath,
   unlinkErrorMessage,
 } from '../../lib/sign-in';
+import { reportLeaving } from '../../lib/navigation';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import BusyButton from '../BusyButton';
@@ -41,6 +42,8 @@ const SignInMethods = ({
   const [alert, setAlert] = useState<SignInMethodError | undefined>(error);
   const [removed, setRemoved] = useState<string>();
   const [pending, setPending] = useState<string>();
+  // The provider whose link hop is under way: the browser is leaving for it.
+  const [linking, setLinking] = useState<ProviderId>();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutFailed, setSignOutFailed] = useState(false);
 
@@ -48,6 +51,7 @@ const SignInMethods = ({
     if (!configured.includes(providerId)) return;
     setAlert(undefined);
     setRemoved(undefined);
+    setLinking(providerId);
     const result = await linkSocial({
       provider: providerId,
       callbackURL: ACCOUNT_PATH,
@@ -55,7 +59,13 @@ const SignInMethods = ({
       // sentence in this row (claude-docs/components/sign-in-methods.md).
       errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
     });
-    if (result?.error) setAlert({ providerId, message: GENERIC_LINK_ERROR });
+    if (result?.error) {
+      setAlert({ providerId, message: GENERIC_LINK_ERROR });
+      setLinking(undefined);
+      return;
+    }
+    // The redirect has started: keep the page bar up until the browser leaves.
+    reportLeaving();
   };
 
   const handleRemove = async (account: LinkedAccount, label: string): Promise<void> => {
@@ -132,6 +142,7 @@ const SignInMethods = ({
               }
               removal={removal}
               pending={pending !== undefined}
+              busy={account ? pending === account.id : linking === provider.id}
               error={alert?.providerId === provider.id ? alert.message : undefined}
               onAdd={() => void handleAdd(provider.id)}
               onRemove={() => {

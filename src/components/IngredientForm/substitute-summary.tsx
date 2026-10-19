@@ -8,6 +8,7 @@ import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
 import FormIcon from '../FormIcon';
+import Skeleton from '../Skeleton';
 import type { EntrySummary } from '../Combobox/types';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
@@ -78,7 +79,7 @@ export function SubstituteSummary({
   });
 
   if (isPending || (error && isRefetching)) {
-    return <output className="entry-summary__status">Loading…</output>;
+    return <Skeleton shape="line" />;
   }
   if (error) {
     return (

@@ -142,6 +142,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
 }
 
+// A lookup in flight: the shared spinner, muted, ahead of the clear and chevron.
+.combobox__indicators > .spinner {
+  color: $text-muted;
+}
+
 // The text's slot in the row, a one-cell grid: the box takes the rest of the
 // row, as it always has. With a qualifier it is as wide as the text instead,
 // the cell sized by a hidden copy of the value in the box's own font and

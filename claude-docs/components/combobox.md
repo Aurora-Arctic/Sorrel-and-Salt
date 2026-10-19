@@ -124,6 +124,11 @@ colour is never the only cue.
   and after them. Each group's heading is keyed by its place, `heading-0`,
   rather than its text, which may hold a space and would split the
   `aria-labelledby` reference. The status region counts the rows as before.
+- **A pending lookup is shown and said.** While `suggestions.pending`, the
+  input carries `aria-busy` and the indicator strip holds a `Spinner` (it
+  shows after `$loading-delay`, so a quick answer never flashes it), beside
+  the status region's "Looking for" line. `CategoryPicker` gets it by passing
+  its `pending` through.
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as
   the rows arrive, the typed row counting as one. A box with no source never

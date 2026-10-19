@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import Skeleton from '@/components/Skeleton';
 import type { SkeletonShape } from '@/components/Skeleton/types';
 
-const SHAPES: SkeletonShape[] = ['table', 'cards', 'form', 'page'];
+const SHAPES: SkeletonShape[] = ['table', 'cards', 'form', 'page', 'line'];
 
 // A skeleton is announced once, as a status, whatever it draws; the shapes
 // are for the eye and add nothing to the accessibility tree.

@@ -54,5 +54,5 @@ idle beside busy; `BusyKeepingFocus`, busy with `aria-disabled`; and
 
 No file of its own (claude-docs/testing/layer-ownership.md, "What a test may
 assert", rule 5): each form that uses it asserts its own busy state, by role
-and `aria-busy`, as NameForm, EmailForm, SignInMethods, SignOutButton and
+and `aria-busy`, as NameForm, EmailForm, SignInMethods, SignInPanel, SignOutButton and
 InvitationAcceptance do.

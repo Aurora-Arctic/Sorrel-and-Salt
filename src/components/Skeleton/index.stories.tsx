@@ -18,3 +18,5 @@ export const CardsWithFilter: Story = () => <Skeleton shape="cards" filter />;
 export const Form: Story = () => <Skeleton shape="form" />;
 
 export const Page: Story = () => <Skeleton shape="page" />;
+
+export const Line: Story = () => <Skeleton shape="line" />;

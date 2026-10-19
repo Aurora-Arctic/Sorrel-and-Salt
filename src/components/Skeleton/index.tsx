@@ -13,6 +13,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   cards: 6,
   form: 4,
   page: 3,
+  line: 1,
 };
 
 const Bars = ({ of: length, className }: { of: number; className: string }): ReactElement => (
@@ -75,6 +76,7 @@ const Skeleton = ({ shape, filter = false, count }: SkeletonProps): ReactElement
             </div>
           </>
         )}
+        {shape === 'line' && <span className="skeleton__line" />}
         {shape === 'page' && (
           <>
             <span className="skeleton__title" />

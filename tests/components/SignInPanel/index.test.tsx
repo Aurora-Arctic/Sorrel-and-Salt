@@ -75,6 +75,34 @@ describe('SignInPanel', () => {
     });
   });
 
+  it('marks the pressed provider busy and disables the others while the hop is under way', async () => {
+    socialMock.mockReturnValue(new Promise(() => {}));
+    render(<SignInPanel configured={['google', 'discord']} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    expect(await screen.findByRole('button', { name: 'Signing In' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Signing In' }));
+    expect(socialMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('frees every provider again when the sign-in fails before the redirect', async () => {
+    socialMock.mockResolvedValue({ error: { message: 'x' } });
+    render(<SignInPanel configured={['google', 'discord']} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).not.toHaveAttribute(
+      'aria-busy',
+    );
+    expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeEnabled();
+  });
+
   it('shows a passed-in error as an alert, and none without one', () => {
     const { unmount } = render(<SignInPanel next="/" configured={['google']} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

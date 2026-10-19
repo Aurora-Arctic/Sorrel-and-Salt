@@ -527,6 +527,14 @@ describe('Combobox', () => {
     expect(onCommit).toHaveBeenCalledWith('Hedge Fixture');
   });
 
+  it('marks the box busy while a lookup is pending, and not once it is answered', () => {
+    const { rerender } = render(<Harness suggestions={{ options: [], pending: true }} />);
+    expect(box()).toHaveAttribute('aria-busy', 'true');
+
+    rerender(<Harness suggestions={{ options: [], pending: false }} />);
+    expect(box()).not.toHaveAttribute('aria-busy');
+  });
+
   it('opens once suggestions arrive for what was typed', () => {
     const { rerender } = render(<Harness suggestions={{ options: [], pending: true }} />);
 
