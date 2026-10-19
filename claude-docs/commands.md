@@ -136,10 +136,11 @@ widely available.
 
 ## The workshop
 
-| npm (`make`)                                                               | Purpose                                                                                                                                                           |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`) | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero                             |
-| `node scripts/review-screenshots.mjs`                                      | A design review's screenshots: each listed page at 375 and 412 wide, both themes, through the remote browser ([`workshop.md`](workshop.md), "Review screenshots") |
+| npm (`make`)                                                               | Purpose                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`) | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero                                                                                                                                                                                                        |
+| `node scripts/review-screenshots.mjs`                                      | A design review's screenshots: each listed page at 375 and 412 wide, both themes, through the remote browser ([`workshop.md`](workshop.md), "Review screenshots")                                                                                                                                                                            |
+| `npm run lighthouse:seo -- <base-url>`                                     | Lighthouse's SEO audits on `/`, `/compendium` and one entry, signed out; exits non-zero on any failure. By hand only, against a server running with `VERCEL_ENV=production` (off production the noindex header fails it correctly). Needs Chrome on the machine, or `--port` for one already listening; the devcontainer has neither (MB.84) |
 
 ## The local stack (host only)
 

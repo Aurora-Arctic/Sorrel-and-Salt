@@ -21,7 +21,11 @@
 
 ## Not done here
 
-Search Console verification and sitemap submission are the owner's action. No Lighthouse dependency was added: it is not installed, and adding it is a new dependency for the owner to decide. The Lighthouse SEO audits were checked by hand on the three pages (status 200, title, description, viewport, canonical, no `noindex`, no image without alt, valid `robots.txt`); see the task's report for the options.
+Search Console verification and sitemap submission are the owner's action.
+
+## Lighthouse
+
+`lighthouse` (exact version, a dev dependency, with `chrome-launcher`) backs `npm run lighthouse:seo -- <base-url>` (`scripts/lighthouse-seo.mjs`). It runs the SEO category on `/`, `/compendium` and one current entry and exits non-zero on any failed audit. It is run by hand and gates nothing, because it only means anything against a `VERCEL_ENV=production` server: off production the noindex header and the disallow-all robots.txt fail the crawlability audits, which is the site working. The devcontainer has no Chrome. What was tried: the remote Chromium reaches the app (`devcontainer:<port>`), but Lighthouse needs a DevTools port, and asking the Playwright server for one with a `--remote-debugging-port` launch option left it refused from the other container, so the script was checked only as far as its usage, entry discovery and missing-Chrome handling. On the three pages the checks Lighthouse's SEO category makes were done by hand with curl (status 200, title, description, viewport, canonical, no noindex, no image without alt text, valid robots.txt).
 
 ## Sources
 
