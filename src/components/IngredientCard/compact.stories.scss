@@ -8,7 +8,7 @@
 //
 // What stays: the content, the body order, the hover lift, and every target at
 // 24px or more (the tip badges keep their height; only their sides tighten).
-// Text keeps its sizes, bar the name, one heading step down.
+// Text goes one step down the type scale, to overline at the smallest.
 
 .compact-sample {
   .ingredient-card {
@@ -16,10 +16,16 @@
     gap: space(2);
   }
 
-  // Name: h3's size in place of h2's.
+  // Name: h4's size, two steps under the card's h2 (h3 in the first sample).
   .ingredient-card__name {
-    font-size: heading-size(3);
+    font-size: heading-size(4);
     line-height: 1.15;
+  }
+
+  // Formal name: caption down to overline, the smallest size the site sets text in
+  // bar the bottom bar's tab labels.
+  .ingredient-card__formal {
+    font-size: type-size('overline');
   }
 
   .specimen__top {
@@ -34,6 +40,7 @@
     margin-block-end: 0;
 
     .badge {
+      font-size: type-size('overline');
       padding-inline: 0.3125rem;
       min-block-size: 1.5rem;
       box-sizing: border-box;
@@ -45,6 +52,7 @@
     gap: space(1);
 
     .chip {
+      font-size: type-size('overline');
       padding: 0.0625rem 0.5rem;
     }
   }
@@ -52,6 +60,9 @@
   // Forms line: 8px above and (through the foot) below, a shorter dot gap.
   .ingredient-card__forms {
     --forms-gap: #{space(4)};
+
+    // Body down to small; the icons are in em, so they follow.
+    font-size: type-size('small');
 
     margin-block-start: space(2);
     row-gap: 0;
@@ -63,7 +74,15 @@
 
   // Jar lines: tighter rows, the rule nearer.
   .specimen__stock {
+    // Small down to caption, and the stock badges beside the text to overline.
+    font-size: type-size('caption');
     padding-block: space(2) space(1);
+
+    .badge {
+      font-size: type-size('overline');
+      min-block-size: 1.5rem;
+      box-sizing: border-box;
+    }
 
     > ul {
       gap: space(1);
