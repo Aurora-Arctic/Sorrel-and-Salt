@@ -29,8 +29,8 @@ import {
 // and its opposite is in place before the page is drawn, the type-ahead offers
 // this coven's cupboard and nothing else, each jar line carries its form's
 // icon and M9.8's badge, a retired compendium entry the coven holds keeps
-// its forms and categories, and the page passes axe at both densities and at a
-// phone's width.
+// its forms and categories and can be annotated and made its own, and the page
+// passes axe at both densities and at a phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -373,60 +373,177 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoSidewaysScroll(page);
 });
 
-test.fixme(
-  'a retired compendium entry the coven still holds keeps its forms and categories on its card',
-  {
-    annotation: {
-      type: 'fixme',
-      description:
-        'the coven list pages live rows only (readableInTiers), so a retired held entry never draws a card',
-    },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
-      A: 'owner',
-    });
-    const A = coven.users.A;
-    const retiring = await withSql(async (sql) => {
-      const ingredientId = await insertIngredient(
-        sql,
-        makeIngredient({
-          name: 'Fixture Retiredwort',
-          canonicalName: 'Fixtura emerita',
-          variants: [makeVariant({ form: 'Herb' })],
-          categories: ['Protection'],
-        }),
-        A,
-      );
-      await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
-      return ingredientId;
-    });
-    const onCompendium = async () => {
-      await page.goto('/compendium');
-      await nameSearch(page).fill('Fixture Retiredwort');
-      await nameSearch(page).press('Enter');
-      await expect(page).toHaveURL(/Retiredwort/);
-      return rowOf(compendiumList(page), 'Fixture Retiredwort');
-    };
-
-    // Live, the entry is the compendium's like any other.
-    await expect(await onCompendium()).toHaveCount(1);
-
-    await withSql((sql) =>
-      sql.begin(async (tx) => {
-        await tx`select set_config('app.current_user_id', ${A}, true)`;
-        await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+// M12.32 turned this on: the coven list reads a retired entry its cupboard
+// still names, so the card draws, marked Retired.
+test('a retired compendium entry the coven still holds keeps its forms and categories on its card', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiring = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Retiredwort',
+        canonicalName: 'Fixtura emerita',
+        variants: [makeVariant({ form: 'Herb' })],
+        categories: ['Protection'],
       }),
+      A,
     );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    return ingredientId;
+  });
+  const onCompendium = async () => {
+    await page.goto('/compendium');
+    await nameSearch(page).fill('Fixture Retiredwort');
+    await nameSearch(page).press('Enter');
+    await expect(page).toHaveURL(/Retiredwort/);
+    return rowOf(compendiumList(page), 'Fixture Retiredwort');
+  };
 
-    // Why the forms and categories could have gone missing: retired, the entry
-    // is gone from the compendium, so a read that filters retired rows finds none.
-    await expect(await onCompendium()).toHaveCount(0);
+  // Live, the entry is the compendium's like any other.
+  await expect(await onCompendium()).toHaveCount(1);
 
-    await page.goto(listPath(coven));
-    const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
-    await expect(card).toHaveCount(1);
-    await expect(card).toContainText('Herb');
-    await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
-  },
-);
+  await withSql((sql) =>
+    sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+    }),
+  );
+
+  // Why the forms and categories could have gone missing: retired, the entry
+  // is gone from the compendium, so a read that filters retired rows finds none.
+  await expect(await onCompendium()).toHaveCount(0);
+
+  await page.goto(listPath(coven));
+  const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
+  await expect(card).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Retired' })).toHaveCount(1);
+  await expect(card).toContainText('Herb');
+  await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
+});
+
+// The owner's decision of 2026-10-19, reversing part of M12.24: a coven goes
+// on annotating a retired entry it holds, and may take it as its own or
+// remove it.
+test('a retired compendium entry the coven still holds can be annotated, then made its own', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired Writes', 'gate-retired-w.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiredId = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Lapsedwort',
+        canonicalName: 'Fixtura lapsa',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${ingredientId}`;
+    });
+    return ingredientId;
+  });
+  const heading = (name: string) => page.getByRole('heading', { level: 1, name });
+  const choose = async (name: string) => {
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
+  };
+
+  // Why the writes could be refused: the entry is retired, and the coven's
+  // live cupboard row is all that still reaches it.
+  await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
+  await expect(heading('Fixture Lapsedwort')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText([
+    'Annotate',
+    'Make It Ours',
+    'Remove',
+  ]);
+  await page.keyboard.press('Escape');
+
+  await choose('Annotate');
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'Label' }).fill('Fixture Our Lapsedwort');
+  await dialog.getByRole('button', { name: 'Save Annotation' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(
+    page.getByRole('heading', { level: 1, name: /Fixture Our Lapsedwort/ }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
+
+  await choose('Make It Ours');
+  const ask = page.getByRole('dialog', { name: 'Make It Ours' });
+  await ask.getByRole('button', { name: 'Make It Ours' }).click();
+  await expect(page).toHaveURL(
+    new RegExp(`/coven/${coven.slug}/ingredients/(?!${retiredId})[0-9a-f-]{36}$`),
+  );
+  await expect(page.getByText('Local', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retired' })).toHaveCount(0);
+});
+
+test('a retired compendium entry the coven still holds can be removed, and leaves its list', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired Remove', 'gate-retired-r.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiredId = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Fadedwort',
+        canonicalName: 'Fixtura evanida',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    // A live entry beside it, so the list still renders once the retired one leaves.
+    const keptId = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Keptwort', canonicalName: 'Fixtura servata' }),
+      A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId: keptId }, A);
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${ingredientId}`;
+    });
+    return ingredientId;
+  });
+
+  // Why it could stay listed: retired, the entry is still on the coven's list
+  // while its cupboard row names it (M12.32).
+  await page.goto(listPath(coven));
+  await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(1);
+
+  await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
+  await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('menu').getByRole('menuitem', { name: 'Remove', exact: true }).click();
+  const ask = page.getByRole('dialog', { name: 'Remove from Cupboard' });
+  await ask.getByRole('button', { name: 'Remove', exact: true }).click();
+
+  // The entry page reads nothing once the row is gone, so the remove leads to
+  // the coven's Ingredients list rather than a 404.
+  await expect(page).toHaveURL(new RegExp(`${listPath(coven)}$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeVisible();
+  await expect(rowOf(ingredientList(page), 'Fixture Keptwort')).toHaveCount(1);
+  await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(0);
+});

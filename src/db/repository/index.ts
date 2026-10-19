@@ -3,8 +3,10 @@
 // callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
 // write mechanism, so no write can skip audit stamping. Rule 4: every exported
 // finder applies `deleted_at IS NULL` but the six named `…IncludingSoftDeleted`
-// hatches, and the two read builders are not re-exported here — guarded by
-// tests/guards/soft-delete-finder-guard.test.ts.
+// hatches and the coven Ingredients list's three readers, which admit a
+// retired compendium entry the coven's cupboard still names through an
+// internal hatch (M12.32), and the two read builders are not re-exported
+// here — guarded by tests/guards/soft-delete-finder-guard.test.ts.
 // Import this file, never a sibling: the rest of the folder is internal.
 
 export { withAudit } from './write';

@@ -782,7 +782,11 @@ describe('CompendiumList filter', () => {
       escape();
     });
     expect(row()).toBe(before);
-    expect(unsourcedSwitch()).toBeChecked();
+    // The address, not the switch: the panel is sliding shut, and `useSlide`'s
+    // fallback timer closes it after 600ms of real time, which a loaded run can
+    // pass before this line. The switch is read again once the panel reopens.
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(pushed().get('withoutReferences')).toBe('1');
 
     fireEvent.change(nameBox(), { target: { value: 'test' } });
     await act(async () => {

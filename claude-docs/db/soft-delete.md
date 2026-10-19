@@ -71,6 +71,28 @@ decision in the diff
 ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "When
 the compendium retires the entry").
 
+M12.32 carries the same rule onto the coven's Ingredients list. The list, its
+pager count and its filter counts keep showing a retired compendium entry while
+the coven's live cupboard row names it, and stop once the coven removes the row.
+The rule lives in one scope in `ingredients.ts`,
+`workspaceListScopeIncludingSoftDeleted`, built from the ordinary builders:
+
+- the coven's own entries, with their tombstone filter, `notSoftDeleted`;
+- or a compendium entry (`inCompendium`), live or retired, that a cupboard
+  row of the proof's coven names, through `existsIn`, which keeps the
+  cupboard row's own tombstone filter.
+
+The list and its count page that scope through
+`findPageInScopeIncludingSoftDeleted` and
+`findPageCountInScopeIncludingSoftDeleted` in `finders.ts`:
+`findPageInScope` and its count without the tombstone filter they would
+otherwise add, since the scope carries its own. The facet counts read the
+scope directly through `selectFrom`. None of the three is in the index. The
+public list and its search, the add flow's exact match, the ingredient picker
+and `findReadableVariant` stay live-only
+([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "When
+the compendium retires the entry").
+
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may (["The repository's files"](repository-files.md)) — so
 there is no public handle a finder could reach the database through while
@@ -102,13 +124,18 @@ divided between two of them, by what each can make impossible.
 
 `tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
 repository, read as text, in two cases (MB.224): every finder the index
-re-exports, other than the escape hatches, either calls `notSoftDeleted(...)`
+re-exports, other than the escape hatches and the pinned callers of an
+internal hatch, either calls `notSoftDeleted(...)`
 directly or delegates to one that does; and the hatches are a pinned list,
 each named `…IncludingSoftDeleted`, so a new one is a decision in the diff.
+A third case pins the folder's internal hatches, the ones the index does not
+export (`existsInIncludingSoftDeleted`, M12.24; the M12.32 scope and pager
+pair), each to the only functions allowed to call it: a call anywhere else
+fails, and a finder reaching a hatch never counts as delegating to a filter.
 The finders are read off the index itself, so a new finder is checked without
 being listed. What each hatch still filters — the spell hatches skip the
 ingredient's tombstone alone, the substitute hatch the linked ingredient's
-alone, the co-member hatch the asked-about user's seat and row alone, the cupboard hatch the compendium entry's alone — is its service's READS table's to prove
+alone, the co-member hatch the asked-about user's seat and row alone, the cupboard hatch and the list's scope the compendium entry's alone — is its service's READS table's to prove
 ([`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
 layer").
 

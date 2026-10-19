@@ -121,15 +121,16 @@ describe('a coven whose cupboard names a retired entry', () => {
     await expect(getIngredient(asUser(A), entryId, WORKSPACE_W_ID)).rejects.toThrow(NotFound);
   });
 
-  it('starts no new jar of it', async () => {
+  it('starts a fresh jar of it once its old one is emptied', async () => {
     await retire();
     await sql`update inventory_items set deleted_at = now(), deleted_by = ${A.id} where id = ${wJar}`;
-    // Why it could have started one: the coven still reads the form it would name.
-    const entry = await getIngredient(asUser(A), entryId, WORKSPACE_W_ID);
-    const detail = await ingredientDetailOf(asUser(A), entry, WORKSPACE_W_ID);
-    expect(detail.variants.map(({ variant }) => variant.id)).toEqual([variantId]);
+    // The owner's decision of 2026-10-19 reverses M12.24's "no new jar": the
+    // coven still reads the form, and may stock it again
+    // (retired-entry-writes.test.ts has the refusals).
+    const jar = await createStock(asUser(A), WORKSPACE_W_ID, variantId, {});
 
-    await expect(createStock(asUser(A), WORKSPACE_W_ID, variantId, {})).rejects.toThrow(NotFound);
+    expect(jar).toMatchObject({ workspaceId: WORKSPACE_W_ID, variantId });
+    expect(jar.id).not.toBe(wJar);
   });
 });
 

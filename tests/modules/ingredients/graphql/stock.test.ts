@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
@@ -126,6 +127,31 @@ describe('addIngredientToWorkspace', () => {
       audit: { createdBy: B.id, updatedBy: B.id },
     });
     expect(item?.ingredient.stock).toEqual([{ id: item?.id, quantityOnHand: 30 }]);
+  });
+
+  it('adds a jar of a retired entry W still holds, answering the jar', async () => {
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: entry }, A.id);
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${E.id}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${entry}`;
+    });
+    // The jar's own fields only: `InventoryItem.ingredient` and `variant` read
+    // through the live-only `ingredientsById` loader, which answers no retired
+    // entry (claude-docs/db/workspace-compendium-entries.md, "When the
+    // compendium retires the entry").
+    const result = await run<{ addIngredientToWorkspace: { id: string; quantityOnHand: number } }>(
+      asUser(B),
+      `mutation ($workspaceId: ID!, $variantId: ID!, $input: StockInput!) {
+        addIngredientToWorkspace(workspaceId: $workspaceId, variantId: $variantId, input: $input) {
+          id quantityOnHand
+        }
+      }`,
+      { workspaceId: WORKSPACE_W_ID, variantId: herb, input: { quantityOnHand: 2, unit: 'g' } },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.addIngredientToWorkspace.quantityOnHand).toBe(2);
+    expect(await liveJars()).toBe(1);
   });
 
   it('refuses a form the coven holds as VALIDATION beside variantId, writing nothing', async () => {

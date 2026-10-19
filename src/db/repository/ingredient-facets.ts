@@ -20,7 +20,7 @@ import {
   pairIsLive,
   stated,
   toxicArm,
-  workspaceListScope,
+  workspaceListScopeIncludingSoftDeleted,
 } from './ingredients';
 import { fold, readableInTiers } from './predicates';
 import { selectFrom } from './select';
@@ -72,7 +72,8 @@ export async function findCompendiumFacets(filter: IngredientFilter): Promise<Co
 
 /**
  * How many of a coven's ingredients each filter value would list (M12.3): the
- * rows `findWorkspaceIngredientPage` reads, counted as `findCompendiumFacets`
+ * rows `findWorkspaceIngredientPage` reads, a retired compendium entry the
+ * coven still holds included (M12.32), counted as `findCompendiumFacets`
  * counts the compendium's, over the coven's overrides (M12.18): an entry's
  * elements, celestial bodies and zodiac signs are counted as its cupboard row
  * states them, an empty list under none. Categories have no override, so
@@ -82,22 +83,21 @@ export async function findWorkspaceIngredientFacets(
   membership: Membership,
   filter: IngredientFilter,
 ): Promise<WorkspaceIngredientFacets> {
-  const readable = readableInTiers([membership], ingredients);
   // The seven kinds and the switch count under the filter's own source and
   // jars; the source strip under its jars only, and the switch under its source.
   const [facets, source, inStock, lowStockOnly] = await Promise.all([
-    readFacets(filter, and(readable, workspaceListScope(membership, filter)), membership),
+    readFacets(filter, workspaceListScopeIncludingSoftDeleted(membership, filter), membership),
     sourceFacet(filter, membership, (value) =>
-      and(readable, workspaceListScope(membership, { ...filter, source: value })),
+      workspaceListScopeIncludingSoftDeleted(membership, { ...filter, source: value }),
     ),
     totalUnder(
       filter,
-      and(readable, workspaceListScope(membership, { ...filter, inStock: true })),
+      workspaceListScopeIncludingSoftDeleted(membership, { ...filter, inStock: true }),
       membership,
     ),
     totalUnder(
       filter,
-      and(readable, workspaceListScope(membership, { ...filter, lowStockOnly: true })),
+      workspaceListScopeIncludingSoftDeleted(membership, { ...filter, lowStockOnly: true }),
       membership,
     ),
   ]);
