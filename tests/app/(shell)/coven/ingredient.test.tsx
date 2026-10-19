@@ -51,7 +51,7 @@ vi.mock('@/components/IngredientForm', () => ({
 }));
 
 const entryValues = vi.fn();
-vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+vi.mock('@/app/entry-values', () => ({ entryValues }));
 
 // The cupboard buttons (M12.17) are client parts that send mutations, so the page
 // renders under a query client.
@@ -181,7 +181,7 @@ describe('the coven ingredient page', () => {
   it('opens the edit dialog on a curator who asks for it with a bare ?edit', async () => {
     await open(compendiumRow(), true, { edit: '' });
 
-    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: ID }));
+    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: ID }), null);
     expect(dialog()).toBeInTheDocument();
   });
 

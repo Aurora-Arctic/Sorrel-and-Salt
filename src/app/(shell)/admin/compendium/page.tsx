@@ -31,7 +31,7 @@ import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
-import { entryValues } from './entry-values';
+import { entryValues } from '@/app/entry-values';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -48,7 +48,7 @@ const readEntry = async (slug: string) => {
   return {
     kind: 'entry' as const,
     id: address.entry.id,
-    values: await entryValues(address.entry),
+    values: await entryValues(address.entry, null),
   };
 };
 

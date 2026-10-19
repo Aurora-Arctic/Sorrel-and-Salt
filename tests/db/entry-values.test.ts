@@ -1,14 +1,19 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
+import { entryValues } from '@/app/entry-values';
 import { toInput } from '@/components/IngredientForm/values';
 import { citationText } from '@/lib/citation';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { Forbidden } from '@/lib/errors';
 import {
   type IngredientRow,
   createCompendiumEntry,
+  createWorkspaceIngredient,
   updateCompendiumEntry,
+  updateWorkspaceIngredient,
 } from '@/modules/ingredients';
-import { A, E, asUser } from '../support/as-user';
+import { assertMembership } from '@/modules/coven';
+import { A, B, D, E, asUser } from '../support/as-user';
 import { curatedDeityId, curatedFormId } from '../support/db/curated-ids';
 import { useTestDatabase } from '../support/db/database';
 import { liveFolkNames } from '../support/db/folk-names';
@@ -17,10 +22,11 @@ import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
 
-// src/app/(shell)/admin/compendium/entry-values.ts: the values `/admin/compendium`'s
-// edit modal opens with, read from the database. What they must hold is every
-// value and link of the entry, so that saving the form untouched sends the
-// entry back as it was: an edit that changes nothing changes nothing.
+// src/app/entry-values.ts: the values an edit modal opens with, for the
+// admin's compendium entry or a coven's own (M8.17), read from the database.
+// What they must hold is every value and link of the entry, so that saving the
+// form untouched sends the entry back as it was: an edit that changes nothing
+// changes nothing.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -184,7 +190,7 @@ describe('entryValues', () => {
   });
 
   it('reads every value and link of the entry as the form shows it', async () => {
-    const values = await entryValues(created);
+    const values = await entryValues(created, null);
     // insertReference's default book, as a row links it.
     const BOOK_LINK = {
       id: book,
@@ -292,7 +298,7 @@ describe('entryValues', () => {
   });
 
   it('opens an edit that, saved untouched, leaves the entry as it was', async () => {
-    const before = await entryValues(created);
+    const before = await entryValues(created, null);
     const row = await rowOf(created.id);
     const children = await childrenOf(created.id);
     // Why "unchanged" could have been something else: the entry holds every relation.
@@ -302,7 +308,7 @@ describe('entryValues', () => {
 
     expect(await rowOf(saved.id)).toEqual(row);
     expect(await childrenOf(saved.id)).toEqual(children);
-    expect(await entryValues(saved)).toEqual(before);
+    expect(await entryValues(saved, null)).toEqual(before);
   });
 
   it('reads an entry holding nothing but its identity as the empty lists and blanks', async () => {
@@ -312,7 +318,7 @@ describe('entryValues', () => {
       canonicalName: null,
     });
 
-    const values = await entryValues(bare);
+    const values = await entryValues(bare, null);
 
     expect(values).toMatchObject({
       name: 'Testbare',
@@ -330,5 +336,70 @@ describe('entryValues', () => {
     const row = await rowOf(bare.id);
     await updateCompendiumEntry(admin, bare.id, editInput(values));
     expect(await rowOf(bare.id)).toEqual(row);
+  });
+});
+
+describe("entryValues, for a coven's own entry", () => {
+  let own: IngredientRow;
+
+  beforeAll(async () => {
+    // The coven's own Testwort, written as a member writes it, with a folk
+    // name, a category, a curated form and a substitute linking the compendium.
+    own = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
+      ...everything(),
+      name: 'Testwort',
+      deities: [],
+    });
+  });
+
+  it("reads its values for a member, under the coven's proof", async () => {
+    const values = await entryValues(own, asUser(B));
+
+    expect(own.workspaceId).toBe(WORKSPACE_W_ID);
+    expect(values).toMatchObject({
+      name: 'Testwort',
+      canonicalName: 'Fixtura testalis',
+      folkNames: expect.arrayContaining([{ value: 'Test Root', id: expect.any(String) }]),
+      categoryIds: [healing],
+      variants: expect.arrayContaining([
+        expect.objectContaining({
+          form: 'Herb',
+          formLink: expect.objectContaining({ id: herb.id }),
+        }),
+      ]),
+    });
+  });
+
+  it('opens an edit that, saved untouched through the coven, leaves the entry as it was', async () => {
+    const before = await entryValues(own, asUser(B));
+    const row = await rowOf(own.id);
+    const children = await childrenOf(own.id);
+
+    const saved = await updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      own.id,
+      editInput(before),
+    );
+
+    expect(await rowOf(saved.id)).toEqual(row);
+    expect(await childrenOf(saved.id)).toEqual(children);
+    expect(await entryValues(saved, asUser(B))).toEqual(before);
+  });
+
+  it("refuses another coven's member by direct id", async () => {
+    // Why it could have succeeded: the row is live, D is an owner (of X), and
+    // B's same read answers.
+    await expect(
+      assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] }),
+    ).resolves.toBeDefined();
+    expect((await rowOf(own.id)).deleted_at).toBeNull();
+    await expect(entryValues(own, asUser(B))).resolves.toBeDefined();
+
+    await expect(entryValues(own, asUser(D))).rejects.toBeInstanceOf(Forbidden);
+  });
+
+  it('refuses a read with no session', async () => {
+    await expect(entryValues(own, null)).rejects.toBeInstanceOf(Forbidden);
   });
 });

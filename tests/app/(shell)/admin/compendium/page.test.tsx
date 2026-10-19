@@ -83,7 +83,7 @@ vi.mock('@/modules/vocabulary', () => ({
 }));
 
 const entryValues = vi.fn();
-vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+vi.mock('@/app/entry-values', () => ({ entryValues }));
 
 // `redirect` throws in Next, ending the render; so does this one, recognisably.
 const REDIRECTED = 'NEXT_REDIRECT';
@@ -616,7 +616,7 @@ describe('the /admin/compendium modal', () => {
     await renderPage({ edit: TESTWORT.slug });
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
-    expect(entryValues).toHaveBeenCalledWith(TESTWORT);
+    expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     // An edit opens with its sections closed (MB.115).
     openSections('Identity', 'Variants');

@@ -10,7 +10,7 @@ import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
-import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
+import { entryValues } from '@/app/entry-values';
 import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
@@ -126,7 +126,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   const canEdit = inCompendium && viewer.canCurate;
   const opened =
     canEdit && 'edit' in (await searchParams)
-      ? { id: entry.id, values: await entryValues(entry) }
+      ? { id: entry.id, values: await entryValues(entry, null) }
       : undefined;
 
   // Annotate opens its dialog from the address the same way, but only for a
