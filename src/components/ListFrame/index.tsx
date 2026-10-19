@@ -1,16 +1,7 @@
 'use client';
 
-import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import {
-  type ReactElement,
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from 'react';
+import { type ReactElement, createContext, useContext, useEffect, useRef, useState } from 'react';
+import { usePendingNavigation } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation } from './types';
 
@@ -43,8 +34,7 @@ export const ListNavigationContext = createContext<ListNavigation | null>(null);
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);
-  const router = useRouter();
-  const [moving, startMoving] = useTransition();
+  const { pending: moving, navigate } = usePendingNavigation();
   const [leaving, setLeaving] = useState(false);
   const pending = moving || leaving;
   const root = useRef<HTMLDivElement>(null);
@@ -99,11 +89,7 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
           ? root.current?.querySelector('.list-frame__body')?.getBoundingClientRect().height
           : undefined,
       );
-      startMoving(() =>
-        kind === 'page'
-          ? router.push(href as Route, { scroll: false })
-          : router.push(href as Route),
-      );
+      navigate(href, kind === 'page' ? { scroll: false } : undefined);
     },
   };
   return (

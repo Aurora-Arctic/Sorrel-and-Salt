@@ -18,22 +18,6 @@ const MECHANISM = 'src/lib/navigation/';
 
 /** File to the number of bare router calls it may still hold, with why. */
 const BASELINE: Record<string, { calls: number; reason: string }> = {
-  'src/components/ListFrame/index.tsx': {
-    calls: 2,
-    reason: 'owns a navigation transition; moves onto the hook',
-  },
-  'src/components/TabbedPage/tab-switch.tsx': {
-    calls: 1,
-    reason: 'owns a navigation transition; moves onto the hook',
-  },
-  'src/components/Modal/route-modal-provider.tsx': {
-    calls: 1,
-    reason: 'owns a navigation transition; moves onto the hook',
-  },
-  'src/components/Modal/route-modal.tsx': {
-    calls: 2,
-    reason: 'closes a route modal with replace and refresh',
-  },
   'src/components/AppShell/add-ingredient-button.tsx': {
     calls: 3,
     reason: 'bare pushes after choosing a destination',

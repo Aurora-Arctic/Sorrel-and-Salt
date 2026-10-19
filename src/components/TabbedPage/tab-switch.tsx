@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { type ReactElement, createContext, useContext, useState, useTransition } from 'react';
+import { type ReactElement, createContext, useContext, useState } from 'react';
+import { usePendingNavigation } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type {
   PageTab,
@@ -32,15 +32,14 @@ export const TabSwitchContext = createContext<TabSwitch | null>(null);
  */
 export const TabSwitchProvider = ({ children }: TabSwitchProviderProps): ReactElement => {
   const outer = useContext(TabSwitchContext);
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, navigate } = usePendingNavigation();
   const [target, setTarget] = useState<PageTab>();
   const value = outer ?? {
     pending,
     target,
     go: (tab) => {
       setTarget(tab);
-      startTransition(() => router.push(tab.href));
+      navigate(tab.href);
     },
   };
   return <TabSwitchContext.Provider value={value}>{children}</TabSwitchContext.Provider>;
