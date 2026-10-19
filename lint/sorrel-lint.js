@@ -51,13 +51,16 @@ export default {
       }),
     },
     // CLAUDE.md rule 1: a route handler is a file, so only its path can be checked.
+    // The exemption is three public files that carry no application data and take
+    // no session, as robots.ts and sitemap.ts do (M12.2, claude-docs/seo/ai-discovery.md).
     'route-allowlist': {
       create: (context) => ({
         Program(program) {
           const file = fileOf(context);
           if (
             /^src\/app\/.*\/route\.(?:[jt]sx?|mjs)$/.test(file) &&
-            !/^src\/app\/api\/(?:graphql|auth\/\[\.\.\.all\])\/route\./.test(file)
+            !/^src\/app\/api\/(?:graphql|auth\/\[\.\.\.all\])\/route\./.test(file) &&
+            !/^src\/app\/(?:llms\.txt|\.well-known\/(?:ai-catalog|ard)\.json)\/route\./.test(file)
           ) {
             context.report({
               node: program,

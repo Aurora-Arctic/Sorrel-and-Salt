@@ -14,7 +14,13 @@ describe('MB.84: robots', () => {
       rules: { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' },
       sitemap: 'https://sorrelandsalt.com/sitemap.xml',
     });
-    expect(CRAWLABLE_PATHS).toEqual(['/compendium', '/compendium/']);
+    expect(CRAWLABLE_PATHS).toEqual([
+      '/compendium',
+      '/compendium/',
+      '/llms.txt',
+      '/.well-known/ai-catalog.json',
+      '/.well-known/ard.json',
+    ]);
   });
 
   it.each(['preview', 'development', undefined])('disallows everything under %s', (env) => {

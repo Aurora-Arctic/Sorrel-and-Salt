@@ -40,8 +40,11 @@ resolve: async (_query, { workspaceId }, { session }) =>
   fails a `'use server'` directive, which no `no-restricted-imports` rule
   could see. There are no bespoke route handlers beyond
   this one and `/api/auth/*`
-  ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)), and
-  lint's `sorrel/route-allowlist` fails any other `route` file under
+  ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)); the
+  three public files `/llms.txt`, `/.well-known/ai-catalog.json` and
+  `/.well-known/ard.json` (M12.2) carry no application data and are named in
+  lint's allowlist, one by one
+  ([`seo/ai-discovery.md`](../seo/ai-discovery.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
   `src/app/`, by its path: a file is not an import either.
 - **Admin is not an exception to either.** `/admin`'s pages read through
   services, and its writes go through this endpoint

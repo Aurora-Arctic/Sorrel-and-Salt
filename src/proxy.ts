@@ -28,7 +28,7 @@ const PUBLIC_ROUTES = [
   '/robots.txt',
   '/sitemap.xml',
   '/llms.txt',
-  '/.well-known/*',
+  '/.well-known/*', // ai-catalog.json and ard.json (M12.2)
   '/favicon.ico',
   '/icon.png',
   '/icon.svg',

@@ -18,7 +18,8 @@ answer.
   (MB.57); `/sign-in`; `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
   (MB.66, [`email.md`](../email.md)). MB.83 adds `/compendium`, `/compendium/*`,
-  `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*`: the public
+  `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*` (which covers
+  `ai-catalog.json` and `ard.json`, [`../seo/ai-discovery.md`](../seo/ai-discovery.md)): the public
   compendium's pages and the files a crawler reads (MB.80), with the icon and
   manifest files M11.16 will add, listed ahead of it. The `(public)` route
   group holds these pages, and its layout draws the chrome without redirecting
