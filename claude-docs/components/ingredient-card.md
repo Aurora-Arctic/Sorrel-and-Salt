@@ -67,7 +67,7 @@ The owner asked for smaller type, about half way to the compact look, with the s
 
 The same card in a tighter look, for a long list. It is not a prop. The look must be switchable before React runs (M9.6 stores the choice and a script sets an attribute before the first paint), and a prop fixes the look at render, which would then disagree with the server's markup on hydration. So the look is a Sass mixin, `ingredient-card-compact` (`_compact.scss`), applied in `index.scss` under `[data-density='compact']:not(:root[data-card-density='regular'] *)`: it applies wherever an ancestor carries the first attribute, unless `<html>` carries `data-card-density="regular"`, which the pre-paint script sets from the stored Compact choice (`card-density-switch.md`). `IngredientCardList` sets it from its `density` prop; a card on its own is wrapped in an element that carries it (stories `Compact`, `Compact Long Name`).
 
-What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the hover lift, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact. M8.14 makes compact a real option and builds no switch.
+What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the hover lift, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact, with the Compact switch ([`card-density-switch.md`](card-density-switch.md)) to turn it off.
 
 ### Jar-section spacing
 
@@ -115,7 +115,7 @@ the `(name, id)` keyset the list pages on
 
 Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
 
-Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture, so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
 ## Accessibility
 

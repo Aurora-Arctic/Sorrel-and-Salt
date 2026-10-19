@@ -4,7 +4,7 @@ import type { EntryKind } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { Dot } from '../IngredientCard/story-jars';
+import JarLines from '../JarLines';
 import type { CardCategory } from '../IngredientCard/types';
 
 // Story-only data for the grid stories (index.stories.tsx). Invented
@@ -189,15 +189,17 @@ export const ENTRIES: FixtureEntry[] = [
   },
 ];
 
-export const JarLines = ({ jars }: { jars: Jar[] }): ReactNode => (
-  <ul>
-    {jars.map((j) => (
-      <li key={j.form}>
-        <span>
-          {formLabel(j.form)} <Dot /> {j.quantity} {j.unit}
-        </span>
-        <StockBadge quantity={j.quantity} threshold={j.threshold} unit={j.unit} />
-      </li>
-    ))}
-  </ul>
+// The fixture's jars as the component takes them; the group icon is looked up from the entry's
+// variants, as the page will read it from the form's group.
+export const jarLinesOf = (entry: FixtureEntry): ReactNode => (
+  <JarLines
+    jars={entry.jars.map(({ form, ...rest }) => ({
+      ...rest,
+      id: form,
+      form,
+      icon:
+        entry.variants.find(({ form: variantForm }) => variantForm === form)?.formChoice?.group
+          .icon ?? null,
+    }))}
+  />
 );
