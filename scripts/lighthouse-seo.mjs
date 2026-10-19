@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Lighthouse's SEO category on the three public page kinds (MB.84): the home
-// page, the compendium list and one current entry, signed out. Exits non-zero
+// page, the compendium list and one current entry, signed out (or the entries
+// named with `--path`). Exits non-zero
 // unless every SEO audit that applies passes. Run by hand; it is no part of CI,
 // `test:coverage`, `test:stories` or `e2e`.
 //
@@ -10,7 +11,7 @@
 // "robots.txt is valid" audits correctly fail, and so does every Vercel
 // preview. A failure against staging or a preview is the site working.
 //
-// usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>]
+// usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>] [--path <path>]...
 //   <base-url>  where the production-env server answers, e.g. http://localhost:8001
 //               (from the devcontainer's own side, a server it runs is
 //               http://devcontainer:<port> to the browser)
@@ -24,12 +25,18 @@
 //               LIGHTHOUSE_CDP_HOST and LIGHTHOUSE_CDP_PORT, which are the
 //               defaults here, so there `--host` and `--port` are not needed.
 //   --host      the machine that Chrome's port is on (default localhost).
+//   --path      a page to audit besides `/` and `/compendium`, starting with `/`;
+//               repeat it for more. Given any, they stand in for the entry the
+//               script would pick itself, because the first entry on the list
+//               is one page and says little about the rest; a caller sampling
+//               entries picks them (say, at random from /sitemap.xml) and
+//               passes them here, so the script holds no list of its own.
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
 import { lookup } from 'node:dns/promises';
 
 const USAGE =
-  'usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>]\n' +
+  'usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>] [--path <path>]...\n' +
   'Only meaningful against a server running with VERCEL_ENV=production: off production\n' +
   'the noindex header and the disallow-all robots.txt make the crawlability audits fail.';
 
@@ -39,11 +46,25 @@ function takeOption(flag) {
   const at = args.indexOf(flag);
   return at === -1 ? undefined : args.splice(at, 2)[1];
 }
+/** Removes every `--path value` from `args` and returns the values. */
+function takePaths() {
+  const found = [];
+  for (let at = args.indexOf('--path'); at !== -1; at = args.indexOf('--path')) {
+    found.push(args.splice(at, 2)[1]);
+  }
+  return found;
+}
+const extraPaths = takePaths();
 const hostName = takeOption('--host') ?? process.env.LIGHTHOUSE_CDP_HOST;
 const portText = takeOption('--port') ?? process.env.LIGHTHOUSE_CDP_PORT;
 const port = portText === undefined ? undefined : Number(portText);
 const [base] = args;
-if (!base || args.length !== 1 || (port !== undefined && !Number.isInteger(port))) {
+if (
+  !base ||
+  args.length !== 1 ||
+  (port !== undefined && !Number.isInteger(port)) ||
+  extraPaths.some((path) => !path?.startsWith('/'))
+) {
   console.error(USAGE);
   process.exit(2);
 }
@@ -57,7 +78,7 @@ async function firstEntryPath() {
   return match[1];
 }
 
-const paths = ['/', '/compendium', await firstEntryPath()];
+const paths = ['/', '/compendium', ...(extraPaths.length ? extraPaths : [await firstEntryPath()])];
 
 // An IP, not the name: Chrome answers DevTools requests only when the Host
 // header is an IP or `localhost`, and it builds the WebSocket address it
