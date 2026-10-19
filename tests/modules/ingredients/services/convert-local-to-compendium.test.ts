@@ -147,6 +147,43 @@ describe('convertLocalToCompendiumEntry', () => {
     expect(result.entry.ingredientId).toBe(entry);
   });
 
+  // M8.17: the edit dialog offers Link to every own entry, formal name or not,
+  // and searches every compendium entry, not only those of the same name.
+  it('moves a jar of a local with a formal name to a compendium entry of another name', async () => {
+    const named = await insertIngredient(
+      sql,
+      makeIngredient({
+        workspaceId: WORKSPACE_W_ID,
+        name: 'Named Testwort',
+        canonicalName: 'Testus nominatus',
+        nomenclature: 'botanical',
+        variants: [makeVariant({ form: 'Testform' })],
+      }),
+      A.id,
+    );
+    const jarId = await insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        ingredientId: named,
+        variantId: await variantIdOf(sql, named, 'Testform'),
+        quantityOnHand: '3',
+        unit: 'g',
+      },
+      A.id,
+    );
+    // The two differ by name and by formal name, so nothing matched them.
+    const [compendium] =
+      await sql`select name, canonical_name from ingredients where id = ${entry}`;
+    expect(compendium.name).not.toBe('Named Testwort');
+    expect(compendium.canonical_name).not.toBe('Testus nominatus');
+
+    const result = await convert(asUser(B), named);
+
+    expect(await jarRow(jarId)).toMatchObject({ ingredient_id: entry, variant_id: form });
+    expect(result.entry.ingredientId).toBe(entry);
+  });
+
   it('writes the cupboard row with only what the local said differently', async () => {
     await convert();
 
