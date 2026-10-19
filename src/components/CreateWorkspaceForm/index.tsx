@@ -48,7 +48,9 @@ const CreateWorkspaceForm = (): ReactElement => {
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
       // The new coven's home replaces the whole of this page, not only a coven body; it has its contents menu.
-      navigate(`/coven/${slug}`, { target: { region: 'main', shape: 'page', frame: 'with-nav' } });
+      navigate(`/coven/${slug}`, {
+        target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
+      });
       // The shell's switcher lists the viewer's covens from the layout, which
       // a client-side push does not re-run: refresh brings the new one in.
       refresh();

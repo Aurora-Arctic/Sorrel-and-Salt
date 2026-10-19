@@ -266,7 +266,7 @@ page's content. The `<main>` takes the frame the target names, top-aligned
 and never centred in the window: `wide` and `with-nav` use `page-column`,
 `narrow` uses `page-frame page-frame--narrow`, and no frame the standard
 `page-frame`. A narrow `form` sits on a `panel`, as the real form does.
-`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid, and the admin index is the `contents` shape (sections of links), and `tabs` draws
+`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid, and the admin index is the `contents` shape (sections of links), and the target's `head` (`eyebrow` for the coven home, `title` for Account) shapes the head the page draws, and `tabs` draws
 the tab track in the heading row. A navigation with no target, such as a
 refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 

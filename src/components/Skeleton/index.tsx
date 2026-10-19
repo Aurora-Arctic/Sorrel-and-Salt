@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { SkeletonProps, SkeletonShape } from './types';
+import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
 import './index.scss';
 
 // The one skeleton every region wait uses (M12.33): placeholder shapes drawn
@@ -32,6 +32,22 @@ const Bars = ({ of: length, className }: { of: number; className: string }): Rea
   </>
 );
 
+// A page's head at the size of the real one, so what is under it does not
+// jump on arrival: an eyebrow bar where the page has an eyebrow, the title,
+// and a lede that wraps to two lines unless the page has none.
+const PageHead = ({ head, loose }: { head: SkeletonHead; loose?: boolean }): ReactElement => (
+  <div className={loose ? 'skeleton__intro skeleton__intro--loose' : 'skeleton__intro'}>
+    {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
+    <span className="skeleton__title" />
+    {head !== 'title' && (
+      <div className="skeleton__lede">
+        <span />
+        <span />
+      </div>
+    )}
+  </div>
+);
+
 const Skeleton = ({
   shape,
   filter = false,
@@ -39,6 +55,7 @@ const Skeleton = ({
   action = false,
   tabs = false,
   menu = false,
+  head,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
@@ -101,10 +118,7 @@ const Skeleton = ({
           // children in the page's order: head, menu, then the sections, so
           // the menu stands where the real one does at every width.
           <div className={menu ? 'page-with-nav' : 'skeleton__plain'}>
-            <div className="skeleton__intro">
-              <span className="skeleton__title" />
-              <span className="skeleton__lede" />
-            </div>
+            <PageHead head={head} />
             {menu && (
               <div className="page-nav skeleton__menu">
                 <span />
@@ -126,8 +140,7 @@ const Skeleton = ({
           // The admin index: a heading and a line, then titled lists of
           // links each with its one line beneath, as `AdminContents` lays them.
           <div className="skeleton__plain">
-            <span className="skeleton__title" />
-            <span className="skeleton__lede" />
+            <PageHead head={head} loose />
             {CONTENTS_ENTRIES.map((entries, section) => (
               <div key={section} className="skeleton__section">
                 <span className="skeleton__label" />

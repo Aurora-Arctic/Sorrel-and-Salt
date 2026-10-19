@@ -249,8 +249,19 @@
   height: 1.75rem;
 }
 
+// A lede that wraps to two lines, as the pages' do: each line a body line
+// (1.65, typography-base) tall, a bar of 1rem sat in it, so the head is the
+// real one's height. The second line stops short, as a last line does.
 .skeleton__lede {
-  width: 65%;
+  display: flex;
+  flex-direction: column;
+  gap: calc(type-size('body') * 1.65 - 1rem);
+  max-width: $measure;
+  padding-block: calc((type-size('body') * 1.65 - 1rem) / 2);
+
+  > span:nth-child(2) {
+    width: 60%;
+  }
 }
 
 .skeleton__plain {
@@ -261,6 +272,19 @@
 // the pages' `.header` column holds them.
 .skeleton__intro {
   @include stack(2);
+}
+
+// The head's bars take the line box of what they stand in for (an h1's at
+// 1.1, an eyebrow's at body's 1.65), the eyebrow's bar sat in its box.
+.skeleton__shapes .skeleton__intro > .skeleton__title {
+  width: 40%;
+  height: calc(heading-size(1) * 1.1);
+}
+
+.skeleton__shapes .skeleton__eyebrow {
+  width: 20%;
+  height: type-size('overline');
+  margin-block: calc((type-size('overline') * 1.65 - type-size('overline')) / 2);
 }
 
 // A page with a side menu (the account's jump menu, the coven home's
@@ -339,4 +363,10 @@
 // text arrives.
 .skeleton__shapes .skeleton__line {
   width: 70%;
+}
+
+// The admin index head is a bare h1 and a line (no `.header` column), so its
+// heading keeps the h1 own bottom margin, which the line sits under.
+.skeleton__shapes .skeleton__intro--loose > .skeleton__title {
+  margin-block-end: space(2);
 }

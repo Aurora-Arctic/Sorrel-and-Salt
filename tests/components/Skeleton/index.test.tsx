@@ -116,6 +116,35 @@ describe('Skeleton tabs and menu', () => {
   });
 });
 
+// The head is drawn at the size of the real one, so what is under it does not
+// jump on arrival: a title bar and a lede of two lines, with an eyebrow bar
+// above them where the page has an eyebrow, and the title alone where the
+// page has no lede (the account page).
+describe('Skeleton page head', () => {
+  const head = (container: HTMLElement): Element | null =>
+    container.querySelector('.skeleton__intro');
+
+  it('draws a title and a lede of two lines by default', () => {
+    const { container } = render(<Skeleton shape="page" menu />);
+    expect(head(container)?.querySelector('.skeleton__title')).not.toBeNull();
+    expect(head(container)?.querySelector('.skeleton__eyebrow')).toBeNull();
+    expect(head(container)?.querySelectorAll('.skeleton__lede > span')).toHaveLength(2);
+  });
+
+  it('draws an eyebrow above the title only for the eyebrow head', () => {
+    const { container } = render(<Skeleton shape="page" menu head="eyebrow" />);
+    expect(
+      [...(head(container)?.children ?? [])].map((node) => node.className.split(' ')[0]),
+    ).toEqual(['skeleton__eyebrow', 'skeleton__title', 'skeleton__lede']);
+  });
+
+  it('draws the title alone for the title head', () => {
+    const { container } = render(<Skeleton shape="page" menu head="title" />);
+    expect(head(container)?.querySelector('.skeleton__title')).not.toBeNull();
+    expect(head(container)?.querySelector('.skeleton__lede')).toBeNull();
+  });
+});
+
 // The wait for a page of linked sections (the admin index) draws what that
 // page is: a heading, a line, then titled lists of links each with a line
 // beneath, and no card blocks, which that page does not have.

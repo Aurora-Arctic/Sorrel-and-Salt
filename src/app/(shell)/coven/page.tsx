@@ -58,7 +58,7 @@ export default async function CovenLandingPage() {
               : `You have ${pending} invitations waiting. `}
             <PendingLink
               href={ACCOUNT_INVITATIONS_PATH}
-              navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav' }}
+              navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav', head: 'title' }}
             >
               See your invitations
             </PendingLink>
