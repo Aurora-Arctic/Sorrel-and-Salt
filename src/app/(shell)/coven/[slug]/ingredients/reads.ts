@@ -66,6 +66,11 @@ export const readCovenIngredients = cache(
           return { form, toxic, safetyNotes, formChoice: icon ? { group: { icon } } : null };
         });
       }),
+      formOf: new Map(
+        forms.flatMap((answer) =>
+          answer instanceof Error ? [] : answer.map(({ id, form }): [string, string] => [id, form]),
+        ),
+      ),
       categories,
       jars: jars.map((answer) => {
         if (answer instanceof Error) throw answer;

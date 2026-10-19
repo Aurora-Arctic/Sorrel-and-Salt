@@ -19,6 +19,14 @@ export interface CovenIngredientPage extends Page<IngredientRow, CovenListEdge> 
   variants: SafetyVariant[][];
   /** Each entry's category chips. */
   categories: CardCategory[][];
+  /** The form of every variant on the page, by variant id: a jar names its variant, not its form. */
+  formOf: ReadonlyMap<string, string>;
   /** Each entry's live jars in this coven, one per form held. */
   jars: StockRow[][];
+}
+
+export interface CovenIngredientsParams {
+  // Both are promises in Next 16: awaited before use.
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }

@@ -48,6 +48,7 @@ different groups, so the page offers each name once, whatever its case.
 ## Contracts
 
 - **The public page shares the filter.** `CompendiumListFilter` takes `audience` (`'admin'`, the default, or `'public'`). The public audience filters at `/compendium`, draws no No Refs control and no Classification facet, and words its empty sentence through the exported `emptyText(..., whenEmpty)`. The cards that page draws are [`compendium-cards.md`](compendium-cards.md).
+- **A coven’s Ingredients page shares it too (M9.6).** `audience="coven"`, with `covenSlug` and `workspaceId`, filters at `/coven/<slug>/ingredients` (`covenIngredientsHref`, `href.ts`), is labelled Filter Ingredients, and draws no No Refs control and no Classification facet. The filter it is given also carries `source`, `inStock` and `lowStockOnly`, so the panel draws Source, In Stock and Low Stock Only. The name search suggests from the coven’s cupboard and a pick opens `/coven/<slug>/ingredients/<id>`. The live counts ask `workspaceIngredientFacets` (the `CovenFacetCounts` document) with `workspaceId`, and the sentence names the three choices. The cards are [`coven-cards.md`](coven-cards.md).
 
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178),
   named "Filter the Compendium" inside a `<search>` landmark and `position: relative`

@@ -52,8 +52,8 @@ const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: va
 /**
  * A coven's counts as the props its panel takes (M9.7): the compendium's kinds mapped as
  * `compendiumFacetCounts` maps them, and the Source strip and In Stock switch beside
- * them. A coven has no No Refs switch, so that count reads zero and nothing shows it. Not yet
- * called by a page: M9.6 builds the coven's list and reads `workspaceIngredientFacets` here.
+ * them. A coven has no No Refs switch, so that count reads zero and nothing shows it. The
+ * coven Ingredients page (M9.6) reads `workspaceIngredientFacets` and maps it here.
  */
 export function covenFacetCounts(
   facets: WorkspaceIngredientFacets,

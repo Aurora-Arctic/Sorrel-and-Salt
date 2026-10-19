@@ -116,7 +116,7 @@ in the filter slot to carry.
   through the list frame's transition, which would grey the list and swap it
   for a skeleton. The heading is opt-in so a consumer whose pick is a page
   (M8.18) does not show a loading modal.
-- **The source is the compendium only.** M9.6 adds the workspace source.
+- **The source is the compendium, or the coven’s cupboard.** Given a `workspaceId` the box reads the cupboard (above); the coven Ingredients page does so.
 
 ## The parameter table
 

@@ -44,8 +44,8 @@ beforeEach(() => {
   listWorkspaceIngredients.mockResolvedValue([entry(own, null), entry(held, { label: 'Ours' })]);
   countWorkspaceIngredients.mockResolvedValue({ totalCount: 2, countBefore: null });
   variantsOf.mockResolvedValue([
-    [{ form: 'Fixture Herb', toxic: false, safetyNotes: null }],
-    [{ form: 'Fixture Oil', toxic: true, safetyNotes: 'Fixture note' }],
+    [{ id: 'v1', form: 'Fixture Herb', toxic: false, safetyNotes: null }],
+    [{ id: 'v2', form: 'Fixture Oil', toxic: true, safetyNotes: 'Fixture note' }],
   ]);
   readCardCategoriesOf.mockResolvedValue([[], []]);
   stockOf.mockResolvedValue([[{ id: 'j1' }], []]);
@@ -86,6 +86,12 @@ describe('readCovenIngredients', () => {
     expect(page.edges.map(({ cupboardEntry }) => cupboardEntry)).toEqual([null, { label: 'Ours' }]);
     expect(page.variants[0][0].formChoice).toEqual({ group: { icon: 'leaf' } });
     expect(page.variants[1][0].formChoice).toBeNull();
+  });
+
+  it('names the form of every variant on the page, so a jar can say which form it holds', async () => {
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined);
+
+    expect(Object.fromEntries(page.formOf)).toEqual({ v1: 'Fixture Herb', v2: 'Fixture Oil' });
   });
 
   it('passes the address variables to the list as the filter', async () => {
