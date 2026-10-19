@@ -20,6 +20,8 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 
 ## Contracts
 
+- **A `page` draws the side menu when its frame is `with-nav`**, which is what an ingredient's page uses (a Compendium entry in the `main` region, a coven's own entry in the `coven` region): the menu column beside the title, the lede and the blocks. It is built only from the existing pieces.
+
 - **Exactly one `<output>`, "Loading"**, visually hidden, so a screen reader
   hears one announcement whatever the shape. The drawn shapes are
   `aria-hidden`.

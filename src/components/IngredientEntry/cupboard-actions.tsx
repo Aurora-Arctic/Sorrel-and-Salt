@@ -1,6 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
@@ -129,7 +130,9 @@ export default function CupboardActions({
   const makeOurs = useMutation({
     mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
     onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) =>
-      navigate(`/coven/${covenSlug}/ingredients/${entry.id}` as Route),
+      navigate(`/coven/${covenSlug}/ingredients/${entry.id}` as Route, {
+        target: ingredientLinkTarget(`/coven/${covenSlug}/ingredients/${entry.id}`),
+      }),
     onError: (error) => {
       // A refusal names the own entry in the way, so it is shown as the service wrote it.
       settle();

@@ -25,6 +25,29 @@ Put it inside the `Link`, after the text:
 It takes no props. The hook reads the nearest enclosing `Link`, so outside one
 it never shows.
 
+### A link with the chain icon: `LinkIconHint`
+
+A link that wears the chain icon (`LinkIcon`) has no dot: the icon itself turns
+into the loading ring (the owner's call, 2026-10-19). Use `LinkIconHint` in
+place of `<LinkIcon /><LinkHint />`:
+
+```tsx
+<Link href={href}>
+  {label}
+  <LinkIconHint />
+</Link>
+```
+
+It draws one `1em` box (`span.link-icon-hint`) holding the icon, and while the
+link is pending (the same state as the dot, `useLinkPending`) the shared
+[`Spinner`](spinner.md) in the same box, with `is-pending` on the box. Nothing
+shifts. The icon is hidden when the ring appears, both after `$loading-delay`,
+so a quick navigation changes nothing; the ring pulses under reduced motion as
+it does everywhere. The link keeps `aria-busy`. Used by the Compendium list's
+name link, and the "Similar in the Compendium" and "In the Compendium" rows of
+the ingredient page ([`ingredient-entry.md`](ingredient-entry.md)). A plain
+text link keeps the dot.
+
 ## Behaviour
 
 - Renders `<span aria-hidden="true" class="link-hint">`, plus `is-pending`
@@ -67,7 +90,8 @@ announced when the new page arrives.
 
 ## Stories
 
-`Idle` and `Pending` draw the markup for each state directly. The workshop has
+`Idle` and `Pending` draw the markup for each state directly; `IconIdle` and
+`IconPending` do the same for a link with the chain icon. The workshop has
 no Next router, so `useLinkStatus` there (the stub in
 `.ladle/UnoptimizedLink.tsx`, next to the `next/link` alias) always answers
 `false`.
@@ -77,4 +101,5 @@ no Next router, so `useLinkStatus` there (the stub in
 `tests/components/LinkHint/index.test.tsx` mocks `useLinkStatus` and checks the
 dot is hidden from the accessibility tree in both states and carries
 `is-pending` only when pending. It reads the class because the class is the
-state and the dot has no role.
+state and the dot has no role. `LinkIconHint` is tested the same way: no dot at
+rest, the ring and `is-pending` while pending, the icon again after.

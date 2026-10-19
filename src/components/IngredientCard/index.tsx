@@ -1,6 +1,7 @@
-import Link from 'next/link';
 import { Fragment, type ReactElement } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { PendingLink } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
@@ -54,9 +55,10 @@ const IngredientCard = ({
       <div className="specimen__top">
         <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
-            <Link href={href}>
+            {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
+            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
               {label} <LinkHint />
-            </Link>
+            </PendingLink>
           </Heading>
           {formal !== '' && (
             <p className="meta ingredient-card__formal">

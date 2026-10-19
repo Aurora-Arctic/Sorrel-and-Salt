@@ -1,3 +1,4 @@
+import { covenSlugOf, covenTarget } from '../../lib/coven-path';
 import type { NavigationTarget } from '../../lib/navigation';
 
 /**
@@ -19,4 +20,27 @@ export const siteLinkTarget = (base: string, href: string = base): NavigationTar
   }
   if (base === '/admin') return { region: 'main', shape: 'contents', frame: 'wide' };
   return { region: 'main', shape: 'page' };
+};
+
+/**
+ * What the page a link into the ingredients draws while it is on its way
+ * (M12.33), from the address alone. A compendium entry is a wide page with its
+ * jump menu; a coven's entry sits under the coven's context row, so it is the
+ * coven region's (`fromCoven`: the press starts inside a coven, where the
+ * coven's body is what changes; from anywhere else the whole main changes
+ * and the wait is the main region's); the Compendium search a See All opens is
+ * the Compendium's list. None for an address that is none of these.
+ */
+export const ingredientLinkTarget = (
+  href: string,
+  fromCoven: boolean = true,
+): NavigationTarget | undefined => {
+  const path = href.split(/[?#]/)[0] ?? href;
+  if (path.startsWith('/compendium/ingredients/')) {
+    return { region: 'main', shape: 'page', frame: 'with-nav' };
+  }
+  if (path === '/compendium') return siteLinkTarget('/compendium');
+  if (covenSlugOf(path) === null) return undefined;
+  const target = covenTarget(path);
+  return fromCoven ? target : { ...target, region: 'main' };
 };

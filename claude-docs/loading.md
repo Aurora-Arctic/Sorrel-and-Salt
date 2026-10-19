@@ -32,7 +32,9 @@ register, so the control moves first.
   place, gains a [`Spinner`](components/spinner.md), swaps its label for a
   busy one, and carries `aria-busy="true"`.
 - A **link** in the page shows the [`LinkHint`](components/link-hint.md) dot
-  after its text. A link that is a tab moves its pill at once
+  after its text. A link that wears the chain icon shows no dot: its icon turns
+  into the [`Spinner`](components/spinner.md) ring in the same space
+  (`LinkIconHint`, the owner's call, 2026-10-19). A link that is a tab moves its pill at once
   ([`TabbedPage`](components/tabbed-page.md)). The site's menu links (the
   global bar's links, the admin pages' lead link and the account menu's items)
   show no dot: the page bar and the skeleton answer for them (the owner's call,
@@ -238,6 +240,21 @@ with the value already put back.
   rest.
 - The coven's section links (each carries a `target` in `SectionNav`'s props)
   and the Contents on the coven home name the `coven` target `covenTarget` gives for the section's address.
+- Every link into an ingredient's page names the page it draws through
+  `ingredientLinkTarget(href, fromCoven?)` (`site-target.ts`): a Compendium
+  entry is a `main` `page` with its jump menu (`with-nav`); a coven's own
+  entry is the `coven` region's `page` with its jump menu (`covenTarget`
+  knows an address with an id beneath `ingredients`), or, from outside the
+  coven (the admin shell's Add Ingredient), the `main` region's; the
+  Compendium list is `siteLinkTarget('/compendium')`. The sources are the
+  ingredient card's name ([`IngredientCard`](components/ingredient-card.md),
+  so the Compendium and coven cards both), the admin Compendium list's name
+  link, the search box's pick, and the ingredient page's own links (substitutes,
+  In the Compendium, Similar, See All, the moved-away link), plus the
+  navigations that follow a Make It Ours, a Link to Selected and a Save in Add
+  Ingredient. The skeleton always draws the jump menu, though the page draws it
+  only for an entry that has forms. A same-page save in the entry dialog, and
+  the delete that returns to the list, keep what they had.
 - A pager or filter in a `ListFrame`, a tab, and the route modal's
   provider navigate through the hook directly; they keep their own
   skeletons.

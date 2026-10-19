@@ -459,7 +459,7 @@ $replaces-gap: space(5);
     margin-inline-start: auto;
   }
 
-  a svg {
+  a .link-icon-hint {
     margin-inline-start: 0;
   }
 }
@@ -484,7 +484,7 @@ $replaces-gap: space(5);
     hyphens: auto;
   }
 
-  svg {
+  .link-icon-hint {
     flex: none;
     margin-inline-start: auto;
     margin-block-start: 0.125em;
