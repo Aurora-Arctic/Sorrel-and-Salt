@@ -72,13 +72,18 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
 
 /**
  * What a coven page draws while it is on its way: the parts of the section the
- * address names. The coven's home is a page with its contents menu beside it;
- * a section not named is a plain page. One mapping for the switcher, the
- * section nav and the home's Contents.
+ * address names. The coven's home is a page with its contents menu beside it,
+ * and so is one ingredient's page (the address has an id beneath
+ * `ingredients`: its jump menu stands beside it, not the list's cards); a
+ * section not named is a plain page. One mapping for the switcher, the
+ * section nav, the home's Contents and the links into an ingredient.
  */
 export function covenTarget(pathname: string): NavigationTarget {
   const slug = covenSlugOf(pathname);
   const section = slug ? pathname.split('/')[3] : undefined;
-  if (slug && !section) return { region: 'coven', shape: 'page', frame: 'with-nav' };
+  const beneath = slug ? pathname.split('/')[4] : undefined;
+  if (slug && (!section || (section === 'ingredients' && beneath))) {
+    return { region: 'coven', shape: 'page', frame: 'with-nav' };
+  }
   return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

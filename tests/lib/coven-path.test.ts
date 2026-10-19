@@ -78,6 +78,14 @@ describe('covenTarget', () => {
     expect(covenTarget('/coven/a')).toEqual({ region: 'coven', shape: 'page', frame: 'with-nav' });
   });
 
+  it('draws an ingredient\x27s own page as a page with its jump menu, not the cards of the list above it', () => {
+    expect(covenTarget('/coven/a/ingredients/some-id')).toEqual({
+      region: 'coven',
+      shape: 'page',
+      frame: 'with-nav',
+    });
+  });
+
   it('draws a section it does not name as a plain page', () => {
     expect(covenTarget('/coven/a/grimoire')).toEqual({ region: 'coven', shape: 'page' });
   });
