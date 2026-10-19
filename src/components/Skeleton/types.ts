@@ -1,5 +1,17 @@
 import type { ReactNode } from 'react';
 
+/** What a skeleton stands in for. */
+export type SkeletonShape = 'table' | 'cards' | 'form' | 'page';
+
+export interface SkeletonProps {
+  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) or `page` (a heading and blocks). */
+  shape: SkeletonShape;
+  /** Whether a `table` or `cards` skeleton draws a filter row above the list. */
+  filter?: boolean;
+  /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
+  count?: number;
+}
+
 export interface SwapPanelProps {
   /** Whether the next content is on its way, so the skeleton shows in its place. */
   pending: boolean;

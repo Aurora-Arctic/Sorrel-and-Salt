@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps } from './types';
 import './index.scss';
 
@@ -131,7 +132,7 @@ export default function MenuButton({
           }
         }}
       >
-        {busy && <span className="spinner" aria-hidden="true" />}
+        {busy && <Spinner />}
         {busy ? (busyLabel ?? label) : label}
         {!busy && <Chevron />}
       </button>

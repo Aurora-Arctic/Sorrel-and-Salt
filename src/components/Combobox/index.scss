@@ -795,7 +795,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // Where the count will be while a search runs. The shape and the shimmer
   // are the list skeleton's (`skeleton-shimmer`, _primitives.scss); the fill
   // is the chip's own ink at low strength, since a chip is a solid colour the
-  // quiet fill would vanish on. Still under reduced motion.
+  // quiet fill would vanish on. Pulses under reduced motion.
   &.is-pending {
     display: inline-block;
     width: 1.75ch;
@@ -809,11 +809,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
       color-mix(in srgb, currentcolor 22%, transparent) 100%
     );
     background-size: 200% 100%;
-    animation: skeleton-shimmer 1.4s ease-in-out infinite;
-
-    @include reduced-motion {
-      animation: none;
-    }
+    @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
   }
 }
 

@@ -1,0 +1,24 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A save in flight, the owner's call for every Save button (M5.6): a ring in
+// the surrounding ink, open on one side so its turn reads, ahead of the label.
+// Hidden for `$loading-delay` first, then turning; where motion is reduced
+// the turn becomes the shared slow pulse (`loading-motion`), since a still
+// ring says nothing is happening.
+.spinner {
+  @include loading-motion(spinner-turn $spin-duration linear infinite, $loading-delay);
+
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  border: 2px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: radius('pill');
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}

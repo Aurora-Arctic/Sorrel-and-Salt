@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import Spinner from '../Spinner';
 import type { BusyButtonProps } from './types';
 
 // A button whose action can be in flight: `aria-busy`, the `.spinner` ahead
@@ -20,7 +21,7 @@ const BusyButton = ({
   // A bare `<button>` submits; `type` defaults to `button` so a form's
   // non-submit actions never submit it by accident, and a Save says `submit`.
   <button type={type} className={className} aria-busy={busy || undefined} {...button}>
-    {busy && <span className="spinner" aria-hidden="true" />}
+    {busy && <Spinner />}
     {busy ? busyLabel : children}
   </button>
 );

@@ -476,7 +476,7 @@
 // The new content of a list or tab, faded in as it replaces the skeleton
 // that stood in for it (`list-frame-fade-in`, _primitives.scss, the one
 // keyframe); under reduced motion it shows at once.
-@mixin arrived($duration: 200ms) {
+@mixin arrived($duration: $arrive-duration) {
   animation: list-frame-fade-in $duration ease both;
 
   @include reduced-motion {
@@ -484,11 +484,38 @@
   }
 }
 
+// The motion of a piece that says something is loading: its own animation,
+// and under reduced motion the one slow opacity pulse (`loading-pulse`,
+// _primitives.scss) in its place, so no wait is ever a still mark and no piece
+// invents its own fallback. A wait that shows only after `$delay` (an
+// indicator, not a skeleton) is hidden until then by `loading-appear`, which
+// moves `visibility` only, so it holds under the pulse, which moves opacity.
+@mixin loading-motion($animation, $delay: null) {
+  @if $delay {
+    animation:
+      $animation,
+      loading-appear 0s linear $delay both;
+  } @else {
+    animation: $animation;
+  }
+
+  @include reduced-motion {
+    @if $delay {
+      animation:
+        loading-pulse $pulse-duration ease-in-out infinite,
+        loading-appear 0s linear $delay both;
+    } @else {
+      animation: loading-pulse $pulse-duration ease-in-out infinite;
+    }
+  }
+}
+
 // A skeleton's placeholder shape (MB.115, shared since M9.18): a rounded
 // bar of the muted ink a little way into the card surface, as the combobox's
 // quiet fills are, so both themes carry it on the page and on a card, with a
 // lighter step of the same passing across it (`skeleton-shimmer`,
-// _primitives.scss). Still, with no shimmer, where motion is reduced. The
+// _primitives.scss), which becomes the shared pulse where motion is reduced
+// (`loading-motion`). The
 // tab's list skeleton and the route modal's form skeleton draw their shapes
 // with it.
 @mixin skeleton-shape {
@@ -502,11 +529,7 @@
     $fill-quiet 100%
   );
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
 }
 
 // The two row tweaks a data table's owner asks for, each emitted once as a

@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // A fixed-size dot that always holds its space, so showing it moves nothing.
-// Hidden until the link has been pending for 100ms, so a fast navigation
+// Hidden until the link has been pending for `$loading-delay`, so a fast navigation
 // never flashes it. Next's own example, through the project's tokens.
 // claude-docs/components/link-hint.md
 .link-hint {
@@ -19,7 +19,7 @@
     visibility: visible;
     animation-name: link-hint-in, link-hint-pulse;
     animation-duration: 200ms, 1s;
-    animation-delay: 100ms, 100ms;
+    animation-delay: $loading-delay, $loading-delay;
     animation-timing-function: ease, ease-in-out;
     animation-iteration-count: 1, infinite;
     animation-fill-mode: forwards, none;
@@ -27,7 +27,7 @@
     // Reduced motion keeps a still dot, shown after the same delay by a
     // transition-free rule: no fade, no pulse.
     @include reduced-motion {
-      animation: link-hint-still 0s 100ms forwards;
+      animation: link-hint-still 0s $loading-delay forwards;
     }
   }
 }
