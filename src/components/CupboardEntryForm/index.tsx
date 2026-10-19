@@ -93,6 +93,7 @@ const CupboardEntryForm = ({
   compendium,
   overrides,
   onDone,
+  aside,
 }: CupboardEntryFormProps): ReactElement => {
   const id = useId();
   const { refresh } = usePendingNavigation();
@@ -269,6 +270,7 @@ const CupboardEntryForm = ({
             dirty={dirty}
             submitting={save.isPending}
             onCancel={() => discard.request(onDone)}
+            aside={aside?.({ onRefused: setAlert })}
           />
           {discard.asking && <DiscardQuestion guard={discard} />}
         </form>

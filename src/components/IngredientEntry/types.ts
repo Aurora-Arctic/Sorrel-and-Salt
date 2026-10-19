@@ -174,5 +174,44 @@ export interface CupboardActionsProps extends CupboardProps {
 export interface AnnotateDialogProps {
   closeHref: Route;
   returnTo?: () => HTMLElement | null | undefined;
-  opened?: Omit<CupboardEntryFormProps, 'onDone'>;
+  opened?: Omit<CupboardEntryFormProps, 'onDone' | 'aside'>;
+  /** Make It Ours and Remove in a More menu at the form's foot; left out, no menu. */
+  more?: AnnotateMoreProps;
+}
+
+/** What `useCupboardWrites` needs: the entry, where a remove leads, and how the caller's question closes and shows a refusal. */
+export interface CupboardWritesOptions {
+  workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
+  ingredientId: string;
+  /** Where a remove leads, replacing the address; left out, the page reads again. */
+  removedHref?: Route;
+  /** Closes the caller's question, after either write is answered. */
+  onSettle: () => void;
+  /** Shows a refusal's sentence in the caller's alert. */
+  onRefused: (message: string) => void;
+}
+
+/** One cupboard write: start it, and whether it is in flight. */
+export interface CupboardWrite {
+  run: () => void;
+  pending: boolean;
+}
+
+export interface CupboardWrites {
+  remove: CupboardWrite;
+  makeOurs: CupboardWrite;
+}
+
+/**
+ * The Annotate dialog's More menu (M8.17): the coven's address segment, which
+ * of Make It Ours and Remove the member may use, from the same permissions the
+ * entry page reads, and where a remove leads, `closeHref` when left out.
+ */
+export interface AnnotateMoreProps {
+  covenSlug: string;
+  canMakeOurs: boolean;
+  canRemove: boolean;
+  removedHref?: Route;
 }

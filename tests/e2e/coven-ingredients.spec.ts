@@ -501,7 +501,9 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
 
 // M8.17: Annotate on the card of a compendium entry the coven holds opens the
 // entry page's dialog over the list, and a close or a save comes back to the
-// list as it was, its search kept and the focus on the card's Annotate.
+// list as it was, its search kept and the focus on the card's Annotate. The
+// dialog's More menu removes the entry from the cupboard, back onto the same
+// search without its card.
 test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
   page,
 }) => {
@@ -509,8 +511,8 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
     A: 'owner',
     C: 'viewer',
   });
-  await withSql(async (sql) => {
-    const ingredientId = await insertIngredient(
+  const ingredientId = await withSql(async (sql) => {
+    const id = await insertIngredient(
       sql,
       makeIngredient({
         name: 'Fixture Notewort',
@@ -519,7 +521,8 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
       }),
       coven.users.A,
     );
-    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, coven.users.A);
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId: id }, coven.users.A);
+    return id;
   });
   const searched = `${listPath(coven)}?query=Notewort`;
   const backAtSearch = async () => {
@@ -559,6 +562,26 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await backAtSearch();
   const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
   await expect(annotated.getByRole('button', { name: 'Annotated' })).toBeVisible();
+
+  // More, then Remove: asked first, then gone from the cupboard and the list.
+  await annotated.getByRole('link', { name: /^Annotate Fixture Our Notewort/ }).click();
+  await dialog.getByRole('button', { name: 'More' }).click();
+  const menu = dialog.getByRole('menu', { name: 'More' });
+  await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+  await assertNoAccessibilityViolations(page);
+  await menu.getByRole('menuitem', { name: 'Remove' }).click();
+  const question = page.getByRole('group', { name: /Remove Fixture Our Notewort/ });
+  await question.getByRole('button', { name: 'Remove', exact: true }).click();
+
+  await expect(dialog).toHaveCount(0);
+  await backAtSearch();
+  await expect(rowOf(ingredientList(page), 'Fixture Our Notewort')).toHaveCount(0);
+  const held = await withSql(
+    (sql) =>
+      sql`select 1 from workspace_compendium_entries
+           where workspace_id = ${coven.id} and ingredient_id = ${ingredientId} and deleted_at is null`,
+  );
+  expect(held).toHaveLength(0);
 });
 
 // M8.17 (moved from M9.10 by the owner, 2026-10-19): the coven's own entry

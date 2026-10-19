@@ -81,7 +81,8 @@ passes its discard guard's `request` (claude-docs/components/modal.md,
 "Unsaved changes"), and `holdCancel` makes it wait while a save is in flight,
 as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
 end, is drawn when `onDelete` is given, "Delete Group", and asks the form's
-own question. The row is `.form__actions`, which wraps, so a third button
+own question. `aside` draws whatever it is given in `.form__aside` after
+Delete, at the far end: the Annotate dialog's More menu (M8.17). The row is `.form__actions`, which wraps, so a third button
 never squeezes it. A form that does something other than save renames its
 submit with `label` and `busyLabel`, in title case: the admin invitation form
 passes "Send Invitation" and "Sending" (MB.119), so it draws this row rather

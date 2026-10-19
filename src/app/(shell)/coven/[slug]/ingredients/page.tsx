@@ -27,6 +27,7 @@ import {
   heldCompendiumEntry,
   isAnnotated,
   isRetired,
+  MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
 
 // A coven's Ingredients (M9.6): what the coven has, as compact cards with their jars. The coven
@@ -180,6 +181,13 @@ export default async function CovenIngredientsPage({
               ...cupboardFormValues(annotated.entry, annotated.cupboardEntry),
             }
           }
+          // Make It Ours and Remove in the dialog's More menu (M8.17), on the
+          // permissions the entry page reads; a remove returns to this list.
+          more={{
+            covenSlug: workspace.slug,
+            canMakeOurs: rolePermits(membership.role, MAKE_IT_OURS_PERMISSION),
+            canRemove: rolePermits(membership.role, { ingredient: ['delete'] }),
+          }}
         />
       )}
     </main>
