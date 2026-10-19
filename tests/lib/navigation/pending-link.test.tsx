@@ -6,15 +6,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
-// M12.33 scaffold: lane A builds `@/lib/navigation`. Until it does, the module is
-// loaded by a specifier neither the type checker nor Vite resolves, so this
-// file compiles and its suites are skipped. That lane makes the import a
-// plain `await import('…')` of the path below and unskips every
-// `describe.skip` here (grep "M12.33 scaffold").
-const scaffold: string = '@/lib/navigation';
-const { PendingLink, useNavigationState } = await import(/* @vite-ignore */ scaffold).catch(
-  () => ({}),
-);
+const { PendingLink, useNavigationState } = await import('@/lib/navigation');
 
 // The one link the site draws (M12.33): a plain press navigates through the
 // shared hook, so the bar and the destination's skeleton follow; a press the
@@ -54,7 +46,7 @@ afterEach(async () => {
   await act(async () => arrive());
 });
 
-describe.skip('PendingLink', () => {
+describe('PendingLink', () => {
   it('is a link to its address, idle at rest', () => {
     renderLink();
 
@@ -82,7 +74,7 @@ describe.skip('PendingLink', () => {
   });
 
   it('carries the navigation target it is given into the site-wide state', async () => {
-    renderLink({ target: COVEN_TABLE });
+    renderLink({ navigationTarget: COVEN_TABLE });
 
     await act(async () => {
       fireEvent.click(link(), { button: 0 });

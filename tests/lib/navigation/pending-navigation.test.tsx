@@ -8,15 +8,8 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
-// M12.33 scaffold: lane A builds `@/lib/navigation`. Until it does, the module is
-// loaded by a specifier neither the type checker nor Vite resolves, so this
-// file compiles and its suites are skipped. That lane makes the import a
-// plain `await import('…')` of the path below and unskips every
-// `describe.skip` here (grep "M12.33 scaffold").
-const scaffold: string = '@/lib/navigation';
-const { reportLeaving, useNavigationState, usePendingNavigation } = await import(
-  /* @vite-ignore */ scaffold
-).catch(() => ({}));
+const { reportLeaving, useNavigationState, usePendingNavigation } =
+  await import('@/lib/navigation');
 
 // The one way the site navigates (M12.33; claude-docs/design-decisions/m12.33-plan.md):
 // each caller's own `pending`, and a site-wide `busy` with the target's
@@ -41,7 +34,7 @@ function Go({
     <button
       type="button"
       aria-busy={navigation.pending}
-      onClick={() => (refresh ? navigation.refresh() : navigation.navigate(href, options))}
+      onClick={() => (refresh ? navigation.refresh() : navigation.navigate(href ?? '', options))}
     >
       {name}
     </button>
@@ -94,7 +87,7 @@ afterEach(async () => {
   });
 });
 
-describe.skip('usePendingNavigation', () => {
+describe('usePendingNavigation', () => {
   it('pushes the address, and is pending until the new page has rendered', async () => {
     const { arrives, arrive } = arrival();
     render(
@@ -155,7 +148,7 @@ describe.skip('usePendingNavigation', () => {
   });
 });
 
-describe.skip('useNavigationState', () => {
+describe('useNavigationState', () => {
   it('is idle, with no target, while nothing is on its way', () => {
     render(<Probe />);
 
@@ -217,7 +210,7 @@ describe.skip('useNavigationState', () => {
   });
 });
 
-describe.skip('reportLeaving', () => {
+describe('reportLeaving', () => {
   it('keeps the page busy until the browser leaves, however long that takes', async () => {
     vi.useFakeTimers();
     try {
