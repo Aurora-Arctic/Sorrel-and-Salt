@@ -29,8 +29,10 @@ import {
 // and its opposite is in place before the page is drawn, the type-ahead offers
 // this coven's cupboard and nothing else, each jar line carries its form's
 // icon and M9.8's badge, a retired compendium entry the coven holds keeps
-// its forms and categories and can be annotated and made its own, and the page
-// passes axe at both densities and at a phone's width.
+// its forms and categories and can be annotated and made its own, a held
+// compendium entry's card opens Annotate over the list and closes back to its
+// search (M8.17), and the page passes axe at both densities and at a phone's
+// width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -494,6 +496,68 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
   );
   await expect(page.getByText('Local', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Retired' })).toHaveCount(0);
+});
+
+// M8.17: Annotate on the card of a compendium entry the coven holds opens the
+// entry page's dialog over the list, and a close or a save comes back to the
+// list as it was, its search kept and the focus on the card's Annotate.
+test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate List Annotate', 'gate-list-ann.test', {
+    A: 'owner',
+    C: 'viewer',
+  });
+  await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Notewort',
+        canonicalName: 'Fixtura notata',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      coven.users.A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, coven.users.A);
+  });
+  const searched = `${listPath(coven)}?query=Notewort`;
+  const backAtSearch = async () => {
+    await expect(page).toHaveURL((url) => url.searchParams.get('query') === 'Notewort');
+    await expect(page).toHaveURL((url) => !url.searchParams.has('annotate'));
+  };
+  const annotateLink = page.getByRole('link', { name: /^Annotate Fixture/ });
+
+  // A viewer reads the card with no Annotate on it.
+  await signInAgainAs(page, coven.users.C);
+  await page.goto(searched);
+  await expect(rowOf(ingredientList(page), 'Fixture Notewort')).toHaveCount(1);
+  await expect(annotateLink).toHaveCount(0);
+
+  // Why the save could leave a mark: the card is not yet annotated.
+  await signInAgainAs(page, coven.users.A);
+  await page.goto(searched);
+  const card = rowOf(ingredientList(page), 'Fixture Notewort');
+  await expect(card.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
+  const link = card.getByRole('link', { name: 'Annotate Fixture Notewort, Fixtura notata' });
+
+  await link.click();
+  const dialog = page.getByRole('dialog', { name: 'Annotate This Entry' });
+  await expect(dialog.getByRole('textbox', { name: 'Label' })).toBeVisible();
+  await expect(page).toHaveURL((url) => url.searchParams.has('annotate'));
+
+  // Unchanged, Escape closes it, back onto the search and the card's Annotate.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await backAtSearch();
+  await expect(link).toBeFocused();
+
+  await link.click();
+  await dialog.getByRole('textbox', { name: 'Label' }).fill('Fixture Our Notewort');
+  await dialog.getByRole('button', { name: 'Save Annotation' }).click();
+  await expect(dialog).toHaveCount(0);
+  await backAtSearch();
+  const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
+  await expect(annotated.getByRole('button', { name: 'Annotated' })).toBeVisible();
 });
 
 test('a retired compendium entry the coven still holds can be removed, and leaves its list', async ({
