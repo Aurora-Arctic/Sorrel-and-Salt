@@ -70,6 +70,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
     <IngredientEntry
       detail={detail}
       hrefOf={hrefOf}
+      back={{ href: '/compendium' as Route, label: 'Compendium' }}
       edit={
         canEdit
           ? {

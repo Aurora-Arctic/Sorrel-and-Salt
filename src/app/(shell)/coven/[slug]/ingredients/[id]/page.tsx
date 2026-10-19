@@ -138,6 +138,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}
+        back={{ href: `/coven/${workspace.slug}/ingredients` as Route, label: 'Ingredients' }}
         edit={
           canEdit
             ? {

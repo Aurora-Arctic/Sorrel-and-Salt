@@ -71,7 +71,7 @@ const params = (id = ID, search: Record<string, string> = {}) => ({
 
 const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
-// Edit, a plain link when it is the only choice, or Edit Entry in the Edit menu
+// Edit, a plain link when it is the only choice, or Edit Compendium Entry in the Edit menu
 // beside the cupboard's choices (the owner's call, 2026-10-19), opened here.
 const edits = () => {
   const menu = screen.queryByRole('button', { name: 'Edit', expanded: false });
@@ -82,7 +82,7 @@ const edits = () => {
   ];
 };
 
-const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
 
 const open = async (
   row: ReturnType<typeof compendiumRow>,
@@ -275,6 +275,45 @@ describe('the coven ingredient page’s Annotate', () => {
     await open(compendiumRow(), false, { annotate: '' });
 
     expect(annotateDialog()).not.toBeInTheDocument();
+  });
+});
+
+// Compendium on every compendium entry in a coven, and the shelf before the
+// name for one the cupboard holds (the owner's call, 2026-10-19).
+describe('the coven ingredient page’s marks', () => {
+  const compendiumMark = () => screen.queryByRole('status');
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+
+  it('marks a compendium entry the coven does not hold as from the Compendium, with no shelf', async () => {
+    await open(compendiumRow());
+
+    expect(compendiumMark()).toBeInTheDocument();
+    expect(shelf()).not.toBeInTheDocument();
+  });
+
+  it('draws the shelf beside the heading once the coven holds the entry, not inside it', async () => {
+    getCupboardEntry.mockResolvedValue({
+      id: 'fixture-jar',
+      label: null,
+      description: null,
+      safetyNotes: null,
+      elements: null,
+      celestialBodies: null,
+      zodiacSigns: null,
+      colors: null,
+    });
+    await open(compendiumRow());
+
+    expect(compendiumMark()).toBeInTheDocument();
+    expect(shelf()).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).not.toContainElement(shelf());
+  });
+
+  it("draws the shelf on the coven's own entry, which the cupboard always holds, and no Compendium", async () => {
+    await open(covenRow());
+
+    expect(compendiumMark()).not.toBeInTheDocument();
+    expect(shelf()).toBeInTheDocument();
   });
 });
 

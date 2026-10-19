@@ -7,6 +7,7 @@ import { editHeading } from '../CompendiumList/heading';
 import IngredientForm from '../IngredientForm';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
+import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
 
@@ -37,7 +38,7 @@ export default function EntryDialog({
       closeHref={closeHref}
       content={
         opened && {
-          heading: editHeading(entry),
+          heading: editHeading(entry, EDIT_ENTRY_EYEBROW),
           body: (done) => (
             <IngredientForm
               // A fresh form per entry, inside the one modal.

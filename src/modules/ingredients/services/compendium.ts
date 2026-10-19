@@ -241,6 +241,7 @@ export async function updateCompendiumEntry(
       id,
       { ...lists, ...curated.children, heldDeities: held },
       'replace',
+      curator,
     );
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));

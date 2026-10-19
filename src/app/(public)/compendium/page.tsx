@@ -6,6 +6,7 @@ import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/Comp
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
 import PageHeader from '../../../components/PageHeader';
+import { entryRecency } from '../../../lib/entry-recency';
 import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../lib/pagination';
@@ -87,6 +88,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     variants: page.variants[i],
     toxic: node.toxic,
     safetyNotes: node.safetyNotes,
+    recency: entryRecency(node.createdAt, node.updatedAt),
   }));
 
   // Who may add: a role that may create an ingredient and stock it (`canWrite`, set in

@@ -17,13 +17,13 @@ It follows the menu-button pattern of the ARIA Authoring Practices Guide, as the
 | `busyLabel` | Optional: the label while busy, "Adding"                                                       |
 | `ref`       | Optional: the button, so a caller can give the focus back to it after a dialog a choice opened |
 
-A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructive`. It is either a link, with `href` and an optional `onClick` that runs first and may prevent the navigation, or an action, with `onSelect`.
+A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructive` or `constructive`. It is either a link, with `href` and an optional `onClick` that runs first and may prevent the navigation, or an action, with `onSelect`.
 
 ## Contracts
 
 - **The keys.** Opening, by a press or ArrowDown on the button, puts the focus on the first choice. ArrowDown and ArrowUp move through the choices and wrap at the ends; Home and End go to the first and the last. Escape closes the menu and gives the focus back to the button. Tab and a press outside close it.
 - **Choosing closes first.** A choice closes the menu and then runs its action, or follows its link. A choice that opens a dialog gives the focus back to the button through `ref` once the dialog closes, since the menu item has gone.
-- **It fades in and out** over the short motion, `$motion-short` (the owner's call, 2026-10-19). A closing menu stays drawn until its fade-out ends, inert and hidden from assistive technology, so nothing finds or focuses it on its way out. A browser that never reports the end still unmounts it after 400ms, and under reduced motion it goes at once.
+- **It fades in and out** over the short motion, `$motion-short` (the owner's call, 2026-10-19). A constructive choice, Add to Cupboard, is in the accent green and filled the same way. A closing menu stays drawn until its fade-out ends, inert and hidden from assistive technology, so nothing finds or focuses it on its way out. A browser that never reports the end still unmounts it after 400ms, and under reduced motion it goes at once.
 - **Busy is shut.** While `busy`, the button is disabled, carries `aria-busy`, and shows the spinner and `busyLabel` in place of the label and chevron.
 - **Look.** The menu is the bar's Add Ingredient menu: a card hung under the button's end edge, small text, and the quiet fill on hover and focus. A destructive choice is in the destructive colour, and filled with it on hover and focus as `.btn--destructive` is (the owner's call, 2026-10-19).
 

@@ -11,8 +11,14 @@ export default {
 };
 
 const ITEMS: MenuButtonItem[] = [
-  { key: 'edit', label: 'Edit Entry', href: '/?edit' as Route, onClick: (e) => e.preventDefault() },
+  {
+    key: 'edit',
+    label: 'Edit Compendium Entry',
+    href: '/?edit' as Route,
+    onClick: (e) => e.preventDefault(),
+  },
   { key: 'annotate', label: 'Annotate', onSelect: () => {} },
+  { key: 'add', label: 'Add to Cupboard', constructive: true, onSelect: () => {} },
   { key: 'own', label: 'Make It Ours', onSelect: () => {} },
   { key: 'remove', label: 'Remove', destructive: true, onSelect: () => {} },
 ];

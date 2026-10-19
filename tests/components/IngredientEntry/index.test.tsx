@@ -656,6 +656,20 @@ describe('IngredientEntry', () => {
   });
 });
 
+describe('IngredientEntry back link', () => {
+  it('links back to the list it was given, and shows none when it is given none', () => {
+    const { unmount } = renderEntry();
+    expect(screen.queryByRole('link', { name: /^Back to/ })).not.toBeInTheDocument();
+    unmount();
+
+    renderEntry({ back: { href: '/compendium' as Route, label: 'Compendium' } });
+    expect(screen.getByRole('link', { name: /^Back to Compendium/ })).toHaveAttribute(
+      'href',
+      '/compendium',
+    );
+  });
+});
+
 describe('IngredientEntry references', () => {
   const noteMarks = (region: HTMLElement) =>
     within(region).queryAllByRole('link', { name: /^Note \d+$/ });
@@ -932,7 +946,7 @@ describe('IngredientEntry edit', () => {
     ...overrides,
   });
   const opened = { id: '00000000-0000-4000-8000-000000000001', values: EMPTY_VALUES };
-  const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+  const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
 
   beforeEach(() => {
     router.push.mockReset();
@@ -1064,9 +1078,9 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Planets')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // Annotated stands in for Compendium; a compendium entry is never Local.
+    // Annotated sits beside Compendium; a compendium entry is never Local.
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-    expect(screen.queryAllByRole('status')).toHaveLength(0);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
@@ -1103,5 +1117,38 @@ describe('IngredientEntry on a coven page', () => {
 
     expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+describe('IngredientEntry recency (MB.106)', () => {
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  it('marks a compendium entry created lately New', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ createdAt: daysAgo(2) }) }) });
+
+    expect(screen.getByText('New', { exact: true })).toBeInTheDocument();
+  });
+
+  it('marks an older compendium entry changed lately Updated', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ updatedAt: daysAgo(2) }) }) });
+
+    expect(screen.getByText('Updated', { exact: true })).toBeInTheDocument();
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+  });
+
+  it('marks neither on an entry unchanged for longer', () => {
+    renderEntry();
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  });
+
+  it("marks neither on a coven's own entry, however new", () => {
+    renderEntry({
+      detail: detail({ entry: entryRow({ workspaceId: COVEN, createdAt: daysAgo(1) }) }),
+    });
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
   });
 });

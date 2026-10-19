@@ -18,6 +18,7 @@ import './index.scss';
 // which must know which tab is open, and the switch they share with the
 // action and the panel are the client parts; the action and the content pass
 // through them from the server.
+// A page with a single tab (a member who cannot invite sees only Members) draws no row.
 // The row rides in `PageHeader`'s trailing children with the action, a
 // fragment spreading into the header's flex row in the order heading, tabs,
 // action, so the header needs no slot of its own for it.
@@ -28,9 +29,12 @@ const TabbedPage = ({ title, tabs, action, children }: TabbedPageProps): ReactEl
         title={title}
         action={
           <>
-            <nav aria-label={title} className="tabbed-page__tabs">
-              <TabLinks tabs={tabs} />
-            </nav>
+            {/* One tab has nowhere to switch to, so no row is drawn. */}
+            {tabs.length > 1 && (
+              <nav aria-label={title} className="tabbed-page__tabs">
+                <TabLinks tabs={tabs} />
+              </nav>
+            )}
             <TabAction>{action}</TabAction>
           </>
         }

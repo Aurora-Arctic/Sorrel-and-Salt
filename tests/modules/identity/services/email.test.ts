@@ -9,6 +9,7 @@ import {
   type EmailVerificationSender,
 } from '@/modules/identity';
 import { A, B, asUser } from '../../../support/as-user';
+import { asTouch } from '../../../support/db/touch-row';
 import type { EmailUserRow } from './types';
 
 // Story 59's service half: asking for an address writes nothing to
@@ -74,7 +75,12 @@ beforeEach(async () => {
   vi.mocked(sender.requestChange).mockClear();
   // Both start unverified and stamped by someone else, so a stamp of their own
   // id is visible as this call's write.
-  await sql`update users set email_verified = false, updated_by = ${A.id} where id = ${B.id}`;
+  // A save that changes no column keeps updated_by (migration 0079), so the
+  // stamp is written under the touch setting, as writeChildren does.
+  await asTouch(
+    sql,
+    (tx) => tx`update users set email_verified = false, updated_by = ${A.id} where id = ${B.id}`,
+  );
   await sql`update users set email_verified = false where id = ${A.id}`;
   await setSentAt(B.id, null);
 });

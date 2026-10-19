@@ -249,7 +249,7 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    it('shows the held mark, and Annotated in its place once a field is overridden', () => {
+    it('shows the held mark, and Annotated beside it once a field is overridden', () => {
       const held = render(<IngredientCard {...BASE} kind="cupboard" />);
       expect(heldMark()).toBeInTheDocument();
       expect(screen.getAllByRole('status')).toHaveLength(1);
@@ -257,8 +257,8 @@ describe('IngredientCard', () => {
 
       render(<IngredientCard {...BASE} kind="cupboard" annotated />);
       expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-      expect(heldMark()).toBeNull();
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      expect(heldMark()).toBeInTheDocument();
+      expect(screen.getAllByRole('status')).toHaveLength(1);
     });
 
     it('shows the retired mark in place of the held one', () => {
@@ -315,5 +315,23 @@ describe('IngredientCard actions', () => {
   it('draws no foot without actions or jar lines', () => {
     render(<IngredientCard {...BASE} />);
     expect(screen.queryByRole('button')).toBeNull();
+  });
+});
+
+describe('IngredientCard recency (MB.106)', () => {
+  it.each([
+    ['new', 'New'],
+    ['updated', 'Updated'],
+  ] as const)('shows %s as text on a compendium entry', (recency, shown) => {
+    render(<IngredientCard {...BASE} kind="compendium" recency={recency} />);
+
+    expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
+  });
+
+  it('shows neither with no recency', () => {
+    render(<IngredientCard {...BASE} kind="compendium" recency={null} />);
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
   });
 });
