@@ -11,7 +11,7 @@
   height: 0.6em;
   margin-inline-start: space(1);
   border-radius: 50%;
-  background: currentColor;
+  background: $accent;
   opacity: 0;
   visibility: hidden;
 
@@ -31,14 +31,17 @@
   }
 }
 
+// In the accent colour at full strength, pulsing to half: at the link's own
+// colour and a third of its strength the dot was too faint to notice (the
+// owner's call, 2026-10-19).
 @keyframes link-hint-in {
   to {
-    opacity: 0.35;
+    opacity: 1;
   }
 }
 
 @keyframes link-hint-pulse {
   50% {
-    opacity: 0.15;
+    opacity: 0.4;
   }
 }

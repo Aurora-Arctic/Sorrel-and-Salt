@@ -33,6 +33,10 @@ it never shows.
   moves nothing.
 - When pending it appears after a 100ms delay, so a fast navigation never
   flashes it, then fades in and pulses.
+- It is drawn in the accent colour (`$accent`) at full strength and pulses down
+  to 40%, so it reads beside any link colour. At the link's own colour and a
+  third of its strength it was too faint to notice (the owner's call,
+  2026-10-19).
 - Its delay is the `$loading-delay` token (100ms), the same hold-back the
   spinner and the page bar use.
 - Under `prefers-reduced-motion` it shows after the same delay and pulses,

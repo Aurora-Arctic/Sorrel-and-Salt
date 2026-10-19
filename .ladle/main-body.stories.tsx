@@ -25,7 +25,7 @@ const Page = (): ReactElement => (
 
 // At rest the body shows its page. Press the link to see it swap.
 export const AtRest: Story = () => (
-  <Navigating>
+  <Navigating bar>
     <ShellFrame area="none">
       <Page />
     </ShellFrame>
@@ -35,7 +35,7 @@ export const AtRest: Story = () => (
 // The same page, opened with its link already pressed: the page has gone and
 // the skeleton stands in a `main` of its own, under the page bar.
 export const LoadingPage: Story = () => (
-  <Navigating press="Compendium">
+  <Navigating bar press="Compendium">
     <ShellFrame area="none">
       <Page />
     </ShellFrame>

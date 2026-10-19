@@ -322,7 +322,7 @@ so their stories live in `.ladle/`:
 
 - `Main Body` (`.ladle/main-body.stories.tsx`): `AtRest` shows a page inside the shell;
   `LoadingPage` opens with its link already pressed, so the page has gone and the
-  `page` skeleton stands in its `main`.
+  `page` skeleton stands in its `main`, under the page bar.
 - `Pending Link` (`.ladle/pending-link.stories.tsx`): `AtRest` is a link with its
   hint; `LoadingLink` opens pressed, with the dot showing and `aria-busy` set.
 
