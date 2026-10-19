@@ -301,7 +301,7 @@ export const NothingRecorded: Story = () => (
 );
 
 // A compendium entry this coven holds in its cupboard, with nothing changed
-// (M12.16): marked From the Compendium, and no Local badge.
+// (M12.16): marked Compendium, and no Local badge.
 export const FromTheCompendium: Story = () => (
   <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />
 );

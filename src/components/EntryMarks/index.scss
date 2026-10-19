@@ -1,0 +1,27 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A tipped badge (Retired, Annotated) and its tip together: the tip's anchor, and the box the
+// pointer may cross onto the tip within. Lifted above the ingredient card's
+// stretched link so a click on it opens the tip and does not navigate.
+.entry-mark-tip {
+  @include tip-anchor;
+
+  position: relative;
+  z-index: 1;
+}
+
+// A button that only opens its tip: the badge look, the help cursor, a focus ring.
+.entry-mark--tip {
+  font-family: inherit;
+  cursor: help;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.entry-mark__tip {
+  // Placed by `useTip`, which keeps it on the screen wherever the badge wraps to.
+  @include tip-above;
+}

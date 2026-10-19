@@ -432,6 +432,40 @@ $track-inset: calc(1px + 0.125rem);
   justify-self: end;
 }
 
+// The cards variant (a list of ingredient cards): the same grid the real list
+// draws, `$ingredient-card-min` wide at the least, each a card-surface block of
+// a heading bar, a shorter caption bar and a chips bar. Equal in height, as the
+// real cards are.
+.tab-skeleton__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$ingredient-card-min}), 1fr));
+  gap: space(4);
+}
+
+.tab-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  min-height: 9rem;
+  padding: space(5);
+  border-radius: radius('surface');
+  background-color: $surface-card;
+
+  > span:nth-child(1) {
+    width: 60%;
+    height: 1.25rem;
+  }
+
+  > span:nth-child(2) {
+    width: 40%;
+  }
+
+  > span:nth-child(3) {
+    width: 75%;
+    margin-block-start: auto;
+  }
+}
+
 // Prev and Next, centred beneath the table as the pager is.
 .tab-skeleton__pager {
   display: flex;

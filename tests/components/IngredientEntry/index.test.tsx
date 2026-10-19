@@ -299,13 +299,13 @@ describe('IngredientEntry', () => {
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
-  it('marks a retired entry with a status in its head, and a live one with none', () => {
+  it('marks a retired entry with a Retired button in its head, and a live one with none', () => {
     const { unmount } = renderEntry();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retired' })).not.toBeInTheDocument();
     unmount();
 
     renderEntry({ detail: detail({ retired: true }) });
-    expect(screen.getByRole('status').closest('header')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Retired' }).closest('header')).not.toBeNull();
   });
 
   it('marks the entry Toxic when a form is, though the ingredient is not', () => {
@@ -371,7 +371,7 @@ describe('IngredientEntry', () => {
     const links = within(substitutes).getAllByRole('link');
     expect(links).toHaveLength(2);
     for (const link of links) expect(link).toHaveAttribute('href', LINKED_HREF);
-    expect(links[1]).toHaveTextContent('testoil');
+    expect(links[1]).toHaveTextContent('Testoil');
     expect(within(substitutes).getByText('Typed Testleaf')).not.toHaveRole('link');
     expect(within(substitutes).getByText('Typed Testleaf').closest('a')).toBeNull();
   });
@@ -1025,11 +1025,9 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Planets')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // The marks are statuses; a compendium entry is never Local.
-    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
-      'From the Compendium',
-      'Annotated',
-    ]);
+    // Annotated stands in for Compendium; a compendium entry is never Local.
+    expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
+    expect(screen.queryAllByRole('status')).toHaveLength(0);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
@@ -1037,9 +1035,7 @@ describe('IngredientEntry on a coven page', () => {
     renderEntry({ detail: detail({ cupboardEntry: held() }) });
 
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
-    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
-      'From the Compendium',
-    ]);
+    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual(['Compendium']);
     expect(screen.getAllByText('Testwort')).toHaveLength(1);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });

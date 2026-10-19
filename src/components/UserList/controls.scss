@@ -35,21 +35,12 @@
 }
 
 // Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
-// InfoTip's, above the mark or button from its left edge, no wider than
+// InfoTip's, placed by `useTip` above the mark or button, no wider than
 // `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`,
 // the marks' and logos' centred tip, which takes no pointer: these stay open while hovered.
 .user-list__control-tip {
-  @include tip-above(start, $tip-layer);
+  @include tip-above($tip-layer);
 
   // Its cell keeps to one line; the reason wraps within the bubble.
   white-space: normal;
-}
-
-// The locked Revoke's, placed against the viewport by its script rather than
-// the cell, so the table's scrolling frame cannot clip it. Its side margin is
-// the gutter the script keeps between it and the screen's edge.
-.user-list__control-tip--fixed {
-  position: fixed;
-  bottom: auto;
-  margin-inline: space(4);
 }

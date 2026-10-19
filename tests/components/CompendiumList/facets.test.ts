@@ -201,6 +201,7 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
       { value: 'compendium', count: 0 },
     ],
     inStock: 3,
+    lowStockOnly: 2,
   };
 
   it('carries both Source values, zero kept, and the In Stock count beside the shared kinds', () => {
@@ -214,6 +215,7 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
       ['compendium', 0],
     ]);
     expect(counts.inStock).toBe(3);
+    expect(counts.lowStockOnly).toBe(2);
     expect(counts.toxic.map(({ value, count }) => [value, count])).toEqual([['toxic', 2]]);
   });
 
@@ -221,5 +223,6 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
     const counts = compendiumFacetCounts(EMPTY, VOCABULARIES);
     expect(counts).not.toHaveProperty('source');
     expect(counts).not.toHaveProperty('inStock');
+    expect(counts).not.toHaveProperty('lowStockOnly');
   });
 });

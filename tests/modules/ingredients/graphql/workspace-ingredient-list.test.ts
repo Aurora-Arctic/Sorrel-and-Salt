@@ -66,6 +66,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $toxic: ToxicFilter
       $source: IngredientSource
       $inStock: Boolean
+      $lowStockOnly: Boolean
       $first: Int
       $after: String
     ) {
@@ -82,6 +83,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         toxic: $toxic
         source: $source
         inStock: $inStock
+        lowStockOnly: $lowStockOnly
         first: $first
         after: $after
       ) {
@@ -243,8 +245,13 @@ describe('workspaceIngredients', () => {
     expect(await badges({ inStock: true })).toEqual([['Heldwort', true]]);
     expect(await badges({ inStock: false })).toHaveLength(2);
 
+    // A jar with no quantity is held, never low.
+    expect(await names({ lowStockOnly: true })).toEqual([]);
+
     await sql`update inventory_items set quantity_on_hand = 0 where id = ${jar}`;
     expect(await names({ inStock: true })).toEqual([]);
+    expect(await names({ lowStockOnly: true })).toEqual(['Heldwort']);
+    expect(await names({ lowStockOnly: false })).toHaveLength(2);
 
     const refused = await run(asUser(B), { source: 'both' });
     expect(refused.errors).toHaveLength(1);

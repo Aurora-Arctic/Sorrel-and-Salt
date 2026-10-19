@@ -1907,12 +1907,18 @@
     gap: space(3);
   }
 
+  // The name block and the badges side by side while they fit; when they do not
+  // (a long name), the badges wrap onto their own row beneath, at the left, with
+  // `space(3)` between the rows. The name block grows, so beside it the badges are
+  // pushed to the right edge.
   .specimen__top {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     // The badge cluster hugs its own content rather than stretching.
     align-items: flex-start;
     gap: space(4);
+    row-gap: space(3);
 
     h4 {
       margin-bottom: 0;
@@ -1927,19 +1933,79 @@
     gap: space(2);
   }
 
-  .specimen__stock {
-    display: flex;
-    justify-content: space-between;
-    gap: space(4);
-    margin: 0;
-    padding-top: space(2);
-    border-top: 1px solid $text-muted;
-    font-size: type-size('caption');
-    color: $text-muted;
-    opacity: 0.85;
+  // Takes only the room it needs. Rows start at the left: when the group sits
+  // under the name it fills the row and wraps within itself, and CSS cannot tell
+  // that from the group beside the name, so both are left-aligned. Beside the
+  // name it still sits at the right, since the name block takes the spare room.
+  .specimen__badges {
+    flex: 0 1 auto;
+    // Air below the group, which only shows when it sits under the name: beside it
+    // the name block is the taller one, so the row is no higher. 12px + this = 20px.
+    margin-block-end: space(2);
   }
 
-  .specimen__threshold {
-    white-space: nowrap;
+  // The chip row is a list in the real card, so it drops the ◆ marker and indent.
+  .specimen__chips {
+    @include list-reset;
+  }
+
+  // The foot holds the jar lines and the actions. `margin-top: auto` takes up any
+  // spare height when the card is stretched to a grid row, so the foot lands at the
+  // bottom; on its own it is nothing. The padding is the air between the chips and
+  // the rule (20px with the card's own gap; owner trimmed it from 24).
+  .specimen__foot {
+    margin-top: auto;
+    padding-top: $ingredient-card-forms-air;
+  }
+
+  // The jar lines, under a rule: the `small` size so the stock badges do not outweigh
+  // them, in muted ink (the 0.85 opacity is reset so the badges keep their own inks).
+  .specimen__stock {
+    display: block;
+    margin: 0;
+    // Air between the rule and the first line, and after the last line.
+    padding-block: space(3) space(2);
+    border-top: 1px solid $text-muted;
+    font-size: type-size('small');
+    color: $text-muted;
+  }
+
+  // The jar lines are a list: one `li` per jar, the form and quantity first and the
+  // stock badge last, so the badge lands at the right edge.
+  .specimen__stock > ul {
+    @include list-reset;
+
+    display: flex;
+    flex-direction: column;
+    // Jar lines with 24px badges nearly touched; a step apart reads as separate lines.
+    gap: space(2);
+
+    > li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: space(2);
+
+      > span {
+        display: inline-flex;
+        align-items: center;
+        gap: space(1);
+
+        // Out of the flex flow, as in the forms line, so the dot has the same gap
+        // either side; still read aloud.
+        > .spoken-separator {
+          position: absolute;
+        }
+      }
+    }
+  }
+
+  // Right-aligned buttons beneath the jar lines.
+  .specimen__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: space(2);
+    margin-top: space(3);
   }
 }

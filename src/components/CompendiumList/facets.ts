@@ -5,6 +5,7 @@ import type {
 } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type {
   CategoryFacetChoice,
   CompendiumCategoryChoice,
@@ -66,6 +67,7 @@ export function covenFacetCounts(
       count,
     })),
     inStock: facets.inStock,
+    lowStockOnly: facets.lowStockOnly,
   };
 }
 
@@ -84,7 +86,7 @@ export function compendiumFacetCounts(
     forms: facets.forms
       .map(({ value, count }): FormFacetChoice => ({
         value,
-        label: value,
+        label: formLabel(value),
         count,
         icon: formIcons.get(value.toLocaleLowerCase()) ?? null,
       }))

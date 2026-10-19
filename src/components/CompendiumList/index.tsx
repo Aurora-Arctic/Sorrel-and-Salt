@@ -7,6 +7,7 @@ import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
@@ -72,7 +73,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
               {i > 0 && ' '}
               <span className="compendium-list__form">
                 <FormIcon name={icon} />
-                {i < entry.forms.length - 1 ? `${name},` : name}
+                {i < entry.forms.length - 1 ? `${formLabel(name)},` : formLabel(name)}
               </span>
             </Fragment>
           ))}

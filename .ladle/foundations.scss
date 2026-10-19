@@ -365,14 +365,10 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     border-radius: radius('control');
     background-color: $surface-page;
 
-    // A phone's width has no room to spare: less ground around the card, and the
-    // badges drop under the name rather than squeezing the Latin name beside them.
+    // A phone's width has no room to spare: less ground around the card. The badges
+    // drop under the name by themselves, as the card's top row wraps.
     @media (max-width: 30rem) {
       padding: space(3);
-
-      .specimen__top {
-        flex-wrap: wrap;
-      }
     }
   }
 

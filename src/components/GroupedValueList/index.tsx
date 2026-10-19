@@ -1,3 +1,4 @@
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import StackTable, { GroupChip, updatedColumn } from '../DataTable';
@@ -31,6 +32,8 @@ const GroupedValueList = ({
   position,
 }: GroupedValueListProps): ReactElement => {
   const { title, label, plural, group } = KINDS[kind];
+  // A form's name is shown in title case; the other kinds' names as saved.
+  const shown = (name: string): string => (kind === 'form' ? formLabel(name) : name);
   // An empty list says how to fill it; a filtered one with no rows, which
   // filters left none: the name, and the group by its name.
   const groupName = groups.find(({ slug }) => slug === filter.group)?.name ?? filter.group;
@@ -59,7 +62,7 @@ const GroupedValueList = ({
             whose groups are drawn in chips taller than a line of text. */}
         <StackTable
           columns={[
-            { heading: 'Name', cell: (entry) => entry.name },
+            { heading: 'Name', cell: (entry) => shown(entry.name) },
             group && {
               heading: group.label,
               cell: (entry) => (
@@ -81,7 +84,11 @@ const GroupedValueList = ({
               hiddenHeading: true,
               action: 'corner',
               cell: (entry) => (
-                <EditLink href={entry.editHref} name={entry.name} heading={entry.editHeading} />
+                <EditLink
+                  href={entry.editHref}
+                  name={shown(entry.name)}
+                  heading={entry.editHeading}
+                />
               ),
             },
           ]}

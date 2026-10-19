@@ -229,12 +229,17 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Six palettes, deliberately not equals. Two appear on an IngredientCard.
+Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
-alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
-exactly one alarming badge in the app and spends no hue, which matters because every
-hue not already reserved belongs to one of the eight groups. **Last used** marks
+alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
+(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its label on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. It also keeps its word, drawing and heavier border, so its meaning never rests on colour. That keeps
+exactly one alarming badge in the app and spends no new hue, which matters because every
+hue not already reserved belongs to one of the eight groups.
+
+**Caution** (M8.14) marks an ingredient or form that carries safety notes. It is the safety red as a tint with a red edge (`$wax-caution-dark`, `$wax-caution-light`: the wax at +15% saturation, lifted 30% for dark and darkened 4% for light), so Toxic stays the one solid badge. Its label on its tint measures 4.94:1 dark and 6.49:1 light, and its edge 3.68:1 and 4.47:1 on the dark and light cards (3.89:1 and 4.18:1 on the pages). Beside Out of Stock it differs only in saturation, so the word, not the colour, tells them apart.
+
+**Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
 dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.
@@ -256,6 +261,8 @@ than solid, so it never reads as last-used's pointer. Dark takes
 because `$sorrel-vivid` on its own tint measured 4.42:1, under 4.5. As drawn,
 its label on its tint is 5.60:1 dark and 6.98:1 light, and its edge 4.23:1 and
 4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
+
+**Annotated** (M8.14) marks a compendium entry with the coven's own changes. It wears Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens (the same idea as an entry of its own), tinted, with Local's contrast. It is its own palette, never `badge--local`.
 
 **Retired** (M12.24) marks a compendium entry the curators have retired, on
 the ingredient page of a coven whose cupboard still names it. It is a fact
@@ -1084,9 +1091,10 @@ heavier than the reverse; light reverts to the browser default.
   reads, which the `.visually-hidden` class includes); `button-reset` (a
   button with its box taken away); `stack($step)` (a column a step of space
   apart); `busy-faded` (colour out and `$opacity-disabled` left);
-  `tip-anchor` and `tip-above($align, $layer, $capped)` (what a tip is
-  placed against, and a bubble above it, capped to `$tip-width` and the
-  window); `tip-bubble-open` (a bubble's open state alone, for one opened
+  `tip-anchor` and `tip-above($layer, $capped)` (a fixed bubble, placed by
+  `useTip` through Floating UI and kept on screen; capped to `$tip-width` and
+  the window; a `$align` still pins the old way and is for EntryMarks and
+  IngredientCard until they adopt the hook); `tip-bubble-open` (a bubble's open state alone, for one opened
   by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
   and `icon-button-remove` (the accent and the wax); `chevron-flip` (the
@@ -1115,7 +1123,7 @@ heavier than the reverse; light reverts to the browser default.
     `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
     `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
-    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
+    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*` (the `IngredientCard`'s look; Foundations renders the card itself),
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
     screen reader reads and nothing draws, such as a live region's news, and `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it in the name (MB.115).
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,

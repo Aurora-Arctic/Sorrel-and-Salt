@@ -54,21 +54,17 @@
   color: $secondary;
 }
 
-// A mark or a logo that says what it is in a tip bubble on hover, the form
-// tips' look, centred above it. The bubble takes no pointer, so it never
-// blocks the row it overlaps.
+// A mark or a logo that says what it is in a tip bubble on hover (hint.tsx),
+// the form tips' look, placed by `useTip`. The bubble takes no pointer, so it
+// never blocks the row it overlaps.
 .user-list__hint {
   position: relative;
 }
 
 .user-list__tip {
-  @include tip-above(center, $tip-layer, false);
+  @include tip-above($tip-layer, false);
 
   pointer-events: none;
-}
-
-.user-list__hint:hover .user-list__tip {
-  @include tip-bubble-open;
 }
 
 // The linked providers' marks in a row, each on its brand's circle, the
@@ -123,11 +119,10 @@
   }
 }
 
-// Above the icon from its left edge, rather than centred as the marks' tips
-// are: the icon starts the row's first cell, and a centred tip would run past
-// the table's scrolling frame, which clips it.
+// Above the icon, placed by `useTip`: the icon starts the row's first cell, and
+// the tip is shifted back onto the screen where it would run past its edge.
 .user-list__history-tip {
-  @include tip-above(start, $tip-layer, false);
+  @include tip-above($tip-layer, false);
 }
 
 // Email and its verified mark, side by side.

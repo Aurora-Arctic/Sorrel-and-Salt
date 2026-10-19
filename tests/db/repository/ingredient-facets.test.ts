@@ -305,7 +305,7 @@ describe('findCompendiumFacets', () => {
       return logged.filter(({ query }) => !/set_config/.test(query));
     }
 
-    it('sends at most eight reads for the compendium and ten for a coven, with a search or without', async () => {
+    it('sends at most eight reads for the compendium and eleven for a coven, with a search or without', async () => {
       await seedEntries();
       const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
       const browse: IngredientFilter = { zodiacSigns: ['leo'] };
@@ -324,7 +324,7 @@ describe('findCompendiumFacets', () => {
       // value would send far more than eight.
       expect(compendium[0].length).toBeGreaterThan(0);
       for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(8);
-      for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(10);
+      for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);
     });
   });
 

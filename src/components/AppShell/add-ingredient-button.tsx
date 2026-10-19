@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useEffect, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
@@ -42,7 +43,7 @@ const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 function savedMessage(saved: SavedIngredient): string {
   const jars = (saved.stock ?? []).map(
     ({ variant, quantityOnHand, unit }) =>
-      `the jar of ${variant.form} holding ${
+      `the jar of ${formLabel(variant.form)} holding ${
         quantityOnHand === null ? 'an unmeasured amount' : `${quantityOnHand} ${unit ?? ''}`.trim()
       }`,
   );

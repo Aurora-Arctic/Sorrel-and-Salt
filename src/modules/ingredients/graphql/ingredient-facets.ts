@@ -142,12 +142,16 @@ export const IngredientFacetsRef = builder
       source: t.field({
         type: [SourceFacetCountRef],
         description:
-          'local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock included.',
+          'local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock and lowStockOnly included.',
         resolve: (facets) => facets.source,
       }),
       inStock: t.exposeInt('inStock', {
         description:
           'How many entries the list would hold with inStock on, the rest of the filter kept, source included: the same whether inStock is chosen or not.',
+      }),
+      lowStockOnly: t.exposeInt('lowStockOnly', {
+        description:
+          'How many entries the list would hold with lowStockOnly on, the rest of the filter kept, source included: the same whether lowStockOnly is chosen or not.',
       }),
     }),
   });

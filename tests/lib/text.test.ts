@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addressTaken, capitalise, joinAnd, noMatchText, plural } from '@/lib/text';
+import { addressTaken, capitalise, joinAnd, noMatchText, plural, titleCase } from '@/lib/text';
 
 // The English a refusal is phrased in (MB.210): one counting rule and one
 // list rule for every service, so a refusal never says "1 forms" or lists
@@ -56,5 +56,46 @@ describe('noMatchText', () => {
 
   it('gives the empty text when no filter is in force', () => {
     expect(noMatchText('NOUNS', [], 'EMPTY')).toBe('EMPTY');
+  });
+});
+
+describe('titleCase', () => {
+  it('raises each word', () => {
+    expect(titleCase('dried leaf')).toBe('Dried Leaf');
+  });
+
+  it('keeps small words lower-case after the first word', () => {
+    expect(titleCase('oil of cloves')).toBe('Oil of Cloves');
+    expect(titleCase('salt and pepper with a twist')).toBe('Salt and Pepper with a Twist');
+  });
+
+  it('raises a small word that opens the text', () => {
+    expect(titleCase('the root')).toBe('The Root');
+    expect(titleCase('of old')).toBe('Of Old');
+  });
+
+  it('raises every part of a hyphenated word', () => {
+    expect(titleCase('cold-pressed oil')).toBe('Cold-Pressed Oil');
+    expect(titleCase('freeze-dried')).toBe('Freeze-Dried');
+  });
+
+  it('leaves a word with a capital inside alone', () => {
+    expect(titleCase('pH strip')).toBe('pH Strip');
+    expect(titleCase('CBD oil')).toBe('CBD Oil');
+  });
+
+  it('collapses extra whitespace and trims', () => {
+    expect(titleCase('  whole   root  ')).toBe('Whole Root');
+  });
+
+  it('returns the empty string for empty or blank text', () => {
+    expect(titleCase('')).toBe('');
+    expect(titleCase('   ')).toBe('');
+  });
+
+  it('folds to the same identity as the text it came from', () => {
+    for (const form of ['dried leaf', 'oil of cloves', 'cold-pressed oil', ' whole root ']) {
+      expect(titleCase(form).toLowerCase()).toBe(form.trim().toLowerCase());
+    }
   });
 });
