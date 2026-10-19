@@ -276,6 +276,7 @@ const CompendiumList = ({
       rows={entries}
       rowKey={(entry) => entry.id}
       empty={emptyText(filter, categories, facets)}
+      className="data-table--nowrap"
     />
   </IngredientSearch>
 );
