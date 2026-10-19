@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import LinkHint from '@/components/LinkHint';
+import LinkHint, { LinkIconHint } from '@/components/LinkHint';
 
 let pending = false;
 
@@ -39,5 +39,46 @@ describe('LinkHint', () => {
     expect(hint).toHaveAttribute('aria-hidden', 'true');
     expect(hint).toHaveClass('is-pending');
     expect(screen.getByRole('link', { name: 'Name' })).toBeInTheDocument();
+  });
+});
+
+// A link that wears the chain icon shows no dot: the icon is what turns into
+// the loading ring while the link is pending (M12.33, the owner's call). The
+// ring is the shared Spinner, found by its class as it has no role.
+describe('LinkIconHint', () => {
+  beforeEach(() => {
+    pending = false;
+  });
+
+  it('draws the chain icon and no ring at rest, and no dot at all', () => {
+    const { container } = render(
+      <a href="/x">
+        Name <LinkIconHint />
+      </a>,
+    );
+    expect(container.querySelector('svg')).toBeInTheDocument();
+    expect(container.querySelector('.spinner')).not.toBeInTheDocument();
+    expect(container.querySelector('.link-hint')).not.toBeInTheDocument();
+  });
+
+  it('swaps the icon for the ring while the link is pending, and back after', () => {
+    pending = true;
+    const { container, rerender } = render(
+      <a href="/x">
+        Name <LinkIconHint />
+      </a>,
+    );
+    expect(container.querySelector('.spinner')).toHaveAttribute('aria-hidden', 'true');
+    expect(container.querySelector('.link-icon-hint')).toHaveClass('is-pending');
+    expect(screen.getByRole('link', { name: 'Name' })).toBeInTheDocument();
+
+    pending = false;
+    rerender(
+      <a href="/x">
+        Name <LinkIconHint />
+      </a>,
+    );
+    expect(container.querySelector('.spinner')).not.toBeInTheDocument();
+    expect(container.querySelector('.link-icon-hint')).not.toHaveClass('is-pending');
   });
 });

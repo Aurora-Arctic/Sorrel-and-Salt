@@ -39,6 +39,10 @@ follows `href` as before.
 
 ## Where it is used
 
+- **`LinkIcon` inside a link** is drawn through `LinkIconHint`
+  ([`link-hint.md`](link-hint.md)), so the chain turns into the loading ring
+  while the link is pending; the bare `LinkIcon` is the glyph alone.
+
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.

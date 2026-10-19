@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Route } from 'next';
-import { EditLink, LinkIcon } from '../IconTip';
-import LinkHint from '../LinkHint';
+import { EditLink } from '../IconTip';
+import { LinkIconHint } from '../LinkHint';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
@@ -46,8 +46,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
         href={`/compendium/ingredients/${entry.slug}` as Route}
       >
         {entry.name}
-        <LinkIcon />
-        <LinkHint />
+        <LinkIconHint />
       </Link>
     ),
   },

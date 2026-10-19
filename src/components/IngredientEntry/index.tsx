@@ -10,8 +10,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
-import { LinkIcon } from '../IconTip';
-import LinkHint from '../LinkHint';
+import LinkHint, { LinkIconHint } from '../LinkHint';
 import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
@@ -427,8 +426,7 @@ function ReplacesBlock({
             <li key={href}>
               <Link href={href}>
                 <span className="ingredient-entry__entry-title">{title}</span>
-                <LinkIcon />
-                <LinkHint />
+                <LinkIconHint />
               </Link>
             </li>
           ))}

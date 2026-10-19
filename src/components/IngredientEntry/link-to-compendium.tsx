@@ -8,8 +8,8 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import IconTip, { LinkIcon } from '../IconTip';
-import LinkHint from '../LinkHint';
+import IconTip from '../IconTip';
+import { LinkIconHint } from '../LinkHint';
 import Modal from '../Modal';
 import Notice from '../Notice';
 
@@ -111,8 +111,7 @@ export default function LinkToCompendium({
               </label>
               <IconTip tip="Open">
                 <Link href={href}>
-                  <LinkIcon />
-                  <LinkHint />
+                  <LinkIconHint />
                   <span className="visually-hidden">Open {title}</span>
                 </Link>
               </IconTip>

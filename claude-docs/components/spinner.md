@@ -24,6 +24,9 @@ it; nothing else should draw its own.
 - It is `1em` square and takes the colour of the text around it, so it
   scales with its label.
 
+- **A link's chain icon turns into it** while the link is pending
+  ([`LinkIconHint`](link-hint.md)), in the icon's own `1em` box.
+
 ## Stories
 
 `Feedback / Loading / Spinner`: `Default` and `Larger`.

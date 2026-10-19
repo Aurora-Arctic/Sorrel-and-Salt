@@ -45,3 +45,39 @@
     opacity: 0.4;
   }
 }
+
+// The chain icon that becomes the ring (`LinkIconHint`): one 1em box holding
+// both, stacked, so the swap moves nothing. The box takes the place and
+// spacing the bare svg had in the link (the `icon-link` mixin's), and the
+// svg and the ring fill it. The icon is hidden once the ring appears
+// (`loading-appear`, the same zero-length step the ring uses), and where
+// motion is reduced the ring pulses (Spinner's own `loading-motion`).
+.link-icon-hint {
+  display: inline-grid;
+  width: 1em;
+  height: 1em;
+  margin-inline-start: space(1);
+  vertical-align: -0.125em;
+  flex: none;
+
+  // Doubled class: out-ranks the `icon-link` mixin's and the entry page's own `svg` rules,
+  // whose margin belongs to the box now, not to the svg inside it.
+  &.link-icon-hint > svg,
+  &.link-icon-hint > .spinner {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    vertical-align: baseline;
+  }
+
+  &.is-pending.link-icon-hint > svg {
+    animation: link-icon-out 0s linear $loading-delay forwards;
+  }
+}
+
+@keyframes link-icon-out {
+  to {
+    visibility: hidden;
+  }
+}
