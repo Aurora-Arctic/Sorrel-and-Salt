@@ -6,21 +6,21 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File                       | What it holds                                                                                  |
-| -------------------------- | ---------------------------------------------------------------------------------------------- |
-| `modal.tsx`                | `Modal`, the default export                                                                    |
-| `route-modal.tsx`          | `RouteModal`                                                                                   |
-| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes             |
-| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once") |
-| `loading.tsx`              | `ModalLoading`, the skeleton a modal shows while its contents are on the way                   |
-| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                     |
-| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                           |
-| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                |
-| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                              |
-| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                           |
-| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                              |
-| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                |
-| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest   |
+| File                       | What it holds                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------- |
+| `modal.tsx`                | `Modal`, the default export                                                                     |
+| `route-modal.tsx`          | `RouteModal`                                                                                    |
+| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes              |
+| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once")  |
+| `loading.tsx`              | `ModalLoading`, a thin user of the shared `Skeleton` (`form` shape) a modal shows while loading |
+| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                      |
+| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                            |
+| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                 |
+| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                               |
+| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                            |
+| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                               |
+| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                 |
+| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest    |
 
 ## Props
 
@@ -447,8 +447,10 @@ The form arrives in the same dialog.
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
   mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
   is given `edit` (M8.19; the two entry routes have no layout one). It keeps the heading of the
-  modal just pressed and runs `router.push(href)` inside `useTransition`
-  (a React call that marks a change as in progress until it finishes). It
+  modal just pressed and navigates through `usePendingNavigation`
+  (`src/lib/navigation/`), which runs `router.push(href)` inside a React
+  transition (a call that marks a change as in progress until it finishes);
+  the page bar shows as well ([`../loading.md`](../loading.md)). It
   offers `loading` (that heading while the push is pending, otherwise
   nothing), `open(href, heading)` and `cancel()`. The workshop, whose
   router goes nowhere, supplies its own value through the exported
@@ -472,7 +474,8 @@ The form arrives in the same dialog.
   modal are the same `<Modal>` at the same place in the page, so React keeps
   the one `<dialog>` and it fades in once, not twice. The form inside is
   keyed by the row's id, so opening another row starts a fresh form.
-- **The skeleton** (`ModalLoading`, `loading.tsx`) is a visually hidden
+- **The skeleton** (`ModalLoading`, `loading.tsx`) is the shared
+  [`Skeleton`](skeleton.md) in its `form` shape: a visually hidden
   `<output>Loading</output>` (a status a screen reader announces) and
   placeholder shapes hidden from it: four label-and-box pairs and a row of two
   buttons. While it shows, `Modal`'s `loading` prop marks the body
