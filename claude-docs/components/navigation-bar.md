@@ -24,7 +24,9 @@ bar along the bottom edge of the global bar while a navigation is on its way.
 The stylesheet's `[data-leaving]` rule sets `display: block` so the author
 rule beats the browser's `hidden`, and puts the fade on that state. The 100ms
 hold-back before it shows is the component's timer, not a CSS delay, so a
-navigation that settles first can cancel it.
+navigation that ends first can cancel it. The bar reads the site-wide wait
+from `NavigationProvider`, which React ends by itself when the navigation's
+transition ends; see [`../loading.md`](../loading.md).
 
 The stylesheet is imported where the app's other global sheets are
 (`src/app/providers.tsx`).
