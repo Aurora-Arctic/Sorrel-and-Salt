@@ -20,8 +20,11 @@ export default {
 // The bar is `position: fixed` against the window, but the frame pads the shell
 // in from the window's edge. A transformed box makes it the bar's containing
 // block, so the bar lands on the bottom edge of the global bar as in the app.
+// The box also becomes the skip link's, whose hiding (lifted above the page's
+// top edge) then leaves it in view; the clip hides it again, and it still shows
+// on focus, where it moves back inside the box.
 const BarFrame = ({ children }: { children: ReactNode }): ReactElement => (
-  <div style={{ transform: 'translateZ(0)' }}>
+  <div style={{ transform: 'translateZ(0)', overflow: 'hidden' }}>
     <ShellFrame area="none">{children}</ShellFrame>
   </div>
 );
