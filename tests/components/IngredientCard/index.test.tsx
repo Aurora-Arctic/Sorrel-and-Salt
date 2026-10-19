@@ -360,7 +360,7 @@ describe('IngredientCard navigation', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
     });
     expect(router.push.mock.calls[0]?.[0]).toBe(HREF);
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry' });
+    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
   });
 
   it("presses through to a coven's entry as a coven page with its jump menu", async () => {
@@ -377,6 +377,6 @@ describe('IngredientCard navigation', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
     });
-    expect(target).toEqual({ region: 'coven', shape: 'page', frame: 'entry' });
+    expect(target).toEqual({ region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' });
   });
 });

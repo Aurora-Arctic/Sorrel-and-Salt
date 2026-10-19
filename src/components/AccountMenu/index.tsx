@@ -36,7 +36,7 @@ const Chevron = (): ReactElement => (
 );
 
 // The account page: its sections beside the jump menu.
-const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav' } as const;
+const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
 
 const AccountMenu = ({
   name,

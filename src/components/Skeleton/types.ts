@@ -3,6 +3,9 @@ import type { ReactNode } from 'react';
 /** What a skeleton stands in for. */
 export type SkeletonShape = 'table' | 'cards' | 'form' | 'page' | 'contents' | 'line';
 
+/** A page's head: a title and a lede (the default), with an `eyebrow` above them, or the `title` alone. */
+export type SkeletonHead = 'eyebrow' | 'title' | undefined;
+
 export interface SkeletonProps {
   /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks), `contents` (a heading and titled lists of links, the admin index) or `line` (one line of text, for a sentence that loads in place). */
   shape: SkeletonShape;
@@ -18,6 +21,8 @@ export interface SkeletonProps {
   menu?: boolean;
   /** With `menu`: the content fills the wide column beside the menu, as an ingredient's entry does, not the narrow column of the coven home. */
   entry?: boolean;
+  /** A `page` or `contents` skeleton's head, drawn at the size of the real one. */
+  head?: 'eyebrow' | 'title';
   /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
   count?: number;
 }

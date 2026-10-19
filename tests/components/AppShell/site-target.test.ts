@@ -23,6 +23,7 @@ describe('siteLinkTarget', () => {
     expect(siteLinkTarget('/coven', '/coven/fixture-coven')).toMatchObject({
       shape: 'page',
       frame: 'with-nav',
+      head: 'eyebrow',
     });
   });
 
@@ -46,6 +47,7 @@ describe('ingredientLinkTarget', () => {
       region: 'main',
       shape: 'page',
       frame: 'entry',
+      head: 'eyebrow',
     });
   });
 
@@ -54,6 +56,7 @@ describe('ingredientLinkTarget', () => {
       region: 'coven',
       shape: 'page',
       frame: 'entry',
+      head: 'eyebrow',
     });
   });
 
@@ -62,6 +65,7 @@ describe('ingredientLinkTarget', () => {
       region: 'main',
       shape: 'page',
       frame: 'entry',
+      head: 'eyebrow',
     });
   });
 

@@ -16,7 +16,7 @@ export const siteLinkTarget = (base: string, href: string = base): NavigationTar
   if (base === '/coven') {
     return href === base
       ? { region: 'main', shape: 'page', frame: 'narrow' }
-      : { region: 'main', shape: 'page', frame: 'with-nav' };
+      : { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   }
   if (base === '/admin') return { region: 'main', shape: 'contents', frame: 'wide' };
   return { region: 'main', shape: 'page' };
@@ -37,7 +37,7 @@ export const ingredientLinkTarget = (
 ): NavigationTarget | undefined => {
   const path = href.split(/[?#]/)[0] ?? href;
   if (path.startsWith('/compendium/ingredients/')) {
-    return { region: 'main', shape: 'page', frame: 'entry' };
+    return { region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' };
   }
   if (path === '/compendium') return siteLinkTarget('/compendium');
   if (covenSlugOf(path) === null) return undefined;

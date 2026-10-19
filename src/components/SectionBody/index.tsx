@@ -35,6 +35,7 @@ export default function SectionBody({
             filter={target.filter}
             menu={target.frame === 'with-nav' || target.frame === 'entry'}
             entry={target.frame === 'entry'}
+            head={target.head}
           />
         </main>
       ) : (

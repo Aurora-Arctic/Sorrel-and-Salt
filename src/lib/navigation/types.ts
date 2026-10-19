@@ -15,6 +15,11 @@ export type NavigationTarget = {
    * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column
    * with a side menu drawn, on a `page`) or `entry` (the wide column with a side menu, an ingredient's page). None is the standard centred frame.
    */
+  /**
+   * The head of a `page` or `contents`: `eyebrow` draws an eyebrow above the
+   * title, `title` the title alone; none is a title and a lede.
+   */
+  head?: 'eyebrow' | 'title';
   frame?: 'wide' | 'narrow' | 'with-nav' | 'entry';
 };
 

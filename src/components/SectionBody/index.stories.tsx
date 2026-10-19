@@ -52,7 +52,18 @@ export const LoadingTabs: Story = () => (
 
 // The coven's home: the page with its contents menu beside it.
 export const LoadingWithMenu: Story = () => (
-  <Waiting name="Overview" target={{ region: 'coven', shape: 'page', frame: 'with-nav' }} />
+  <Waiting
+    name="Overview"
+    target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' }}
+  />
+);
+
+// The account page: a title alone over its menu and panels.
+export const LoadingAccount: Story = () => (
+  <Waiting
+    name="Account"
+    target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'title' }}
+  />
 );
 
 // The admin index: its heading and line, then titled lists of links (no cards).
