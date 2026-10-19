@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useEffect, useState } from 'react';
+import './navigation-bar.scss';
 import { BAR_FADE_MS, LOADING_DELAY_MS } from './timing';
 import { useNavigationState } from './use-navigation';
 
