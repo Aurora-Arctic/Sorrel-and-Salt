@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
@@ -10,7 +10,8 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 // decide is their own tests'; the page's own reads run for real over them. Here: the guard on
 // the slug from the address, one page of 24 with one stock call for the whole page, the address
 // becoming the filter, what a card shows of the coven's label, kind and jars, and the edit
-// dialog `?edit=<id>` opens over the list on the coven's own entry (M8.17).
+// dialog `?edit=<id>` opens over the list on the coven's own entry, and the Annotate dialog
+// `?annotate=<id>` opens over it on a compendium entry the cupboard holds (M8.17).
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
@@ -41,6 +42,7 @@ const stockOf = vi.fn();
 const variantsOf = vi.fn();
 const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
+const heldCompendiumEntry = vi.fn();
 vi.mock('@/modules/ingredients', async (importActual) => ({
   ...(await importActual<typeof import('@/modules/ingredients')>()),
   listWorkspaceIngredients,
@@ -49,6 +51,7 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
   variantsOf,
   workspaceIngredientFacets,
   getIngredient,
+  heldCompendiumEntry,
 }));
 
 // The form is its own tests'; here only which ways out of it lead where.
@@ -59,6 +62,27 @@ vi.mock('@/components/IngredientForm', () => ({
         Save
       </button>
       <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
+    </form>
+  ),
+}));
+
+// The Annotate form is its own tests' too; here, which entry it was handed and its way out.
+vi.mock('@/components/CupboardEntryForm', () => ({
+  default: ({
+    ingredientId,
+    compendium,
+    overrides,
+    onDone,
+  }: {
+    ingredientId: string;
+    compendium: { name: string };
+    overrides: { label: string | null };
+    onDone: () => void;
+  }) => (
+    <form aria-label={`Annotate ${ingredientId}, ${compendium.name}, ${overrides.label}`}>
+      <button type="button" onClick={onDone}>
         Cancel
       </button>
     </form>
@@ -180,10 +204,10 @@ describe('the coven Ingredients page', () => {
       within(list)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href'))
-        // A member's Edit is the next test's.
-        .filter((href) => !href?.includes('edit=')),
+        // A member's Edit and Annotate are the dialogs' tests'.
+        .filter((href) => !href?.includes('edit=') && !href?.includes('annotate=')),
     ).toEqual(['/coven/fixture-coven/ingredients/a1', '/coven/fixture-coven/ingredients/b2']);
-    expect(within(list).getByRole('link', { name: /House Salt/ })).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /^House Salt/ })).toBeInTheDocument();
   });
 
   it('draws the jar a coven holds on its form', async () => {
@@ -219,7 +243,7 @@ describe("the coven Ingredients page's edit dialog", () => {
   it("gives a member Edit on the coven's own entry alone, keeping the filter, and reads nothing until asked", async () => {
     await renderPage({ source: 'local' });
     // Both rows are on the page, so Edit's absence on the compendium's is the rule, not the fixture.
-    expect(screen.getByRole('link', { name: /House Salt/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^House Salt/ })).toBeInTheDocument();
     const edits = editLinks();
     expect(edits).toHaveLength(1);
     expect(edits[0]).toHaveAccessibleName('Edit Testwort');
@@ -231,7 +255,7 @@ describe("the coven Ingredients page's edit dialog", () => {
   it('gives a viewer no Edit', async () => {
     asRole('viewer');
     await renderPage();
-    expect(screen.getByRole('link', { name: /Testwort/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^Testwort/ })).toBeInTheDocument();
     expect(editLinks()).toHaveLength(0);
   });
 
@@ -280,5 +304,101 @@ describe("the coven Ingredients page's edit dialog", () => {
 
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
+  });
+});
+
+describe("the coven Ingredients page's Annotate dialog", () => {
+  const asRole = (role: string) =>
+    requireCovenMembership.mockResolvedValue({
+      workspace: COVEN,
+      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
+    });
+  const annotateLinks = () =>
+    within(screen.getByRole('list', { name: 'Ingredients' })).queryAllByRole('link', {
+      name: /^Annotate/,
+    });
+  const annotateDialog = () => screen.queryByRole('dialog', { name: 'Annotate This Entry' });
+  const FILTERED_HREF = '/coven/fixture-coven/ingredients?source=local';
+  const SALT = { ...row('b2', 'Fixture Salt', null), description: null };
+  const held = (entry: { id: string; deletedAt: Date | null } = SALT) => ({
+    entry,
+    cupboardEntry: { ingredientId: entry.id, label: 'House Salt', description: null },
+  });
+
+  beforeEach(() => {
+    heldCompendiumEntry.mockImplementation(async (_membership: unknown, id: string) =>
+      id === 'b2' ? held() : undefined,
+    );
+  });
+
+  it('gives a member Annotate on the compendium entry alone, keeping the filter, and reads nothing until asked', async () => {
+    await renderPage({ source: 'local' });
+    // Both rows are on the page, so Annotate's absence on the coven's own is the rule.
+    expect(screen.getByRole('link', { name: /^Testwort/ })).toBeInTheDocument();
+    const annotates = annotateLinks();
+    expect(annotates).toHaveLength(1);
+    expect(annotates[0]).toHaveAccessibleName('Annotate House Salt');
+    expect(annotates[0]).toHaveAttribute('href', `${FILTERED_HREF}&annotate=b2`);
+    expect(annotateDialog()).not.toBeInTheDocument();
+    expect(heldCompendiumEntry).not.toHaveBeenCalled();
+  });
+
+  it('gives Annotate on a retired entry the cupboard still holds', async () => {
+    listWorkspaceIngredients.mockResolvedValue([
+      {
+        node: { ...row('b2', 'Fixture Salt', null), deletedAt: new Date('2026-10-01') },
+        cursor: { key: ['Fixture Salt'], id: 'b2' },
+        cupboardEntry: { label: 'House Salt', description: null },
+      },
+    ]);
+    variantsOf.mockResolvedValue([[]]);
+    stockOf.mockResolvedValue([[]]);
+    await renderPage();
+    expect(annotateLinks()).toHaveLength(1);
+  });
+
+  it('gives a viewer no Annotate', async () => {
+    asRole('viewer');
+    await renderPage();
+    expect(screen.getByRole('link', { name: /^House Salt/ })).toBeInTheDocument();
+    expect(annotateLinks()).toHaveLength(0);
+  });
+
+  it('opens the held entry under ?annotate=<id>, read on the coven’s proof, with its values and the coven’s', async () => {
+    await renderPage({ annotate: 'b2' });
+    const { membership } = await requireCovenMembership.mock.results[0].value;
+    expect(heldCompendiumEntry).toHaveBeenCalledWith(membership, 'b2');
+    const dialog = annotateDialog()!;
+    expect(
+      within(dialog).getByRole('form', { name: 'Annotate b2, Fixture Salt, House Salt' }),
+    ).toBeInTheDocument();
+  });
+
+  it('opens a retired entry the cupboard still holds', async () => {
+    heldCompendiumEntry.mockResolvedValue(held({ ...SALT, deletedAt: new Date('2026-10-01') }));
+    await renderPage({ annotate: 'b2' });
+    expect(annotateDialog()).toBeInTheDocument();
+  });
+
+  it('opens nothing for a viewer, and reads nothing', async () => {
+    asRole('viewer');
+    await renderPage({ annotate: 'b2' });
+    // The entry is held: a member asking for the same address gets the dialog (above).
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(heldCompendiumEntry).not.toHaveBeenCalled();
+  });
+
+  it('opens nothing for an id the cupboard does not hold, the coven’s own entry included', async () => {
+    await renderPage({ annotate: 'a1' });
+    // The read was made, and the cupboard named nothing.
+    expect(heldCompendiumEntry).toHaveBeenCalledWith(expect.anything(), 'a1');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('goes back to the filtered list on Cancel', async () => {
+    await renderPage({ source: 'local', annotate: 'b2' });
+    fireEvent.click(within(annotateDialog()!).getByRole('button', { name: 'Cancel' }));
+    // The form closes the modal through its own close, which fades out first.
+    await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
   });
 });

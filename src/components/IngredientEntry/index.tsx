@@ -32,6 +32,7 @@ import type {
 } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
+import { cupboardFormValues } from '../CupboardEntryForm/entry-values';
 import EditButton from './edit-button';
 import { editEyebrow } from './edit-heading';
 import {
@@ -541,24 +542,7 @@ const IngredientEntry = ({
                     edit={edit ? { href: edit.href, entry: editable } : undefined}
                     ingredientId={entry.id}
                     held={held}
-                    compendium={{
-                      name: entry.name,
-                      description: entry.description,
-                      safetyNotes: entry.safetyNotes,
-                      elements: entry.elements ?? [],
-                      celestialBodies: entry.celestialBodies ?? [],
-                      zodiacSigns: entry.zodiacSigns ?? [],
-                      colors: entry.colors ?? [],
-                    }}
-                    overrides={{
-                      label: cupboardEntry?.label ?? null,
-                      description: cupboardEntry?.description ?? null,
-                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
-                      elements: cupboardEntry?.elements ?? null,
-                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
-                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
-                      colors: cupboardEntry?.colors ?? null,
-                    }}
+                    {...cupboardFormValues(entry, cupboardEntry)}
                   />
                 )}
               </>

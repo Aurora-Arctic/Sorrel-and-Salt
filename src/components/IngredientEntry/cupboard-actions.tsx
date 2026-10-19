@@ -10,13 +10,12 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import CupboardEntryForm from '../CupboardEntryForm';
 import { editHeading } from '../CompendiumList/heading';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
-import Modal, { RouteModal, useOpenModalClick } from '../Modal';
-import { useRouteModalOpener } from '../Modal/route-modal-provider';
+import Modal, { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
+import AnnotateDialog from './annotate-dialog';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
@@ -94,10 +93,6 @@ export default function CupboardActions({
   );
 
   const openAnnotate = useOpenModalClick(annotate.href, ANNOTATE_HEADING);
-
-  // Edit's press shows its skeleton here too; this place leaves that one to it.
-  const loading = useRouteModalOpener()?.loading;
-  const annotating = annotate.opened || loading?.title === ANNOTATE_HEADING.title;
 
   const settle = (): void => setAsking(undefined);
 
@@ -277,28 +272,11 @@ export default function CupboardActions({
           )}
         </Modal>
       )}
-      {annotating && (
-        <RouteModal
-          closeHref={annotate.closeHref}
-          returnTo={back}
-          content={
-            annotate.opened
-              ? {
-                  heading: ANNOTATE_HEADING,
-                  body: (done) => (
-                    <CupboardEntryForm
-                      workspaceId={workspaceId}
-                      ingredientId={ingredientId}
-                      compendium={compendium}
-                      overrides={overrides}
-                      onDone={done}
-                    />
-                  ),
-                }
-              : undefined
-          }
-        />
-      )}
+      <AnnotateDialog
+        closeHref={annotate.closeHref}
+        returnTo={back}
+        opened={annotate.opened ? { workspaceId, ingredientId, compendium, overrides } : undefined}
+      />
       {alert && <Notice kind="error">{alert}</Notice>}
     </div>
   );

@@ -1,4 +1,8 @@
-import type { CompendiumValues, CupboardOverrides } from '../CupboardEntryForm/types';
+import type {
+  CompendiumValues,
+  CupboardEntryFormProps,
+  CupboardOverrides,
+} from '../CupboardEntryForm/types';
 import type { Route } from 'next';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
@@ -160,4 +164,15 @@ export interface CupboardActionsProps extends CupboardProps {
   overrides: CupboardOverrides;
   /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
   edit?: { href: Route; entry: EditableEntry };
+}
+
+/**
+ * The coven's Annotate dialog (`annotate-dialog.tsx`): where closing goes, where the
+ * focus goes back to when RouteModal's own fallbacks do not fit, and the form's values
+ * once the address asks for the dialog. Left out, it shows only while a press loads it.
+ */
+export interface AnnotateDialogProps {
+  closeHref: Route;
+  returnTo?: () => HTMLElement | null | undefined;
+  opened?: Omit<CupboardEntryFormProps, 'onDone'>;
 }

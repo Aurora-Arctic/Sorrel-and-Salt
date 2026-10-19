@@ -8,6 +8,8 @@ import {
   covenIngredientsPath,
 } from '../../../../../components/CompendiumList/href';
 import type { CovenListFilter } from '../../../../../components/CompendiumList/types';
+import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
+import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-dialog';
 import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
@@ -22,6 +24,7 @@ import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   CONVERT_PERMISSION,
+  heldCompendiumEntry,
   isAnnotated,
   isRetired,
 } from '@/modules/ingredients';
@@ -32,8 +35,10 @@ import {
 // alone (CLAUDE.md rule 6). The shell draws no `<main>`, so the page does. The address carries
 // the compendium list's filters plus Source, In Stock and Low Stock Only (`COVEN_PARAMS`), and
 // the page reads one page of 24 under them. A member's card for the coven's own entry has
-// Edit, which opens the entry page's dialog over the list under `?edit=<id>`; closing or
-// saving comes back to the list as it was, filter and page kept (M8.17).
+// Edit, which opens the entry page's dialog over the list under `?edit=<id>`, and a card
+// for a compendium entry the cupboard holds has Annotate, which opens the entry page's
+// Annotate dialog under `?annotate=<id>`; closing or saving either comes back to the list
+// as it was, filter and page kept (M8.17).
 // claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
@@ -53,6 +58,12 @@ export default async function CovenIngredientsPage({
   const editId = typeof query.edit === 'string' && query.edit ? query.edit : undefined;
   // Read only for a role that may edit: a viewer's `?edit` opens nothing and reads nothing.
   const edited = mayEdit && editId ? await readEditedEntry(workspace.id, editId) : undefined;
+  const annotateId =
+    typeof query.annotate === 'string' && query.annotate ? query.annotate : undefined;
+  // The same rule for Annotate, as the entry page's: a compendium entry the coven holds, a
+  // retired one included; an own entry or one not held opens nothing.
+  const annotated =
+    mayEdit && annotateId ? await heldCompendiumEntry(membership, annotateId) : undefined;
 
   // The address names categories and deities by slug; the service filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
@@ -94,6 +105,14 @@ export default async function CovenIngredientsPage({
             { edit: node.id },
           ),
           editHeading: editHeading(shown),
+        }),
+      ...(!own &&
+        mayEdit && {
+          annotateHref: covenIngredientsHref(
+            workspace.slug,
+            { ...filter, after, before },
+            { annotate: node.id },
+          ),
         }),
       annotated: cupboardEntry !== null && isAnnotated(cupboardEntry),
       retired: isRetired(node),
@@ -149,6 +168,18 @@ export default async function CovenIngredientsPage({
               mayLink: rolePermits(membership.role, CONVERT_PERMISSION),
             },
           }}
+        />
+      )}
+      {mayEdit && (
+        <AnnotateDialog
+          closeHref={listHref}
+          opened={
+            annotated && {
+              workspaceId: workspace.id,
+              ingredientId: annotated.entry.id,
+              ...cupboardFormValues(annotated.entry, annotated.cupboardEntry),
+            }
+          }
         />
       )}
     </main>

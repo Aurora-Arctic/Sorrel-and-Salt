@@ -34,17 +34,18 @@ export const covenIngredientsPath = (covenSlug: string): Route =>
   `/coven/${covenSlug}/ingredients` as Route;
 
 /**
- * The coven list under a filter, at a page, with its own entry's edit dialog open
- * over it or not (M8.17): the coven's twin of `compendiumHref`.
+ * The coven list under a filter, at a page, with a dialog open over it or not (M8.17):
+ * its own entry's edit dialog (`?edit=<id>`), or a held compendium entry's Annotate
+ * (`?annotate=<id>`). The coven's twin of `compendiumHref`.
  */
 export function covenIngredientsHref(
   covenSlug: string,
   place: Partial<CovenListFilter> & SearchCursor,
-  dialog?: { edit: string },
+  dialog?: { edit: string } | { annotate: string },
 ): Route {
   return COVEN_PARAMS.href(covenIngredientsPath(covenSlug), place, {
     after: place.after,
     before: place.before,
-    ...dialogParams(dialog),
+    ...(dialog && 'annotate' in dialog ? { annotate: dialog.annotate } : dialogParams(dialog)),
   });
 }
