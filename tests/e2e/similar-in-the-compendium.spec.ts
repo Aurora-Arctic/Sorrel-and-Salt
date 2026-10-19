@@ -77,7 +77,7 @@ test('a member makes an own entry the compendium entry it matches, jar and all',
   await assertNoAccessibilityViolations(page);
 
   await expect(page.getByRole('button', { name: 'Link to Selected' })).toBeDisabled();
-  await page.getByText('Fixture Similar Wort', { exact: true }).click();
+  await page.getByRole('radio', { name: 'Fixture Similar Wort' }).check();
   await expect(page.getByRole('radio', { name: 'Fixture Similar Wort' })).toBeChecked();
   await expect(page.getByRole('link', { name: /^Open Fixture Similar Wort/ })).toBeVisible();
   await page.getByRole('button', { name: 'Link to Selected' }).click();
