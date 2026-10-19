@@ -10,26 +10,40 @@
 // "robots.txt is valid" audits correctly fail, and so does every Vercel
 // preview. A failure against staging or a preview is the site working.
 //
-// usage: node scripts/lighthouse-seo.mjs <base-url> [--port <chrome-debugging-port>]
+// usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>]
 //   <base-url>  where the production-env server answers, e.g. http://localhost:8001
+//               (from the devcontainer's own side, a server it runs is
+//               http://devcontainer:<port> to the browser)
 //   --port      use a Chrome already listening for DevTools on this port; without
 //               it a local Chrome is launched headless with `chrome-launcher`,
 //               which needs Chrome installed on the machine running this. The
-//               devcontainer has none, and its remote Playwright browser gave no
-//               DevTools port that could be reached (MB.84).
+//               devcontainer has none, and the Playwright servers open no
+//               DevTools port (they launch Chromium over a pipe), so it uses the
+//               `lighthouse-chrome` container instead (`make lighthouse-up` on
+//               the host, MB.84). .devcontainer/docker-compose.yml sets
+//               LIGHTHOUSE_CDP_HOST and LIGHTHOUSE_CDP_PORT, which are the
+//               defaults here, so there `--host` and `--port` are not needed.
+//   --host      the machine that Chrome's port is on (default localhost).
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
+import { lookup } from 'node:dns/promises';
 
 const USAGE =
-  'usage: node scripts/lighthouse-seo.mjs <base-url> [--port <chrome-debugging-port>]\n' +
+  'usage: node scripts/lighthouse-seo.mjs <base-url> [--host <name>] [--port <chrome-debugging-port>]\n' +
   'Only meaningful against a server running with VERCEL_ENV=production: off production\n' +
   'the noindex header and the disallow-all robots.txt make the crawlability audits fail.';
 
 const args = process.argv.slice(2);
-const portAt = args.indexOf('--port');
-const port = portAt === -1 ? undefined : Number(args.splice(portAt, 2)[1]);
+/** Removes `flag value` from `args` and returns the value. */
+function takeOption(flag) {
+  const at = args.indexOf(flag);
+  return at === -1 ? undefined : args.splice(at, 2)[1];
+}
+const hostName = takeOption('--host') ?? process.env.LIGHTHOUSE_CDP_HOST;
+const portText = takeOption('--port') ?? process.env.LIGHTHOUSE_CDP_PORT;
+const port = portText === undefined ? undefined : Number(portText);
 const [base] = args;
-if (!base || args.length !== 1 || (portAt !== -1 && !Number.isInteger(port))) {
+if (!base || args.length !== 1 || (port !== undefined && !Number.isInteger(port))) {
   console.error(USAGE);
   process.exit(2);
 }
@@ -45,6 +59,12 @@ async function firstEntryPath() {
 
 const paths = ['/', '/compendium', await firstEntryPath()];
 
+// An IP, not the name: Chrome answers DevTools requests only when the Host
+// header is an IP or `localhost`, and it builds the WebSocket address it
+// hands back from that same header. Lighthouse sends the `hostname` flag as
+// the Host header, so a name like `lighthouse-chrome` would be refused.
+const hostname = port && hostName ? (await lookup(hostName, { family: 4 })).address : undefined;
+
 const chrome = port
   ? undefined
   : await launch({ chromeFlags: ['--headless=new', '--no-sandbox'] }).catch((error) => {
@@ -57,6 +77,7 @@ try {
   for (const path of paths) {
     const { lhr } = await lighthouse(`${origin}${path}`, {
       port: port ?? chrome.port,
+      ...(hostname && { hostname }),
       onlyCategories: ['seo'],
       output: 'json',
       logLevel: 'error',

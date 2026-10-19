@@ -12,7 +12,7 @@
 	db-generate db-migrate db-seed db-drop db-reset db-reset-demo db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
-	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down docker-codegen \
+	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down lighthouse-up lighthouse-down docker-codegen \
 	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -204,6 +204,15 @@ playwright-audit-up:
 ## Stop the audit's browser server
 playwright-audit-down:
 	$(COMPOSE) --profile audit stop playwright-audit
+
+# For `npm run lighthouse:seo` from the devcontainer: the same image as the audit's.
+## Start the Chromium with a DevTools port for Lighthouse (compose profile: audit)
+lighthouse-up:
+	$(COMPOSE) --profile audit up -d lighthouse-chrome
+
+## Stop the Lighthouse Chromium
+lighthouse-down:
+	$(COMPOSE) --profile audit stop lighthouse-chrome
 
 # `sorrel-app`, not `app`: browsers HSTS-preload the `app` gTLD.
 ## Record a Playwright spec on the browser server's display (:7900) — pass NAME=<spec>

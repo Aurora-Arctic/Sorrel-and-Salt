@@ -57,6 +57,11 @@ services:
       # e2e:audit`): the WebKit, Firefox and phone audit's browsers on
       # `playwright-audit` (`make playwright-audit-up`, M10.25).
       PLAYWRIGHT_AUDIT_WS_ENDPOINT: ws://playwright-audit:4444/
+      # Likewise here only: where `npm run lighthouse:seo` finds Chromium's
+      # DevTools port, on `lighthouse-chrome` (`make lighthouse-up`, MB.84).
+      # `scripts/lighthouse-seo.mjs` turns the name into an IP itself.
+      LIGHTHOUSE_CDP_HOST: lighthouse-chrome
+      LIGHTHOUSE_CDP_PORT: '9222'
       # As `app`, so `npm run dev` and `npm run e2e` here mail into Mailpit.
       MAIL_TRANSPORT: mailpit
       MAILPIT_URL: http://mailpit:8025
