@@ -15,9 +15,10 @@
 // button, Clear All and the tray, which opens inside the form and so travels with it. The
 // sticky box is the `<search>`, whose parent `.list-frame` spans the results; the form
 // inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
-// Opaque so the cards do not show through. The padding above is the row's own air when stuck;
-// the negative margin of the same size cancels it at rest, so the page lays out as without it.
-// The padding below, `space(2)`, is real space between the row and the cards, as it always was. The tray is anchored to the form inside, not to this box, so the padding
+// Opaque behind the row and its padding below, so the cards do not show through. The air above
+// the stuck row is an offset added to `top`, not padding, so nothing is painted above the row
+// (the owner's call, 2026-10-19). The padding below, `space(2)`, is real space between the row
+// and what follows it. The tray is anchored to the form inside, not to this box, so the padding
 // never moves it from the input. While stuck (`data-stuck`, set by StuckMark) the row wears
 // the floating shadow, faded in and out.
 $stuck-pad: space(4);
@@ -30,10 +31,9 @@ $stuck-pad: space(4);
 .ingredient-search > search {
   position: sticky;
   // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
-  top: var(--sticky-top, 0px);
+  top: calc(var(--sticky-top, 0px) + #{$stuck-pad});
   z-index: layer('sticky-row');
-  margin-block-start: calc(-1 * #{$stuck-pad});
-  padding-block: $stuck-pad space(2);
+  padding-block-end: space(2);
   background-color: $surface-page;
   transition: box-shadow $modal-fade;
 
@@ -56,7 +56,7 @@ $stuck-pad: space(4);
 // One pixel at the row's resting place, which StuckMark watches.
 .ingredient-search__mark {
   position: absolute;
-  inset-block-start: calc(-1 * #{$stuck-pad});
+  inset-block-start: 0;
   inset-inline-start: 0;
   width: 1px;
   height: 1px;

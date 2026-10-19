@@ -73,11 +73,13 @@ in the filter slot to carry.
   results), with an opaque page background and the `sticky-row` layer, above the
   cards and below the bar, tips and dialogs. The offset is one custom property,
   `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
-  PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
-  above, cancelled at rest by an equal negative margin so the page lays out as
-  before, and `space(2)` below, real space between the row and the cards with no
-  cancelling margin (changed 2026-10-19, back to what it was); the tray hangs from the form inside, so the padding never moves it
-  from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  PublicFrame, whose header scrolls away, to 0. The stuck row sits `space(4)`
+  below that offset, added to `top` rather than padded, so the background is
+  painted behind the row and its padding below and never above it (the owner's
+  call, 2026-10-19). The `space(2)` below is real space between the row and what
+  follows; the search sentence under it takes the same back from the frame's gap,
+  so it sits a gap from the input as the cards sit a gap from it. The tray hangs
+  from the form inside, so the padding never moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
   IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
