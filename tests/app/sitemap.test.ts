@@ -15,6 +15,7 @@ vi.mock('@/modules/ingredients', () => ({
 describe('MB.84: sitemap', () => {
   it('lists the compendium and one absolute address per current entry, dated by its last change', async () => {
     expect(await sitemap()).toEqual([
+      { url: 'https://sorrelandsalt.com/' },
       { url: 'https://sorrelandsalt.com/compendium' },
       { url: 'https://sorrelandsalt.com/compendium/ingredients/testwort', lastModified },
       { url: 'https://sorrelandsalt.com/compendium/ingredients/fixtura-testalis', lastModified },

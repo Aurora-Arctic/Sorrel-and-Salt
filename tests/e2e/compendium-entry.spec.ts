@@ -105,6 +105,13 @@ test('a slug an entry has moved off answers 308 to its current address', async (
 
   expect(moved.status()).toBe(308);
   expect(moved.headers()['location']).toMatch(new RegExp(`/compendium/ingredients/${now}$`));
+  // A browser must not keep the move: the slug can be handed to a new entry (MB.84). Next sends
+  // `max-age=0` inside `no-store`; what is refused is any lifetime above zero.
+  const headers = moved.headers();
+  expect(headers['cache-control']).toContain('no-store');
+  expect(headers['cache-control']).not.toMatch(/max-age=[1-9]/);
+  expect(headers['expires']).toBeUndefined();
+  expect(headers['last-modified']).toBeUndefined();
 });
 
 test('a visitor reads an entry with its details and each form, on a page that fits a phone', async ({
