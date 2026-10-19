@@ -331,8 +331,6 @@ same 400ms as every other colour. Decorative, so no contrast table: nothing is
 read against them, and `prefers-contrast: more` removes the ornaments entirely
 ([`components/backdrop.md`](components/backdrop.md)).
 
-## Chips, badges and the solid-fill rule
-
 ## Category chips
 
 Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one
@@ -340,7 +338,7 @@ of two emphasis levels, both leading with a 6px dot in the group colour (`chip-d
 
 - **`full`**: the category chip, everywhere a category shows (the card, the entry page,
   pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
-  (8% over `$surface-card`; 14% at first, lowered the same day on the owner's call — the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of
+  (5% over `$surface-card`; 14% at first, lowered twice the same day on the owner's call — the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of
   `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
   own shape).
 - **`quiet`**: neutral ink and a `$hairline` border, the colour kept to the dot. For a control
@@ -362,30 +360,6 @@ eight seeded pairs on both surfaces of each theme, the lowest ratio in each is:
 A group an admin adds is held to 4.5:1 for its colour alone (M5.6b), a looser test than the
 eight seeded ones passed; the stirred label is checked against the seeded eight only, so a very
 pale or very dark admin colour is worth a look in the colour field's preview.
-
-## Chips, badges and the solid-fill rule
-
-## Category chips
-
-Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one
-of two emphasis levels, both leading with a 6px dot in the group colour (`chip-dot()`):
-
-- **`full`**: the category chip, everywhere a category shows (the card, the entry page,
-  pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
-  (8% over `$surface-card`), a border at 35%, and the label in the group colour with 30% of
-  `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
-  own shape).
-- **`quiet`**: neutral ink and a `$hairline` border, the colour kept to the dot. For a control
-  rather than a category: the card's +N button (and the colour field's preview, which shows both).
-
-**Why the ink is stirred in.** The old rule below says a wash of a group's own colour cannot
-hold 4.5:1, and it was right for the colour as text: with the pure colour on a 14% wash, the
-worst of the eight seeded groups (Mind & Spirit, light theme, on the parchment page) reads
-3.56:1. Mixing 30% of the body ink into the label lifts the worst case to 5.37:1. Checked with a
-script against all eight seeded pairs, each on both surfaces of its own theme (card and page),
-the lowest ratios are 5.37 (Mind & Spirit, light, page) and, across the rest, 5.4 and above. A
-group an admin adds clears the write check at 4.5:1 for the colour alone, so its label, which
-is nearer the body ink, is never worse than the colour's own.
 
 ## Chips, badges and the solid-fill rule
 

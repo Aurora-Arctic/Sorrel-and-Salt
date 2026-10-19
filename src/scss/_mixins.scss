@@ -198,7 +198,7 @@
 // 5.37:1 for all eight seeded groups on both surfaces of both themes (styling.md,
 // "Category chips"). The mix is of the pair's members, so a group an admin adds gets it too.
 @mixin chip-wash($color) {
-  background-color: color-mix(in srgb, $color 8%, $surface-card);
+  background-color: color-mix(in srgb, $color 5%, $surface-card);
   border-color: color-mix(in srgb, $color 35%, $surface-card);
   color: color-mix(in srgb, $text-primary 30%, $color);
 }
