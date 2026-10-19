@@ -85,7 +85,7 @@ beforeEach(() => {
 describe('the public compendium page', () => {
   it('lists the entry as a link to its own page for a visitor with no account', async () => {
     await renderPage();
-    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const list = screen.getByRole('list', { name: 'Compendium' });
     expect(within(list).getByRole('link', { name: /Testwort/ })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${NODE.slug}`,

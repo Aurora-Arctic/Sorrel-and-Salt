@@ -50,7 +50,7 @@ const CompendiumCards = ({
     {entries.length === 0 ? (
       <p>{emptyText(filter, categories, facets, 'The compendium is empty.')}</p>
     ) : (
-      <IngredientCardList label="Ingredients">
+      <IngredientCardList label="Compendium">
         {entries.map((entry) => (
           <IngredientCard
             key={entry.id}

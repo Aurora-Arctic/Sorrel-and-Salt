@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { type ReactElement, useMemo, useState } from 'react';
 import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
@@ -189,7 +190,7 @@ const CompendiumListFilterRow = ({
       pickHref={(match) =>
         audience === 'admin'
           ? compendiumHref(filter, { edit: match.slug })
-          : `/compendium/ingredients/${match.slug}`
+          : (`/compendium/ingredients/${match.slug}` as Route)
       }
       pickHeading={audience === 'admin' ? editHeading : undefined}
     >

@@ -102,7 +102,7 @@ describe('CompendiumCards', () => {
 
   it('lists each entry as a plain link to its own page, with no modal', () => {
     render(<Cards {...props()} />);
-    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const list = screen.getByRole('list', { name: 'Compendium' });
     const hrefs = within(list)
       .getAllByRole('link')
       .map((link) => link.getAttribute('href'));
