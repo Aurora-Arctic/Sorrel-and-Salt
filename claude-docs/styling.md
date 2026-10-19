@@ -1094,6 +1094,19 @@ What each section review (MB.115 to MB.124) designs to:
   phone width, with every text pairing at 4.5:1 and every edge a control
   depends on at 3:1.
 
+## Smooth scrolling
+
+The root sets `scroll-behavior: smooth` (`src/app/globals.scss`), so a jump to
+a section glides. Next scrolls to the top on a route change too, and it turns
+smooth scrolling off for that jump only if `<html>` carries
+`data-scroll-behavior="smooth"` (`src/app/layout.tsx`). Without the attribute
+the jump glides, then Next's scroll-into-view glides on and stops part-way
+down: 62px at a desktop's width, 40px at a phone's, after a move from an
+admin page to the Compendium. Keep the attribute for as long as the stylesheet
+sets the behaviour. `tests/e2e/route-scroll.spec.ts` proves it, with reduced
+motion switched off for that spec alone, because the suite's default turns
+the smooth scrolling off and hides the bug.
+
 ## Theme resolution
 
 `globals.scss` resolves **three** states, not two, and `.ladle/theme.scss`,
