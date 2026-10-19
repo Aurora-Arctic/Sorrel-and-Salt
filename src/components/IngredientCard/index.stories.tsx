@@ -167,9 +167,9 @@ export const ManyCategories: Story = () => (
     <IngredientCard
       {...BASE}
       categories={['Binding', 'Clarity', 'Healing', 'Protection', 'Sleep', 'Strength'].map(
-        (name) => ({
+        (name, index) => ({
           category: { id: name, name },
-          group: CATEGORIES[0].group,
+          group: CATEGORIES[index % CATEGORIES.length].group,
         }),
       )}
     />

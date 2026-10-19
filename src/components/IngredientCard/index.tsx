@@ -82,7 +82,7 @@ const IngredientCard = ({
         <ul className="specimen__chips" aria-label="Categories">
           {categories.slice(0, CATEGORY_CHIP_LIMIT).map(({ category, group }) => (
             <li key={category.id}>
-              <span className="chip chip--quiet" style={chipColors(group)}>
+              <span className="chip" style={chipColors(group)}>
                 {category.name}
               </span>
             </li>

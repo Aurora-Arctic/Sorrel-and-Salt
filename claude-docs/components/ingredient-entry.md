@@ -69,7 +69,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
 - **Every link to another page carries a `LinkHint`** (the substitutes, the In the Compendium links, the moved-away link), so a click shows it took while the server answers. The jump menu and the Edit button do not: the first stays on the page, the second opens a modal with its own skeleton. There is no `loading.tsx` and no Suspense boundary on purpose: one would turn the public route's 404 and 308 into 200s and break rendering without script (Next's `loading` file docs, "Status codes"). See [`link-hint.md`](link-hint.md).
 - **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
 - **The notes slot.** The References section is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above.
-- **Meaning never by colour alone.** Local, Toxic and Retired carry their words; a category chip carries its name, its colour repeating its group.
+- **Meaning never by colour alone.** Local, Toxic and Retired carry their words; a category chip carries its name, its colour repeating its group (the full chip level, 2026-10-19).
 
 ## Edit
 

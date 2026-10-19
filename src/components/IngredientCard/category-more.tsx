@@ -114,7 +114,7 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
         className={open ? 'category-more__panel is-open' : 'category-more__panel'}
       >
         {categories.map(({ category, group }) => (
-          <span key={category.id} className="chip chip--quiet" style={chipColors(group)}>
+          <span key={category.id} className="chip" style={chipColors(group)}>
             {category.name}
           </span>
         ))}

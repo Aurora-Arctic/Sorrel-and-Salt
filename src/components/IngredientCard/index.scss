@@ -222,7 +222,7 @@
   // unpositioned so the panel hangs from the chip row, not from the button.
   position: relative;
   z-index: 1;
-  @include chip($dark: $text-primary, $light: $text-primary);
+  @include chip($dark: $text-primary, $light: $text-primary, $state: quiet);
   border-color: $hairline;
   font-size: type-size('overline');
   cursor: pointer;

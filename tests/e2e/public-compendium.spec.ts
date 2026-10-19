@@ -333,9 +333,7 @@ test('the category chips and the +N button share one line, and opening the panel
     .filter({ has: page.getByRole('button', { name: /more categories? for/i }) })
     .first();
   await expect(card).toBeVisible();
-  await card.evaluate((el) => {
-    el.style.width = '20rem';
-  });
+  await card.evaluate((el) => el.style.setProperty('width', '20rem'));
   const more = card.getByRole('button', { name: /more categories? for/i });
   await expect(more).toBeVisible();
 
@@ -348,7 +346,9 @@ test('the category chips and the +N button share one line, and opening the panel
   expect((await chips.count()) + count).toBe(6);
   const tops = await chips.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
   tops.push((await more.boundingBox())!.y);
-  expect(new Set(tops.map(Math.round)).size).toBe(1);
+  // One line: tops within a pixel (the chip and the button differ by half a pixel), far
+  // under a line's height.
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
 
   const before = (await card.boundingBox())!.height;
   await more.click();

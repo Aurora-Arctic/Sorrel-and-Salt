@@ -510,14 +510,14 @@ so that every list draws the same one:
   `aria-hidden` while closed.
 - **A coloured chip wears its group's pair** (MB.126). `colors`, a group
   row's `{ colorDark, colorLight }`, sets both on the chip inline through
-  `chipColors()` and marks it `is-coloured`, and the stylesheet fills it
-  solid with the theme's one, `light-dark()`, its text and × in
-  `$text-on-color` — the solid-fill rule, since a wash of the colour cannot
-  hold 4.5:1 (`styling.md`, "Chips, badges and the solid-fill rule"). It is
-  the fill `chip()` draws selected, not the mixin, which draws a pill: the
+  `chipColors()` and marks it `is-coloured`, and the stylesheet gives it
+  the full chip level (2026-10-19; `chip-wash()`, an inset ring for the edge): a wash of
+  the theme's colour, `light-dark()`, its text and × in the stirred label ink that holds
+  4.5:1 (`styling.md`, "Category chips"). It is
+  the wash `chip()` draws, not the mixin, which draws a pill: the
   chip keeps its shape, padding and 24px ×, so a row mixes coloured and
   plain chips without a jump. The ×'s and a sortable handle's focus rings
-  are drawn in the same inverted ink on the fill, and the grip in it too;
+  are drawn in the same ink as the label (`currentcolor`), and the grip in it too;
   the ×'s hover keeps its own wash and ink, the error edge stays, and a
   held chip takes the body ink back with the accent's wash. A sortable
   entry passes `colors` the same way.
@@ -543,7 +543,7 @@ so that every list draws the same one:
   whether or not the count has arrived, so a reader never meets a label that
   changes under them. `outlined` draws the chip as an outline on the card
   instead of a wash (the `outlined-chip` mixin, `_mixins.scss`); a coloured
-  chip stays filled, since its group's colour is its look.
+  chip stays washed, since its group's colour is its look.
 
 ### An action on an entry
 

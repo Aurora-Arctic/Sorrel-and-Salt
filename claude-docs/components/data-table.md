@@ -73,7 +73,7 @@ its mixin in `_mixins.scss`:
 
 ## GroupChip
 
-`<GroupChip name colors icon>` draws a group's name in a `.chip` in its own
+`<GroupChip name colors icon>` draws a group's name in a `.chip` (the full level, 2026-10-19) in its own
 colours when `colors` holds both `colorDark` and `colorLight`, and as plain
 text otherwise: a form group or a tradition carries none. An `icon` leads the
 name with a [`FormIcon`](form-icon.md): a form group's icon name, or `null`
