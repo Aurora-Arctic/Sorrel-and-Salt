@@ -1,6 +1,9 @@
 import type { Route } from 'next';
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { useEffect } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useNavigationState } from '@/lib/navigation';
+import { Navigating } from '../../support/navigating';
 import IngredientCard from '@/components/IngredientCard';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { StockBadge } from '@/components/StockBadge';
@@ -9,6 +12,10 @@ import { StockBadge } from '@/components/StockBadge';
 // so each case is its props in and what rendered out. The names, forms and
 // notes are the test's own data. Marks are found by their exact text and
 // asserted by presence or absence, never by what the words say.
+
+// The name link navigates through the shared hook (M12.33), so the App Router is mocked.
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const HREF = '/compendium/ingredients/testwort-testalis' as Route;
 const LEAF = {
@@ -315,5 +322,61 @@ describe('IngredientCard actions', () => {
   it('draws no foot without actions or jar lines', () => {
     render(<IngredientCard {...BASE} />);
     expect(screen.queryByRole('button')).toBeNull();
+  });
+});
+
+// The name link is the card's one way onward, and the page it leads to draws
+// its own frame while it loads (M12.33): the card names that page by the address.
+describe('IngredientCard navigation', () => {
+  let target: unknown;
+  function Probe() {
+    const state = useNavigationState();
+    useEffect(() => {
+      target = state.target;
+    });
+    return null;
+  }
+  let arrive = () => {};
+  const arrives = () =>
+    new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+  beforeEach(() => {
+    router.push.mockReset();
+    target = undefined;
+  });
+  afterEach(async () => {
+    await act(async () => arrive());
+  });
+
+  it('presses through to a compendium entry as a main page with its jump menu', async () => {
+    render(
+      <Navigating push={router.push} arrives={arrives()}>
+        <IngredientCard {...BASE} />
+        <Probe />
+      </Navigating>,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
+    });
+    expect(router.push.mock.calls[0]?.[0]).toBe(HREF);
+    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'with-nav' });
+  });
+
+  it("presses through to a coven's entry as a coven page with its jump menu", async () => {
+    render(
+      <Navigating push={router.push} arrives={arrives()}>
+        <IngredientCard
+          {...BASE}
+          href={'/coven/fixture-coven/ingredients/some-id' as Route}
+          kind="own"
+        />
+        <Probe />
+      </Navigating>,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
+    });
+    expect(target).toEqual({ region: 'coven', shape: 'page', frame: 'with-nav' });
   });
 });

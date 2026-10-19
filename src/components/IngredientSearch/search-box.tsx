@@ -1,6 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
@@ -162,7 +163,10 @@ const IngredientSearchBox = ({
     if (!option) return;
     const href = pickHref(option.match);
     if (modal && pickHeading) modal.open(href, pickHeading(option.match));
-    else navigate(href);
+    else {
+      const target = ingredientLinkTarget(href);
+      navigate(href, target ? { target } : {});
+    }
   }
 
   return (
