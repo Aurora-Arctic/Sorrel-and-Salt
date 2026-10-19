@@ -222,9 +222,16 @@ stock.
   with `findReadableVariant` under the coven's proof, so another coven's form,
   a deleted form, or a form of a deleted ingredient is `NotFound`. The
   composite foreign key alone would accept another coven's form, since it holds
-  only the variant to its ingredient.
+  only the variant to its ingredient. The one deleted parent it admits is a
+  compendium entry the curators retired while this coven's live cupboard row
+  names it: it passes the coven's proof as `heldBy`, and checks the row again
+  through `heldCompendiumEntry` under the stock lock, so a coven may still
+  start a jar of a retired entry it holds (the owner's decision, 2026-10-19;
+  [`m12.24-retired-entry-stays-readable.md`](../design-decisions/m12.24-retired-entry-stays-readable.md)).
+  A coven's own deleted ingredient's forms stay refused.
 - **A jar of a compendium form lists the entry (M12.15).** `createStock` also
-  inserts the coven's cupboard row for the entry when it has none, in the same
+  inserts the coven's cupboard row for the entry when it has none (never for a
+  retired entry, which is reached only through a live row), in the same
   transaction, under the coven's stock lock. The jar is stored on the
   compendium form asked for even when the coven's own entry shares the entry's
   name or formal name: a name match takes nothing from it (M12.28). A second jar of another form adds no second row
@@ -300,7 +307,7 @@ filter never reaches another coven's rows. Categories, forms, folk names and
 elements, which a cupboard row does not cover.
 
 Two settings belong to the coven's list alone (M9.7), so they sit in
-`workspaceListScope` and not in `compendiumList`, which the compendium's page
+`workspaceListScopeIncludingSoftDeleted` and not in `compendiumList`, which the compendium's page
 and count share. `source: 'local'` keeps the coven's own entries;
 `source: 'compendium'` keeps the compendium entries its cupboard names; leaving
 it out keeps both, so the two `source` counts add up to the list's total.
@@ -309,7 +316,7 @@ live form, is not at 0. A jar with no quantity is held but unweighed, so it
 counts as in stock (the test is "null or not 0", since a bare `<> 0` is unknown
 for null and would drop it). An entry whose jars are all at 0 leaves, and so
 does an entry with no jar, whether the coven's own or one its cupboard names.
-Because `workspaceListScope` is shared with the facets, a facet's count equals
+Because `workspaceListScopeIncludingSoftDeleted` is shared with the facets, a facet's count equals
 the list's total under the same two settings.
 
 `lowStockOnly` (M9.8) keeps an entry only when one of the coven's live jars of it,
@@ -327,7 +334,7 @@ switch forced on, under the rest of the filter and the chosen Source.
 entries each filter value would list, counted by the rules of
 [`findCompendiumFacets`](compendium-read.md). It makes the same
 `ingredient: read` check as the list, then calls
-`findWorkspaceIngredientFacets`, which counts within `workspaceListScope`
+`findWorkspaceIngredientFacets`, which counts within `workspaceListScopeIncludingSoftDeleted`
 (the coven's own entries and the compendium entries its cupboard names) over
 the same left join, so the element, zodiac sign and planet counts read the
 coven's overrides: an entry whose cupboard row moves it from one element to

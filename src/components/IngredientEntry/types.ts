@@ -129,6 +129,12 @@ export interface CupboardProps {
    * the parameter.
    */
   annotate: { href: Route; closeHref: Route; opened: boolean };
+  /**
+   * Where a remove leads, for an entry whose page reads nothing once its
+   * cupboard row is gone: a retired one (M12.24), which only that row still
+   * reaches. Left out, a remove reads the page again, which offers Add.
+   */
+  removedHref?: Route;
 }
 
 /** What the client buttons need to draw: the props above, and the entry's two sides for the form. */

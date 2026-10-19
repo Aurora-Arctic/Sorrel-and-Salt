@@ -322,6 +322,10 @@ export async function addCupboardEntry(
  * patch leaves out keeps its value, `null` hands the column back to the
  * compendium's, and a value, a list even when empty, is the coven's own.
  *
+ * A retired entry the coven still holds is annotated the same way, by the
+ * owner's decision (claude-docs/db/workspace-compendium-entries.md, "When
+ * the compendium retires the entry"); the compendium entry is not written.
+ *
  * @throws {Forbidden} the caller may not update this coven's ingredients.
  * @throws {NotFound} this coven holds no live cupboard entry for this id.
  * @throws {ValidationError} the patch breaks `CupboardEntryInput`, or the
@@ -335,7 +339,11 @@ export async function annotateCupboardEntry(
 ): Promise<CupboardEntryRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
   const parsed = parseInput(CupboardEntryInput, patch);
-  const row = await readHeld(membership, ingredientId);
+  // Read through the retired-entry hatch, as Make It Ours reads it, so a
+  // retired entry the coven still holds is found; Remove reads it the same way.
+  const held = await heldCompendiumEntry(membership, ingredientId);
+  if (!held) throw new NotFound(NO_ROW);
+  const row = held.cupboardEntry;
   await refuseLabelTaken(membership, parsed.label, row.id);
 
   const values = setColumns(parsed);
@@ -354,7 +362,10 @@ export async function annotateCupboardEntry(
 /**
  * Takes a compendium entry out of this coven's cupboard, stamping who removed
  * it. Refused while the coven holds a jar of any of its forms, so no stock is
- * left that nothing lists. Its spell layers are untouched.
+ * left that nothing lists. Its spell layers are untouched. A retired entry the
+ * coven still holds is removed the same way, by the owner's decision
+ * (claude-docs/db/workspace-compendium-entries.md, "When the compendium
+ * retires the entry"); the compendium entry is not written.
  *
  * @throws {Forbidden} the caller may not delete this coven's ingredients.
  * @throws {NotFound} this coven holds no live cupboard entry for this id.
@@ -370,7 +381,11 @@ export async function removeCupboardEntry(
     // A first jar is created under this lock, so the count below is not
     // stale by the time the row goes.
     await write.lockCovenStock(membership);
-    const row = await readHeld(membership, ingredientId);
+    // Read through the retired-entry hatch, so a retired entry the coven
+    // still holds can be taken out of its cupboard as a live one can.
+    const held = await heldCompendiumEntry(membership, ingredientId);
+    if (!held) throw new NotFound(NO_ROW);
+    const row = held.cupboardEntry;
     const jars = await findStockOfIngredients(membership, [ingredientId]);
     if (jars.length > 0) {
       throw new ValidationError([
@@ -387,14 +402,6 @@ export async function removeCupboardEntry(
     );
     if (!removed) throw new NotFound(NO_ROW);
   });
-}
-
-/** This coven's live cupboard entry for the id. */
-async function readHeld(membership: Membership, ingredientId: string): Promise<CupboardEntryRow> {
-  if (!RowId.safeParse(ingredientId).success) throw new NotFound(NO_ROW);
-  const row = await findCupboardEntry(membership, ingredientId);
-  if (!row) throw new NotFound(NO_ROW);
-  return row;
 }
 
 // Turning one of the coven's own entries into the compendium entry it

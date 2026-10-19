@@ -82,6 +82,18 @@ const edits = () => {
   ];
 };
 
+// A cupboard row with no overrides, as the cupboard reads hand it back.
+const HELD_ROW = {
+  id: 'fixture-jar',
+  label: null,
+  description: null,
+  safetyNotes: null,
+  elements: null,
+  celestialBodies: null,
+  zodiacSigns: null,
+  colors: null,
+};
+
 const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
 
 const open = async (
@@ -214,6 +226,45 @@ describe('the coven ingredient page', () => {
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(edits()).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();
+  });
+
+  it('offers a retired entry the coven holds Annotate, Make It Ours and Remove, but no compendium Edit, Add or public link', async () => {
+    // The owner's decision, 2026-10-19: the coven keeps annotating its row and
+    // may take the entry as its own or remove it. The live-only cupboard read finds nothing;
+    // the retired-entry read carries the row in the detail.
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({
+      ...entryDetail(),
+      retired: true,
+      cupboardEntry: { ...HELD_ROW },
+    });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: true },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
+    expect(items).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();
+  });
+
+  it('opens the annotate dialog on a retired entry the coven holds, asked with ?annotate', async () => {
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({
+      ...entryDetail(),
+      retired: true,
+      cupboardEntry: { ...HELD_ROW },
+    });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params(ID, { annotate: '' })));
+
+    expect(screen.getByRole('dialog', { name: 'Annotate This Entry' })).toBeInTheDocument();
   });
 
   it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {
