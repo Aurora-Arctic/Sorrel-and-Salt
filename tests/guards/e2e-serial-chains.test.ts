@@ -135,6 +135,20 @@ export function chainedAssignments(file: string, { ignoreSerial = false } = {}):
   const ast = parse(source, { sourceType: 'module', plugins: ['typescript'] });
   const findings: Finding[] = [];
 
+  // Only a name the file declares can chain two tests: a browser global such
+  // as `document`, written inside `page.evaluate`, is declared nowhere here.
+  const declared = new Set<string>();
+  for (const node of walk(ast.program)) {
+    if (node.type === 'VariableDeclarator') patternNames(node.id).forEach((n) => declared.add(n));
+    if (node.type === 'FunctionDeclaration' && node.id) declared.add(node.id.name);
+    if (
+      node.type === 'ImportSpecifier' ||
+      node.type === 'ImportDefaultSpecifier' ||
+      node.type === 'ImportNamespaceSpecifier'
+    )
+      declared.add(node.local.name);
+  }
+
   const checkTest = (fn: ArrowFunctionExpression | FunctionExpression, serial: boolean) => {
     if (serial && !ignoreSerial) return;
     const locals = new Set<string>();
@@ -153,7 +167,8 @@ export function chainedAssignments(file: string, { ignoreSerial = false } = {}):
             : null;
       if (!target) continue;
       for (const name of assignedRoots(target)) {
-        if (!locals.has(name)) findings.push({ file, line: node.loc?.start.line ?? 0, name });
+        if (!locals.has(name) && declared.has(name))
+          findings.push({ file, line: node.loc?.start.line ?? 0, name });
       }
     }
   };
@@ -197,6 +212,8 @@ describe('M11.18: a spec file whose tests chain is serial', () => {
     expect(chained('tests/e2e/stories/01-invitations.spec.ts')).toContain('invitedPath');
     expect(chained('tests/e2e/stories/01-accounts.spec.ts')).toContain('holder');
     expect(chained('tests/e2e/shell.spec.ts')).toEqual([]);
+    // axe.spec.ts writes `document.title` inside `page.evaluate`: a browser global, no chain.
+    expect(chained('tests/e2e/axe.spec.ts')).toEqual([]);
     expect(chainedAssignments('tests/e2e/stories/01-invitations.spec.ts')).toEqual([]);
     expect(chainedAssignments('tests/e2e/stories/01-accounts.spec.ts')).toEqual([]);
 
