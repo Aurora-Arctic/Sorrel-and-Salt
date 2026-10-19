@@ -1,6 +1,6 @@
 import type { Story } from '@ladle/react';
 import IngredientCard from '../IngredientCard';
-import { ENTRIES, JarLines } from './story-fixtures';
+import { ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
 
 // Render-only; the wrapping and the density are asserted in tests/components/IngredientCardList.
@@ -58,7 +58,7 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
           </>
         }
       >
-        <JarLines jars={e.jars} />
+        {jarLinesOf(e)}
       </IngredientCard>
     ))}
   </IngredientCardList>

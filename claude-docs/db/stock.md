@@ -256,6 +256,10 @@ stock.
 the list on the coven's Ingredients page. It checks `ingredient: read`, so any
 member of the coven, viewers included, may read it, and answers one page from
 `findWorkspaceIngredientPage` in `src/db/repository/ingredients.ts`.
+`countWorkspaceIngredients(session, workspaceId, filter, start)`, beside it, numbers its
+pages (M9.6): it asserts the same permission and reads `findWorkspaceIngredientCount`, the
+twin of `findCompendiumCount` over the same arms and scope, so the count and the page hold
+the same rows. It is not cached.
 
 A coven's ingredients are two kinds of row, in one query (M12.18):
 

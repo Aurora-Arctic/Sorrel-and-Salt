@@ -4,6 +4,7 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import CategoryChips from '../CategoryChips';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
+import LinkHint from '../LinkHint';
 import { CautionMark, ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
@@ -53,7 +54,9 @@ const IngredientCard = ({
       <div className="specimen__top">
         <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
-            <Link href={href}>{label}</Link>
+            <Link href={href}>
+              {label} <LinkHint />
+            </Link>
           </Heading>
           {formal !== '' && (
             <p className="meta ingredient-card__formal">

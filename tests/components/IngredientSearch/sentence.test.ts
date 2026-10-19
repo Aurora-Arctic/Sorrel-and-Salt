@@ -135,6 +135,45 @@ describe('buildSearchSentence', () => {
     );
   });
 
+  it("names a coven list's source, in stock and low stock after toxic, before the admin clauses", () => {
+    expect(text({ source: 'local' }, 4)).toBe('4 ingredients, from the Local source');
+    expect(text({ source: 'compendium' }, 1)).toBe('1 ingredient, from the Compendium source');
+    expect(text({ inStock: true }, 2)).toBe('2 ingredients, in stock');
+    expect(text({ lowStockOnly: true }, 2)).toBe('2 ingredients, low or out of stock');
+    expect(
+      text(
+        {
+          lowStockOnly: true,
+          inStock: true,
+          source: 'local',
+          toxic: 'toxic',
+          nomenclature: 'botanical',
+        },
+        3,
+        { admin: true },
+      ),
+    ).toBe(
+      '3 ingredients, that are toxic, from the Local source, in stock, low or out of stock, classified as botanical',
+    );
+  });
+
+  it('counts the coven clauses as filters, ignores a false flag or a null source, and links each away', () => {
+    expect(buildSearchSentence({ filter: { inStock: false, source: null }, total: 2 })).toEqual({
+      fragments: [{ kind: 'text', text: '2 ingredients' }],
+      hasFilter: false,
+    });
+    const { fragments, hasFilter } = buildSearchSentence({
+      filter: { source: 'compendium', inStock: true, lowStockOnly: true },
+      total: 2,
+    });
+    expect(hasFilter).toBe(true);
+    expect(fragments.flatMap((f) => (f.kind === 'value' ? [[f.facet, f.value]] : []))).toEqual([
+      ['source', 'compendium'],
+      ['inStock', 'true'],
+      ['lowStockOnly', 'true'],
+    ]);
+  });
+
   it('names Nomenclature and No Refs only for an admin list', () => {
     const filter: SearchSentenceFilter = { nomenclature: 'botanical', withoutReferences: true };
     expect(text(filter, 2)).toBe('2 ingredients');
