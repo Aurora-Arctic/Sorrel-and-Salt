@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 
 // The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
 // they decide is their own tests' (the admin page's test runs the reads). Here: what the
@@ -64,6 +65,7 @@ async function renderPage(params: Record<string, string | string[]> = {}) {
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
 
+const sizeRead = () => readCompendium.mock.lastCall![3] as number;
 const variablesRead = () => JSON.parse(readCompendium.mock.lastCall![0] as string);
 
 beforeEach(() => {
@@ -90,6 +92,19 @@ describe('the public compendium page', () => {
       'href',
       `/compendium/ingredients/${NODE.slug}`,
     );
+  });
+
+  it('asks for a page of 24 cards, so the grid ends on a full row, on the first page and both ways on', async () => {
+    const cursor = encodeCursor({ key: ['Testwort'], id: NODE.id });
+    await renderPage();
+    const first = sizeRead();
+    await renderPage({ after: cursor });
+    const next = sizeRead();
+    await renderPage({ before: cursor });
+    const previous = sizeRead();
+
+    expect([first, next, previous]).toEqual([CARD_PAGE_SIZE, CARD_PAGE_SIZE, CARD_PAGE_SIZE]);
+    expect(CARD_PAGE_SIZE).toBe(24);
   });
 
   it('reads the same list with ?withoutReferences=1 as without it', async () => {

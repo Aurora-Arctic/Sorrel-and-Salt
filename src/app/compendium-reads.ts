@@ -7,7 +7,7 @@ import type {
 import type { CardCategory } from '../components/IngredientCard/types';
 import type { SafetyVariant } from '../components/SafetyNote/types';
 import { readNumberedPage } from '../lib/numbered-page';
-import { allPages } from '../lib/pagination';
+import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
 
 import {
   compendiumFacets,
@@ -40,7 +40,13 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 // the parameter table's variables, written as JSON, so a new filter changes
 // no line here (src/components/CompendiumList/params.ts).
 export const readCompendium = cache(
-  async (variables: string, after: string | undefined, before: string | undefined) => {
+  async (
+    variables: string,
+    after: string | undefined,
+    before: string | undefined,
+    // The admin table pages by the default; the public cards by `CARD_PAGE_SIZE`.
+    size: number = DEFAULT_PAGE_SIZE,
+  ) => {
     // Written by this page from the table a few lines below, and checked again by the service.
     const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
     // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
@@ -48,6 +54,7 @@ export const readCompendium = cache(
       { after, before },
       (request) => listCompendium(filter, request),
       (start) => countCompendium(filter, start),
+      size,
     );
     // Each entry's live forms, the Form column (MB.222): one batch for the
     // page, through the read `Ingredient.variants` resolves through.

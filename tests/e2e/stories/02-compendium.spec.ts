@@ -49,8 +49,8 @@ function compendiumSearch(page: Page) {
  */
 const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
-/** The page size every compendium list pages by (M8.10: `first: 25`). */
-const PAGE_SIZE = 25;
+/** The cards page by `CARD_PAGE_SIZE`, 24, so the grid ends on a full row. */
+const PAGE_SIZE = 24;
 
 /**
  * Opens the Filters panel and returns it. The button only exists once the page has hydrated

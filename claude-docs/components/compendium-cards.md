@@ -1,6 +1,6 @@
 # CompendiumCards
 
-`src/components/CompendiumCards/` is the public compendium's list (M8.18; MB.80): the search and its filters, one `IngredientCard` per entry in an `IngredientCardList`, and the pager beneath. It is the card-shaped sibling of the admin's `CompendiumList` table. Both are render-only: the page reads one page of entries under the address's filter and hands it over.
+`src/components/CompendiumCards/` is the public compendium's list (M8.18; MB.80): the search and its filters, one `IngredientCard` per entry in an `IngredientCardList`, and the pager beneath. A page holds `CARD_PAGE_SIZE` (24) entries, which the page asks its read for, so the grid ends on a full row at one to four columns. It is the card-shaped sibling of the admin's `CompendiumList` table. Both are render-only: the page reads one page of entries under the address's filter and hands it over.
 
 ## Props
 

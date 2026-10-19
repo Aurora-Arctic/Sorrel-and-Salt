@@ -8,6 +8,7 @@ import type { CompendiumListFilter } from '../../../components/CompendiumList/ty
 import PageHeader from '../../../components/PageHeader';
 import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
+import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { viewerIfSignedIn } from '../../../lib/viewer';
 import {
   readCardCategories,
@@ -65,7 +66,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
   const [page, counts, formIcons, viewer] = await Promise.all([
-    readCompendium(variables, after, before),
+    readCompendium(variables, after, before, CARD_PAGE_SIZE),
     readFacets(variables),
     readFormIcons(),
     viewerIfSignedIn(),

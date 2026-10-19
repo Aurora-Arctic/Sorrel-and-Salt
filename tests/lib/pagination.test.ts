@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { InvalidCursor } from '@/lib/errors';
 import {
+  CARD_PAGE_SIZE,
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
   allPages,
@@ -230,6 +231,28 @@ describe('resolveNumberedPage', () => {
 
     expect(asked).toMatchObject({ before: { key: ['k050'], id: ID }, inverted: true });
     expect(page.position).toEqual({ page: 2, pages: 3 });
+  });
+
+  it('reads and counts pages of the size it is given, forwards and backwards', async () => {
+    const asked: PageRequest[] = [];
+    const fetch = (request: PageRequest) => {
+      asked.push(request);
+      return rows(CARD_PAGE_SIZE + 1);
+    };
+    const count = () => Promise.resolve({ totalCount: 50, countBefore: CARD_PAGE_SIZE });
+
+    const forwards = await resolveNumberedPage({}, fetch, count, CARD_PAGE_SIZE);
+    const backwards = await resolveNumberedPage(
+      { before: encodeCursor({ key: ['k050'], id: ID }) },
+      fetch,
+      count,
+      CARD_PAGE_SIZE,
+    );
+
+    expect(asked.map(({ limit }) => limit)).toEqual([CARD_PAGE_SIZE + 1, CARD_PAGE_SIZE + 1]);
+    expect(forwards.edges).toHaveLength(CARD_PAGE_SIZE);
+    expect(forwards.position).toEqual({ page: 2, pages: 3 });
+    expect(backwards.position).toEqual({ page: 2, pages: 3 });
   });
 
   it('counts an empty page from no row, as page 1 of 1', async () => {

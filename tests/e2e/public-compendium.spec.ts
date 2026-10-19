@@ -13,7 +13,8 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // pager reaches the last page, the foot of each card follows the visitor's role, and the
 // page holds at a phone's width.
 
-const PAGE_SIZE = 25;
+// The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
+const PAGE_SIZE = 24;
 const ADD = 'Add to My Ingredients';
 
 test.beforeAll(async () => {
