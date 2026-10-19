@@ -13,6 +13,8 @@ export default {
   // guard deliberately ignores.
   stories: [
     'src/components/**/index.stories.tsx',
+    // A throwaway sample beside the card; goes with compact.stories.tsx.
+    'src/components/IngredientCard/compact.stories.tsx',
     'src/emails/*.stories.tsx',
     '.ladle/*.stories.tsx',
   ],
