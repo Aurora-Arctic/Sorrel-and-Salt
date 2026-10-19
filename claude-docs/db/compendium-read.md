@@ -310,9 +310,11 @@ rules:
   leaving the search.
 - **No Form is counted the same way (M12.30).** `withoutForms` is how many
   entries have no live variant under the rest of the filter, read through
-  `hasNoForm` in `compendiumList`, with the filter's own `withoutForms` set
-  for it. An entry whose variants are all soft-deleted counts. It costs one
-  more read, so the compendium sends nine queries and a coven eleven.
+  `hasNoForm`, whatever the switch's own setting. An entry whose variants
+  are all soft-deleted counts. It shares one query with the No Refs count: the
+  read lists the entries with both switches off and counts each arm
+  (`citesNowhere`, `hasNoForm`) beside the other switch's own setting, so a
+  switch that is on narrows the other's count as it narrows the list.
 - **Nothing soft-deleted counts** (a soft delete marks a row deleted rather
   than removing it): not a deleted entry, variant, deity link or category
   pair, and not a deleted deity, category, sign or body either.
@@ -320,8 +322,8 @@ rules:
 **How it reads.** Each kind is one grouped query (`GROUP BY`), built through
 `selectFrom`'s aggregate form and the list's own conditions from
 `compendiumList`, so a count cannot match differently from the list it sits
-beside. They run at once with `Promise.all`, so a read costs nine
-queries for the compendium (the seven kinds, the No Refs count and the No Form count) and eleven
+beside. They run at once with `Promise.all`, so a read costs eight
+queries for the compendium (the seven kinds and the two switch counts, No Refs and No Form) and eleven
 for a coven (the seven kinds, the two Source counts, the In Stock count and the Low Stock Only count), whatever the filter. With a search, each runs in its own transaction
 that sets the 0.5 threshold, as the list does. Signs and bodies use a right
 join from the vocabulary table, with the entries' conditions in the join, so a

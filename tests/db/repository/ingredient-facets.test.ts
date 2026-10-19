@@ -305,7 +305,7 @@ describe('findCompendiumFacets', () => {
       return logged.filter(({ query }) => !/set_config/.test(query));
     }
 
-    it('sends at most nine reads for the compendium and eleven for a coven, with a search or without', async () => {
+    it('sends at most eight reads for the compendium and eleven for a coven, with a search or without', async () => {
       await seedEntries();
       const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
       const browse: IngredientFilter = { zodiacSigns: ['leo'] };
@@ -323,7 +323,7 @@ describe('findCompendiumFacets', () => {
       // Why the bound could have been missed: each kind is read, so a read per
       // value would send far more than eight.
       expect(compendium[0].length).toBeGreaterThan(0);
-      for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(9);
+      for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(8);
       for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);
     });
   });
@@ -376,6 +376,33 @@ describe('findCompendiumFacets', () => {
         expect({ withoutReferences, count: facets.withoutReferences }).toEqual({
           withoutReferences,
           count: totalCount,
+        });
+      }
+    });
+
+    it('counts each switch under the other, as the list reads them with both on', async () => {
+      const citedNoForm = await add('Alphawort', { variants: [] });
+      await cite(citedNoForm);
+      await add('Betawort', { variants: [] });
+      const citedFormed = await add('Gammawort', { variants: [makeVariant({ form: 'Resin' })] });
+      await cite(citedFormed);
+      await add('Deltawort', { variants: [makeVariant({ form: 'Resin' })] });
+      const { totalCount } = await findCompendiumCount(
+        { withoutReferences: true, withoutForms: true },
+        undefined,
+      );
+      // Why it could have counted otherwise: two entries lack a form and two
+      // cite nothing, but only one is both.
+      expect(totalCount).toBe(1);
+
+      for (const switches of [{ withoutReferences: true }, { withoutForms: true }]) {
+        const facets = await findCompendiumFacets(switches);
+        expect({
+          withoutReferences: facets.withoutReferences,
+          withoutForms: facets.withoutForms,
+        }).toEqual({
+          withoutReferences: switches.withoutForms ? 1 : 2,
+          withoutForms: switches.withoutReferences ? 1 : 2,
         });
       }
     });

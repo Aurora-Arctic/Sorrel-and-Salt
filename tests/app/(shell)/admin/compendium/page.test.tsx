@@ -156,11 +156,12 @@ const FILTERED = {
   query: 'test',
   forms: ['Fixture Oil', 'Fixture Powder'],
   withoutReferences: '1',
+  withoutForms: '1',
   // Read from the address alone, with no control for it (M8.13).
   elements: ['fire', 'earth'],
 };
 const FILTERED_HREF =
-  '/admin/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&elements=fire&elements=earth';
+  '/admin/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth';
 
 /** A curated form as its service lists it, keyed by name as the finder pages it. */
 const curatedForm = (name: string, index: number) =>
@@ -579,10 +580,10 @@ describe('the /admin/compendium filter', () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&elements=fire&elements=earth&before=[^&]+$/,
+      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&elements=fire&elements=earth&after=[^&]+$/,
+      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&after=[^&]+$/,
     );
   });
 });
