@@ -87,10 +87,10 @@ export function useListNavigation(): ListNavigation {
  * a pager, no filter row, since the real one stays. Swapped as a tab's
  * panel is (`TabbedPage/swap-panel.tsx`).
  */
-export const ListBody = ({ children }: ListBodyProps): ReactElement => {
+export const ListBody = ({ shape, children }: ListBodyProps): ReactElement => {
   const { pending } = useListNavigation();
   return (
-    <SwapPanel pending={pending} className="list-frame__body">
+    <SwapPanel pending={pending} className="list-frame__body" shape={shape}>
       {children}
     </SwapPanel>
   );

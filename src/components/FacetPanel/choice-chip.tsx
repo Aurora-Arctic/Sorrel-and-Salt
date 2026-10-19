@@ -191,6 +191,7 @@ export function ChoiceChip<T extends string>({
         &#8203;
       </span>
       <div
+        ref={tip.anchor}
         className="facet-chip__bar"
         onMouseEnter={chipHint ? tip.show : undefined}
         onMouseLeave={chipHint ? tip.hideSoon : undefined}
@@ -263,10 +264,12 @@ export function ChoiceChip<T extends string>({
         </fieldset>
         {chipHint && (
           <span
+            ref={tip.bubble}
             id={chipHintId}
             role="tooltip"
             className={tip.open && !shown ? 'info-tip__bubble is-open' : 'info-tip__bubble'}
             aria-hidden={!(tip.open && !shown)}
+            style={tip.bubbleStyle}
           >
             {chipHint}
           </span>

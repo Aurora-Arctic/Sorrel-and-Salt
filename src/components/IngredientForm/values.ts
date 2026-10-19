@@ -1,3 +1,4 @@
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type {
   FieldError,
@@ -305,8 +306,11 @@ export function entryDetail(entry: AnyListEntry): string | undefined {
 }
 
 /** The text of the linked ingredient's form `id`, when it knows one by that id. */
+const formDisplay = (form: string | undefined): string | undefined =>
+  form === undefined ? undefined : formLabel(form);
+
 const formNamed = (link: SubstituteLink, id: string | undefined): string | undefined =>
-  link.variants?.find((variant) => variant.id === id)?.form;
+  formDisplay(link.variants?.find((variant) => variant.id === id)?.form);
 
 /** The substitute picker's two headings (M12.19), in the order they list. */
 export const YOUR_INGREDIENTS = 'Your Ingredients';
@@ -374,7 +378,7 @@ export function formRows(
       .sort((a, b) => a.tier - b.tier || a.index - b.index);
     return ranked.map(({ variant }) => ({
       value: option.value,
-      label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
+      label: `${name} · ${variant.group ? `${formLabel(variant.form)} (${variant.group})` : formLabel(variant.form)}`,
       heading: option.heading,
       key: `${option.key ?? link.id}/${variant.id}`,
       link,

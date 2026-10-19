@@ -203,7 +203,7 @@ describe('the coven ingredient page', () => {
 
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(edits()).toHaveLength(0);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();
   });
 
   it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {

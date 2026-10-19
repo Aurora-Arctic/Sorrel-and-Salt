@@ -4,6 +4,8 @@ import { chipColors } from '../src/lib/chip-colors';
 import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
 import { RadioGroupField, SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
+import IngredientCard from '../src/components/IngredientCard';
+import { Jars } from '../src/components/IngredientCard/story-jars';
 import { ListNavigationContext } from '../src/components/ListFrame';
 import Pager from '../src/components/Pager';
 import PageNav from '../src/components/PageNav';
@@ -31,6 +33,17 @@ function seededGroup(name: string): SeedCategoryGroup {
 }
 
 // Compile-time Sass constants, so these do not move with the theme.
+// The card's sample data, invented (Testwort, never a real plant). Its chips
+// read the seeded groups' colour pairs, as a page's chips would.
+const SPECIMEN_CATEGORIES = ['Protection & Defense', 'Mind & Spirit', 'Craft & Change'].map(
+  (name, i) => ({ category: { id: `specimen-${i}`, name }, group: seededGroup(name) }),
+);
+const SPECIMEN_FORMS = [
+  { form: 'dried leaf', formChoice: { group: { icon: 'botanical' } }, safetyNotes: '' },
+  { form: 'whole root', safetyNotes: '' },
+  { form: 'oil', formChoice: { group: { icon: 'fluid' } }, safetyNotes: '' },
+];
+
 const RAW_PALETTE: readonly (readonly [name: string, purpose: string])[] = [
   ['soot', 'dark-theme page ground — a warm near-black, not neutral'],
   ['soot-raised', 'dark-theme card / raised surface'],
@@ -872,40 +885,23 @@ export default function Foundations(): ReactElement {
 
       <section id="fd-specimen">
         <SectionHead eyebrow="everything at once" title="An Ingredient Card">
-          Chips and badges competing for the same eye at shipping size. Foxglove is genuinely deadly
-          — which is what the safety badge is for.
+          The real <code>IngredientCard</code> (see <code>ingredient-card.md</code>), built from
+          invented sample data: chips and badges competing for the same eye at shipping size.
+          Testwort is flagged toxic — which is what the safety badge is for.
         </SectionHead>
         <div className="fd-stage">
-          <article className="modal specimen">
-            <div className="specimen__top">
-              <div>
-                <h4>Foxglove</h4>
-                <p className="meta binomial">Digitalis purpurea</p>
-              </div>
-              <div className="specimen__badges">
-                <span className="badge badge--safety">Toxic</span>
-                <span className="badge badge--low-stock">Low Stock</span>
-              </div>
-            </div>
-            <div className="specimen__chips">
-              <span
-                className="chip is-selected"
-                style={chipColors(seededGroup('Protection & Defense'))}
-              >
-                Protection &amp; Defense
-              </span>
-              <span className="chip" style={chipColors(seededGroup('Mind & Spirit'))}>
-                Mind &amp; Spirit
-              </span>
-              <span className="chip" style={chipColors(seededGroup('Craft & Change'))}>
-                Craft &amp; Change
-              </span>
-            </div>
-            <p className="specimen__stock">
-              <span>Dried leaf · 4&nbsp;g on hand</span>
-              <code className="specimen__threshold">threshold 10&nbsp;g</code>
-            </p>
-          </article>
+          <IngredientCard
+            href="/compendium/ingredients/testwort-testalis"
+            label="Testwort"
+            formalName="Fixtura testalis"
+            nomenclature="botanical"
+            kind="own"
+            toxic
+            categories={SPECIMEN_CATEGORIES}
+            variants={SPECIMEN_FORMS}
+          >
+            <Jars />
+          </IngredientCard>
         </div>
       </section>
 

@@ -46,7 +46,7 @@ jar states that both are tested against, so a change to one copy alone fails.
 - **The threshold lives in the Low badge's tip.** "Low at 10 g or less". The badge
   is a button; the tip opens on hover, tap and focus, closes on Escape, and stays
   open while the pointer is over it (WCAG 1.4.13). It reuses `useTip`
-  (`src/components/InfoTip/use-tip.ts`) and the InfoTip markup: the tip text stays
+  (`src/components/InfoTip/use-tip.ts`, which also places the bubble on screen) and the InfoTip markup: the tip text stays
   in the page, `role="tooltip"`, listed in the button's `aria-describedby`, so it is
   the description and not part of the name.
 - **A threshold of 0 or none shows no Low badge.** It never means "always low". A

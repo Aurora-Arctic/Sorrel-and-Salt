@@ -1,0 +1,210 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+@use 'compact' as *;
+
+// The Foundations specimen (`.specimen` in _primitives.scss) carries the
+// layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
+// a list item should not (it is not a dialog), and the forms line's spacing.
+// Past the tokens only after the section's design review (MB.84).
+.ingredient-card {
+  @include modal-surface($shadow-floating);
+
+  // 16px: one step under the 24px it was, with the type a step smaller.
+  padding: space(4);
+  // The containing block for the name link's stretched `::after` below.
+  position: relative;
+  // Its own stacking context at rest, so the raised actions and tips inside it
+  // (z-index 1 above) stay inside the card instead of painting over the next card.
+  isolation: isolate;
+  cursor: pointer;
+}
+
+// The whole card is the link: the name's one `<a>` stretches an empty `::after`
+// over the article. Not an `<a>` around the card, which a screen reader would
+// read whole as the link's name and which cannot hold the Low badge's button.
+// Plain ink with no underline, at rest or on hover.
+.ingredient-card .ingredient-card__name a {
+  color: $text-primary;
+  text-decoration: none;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: radius('surface');
+  }
+
+  // The ring goes round the card, drawn on the overlay, so the name shows none of
+  // its own and no `:has()` is needed.
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      @include focus-ring;
+    }
+  }
+}
+
+// Under the pointer, or with the link focused, the card lightens and rises. The lift needs no
+// `:has()`: `:focus-within` catches the link's focus, and also a click's, which
+// is harmless; only `:focus-visible` on the link itself draws the ring.
+.ingredient-card {
+  // The lift moves `inset-block-start`, not `transform`: a transformed ancestor becomes
+  // the containing block of a `position: fixed` tip bubble inside it (the Low badge's,
+  // the marks'), and Floating UI does not re-place a bubble when an ancestor's transform
+  // starts or ends, so a quick move between cards left a bubble in the wrong place.
+  inset-block-start: 0;
+  transition:
+    inset-block-start 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease,
+    color $theme-transition-duration $theme-transition-easing;
+
+  &:hover,
+  &:focus-within {
+    background-color: $surface-card-hover;
+    box-shadow: $shadow-lifted;
+    inset-block-start: -2px;
+    // Above its neighbours while a tip may be open (hover or keyboard focus), so a
+    // tip that spills over the card above is not painted under that card's buttons.
+    z-index: 1;
+  }
+
+  // A tip outlives the hover (it stays open a moment after the pointer leaves), so the
+  // card stays raised while one of its tips is open.
+  &:has([role='tooltip'].is-open) {
+    z-index: 1;
+  }
+
+  // The colour and shadow change stay; the movement and the fade go.
+  @include reduced-motion {
+    transition: none;
+
+    &:hover,
+    &:focus-within {
+      inset-block-start: 0;
+    }
+  }
+}
+
+// Takes the room it needs and may shrink below its longest word, which breaks
+// (hyphenated where the dictionary can, anywhere where it cannot) rather than
+// pushing the badges off the card. `hyphens` is Baseline Widely Available.
+.ingredient-card__heading {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ingredient-card__name {
+  hyphens: auto;
+  // h3's size, down from the h2 default (2.15rem): the card is one of many in a grid,
+  // so its name needs less than a page heading. Site sizes only, no new one.
+  font-size: heading-size(3);
+}
+
+// Above the overlay, so the Low badge's button keeps its own hover, focus and
+// click (it opens a tip) instead of following the card's link.
+.ingredient-card .stock-badge-tip {
+  z-index: 1;
+}
+
+.ingredient-card__name,
+.ingredient-card__formal,
+.ingredient-card__forms {
+  margin: 0;
+}
+
+// The forms line: one wrapping row, each item a flex row so the icon and name
+// share a centre line. The dot between two forms is not text but a circle drawn
+// on the item after the first, in the margin to its left, and the line is
+// clipped by that margin (`clip-path`, with a matching negative margin so
+// nothing shifts). A dot that would lead a wrapped line therefore falls in the
+// clipped band and is never seen, and no line ends in one, since each dot
+// belongs to the form after it. CSS cannot tell which item starts a wrapped
+// line, so a rule on the item cannot do this. A screen reader gets the
+// `.spoken-separator` in each item instead, as the circle is announced as nothing.
+.ingredient-card__forms {
+  --forms-gap: #{space(5)};
+
+  // Body down to small; the icons are in em, so they follow.
+  font-size: type-size('small');
+  --forms-dot: #{space(1)};
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  // Wrapped lines sit close: they are one list of forms, not separate rows.
+  row-gap: space(1);
+  // Air above, the chips to the forms the same as the forms to the rule below
+  // (the stock section's `margin-top` is this token too, each beside the
+  // specimen's own 12px gap), so the two read as equal.
+  margin-block-start: $ingredient-card-forms-air;
+  margin-inline-start: calc(-1 * var(--forms-gap));
+  clip-path: inset(0 0 0 var(--forms-gap));
+}
+
+.ingredient-card__item,
+.ingredient-card__form {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+.ingredient-card__item {
+  position: relative;
+  margin-inline-start: var(--forms-gap);
+
+  // Out of the flex flow so it adds no gap beside the form; still read aloud.
+  > .spoken-separator {
+    position: absolute;
+  }
+
+  + .ingredient-card__item::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(-0.5 * (var(--forms-gap) + var(--forms-dot)));
+    inline-size: var(--forms-dot);
+    block-size: var(--forms-dot);
+    border-radius: 50%;
+    background-color: currentcolor;
+  }
+}
+
+// Out of Stock takes Low's weight on the card: the word and the icon still tell
+// the states apart, and the heavier edge is M9.8's for a badge standing alone.
+// The values are the badge mixin's own, so both come out the same height.
+.ingredient-card .specimen__stock .stock-badge--out {
+  border-width: 1px;
+  padding-block: 0.125rem;
+  font-weight: 500;
+}
+
+// The actions' own addition to the primitive: above the stretched link, so each
+// button is its own target.
+.ingredient-card .specimen__actions {
+  position: relative;
+  z-index: 1;
+}
+
+// Chip text on the card, one step under the caption it takes elsewhere, and the badges
+// (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
+// badge size, which holds them 24px tall.
+.ingredient-card {
+  .chip {
+    font-size: type-size('overline');
+  }
+
+  .badge {
+    @include badge-size('medium');
+  }
+}
+
+// The compact look, wherever an ancestor says `data-density="compact"`.
+[data-density='compact'] {
+  @include ingredient-card-compact;
+}

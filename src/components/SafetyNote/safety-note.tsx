@@ -1,6 +1,6 @@
 import { useId, type ReactElement } from 'react';
 import FormIcon from '../FormIcon';
-import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { SafetyNoteProps } from './types';
 import './index.scss';
 
@@ -35,8 +35,7 @@ const SafetyNote = ({
           {forms.map((variant) => (
             <div key={variant.form}>
               <dt>
-                <FormIcon name={variant.formChoice?.group.icon ?? null} />{' '}
-                {capitalise(variant.form)}
+                <FormIcon name={variant.formChoice?.group.icon ?? null} /> {formLabel(variant.form)}
               </dt>
               <dd className="safety-note__text">{variant.safetyNotes}</dd>
             </div>

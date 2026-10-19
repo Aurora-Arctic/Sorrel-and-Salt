@@ -1,5 +1,7 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useMemo, useState } from 'react';
@@ -230,7 +232,7 @@ const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
   data.formSuggestions.edges.map(({ node }) => ({
     value: node.value,
     // The group is what tells two same-named forms apart (M4.2a).
-    label: qualified(node.value, node.group),
+    label: qualified(formLabel(node.value), node.group),
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
     // Null for a form only in use, which `FormIcon` draws as the generic.
@@ -324,7 +326,7 @@ const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
     return {
       value: node.name,
       label: qualified(node.name, canonicalName),
-      note: forms.length ? forms.join(', ') : undefined,
+      note: forms.length ? forms.map(formLabel).join(', ') : undefined,
       key: node.id,
       link: {
         id: node.id,

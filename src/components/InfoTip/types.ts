@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface InfoTipProps {
   /** The tip's id: a field lists it in `aria-describedby`, so the text is read with the field. */
@@ -18,4 +18,10 @@ export interface Tip {
   hide: () => void;
   /** Closes it after a moment the pointer can cross onto the tip in: leaving it. */
   hideSoon: () => void;
+  /** Ref for the element the bubble belongs to: the wrapper that hears the hover. */
+  anchor: (element: HTMLElement | null) => void;
+  /** Ref for the bubble. */
+  bubble: (element: HTMLElement | null) => void;
+  /** The bubble's `style`: where Floating UI has put it, kept on the screen. */
+  bubbleStyle: CSSProperties;
 }

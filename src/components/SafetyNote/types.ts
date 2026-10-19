@@ -33,3 +33,10 @@ export interface ToxicMarkProps {
   /** The forms the consumer shows; any one flagged shows the mark. */
   variants?: readonly SafetyVariant[];
 }
+
+export interface CautionMarkProps {
+  /** The ingredient's own notes; blank counts as none. */
+  safetyNotes?: string | null;
+  /** The forms the consumer shows; notes on any one show the mark. */
+  variants?: readonly SafetyVariant[];
+}

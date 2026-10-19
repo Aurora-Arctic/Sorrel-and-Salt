@@ -350,6 +350,7 @@ export default function FacetPanel({
           (className ? ` ${className}` : '')
         }
         tabIndex={-1}
+        data-tip-boundary=""
         aria-labelledby={titleId}
         open={!hydrated}
         onKeyDown={onKeyDown}

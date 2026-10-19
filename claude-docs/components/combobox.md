@@ -497,8 +497,8 @@ so that every list draws the same one:
   inside its measure. It runs from the chip's left edge as wide as its
   words, up to InfoTip's measure (18rem, or the screen less its gutters),
   past the chip and the control alike, the owner's call during MB.126: only
-  being cut off is wrong. The entry shifts it left as it opens, through
-  `--entry-tip-shift`, by however far it would run off the screen.
+  being cut off is wrong. `useTip` places it as it opens (Floating UI, `top-start`), shifting it
+  until it is inside the screen, and the qualifier's tip the same way.
 - **A detail tells what the chip leaves out** (MB.164). `detail`, a string
   such as a linked substitute's "Dried leaf · Compendium entry", sits on its own line beneath the text in the tooltip, at the
   caption size and in the bubble's own colour, since a muted one is not

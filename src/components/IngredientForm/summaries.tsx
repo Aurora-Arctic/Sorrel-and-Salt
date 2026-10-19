@@ -1,5 +1,7 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import type { ReactElement, ReactNode } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { shortCitationText } from '@/lib/short-citation';
@@ -188,7 +190,7 @@ function VariantsSummary(): ReactNode {
   const { control } = useFormContext<IngredientFormValues>();
   const variants = useWatch({ control, name: 'variants' });
   if (variants.length === 0) return NOTHING;
-  const forms = variants.map((variant) => variant.form.trim() || UNNAMED_FORM);
+  const forms = variants.map((variant) => formLabel(variant.form) || UNNAMED_FORM);
   return `${count(forms.length, FIELD_NOUNS.variants)}: ${forms.join(', ')}`;
 }
 
@@ -222,10 +224,9 @@ export function variantSectionSummary(
 ): ReactNode {
   switch (section) {
     case 'identity': {
-      const form = variant.form.trim();
       const group = variant.formLink?.group;
-      if (form === '') return NOTHING;
-      return group ? `${form} (${group})` : form;
+      if (formLabel(variant.form) === '') return NOTHING;
+      return group ? `${formLabel(variant.form)} (${group})` : formLabel(variant.form);
     }
     case 'details':
       return detailsLine(variant.description, variant.safetyNotes, variant.toxic);

@@ -17,7 +17,10 @@ import './index.scss';
 
 const ROWS = 6;
 
-const TabPanelLoading = ({ filter = false }: TabPanelLoadingProps): ReactElement => (
+const TabPanelLoading = ({
+  filter = false,
+  shape = 'table',
+}: TabPanelLoadingProps): ReactElement => (
   <div className="tab-skeleton">
     <output className="visually-hidden">Loading</output>
     <div className="tab-skeleton__shapes" aria-hidden="true">
@@ -27,20 +30,32 @@ const TabPanelLoading = ({ filter = false }: TabPanelLoadingProps): ReactElement
           <span className="tab-skeleton__field tab-skeleton__field--short" />
         </div>
       )}
-      <div className="tab-skeleton__table">
-        <div className="tab-skeleton__head">
-          <span />
-          <span />
-          <span />
+      {shape === 'cards' ? (
+        <div className="tab-skeleton__cards">
+          {Array.from({ length: ROWS }, (_, card) => (
+            <div key={card} className="tab-skeleton__card">
+              <span />
+              <span />
+              <span />
+            </div>
+          ))}
         </div>
-        {Array.from({ length: ROWS }, (_, row) => (
-          <div key={row} className="tab-skeleton__row">
+      ) : (
+        <div className="tab-skeleton__table">
+          <div className="tab-skeleton__head">
             <span />
             <span />
             <span />
           </div>
-        ))}
-      </div>
+          {Array.from({ length: ROWS }, (_, row) => (
+            <div key={row} className="tab-skeleton__row">
+              <span />
+              <span />
+              <span />
+            </div>
+          ))}
+        </div>
+      )}
       <div className="tab-skeleton__pager">
         <span />
         <span />

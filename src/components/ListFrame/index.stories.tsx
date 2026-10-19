@@ -45,3 +45,15 @@ export const Pending: Story = () => (
     <List />
   </ListNavigationContext.Provider>
 );
+
+// A list of cards on its way: `shape="cards"` swaps the table's skeleton for a grid of
+// card shapes, the same grid the real list draws.
+export const PendingCards: Story = () => (
+  <ListNavigationContext.Provider value={{ pending: true, go: () => undefined }}>
+    <ListFrame className="card-list">
+      <ListBody shape="cards">
+        <p>Cards</p>
+      </ListBody>
+    </ListFrame>
+  </ListNavigationContext.Provider>
+);

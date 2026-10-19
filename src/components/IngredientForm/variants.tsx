@@ -1,5 +1,7 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import { type ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   get,
@@ -235,12 +237,12 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     // Every section open, as a new entry opens (MB.115).
     folds.added();
     clearErrors(BOX);
-    setAnnouncement(`Added ${form}`);
+    setAnnouncement(`Added ${formLabel(form)}`);
     if (isSubmitted) void trigger(BOX);
     focusBox();
   };
   const removeAt = (index: number) => {
-    setAnnouncement(`Removed ${getValues(`variants.${index}.form`)}`);
+    setAnnouncement(`Removed ${formLabel(getValues(`variants.${index}.form`))}`);
     remove(index);
     folds.removed(index);
     setOpen((current) => {
@@ -338,7 +340,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
           question={
             <>
               Remove &quot;
-              {(removingAt === -1 ? '' : getValues(`variants.${removingAt}.form`)).trim() ||
+              {formLabel(removingAt === -1 ? '' : getValues(`variants.${removingAt}.form`)) ||
                 UNNAMED_FORM}
               &quot;? What it holds goes with it once saved.
             </>
@@ -381,7 +383,7 @@ function VariantFieldset({
   const form = variant.form;
   const group = variant.formLink?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the group.
-  const legend = form.trim() || UNNAMED_FORM;
+  const legend = formLabel(form) || UNNAMED_FORM;
   // An ingredient in this form is the likeliest stand-in, then one in its
   // group; each is offered form by form, this variant itself left out.
   const own = variant.variantId;

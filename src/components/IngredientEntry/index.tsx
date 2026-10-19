@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
+import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
@@ -15,8 +16,9 @@ import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
 import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import {
-  BINOMIAL_KINDS,
+  isBinomial,
   NAMELESS_KIND,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -125,7 +127,7 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
     value = <span className="ingredient-entry__empty">None — no naming system names it</span>;
   } else if (formal === '') {
     value = <span className="ingredient-entry__empty">Not yet looked up</span>;
-  } else if (BINOMIAL_KINDS.has(entry.nomenclature)) {
+  } else if (isBinomial(entry.nomenclature)) {
     // `i` rather than `em`: a taxonomic name is set apart, not stressed.
     value = <i className="binomial">{formal}</i>;
   } else if (NAME_LABELS[entry.nomenclature]) {
@@ -156,7 +158,7 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
 }
 
 const substituteLabel = ({ name, form }: SubstituteDetail): string =>
-  form ? `${name} (${form})` : name;
+  form ? `${name} (${formLabel(form)})` : name;
 
 /** The ids one block of a section takes: its heading's, and what names its content. */
 interface Block {
@@ -310,7 +312,7 @@ function FormSection({
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
       <h3 className="ingredient-entry__form-heading">
-        <FormIcon name={icon} /> <span id={nameId}>{capitalise(variant.form)}</span>{' '}
+        <FormIcon name={icon} /> <span id={nameId}>{formLabel(variant.form)}</span>{' '}
         <ToxicMark toxic={variant.toxic} />
       </h3>
       <div className="ingredient-entry__text">
@@ -452,7 +454,7 @@ const IngredientEntry = ({
   const notes = referenceNotes(
     detail,
     anchors,
-    variants.map(({ variant }) => capitalise(variant.form)),
+    variants.map(({ variant }) => formLabel(variant.form)),
   );
 
   // Only the fields the client parts use cross to them, not the whole row.
@@ -513,20 +515,11 @@ const IngredientEntry = ({
         )}
         {(local || held || toxic || retired) && (
           <div className="badges">
-            {local && <span className="badge badge--local">Local</span>}
-            {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
-            {held && !retired && (
-              <output className="badge badge--low-stock">From the Compendium</output>
-            )}
-            {held && isAnnotated(cupboardEntry) && (
-              <output className="badge badge--low-stock">Annotated</output>
-            )}
-            {/* A compendium entry the curators retired, read because this
-                coven's cupboard names it (M12.24). An `output`, so it carries
-                the status role: on the page from the start, never announced. */}
-            {retired && (
-              <output className="badge badge--retired">No Longer in the Compendium</output>
-            )}
+            <EntryMarks
+              kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
+              annotated={held && isAnnotated(cupboardEntry)}
+              retired={retired}
+            />
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
@@ -548,7 +541,7 @@ const IngredientEntry = ({
             { href: '#details', label: 'Details' },
             ...variants.map(({ variant }, at) => ({
               href: `#${anchors[at]}` as const,
-              label: capitalise(variant.form),
+              label: formLabel(variant.form),
               group: 'Forms',
               // The forms take the line References takes, so each part of
               // the menu opens the same way.

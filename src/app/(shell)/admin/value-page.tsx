@@ -1,3 +1,4 @@
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ReactElement } from 'react';
 import { cache } from 'react';
 import type { GroupedValueKind } from '../../../components/GroupedValueForm/types';
@@ -88,7 +89,11 @@ function editHeading(
   groupsById: ReadonlyMap<string, ValueGroupRow>,
 ): ModalHeading {
   const tradition = kind === 'deity' && groupId ? groupsById.get(groupId)?.name : undefined;
-  return { eyebrow: `Edit ${KINDS[kind].label}`, title: name, qualifier: tradition };
+  return {
+    eyebrow: `Edit ${KINDS[kind].label}`,
+    title: kind === 'form' ? formLabel(name) : name,
+    qualifier: tradition,
+  };
 }
 
 /**

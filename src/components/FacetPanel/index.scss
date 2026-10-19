@@ -160,8 +160,7 @@
 // `<details>`, so it opens before the script runs; once the script has run the menu fades as
 // other dropdowns do, and stays in the page until the fade ends.
 .facet-chip__bar {
-  // The tip bubble is placed against the nearest positioned ancestor; this is the chip and its icon.
-  position: relative;
+  // The chip and its icon: what a chip's tip is placed against.
   display: flex;
   align-items: center;
   gap: space(1);
@@ -406,33 +405,13 @@ $sheet-slide: 250ms ease-out;
   }
 }
 
-// A tip in the panel opens below its label, not above it as everywhere else. The panel's
-// clip (needed for the slide) ends at the first row's top edge, so a tip opening upward
-// from Match, which sits in that row, was cut off. Below there is always room in the panel.
-.facet-panel .info-tip__bubble {
-  top: 100%;
-  bottom: auto;
-  margin-block: space(1) 0;
-}
-
-// Below the tablet width a chip that is not first on its line (Source after Toxic) hangs its
-// tip from the icon's right edge, as the wide panel does, so that it opens leftward instead of
-// running past the sheet's right edge. A first chip (Match, Toxic) starts at the sheet's left.
-@media (max-width: #{$shell-tablet-width - 0.0625rem}) {
-  .facet-panel .facet-chip:not(:first-child) .info-tip__bubble {
-    right: 0;
-    left: auto;
-  }
-}
-
-// On the wide panel Match stands at the right-hand end of its row, so a tip hung from the
-// label's left edge ran past the panel's right edge and was cut. It hangs from the icon's
-// right edge there and opens leftward. On the sheet, Match starts at the left, as the tip does.
-@media (min-width: $shell-tablet-width) {
-  .facet-panel .info-tip__bubble {
-    right: 0;
-    left: auto;
-  }
+// A tip in the panel opens below its label, not above it as everywhere else (`--tip-placement`,
+// read by `useTip`, and inherited by every tip in the panel). The panel's clip ends at the first
+// row's top edge, and although a placed tip is fixed and so never clipped, one above Match would
+// cover the panel's own header. Where there is no room below, it flips; where it would run past a
+// side of the screen, it shifts back, so a chip at a row's end needs no rule of its own.
+.facet-panel {
+  --tip-placement: bottom;
 }
 
 // The compact scale (M9.7): every input in the panel is a step shorter than the app's forms
