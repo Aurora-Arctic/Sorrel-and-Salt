@@ -370,7 +370,7 @@ destination by name, the compendium first (`add-ingredient-menu.tsx`; the
 repo had no ARIA menu, so it is written there with arrow keys, Escape and a
 press outside). The default is, on `/admin/*`, the compendium for a curator;
 otherwise the coven the address names, else the first coven they may write to.
-Choosing the compendium is a `router.push` to `/admin/compendium?new` (the
+Choosing the compendium is a `navigate` (`usePendingNavigation`) to `/admin/compendium?new` (the
 admin layout’s route-modal provider sits below the shell, so the button cannot
 open that dialog itself, and the page draws it for a direct request). A coven’s
 dialog is opened by the page’s address too (the owner’s call, 2026-10-18):
@@ -423,9 +423,10 @@ skipped the fade.
 | `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
-  `done` all fade the modal out, then `router.replace(closeHref)`, so Back
-  does not open it again, and `router.refresh()`, so the list beneath re-reads
-  after a save or a delete.
+  `done` all fade the modal out, then `navigate(closeHref, { replace: true })`,
+  so Back does not open it again, and `refresh()`, both from
+  `usePendingNavigation`, so the list beneath re-reads after a save or a
+  delete and the page bar shows if that is slow.
 - **`done` fades first.** It is `Modal`'s own close, so a form that closes
   the modal itself fades out as Close does, and the page goes back once the
   fade ends.

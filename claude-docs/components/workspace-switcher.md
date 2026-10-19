@@ -45,8 +45,12 @@ with a Create Coven choice (M9.16). It defaults to false.
     skeleton takes its place, with no dimming, so nobody acts on the wrong
     coven's data;
   - the page bar shows under the global bar;
-  - when the new coven renders, focus returns to the switcher (the plan's own
-    inference, checked in the design review).
+  - when the new coven renders, focus returns to the switcher. The `[slug]`
+    layout remounts, so a module-level flag set when the switch starts is read
+    once by the next switcher to mount; a refused switch clears it. That focus
+    returns here is a judgement, checked in the design review;
+  - choosing Create Coven aims at the `main` region with a `form` shape, since
+    that page sits outside a coven, and does not set the focus flag.
 - **Only the viewer's own workspaces are listed**, which is the caller's
   concern; the component trusts its list. The destination still asserts
   membership itself (M6.10), so a stale list shows a 404, not data.

@@ -46,8 +46,16 @@ The dot is the link's part of the standard's first part, the control
 ([`../loading.md`](../loading.md)). A link that navigates is a `PendingLink`
 from `src/lib/navigation/`, which also puts up the page bar and, when given a
 `navigationTarget`, the destination's skeleton; the dot stays inside it as
-before. `useLinkStatus` reports only its own link, so the dot says nothing
-about a navigation another control started.
+before. `useLinkStatus` reports only a navigation that Next's own `<Link>`
+started, and a `PendingLink` navigates through the shared hook instead. So
+`PendingLink` wraps its children in `LinkPendingContext`
+(`src/lib/navigation/link-pending.ts`), and `LinkHint` shows its dot when
+either `useLinkStatus` or `useEnclosingLinkPending()` says pending. Outside a
+`PendingLink` the context is `false`. The dot still says nothing about a
+navigation another control started.
+
+The dot under reduced motion is still the open departure from the standard,
+owed to the owner's decision.
 
 ## Accessibility
 

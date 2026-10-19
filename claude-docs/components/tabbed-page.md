@@ -82,9 +82,9 @@ it renders.
   call). A plain left click on a tab other than the open one is the tab
   row's own: `tab-links.tsx` stops the browser following the link and
   navigates through `usePendingNavigation` (`src/lib/navigation/`), which
-  runs `router.push` inside a React transition the row
-  and the content area share, and puts up the page bar as well. Next runs its navigation inside the caller's
-  transition, so it stays pending until the new tab has rendered. Until
+  runs `router.push` inside a React transition the row and the content area
+  share, and puts up the page bar as well. Next runs its navigation inside the
+  caller's transition, so it stays pending until the new tab has rendered. Until
   then the content area shows the pressed tab's skeleton, `TabPanelLoading`,
   in place of the old tab's content, every tab is `aria-disabled` and ignores a press, and the
   action beside the heading is `inert`, out of reach of a press or focus;

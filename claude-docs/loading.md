@@ -36,8 +36,10 @@ register, so the control moves first.
   ([`TabbedPage`](components/tabbed-page.md)).
 - The **coven switcher** shows the picked coven's name with a spinner
   ([`WorkspaceSwitcher`](components/workspace-switcher.md)).
-- A **field** that is searching shows `.field__busy`, a spinner inside the
-  input.
+- A **field** that is searching shows a spinner inside the input. In a
+  [`Combobox`](components/combobox.md) it sits in the indicator strip at the
+  right of the control, beside the clear button and the chevron, and the
+  input carries `aria-busy`.
 
 The spinner and the dot wait **100ms** before they show, so an answer that
 arrives at once never flashes them. The wait is a CSS animation delay
@@ -47,8 +49,9 @@ arrives at once never flashes them. The wait is a CSS animation delay
 
 The region is the part of the page that is about to change. While it changes,
 the old content is taken away and the [`Skeleton`](components/skeleton.md) of
-the new content stands in its place. The skeleton has four shapes: `table`,
-`cards`, `form` and `page`. When the real content arrives, it fades in over
+the new content stands in its place. The skeleton has five shapes: `table`,
+`cards`, `form` and `page` for a whole page, and `line` for one line of text
+that is still being fetched. When the real content arrives, it fades in over
 the skeleton for 200ms (`arrived`).
 
 A skeleton shows **at once**, with no wait, because the press has already
@@ -96,16 +99,26 @@ Switching covens is the longest wait on the site, because the new coven's
 layout and page both read from the database.
 
 1. Choosing a coven in the switcher shows the picked name and a spinner at
-   once, with `aria-busy` on the switcher.
-2. The old coven's page is taken away at once, with no dimming, so nobody acts
-   on the wrong coven's data.
-3. The **destination section's** skeleton takes its place. `pathInCoven`
-   already knows the section: cards for Ingredients, the tabbed table for
-   People, page blocks for the coven home, a form for Create Coven.
+   once, with `aria-busy` on the box (`ComboboxSelect`'s `busy` prop).
+2. [`CovenBody`](components/coven-body.md) takes the old coven's page away at
+   once, with no dimming, so nobody acts on the wrong coven's data. It does
+   this when the store is busy and the target's region is `coven`.
+3. The **destination section's** skeleton takes its place, inside a `<main>`
+   of its own, because the pages draw their own `<main>` and the landmark
+   would otherwise vanish during the wait. The switcher works out the shape
+   with `covenSectionShape` (`src/lib/coven-path.ts`): cards for Ingredients,
+   a table for Members and Invitations, and a page for anything else,
+   including the coven home. Choosing Create Coven aims at the `main` region
+   with a `form` shape instead, since that page is not inside a coven.
 4. When the new coven renders, the content fades in, and focus returns to the
    switcher. The `[slug]` layout remounts on a switch, so focus would
-   otherwise drop to `<body>`. Returning it to the switcher is an inference,
-   not a sourced rule, and is checked in the design review.
+   otherwise drop to `<body>`. The switcher sets a module-level flag when a
+   switch to another coven starts, and the next switcher to mount reads it
+   once and focuses its box. A module variable survives the remount, as
+   component state cannot, and dies with the page, so a reload never
+   refocuses. A switch that ends without a remount (a refusal) clears the
+   flag. Returning focus to the switcher is a judgement, not a sourced rule,
+   and is checked in the design review.
 
 ## Why there is no `loading.tsx` and no route-level Suspense
 
@@ -150,15 +163,15 @@ that is why the shared store below exists.
 Navigation goes through one set of pieces in `src/lib/navigation/`, all
 exported from its `index.ts`.
 
-| Piece                    | What it is, and when to use it                                                                                                                                                                                                                  |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PendingLink`            | The link the site draws, in place of a bare `next/link` where the press navigates. A plain press navigates through the shared hook; a press meant for a new tab or window, or a link with its own `target`, is left to the browser.             |
-| `usePendingNavigation()` | Returns `{ pending, navigate(href, options), refresh() }`. Use it for any navigation that is not a link: a button that pushes, a redirect after a save, a refresh. `pending` is that caller's own; the site-wide store carries it for the rest. |
-| `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads.                                                                                          |
-| `NavigationBar`          | The bar. Mounted once in `src/app/providers.tsx`; a developer does not render it again.                                                                                                                                                         |
-| `Skeleton`               | The region. `shape` is `table`, `cards`, `form` or `page`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                         |
-| `Spinner`                | The control's ring, inside a button or field; see [`spinner.md`](components/spinner.md).                                                                                                                                                        |
-| `loading-motion`         | The Sass mixin for any new piece that moves to say something is loading; it brings the reduced-motion pulse and the optional 100ms wait with it.                                                                                                |
+| Piece                    | What it is, and when to use it                                                                                                                                                                                                                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PendingLink`            | The link the site draws, in place of a bare `next/link` where the press navigates. A plain press navigates through the shared hook; a press meant for a new tab or window, or a link with its own `target`, is left to the browser. It sets `aria-busy` on the anchor while its navigation is pending, and tells a `LinkHint` inside it (see below). |
+| `usePendingNavigation()` | Returns `{ pending, navigate(href, options), refresh() }`. Use it for any navigation that is not a link: a button that pushes, a redirect after a save, a refresh. `pending` is that caller's own; the site-wide store carries it for the rest.                                                                                                      |
+| `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads.                                                                                                                                                                                               |
+| `NavigationBar`          | The bar. Mounted once in `src/app/providers.tsx`; a developer does not render it again.                                                                                                                                                                                                                                                              |
+| `Skeleton`               | The region. `shape` is `table`, `cards`, `form`, `page` or `line`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                                      |
+| `Spinner`                | The control's ring, inside a button or field; see [`spinner.md`](components/spinner.md).                                                                                                                                                                                                                                                             |
+| `loading-motion`         | The Sass mixin for any new piece that moves to say something is loading; it brings the reduced-motion pulse and the optional 100ms wait with it.                                                                                                                                                                                                     |
 
 `navigate(href, options)` takes `{ replace, scroll, target }`:
 
@@ -175,14 +188,47 @@ Under the hood, a small external store holds the site-wide busy flag and the
 latest target, so the bar and the regions can follow a navigation that a button
 elsewhere in the tree started.
 
+**Where the pieces are used.** The links that draw a skeleton name a target:
+
+- The site bar's links, and their copies in the account menu, use
+  `siteLinkTarget` (`src/components/AppShell/site-target.ts`): the `main`
+  region, `cards` for `/compendium` and `page` otherwise.
+- The admin navigation uses `adminTarget` (`src/components/AdminNav/target.ts`):
+  `page` for `/admin`, `cards` for `/admin/compendium`, and `table` for the
+  rest.
+- The coven's section links (each carries a `target` in `SectionNav`'s props)
+  and the Contents on the coven home name a `coven` target whose shape is
+  `covenSectionShape` of the section's address.
+- A pager or filter in a `ListFrame`, a tab, and the route modal's
+  provider navigate through the hook directly; they keep their own
+  skeletons.
+
+**What `MainBody` replaces.** `MainBody` (`src/components/AppShell/main-body.tsx`)
+answers a `main` target by replacing everything inside `#main` with one
+`<main className="page-frame">` holding the skeleton, so the page frame is
+replaced as well as the page's content. A navigation with no target, such as a
+refresh, leaves the page standing, and a `coven` target is `CovenBody`'s.
+
+**The dot inside a `PendingLink`.** `LinkHint` reads Next's `useLinkStatus`,
+which only sees a navigation that Next's own `<Link>` started. A
+`PendingLink` navigates through the shared hook, so `useLinkStatus` never
+reports it pending. `PendingLink` therefore wraps its children in
+`LinkPendingContext` (`src/lib/navigation/link-pending.ts`), and `LinkHint`
+shows its dot when either the hook or the enclosing context says pending.
+
 ### The guard
 
-`tests/guards/navigation.test.ts` fails when a file calls `router.push`,
-`router.replace` or `router.refresh` bare, because a bare call moves the page
-with no signal. Next's `<Link>` is not covered. Its baseline lists the files
-that still hold such a call, each with a reason, and a count that no longer
-matches fails too, so the list can only shrink. A new offender fails in its own
-diff; the fix is `usePendingNavigation`, not a new baseline entry.
+`tests/guards/navigation.test.ts` fails when a file under `src/` outside
+`src/lib/navigation/` calls `router.push`, `router.replace` or
+`router.refresh`, because a bare call moves the page with no signal. The match
+is by name: a receiver whose name ends in `router` (`router`, `appRouter`),
+so a router held under another name is not seen. Next's `<Link>` is not
+covered. Its baseline is now empty; a file that holds such a call fails in its
+own diff, and the fix is `usePendingNavigation`, not a new baseline entry. Were
+an entry ever added, a count that no longer matches would fail too, so the list
+could only shrink. A second test feeds the pattern a sample string with three
+calls and an `appRouter` call and expects four matches, so a loosened pattern
+fails.
 
 ### Adding a wait: the steps
 
@@ -224,15 +270,18 @@ More examples:
   - Region: the list's skeleton replaces its rows.
 - **Save in a modal:** unchanged, with no bar, because nothing navigates.
   - Control: `BusyButton` shows its busy label and a spinner.
-  - Its `router.refresh()` afterwards runs through the same navigation hook, so
-    the bar shows if the refresh is slow.
+  - On close, the route modal replaces the address with its close address and
+    then calls `refresh` from the same navigation hook, so the bar shows if the
+    refresh is slow. A refresh has no target, so no skeleton replaces the
+    page.
 - **Sign in with Google:**
   - Control: the provider button becomes a `BusyButton` with a spinner.
   - Page: the bar stays up until the browser leaves.
 - **Combobox search:**
-  - Control: the visible `.field__busy` spinner appears in the input.
+  - Control: the spinner appears in the indicator strip, and the input
+    carries `aria-busy`.
 - **Substitute summary:**
-  - Region: a one-line skeleton replaces the plain "Loading…" text.
+  - Region: a `line` skeleton replaces the plain "Loading…" text.
 
 ## Research
 
