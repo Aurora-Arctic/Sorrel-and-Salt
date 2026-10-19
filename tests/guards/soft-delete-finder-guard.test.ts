@@ -24,6 +24,23 @@ const ESCAPE_HATCHES = [
   'findCupboardEntryIncludingSoftDeleted',
 ];
 
+/**
+ * The folder's internal builders that skip a filter, none of them exported
+ * from the index, each with the only functions allowed to call it. A finder
+ * named here as a caller skips the filter through that hatch alone (M12.24,
+ * M12.32; claude-docs/db/soft-delete.md, "Soft-delete filtering").
+ */
+const INTERNAL_HATCHES: Record<string, string[]> = {
+  existsInIncludingSoftDeleted: ['inUseIngredientParent'],
+  findPageInScopeIncludingSoftDeleted: ['findWorkspaceIngredientPage'],
+  findPageCountInScopeIncludingSoftDeleted: ['findWorkspaceIngredientCount'],
+  workspaceListScopeIncludingSoftDeleted: [
+    'findWorkspaceIngredientPage',
+    'findWorkspaceIngredientCount',
+    'findWorkspaceIngredientFacets',
+  ],
+};
+
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
 /** Every file in the folder, by repo-relative path. Subdirectories are not the repository's. */
@@ -64,13 +81,23 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(finders.length).toBeGreaterThan(30);
 
     for (const finder of finders) {
+      const body = functionBody(finder);
+      // A pinned caller of an internal hatch skips the filter through it,
+      // which the next test holds to the pin.
+      if (
+        Object.entries(INTERNAL_HATCHES).some(
+          ([hatch, callers]) => callers.includes(finder) && new RegExp(`\\b${hatch}\\(`).test(body),
+        )
+      )
+        continue;
       // Either it filters itself, or it delegates to something that does: a
-      // sibling finder, `findPage` and its kin included; `readableSpells`,
-      // which carries the filter with the visibility rule; `readableInTiers`,
-      // which carries it with the tier; or `curated`, with the group's.
+      // sibling finder, `findPage` and its kin included, though never a
+      // hatch; `readableSpells`, which carries the filter with the
+      // visibility rule; `readableInTiers`, which carries it with the tier;
+      // or `curated`, with the group's.
       expect(
-        /notSoftDeleted\(|find(?:Many|One|Page)\w*\(|readableSpells\(|readableInTiers\(|\bcurated\(/.test(
-          functionBody(finder),
+        /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableInTiers\(|\bcurated\(/.test(
+          body,
         ),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
@@ -83,5 +110,33 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     );
     // The generic hatch says what it is at the call site, and skips the filter outright.
     expect(functionBody('findManyIncludingSoftDeleted')).not.toMatch(/notSoftDeleted\(/);
+  });
+
+  it('calls each internal hatch from its pinned callers only, and declares no other', () => {
+    const declared = FILES.flatMap((file) => [
+      ...source(file).matchAll(/^(?:export )?(?:async )?function (\w+IncludingSoftDeleted)\b/gm),
+    ])
+      .map((match) => match[1])
+      .filter((name) => !ESCAPE_HATCHES.includes(name));
+    expect(declared.sort()).toEqual(Object.keys(INTERNAL_HATCHES).sort());
+    expect(declared.filter((name) => FINDERS.includes(name))).toEqual([]);
+
+    for (const [hatch, callers] of Object.entries(INTERNAL_HATCHES)) {
+      // A call, never the declaration itself.
+      const call = new RegExp(`(?<!function )\\b${hatch}\\(`, 'g');
+      const everywhere = FILES.reduce(
+        (sum, file) => sum + (source(file).match(call) ?? []).length,
+        0,
+      );
+      const inCallers = callers.map((caller) => (functionBody(caller).match(call) ?? []).length);
+      // Precondition: each pinned caller does call it, so the count is not vacuous.
+      expect(
+        inCallers.every((count) => count > 0),
+        `each of ${callers.join(', ')} calls ${hatch}`,
+      ).toBe(true);
+      expect(everywhere, `${hatch} is called outside ${callers.join(', ')}`).toBe(
+        inCallers.reduce((sum, count) => sum + count, 0),
+      );
+    }
   });
 });

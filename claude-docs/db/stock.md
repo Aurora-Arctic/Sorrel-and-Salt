@@ -300,7 +300,7 @@ filter never reaches another coven's rows. Categories, forms, folk names and
 elements, which a cupboard row does not cover.
 
 Two settings belong to the coven's list alone (M9.7), so they sit in
-`workspaceListScope` and not in `compendiumList`, which the compendium's page
+`workspaceListScopeIncludingSoftDeleted` and not in `compendiumList`, which the compendium's page
 and count share. `source: 'local'` keeps the coven's own entries;
 `source: 'compendium'` keeps the compendium entries its cupboard names; leaving
 it out keeps both, so the two `source` counts add up to the list's total.
@@ -309,7 +309,7 @@ live form, is not at 0. A jar with no quantity is held but unweighed, so it
 counts as in stock (the test is "null or not 0", since a bare `<> 0` is unknown
 for null and would drop it). An entry whose jars are all at 0 leaves, and so
 does an entry with no jar, whether the coven's own or one its cupboard names.
-Because `workspaceListScope` is shared with the facets, a facet's count equals
+Because `workspaceListScopeIncludingSoftDeleted` is shared with the facets, a facet's count equals
 the list's total under the same two settings.
 
 `lowStockOnly` (M9.8) keeps an entry only when one of the coven's live jars of it,
@@ -327,7 +327,7 @@ switch forced on, under the rest of the filter and the chosen Source.
 entries each filter value would list, counted by the rules of
 [`findCompendiumFacets`](compendium-read.md). It makes the same
 `ingredient: read` check as the list, then calls
-`findWorkspaceIngredientFacets`, which counts within `workspaceListScope`
+`findWorkspaceIngredientFacets`, which counts within `workspaceListScopeIncludingSoftDeleted`
 (the coven's own entries and the compendium entries its cupboard names) over
 the same left join, so the element, zodiac sign and planet counts read the
 coven's overrides: an entry whose cupboard row moves it from one element to

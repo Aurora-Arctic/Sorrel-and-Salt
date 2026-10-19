@@ -257,55 +257,91 @@ declaration it is written in, and a private helper under its own name rather
 than credited to whichever export happens to sit above it. Review holds the
 list since MB.224 retired the guard that pinned it.
 
-It holds the predicate, the seven builders over it, twenty-three functions and the
-writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
-NULL` itself; `inTiers` and `readableInTiers` beside it,
-`readableIngredientParent` in `ingredient-parent.ts` with `inUseIngredientParent` and `inUseVariantParent` (M12.24), which also admit a retired compendium entry the reading coven's cupboard names, and `findPageInTiers`
-and `findPageCountInTiers` in `finders.ts`
-(MB.206); `findSimilarIngredients`
-(M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
-M4.7a), the celestial body, zodiac and form autofill; `findCommonNameSuggestions`
-(M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
-ingredient's folk names and category links; `findManyOfVariants` (MB.218), the
-rows one form of an ingredient owns; `findCompendiumPage` (M8.5), the
-public list, and `findCompendiumCount` (MB.105), its count;
-`findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
-`findIngredientSuggestions` (MB.138), the substitute picker's search;
-`findCompendiumEntryByIdentity` (M5.2), the entry a colliding compendium
-write names; `findCompendiumFormRenameClashes` (MB.220), the entries a
-curated form's rename would give two forms of one name; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
-(MB.82), the entry at an address and the one a retired address redirects to;
-`inCupboard` (M12.14), the private filter under `findCupboardEntry` and
-`findCupboardEntriesOf` that admits a coven's cupboard row only while it
-names a live compendium entry; `findCupboardEntryIncludingSoftDeleted` (M12.24),
-the escape hatch that reads a retired compendium entry for a coven whose live
-cupboard row names it; `findCompendiumMatchesByName` (M12.14), the
-compendium entries a typed name or formal name names exactly;
-`findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
-holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
-ingredient's or a variant's substitutes and the ingredients they link, deleted or not;
-`findReferencesOf` (MB.153, MB.208), a sourced row's references, each
-where its readers may look; `findManyReferences` (MB.153), what a row
-written under the proofs may cite; `findReferenceSuggestions` (MB.153), the
-reference picker's search; `citesNothing` (MB.153), the admin's to-do
-filter, a sourced row citing no compendium reference, and `cites` (MB.218),
-its converse; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
-compendium-tier methods update and soft-delete a row only under
+The list follows, by file. Nothing checks it, so it states no total that
+could go stale: review compares it with the code. "Compendium" in the last column means
+the read touches the compendium tier alone; "both" means it reads the
+compendium and a coven's rows in one statement.
+
+**The predicate and the builders over it.** Every other entry reads the tier
+through one of these.
+
+| Name                       | File                   | Task   | What it is                                                                                   | Reads      |
+| -------------------------- | ---------------------- | ------ | -------------------------------------------------------------------------------------------- | ---------- |
+| `inCompendium`             | `predicates.ts`        | MB.100 | The predicate itself, `workspace_id IS NULL`                                                 | compendium |
+| `inTiers`                  | `predicates.ts`        | MB.206 | The compendium or the proofs' covens                                                         | both       |
+| `readableInTiers`          | `predicates.ts`        | MB.206 | `inTiers`, live rows only                                                                    | both       |
+| `readableIngredientParent` | `ingredient-parent.ts` | MB.206 | A child row's ingredient is readable                                                         | both       |
+| `readableVariantParent`    | `ingredient-parent.ts` | MB.218 | A row one form owns takes its ingredient's tier, through the form                            | both       |
+| `inUseIngredientParent`    | `ingredient-parent.ts` | M12.24 | `readableIngredientParent`, or a retired compendium entry the reading coven's cupboard names | both       |
+| `inUseVariantParent`       | `ingredient-parent.ts` | M12.24 | The same, through a form                                                                     | both       |
+| `findPageInTiers`          | `finders.ts`           | MB.206 | A cursor page (one that resumes from the last row) over `readableInTiers`                    | both       |
+| `findPageCountInTiers`     | `finders.ts`           | MB.206 | Its count                                                                                    | both       |
+
+**The functions.**
+
+| Name                                          | File                   | Task           | What it reads                                                                                                                                  | Reads      |
+| --------------------------------------------- | ---------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `findSimilarIngredients`                      | `ingredients.ts`       | M4.7           | The fuzzy duplicate match                                                                                                                      | both       |
+| `findManyIngredients`                         | `ingredients.ts`       | MB.9           | A loader's batch of ingredients by id                                                                                                          | both       |
+| `findOneIngredient`                           | `ingredients.ts`       | M8.5           | One row in the compendium or a proof's coven                                                                                                   | both       |
+| `findReadableVariant`                         | `ingredients.ts`       | M9.3           | The form a jar may name; never a retired entry's                                                                                               | both       |
+| `findManyOfIngredients`                       | `ingredients.ts`       | M4.8           | An ingredient's folk names and category links                                                                                                  | both       |
+| `findManyOfVariants`                          | `ingredients.ts`       | MB.218         | The rows one form of an ingredient owns                                                                                                        | both       |
+| `findDeitiesOfIngredients`                    | `ingredients.ts`       | MB.167         | An ingredient's deities                                                                                                                        | both       |
+| `findSubstitutesIncludingSoftDeleted`         | `ingredients.ts`       | MB.140         | An ingredient's or a form's substitutes and the ingredients they link, deleted or not                                                          | both       |
+| `findIngredientSuggestions`                   | `ingredients.ts`       | MB.138         | The substitute picker's search                                                                                                                 | both       |
+| `findCompendiumPage`                          | `ingredients.ts`       | M8.5           | The public list                                                                                                                                | compendium |
+| `findCompendiumCount`                         | `ingredients.ts`       | MB.105         | Its count                                                                                                                                      | compendium |
+| `findCompendiumEntryByIdentity`               | `ingredients.ts`       | M5.2           | The entry a colliding compendium write names                                                                                                   | compendium |
+| `workspaceListScopeIncludingSoftDeleted`      | `ingredients.ts`       | M9.4, M12.32   | Which rows a coven's ingredient list holds, a retired entry its cupboard names included; the coven's page, count and filter counts all read it | both       |
+| `listColumns`                                 | `ingredients.ts`       | M12.18         | The cupboard row joined beside a compendium entry, so a coven's overrides sort and filter                                                      | both       |
+| `findCompendiumFacets`                        | `ingredient-facets.ts` | M12.3          | The public list's filter counts                                                                                                                | compendium |
+| `inCupboard`                                  | `cupboard-entries.ts`  | M12.14         | The private filter under `findCupboardEntry` and `findCupboardEntriesOf`: a cupboard row only while its entry is live                          | both       |
+| `findCupboardEntryIncludingSoftDeleted`       | `cupboard-entries.ts`  | M12.24         | The escape hatch that reads a retired entry for a coven whose live cupboard row names it                                                       | both       |
+| `compendiumNamed`                             | `cupboard-entries.ts`  | M12.14         | The private match on a typed name or formal name under `findCompendiumMatchesByName` and `findCompendiumMatchPage`                             | compendium |
+| `findCompendiumMatchPage`                     | `cupboard-entries.ts`  | M12.20         | Those exact matches as a page, for the Add flow                                                                                                | compendium |
+| `countCovensUsing`                            | `cupboard-entries.ts`  | M12.25         | How many covens' cupboards name an entry, a number and never a name                                                                            | both       |
+| `findCompendiumEntryBySlug`                   | `slugs.ts`             | MB.82          | The entry at an address                                                                                                                        | compendium |
+| `findCompendiumSlugRedirect`                  | `slugs.ts`             | MB.82          | The entry a retired address redirects to                                                                                                       | compendium |
+| `findCompendiumSlugs`                         | `slugs.ts`             | MB.84, M12.2   | Every live entry's address, for the sitemap and `llms.txt`                                                                                     | compendium |
+| `findManyStock`                               | `stock.ts`             | M9.3, M12.24   | The private read under a coven's jar finders: jars of a readable form, or of a retired entry the coven uses                                    | both       |
+| `findIngredientsInSpellsIncludingSoftDeleted` | `spells.ts`            | M5.3           | What a readable spell holds, deleted or not                                                                                                    | both       |
+| `findVocabularySuggestions`                   | `vocabularies.ts`      | MB.94, M4.7a   | The celestial body, zodiac and form autofill                                                                                                   | both       |
+| `findCompendiumFormRenameClashes`             | `vocabularies.ts`      | MB.220         | The entries a curated form's rename would give two forms of one name                                                                           | compendium |
+| `findCommonNameSuggestions`                   | `common-names.ts`      | M4.7a          | The common-name autofill                                                                                                                       | both       |
+| `findReferencesOf`                            | `references.ts`        | MB.153, MB.208 | A sourced row's references, each where its readers may look                                                                                    | both       |
+| `findManyReferences`                          | `references.ts`        | MB.153         | What a row written under the proofs may cite                                                                                                   | both       |
+| `findReferenceSuggestions`                    | `references.ts`        | MB.153         | The reference picker's search                                                                                                                  | both       |
+| `cites`                                       | `references.ts`        | MB.218         | A sourced row citing a live compendium reference                                                                                               | compendium |
+| `writerFor`                                   | `write.ts`             | M5.2           | The private builder of `withAudit`'s writer (below)                                                                                            | compendium |
+
+Three kinds of caller are deliberately left off, because they reach the tier
+only through an entry above. That is the rule for a private helper, applied
+the other way round:
+
+- `findCompendiumMatchesByName` reads it through `compendiumNamed`.
+- `citesNothing` (MB.153, the admin's to-do filter) and `citesNowhere` in
+  `ingredients.ts` are `cites` negated.
+- `findWorkspaceIngredientPage`, `findWorkspaceIngredientCount` and
+  `findWorkspaceIngredientFacets` read it through
+  `workspaceListScopeIncludingSoftDeleted`, as `findCupboardEntry` and
+  `findCupboardEntriesOf` read it through `inCupboard`.
+
+`writerFor`'s compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
-curated form's rename onto the compendium variants picking it (`carryFormRename`, M5.6a, MB.220). The
-list, its count, the identity lookup, the exact-name match, the rename's clash check, the two address finders and the writer
-touch the compendium tier alone, as do `citesNothing` and `cites`; each of the rest
-reads the compendium and the proofs' workspaces in a single statement. A later
-task that adds such a finder adds its name to
-this list in its own PR, with a one-line reason beside it.
-The list is then the scope of the extraction task, read from one file.
+curated form's rename onto the compendium variants picking it
+(`carryFormRename`, M5.6a, MB.220).
+
+A later task that adds such a function adds its row to the tables above in
+its own PR. The list is then the scope of the extraction task, read from one
+file.
 
 One entry is not the compendium's: `onSiteTier` (MB.202), `invitations`'
 site tier, `workspace_id IS NULL` spelled for that table alone so that no
 invitation read calls `inCompendium`. It is listed because it spells the
 tier's predicate, and the extraction task leaves it behind.
 
-**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gains MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers, which MB.218 adds to the list above in its own PR ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gained MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers; both are in the tables above ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Where types live
 

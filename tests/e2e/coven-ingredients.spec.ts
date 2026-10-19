@@ -373,60 +373,55 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoSidewaysScroll(page);
 });
 
-test.fixme(
-  'a retired compendium entry the coven still holds keeps its forms and categories on its card',
-  {
-    annotation: {
-      type: 'fixme',
-      description:
-        'the coven list pages live rows only (readableInTiers), so a retired held entry never draws a card',
-    },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
-      A: 'owner',
-    });
-    const A = coven.users.A;
-    const retiring = await withSql(async (sql) => {
-      const ingredientId = await insertIngredient(
-        sql,
-        makeIngredient({
-          name: 'Fixture Retiredwort',
-          canonicalName: 'Fixtura emerita',
-          variants: [makeVariant({ form: 'Herb' })],
-          categories: ['Protection'],
-        }),
-        A,
-      );
-      await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
-      return ingredientId;
-    });
-    const onCompendium = async () => {
-      await page.goto('/compendium');
-      await nameSearch(page).fill('Fixture Retiredwort');
-      await nameSearch(page).press('Enter');
-      await expect(page).toHaveURL(/Retiredwort/);
-      return rowOf(compendiumList(page), 'Fixture Retiredwort');
-    };
-
-    // Live, the entry is the compendium's like any other.
-    await expect(await onCompendium()).toHaveCount(1);
-
-    await withSql((sql) =>
-      sql.begin(async (tx) => {
-        await tx`select set_config('app.current_user_id', ${A}, true)`;
-        await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+// M12.32 turned this on: the coven list reads a retired entry its cupboard
+// still names, so the card draws, marked Retired.
+test('a retired compendium entry the coven still holds keeps its forms and categories on its card', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiring = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Retiredwort',
+        canonicalName: 'Fixtura emerita',
+        variants: [makeVariant({ form: 'Herb' })],
+        categories: ['Protection'],
       }),
+      A,
     );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    return ingredientId;
+  });
+  const onCompendium = async () => {
+    await page.goto('/compendium');
+    await nameSearch(page).fill('Fixture Retiredwort');
+    await nameSearch(page).press('Enter');
+    await expect(page).toHaveURL(/Retiredwort/);
+    return rowOf(compendiumList(page), 'Fixture Retiredwort');
+  };
 
-    // Why the forms and categories could have gone missing: retired, the entry
-    // is gone from the compendium, so a read that filters retired rows finds none.
-    await expect(await onCompendium()).toHaveCount(0);
+  // Live, the entry is the compendium's like any other.
+  await expect(await onCompendium()).toHaveCount(1);
 
-    await page.goto(listPath(coven));
-    const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
-    await expect(card).toHaveCount(1);
-    await expect(card).toContainText('Herb');
-    await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
-  },
-);
+  await withSql((sql) =>
+    sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+    }),
+  );
+
+  // Why the forms and categories could have gone missing: retired, the entry
+  // is gone from the compendium, so a read that filters retired rows finds none.
+  await expect(await onCompendium()).toHaveCount(0);
+
+  await page.goto(listPath(coven));
+  const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
+  await expect(card).toHaveCount(1);
+  await expect(card.getByRole('button', { name: 'Retired' })).toHaveCount(1);
+  await expect(card).toContainText('Herb');
+  await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
+});

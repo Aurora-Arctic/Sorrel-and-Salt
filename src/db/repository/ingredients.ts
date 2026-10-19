@@ -34,7 +34,12 @@ import {
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import { findPageCountInTiers, findPageInTiers } from './finders';
+import {
+  findPageCountInScopeIncludingSoftDeleted,
+  findPageCountInTiers,
+  findPageInScopeIncludingSoftDeleted,
+  findPageInTiers,
+} from './finders';
 import {
   inUseIngredientParent,
   inUseVariantParent,
@@ -312,7 +317,8 @@ export function findCompendiumCount(
 
 /**
  * One page of a coven's ingredients under `filter` (M9.4, M12.18): its own
- * live entries, and every live compendium entry its cupboard names. Matched,
+ * live entries, and every compendium entry its live cupboard rows name, a
+ * retired one included (M12.32). Matched,
  * ordered and keyed as the compendium is, by the same arms, but under the
  * proof, over the coven's overrides, and with each entry's cupboard row beside
  * it, null for the coven's own (claude-docs/db/stock.md, "The workspace
@@ -326,12 +332,12 @@ export async function findWorkspaceIngredientPage(
   const list = compendiumList(filter, membership);
   // The order's left join carries the cupboard row onto each entry as
   // `joined`; the finder's type knows the carried score alone.
-  const entries = (await findPageInTiers(
-    [membership],
+  const entries = (await findPageInScopeIncludingSoftDeleted(
     ingredients,
+    workspaceListScopeIncludingSoftDeleted(membership, filter),
     list.order,
     page,
-    and(list.arms, workspaceListScope(membership, filter)),
+    list.arms,
   )) as PageEntry<IngredientRow, CompendiumScore & { joined: CupboardEntryRow | null }>[];
   return entries.map(({ joined, ...entry }) => ({ ...entry, cupboardEntry: joined }));
 }
@@ -348,32 +354,39 @@ export function findWorkspaceIngredientCount(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const list = compendiumList(filter, membership);
-  return findPageCountInTiers(
-    [membership],
+  return findPageCountInScopeIncludingSoftDeleted(
     ingredients,
+    workspaceListScopeIncludingSoftDeleted(membership, filter),
     list.order,
     start,
-    and(list.arms, workspaceListScope(membership, filter)),
+    list.arms,
   );
 }
 
 /**
- * Which readable rows a coven's ingredient list holds (M9.4, M12.18): its
- * own, and the compendium entries a live cupboard row of its names, one keyed
- * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar does
+ * Which rows a coven's ingredient list holds (M9.4, M12.18): its own live
+ * entries, and the compendium entries a live cupboard row of its names, one
+ * keyed `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. The
+ * second arm admits a compendium entry a curator has retired (soft-deleted):
+ * the coven still holds it, so it stays listed until the coven removes it
+ * (M12.32, by M12.24's rule; claude-docs/db/workspace-compendium-entries.md,
+ * "When the compendium retires the entry"). Hence the hatch's name: the scope
+ * carries the tombstone filters itself — the own entry's here, the cupboard
+ * row's in `existsIn` — so its readers page it without one, and
+ * `inCompendium` keeps a coven's own deleted entry off the second arm. A jar does
  * not decide it, and an own entry sharing a compendium entry's name leaves
  * both listed: the coven chose both. The page and the facets (M12.3) both read
  * it, so they hold the same rows. The coven-only `source`, `inStock` and
  * `lowStockOnly` settings (M9.7, M9.8) are read here, not in `compendiumList`, which the
  * compendium's page and count share and where a coven's jars mean nothing.
  */
-export function workspaceListScope(
+export function workspaceListScopeIncludingSoftDeleted(
   membership: Membership,
   filter: Pick<IngredientFilter, 'source' | 'inStock' | 'lowStockOnly'> = {},
-): SQL | undefined {
+): SQL {
   return and(
     or(
-      scopedTo(membership, ingredients),
+      and(scopedTo(membership, ingredients), notSoftDeleted(ingredients)),
       and(
         inCompendium(ingredients),
         existsIn(
@@ -389,7 +402,7 @@ export function workspaceListScope(
     filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
     filter.inStock ? holdsJarInStock(membership) : undefined,
     filter.lowStockOnly ? holdsJarLowOrOut(membership) : undefined,
-  );
+  ) as SQL;
 }
 
 /**

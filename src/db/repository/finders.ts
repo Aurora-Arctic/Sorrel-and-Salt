@@ -206,6 +206,38 @@ export function findPageCountInScope(
   return readCount(table, and(scope, notSoftDeleted(table)), order, start, where);
 }
 
+/**
+ * `findPageInScope` without the tombstone filter: the scope decides alone
+ * which deleted rows it admits. The coven's Ingredients list is its one
+ * caller (M12.32), whose scope admits a retired compendium entry only while
+ * the coven's live cupboard row names it. A hatch, not a flag on
+ * `findPageInScope`, so a scope that forgets the filter cannot reach it by a
+ * default; `tests/guards/soft-delete-finder-guard.test.ts` pins its caller.
+ */
+export function findPageInScopeIncludingSoftDeleted<
+  TTable extends PgTable & Identified,
+  Carried extends object,
+>(
+  table: TTable,
+  scope: SQL,
+  order: PageOrder<Carried>,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+  return readPage(table, scope, order, page, where);
+}
+
+/** `findPageCount` for `findPageInScopeIncludingSoftDeleted`: the same rows, counted. */
+export function findPageCountInScopeIncludingSoftDeleted(
+  table: PgTable & Identified,
+  scope: SQL,
+  order: PageOrder,
+  start: Cursor | undefined,
+  where?: SQL,
+): Promise<PageCount> {
+  return readCount(table, scope, order, start, where);
+}
+
 /** A page of `table` under its finder's `scope` and the caller's `where`, cut at the page's bounds. */
 function readPage<TTable extends PgTable & Identified, Carried extends object>(
   table: TTable,
