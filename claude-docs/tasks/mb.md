@@ -272,6 +272,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 | MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
 | MB.268 | Seeded Users Are Verified                                                                                                | Bugfixes | —                      |
+| MB.269 | A Repeat Invitation Replaces the Pending One                                                                             | Bugfixes | —                      |
 | MB.270 | The Search Sentence Types a Changed Term                                                                                 | Bugfixes | —                      |
 | MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
 | MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
@@ -1709,6 +1710,36 @@ _Acceptance criteria:_
 - Seeding twice in a row leaves the users verified, and the seed still makes no other change on the second run
 - Any database test that relied on a seeded user being unverified creates its own unverified user instead
 - Docs: `claude-docs/db/standard-scenario.md`, and any seed doc that describes the users, says they are seeded verified
+
+**MB.269 — A Repeat Invitation Replaces the Pending One** · 3h
+
+_Story:_ As a coven owner, I want inviting an address again to replace the invitation already waiting for it, so that only one invitation is pending per address and the old link stops working.
+
+Inviting an address that already has a pending invitation of the same kind creates a second invitation, and both stay live. "The same kind" means the same coven, or the site's admin and curator invitations. Neither `createInvitation` in `src/modules/coven/services/invitations.ts` nor `createAdminInvitation` in `src/modules/identity/services/admin-invitations.ts` looks for one already waiting. So the Members page and the invited account's Invitations section list both, and either link can be accepted. The new invitation should withdraw the waiting one, in the same write that creates it.
+
+Found on 2026-10-19. Steps to reproduce:
+
+1. Sign in as a coven owner.
+2. Open the coven's Members page.
+3. Invite an address as a member.
+4. Invite the same address to the same coven again.
+5. Look at the pending invitations, on the Members page and on that address's account page.
+
+- **Actual:** two pending invitations exist for the same address and coven, and both links work.
+- **Expected:** the second replaces the first. The first is withdrawn and its link stops working, leaving one pending invitation.
+
+The same happens when an admin invites the same address to the site tier twice.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: inviting the same address to the same coven twice leaves one pending invitation, the newest.
+- The withdrawal and the new invitation happen in one `withAudit` write. The withdrawn row is stamped as revoked by the inviter, the same as a manual withdrawal.
+- The old link is refused once replaced. A test tries to accept the first invitation, both by its link and by its id on the account page, and is refused.
+- The new invitation's role is the one that applies, even when it differs from the old one's.
+- Only a pending invitation to the same coven is replaced. A pending invitation to another coven, an accepted one and a lapsed one are left alone, and tests prove each.
+- The same rules hold for admin invitations: a second site-tier invitation to the same address replaces the pending one. Coven invitations and site-tier invitations never replace each other.
+- The address is matched case-insensitively, the same way acceptance already matches it.
+- `claude-docs/` docs on invitations say that a repeat invitation replaces the pending one.
 
 **MB.270 — The Search Sentence Types a Changed Term** · 1.5h
 
