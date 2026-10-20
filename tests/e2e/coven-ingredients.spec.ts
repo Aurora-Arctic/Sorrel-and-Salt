@@ -424,7 +424,8 @@ test('a retired compendium entry the coven still holds keeps its forms and categ
   await page.goto(listPath(coven));
   const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
   await expect(card).toHaveCount(1);
-  await expect(card.getByRole('button', { name: 'Retired' })).toHaveCount(1);
+  // Exact: the card's More (M8.17) is named for the entry, "More for Fixture Retiredwort, …".
+  await expect(card.getByRole('button', { name: 'Retired', exact: true })).toHaveCount(1);
   await expect(card).toContainText('Herb');
   await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
 });
@@ -668,7 +669,9 @@ test("a coven's own entry is deleted from its edit dialog over the list, back on
     .getByRole('link', { name: 'Edit Fixture Gonewort, Fixtura abiens' })
     .click();
   const dialog = page.getByRole('dialog', { name: /Fixture Gonewort/ });
-  await dialog.getByRole('button', { name: 'Delete Ingredient' }).click();
+  // An owner may link too, so Delete shares the foot's More with Link (M8.17).
+  await dialog.getByRole('button', { name: 'More', exact: true }).click();
+  await dialog.getByRole('menuitem', { name: 'Delete Ingredient' }).click();
   const question = dialog.getByRole('group', { name: /Delete/ });
   await expect(question).toContainText('Fixture Gonewort');
   await question.getByRole('button', { name: 'Delete', exact: true }).click();
