@@ -31,11 +31,16 @@ export interface EntryMarksProps {
    * question to the entry page (the owner's call, 2026-10-20).
    */
   provenance?: boolean;
+  /**
+   * False leaves the safety badge out, for a caller that draws its own SafetyMark
+   * elsewhere: the card, beside the name (the owner's call, 2026-10-20).
+   */
+  safety?: boolean;
   /** The ingredient's own Toxic flag; it or any form's shows Toxic, last in the row. */
   toxic?: boolean | null;
-  /** The ingredient's own safety notes; these or any form's show Caution, before Toxic. */
+  /** The ingredient's own safety notes; these or any form's show Caution, unless Toxic shows. */
   safetyNotes?: string | null;
-  /** The forms the caller shows, whose notes and flags feed Caution and Toxic. */
+  /** The forms the caller shows, whose notes and flags feed Toxic and Caution. */
   variants?: readonly SafetyVariant[];
 }
 

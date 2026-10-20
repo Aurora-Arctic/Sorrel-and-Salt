@@ -5,6 +5,7 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
+import { SafetyMark } from '../SafetyNote';
 import LinkHint from '../LinkHint';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
@@ -38,15 +39,17 @@ const IngredientCard = ({
   const Heading = `h${level}` as const;
   const formal = (formalName ?? '').trim();
 
-  // Without a mark the cluster is left out, not left empty, so it adds no gap.
-  const marked = Boolean(
-    kind === 'own' ||
-    retired ||
-    toxic ||
-    variants.some((v) => v.toxic) ||
+  // Without a mark each holder is left out, not left empty, so it adds no gap.
+  const marked = kind === 'own' || Boolean(retired);
+  const safe =
+    Boolean(toxic) ||
     (safetyNotes ?? '').trim() !== '' ||
-    variants.some((v) => (v.safetyNotes ?? '').trim() !== ''),
-  );
+    variants.some((v) => v.toxic || (v.safetyNotes ?? '').trim() !== '');
+  // The first word apart, so the safety badge beside the name drops below it only
+  // once that word would have to break to fit (the owner's call, 2026-10-20): the
+  // name block's narrowest width is this word's (index.scss). Spans do not change
+  // the link's name.
+  const [, first = label, rest = ''] = /^(\S+)(.*)$/s.exec(label) ?? [];
 
   const jars = children != null && children !== false;
   const hasActions = actions != null && actions !== false;
@@ -61,7 +64,8 @@ const IngredientCard = ({
           <Heading className="ingredient-card__name">
             {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
             <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-              {label} <LinkHint />
+              <span className="ingredient-card__first">{first}</span>
+              {rest} <LinkHint />
             </PendingLink>
           </Heading>
           {formal !== '' && (
@@ -76,17 +80,20 @@ const IngredientCard = ({
               )}
             </p>
           )}
+          {/* Every badge but the safety one, as a row under the formal name (the
+              owner's call, 2026-10-20). */}
+          {marked && (
+            <div className="specimen__badges">
+              <EntryMarks kind={kind} retired={retired} provenance={false} safety={false} />
+            </div>
+          )}
         </div>
-        {marked && (
-          <div className="specimen__badges">
-            <EntryMarks
-              kind={kind}
-              retired={retired}
-              provenance={false}
-              toxic={toxic}
-              safetyNotes={safetyNotes}
-              variants={variants}
-            />
+        {/* The one safety badge, Toxic over Caution, at the top right beside the
+            name. After the row above in the document: read last, as the row's red
+            mark is, and where it lands when it wraps below. */}
+        {safe && (
+          <div className="ingredient-card__safety">
+            <SafetyMark toxic={toxic} safetyNotes={safetyNotes} variants={variants} />
           </div>
         )}
       </div>

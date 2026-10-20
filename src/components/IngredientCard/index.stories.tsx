@@ -42,7 +42,7 @@ const BASE = {
 };
 
 // The public compendium: no cupboard mark, no jar lines. The oil form carries notes and
-// the Toxic flag, so Caution and Toxic show together.
+// the Toxic flag, so Toxic shows alone: it wins over Caution.
 export const Compendium: Story = () => <IngredientCard {...BASE} kind="compendium" />;
 
 // A coven's own entry, with the jar lines M9.6 will fill the slot with.
@@ -106,16 +106,15 @@ export const ManyForms: Story = () => (
   </IngredientCard>
 );
 
-// Retired, Caution and Toxic together: the badges wrap and every row
-// starts at the left edge in a narrow column.
+// Retired under the formal name and Toxic beside the name, Toxic winning over Caution.
 export const RetiredCaution: Story = () => (
   <IngredientCard {...BASE} kind="cupboard" retired safetyNotes="Keep away from open flame.">
     <Jars />
   </IngredientCard>
 );
 
-// A long name and a long formal name with all three top badges: the name block
-// and the badges cannot sit side by side, so the badges wrap beneath.
+// A long name and a long formal name: the name wraps with the safety badge still beside
+// its first word, and Retired sits under the formal name.
 export const LongName: Story = () => (
   <IngredientCard
     {...BASE}
@@ -125,6 +124,14 @@ export const LongName: Story = () => (
     formalName="Fixtura testalis longissimanicusmus"
     safetyNotes="Keep away from open flame."
   >
+    <Jars />
+  </IngredientCard>
+);
+
+// A name of one long word: the safety badge stays beside it while the word fits, and
+// drops below it, after the row under the formal name, once it would break.
+export const OneLongWord: Story = () => (
+  <IngredientCard {...BASE} kind="own" label="Testwortnameicanicusmuslongus">
     <Jars />
   </IngredientCard>
 );

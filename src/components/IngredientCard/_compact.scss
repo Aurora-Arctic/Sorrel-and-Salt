@@ -37,18 +37,25 @@
 
   // Badges: the sides tighten and the gaps close. The height stays at 24px,
   // the smallest target a tipped badge may have.
-  .specimen__badges {
+  .specimen__badges,
+  .ingredient-card__safety {
     gap: space(1);
-    // Centred on the smaller name's first line, as in the regular card (index.scss), and
-    // no air below.
-    margin-block: calc(
-        (#{heading-size(4)} * 1.15 - #{map.get($badge-sizes, 'small', 'min-block-size')}) / 2
-      )
-      0;
 
     .badge {
       @include badge-size('small');
     }
+  }
+
+  // The row under the formal name, one step closer.
+  .ingredient-card__heading > .specimen__badges {
+    margin-block-start: space(1);
+  }
+
+  // Centred on the smaller name's first line, as in the regular card (index.scss).
+  .ingredient-card__safety {
+    margin-block-start: calc(
+      (#{heading-size(4)} * 1.15 - #{map.get($badge-sizes, 'small', 'min-block-size')}) / 2
+    );
   }
 
   // Chips: tighter inside and between. The chip row has no control in it.

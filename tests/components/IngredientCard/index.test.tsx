@@ -206,15 +206,44 @@ describe('IngredientCard', () => {
       expect(cautionMark()).toBeNull();
     });
 
-    it('shows Toxic without Caution when nothing has notes, and both when both apply', () => {
+    // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
+    it('shows Toxic alone, with or without notes', () => {
       const bare = render(<IngredientCard {...BASE} toxic variants={[LEAF]} />);
       expect(toxicMark()).not.toBeNull();
       expect(cautionMark()).toBeNull();
       bare.unmount();
 
-      render(<IngredientCard {...BASE} toxic variants={[OIL]} />);
+      render(
+        <IngredientCard {...BASE} toxic safetyNotes="Fixture entry caution." variants={[OIL]} />,
+      );
       expect(toxicMark()).not.toBeNull();
-      expect(cautionMark()).not.toBeNull();
+      expect(cautionMark()).toBeNull();
+    });
+
+    // The safety badge sits beside the name and the rest under the formal name
+    // (the owner's call, 2026-10-20). It is read last, after the name, the formal
+    // name and the row beneath them: the row the badge joins when it wraps.
+    it('reads the name, the formal name, the other marks, then the safety badge', () => {
+      render(
+        <IngredientCard
+          {...BASE}
+          kind="own"
+          formalName="Fixtura testalis"
+          safetyNotes="Fixture entry caution."
+        />,
+      );
+      const order = [
+        screen.getByRole('link', { name: /Fixture Testwort/ }),
+        screen.getByText('Fixtura testalis'),
+        localMark(),
+        cautionMark(),
+      ];
+
+      for (const [at, mark] of order.slice(1).entries()) {
+        expect(
+          order[at]!.compareDocumentPosition(mark!) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      }
     });
 
     it('draws no caution block, even when a listed form has notes', () => {

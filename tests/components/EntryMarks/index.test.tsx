@@ -118,7 +118,7 @@ describe('EntryMarks', () => {
 });
 
 // Green first, red last, on every badge row (the owner's call, 2026-10-20):
-// EntryMarks draws the whole row, Caution and Toxic included, so the order
+// EntryMarks draws the whole row, the safety mark included, so the order
 // holds in one place. Asserted by document order, never by class or copy.
 describe('EntryMarks badge order', () => {
   const precedes = (first: Element | null, second: Element | null): boolean =>
@@ -134,22 +134,28 @@ describe('EntryMarks badge order', () => {
     expect(precedes(annotated(), retired())).toBe(true);
   });
 
-  it('draws Local ahead of the red marks', () => {
-    render(<EntryMarks kind="own" toxic safetyNotes="Fixture caution." />);
-    expect(precedes(local(), caution())).toBe(true);
+  it('draws Local ahead of the safety mark', () => {
+    render(<EntryMarks kind="own" toxic />);
     expect(precedes(local(), toxic())).toBe(true);
   });
 
-  it('draws the red marks last, Caution before Toxic', () => {
-    render(<EntryMarks kind="cupboard" retired annotated toxic safetyNotes="Fixture caution." />);
+  it('draws the safety mark last', () => {
+    render(<EntryMarks kind="cupboard" retired annotated safetyNotes="Fixture caution." />);
 
     for (const mark of [annotated(), retired()]) {
       expect(precedes(mark, caution())).toBe(true);
     }
-    expect(precedes(caution(), toxic())).toBe(true);
   });
 
-  it('reads Caution and Toxic from a form as well as the ingredient', () => {
+  // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
+  it('shows Toxic alone when the entry is toxic and has notes', () => {
+    render(<EntryMarks kind="cupboard" toxic safetyNotes="Fixture caution." />);
+
+    expect(toxic()).toBeInTheDocument();
+    expect(caution()).toBeNull();
+  });
+
+  it('reads Toxic over Caution from a form as well as the ingredient', () => {
     render(
       <EntryMarks
         kind="compendium"
@@ -157,8 +163,16 @@ describe('EntryMarks badge order', () => {
       />,
     );
 
-    expect(caution()).toBeInTheDocument();
     expect(toxic()).toBeInTheDocument();
+    expect(caution()).toBeNull();
+  });
+
+  it('leaves the safety mark to its caller when told to', () => {
+    render(<EntryMarks kind="own" safety={false} toxic safetyNotes="Fixture caution." />);
+
+    expect(local()).toBeInTheDocument();
+    expect(toxic()).toBeNull();
+    expect(caution()).toBeNull();
   });
 });
 

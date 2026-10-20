@@ -47,3 +47,10 @@ export interface CautionMarkProps {
   /** The forms the consumer shows; notes on any one show the mark. */
   variants?: readonly SafetyVariant[];
 }
+
+/** ToxicMark's and CautionMark's props together: SafetyMark draws one of the two. */
+export interface SafetyMarkProps {
+  toxic?: boolean | null;
+  safetyNotes?: string | null;
+  variants?: readonly SafetyVariant[];
+}

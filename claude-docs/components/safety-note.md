@@ -1,7 +1,7 @@
-# SafetyNote, ToxicMark and CautionMark
+# SafetyNote, ToxicMark, CautionMark and SafetyMark
 
 `src/components/SafetyNote/` — how the project shows that an ingredient needs
-care (M8.13a, story 53). Three components share the directory:
+care (M8.13a, story 53). Four components share the directory:
 
 - **`SafetyNote`** (the default export) sets an ingredient's safety notes apart
   from its description, so a warning is noticed rather than skimmed past.
@@ -9,15 +9,18 @@ care (M8.13a, story 53). Three components share the directory:
   show is flagged toxic. M11.21 added the flags and left the badge to Wave 12.
 - **`CautionMark`** is the Caution badge (M8.14), a summary for a reader who has
   not reached the notes yet: the word "Caution", no tip, nothing focusable, shown when the
-  ingredient or a form on show has non-blank notes. It is independent of Toxic, so
-  both can show. It wears the tinted `caution` palette, quieter than Toxic's
+  ingredient or a form on show has non-blank notes. On its own it is independent of
+  Toxic; in a badge row `SafetyMark` keeps only one. It wears the tinted `caution` palette, quieter than Toxic's
   solid fill. The card uses it, and so does the entry page's head (the owner's call,
   2026-10-19), so a note on one form shows before the reader scrolls to that form;
   the page also keeps `SafetyNote` for the notes themselves.
+- **`SafetyMark`** is a badge row's one safety badge (the owner's call, 2026-10-20):
+  `ToxicMark` when the ingredient or a shown form is flagged, else `CautionMark`, else
+  nothing. Toxic says more, so the two never share a row. It takes both marks' props.
 
 This directory owns safety presentation for the whole project. The card (M8.14),
 the entry page (M8.19) and the spell builder's toxic-ingredient warning (M10.18)
-each use these two as they are, and none of them draws a warning of its own. In a badge row, the card's and the entry page's head, `EntryMarks` draws them, last, as the red group ([`entry-marks.md`](entry-marks.md), "The order").
+each use these two as they are, and none of them draws a warning of its own. In a badge row, the card's and the entry page's head, they are drawn through `SafetyMark`: last, as the red group, by `EntryMarks` on the page, and beside the name on the card ([`entry-marks.md`](entry-marks.md), "The order").
 
 ## Props
 

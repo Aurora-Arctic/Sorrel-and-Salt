@@ -1,21 +1,22 @@
 # EntryMarks
 
 `src/components/EntryMarks/` — an ingredient entry's badge row: the badges saying whose it is
-(M8.14), and its Caution and Toxic warnings. The ingredient card and the head of the entry page (`IngredientEntry`)
+(M8.14), and its one safety warning, Toxic or else Caution. The ingredient card and the head of the entry page (`IngredientEntry`)
 both draw them through this one component, so the two cannot drift.
 
 ## Props
 
 `EntryMarksProps` (`types.ts`):
 
-| Prop                               | What it is                                                                                                                                                                           |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `kind`                             | `own`, `cupboard` or `compendium`: the three kinds below                                                                                                                             |
-| `annotated`                        | The cupboard row overrides a field of the compendium's. Only a `cupboard` entry shows it                                                                                             |
-| `retired`                          | The curators retired the entry (M12.24)                                                                                                                                              |
-| `inCoven`                          | Read inside a coven: a `compendium` entry then shows Compendium. Left out on the public compendium                                                                                   |
-| `provenance`                       | Compendium and Annotated, the two marks saying where a held entry came from. On by default; the ingredient card turns it off                                                         |
-| `toxic`, `safetyNotes`, `variants` | The ingredient's own flag and notes, and the forms the caller shows; any one set shows Toxic or Caution, drawn by `ToxicMark` and `CautionMark` ([`safety-note.md`](safety-note.md)) |
+| Prop                               | What it is                                                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`                             | `own`, `cupboard` or `compendium`: the three kinds below                                                                                                                  |
+| `annotated`                        | The cupboard row overrides a field of the compendium's. Only a `cupboard` entry shows it                                                                                  |
+| `retired`                          | The curators retired the entry (M12.24)                                                                                                                                   |
+| `inCoven`                          | Read inside a coven: a `compendium` entry then shows Compendium. Left out on the public compendium                                                                        |
+| `provenance`                       | Compendium and Annotated, the two marks saying where a held entry came from. On by default; the ingredient card turns it off                                              |
+| `safety`                           | The safety badge. On by default; the ingredient card turns it off and draws `SafetyMark` beside the name itself                                                           |
+| `toxic`, `safetyNotes`, `variants` | The ingredient's own flag and notes, and the forms the caller shows; any one set shows Toxic, or else Caution, drawn by `SafetyMark` ([`safety-note.md`](safety-note.md)) |
 
 ## The three kinds
 
@@ -36,7 +37,7 @@ A retired entry shows **Retired** in place of Compendium (it was worded "No Long
 
 **Annotated** (changed 2026-10-18; in place of Compendium, beside it from 2026-10-19 until the owner's call of 2026-10-20 that Annotated wins, since it already says the entry is the Compendium's): "Annotated", a tipped button like Retired ("From the Compendium, with your coven's own changes."), opening from its right edge and lifted above the card's stretched link so a click opens the tip and does not navigate. A retired and annotated entry shows Retired and Annotated, each with its own tip; a retired, unannotated one shows Retired alone. It wears the `annotated` palette: Local's inks, through the `$local-badge-dark` and `$local-badge-light` tokens in `_variables.scss`, so the two cannot drift apart (it marks your coven's own changes, the same idea as your own entry). Its contrast is Local's. It is never rendered as `badge--local`.
 
-**The card leaves Compendium and Annotated off** (the owner's call, 2026-10-20). A coven's card shows Local, Retired, Caution and Toxic, and never Compendium or Annotated: where a held entry came from, and whether the coven changed it, is the entry page's to say. `IngredientCard` passes `provenance={false}`; the entry page's head leaves it on, so both still draw through this one component. The Quick Look details modal draws no badges at all.
+**The card leaves Compendium and Annotated off** (the owner's call, 2026-10-20). A coven's card shows Local, Retired and its safety badge, and never Compendium or Annotated: where a held entry came from, and whether the coven changed it, is the entry page's to say. `IngredientCard` passes `provenance={false}`, and `safety={false}`, since it draws `SafetyMark` beside the name and this row under the formal name ([`ingredient-card.md`](ingredient-card.md), "A long name"); the entry page's head leaves it on, so both still draw through this one component. The Quick Look details modal draws no badges at all.
 
 ## The order: green first, red last
 
@@ -48,10 +49,12 @@ Every badge row is drawn by this component, so the order holds in one place rath
 | Annotated  | `annotated` | Local's inks           | green   |
 | Compendium | `low-stock` | chalk on the muted ink | neutral |
 | Retired    | `retired`   | chalk on the muted ink | neutral |
-| Caution    | `caution`   | wax red tint           | red     |
 | Toxic      | `safety`    | solid wax red          | red     |
+| Caution    | `caution`   | wax red tint           | red     |
 
-So a held, annotated entry with notes reads Annotated, Caution, Toxic (Annotated wins over Compendium), a held, unannotated one Compendium, Caution, Toxic, and a retired, annotated one Annotated, Retired, Caution, Toxic. Low (`low-stock`, neutral) and Out of Stock (`out-of-stock`, a muted wax tint, red) are `StockBadge`s on the jar lines, one to a line, so they share no row with these. The form heading's lone `ToxicMark` on the entry page is a row of one.
+**One safety badge** (the owner's call, 2026-10-20): Toxic when the ingredient or a shown form is flagged, else Caution when any has notes. Toxic says more, so the two never show together; `SafetyMark` decides.
+
+So a held, annotated entry with notes reads Annotated, Caution (Annotated wins over Compendium), a held, unannotated toxic one Compendium, Toxic, and a retired, annotated one Annotated, Retired, then its safety badge. Low (`low-stock`, neutral) and Out of Stock (`out-of-stock`, a muted wax tint, red) are `StockBadge`s on the jar lines, one to a line, so they share no row with these. The form heading's lone `ToxicMark` on the entry page is a row of one.
 
 ## Contracts
 
@@ -59,7 +62,7 @@ So a held, annotated entry with notes reads Annotated, Caution, Toxic (Annotated
   `kind` from `workspaceId` and `cupboardEntry`, and `annotated` from
   `isAnnotated`; the card is handed `kind` and `retired` by its caller, and no
   `annotated`, which it never shows.
-- **No wrapper.** It renders the badges bare, Caution and Toxic included, inside the
+- **No wrapper.** It renders the badges bare, the safety badge included, inside the
   caller's own row (`.specimen__badges` on the card, `.badges` on the entry page). With
   nothing to show it renders nothing.
 - **Local is a `span`; Compendium is an `output` element**, so it carries the

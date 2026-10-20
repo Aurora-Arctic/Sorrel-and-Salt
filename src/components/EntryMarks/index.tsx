@@ -1,5 +1,5 @@
 import { Fragment, type ReactElement, type ReactNode } from 'react';
-import { CautionMark, ToxicMark } from '../SafetyNote';
+import { SafetyMark } from '../SafetyNote';
 import type { EntryMarksProps } from './types';
 import TipMark from './tip-mark';
 import './index.scss';
@@ -22,7 +22,7 @@ const byTone = (marks: readonly Mark[]): Mark[] =>
   TONES.flatMap((tone) => marks.filter((mark) => mark.tone === tone));
 
 // An ingredient entry's badge row: whose it is (Local, Compendium, Annotated,
-// Retired) and its warnings (Caution, Toxic). New and Updated are RecencyMark,
+// Retired) and its one warning (Toxic, or else Caution). New and Updated are RecencyMark,
 // which sits elsewhere. One component so the entry page's head and the
 // ingredient card cannot drift (M8.14). It takes the kind and the flags as props
 // and works none of them out from the data. It renders the badges bare, with no
@@ -33,6 +33,7 @@ const EntryMarks = ({
   retired = false,
   inCoven = false,
   provenance = true,
+  safety = true,
   toxic,
   safetyNotes,
   variants,
@@ -87,15 +88,15 @@ const EntryMarks = ({
       ),
     });
   }
-  // Each draws nothing when it does not hold, so it is listed unconditionally.
-  marks.push(
-    {
-      key: 'caution',
+  // One safety badge, Toxic over Caution, drawing nothing when neither holds. The
+  // card draws its own beside the name (`safety={false}`).
+  if (safety) {
+    marks.push({
+      key: 'safety',
       tone: 'red',
-      node: <CautionMark safetyNotes={safetyNotes} variants={variants} />,
-    },
-    { key: 'toxic', tone: 'red', node: <ToxicMark toxic={toxic} variants={variants} /> },
-  );
+      node: <SafetyMark toxic={toxic} safetyNotes={safetyNotes} variants={variants} />,
+    });
+  }
   return (
     <>
       {byTone(marks).map((mark) => (

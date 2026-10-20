@@ -92,13 +92,48 @@
   }
 }
 
-// Takes the room it needs and may shrink below its longest word, which breaks
-// (hyphenated where the dictionary can, anywhere where it cannot) rather than
-// pushing the badges off the card. `hyphens` is Baseline Widely Available.
+// The name block and the safety badge share the top row until the name's first word
+// no longer fits beside the badge; only then does the badge wrap below (the owner's
+// call, 2026-10-20). A flex row wraps on its items' narrowest widths, and the name
+// block's is made its first word's: from a zero basis it grows into the spare room, and
+// its content-based minimum (`min-width: auto`) is its min-content width. Every other
+// word may break anywhere (`overflow-wrap: anywhere`), so it counts as no wider than a
+// letter there, and the badge row below counts as nothing; the first word breaks only
+// when it overflows (`break-word`) and never by the dictionary (`hyphens: manual`), so
+// it counts whole. Not the longest word, which `flex-wrap` alone keys on, nor the whole
+// name, which a `flex-basis: auto` keys on. `max-width` lets a first word wider than
+// the card still break rather than spill. All Baseline Widely Available.
 .ingredient-card__heading {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 1 0;
+  max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+// The pending dot takes only its start margin on the line, its own width hanging into
+// the gap beside the safety badge, so it never wraps alone onto a blank line under a
+// name that just fits (the narrower block made that common). Hidden but for a slow
+// navigation; the gap holds it. No no-break space: Chrome breaks before the dot anyway.
+.ingredient-card__name .link-hint {
+  margin-inline-end: -0.6em;
+}
+
+.ingredient-card__first {
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.ingredient-card__safety {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+// The other badges, a row under the formal name. Its zero width and full minimum
+// keep it the block's width while adding nothing to the block's narrowest width, so
+// a wide badge never pushes the safety badge down.
+.ingredient-card .ingredient-card__heading > .specimen__badges {
+  inline-size: 0;
+  min-inline-size: 100%;
+  margin-block: space(2) 0;
 }
 
 .ingredient-card__name {
@@ -181,12 +216,12 @@
   @include badge-size('medium');
 }
 
-// The badges' first row centred on the name's first line, as the forms line's icons are
+// The safety badge centred on the name's first line, as the forms line's icons are
 // centred on theirs: the specimen tops them flush (`align-items: flex-start`), which sat the
 // 24px badge above a taller line of name. Half the name's line box less the badge's height,
 // so the step follows the name's size (`heading-size(3)` here, `heading-size(4)` compact).
 // It shows only beside the name; wrapped beneath it, it adds that much to the row gap.
-.ingredient-card .specimen__badges {
+.ingredient-card .ingredient-card__safety {
   margin-block-start: calc(
     (#{heading-size(3)} * 1.15 - #{map.get($badge-sizes, 'medium', 'min-block-size')}) / 2
   );
