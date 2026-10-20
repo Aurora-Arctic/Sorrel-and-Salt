@@ -89,6 +89,7 @@ const BASE: CovenCardsProps = {
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,
+  canAdd: true,
 };
 
 export const Default: Story = () => <CovenCards {...BASE} />;
@@ -103,7 +104,18 @@ export const MidList: Story = () => (
   />
 );
 
+// An empty cupboard: a member is offered the first add, a viewer reads the sentence alone.
 export const Empty: Story = () => <CovenCards {...BASE} entries={[]} total={0} />;
+
+export const EmptyForAViewer: Story = () => (
+  <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />
+);
+
+// A search that matched nothing: the region says only what to do, pointing at the filter row's
+// clears (the search sentence above already names the search), and hands the search to the Compendium.
+export const NoMatches: Story = () => (
+  <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
+);
 
 // A member's view: Edit in the foot of the coven's own entry, none on the compendium's (M8.17).
 export const WithEdit: Story = () => (

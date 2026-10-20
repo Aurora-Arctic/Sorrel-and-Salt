@@ -1099,11 +1099,10 @@ What each section review (MB.115 to MB.124) designs to:
   ([`components/modal.md`](components/modal.md)). A button that opens a
   dialog from its own page is a `ModalButton`, which takes the focus back to
   it however the dialog closes, since `Modal` restores nothing itself. A
-  refusal from an action on the page is said once, above the controls, by an
-  `ActionFailure` wrapped around them
-  ([`components/action-failure.md`](components/action-failure.md)), not
-  beside the button pressed, where a narrow cell or a phone's card would wrap
-  it. A page's own menu of jump links is a `PageNav`
+  refusal from a click outside a form is said by `useClickFeedback`
+  ([`components/click-feedback.md`](components/click-feedback.md)), in a
+  callout floating under the button pressed, out of the flow so that a
+  narrow cell or a phone's card does not wrap it. A page's own menu of jump links is a `PageNav`
   ([`components/page-nav.md`](components/page-nav.md)), laid out by
   `.page-with-nav`. Each is in `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,

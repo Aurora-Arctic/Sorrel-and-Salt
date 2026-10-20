@@ -544,6 +544,10 @@ test.describe('the primary admin', () => {
       await revoking.getByRole('button', { name: 'Demote' }).click();
       await expect(revoking).toHaveCount(0);
       await expect(row.getByRole('alert')).toBeVisible();
+      // Said under the Change Role that opened the dialog, which has the focus back.
+      await expect(
+        row.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
+      ).toBeFocused();
       await assertNoAccessibilityViolations(page);
 
       const reread = await userRow(page, loneEmail);

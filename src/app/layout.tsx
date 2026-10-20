@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Backdrop from '../components/Backdrop';
+import { StatusRegionProvider } from '../components/ClickFeedback/status-region';
 import ThemeToggle from '../components/ThemeToggle';
 import { impersonationEnabled } from '../lib/impersonation';
 import { SITE_NAME, SITE_ORIGIN } from '../lib/site';
@@ -42,8 +43,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Every page gets it, signed in or not — M2.6 moved it here from the
             home page, which was the only page that existed yet. */}
         <ThemeToggle />
-        {/* Around the page alone: the toggle and backdrop query nothing. */}
-        <Providers>{children}</Providers>
+        {/* The page's one status region, its <output> drawn ahead of the page so
+            a screen reader is listening before a click says anything
+            (claude-docs/components/click-feedback.md). Around the page alone:
+            the toggle and backdrop query nothing and say nothing. */}
+        <StatusRegionProvider>
+          <Providers>{children}</Providers>
+        </StatusRegionProvider>
         {/* Last, so it never precedes the page in reading order even for a
             tool that ignores aria-hidden. */}
         <Backdrop />

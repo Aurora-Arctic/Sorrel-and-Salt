@@ -25,7 +25,7 @@ through `Workspace.members`.
   Remove column, not an empty one.
 - **Change Role sits in the Role column**, the role on the left and the
   control on the right. It is `btn btn--small btn--quiet`.
-- **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said above the table through [`ActionFailure`](action-failure.md), as Change Role's is.
+- **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said under the Remove pressed, as Change Role's is (below).
 - **Remove has a column of its own**, as Impersonate has, from the same
   `row-action-column` mixin: last, ruled in red,
   sticky at the right edge while the table scrolls, and at the card's top
@@ -68,16 +68,15 @@ viewer, member, owner order is chosen to start. The confirm button follows the
 choice: **Promote**, green (`btn--solid`), for a role above their own, and
 **Demote**, red (`btn--destructive`), for one below.
 
-A refusal is shown by [`ActionFailure`](action-failure.md), which the page wraps
-the list in: an error notice above the table naming the member ("<name>'s role
-was not changed. This is the last owner, and a coven needs one. Make another
-member an owner first."), cleared when the next attempt starts. Both controls
-read it with `useActionFailure()` and hand `ConfirmedAction` an `onFailure`
-that reports to it, instead of the refusal being drawn beside the row. Outside
-an `ActionFailure` the hook gives `null`, the controls pass no `onFailure`,
-and `ConfirmedAction` says the refusal beside the button itself, so a refusal
-is never dropped (MB.119 deleted the list's own `role-failure.tsx`, whose
-default was a report that did nothing).
+Both controls say what happened through `ConfirmedAction`'s click feedback
+([`click-feedback.md`](click-feedback.md), M12.31). A refusal gives the focus
+back to the button that opened the modal and floats under it in a callout
+saying the service's sentence alone ("This is the last owner, and a coven
+needs one. Make another member an owner first."), with no prefix naming the
+member, since the callout hangs from that member's row (the owner's call,
+2026-10-20), and with a badge on the button to bring it back; nothing on the page moves, and the next attempt clears it. A
+success is said in the page's status region: "<name> is now <role>." or
+"<name> is removed.".
 
 ## Styling
 
@@ -106,5 +105,6 @@ three roles with their dates, the role controls beside each role, no Remove
 column without `removeAction`, each control given its row's member, "You"
 on the own row only, and the address only under
 `showEmail`. `tests/components/MemberList/remove-control.test.tsx`
-and `role-control.test.tsx` hold each control's refusal: said above through an
-`ActionFailure`, and beside the control when it stands outside one.
+and `role-control.test.tsx` hold each control's refusal, said under the button
+as the service's sentence alone and the focus on the button, the badge bringing it back,
+and its success said in the status region.

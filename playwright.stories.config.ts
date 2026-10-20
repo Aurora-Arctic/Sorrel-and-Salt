@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import { HTML_REPORT, auditProjects, baseConfig } from './playwright.config';
+import { auditProjects } from './playwright.config';
+import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import { slotServers } from './tests/e2e/servers';
 
 // The story suite (M9.1): one browser flow per user story, under

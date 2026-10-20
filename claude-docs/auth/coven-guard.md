@@ -78,8 +78,8 @@ Ingredients by M9.6 and Grimoire by M10.11.
 
 Contents lists a page only if the caller can open it, so a link is never a
 404: Ingredients (M9.6) for every role, viewers included, and Members for roles holding
-`member: read`. One `ActionFailure`
-wraps the two buttons' sections, so a refusal is said once above them. Leave
+`member: read`. Each button says its own
+refusal in a callout under itself (M12.31). Leave
 and Delete are in sections of their own so the button that ends a seat is never
 beside the one that ends a coven.
 

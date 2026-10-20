@@ -1,7 +1,6 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
-import { emptyText } from '../CompendiumList';
 import { AnnotateLink, EditLink } from '../IconTip';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import IngredientCard from '../IngredientCard';
@@ -9,6 +8,7 @@ import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
 import CardMore from './card-more';
+import EmptyCupboard from './empty';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
@@ -19,8 +19,8 @@ import '../CompendiumList/index.scss';
 // the page gives the entry an edit address (M8.17): the coven's own entries, for a role that
 // may update them; and Annotate where it gives an annotate address: the compendium entries the
 // cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Delete on
-// an own entry, Make It Ours and Remove on a compendium one. An empty list is plain
-// text until M9.11 builds its empty state. claude-docs/components/coven-cards.md.
+// an own entry, Make It Ours and Remove on a compendium one. An empty list is
+// EmptyCupboard's (M9.11). claude-docs/components/coven-cards.md.
 
 // Named with the formal name too, as two entries can share a label.
 const nameOf = (entry: CovenCardEntry): string =>
@@ -79,6 +79,7 @@ const CovenCards = ({
   nextHref,
   position,
   total,
+  canAdd,
 }: CovenCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -99,7 +100,7 @@ const CovenCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, 'There are no ingredients here yet.')}</p>
+      <EmptyCupboard covenSlug={covenSlug} filter={filter} canAdd={canAdd} />
     ) : (
       <IngredientCardList label="Ingredients" density="compact">
         {entries.map((entry) => (

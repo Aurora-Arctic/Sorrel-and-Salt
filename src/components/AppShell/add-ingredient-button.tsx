@@ -11,6 +11,7 @@ import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
+import { NEW, closedHref, openHref } from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 
@@ -31,8 +32,6 @@ import type { AddDestination, AddIngredientButtonProps } from './types';
 // claude-docs/components/modal.md, "Add Ingredient".
 
 const LABEL = 'Add Ingredient';
-/** The address parameter that opens a coven's dialog. */
-const NEW = 'new';
 // The solid green at the medium size (the owner's call, M8.16): the bar's one
 // action, taller than a small button and shorter than a field.
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
@@ -110,22 +109,6 @@ function destinationsOf(
   const named = covens.find((d) => d.kind === 'coven' && d.workspace.slug === slug);
   const onAdmin = pathname.startsWith('/admin') && compendium.length > 0;
   return { all, initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]) };
-}
-
-/** The address with `?new`, or `?new=<slug>` for a coven other than the default, over its other parameters. */
-function openHref(pathname: string, params: URLSearchParams, slug?: string): string {
-  const rest = new URLSearchParams(params);
-  rest.delete(NEW);
-  const lead = rest.toString();
-  return `${pathname}?${lead ? `${lead}&` : ''}${NEW}${slug ? `=${encodeURIComponent(slug)}` : ''}`;
-}
-
-/** The address with `?new` dropped. */
-function closedHref(pathname: string, params: URLSearchParams): string {
-  const rest = new URLSearchParams(params);
-  rest.delete(NEW);
-  const lead = rest.toString();
-  return lead ? `${pathname}?${lead}` : pathname;
 }
 
 const AddIngredientButton = ({

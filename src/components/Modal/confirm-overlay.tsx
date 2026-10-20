@@ -16,9 +16,15 @@ import './index.scss';
 // buttons and the modal places it (claude-docs/components/modal.md, "Asking
 // over the form"). Outside a modal it stands in the form's flow.
 
-/** Whether the element can take the focus back: still in the page, and not held inert. */
+/**
+ * Whether the element can take the focus back: still in the page, and not held
+ * inert. Asked of the element rather than `instanceof HTMLElement`, which is
+ * false in a story Ladle draws into an iframe, its script running in the page
+ * around the frame.
+ */
 const canFocus = (element: Element | null): element is HTMLElement =>
-  element instanceof HTMLElement &&
+  typeof (element as HTMLElement | null)?.focus === 'function' &&
+  element !== null &&
   element.isConnected &&
   element !== element.ownerDocument.body &&
   element.closest('[inert]') === null;

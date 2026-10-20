@@ -1,11 +1,13 @@
 import type { Route } from 'next';
 import type { Story } from '@ladle/react';
+import { usePressOnMount } from '../../../.ladle/press';
 import InvitationAcceptance from '.';
 import type { InvitationAcceptanceProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/InvitationAcceptance.
-// Accept talks to the network only on a click, so nothing is mocked: a click
-// in the workshop fails into the alert, which is itself a state worth seeing.
+// Accept talks to the network only on a click, so nothing is mocked: the
+// workshop has no server, so a click fails into the callout under Accept
+// (ClickFeedback), which is itself a state worth seeing.
 export default {
   title: 'Pages / Invitation Acceptance',
 };
@@ -48,6 +50,13 @@ export const AcceptableCurator: Story = () => (
   <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
 );
 
+// Accept pressed and refused: the workshop's request finds no server, so the
+// callout says the generic sentence, with the badge on Accept's corner.
+export const AcceptRefused: Story = () => {
+  usePressOnMount('Accept Invitation');
+  return <Acceptable />;
+};
+
 export const AcceptableCoven: Story = () => (
   <Page
     status="acceptable"
@@ -80,8 +89,9 @@ export const DifferentAddress: Story = () => <Page status="refused" message={DIF
 export const Paused: Story = () => <Page status="refused" message={PAUSED} />;
 
 // Phone and both themes, for the states that differ in shape: the signed-out
-// and acceptable ones (a sentence and a button), the unverified one (an alert
-// and a button) and a refusal (an alert alone).
+// and acceptable ones (a sentence and a button), a refused Accept (a button
+// and its callout), the unverified one (an alert and a button) and a refusal
+// (an alert alone).
 export const SignedOutPhoneDark: Story = () => <SignedOut />;
 SignedOutPhoneDark.meta = { theme: 'dark', width: 375 };
 
@@ -93,6 +103,12 @@ AcceptableCovenPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const AcceptableCovenPhoneLight: Story = () => <AcceptableCoven />;
 AcceptableCovenPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const AcceptRefusedPhoneDark: Story = () => <AcceptRefused />;
+AcceptRefusedPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const AcceptRefusedPhoneLight: Story = () => <AcceptRefused />;
+AcceptRefusedPhoneLight.meta = { theme: 'light', width: 375 };
 
 export const UnverifiedPhoneDark: Story = () => <Unverified />;
 UnverifiedPhoneDark.meta = { theme: 'dark', width: 375 };

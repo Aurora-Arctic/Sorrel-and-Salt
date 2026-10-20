@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ActionFailure from '@/components/ActionFailure';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
+import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
 const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -22,7 +23,9 @@ describe('LeaveWorkspaceButton', () => {
 
   it('sends nothing until confirmed, then leaves the named workspace and lands on the coven landing', async () => {
     graphqlRequest.mockResolvedValue({ leaveWorkspace: true });
-    render(<LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />);
+    render(<LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />, {
+      wrapper: StatusRegionProvider,
+    });
     fireEvent.click(screen.getByRole('button', { name: /^Leave Coven/ }));
     const dialog = await screen.findByRole('dialog');
     expect(graphqlRequest).not.toHaveBeenCalled();
@@ -33,34 +36,21 @@ describe('LeaveWorkspaceButton', () => {
     // The switcher lists covens from a layout the replace does not re-run.
     expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest).toHaveBeenCalledWith(expect.anything(), { workspaceId: ID });
+    // The landing it opens is the news; the status region says nothing.
+    expect(announced()).toBe('');
   });
 
-  it('stays on the page and says why when the service refuses', async () => {
+  it('stays on the page and says why under the button when the service refuses', async () => {
     graphqlRequest.mockRejectedValue(new Error('Forbidden'));
     render(<LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />);
     fireEvent.click(screen.getByRole('button', { name: /^Leave Coven/ }));
     const dialog = await screen.findByRole('dialog');
 
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Leave Coven' }));
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Leave Coven' }));
+    });
 
-    expect(await screen.findByRole('alert')).toBeVisible();
+    await expectRefusalUnder(screen.getByRole('button', { name: 'Leave Coven' }), 'Leave Coven');
     expect(replace).not.toHaveBeenCalled();
-  });
-
-  it("says a refusal above the page's buttons when they sit in an ActionFailure, not beside the one pressed", async () => {
-    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
-    render(
-      <ActionFailure>
-        <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />
-      </ActionFailure>,
-    );
-    fireEvent.click(screen.getByRole('button', { name: /^Leave Coven/ }));
-    const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Leave Coven' }));
-
-    const alert = await screen.findByRole('alert');
-    const button = screen.getByRole('button', { name: 'Leave Coven' });
-    // Document order: the notice precedes the button.
-    expect(alert.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

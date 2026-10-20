@@ -448,7 +448,7 @@ test(
     await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
 
     await page.goto(invitedPath);
-    const accept = page.getByRole('button', { name: 'Accept Invitation' });
+    const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
     await expect(accept).toBeVisible();
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
@@ -580,7 +580,26 @@ test(
         sql`update invitations set expires_at = now() - interval '1 hour' where email = ${late}`,
     );
 
+    // The page still open offers Accept, and its press is refused: the
+    // service's sentence in a callout from Accept, which keeps the focus, and
+    // a badge on Accept that brings it back once closed (design F, M12.31).
+    const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
+    await accept.click();
+    const callout = page.getByRole('main').getByRole('alert');
+    await expect(callout).toBeVisible();
+    await expect(accept).toBeFocused();
+    const pressedRefusal = ((await callout.textContent()) ?? '').trim();
+    await expect(accept).toHaveAccessibleDescription(`Last try failed: ${pressedRefusal}`);
+    await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
+    await page.keyboard.press('Escape');
+    await expect(callout).toHaveCount(0);
+    await expect(accept).toBeFocused();
+    await page.getByRole('button', { name: 'Show the error for Accept Invitation' }).click();
+    await expect(page.getByRole('main').getByRole('alert')).toHaveText(pressedRefusal);
+
     const expiredRefusal = await refusalAt(page, path);
+    expect(expiredRefusal.trim()).toBe(pressedRefusal);
     expect(new Set([expiredRefusal, revokedRefusal, usedRefusal]).size).toBe(3);
     await assertNoAccessibilityViolations(page);
     await directAcceptRefused(page, path);

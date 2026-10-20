@@ -41,8 +41,8 @@ import {
 // Edit, which opens the entry page's dialog over the list under `?edit=<id>`, and a card
 // for a compendium entry the cupboard holds has Annotate, which opens the entry page's
 // Annotate dialog under `?annotate=<id>`; closing or saving either comes back to the list as
-// it was, filter and page kept (M8.17).
-// claude-docs/components/coven-cards.md.
+// it was, filter and page kept (M8.17). A member who may add is offered the first add on an
+// empty cupboard (M9.11). claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
 
@@ -149,6 +149,7 @@ export default async function CovenIngredientsPage({
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}
+        canAdd={rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] })}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           covenIngredientsHref(workspace.slug, { ...filter, ...cursor }),
         )}

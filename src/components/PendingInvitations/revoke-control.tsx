@@ -8,7 +8,7 @@ import type { RevokeControlProps } from './types';
 
 // A pending invitation's Revoke on the members page (M7.6). It asks first,
 // naming the address, then sends `revokeInvitation`; the page is read again
-// and the row is gone, or the refusal is said beside the control. The page
+// and the row is gone, or the refusal is said in a callout under the control. The page
 // draws it for owners only; the service is the guard
 // (claude-docs/components/pending-invitations.md).
 
@@ -34,6 +34,7 @@ const RevokeControl = ({ workspaceId, invitation }: RevokeControlProps): ReactEl
     }
     busy="Revoking"
     confirmClass="btn btn--destructive"
+    announcement={`The invitation to ${invitation.email} is revoked.`}
     send={() => graphqlRequest(RevokeInvitationDocument, { workspaceId, id: invitation.id })}
   />
 );

@@ -11,7 +11,9 @@ component taking the workspace's `workspaceId` and `name`.
   restore by hand rests on.
 - **One GraphQL mutation, `deleteWorkspace(workspaceId)`**, through the same path as every write
   from the browser (CLAUDE.md rule 1). A refusal, such as a second owner deleting first, is said
-  above the page's buttons by `ActionFailure` (see [`leave-workspace-button.md`](leave-workspace-button.md)).
+  in a callout under the button, which has the focus back
+  ([`click-feedback.md`](click-feedback.md), M12.31). A success announces nothing, since it
+  leaves the page.
 - **A success goes to the coven landing** (`/coven`) with `router.replace`, then `router.refresh()`,
   as Leave Coven does ([`leave-workspace-button.md`](leave-workspace-button.md)). A re-read would
   be a 404, since the deleting user has no membership of the coven any more.
@@ -20,8 +22,9 @@ component taking the workspace's `workspaceId` and `name`.
 
 The optional `inModal` prop asks the confirmation over the dialog the button sits in rather than
 opening a second modal on top, and `onlyOwner` leaves "other owners included" out of the question,
-since there are none. The only owner's guided exit (M6.16,
-[`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
+since there are none. With `inModal`, a refusal is a plain error `Notice` inside the dialog,
+on its own line above the dialog's buttons (the shared `.modal__actions` style), with no badge (the owner's call, 2026-10-20). The only owner's guided exit
+(M6.16, [`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
 
 ## Styling
 
@@ -41,7 +44,7 @@ story.
 ## Testing
 
 `tests/components/DeleteWorkspaceButton/index.test.tsx` asserts that nothing is sent until the
-confirmation, then that the named coven's id is sent and the landing replaces the page, and that a refusal is
-said and the page stays. The only owner's route through it is
+confirmation, then that the named coven's id is sent and the landing replaces the page, and that a refusal is said under the button, with the focus on it and the badge
+bringing it back, and the page stays. The only owner's route through it is
 `tests/components/LeaveWorkspaceButton/owner-exit.test.tsx`; the page's choice to show it by
 permission is `tests/app/(shell)/coven/page.test.tsx`.

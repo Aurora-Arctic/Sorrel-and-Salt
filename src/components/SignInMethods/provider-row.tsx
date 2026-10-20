@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import BusyButton from '../BusyButton';
+import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
 import ProviderMark from '../ProviderMark';
 import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
@@ -9,8 +10,10 @@ import type { ProviderRowProps } from './types';
 // states, each told apart by its control and its words rather than by hue:
 // linked has Remove (greyed for the only method left, with a line saying why;
 // or, from a stale session, nothing, since the list says why once),
-// addable has Add, and unavailable has a greyed Add with the note saying why. A failure about this provider sits in its row, beneath the
-// controls. claude-docs/components/sign-in-methods.md, "The rows".
+// addable has Add, and unavailable has a greyed Add with the note saying why.
+// A press's failure is a callout under the control pressed; a failed link's
+// callback error, which no press here raised, sits in the row beneath the
+// controls as a `Notice`. claude-docs/components/sign-in-methods.md, "The rows".
 export function ProviderRow({
   provider,
   state,
@@ -24,6 +27,14 @@ export function ProviderRow({
   const noteId = `sign-in-methods__note-${provider.id}`;
   const reasonId = `sign-in-methods__reason-${provider.id}`;
   const unavailable = state === 'unavailable';
+  // Named as the control is, so the badge reads "Show the error for Remove Discord".
+  const { anchorRef, report, feedback } = useClickFeedback({
+    name: `${state === 'linked' ? 'Remove' : 'Add'} ${provider.label}`,
+  });
+  const run = async (action: () => Promise<string | undefined>): Promise<void> => {
+    report(undefined);
+    report(await action());
+  };
 
   return (
     <li
@@ -41,13 +52,17 @@ export function ProviderRow({
         // withheld one is explained once, above the list.
         removal === 'offered' ? (
           // The name stays "Remove Discord" while busy: the aria-label holds it.
+          // The pressed one is `aria-disabled` and keeps the focus, refusing a
+          // second press itself; the others are disabled until it answers.
           <BusyButton
+            ref={anchorRef}
             className="btn btn--destructive btn--small"
             aria-label={`Remove ${provider.label}`}
             busy={busy}
             busyLabel="Removing"
-            disabled={pending}
-            onClick={onRemove}
+            aria-disabled={busy || undefined}
+            disabled={pending && !busy}
+            onClick={busy ? undefined : () => void run(onRemove)}
           >
             Remove
           </BusyButton>
@@ -67,6 +82,7 @@ export function ProviderRow({
         ) : null
       ) : (
         <BusyButton
+          ref={anchorRef}
           // Small and quiet, as Remove is small and in the wax: a row's action,
           // not a page's (the owner, 2026-10-11).
           className="btn btn--quiet btn--small"
@@ -77,11 +93,12 @@ export function ProviderRow({
           busy={busy}
           busyLabel="Adding"
           // Once pressed, the button waits out the hop and a second press does nothing.
-          onClick={busy ? undefined : onAdd}
+          onClick={busy ? undefined : () => void run(onAdd)}
         >
           Add
         </BusyButton>
       )}
+      {feedback}
       {unavailable && <ProviderUnavailableNote id={noteId} className="sign-in-methods__line" />}
       {state === 'linked' && removal === 'last' && (
         <p id={reasonId} className="meta sign-in-methods__line">

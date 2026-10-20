@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import DeleteWorkspaceButton from '@/components/DeleteWorkspaceButton';
+import { expectRefusalUnder } from '../../support/click-feedback';
 
 const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -45,12 +46,12 @@ describe('DeleteWorkspaceButton', () => {
     expect(graphqlRequest).toHaveBeenCalledWith(expect.anything(), { workspaceId: ID });
   });
 
-  it('stays on the page and says why when the service refuses', async () => {
+  it('stays on the page and says why under the button when the service refuses', async () => {
     graphqlRequest.mockRejectedValue(new Error('Forbidden'));
 
     await openAndConfirm();
 
-    expect(await screen.findByRole('alert')).toBeVisible();
+    await expectRefusalUnder(screen.getByRole('button', { name: 'Delete Coven' }), 'Delete Coven');
     expect(replace).not.toHaveBeenCalled();
   });
 });
