@@ -22,7 +22,17 @@ import { entryDetail } from '../../../../support/entry-detail';
 // tests/db/entry-values.test.ts's.
 
 const requireCuratorSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
+vi.mock('@/lib/request-session', () => ({
+  requireCuratorSession,
+  getSession: async () => ADMIN,
+}));
+
+// The plus beside the details' pencil is for covens the viewer may add in (M9.12), tests/app/plus-covens.test.ts's;
+// an admin in no coven has none, so the details draw neither it nor its check.
+vi.mock('@/lib/viewer', () => ({
+  viewerIfSignedIn: async () => undefined,
+  covenRolesIfSignedIn: async () => undefined,
+}));
 
 // The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>

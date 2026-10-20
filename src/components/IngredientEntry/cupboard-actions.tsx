@@ -17,11 +17,9 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
-import AddIcon from '../AddIcon';
 import IconTip, { EditLink, PencilIcon } from '../IconTip';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
-import { HeldMark as CardHeldMark } from '../CompendiumCards/held-mark';
 import { useOpenModalClick } from '../Modal';
 import { AddCupboardEntryDocument } from './add-cupboard-entry';
 import AnnotateDialog from './annotate-dialog';
@@ -30,6 +28,7 @@ import { ANNOTATE_HEADING } from './annotate-heading';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import AddToCovenDialog from './add-to-coven-dialog';
 import AnnotatePicker from './annotate-picker';
+import PlusMark from './plus-mark';
 import type {
   CupboardActionsProps,
   CupboardPlace,
@@ -336,15 +335,9 @@ export default function CupboardActions(
         ]
       : []),
   ];
-  // The plus, where Add is not one of the choices: while some coven that may add lacks the entry.
-  // The plus while some coven that may add lacks the entry, and the check once all hold it.
-  const plusMark = plus ? (
-    plus.covens.some(({ id }) => !plus.heldIn.includes(id)) ? (
-      <AddIcon {...plus} ingredientId={ingredientId} />
-    ) : (
-      <CardHeldMark />
-    )
-  ) : null;
+  // The plus while some coven that may add lacks the entry, and the check once all hold it
+  // (PlusMark), where Add is not one of the choices.
+  const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} /> : null;
   if (items.length === 0 && !plusMark) return null;
 
   // One choice is a plain button, as Add Ingredient is with one place to go.

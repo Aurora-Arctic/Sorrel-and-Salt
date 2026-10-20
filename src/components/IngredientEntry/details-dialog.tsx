@@ -8,6 +8,7 @@ import EntryMarks from '../EntryMarks';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import { SafetyMark } from '../SafetyNote';
+import PlusMark from './plus-mark';
 import { DETAILS_PLACE } from './details';
 import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './types';
 
@@ -23,18 +24,33 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
  * The head's badge and actions (the owner's calls, 2026-10-20). Beside the name, at the end of its
  * first line: the one safety badge, Toxic over Caution, and after it the Edit pencil, the
  * cards' with its tip, named for the entry, a press opening the edit modal at once under
- * its head (M9.18). Under the formal name: New or Updated and then the other badges. All
+ * its head (M9.18); left of it the plus, or the check once every coven the viewer may add in holds the entry. Under the formal name: New or Updated and then the other badges. All
  * the entry page's and the card's own components, so the three cannot differ.
  */
-function headingOf({ heading, marks, editAction }: IngredientDetailsOpened): ModalHeading {
+function headingOf({
+  heading,
+  marks,
+  editAction,
+  plus,
+  ingredientId,
+}: IngredientDetailsOpened): ModalHeading {
   const safety = marks && (
     <SafetyMark toxic={marks.toxic} safetyNotes={marks.safetyNotes} variants={marks.variants} />
   );
   const edit = editAction && <EditLink {...editAction} name={heading.title} />;
+  // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
+  // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
+  const add = plus && ingredientId && <PlusMark plus={plus} ingredientId={ingredientId} />;
+  const actions = (add || edit) && (
+    <>
+      {add}
+      {edit}
+    </>
+  );
   return {
     ...heading,
     ...(safety && { titleBadge: safety }),
-    ...(edit && { titleActions: edit }),
+    ...(actions && { titleActions: actions }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} /> }),
   };
 }

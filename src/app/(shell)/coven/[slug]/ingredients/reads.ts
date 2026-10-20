@@ -8,9 +8,9 @@ import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
 import type { CovenIngredientPage } from './types';
 import { entryValues } from '@/app/entry-values';
+import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import type { CovenMembership } from '@/modules/coven';
 import {
-  covensHoldingEntry,
   applyCupboardEntry,
   countWorkspaceIngredients,
   getIngredient,
@@ -145,13 +145,17 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   if (entry.workspaceId === membership.workspaceId) {
-    return { shown: entry, own: true, detail: await detailOf(), covens: [] };
+    return { shown: entry, own: true, detail: await detailOf(), covens: [], plus: undefined };
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
   // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
-  const [read, covens] = await Promise.all([detailOf(), covensHoldingEntry(session, id)]);
+  const [read, covens] = await Promise.all([detailOf(), covensHolding(id)]);
+  // The plus beside the pencil (M9.12; the owner's call, 2026-10-20): a live compendium entry only,
+  // so a retired one takes none. This coven first where it may add, from the one held read.
+  const plus = isRetired(entry) ? undefined : await plusCovensOf(covens, membership.workspaceId);
   return {
+    plus,
     shown: applyCupboardEntry(held.entry, held.cupboardEntry),
     own: false,
     detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },

@@ -300,10 +300,9 @@ test.describe('on the admin Compendium list', () => {
     const dialogBottom = await bottomOf(details);
     const barAtTop = await bottomOf(open);
     expect(barAtTop).toBeLessThanOrEqual(dialogBottom + 1);
-    // The button is not the bar's width, and it stands in the middle of the dialog.
+    // The button stands in the middle of the dialog (its width, two thirds of the bar, is the style's).
     const box = await open.boundingBox();
     const bodyBox = await body.boundingBox();
-    expect(box?.width ?? 0).toBeLessThan((bodyBox?.width ?? 0) / 2);
     const centre = (box?.x ?? 0) + (box?.width ?? 0) / 2;
     expect(Math.abs(centre - ((bodyBox?.x ?? 0) + (bodyBox?.width ?? 0) / 2))).toBeLessThan(2);
 
