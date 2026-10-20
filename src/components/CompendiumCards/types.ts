@@ -41,8 +41,8 @@ export interface CompendiumCardEntry {
    */
   held?: boolean;
   /**
-   * The ids of the covens that hold it, among `CompendiumCardsProps.covens`. The plus's picker
-   * shows those as held and cannot choose them. Left out, none does.
+   * The ids of the covens that hold it, among `CompendiumCardsProps.covens`. The plus's menu
+   * leaves those off. Left out, none does.
    */
   heldIn?: readonly string[];
   /**
@@ -74,27 +74,27 @@ export interface CompendiumCardsProps extends Pick<
   /** What the foot of each card holds. */
   action: CompendiumCardsAction;
   /**
-   * The coven the plus adds to (M9.12), and the picker's default: the one Add Ingredient would
-   * choose, which on this page, with no coven in its address, is the first the viewer may write
-   * in. With `action` `add` and no coven, the cards show no plus and no check.
+   * The default coven (M9.12): the one Add Ingredient would choose, which on this page, with no
+   * coven in its address, is the first the viewer may write in. The plus adds there where the page
+   * names no `covens`. With `action` `add` and no coven, the cards show no plus and no check.
    */
   workspaceId?: string;
   /**
-   * Every coven the viewer may write in, in the order Add Ingredient lists them. Two or more and
-   * the plus opens a picker of them; fewer and it adds to `workspaceId` at once.
+   * Every coven the viewer may write in, in the order Add Ingredient lists them. Where two or more
+   * of them lack an entry, its plus is a menu of those; where one does, it adds there at once.
    */
   covens?: readonly CompendiumCoven[];
 }
 
-/** A coven the viewer may add to, as the picker names it. */
+/** A coven the viewer may add to, as the plus's menu names it. */
 export interface CompendiumCoven {
   id: string;
   name: string;
 }
 
-/** The plus at a card's bottom right: add this entry to a coven, asking which when there are several. */
+/** The plus at a card's bottom right: add this entry to a coven, asking which when several lack it. */
 export interface AddIconProps {
-  /** The default coven: added to at once with fewer than two `covens`, else the picker's first choice. */
+  /** The default coven: added to at once where `covens` is empty. */
   workspaceId: string;
   /** The compendium entry's id. */
   ingredientId: string;
