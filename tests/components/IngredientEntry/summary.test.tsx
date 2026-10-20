@@ -177,21 +177,39 @@ describe('IngredientSummary', () => {
     expect(rowOf('Planets')).toBe('Fixture Sun');
   });
 
-  it('draws no caution for an entry with no notes, and says when a block is empty', () => {
+  it("draws no caution and no empty block for a sparse entry: no 'None recorded', no empty heading", () => {
     render(
       <IngredientSummary
         detail={full({
-          entry: entryDetail().entry,
+          entry: entryDetail({ elements: null, celestialBodies: null }).entry,
           folkNames: [],
           categories: [],
+          deities: [],
           variants: [],
         })}
       />,
     );
 
+    // The page says each of these is empty (the IngredientEntry tests); the modal hides them.
     expect(screen.queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Folk Names' })).toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: 'Folk Names' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: 'Categories' })).not.toBeInTheDocument();
+    expect(screen.queryByText('None recorded')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Correspondences' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Categories' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/recorded/)).not.toBeInTheDocument();
+  });
+
+  it("keeps a block's filled rows and drops its empty ones", () => {
+    render(<IngredientSummary detail={full({ folkNames: [], deities: [] })} />);
+
+    // Why the rows could show: the entry has elements and planets, and the
+    // block draws those two.
+    expect(rowOf('Elements')).toBe('Fire');
+    expect(rowOf('Planets')).toBe('Fixture Moon');
+    for (const term of ['Zodiac Signs', 'Colours', 'Deities']) {
+      expect(screen.queryByText(term, { selector: 'dt' })).not.toBeInTheDocument();
+    }
+    expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
   });
 });

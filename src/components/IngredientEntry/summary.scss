@@ -31,3 +31,24 @@
   max-width: $measure;
   color: $text-muted;
 }
+
+// Each correspondence's term a small step over its value. The page's rule for
+// that (`stack` on the list, `dd + dt`) reaches no pair, as each sits in its
+// own `<div>`, so on the page the two touch; here the pair stacks itself.
+.ingredient-summary .ingredient-entry__correspondences > div {
+  @include stack(1);
+}
+
+// The details header's rhythm (the owner's call, 2026-10-20): Open Full Page
+// a full step under the name, and the body a step and a half under the row,
+// where the shared defaults suit the edit modals' Undo and Redo. Scoped by
+// `:has()`, Baseline Widely Available, as the Modal's own header rules are.
+.modal-dialog:has(.ingredient-summary) {
+  .modal-dialog__header {
+    padding-bottom: space(5);
+  }
+
+  .modal-dialog__header-slot {
+    margin-top: space(4);
+  }
+}

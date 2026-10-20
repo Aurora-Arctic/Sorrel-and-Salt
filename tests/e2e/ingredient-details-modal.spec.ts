@@ -229,6 +229,7 @@ test.describe('on the public compendium', () => {
           canonicalName: PUBLIC_FORMAL,
           safetyNotes: 'Fixture public caution.',
           folkNames: ['Fixture Peerbane'],
+          elements: ['fire'],
         }),
         userId,
       ),
@@ -252,8 +253,10 @@ test.describe('on the public compendium', () => {
     await expect(
       details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Peerbane'),
     ).toBeVisible();
-    await expect(details.getByRole('heading', { name: 'Categories' })).toBeVisible();
     await expect(details.getByRole('heading', { name: 'Correspondences' })).toBeVisible();
+    // An empty block or row is left out here, where the page says "None recorded".
+    await expect(details.getByRole('heading', { name: 'Categories' })).toHaveCount(0);
+    await expect(details.getByText('None recorded')).toHaveCount(0);
     await expect(details.getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,

@@ -22,7 +22,9 @@ import './summary.scss';
 // those. Shown as the list names the entry, the coven's annotations laid over a
 // held compendium entry as the page lays them. Each form's caution stays on the
 // page's form sections; a line here says which forms carry one (the owner's
-// call, 2026-10-20). claude-docs/components/ingredient-entry.md, "The details modal".
+// call, 2026-10-20). An empty block or correspondence row is left out here,
+// where the page says "None recorded": a glance shows what the entry holds
+// (the owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md, "The details modal".
 
 /** "The Oil form", "The Oil and Root forms", "The Oil, Root and Tincture forms". */
 function formsCarrying(forms: readonly string[]): string {
@@ -42,6 +44,7 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
   const cautioned = variants
     .filter(({ variant }) => said(variant.safetyNotes))
     .map(({ variant }) => variant.form);
+  const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   return (
     <div className="ingredient-summary">
       {/* No Details heading: the dialog's title names the entry, and its h2
@@ -55,32 +58,35 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
           )
         }
       />
-      <div className="ingredient-entry__side">
-        <CorrespondenceBlock
-          block={blockOf('summary', 'correspondences')}
-          rows={correspondences(shown, deities)}
-          level={3}
-        />
-        <ListBlock
-          block={blockOf('summary', 'folk-names')}
-          title="Folk Names"
-          level={3}
-          empty="No folk names recorded."
-        >
-          {folkNames.map((name) => (
-            <li key={name}>{name}</li>
-          ))}
-        </ListBlock>
-        <ListBlock
-          block={blockOf('summary', 'categories')}
-          title="Categories"
-          level={3}
-          empty="No categories recorded."
-          className="ingredient-entry__chips"
-        >
-          {categoryItems(categories)}
-        </ListBlock>
-      </div>
+      {/* Not drawn when every block is empty, so it adds no gap of its own. */}
+      {(rows.length > 0 || folkNames.length > 0 || categories.length > 0) && (
+        <div className="ingredient-entry__side">
+          {rows.length > 0 && (
+            <CorrespondenceBlock
+              block={blockOf('summary', 'correspondences')}
+              rows={rows}
+              level={3}
+            />
+          )}
+          {folkNames.length > 0 && (
+            <ListBlock block={blockOf('summary', 'folk-names')} title="Folk Names" level={3}>
+              {folkNames.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ListBlock>
+          )}
+          {categories.length > 0 && (
+            <ListBlock
+              block={blockOf('summary', 'categories')}
+              title="Categories"
+              level={3}
+              className="ingredient-entry__chips"
+            >
+              {categoryItems(categories)}
+            </ListBlock>
+          )}
+        </div>
+      )}
     </div>
   );
 }
