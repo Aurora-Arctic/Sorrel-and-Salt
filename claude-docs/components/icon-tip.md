@@ -56,6 +56,12 @@ follows `href` as before.
   choice is Delete or Remove, `BinIcon` on a button of its own,
   `.icon-tip__remove`, tipped with its verb (M8.17; the owner's call,
   2026-10-20).
+- **A jar line's Edit Stock pencil** (`EditStock`, M9.9), tipped "Edit Stock": a
+  `ModalButton` whose label is `PencilIcon`, in `.icon-tip__edit` with the
+  `--plain` modifier, which inks the pencil `$text-primary`, chalk on the dark
+  page and the body text on the light one, in place of the accent green (the
+  owner's call, 2026-10-20: white, which a pure white would lose on a light
+  card). Its hover and focus tint is the edit pencil's own.
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),

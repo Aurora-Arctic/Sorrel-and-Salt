@@ -8,12 +8,13 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { FormActions } from '../Field';
+import { PencilIcon } from '../IconTip';
 import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import StockFields, { type StockFormValues, stockAmountsOf, stockFormValues } from '../StockFields';
 import type { EditStockFormProps, EditStockProps } from './types';
 
-// The Edit button on a jar line (M9.9): a `ModalButton` opening a dialog with
+// The Edit pencil on a jar line (M9.9): a `ModalButton` opening a dialog with
 // the jar's three amounts, saved as `updateStock`. The service is the guard,
 // the dialog says its refusal. Nothing on the page changes until the save has
 // answered: no optimistic update, the page reads again once the dialog has
@@ -90,9 +91,10 @@ const EditStockForm = ({ workspaceId, jar, close }: EditStockFormProps): ReactEl
 
 const EditStock = ({ workspaceId, jar }: EditStockProps): ReactElement => (
   <ModalButton
-    label="Edit"
+    tip="Edit Stock"
+    label={<PencilIcon />}
     ariaLabel={`Edit Stock, ${jar.ingredient}, ${formLabel(jar.form)}`}
-    className="btn btn--small"
+    className="icon-tip__edit icon-tip__edit--plain"
     eyebrow="Edit Stock"
     title={jar.ingredient}
     qualifier={formLabel(jar.form)}

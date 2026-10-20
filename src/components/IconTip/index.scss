@@ -103,6 +103,19 @@
   @include icon-button-edit;
 }
 
+// The pencil in the theme's main text colour, the owner's call (M9.9, 2026-10-20),
+// in place of the accent green: `$text-primary` is chalk on the dark page and
+// the body text on the light one, where a pure white would vanish on a card.
+// The hover and focus tint stays the edit pencil's.
+.icon-tip__edit--plain {
+  &,
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: $text-primary;
+  }
+}
+
 // A list row's lone bin (a coven card's Delete or Remove, M8.17): the same
 // size as the pencil beside it, in the wax a remove control wears.
 .icon-tip__remove {

@@ -72,8 +72,11 @@ export interface ModalProps extends ModalHeading {
  * Invite, a Leave Coven. The modal's heading is its title alone.
  */
 export interface ModalButtonProps {
-  /** The button's text and accessible name, in title case: "Invite". */
-  label: string;
+  /**
+   * The button's text and accessible name, in title case: "Invite". An icon
+   * (a jar line's pencil) is the label where `ariaLabel` names the button.
+   */
+  label: ReactNode;
   /** The button's classes: `btn btn--solid`. */
   className: string;
   /** The dialog's heading and accessible name, in title case. */
@@ -85,9 +88,15 @@ export interface ModalButtonProps {
   /**
    * The button's accessible name where its text alone would not tell one
    * button from the next: a row's "Edit" is named "Edit Stock, Rosemary, Oil".
-   * It starts with the text, so a voice command for what is shown still works.
+   * It starts with the text, so a voice command for what is shown still works;
+   * an icon label has no text, so the name is this alone.
    */
   ariaLabel?: string;
+  /**
+   * A tip over an icon button, "Edit Stock" over the pencil. Wraps the button
+   * alone, never the dialog, which would open the tip on the dialog's own focus.
+   */
+  tip?: string;
   size?: ModalProps['size'];
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;

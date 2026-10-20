@@ -23,7 +23,7 @@ const JAR: EditStockJar = {
 
 export const Default: Story = () => <EditStock workspaceId={WORKSPACE} jar={JAR} />;
 
-// Pressed already, as after a click on Edit: the dialog over the page.
+// Pressed already, as after a click on the pencil: the dialog over the page.
 const Pressed = ({ jar }: { jar: EditStockJar }): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => root.current?.querySelector('button')?.click(), []);

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { ModalButton } from '@/components/Modal';
 
@@ -48,5 +48,21 @@ describe('ModalButton', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
+  });
+
+  it("keeps the button's tip off the dialog it opens", async () => {
+    render(
+      <ModalButton label="+" ariaLabel="Open Ledger" tip="Open" className="btn" title="The Ledger">
+        {() => <button type="button">Done</button>}
+      </ModalButton>,
+    );
+
+    await act(async () => {
+      fireEvent.click(trigger());
+    });
+
+    // The dialog took the focus; a tip around it would have opened on that.
+    expect(dialog()).toBeInTheDocument();
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 });

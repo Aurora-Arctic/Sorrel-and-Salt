@@ -1,6 +1,6 @@
 # EditStock
 
-`src/components/EditStock/` — the Edit button on a jar line and the dialog it opens (M9.9). It changes one jar's quantity, unit and low-stock threshold, saved as `updateStock`.
+`src/components/EditStock/` — the Edit pencil on a jar line and the dialog it opens (M9.9). It changes one jar's quantity, unit and low-stock threshold, saved as `updateStock`.
 
 ## Props
 
@@ -8,7 +8,7 @@
 
 ## The button and the dialog
 
-A `ModalButton` ([`modal.md`](modal.md#modalbutton)). The button reads "Edit" and is named "Edit Stock, Rosemary, Oil" (`ariaLabel`), so the buttons down a list of jar lines never share a name and a screen reader hears which jar. The dialog is named the same way, from its head: the eyebrow "Edit Stock", the title the ingredient, the qualifier the form. The head holds the ingredient, not the jar's amounts, so it does not change as the fields are edited.
+A `ModalButton` ([`modal.md`](modal.md#modalbutton)). The button is a pencil (`PencilIcon`) in `.icon-tip__edit icon-tip__edit--plain`, with an `IconTip` showing "Edit Stock" over it, through `ModalButton`'s `tip` so the tip wraps the button and never the dialog ([`icon-tip.md`](icon-tip.md)), and is named "Edit Stock, Rosemary, Oil" (`ariaLabel`, the only name an icon has), so the buttons down a list of jar lines never share a name and a screen reader hears which jar. The dialog is named the same way, from its head: the eyebrow "Edit Stock", the title the ingredient, the qualifier the form. The head holds the ingredient, not the jar's amounts, so it does not change as the fields are edited.
 
 The body is a react-hook-form form around [`StockFields`](stock-fields.md) and a `FormActions` row (Save Stock, Cancel). The form is a child of the modal so its discard guard reaches Close, Escape and the backdrop, as the other edit dialogs' do.
 
@@ -24,7 +24,7 @@ The body is a react-hook-form form around [`StockFields`](stock-fields.md) and a
 
 ## Who sees it
 
-The button is drawn only for a member who may update stock: the Ingredients page passes `canEditStock` (`rolePermits(role, { inventory: ['update'] })`) down through `CovenCards` and `JarLines`. A viewer sees the jar lines with no Edit. The service refuses a viewer and a non-member regardless ([`../db/stock.md`](../db/stock.md)); hiding the button is courtesy, not the guard.
+The button is drawn only for a member who may update stock: the Ingredients page passes `canEditStock` (`rolePermits(role, { inventory: ['update'] })`) down through `CovenCards` and `JarLines`. A viewer sees the jar lines with no pencil. The service refuses a viewer and a non-member regardless ([`../db/stock.md`](../db/stock.md)); hiding the button is courtesy, not the guard.
 
 ## Tests
 

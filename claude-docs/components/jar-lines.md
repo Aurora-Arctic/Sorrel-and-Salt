@@ -11,7 +11,7 @@
 - `quantity`: a number is on hand, `0` is out, `null` is held but not measured and reads "Unmeasured".
 - `unit` follows the quantity; `threshold` only feeds the badge.
 
-`edit`, optional: `{ workspaceId, ingredient }`, the coven's id and the entry's coven label. Given, each line ends with an [`EditStock`](edit-stock.md) button for its jar (M9.9); left out, as for a viewer, the lines are plain text. The prop carries the role's permission, so the component asks nothing of the session.
+`edit`, optional: `{ workspaceId, ingredient }`, the coven's id and the entry's coven label. Given, each line ends with an [`EditStock`](edit-stock.md) pencil for its jar (M9.9); left out, as for a viewer, the lines are plain text. The prop carries the role's permission, so the component asks nothing of the session.
 
 ## What a line holds
 
