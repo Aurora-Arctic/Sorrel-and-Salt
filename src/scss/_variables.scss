@@ -521,6 +521,12 @@ $pager-tight-width: 23rem;
 // 44px target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
 
+// The compact scale's control height (M9.7): a step shorter than
+// `$control-height`, for controls that should take less room than a form's,
+// still well over WCAG 2.5.8's 24px. Worn through the `compact-controls` mixin
+// by the filter panel and the Link dialog's search box.
+$compact-control: 2.5rem;
+
 // The wide page column's width (`.page-column`, MB.115): wider than the
 // measure, for the tables the admin pages hold, whose prose still stops at it. 80rem, the owner's
 // call at the design review: the user list's seven columns need about 77rem

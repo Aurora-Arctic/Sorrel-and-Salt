@@ -187,7 +187,7 @@
   display: inline-flex;
   align-items: center;
   gap: space(2);
-  min-height: var(--facet-control, #{$control-height});
+  min-height: var(--compact-control, #{$control-height});
   padding-block: 0;
   border-radius: radius('pill');
   font: inherit;
@@ -429,36 +429,11 @@ $sheet-slide: 250ms ease-out;
   --tip-placement: bottom;
 }
 
-// The compact scale (M9.7): every input in the panel is a step shorter than the app's forms
-// (`$control-height`), so the panel takes less room. Scoped here: the primitives, Field and
-// Combobox stay as the ingredient form draws them. Only heights and the strip's side padding
-// change; type stays at the body and small sizes, and colours and focus rings are the
-// primitives' own. The height is a custom property so the workshop can compare scales.
-// Chips are left at their own size: they already fit inside a box this tall.
-$compact-control: 2.5rem;
-
+// The compact scale (M9.7): every control in the panel is a step shorter than the app's
+// forms, so the panel takes less room. The `compact-controls` mixin holds the scale, which
+// the Link dialog's search box wears too; the rows close up a step as well.
 .facet-panel--compact {
-  --facet-control: #{$compact-control};
-  --facet-text: calc(var(--facet-control) - 2px - #{2 * space(1)});
-
-  // A native select, a typed box and a combobox's box.
-  .input,
-  .select {
-    min-height: var(--facet-control);
-  }
-
-  .combobox__value {
-    min-height: var(--facet-text);
-    line-height: var(--facet-text);
-  }
-
-  .combobox__input {
-    min-height: var(--facet-text);
-  }
-
-  .switch .switch__control {
-    min-height: var(--facet-control);
-  }
+  @include compact-controls;
 
   .facet-panel__pad,
   .facet-panel__line {

@@ -196,7 +196,13 @@ export default function LinkForm({
 
   return (
     <div className="link-form">
-      <FieldShell label="Compendium Entry" hint={hint} required {...shell}>
+      <FieldShell
+        label="Compendium Entry"
+        hint={hint}
+        required
+        className="link-form__search"
+        {...shell}
+      >
         <Combobox
           id={shell.controlId}
           label="Compendium Entry"

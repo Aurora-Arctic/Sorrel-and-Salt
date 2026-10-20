@@ -17,6 +17,14 @@
   gap: space(3);
 }
 
+// The search box at the compact scale, the filter panel's (M9.7): a step
+// shorter than a form's box, so the dialog gives its room to the picks and the
+// map beneath (the owner's call, 2026-10-20). The box alone: the select
+// beneath it and the dialog's buttons keep the full height.
+.link-form__search {
+  @include compact-controls;
+}
+
 .link-form__picks {
   display: flex;
   flex-direction: column;

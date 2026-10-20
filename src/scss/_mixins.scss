@@ -453,6 +453,39 @@
   color: $text-primary;
 }
 
+// The compact scale (M9.7), for the controls inside the rule that includes it:
+// each one-line control a step shorter than a form's, `$compact-control` rather
+// than `$control-height`. Only heights change; type stays at the body and small
+// sizes, and colours and focus rings are the primitives' own. The height is a
+// custom property, `--compact-control`, so the workshop can compare scales.
+// Chips keep their size: they already fit inside a box this tall. The filter
+// panel wears it on every control (FacetPanel), the Link dialog on its search
+// box alone (IngredientEntry/link-form.scss); every other form keeps the full
+// height.
+@mixin compact-controls {
+  --compact-control: #{$compact-control};
+  --compact-text: calc(var(--compact-control) - 2px - #{2 * space(1)});
+
+  // A native select, a typed box and a combobox's box.
+  .input,
+  .select {
+    min-height: var(--compact-control);
+  }
+
+  .combobox__value {
+    min-height: var(--compact-text);
+    line-height: var(--compact-text);
+  }
+
+  .combobox__input {
+    min-height: var(--compact-text);
+  }
+
+  .switch .switch__control {
+    min-height: var(--compact-control);
+  }
+}
+
 // A tip's bubble: the surface, layer and width cap. Where it sits is not CSS's
 // to say: `useTip` places it when it opens, inline, on Floating UI, so it stays
 // on the screen whatever the control's position (InfoTip/use-tip.ts,
