@@ -80,7 +80,9 @@ It follows WCAG 1.4.13, content on hover or focus, through the same
 
 - **It opens on hover and on the control's focus.** Both are heard on the
   wrapper, which holds the tip as well as the control; focus bubbles up to
-  it from the control.
+  it from the control. A focus inside the control's own open menu bubbles
+  there too and is ignored: the menu says what the control does (the
+  owner's call of 2026-10-20 put the page's Edit menu under a pencil).
 - **It stays while the pointer is over it.** Leaving both closes it after
   150ms, long enough to cross the small gap onto the tip.
 - **It closes on Escape, blur, or the pointer leaving both.** Escape is

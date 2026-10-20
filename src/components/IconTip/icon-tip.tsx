@@ -51,7 +51,13 @@ const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElem
       className={`icon-tip icon-tip--${placement}`}
       onMouseEnter={show}
       onMouseLeave={hideSoon}
-      onFocus={show}
+      // Not for a focus inside the control's own menu, which bubbles here
+      // too: the open menu says what the control does, and a tip opened
+      // there would only close with a fade as the menu goes (the owner's
+      // call, 2026-10-20, putting the page's Edit menu under the pencil).
+      onFocus={(event) => {
+        if (!(event.target as Element).closest('[role="menu"]')) show();
+      }}
       onBlur={hide}
     >
       {children}

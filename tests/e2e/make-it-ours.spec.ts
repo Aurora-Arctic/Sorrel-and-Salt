@@ -59,7 +59,7 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
 
   // By keyboard, as the entry asks: the Edit menu opened by ArrowDown, its
   // choice reached by the arrows and taken by Enter, then the dialog's answer.
-  await page.getByRole('button', { name: 'Edit', exact: true }).focus();
+  await page.getByRole('button', { name: 'Edit Fixture Our Ownwort', exact: true }).focus();
   await page.keyboard.press('ArrowDown');
   const ours = page.getByRole('menuitem', { name: 'Make It Ours' });
   while (!(await ours.evaluate((item) => item === document.activeElement))) {

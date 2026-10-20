@@ -68,14 +68,11 @@ export interface MenuButtonProps {
    */
   icon?: ReactElement;
   /**
-   * Which edge of the button the menu hangs from. `end`, the default, is its
-   * end edge, for a button at the end of its row (a card's More). `auto` picks
-   * as the menu opens: its start edge when the button sits in the start half of
-   * the window, else its end edge, for a button a wrapping header may drop to
-   * the start (the ingredient page's Edit). The room still flips it above or
-   * below.
+   * A state the caller's stylesheet draws the button from, set as its `data-state`: the
+   * compendium card's plus says `added` while its check shows after an add (M9.12). Left out,
+   * the button has none.
    */
-  placement?: 'auto' | 'end';
+  state?: string;
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
 }

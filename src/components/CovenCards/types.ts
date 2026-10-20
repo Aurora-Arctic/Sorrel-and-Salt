@@ -22,8 +22,6 @@ export interface CovenCardEntry {
   safetyNotes: string | null;
   /** Whose entry it is: the coven's `own`, or a compendium entry its cupboard names (`cupboard`). */
   kind: EntryKind;
-  /** The coven's cupboard row overrides a field of the compendium's. */
-  annotated: boolean;
   /** The curators retired the entry. */
   retired: boolean;
   /** The coven's jars of it, one per form held. */

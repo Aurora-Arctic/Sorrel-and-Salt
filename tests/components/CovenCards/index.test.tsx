@@ -73,7 +73,6 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   toxic: false,
   safetyNotes: null,
   kind: 'cupboard',
-  annotated: false,
   retired: false,
   jars: [],
   details: {

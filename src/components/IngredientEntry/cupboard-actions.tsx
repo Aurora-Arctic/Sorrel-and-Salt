@@ -17,6 +17,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
+import IconTip, { PencilIcon } from '../IconTip';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
@@ -39,7 +40,8 @@ import type {
 // Add to Cupboard while the coven does not hold it; Annotate, Make It Ours
 // (M12.23) and Remove once it does; and a curator's Edit Compendium Entry. Two or more
 // share one Edit menu, the owner's call of 2026-10-19, so the title keeps its
-// line; one alone is a plain button. Make It Ours leads to the own entry it
+// line; one alone is a plain button. The menu's button is the pencil at the end
+// of the name's row, named Edit and the entry (the owner's call, 2026-10-20). Make It Ours leads to the own entry it
 // writes, since the compendium entry's page is no longer the coven's; every
 // other write reads the page again, so the marks and the choices follow the
 // cupboard. Which choices show is the page's, from the member's permissions;
@@ -127,13 +129,13 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
 }
 
 /**
- * What the failure badge calls the button that keeps the focus: the menu's
- * "Edit" when two or more choices share it, the lone button's own label
+ * What the failure badge calls the button that keeps the focus: the pencil's
+ * "Edit" and the entry when two or more choices share it, the lone button's own label
  * otherwise. Worked out from the same permissions as the choices, ahead of
  * them, since the hook that draws the badge is called before the choices'
  * handlers exist.
  */
-function feedbackName(places: readonly CupboardPlace[], edit: boolean): string {
+function feedbackName(places: readonly CupboardPlace[], edit: boolean, name: string): string {
   const keys = (
     [
       edit && 'edit',
@@ -143,8 +145,11 @@ function feedbackName(places: readonly CupboardPlace[], edit: boolean): string {
       placesFor.remove(places).length > 0 && 'remove',
     ] as const
   ).filter((key): key is keyof typeof LABEL => key !== false);
-  return keys.length === 1 ? LABEL[keys[0]] : 'Edit';
+  return keys.length === 1 ? LABEL[keys[0]] : editLabel(name);
 }
+
+/** The Edit menu's name, the pencil's: the verb and the entry, as the details modal's pencil has it. */
+const editLabel = (name: string): string => `Edit ${name}`;
 
 /** The coven a confirmation starts on: the default where it may, else the first that may. */
 const startOn = (places: readonly CupboardPlace[], defaultWorkspaceId: string): string =>
@@ -173,8 +178,8 @@ export default function CupboardActions(
   // this render's layout, so the ref is the commit's own.
   const trigger = useRef<HTMLButtonElement | null>(null);
   // The callout hangs from the same button, named as the badge says it: the
-  // menu's "Edit", or the lone button's own label.
-  const feedback = useClickFeedback({ name: feedbackName(places, !!edit) });
+  // pencil's Edit and the entry, or the lone button's own label.
+  const feedback = useClickFeedback({ name: feedbackName(places, !!edit, name) });
   const { anchorRef } = feedback;
   const triggerRef = useCallback(
     (node: HTMLButtonElement | null) => {
@@ -309,17 +314,25 @@ export default function CupboardActions(
     opened && places.find(({ workspaceId }) => workspaceId === opened.workspaceId);
 
   return (
-    <div className="ingredient-entry__cupboard">
+    <div
+      className={
+        only === undefined
+          ? 'ingredient-entry__cupboard ingredient-entry__cupboard--pencil'
+          : 'ingredient-entry__cupboard'
+      }
+    >
       {only === undefined ? (
-        <MenuButton
-          ref={triggerRef}
-          label="Edit"
-          placement="auto"
-          className={PLAIN}
-          items={items}
-          busy={add.isPending}
-          busyLabel="Adding"
-        />
+        <IconTip tip="Edit">
+          <MenuButton
+            ref={triggerRef}
+            label={editLabel(name)}
+            className="icon-tip__edit"
+            icon={<PencilIcon />}
+            items={items}
+            busy={add.isPending}
+            busyLabel="Adding"
+          />
+        </IconTip>
       ) : only.key === 'edit' && edit ? (
         <EditButton href={edit.href} entry={edit.entry} />
       ) : only.key === 'add' && adders.length > 1 ? (

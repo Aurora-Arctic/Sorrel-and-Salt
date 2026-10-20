@@ -30,12 +30,15 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  it('shows Annotated beside Compendium once the cupboard row overrides a field', () => {
+  // Annotated wins (the owner's call, 2026-10-20): it already says the entry is the
+  // Compendium's, so the two never show together. The test above is the precondition:
+  // held and unannotated, the same entry shows Compendium.
+  it('shows Annotated alone, without Compendium, once the cupboard row overrides a field', () => {
     render(<EntryMarks kind="cupboard" annotated />);
 
     expect(annotated()).toBeInTheDocument();
-    expect(held()).toBeInTheDocument();
-    expect(statuses()).toHaveLength(1);
+    expect(held()).toBeNull();
+    expect(statuses()).toHaveLength(0);
   });
 
   it('marks a compendium entry the cupboard does not hold when read in a coven', () => {
@@ -79,6 +82,24 @@ describe('EntryMarks', () => {
     },
   );
 
+  // The card's switch (the owner's call, 2026-10-20): Compendium and Annotated
+  // say where a held entry came from, which the entry page says and a card does not.
+  it('leaves Compendium and Annotated off without provenance, keeping Local and Retired', () => {
+    const card = render(<EntryMarks kind="cupboard" annotated provenance={false} />);
+    expect(held()).toBeNull();
+    expect(annotated()).toBeNull();
+    expect(card.container).toBeEmptyDOMElement();
+    card.unmount();
+
+    const retiredCard = render(<EntryMarks kind="cupboard" retired annotated provenance={false} />);
+    expect(retired()).toBeInTheDocument();
+    expect(annotated()).toBeNull();
+    retiredCard.unmount();
+
+    render(<EntryMarks kind="own" provenance={false} />);
+    expect(local()).toBeInTheDocument();
+  });
+
   it('shows nothing for a compendium entry the cupboard does not hold', () => {
     const { container } = render(<EntryMarks kind="compendium" />);
 
@@ -93,6 +114,51 @@ describe('EntryMarks', () => {
 
     const bare = render(<EntryMarks kind="compendium" annotated />);
     expect(bare.container).toBeEmptyDOMElement();
+  });
+});
+
+// Green first, red last, on every badge row (the owner's call, 2026-10-20):
+// EntryMarks draws the whole row, Caution and Toxic included, so the order
+// holds in one place. Asserted by document order, never by class or copy.
+describe('EntryMarks badge order', () => {
+  const precedes = (first: Element | null, second: Element | null): boolean =>
+    first !== null &&
+    second !== null &&
+    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const caution = () => screen.queryByText('Caution', { exact: true });
+  const toxic = () => screen.queryByText('Toxic', { exact: true });
+
+  it('draws a green mark first, ahead of a neutral one built before it', () => {
+    render(<EntryMarks kind="cupboard" retired annotated />);
+
+    expect(precedes(annotated(), retired())).toBe(true);
+  });
+
+  it('draws Local ahead of the red marks', () => {
+    render(<EntryMarks kind="own" toxic safetyNotes="Fixture caution." />);
+    expect(precedes(local(), caution())).toBe(true);
+    expect(precedes(local(), toxic())).toBe(true);
+  });
+
+  it('draws the red marks last, Caution before Toxic', () => {
+    render(<EntryMarks kind="cupboard" retired annotated toxic safetyNotes="Fixture caution." />);
+
+    for (const mark of [annotated(), retired()]) {
+      expect(precedes(mark, caution())).toBe(true);
+    }
+    expect(precedes(caution(), toxic())).toBe(true);
+  });
+
+  it('reads Caution and Toxic from a form as well as the ingredient', () => {
+    render(
+      <EntryMarks
+        kind="compendium"
+        variants={[{ form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true }]}
+      />,
+    );
+
+    expect(caution()).toBeInTheDocument();
+    expect(toxic()).toBeInTheDocument();
   });
 });
 

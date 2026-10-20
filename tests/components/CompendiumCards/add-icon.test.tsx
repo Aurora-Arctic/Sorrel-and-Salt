@@ -6,24 +6,28 @@ import { HttpResponse } from 'msw';
 import CompendiumCards from '@/components/CompendiumCards';
 import type { CompendiumCardEntry, CompendiumCardsProps } from '@/components/CompendiumCards/types';
 import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from '@/gql/graphql';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { expectRefusalUnder } from '../../support/click-feedback';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
 // The plus of someone who may write in several covens asks which in a menu (M9.12, the owner's
-// call, 2026-10-20): its items are the covens that lack the entry, and choosing one adds there at
-// once. With one coven lacking it, the plus adds there with no menu
-// (claude-docs/components/compendium-cards.md, "The plus").
+// call, 2026-10-20): its items are every coven, one holding the entry disabled, and choosing one
+// adds there at once. With one coven at all, the plus adds there with no menu. A success turns
+// the spinner into a check, which fades back to the plus after a hold unless every coven now
+// holds the entry (claude-docs/components/compendium-cards.md, "The plus").
 
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const client = makeQueryClient();
 const Cards = (props: CompendiumCardsProps): ReactElement => (
-  <QueryClientProvider client={client}>
-    <CompendiumCards {...props} />
-  </QueryClientProvider>
+  <StatusRegionProvider>
+    <QueryClientProvider client={client}>
+      <CompendiumCards {...props} />
+    </QueryClientProvider>
+  </StatusRegionProvider>
 );
 
 const FIRST = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
@@ -260,5 +264,98 @@ describe('the add icon among several covens', () => {
     expect(screen.getAllByRole('button', PLUS)).toHaveLength(1);
     expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
+  });
+});
+
+// The owner's call, 2026-10-20: "When you click the plus and it adds to a coven the loading should
+// animate into a check mark and then fade to the plus." The plus says which it shows in its
+// `data-state`, the attribute its stylesheet draws from: `added` for the check, `returning` while
+// the check fades back to the plus, and none for the plus itself.
+describe('the plus after an add', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    router.refresh.mockReset();
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    return () => vi.useRealTimers();
+  });
+
+  const plus = (): HTMLElement => screen.getByRole('button', PLUS);
+  /** What the statuses say: the page's region, and the cards' own count. */
+  const said = (): string[] =>
+    screen.getAllByRole('status').map((status) => status.textContent?.trim() ?? '');
+
+  it('shows the check on a success, says so once, and returns to the plus after the hold', async () => {
+    mockAdd();
+    // Why it could return: two covens, neither holding the entry, so one add leaves one lacking it.
+    render(<Cards {...props([entry()], { covens: [FIRST, SECOND] })} />);
+    expect(plus()).not.toHaveAttribute('data-state');
+
+    fireEvent.click(within(openMenu()).getByRole('menuitem', { name: SECOND.name }));
+
+    await waitFor(() => expect(plus()).toHaveAttribute('data-state', 'added'));
+    expect(plus()).toHaveAccessibleName(PLUS.name);
+    expect(said()).toContain(`Added to ${SECOND.name}.`);
+    await act(() => vi.advanceTimersByTimeAsync(900));
+    expect(plus()).toHaveAttribute('data-state', 'added');
+
+    await act(() => vi.advanceTimersByTimeAsync(200));
+    expect(plus()).toHaveAttribute('data-state', 'returning');
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(plus()).not.toHaveAttribute('data-state');
+    expect(plus()).toHaveAccessibleName(PLUS.name);
+    expect(plus()).toBeEnabled();
+    // The coven just added to is held until the page says so, so the menu cannot add it twice.
+    expect(within(openMenu()).getByRole('menuitem', { name: SECOND.name })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
+  it('keeps the check where the add left every coven holding the entry', async () => {
+    mockAdd();
+    // Two covens, the second already holding it: adding to the first leaves none lacking it.
+    render(<Cards {...props([entry({ heldIn: [SECOND.id] })], { covens: [FIRST, SECOND] })} />);
+
+    fireEvent.click(within(openMenu()).getByRole('menuitem', { name: FIRST.name }));
+
+    await waitFor(() => expect(plus()).toHaveAttribute('data-state', 'added'));
+    await act(() => vi.advanceTimersByTimeAsync(5000));
+    expect(plus()).toHaveAttribute('data-state', 'added');
+  });
+
+  it('keeps the check on the lone plus, whose one coven then holds the entry', async () => {
+    mockAdd();
+    render(<Cards {...props([entry()], { covens: [FIRST] })} />);
+
+    fireEvent.click(plus());
+
+    await waitFor(() => expect(plus()).toHaveAttribute('data-state', 'added'));
+    expect(plus()).toHaveAccessibleName(PLUS.name);
+    expect(said()).toContain(`Added to ${FIRST.name}.`);
+    await act(() => vi.advanceTimersByTimeAsync(5000));
+    expect(plus()).toHaveAttribute('data-state', 'added');
+  });
+
+  it('never shows the check on a refusal, and says nothing in the status region', async () => {
+    mockGraphQLError('AddCupboardEntry', {
+      code: 'FORBIDDEN',
+      message: 'Viewers cannot add ingredients.',
+    });
+    render(<Cards {...props([entry()], { covens: [FIRST] })} />);
+
+    fireEvent.click(plus());
+
+    expect(await expectRefusalUnder(plus(), PLUS.name)).toContain(
+      'Viewers cannot add ingredients.',
+    );
+    expect(plus()).not.toHaveAttribute('data-state');
+    await act(() => vi.advanceTimersByTimeAsync(2000));
+    expect(plus()).not.toHaveAttribute('data-state');
+    expect(said().filter((text) => text.startsWith('Added'))).toEqual([]);
   });
 });

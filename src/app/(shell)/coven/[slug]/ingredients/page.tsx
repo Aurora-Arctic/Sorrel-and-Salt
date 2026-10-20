@@ -33,7 +33,6 @@ import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   heldCompendiumEntry,
-  isAnnotated,
   isRetired,
   MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
@@ -138,7 +137,6 @@ export default async function CovenIngredientsPage({
           annotateHref: placed({ annotate: node.id }),
         }),
       ...(own ? { mayDelete } : { mayMakeOurs, mayRemove: mayDelete }),
-      annotated: cupboardEntry !== null && isAnnotated(cupboardEntry),
       retired: isRetired(node),
       jars: page.jars[i].flatMap((jar): JarLine[] => {
         const form = page.formOf.get(jar.variantId);

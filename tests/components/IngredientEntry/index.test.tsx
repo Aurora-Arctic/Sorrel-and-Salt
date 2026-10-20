@@ -978,7 +978,7 @@ describe('IngredientEntry edit', () => {
   it('offers Edit only when given where it goes, and never Delete', () => {
     const { unmount } = renderEntry();
     expect(screen.queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     unmount();
 
     renderEntry({ edit: edit() });
@@ -1083,10 +1083,25 @@ describe('IngredientEntry edit', () => {
     const renderOwn = (ui: ReactElement) =>
       render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
+    // The pencil at the end of the name's row (the owner's call, 2026-10-20).
+    it("draws the page's Edit as the pencil beside the name, named for the entry, and no plain Edit", () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
+      expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+      fireEvent.click(pencil);
+      expect(
+        within(screen.getByRole('menu', { name: 'Edit Testwort' }))
+          .getAllByRole('menuitem')
+          .map((item) => item.textContent),
+      ).toEqual(['Edit Ingredient', 'Delete Ingredient']);
+    });
+
     it("offers Edit in the page's Edit menu, and heads the dialog as an ingredient's, writing to the coven", () => {
       renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
-      fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
       expect(screen.getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
         'href',
         `${OWN}?edit`,
@@ -1148,7 +1163,7 @@ describe('IngredientEntry on a coven page', () => {
   const rowOf = (term: string): string =>
     screen.getByText(term, { selector: 'dt' }).nextElementSibling!.textContent!;
 
-  it('shows the merged values of an annotated compendium entry, marked from the compendium', () => {
+  it('shows the merged values of an annotated compendium entry, marked Annotated', () => {
     renderEntry({
       detail: detail({
         cupboardEntry: held({
@@ -1169,9 +1184,12 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Planets')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // Annotated sits beside Compendium; a compendium entry is never Local.
+    // Annotated stands in place of Compendium (the owner's call, 2026-10-20); a
+    // compendium entry is never Local. The next test is the precondition: held and
+    // unannotated, it shows Compendium.
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryByText('Compendium', { exact: true })).toBeNull();
+    expect(screen.queryAllByRole('status')).toHaveLength(0);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
