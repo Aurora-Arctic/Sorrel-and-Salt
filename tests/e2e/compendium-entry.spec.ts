@@ -4,6 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 import { insertIngredient } from '../support/db/insert-ingredient';
+import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
@@ -141,5 +142,42 @@ test('a visitor reads an entry with its details and each form, on a page that fi
   await expect(page.getByRole('region', { name: 'Details' })).toBeVisible();
   await expect(page.locator(`#form-${slugify('Fixture Root')}`)).toBeVisible();
   await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
+});
+
+// A citation prints its url as plain text, Chicago's form, and a url with no
+// hyphen or space is one long word with nowhere a line may break: unbroken, a
+// long one ran past a phone's column (MB.120). The bibliography lets it break
+// anywhere instead.
+test('a source with a long url wraps inside the column on a phone', async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const author = await authorOf(browser, baseURL, 'author@compendium-entry-url.test');
+  const name = 'Fixture Long Sourced Sedge';
+  const url = `https://fixtures.example/${'averylongpathsegmentwithnobreak'.repeat(5)}/testwort?edition=1`;
+  await withSql(async (sql) => {
+    const ingredient = await insertIngredient(
+      sql,
+      makeIngredient({ name, nomenclature: 'none', variants: [] }),
+      author,
+    );
+    const reference = await insertReference(
+      sql,
+      { kind: 'web_page', title: 'A Fixture Page With a Long Address', url },
+      author,
+    );
+    await insertReferenceLink(sql, ingredient, reference, author);
+  });
+
+  await page.goto(`/compendium/ingredients/${slugify(name)}`);
+
+  const bibliography = page.getByRole('list', { name: 'Bibliography' });
+  await expect(bibliography).toContainText(url);
+  await expect(bibliography.getByRole('link', { name: /^Open the Source/ })).toHaveAttribute(
+    'href',
+    url,
+  );
   await assertNoSidewaysScroll(page);
 });
