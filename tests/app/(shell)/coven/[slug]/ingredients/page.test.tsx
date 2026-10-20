@@ -46,6 +46,10 @@ const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
 const heldCompendiumEntry = vi.fn();
 const ingredientDetailOf = vi.fn();
+// The viewer's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// Mocked so no real query runs here; which covens it admits is
+// tests/modules/ingredients/services/covens-holding.test.ts's.
+const covensHoldingEntry = vi.fn();
 vi.mock('@/modules/ingredients', async (importActual) => ({
   ...(await importActual<typeof import('@/modules/ingredients')>()),
   listWorkspaceIngredients,
@@ -56,6 +60,7 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
   getIngredient,
   heldCompendiumEntry,
   ingredientDetailOf,
+  covensHoldingEntry,
 }));
 
 // The form is its own tests'; here only which ways out of it lead where.
@@ -132,6 +137,7 @@ async function renderPage(search: Record<string, string> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  covensHoldingEntry.mockResolvedValue([]);
   requireCovenMembership.mockResolvedValue({
     workspace: COVEN,
     membership: { workspaceId: COVEN.id, userId: 'fixture-user', role: 'member' },
@@ -407,13 +413,15 @@ describe("the coven Ingredients page's details modal", () => {
       'href',
       '/coven/fixture-coven/ingredients/a1',
     );
+    // A coven's own entry is held by this coven alone, so no covens are read for it.
+    expect(covensHoldingEntry).not.toHaveBeenCalled();
   });
 
   it("gives an owner and a member Edit on the coven's own entry, opening the edit modal over the details", async () => {
     for (const role of ['owner', 'member']) {
       asRole(role);
       await renderPage({ source: 'local', entry: 'a1' });
-      expect(within(details('Testwort')!).getByRole('link', { name: 'Edit' })).toHaveAttribute(
+      expect(within(details('Testwort')!).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
         'href',
         `${FILTERED_HREF}&entry=a1&edit=a1`,
       );
@@ -427,7 +435,7 @@ describe("the coven Ingredients page's details modal", () => {
     // The details opened, so Edit's absence is the role's, not a missing dialog.
     const dialog = details('Testwort')!;
     expect(within(dialog).getByRole('link', { name: 'Open Full Page' })).toBeInTheDocument();
-    expect(within(dialog).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
   });
 
@@ -442,7 +450,23 @@ describe("the coven Ingredients page's details modal", () => {
       'href',
       '/coven/fixture-coven/ingredients/b2',
     );
-    expect(within(dialog).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+  });
+
+  it("lists the member's own covens that hold a held compendium entry in the details, read as the member", async () => {
+    covensHoldingEntry.mockResolvedValue([
+      { id: COVEN.id, slug: 'fixture-coven', name: 'Fixture Coven' },
+      { id: 'w-other', slug: 'other-coven', name: 'Other Coven' },
+    ]);
+    await renderPage({ entry: 'b2' });
+
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(session, 'b2');
+    const covens = within(details('House Salt')!).getByRole('list', { name: 'In Your Covens' });
+    expect(within(covens).getByRole('link', { name: 'Other Coven' })).toHaveAttribute(
+      'href',
+      '/coven/other-coven/ingredients/b2',
+    );
+    expect(within(covens).getAllByRole('link')).toHaveLength(2);
   });
 
   it("shows the coven's own entry's sections in the details, read as the member", async () => {

@@ -54,6 +54,9 @@ const ingredientDetailOf = vi.fn();
 // How many entries each filter's choices would list (M12.4), which also
 // names the forms the Form box offers.
 const compendiumFacets = vi.fn();
+// The curator's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
+const covensHoldingEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   listCompendium,
   countCompendium,
@@ -61,6 +64,7 @@ vi.mock('@/modules/ingredients', () => ({
   resolveCompendiumSlug,
   variantsOf,
   ingredientDetailOf,
+  covensHoldingEntry,
 }));
 
 // The curated forms, read through the vocabulary module, and the two batches
@@ -241,6 +245,7 @@ beforeEach(() => {
   categoryGroupsOf.mockImplementation(async (ids: string[]) => ids.map(() => WARDS));
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
+  covensHoldingEntry.mockResolvedValue([]);
   redirect.mockClear();
   router.replace.mockClear();
   // An entry's form asks after near matches of the name it opens with.
@@ -704,7 +709,7 @@ describe('the /admin/compendium details modal', () => {
       'href',
       `/compendium/ingredients/${TESTWORT.slug}`,
     );
-    expect(within(details()).getByRole('link', { name: 'Edit' })).toHaveAttribute(
+    expect(within(details()).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
       'href',
       `${ON_DETAILS}&edit=${TESTWORT.slug}`,
     );
@@ -734,6 +739,21 @@ describe('the /admin/compendium details modal', () => {
     // Why it could read: the list holds the entry.
     expect(screen.getAllByRole('row')).toHaveLength(2);
     expect(ingredientDetailOf).not.toHaveBeenCalled();
+    expect(covensHoldingEntry).not.toHaveBeenCalled();
+  });
+
+  it("lists the curator's own covens that hold the entry in the details, read with the curator's session", async () => {
+    covensHoldingEntry.mockResolvedValue([
+      { id: 'w-fixture', slug: 'fixture-coven', name: 'Fixture Coven' },
+    ]);
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
+    const covens = within(details()).getByRole('list', { name: 'In Your Covens' });
+    expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/coven\/fixture-coven\/ingredients\//),
+    );
   });
 
   it("links each name to its details, keeping the filter, and each row's Edit to no details", async () => {
