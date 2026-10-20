@@ -698,13 +698,24 @@ test("a card's More opened near the window's foot opens above it, inside the win
   const coven = await seedCoven(page, 'Fixture Coven Gate Menu Foot', 'gate-menu-foot.test', {
     A: 'owner',
   });
-  await withSql((sql) =>
-    localIngredient(sql, coven.id, coven.users.A, {
-      name: 'Fixture Footwort',
-      canonicalName: 'Fixtura pedis',
-    }),
-  );
+  // A held compendium entry, whose More holds two choices; a coven's own entry with
+  // Delete alone draws a bin and no More (the owner's call, 2026-10-20).
+  await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Footwort', canonicalName: 'Fixtura pedis' }),
+      coven.users.A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, coven.users.A);
+    await localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Ownwort',
+      canonicalName: 'Fixtura propria',
+    });
+  });
   await page.goto(listPath(coven));
+  const own = rowOf(ingredientList(page), 'Fixture Ownwort');
+  await expect(own.getByRole('button', { name: /^Delete Ingredient/ })).toBeVisible();
+  await expect(own.getByRole('button', { name: /^More for/ })).toHaveCount(0);
   const more = rowOf(ingredientList(page), 'Fixture Footwort').getByRole('button', {
     name: /^More for Fixture Footwort/,
   });
@@ -726,7 +737,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
     await page.setViewportSize({ width, height });
     await more.scrollIntoViewIfNeeded();
     await more.click();
-    await expect(menu.getByRole('menuitem')).toHaveText(['Delete Ingredient']);
+    await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
     const at = (await more.boundingBox())!;
     const box = (await menu.boundingBox())!;
     // Why it could have opened below: the room under More is less than the menu.
