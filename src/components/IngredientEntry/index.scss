@@ -223,7 +223,8 @@ $formal-line: 1.5rem;
 
 // In Your Cupboard: the shelf before the name, at the heading's size and in
 // the muted ink, so it reads as a mark on the name and not part of it (the
-// owner's mock-up, 2026-10-19). A button only to carry its tip (held-mark.tsx).
+// owner's mock-up, 2026-10-19). A button to carry its tip, which a press opens
+// too (held-mark.tsx).
 .ingredient-entry__held {
   display: inline-flex;
   flex: none;

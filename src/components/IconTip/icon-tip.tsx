@@ -32,7 +32,12 @@ const TIP_FADE_MS = 120;
 // No wait to close: the bubble takes no pointer, so there is nothing to cross onto.
 const TIMING = { closeDelayMs: 0 } as const;
 
-const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElement => {
+const IconTip = ({
+  tip,
+  children,
+  placement = 'side',
+  opensOnPress = false,
+}: IconTipProps): ReactElement => {
   // The wrapper, also the tip's anchor, kept to ask whether a menu is open
   // under it: a button in it that says so with `aria-expanded`.
   const wrapper = useRef<HTMLSpanElement | null>(null);
@@ -97,6 +102,8 @@ const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElem
         if (!(event.target as Element).closest('[role="menu"]')) show();
       }}
       onBlur={hide}
+      // A status mark's press, heard as it bubbles from the button (`opensOnPress`).
+      onClick={opensOnPress ? show : undefined}
     >
       {children}
       {(open || closing) && (

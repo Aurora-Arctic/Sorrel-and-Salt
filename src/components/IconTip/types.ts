@@ -19,6 +19,14 @@ export interface IconTipProps {
    * segment of the radio strip (M12.7).
    */
   placement?: 'side' | 'below' | 'above';
+  /**
+   * A press opens the tip too, as a tap or a click does on InfoTip's ⓘ, for a
+   * status mark whose button does nothing else: on touch there is no hover,
+   * and a tap focuses no button in Safari, so without it the word never shows
+   * (the owner's call, 2026-10-20). Opens rather than toggles, as the ⓘ does.
+   * Not for a control with its own press, whose press says what it does.
+   */
+  opensOnPress?: boolean;
 }
 
 export interface EditLinkProps {
