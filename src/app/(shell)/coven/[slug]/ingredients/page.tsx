@@ -18,6 +18,7 @@ import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-p
 import type { JarLine } from '../../../../../components/JarLines/types';
 import { detailsHeading } from '../../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
+import IngredientSummary from '../../../../../components/IngredientEntry/summary';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../../../../../components/Modal/route-modal-provider';
@@ -185,6 +186,7 @@ export default async function CovenIngredientsPage({
             viewed && {
               heading: detailsHeading(viewed.shown),
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
+              children: <IngredientSummary detail={viewed.detail} />,
               ...(viewed.own &&
                 mayEdit && {
                   editAction: {

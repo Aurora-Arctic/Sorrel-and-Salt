@@ -19,7 +19,7 @@ import { discardQuestion, editIngredientDialog } from './stories/ingredient-dial
 // eye, left of the name on the admin Compendium list and at the card's foot on
 // a coven's Ingredients and the public compendium (claude-docs/components/ingredient-entry.md, "The details modal"). This
 // proves what no story walks: the eye opens the details and every close gives
-// it the focus back, the name itself still reaches the entry's page, Edit
+// it the focus back, the details show the entry's sections on every list, the name itself still reaches the entry's page, Edit
 // opens the edit modal over the details and closes back to them, a coven's
 // Edit is an owner's and a member's and not a viewer's, a save there shows in
 // the details and the list, an unsaved close asks first, and the open details
@@ -56,7 +56,15 @@ test.describe('on the admin Compendium list', () => {
       const [held] =
         await sql`select 1 from ingredients where name = ${NAME} and workspace_id is null`;
       if (!held)
-        await insertIngredient(sql, makeIngredient({ name: NAME, canonicalName: FORMAL }), userId);
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: NAME,
+            canonicalName: FORMAL,
+            safetyNotes: 'Fixture admin caution.',
+          }),
+          userId,
+        );
     });
   });
 
@@ -72,6 +80,10 @@ test.describe('on the admin Compendium list', () => {
     await eye.click();
     await expect(details).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`[?&]entry=${slug}`));
+    // The entry's sections, read with the curator's session.
+    await expect(
+      details.getByRole('region', { name: 'Caution' }).getByText('Fixture admin caution.'),
+    ).toBeVisible();
     await expect(details.getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${slug}`,
@@ -129,7 +141,12 @@ test.describe("on a coven's Ingredients", () => {
       C: 'viewer',
     });
     await withSql((sql) =>
-      localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL }),
+      localIngredient(sql, coven.id, coven.users.A, {
+        name: NAME,
+        canonicalName: FORMAL,
+        safetyNotes: 'Fixture coven caution.',
+        folkNames: ['Fixture Covenbane'],
+      }),
     );
     const listPath = `/coven/${coven.slug}/ingredients`;
     const details = detailsDialog(page);
@@ -141,6 +158,13 @@ test.describe("on a coven's Ingredients", () => {
       // Why Edit could be there: the details are open, with their other action.
       await expect(details.getByRole('link', { name: 'Open Full Page' })).toBeVisible();
       await expect(editIn(details)).toHaveCount(0);
+      // The entry's sections, read for the coven.
+      await expect(
+        details.getByRole('region', { name: 'Caution' }).getByText('Fixture coven caution.'),
+      ).toBeVisible();
+      await expect(
+        details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Covenbane'),
+      ).toBeVisible();
     });
 
     for (const key of ['B', 'A'] as const) {
