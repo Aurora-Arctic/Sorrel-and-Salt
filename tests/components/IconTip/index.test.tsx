@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IconTip, { CheckIcon, EditLink } from '@/components/IconTip';
+import MenuButton from '@/components/MenuButton';
 import Modal from '@/components/Modal';
 
 // A word above an icon control, "Edit" over a pencil: shown on hover or the
@@ -119,6 +120,90 @@ describe('IconTip', () => {
       escape(button);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+// A tip over a control that opens a menu: while the menu is open the menu says
+// what the control does, so the tip stays shut however the pointer or the
+// focus reaches the control (the owner's call, 2026-10-20), and is back for
+// the next hover once the menu is closed.
+describe('IconTip around a menu button', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function renderMenu() {
+    render(
+      <IconTip tip="Add">
+        <MenuButton
+          label="Add Fixture Salt"
+          className="btn"
+          icon={<svg aria-hidden="true" />}
+          items={[{ key: 'one', label: 'First Choice', onSelect: vi.fn() }]}
+        />
+      </IconTip>,
+    );
+    return screen.getByRole('button', { name: 'Add Fixture Salt' });
+  }
+
+  // The tip's fade, past which a closed tip is gone from the page.
+  const settle = async () => {
+    await act(async () => {
+      vi.advanceTimersByTime(600);
+    });
+  };
+
+  it('takes its tip away when the menu opens on a press, and keeps it away on hover and focus', async () => {
+    const button = renderMenu();
+    fireEvent.mouseEnter(button);
+    expect(tip()).not.toBeNull();
+    // Why it could show: closed, a hover opens it, as just seen.
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    await settle();
+    expect(tip()).toBeNull();
+
+    fireEvent.mouseLeave(button);
+    fireEvent.mouseEnter(button);
+    expect(tip()).toBeNull();
+    act(() => button.focus());
+    expect(tip()).toBeNull();
+  });
+
+  it('takes its tip away when the menu opens from the keyboard while the pointer rests on the control', async () => {
+    const button = renderMenu();
+    fireEvent.mouseEnter(button);
+    expect(tip()).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.keyDown(button, { key: 'ArrowDown' });
+    });
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    await settle();
+    expect(tip()).toBeNull();
+  });
+
+  it('shows the tip again on a hover once the menu has closed', async () => {
+    const button = renderMenu();
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    fireEvent.mouseEnter(button);
+    expect(tip()).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.mouseLeave(button);
+    fireEvent.mouseEnter(button);
+    expect(tip()).not.toBeNull();
   });
 });
 
