@@ -70,7 +70,7 @@ in the filter slot to carry.
   inside the form and travels with it. `IngredientSearch` marks its root
   `.ingredient-search`, and its `<search>` is `position: sticky` there (the form
   inside would stop at its own end; the sticky box's parent must span the
-  results), with an opaque page background and the `sticky-row` layer, above the
+  results), opaque through its fill layer (below) and the `sticky-row` layer, above the
   cards and below the bar, tips and dialogs. The offset is one custom property,
   `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
   PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
@@ -83,7 +83,13 @@ in the filter slot to carry.
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
   IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
-  Without the API (past the browser floor) the row simply has no shadow. The
+  Without the API (past the browser floor) the row simply has no shadow.
+  The fill is not the row's own background but `.filter-sorrel`, a decorative
+  `aria-hidden` child `FilterForm` draws for `IngredientSearchForm` (its `sorrel`
+  prop), clipped to the row and holding a copy of the corner sorrel, so the
+  sorrel shows through the stuck row while the cards under it stay hidden
+  (M12.46; [`backdrop.md`](backdrop.md), "The copy in the search row"). It is
+  hidden with the sorrel under `prefers-contrast: more`, and the row stays opaque. The
   root's `scroll-padding-top` leaves room for the stuck row, padding included,
   when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
@@ -263,8 +269,8 @@ results.) and `NoMatches`. Each stubs `window.fetch` for `/api/graphql`.
 `tests/components/IngredientSearch/index.test.tsx` asserts the requests the box
 makes (once after the debounce, never before focus or under the floor, first 25
 and no cursor), the action row and empty message, that a pick opens the match
-without applying the text, that the clear empties the box and applies the empty search, and that Enter
-applies the trimmed text.
+without applying the text, that the clear empties the box and applies the empty search, that Enter
+applies the trimmed text, and that the row's sorrel layer is hidden from assistive technology.
 
 ## The search sentence
 

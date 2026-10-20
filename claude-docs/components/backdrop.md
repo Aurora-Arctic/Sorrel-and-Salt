@@ -105,6 +105,32 @@ fixed element is a stacking context, so a layer nested inside it would blend
 with its transparent parent rather than with the page and come out plain
 grey. As siblings in the root stacking context, each blends with the page.
 
+## The copy in the search row
+
+The sticky search row on the ingredient lists is filled with the page colour so
+the cards do not show through, and a sticky box paints as its own stacking
+context, so no `z-index` can put the real sorrel between that fill and the row's
+controls. The row draws a copy instead (M12.46): `.filter-sorrel`, an
+`aria-hidden` child of the `<search>` (not of the form, whose `container-type`
+would become the containing block of fixed children), `position: absolute`,
+`inset: 0`, `z-index: -1`, filled with `$surface-page` and clipped by
+`clip-path: inset(0)`. Its `::before` and `::after` are the `screen` and
+`multiply` layers, `position: fixed` like the real ones, so a fixed copy
+lines up with the real sorrel and the clip shows only the part inside the
+row. The clip makes the layer a stacking context, which is why it carries the
+page colour: the blends need something the colour of the page to blend with. It
+sits on the layer and never on the `<search>`, which would cut off the stuck
+shadow and the Filters tray.
+
+The shape, the photograph and the offsets (the shell bar, the context row, the
+`sorrel-follow-bar` scroll animation) are written once, in the mixins of
+`_sorrel.scss`, and used by `.backdrop--sorrel` and by the copy; the
+keyframes stay in `index.scss`. Under `prefers-contrast: more` the copy's two
+layers are hidden with the sorrel and the layer keeps its fill, so the row
+stays opaque. If a browser ever fails to clip a fixed copy, the fallback is
+`position: absolute` inside an `overflow: hidden` layer, with `StuckMark`
+writing the row's left offset.
+
 ## Accessibility
 
 `aria-hidden="true"` and no role: nothing to announce. `prefers-contrast: more`

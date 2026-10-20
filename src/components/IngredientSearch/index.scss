@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../Backdrop/sorrel' as *;
 
 // Tokens and primitives only until the section's design review: the action
 // beneath the filter row takes the row's own spacing
@@ -15,7 +16,7 @@
 // button, Clear All and the tray, which opens inside the form and so travels with it. The
 // sticky box is the `<search>`, whose parent `.list-frame` spans the results; the form
 // inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
-// Opaque so the cards do not show through. The padding above is the row's own air when stuck;
+// Opaque so the cards do not show through: the fill is the sorrel layer below, not this box. The padding above is the row's own air when stuck;
 // the negative margin of the same size cancels it at rest, so the page lays out as without it.
 // The padding below, `space(2)`, is real space between the row and the cards, as it always was. The tray is anchored to the form inside, not to this box, so the padding
 // never moves it from the input. While stuck (`data-stuck`, set by StuckMark) the row wears
@@ -34,7 +35,6 @@ $stuck-pad: space(4);
   z-index: layer('sticky-row');
   margin-block-start: calc(-1 * #{$stuck-pad});
   padding-block: $stuck-pad space(2);
-  background-color: $surface-page;
   transition: box-shadow $modal-fade;
 
   @include reduced-motion {
@@ -43,6 +43,46 @@ $stuck-pad: space(4);
 
   &[data-stuck] {
     box-shadow: $shadow-floating;
+  }
+}
+
+// The row's fill, and the sorrel the fill would otherwise hide. A sticky box is its own
+// stacking context, so no z-index can put the real sorrel between the fill and the controls;
+// the row draws a copy instead (claude-docs/components/backdrop.md, "The copy in the search
+// row"). A direct child of the `<search>`, not of the form, whose `container-type` would
+// become the containing block of the fixed copies. `z-index: -1` paints it above the box's
+// own background and beneath the controls. The `clip-path` cuts the fixed copies to the row
+// and makes the layer a stacking context, so they blend with its page colour, as the real one
+// does with the page's. It is on this layer and never on the `<search>`, which would cut
+// off the stuck shadow and the tray.
+.ingredient-search > search > .filter-sorrel {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  clip-path: inset(0);
+  background-color: $surface-page;
+
+  &::before,
+  &::after {
+    content: '';
+    @include sorrel-shape;
+  }
+
+  &::before {
+    @include sorrel-blend(screen, $ornament-screen);
+  }
+
+  &::after {
+    @include sorrel-blend(multiply, $ornament-multiply);
+  }
+
+  // As the sorrel goes, the row stays opaque.
+  @media (prefers-contrast: more) {
+    &::before,
+    &::after {
+      display: none;
+    }
   }
 }
 

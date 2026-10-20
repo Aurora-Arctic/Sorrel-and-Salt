@@ -111,6 +111,15 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute('href', `${PATH}?after=x`);
   });
 
+  it("hides the row's sorrel layer from assistive technology, beside the form", () => {
+    const { container } = renderSearch();
+
+    const layer = container.querySelector('search > .filter-sorrel');
+    expect(layer).toHaveAttribute('aria-hidden', 'true');
+    expect(layer).toBeEmptyDOMElement();
+    expect(layer?.parentElement).toBe(form().parentElement);
+  });
+
   it('names the box by its one hidden label', () => {
     renderSearch();
 
