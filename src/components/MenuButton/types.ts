@@ -22,8 +22,22 @@ export type MenuButtonItem = {
       href: Route;
       /** Runs before the link is followed, and may prevent it (a modal opened in place). */
       onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+      disabled?: never;
+      note?: never;
     }
-  | { onSelect: () => void; href?: never }
+  | {
+      onSelect: () => void;
+      href?: never;
+      /**
+       * Shown, and reached by the arrows, but not choosable: `aria-disabled`, as the APG menu
+       * pattern has a disabled item, drawn muted, and a press runs nothing and leaves the menu
+       * open. A coven that already holds the entry (the owner’s call, 2026-10-20). An action
+       * only: a link that leads nowhere is not a link.
+       */
+      disabled?: boolean;
+      /** Why, beneath the label, the item’s description rather than part of its name: "Already in My Ingredients". */
+      note?: string;
+    }
 );
 
 export interface MenuButtonProps {

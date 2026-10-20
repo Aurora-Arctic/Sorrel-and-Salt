@@ -42,7 +42,7 @@ export interface CompendiumCardEntry {
   held?: boolean;
   /**
    * The ids of the covens that hold it, among `CompendiumCardsProps.covens`. The plus's menu
-   * leaves those off. Left out, none does.
+   * shows those disabled. Left out, none does.
    */
   heldIn?: readonly string[];
 }
@@ -75,8 +75,8 @@ export interface CompendiumCardsProps extends Pick<
    */
   workspaceId?: string;
   /**
-   * Every coven the viewer may write in, in the order Add Ingredient lists them. Where two or more
-   * of them lack an entry, its plus is a menu of those; where one does, it adds there at once.
+   * Every coven the viewer may write in, in the order Add Ingredient lists them. With two or more, a
+   * card's plus is a menu of them all by name; with one, it adds there at once.
    */
   covens?: readonly CompendiumCoven[];
 }
@@ -87,7 +87,7 @@ export interface CompendiumCoven {
   name: string;
 }
 
-/** The plus at a card's bottom right: add this entry to a coven, a menu of the covens lacking it where several do. */
+/** The plus at a card's bottom right: add this entry to a coven, a menu of the covens where there are several. */
 export interface AddIconProps {
   /** The default coven: added to at once where `covens` is empty. */
   workspaceId: string;

@@ -155,6 +155,30 @@
   }
 }
 
+// Shown and reached, but not choosable (`aria-disabled`): a coven that already holds the entry
+// (the owner's call, 2026-10-20). In the muted ink, as a disabled Combobox row's note is, with no
+// pointer and no wash under the pointer; the focus keeps its fill and ring, so the arrows still
+// show where they are.
+.menu-button__item[aria-disabled='true'] {
+  color: $text-muted;
+  cursor: default;
+
+  &:hover {
+    background-color: transparent;
+  }
+
+  &:focus-visible {
+    background-color: $fill-quiet;
+  }
+}
+
+// Why an item is disabled, beneath its label: smaller, muted, on a line of its own.
+.menu-button__note {
+  display: block;
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
 // The items in the button's own type, top and bottom padding and height, as
 // `.btn` sets them (`buttonType`): the Annotate dialog's More, whose items
 // are the actions of the dialog's foot (the owner's calls of 2026-10-20). The

@@ -19,17 +19,20 @@ import type { AddIconProps } from './types';
 // and a press needs the browser.
 
 const ADD = 'Add to My Ingredients';
+/** A held coven's note in the plus's menu, AddToCovenDialog's words for the same. */
+const HELD_NOTE = 'Already in My Ingredients';
 
 /**
- * The plus. With one coven left without the entry it adds there directly, with no quantity: it
- * sends `addCupboardEntry` for that coven and reads the page again, which then draws the check
- * in its place. With several it is a menu of those covens by name (the owner's call,
- * 2026-10-20, over the modal picker it first opened), and choosing one adds there at once. A
- * coven that holds the entry is left off rather than shown disabled, as a menu item cannot be;
- * the check says when every one holds it. A refusal is said in a callout under the plus
+ * The plus. Where the viewer may write in one coven alone it adds there directly, with no
+ * quantity: it sends `addCupboardEntry` for that coven and reads the page again, which then draws
+ * the check in its place. With two or more it is always a menu of every one of them by name (the
+ * owner’s calls of 2026-10-20: over the modal picker it first opened, and never adding at once
+ * because one coven alone lacks the entry), and choosing one adds there at once. A coven that
+ * holds the entry is shown disabled, marked Already in My Ingredients, as AddToCovenDialog marks
+ * one; the check says when every one holds it. A refusal is said in a callout under the plus
  * (M12.31), and the focus is given back to the plus for it, since the chosen item went with the
- * menu. The lone plus is `aria-disabled` and not `disabled` while it works, so the focus
- * stays on it; the menu's button is disabled while busy, as MenuButton has it.
+ * menu. The lone plus is `aria-disabled` and not `disabled` while it works, so the focus stays
+ * on it; the menu’s button is disabled while busy, as MenuButton has it.
  */
 export const AddIcon = ({
   workspaceId,
@@ -37,7 +40,6 @@ export const AddIcon = ({
   covens,
   heldIn,
 }: AddIconProps): ReactElement => {
-  const lacking = covens.filter(({ id }) => !heldIn.includes(id));
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: ADD });
   const { anchorRef } = feedback;
@@ -68,7 +70,7 @@ export const AddIcon = ({
     add.mutate(to);
   };
 
-  if (lacking.length > 1)
+  if (covens.length > 1)
     return (
       <>
         <IconTip tip={ADD}>
@@ -79,19 +81,21 @@ export const AddIcon = ({
             icon={<PlusIcon />}
             busy={busy}
             busyLabel="Adding"
-            items={lacking.map(({ id, name }) => ({
-              key: id,
-              label: name,
-              onSelect: () => addTo(id),
-            }))}
+            items={[...covens]
+              .sort((one, other) => one.name.localeCompare(other.name))
+              .map(({ id, name }) =>
+                heldIn.includes(id)
+                  ? { key: id, label: name, onSelect: () => {}, disabled: true, note: HELD_NOTE }
+                  : { key: id, label: name, onSelect: () => addTo(id) },
+              )}
           />
         </IconTip>
         {feedback.feedback}
       </>
     );
 
-  // The one coven without it, or the default where the page named no covens.
-  const only = lacking[0]?.id ?? workspaceId;
+  // The one coven, or the default where the page named no covens.
+  const only = covens[0]?.id ?? workspaceId;
   return (
     <>
       <IconTip tip={ADD}>

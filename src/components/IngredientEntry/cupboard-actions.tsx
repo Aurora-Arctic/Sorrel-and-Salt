@@ -53,13 +53,17 @@ import type {
 //
 // The public entry page offers the same (M9.12), across every coven the viewer
 // may write in: Add while any of them lacks the entry. Standing alone, Add is a
-// menu of the covens lacking it where several do; inside the Edit menu, it
-// asks which in a dialog where two or more may add. And each held choice while one of the
-// covens holding the entry permits it, acting at once where one does and asking
+// menu of every coven that may add where two or more may, a coven holding the
+// entry shown disabled rather than left off (the owner's call, 2026-10-20);
+// inside the Edit menu, it asks which in a dialog where two or more may add.
+// And each held choice while one of the covens holding the entry permits it, acting at once where one does and asking
 // which where several do. Make It Ours and Remove ask in their own
 // confirmation, the dropdown above the question; Annotate asks in a picker of
 // its own, then opens that coven's `?annotate=<covenSlug>`. A coven's page is
 // the one-place case of the same list.
+
+// A held coven's note in the lone Add menu, as AddToCovenDialog and the card's plus word it.
+const HELD_NOTE = 'Already in My Ingredients';
 
 const PLAIN = 'btn btn--quiet btn--medium';
 
@@ -318,20 +322,29 @@ export default function CupboardActions(
         />
       ) : only.key === 'edit' && edit ? (
         <EditButton href={edit.href} entry={edit.entry} />
-      ) : only.key === 'add' && lacking.length > 1 ? (
-        // Add to Cupboard alone, with several covens lacking the entry: a menu
-        // of them, adding to the one chosen at once (the owner's call,
-        // 2026-10-20), as the compendium card's plus does. Held covens are
-        // left off, since there is nothing to add there.
+      ) : only.key === 'add' && adders.length > 1 ? (
+        // Add to Cupboard alone, with two or more covens that may add: a menu
+        // of them all by name, adding to the one chosen at once, as the
+        // compendium card's plus does. A coven already holding the entry is
+        // shown disabled with a note, not left off, so the menu never shifts
+        // under the viewer (the owner's call, 2026-10-20).
         <MenuButton
           ref={triggerRef}
           label={LABEL.add}
           className="btn btn--solid btn--medium"
-          items={lacking.map(({ workspaceId, name: coven }) => ({
-            key: workspaceId,
-            label: coven,
-            onSelect: () => addTo(workspaceId),
-          }))}
+          items={[...adders]
+            .sort((one, other) => one.name.localeCompare(other.name))
+            .map(({ workspaceId, name: coven, held }) =>
+              held
+                ? {
+                    key: workspaceId,
+                    label: coven,
+                    onSelect: () => {},
+                    disabled: true,
+                    note: HELD_NOTE,
+                  }
+                : { key: workspaceId, label: coven, onSelect: () => addTo(workspaceId) },
+            )}
           busy={add.isPending}
           busyLabel="Adding"
         />

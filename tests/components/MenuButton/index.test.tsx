@@ -88,6 +88,57 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
+  // A disabled item (the owner's call of 2026-10-20: a coven that holds the entry is shown, not
+  // left out): the APG menu pattern, so it stays in the roving and is read as unavailable, and
+  // choosing it runs nothing and leaves the menu open.
+  describe('a disabled item', () => {
+    const withHeld = (onSelect = vi.fn()): MenuButtonItem[] => [
+      { key: 'one', label: 'First Choice', onSelect, disabled: true, note: 'Already Chosen' },
+      { key: 'two', label: 'Second Choice', onSelect: vi.fn() },
+    ];
+
+    it('is aria-disabled, named by its label, its note its description', () => {
+      draw(withHeld());
+      fireEvent.click(toggle());
+      const held = within(menu()).getByRole('menuitem', { name: 'First Choice' });
+
+      expect(held).toHaveAttribute('aria-disabled', 'true');
+      expect(held).toHaveAccessibleDescription('Already Chosen');
+      // aria-disabled, not disabled, so the focus can still land on it.
+      expect(held).not.toBeDisabled();
+      expect(within(menu()).getByRole('menuitem', { name: 'Second Choice' })).not.toHaveAttribute(
+        'aria-disabled',
+      );
+    });
+
+    it('stays in the roving, the focus landing on it', () => {
+      draw(withHeld());
+      fireEvent.click(toggle());
+      const [held, other] = within(menu()).getAllByRole('menuitem');
+
+      expect(held).toHaveFocus();
+      fireEvent.keyDown(held!, { key: 'ArrowDown' });
+      expect(other).toHaveFocus();
+      fireEvent.keyDown(other!, { key: 'ArrowDown' });
+      expect(held).toHaveFocus();
+    });
+
+    it('runs nothing when chosen, by a press or by Enter, and the menu stays open', () => {
+      const onSelect = vi.fn();
+      draw(withHeld(onSelect));
+      fireEvent.click(toggle());
+      const held = within(menu()).getByRole('menuitem', { name: 'First Choice' });
+
+      fireEvent.click(held);
+      fireEvent.keyDown(held, { key: 'Enter' });
+      fireEvent.keyDown(held, { key: ' ' });
+
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(menu()).toBeVisible();
+      expect(toggle()).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
   it('draws a link item as a link to its address, its click run first', () => {
     const onClick = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
     draw([

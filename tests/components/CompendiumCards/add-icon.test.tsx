@@ -93,11 +93,15 @@ function openMenu(): HTMLElement {
   return screen.getByRole('menu', PLUS);
 }
 
-/** The menu's items, by name, in order. */
+/** The menu's items, by their labels (a held one's note left out), in order. */
 const items = (menu: HTMLElement): string[] =>
   within(menu)
     .getAllByRole('menuitem')
-    .map((item) => item.textContent ?? '');
+    .map((item) => item.firstChild?.textContent ?? '');
+
+/** Every coven by name, the order the menu lists them in. */
+const BY_NAME = [FIRST, THIRD, SECOND];
+const HELD_NOTE = 'Already in My Ingredients';
 
 function mockAdd() {
   const calls: AddCupboardEntryMutationVariables[] = [];
@@ -135,16 +139,36 @@ describe('the add icon among several covens', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('adds at once to the one coven left without the entry, though it is not the default', async () => {
+  // The owner’s call, 2026-10-20: the plus adds at once only where there is one coven at all,
+  // never because one coven alone is left without the entry.
+  it('opens a menu where there are two covens and one holds the entry, the holder disabled', () => {
     const calls = mockAdd();
-    // Why it is the menu's to skip: the viewer writes in two covens, and the default holds it.
+    // Why it could have added at once: the viewer writes in two covens, and only SECOND lacks it.
     render(<Cards {...props([entry({ heldIn: [FIRST.id] })], { covens: [FIRST, SECOND] })} />);
 
-    fireEvent.click(screen.getByRole('button', PLUS));
+    const menu = openMenu();
 
-    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
-    expect(calls).toEqual([{ workspaceId: SECOND.id, ingredientId: 'fixture-salt-id' }]);
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(items(menu)).toEqual([FIRST.name, SECOND.name]);
+    const held = within(menu).getByRole('menuitem', { name: FIRST.name });
+    expect(held).toHaveAttribute('aria-disabled', 'true');
+    expect(held).toHaveAccessibleDescription(HELD_NOTE);
+    expect(within(menu).getByRole('menuitem', { name: SECOND.name })).not.toHaveAttribute(
+      'aria-disabled',
+    );
+    expect(calls).toEqual([]);
+  });
+
+  it('sends nothing when the held coven is chosen, and keeps the menu open', async () => {
+    const calls = mockAdd();
+    render(<Cards {...props([entry({ heldIn: [FIRST.id] })], { covens: [FIRST, SECOND] })} />);
+    const menu = openMenu();
+
+    fireEvent.click(within(menu).getByRole('menuitem', { name: FIRST.name }));
+
+    await act(async () => {});
+    expect(calls).toEqual([]);
+    expect(router.refresh).not.toHaveBeenCalled();
+    expect(screen.getByRole('menu', PLUS)).toBeVisible();
   });
 
   it('opens a menu of the covens instead of adding, and sends nothing on opening it', () => {
@@ -153,15 +177,21 @@ describe('the add icon among several covens', () => {
 
     const menu = openMenu();
 
-    expect(items(menu)).toEqual(COVENS.map(({ name }) => name));
+    expect(items(menu)).toEqual(BY_NAME.map(({ name }) => name));
     expect(calls).toEqual([]);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('leaves off the menu every coven that already holds the entry', () => {
+  it('lists every coven by name, one that holds the entry shown disabled and marked, not left off', () => {
     render(<Cards {...props([entry({ heldIn: [SECOND.id] })])} />);
+    const menu = openMenu();
 
-    expect(items(openMenu())).toEqual([FIRST.name, THIRD.name]);
+    expect(items(menu)).toEqual(BY_NAME.map(({ name }) => name));
+    const disabled = within(menu)
+      .getAllByRole('menuitem')
+      .filter((item) => item.getAttribute('aria-disabled') === 'true');
+    expect(disabled).toEqual([within(menu).getByRole('menuitem', { name: SECOND.name })]);
+    expect(disabled[0]).toHaveAccessibleDescription(HELD_NOTE);
   });
 
   it("adds to the coven chosen, by that coven's id, and reads the page again", async () => {

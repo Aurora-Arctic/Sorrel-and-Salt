@@ -17,8 +17,8 @@ import '../CompendiumList/index.scss';
 // page. A card's foot is one row at its bottom right: for someone who can add, the plus (Add
 // to My Ingredients) or, once every coven they may write in holds the entry, the check (In My
 // Ingredients); then, for a curator, Edit, which opens the compendium's edit dialog over the
-// results (M8.17). The plus adds at once where one coven lacks the entry and is a menu of the
-// covens where several do (M9.12, the owner's call, 2026-10-20). The foot's left end is the Quick Look eye's (M12.5). A visitor with
+// results (M8.17). The plus adds at once where the viewer has one coven and is a menu of the
+// covens where they have several (M9.12, the owner's calls, 2026-10-20). The foot's left end is the Quick Look eye's (M12.5). A visitor with
 // no account sees nothing on the cards and signs in through the header.
 // claude-docs/components/compendium-cards.md.
 

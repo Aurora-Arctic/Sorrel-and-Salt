@@ -95,8 +95,8 @@ export const Held: Story = () => (
 );
 
 // Someone who may write in two covens: the plus is a menu of both. The first card is in the
-// first coven already, so its plus adds to the second at once, with no menu; the last is in
-// both, and shows the check.
+// first coven already, so its menu shows that coven disabled; the last is in both, and shows
+// the check.
 export const InSeveralCovens: Story = () => (
   <CompendiumCards
     {...BASE}

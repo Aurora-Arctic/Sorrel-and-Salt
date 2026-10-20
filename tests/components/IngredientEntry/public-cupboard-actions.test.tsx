@@ -175,12 +175,14 @@ describe('CupboardActions on the public page', () => {
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
   });
 
-  it('adds at once to the one coven left without the entry, with no menu', async () => {
+  // The owner’s call, 2026-10-20: Add to Cupboard adds at once only where there is one coven
+  // at all; with two it is the menu, a coven that holds the entry shown disabled, not left off.
+  it('is a menu of both covens where one holds the entry, the holder disabled and adding nothing', async () => {
     const calls = mockWrite<AddCupboardEntryMutation>('AddCupboardEntry', {
       addCupboardEntry: { id: 'fixture' },
     });
-    // Why a menu could have shown: both covens may add, and the default one holds the entry,
-    // though it permits nothing else there, so Add to Cupboard is still the lone choice.
+    // Why it could have added at once: both covens may add, and only the second lacks the entry;
+    // the first permits nothing else there, so Add to Cupboard is still the lone choice.
     show(
       props([
         place(1, { held: true, canAnnotate: false, canRemove: false, canMakeOurs: false }),
@@ -189,11 +191,22 @@ describe('CupboardActions on the public page', () => {
     );
 
     press('Add to Cupboard');
+    const menu = screen.getByRole('menu', { name: 'Add to Cupboard' });
+    const [first, second] = within(menu).getAllByRole('menuitem');
+    expect(first).toHaveAccessibleName(place(1).name);
+    expect(first).toHaveAttribute('aria-disabled', 'true');
+    expect(first).toHaveAccessibleDescription('Already in My Ingredients');
+    expect(second).toHaveAccessibleName(place(2).name);
+    expect(second).not.toHaveAttribute('aria-disabled');
 
+    fireEvent.click(first!);
+    await act(async () => {});
+    expect(calls).toEqual([]);
+    expect(menu).toBeVisible();
+
+    fireEvent.click(second!);
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
     expect(calls).toEqual([{ workspaceId: place(2).workspaceId, ingredientId: INGREDIENT }]);
-    expect(screen.queryByRole('menu')).toBeNull();
-    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('says a refusal of the lone menu under it, with the focus on it', async () => {
