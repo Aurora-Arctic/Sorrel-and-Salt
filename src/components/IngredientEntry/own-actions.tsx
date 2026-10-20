@@ -56,7 +56,13 @@ export default function OwnEntryActions({
 
   return (
     <div className="ingredient-entry__cupboard">
-      <MenuButton ref={trigger} label="Edit" className="btn btn--quiet btn--medium" items={items} />
+      <MenuButton
+        ref={trigger}
+        label="Edit"
+        placement="auto"
+        className="btn btn--quiet btn--medium"
+        items={items}
+      />
       {asking && (
         <DeleteDialog
           name={entry.name}

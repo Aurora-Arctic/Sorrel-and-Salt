@@ -21,8 +21,9 @@ import { useEffect, useState } from 'react';
 // clip it (claude-docs/components/combobox.md, "Where the list opens"). An
 // entry's summary opens on the same placement, as wide as its own content
 // rather than its chip (`matchWidth: false`). MenuButton's menu opens on the
-// same rules from its button's end edge (`placement: 'bottom-end'`, M8.17),
-// further off it (`gap`) and as wide as its items.
+// same rules from its button's end edge (`placement: 'bottom-end'`, M8.17), or
+// its start edge when the caller asks for `auto` and the button is in the
+// window's start half, further off it (`gap`) and as wide as its items.
 
 /** Space kept between the list and the edge of the screen. */
 const EDGE_PX = 8;

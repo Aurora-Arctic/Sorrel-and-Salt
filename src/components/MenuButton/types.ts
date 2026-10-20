@@ -12,10 +12,10 @@ export type MenuButtonItem = {
   /**
    * The menu's one primary action, pointed at in the green highlight where
    * every other plain item takes the grey: "Edit Ingredient". A constructive
-   * item is primary already.
+   * item is primary already. The menu draws it first, wherever it is given.
    */
   primary?: boolean;
-  /** Drawn in the accent green, for what adds something and is the menu's primary action: "Add to Cupboard". */
+  /** Drawn in the accent green, for what adds something and is the menu's primary action: "Add to Cupboard". Drawn first, as a primary item is. */
   constructive?: boolean;
 } & (
   | {
@@ -31,7 +31,11 @@ export interface MenuButtonProps {
   label: string;
   /** The button's classes: `btn btn--quiet btn--medium`. */
   className: string;
-  /** What the menu offers, in order. */
+  /**
+   * What the menu offers, in order, the green item (`primary` or `constructive`)
+   * first whatever its place here: the menu draws it first and keeps the rest in
+   * this order (the owner's call, 2026-10-20).
+   */
   items: readonly MenuButtonItem[];
   /** One of its items is in flight: the button shows the spinner and `busyLabel`, and is disabled. */
   busy?: boolean;
@@ -49,6 +53,15 @@ export interface MenuButtonProps {
    * among the card's other icon controls. Left out, the label shows.
    */
   icon?: ReactElement;
+  /**
+   * Which edge of the button the menu hangs from. `end`, the default, is its
+   * end edge, for a button at the end of its row (a card's More). `auto` picks
+   * as the menu opens: its start edge when the button sits in the start half of
+   * the window, else its end edge, for a button a wrapping header may drop to
+   * the start (the ingredient page's Edit). The room still flips it above or
+   * below.
+   */
+  placement?: 'auto' | 'end';
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
 }

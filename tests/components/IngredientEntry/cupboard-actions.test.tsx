@@ -113,7 +113,7 @@ describe('CupboardActions', () => {
     expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
-  it("puts a curator's Edit Compendium Entry first in the menu, a link to the page's edit address", () => {
+  it("puts Add to Cupboard first, then a curator's Edit Compendium Entry, a link to the page's edit address", () => {
     renderActions({
       edit: {
         href: '/coven/fixture-coven/ingredients/fixture?edit' as Route,
@@ -121,7 +121,7 @@ describe('CupboardActions', () => {
       },
     });
 
-    expect(choices()).toEqual(['Edit Compendium Entry', 'Add to Cupboard']);
+    expect(choices()).toEqual(['Add to Cupboard', 'Edit Compendium Entry']);
     expect(screen.getByRole('menuitem', { name: 'Edit Compendium Entry' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/fixture?edit',

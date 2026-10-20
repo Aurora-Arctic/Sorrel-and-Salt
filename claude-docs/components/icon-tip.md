@@ -59,7 +59,7 @@ follows `href` as before.
   choice is Delete or Remove, `BinIcon` on a button of its own,
   `.icon-tip__remove`, tipped with its verb (M8.17; the owner's call,
   2026-10-20).
-- **Quick Look on the lists of entries** (M12.5), through `QuickLookLink`: left of each name on the admin Compendium list, and at each card's bottom left on a coven's Ingredients and the public compendium. `MysticEyeIcon` is an almond eye whose iris is a waxing crescent with a small four-point star, its outline drawn at stroke width 1 rather than the set's 1.5 (the owner's pick, 2026-10-20). It wears `.icon-tip__look`: Edit's large size and accent ink.
+- **Quick Look on the lists of entries** (M12.5), through `QuickLookLink`: left of each name on the admin Compendium list, and at each card's bottom left on a coven's Ingredients and the public compendium. `MysticEyeIcon` is an almond eye whose iris is a waxing crescent with a small four-point star, its outline drawn at stroke width 1 rather than the set's 1.5 (the owner's pick, 2026-10-20). It wears `.icon-tip__look`: Edit's large box, 2rem, and accent ink, with the eye drawn a third bigger than the pencil, `$glyph-size-large` * 4 / 3, about 1.667rem (the owner's call, 2026-10-20). The box stays, so a card foot's height and the eye's line with the pencil do not move; the eye leaves about 3px clear of the box on each side.
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),
@@ -163,7 +163,8 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
   `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem,
   and so does a list card's lone bin (`.icon-tip__remove`), in the remove
-  answer's colours.
+  answer's colours. The Quick Look eye keeps that box but draws its glyph at 4/3 of the
+  pencil's.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
   cards and the modal) and on its own tint each clear 3:1, a control's floor
   (`tests/scss/tokens.test.ts`, "an Edit pencil").
