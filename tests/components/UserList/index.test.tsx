@@ -6,7 +6,7 @@ import type { UserListProps } from '@/components/UserList/types';
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
-import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer, filterForm } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
@@ -386,7 +386,7 @@ describe('UserList filter', () => {
         <UserList {...props()} />
       </Navigating>,
     );
-    const row = screen.getByRole('form', { name: 'Filter Users' });
+    const row = filterForm('Filter Users');
     const controls = () => [
       screen.getByLabelText('Name or Email'),
       screen.getByLabelText('Role'),

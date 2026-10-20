@@ -12,7 +12,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from '@/gql/graphql';
 import { expectRefusalUnder } from '../../support/click-feedback';
-import { sent } from '../../support/filter-form';
+import { filterForm, sent } from '../../support/filter-form';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -382,7 +382,7 @@ describe('CompendiumCards', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     expect(screen.queryByRole('switch', { name: /^No Refs/ })).toBeNull();
     expect(screen.queryByRole('group', { name: /Classification/ })).toBeNull();
-    const form = screen.getByRole('form', { name: 'Filter the Compendium' });
+    const form = filterForm('Filter the Compendium');
     expect(form).toHaveAttribute('action', '/compendium');
     expect(new URLSearchParams(sent(form)).has('withoutReferences')).toBe(false);
   });

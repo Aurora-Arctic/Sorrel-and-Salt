@@ -8,7 +8,7 @@ import type { CovenCardEntry, CovenCardsProps } from '@/components/CovenCards/ty
 import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
-import { sent } from '../../support/filter-form';
+import { filterForm, sent } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
@@ -294,7 +294,7 @@ describe('CovenCards', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     expect(screen.getByRole('switch', { name: /^In Stock/ })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /^Low Stock Only/ })).toBeInTheDocument();
-    const form = screen.getByRole('form', { name: 'Filter Ingredients' });
+    const form = filterForm('Filter Ingredients');
     expect(form).toHaveAttribute('action', '/coven/fixture-coven/ingredients');
     fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
     expect(new URLSearchParams(sent(form)).get('inStock')).not.toBeNull();
