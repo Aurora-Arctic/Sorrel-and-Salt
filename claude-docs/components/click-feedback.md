@@ -61,6 +61,12 @@ row removes itself, is the control's own business and not this component's.
   for a reopening). Leaving by focus or pointer does not pull the focus back.
 - **Escape is taken** (`preventDefault`), so a `<dialog>` the control sits in
   does not close with it.
+- **Its listeners go on the control's own document** (`ownerDocument`), and
+  what is ours is asked of the node rather than `instanceof Node`: a story
+  Ladle draws into an iframe runs its script in the page around the frame, so
+  the global `document` would hear neither the frame's keys nor its presses.
+  The confirm overlay's focus return (`canFocus` in
+  `src/components/Modal/confirm-overlay.tsx`) is asked the same way.
 - **The badge is a toggle** (`aria-expanded`, `aria-controls`), and stays until
   `report(undefined)` or the next try.
 - **A repeat failure is read again**: each open draws a new alert element.

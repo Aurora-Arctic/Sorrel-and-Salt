@@ -16,6 +16,14 @@ import './index.scss';
 // the rule is claude-docs/design-decisions/m12.31-click-feedback-outside-forms.md §5.
 
 /**
+ * The control's own document, which its listeners go on and its events are
+ * raised on: in a story Ladle draws into an iframe the script runs in the page
+ * around the frame, so the global `document` is not the one a key or a press
+ * in the story reaches.
+ */
+const docOf = (node: Node | null | undefined): Document => node?.ownerDocument ?? document;
+
+/**
  * Raised on the document as a callout opens, naming it, so every other closes:
  * one alert on the screen at once. An event rather than a shared store, so a
  * control needs no provider for it and nothing outlives the page.
@@ -31,7 +39,7 @@ const SIDES = ['Top', 'Right', 'Bottom', 'Left'] as const;
  * included.
  */
 function borderless(node: HTMLElement): boolean {
-  const style = getComputedStyle(node);
+  const style = (node.ownerDocument.defaultView ?? window).getComputedStyle(node);
   return SIDES.every(
     (side) =>
       parseFloat(style[`border${side}Width`]) === 0 ||
@@ -93,9 +101,12 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
 
   /** Whether `target` is the control, the badge, the callout, or inside one. */
   const ours = useCallback(
+    // Asked of the target rather than `instanceof Node`, false across an iframe.
     (target: EventTarget | null): boolean =>
-      target instanceof Node &&
-      [anchor, badgeNode.current, calloutNode.current].some((node) => node?.contains(target)),
+      typeof (target as Node | null)?.nodeType === 'number' &&
+      [anchor, badgeNode.current, calloutNode.current].some((node) =>
+        node?.contains(target as Node),
+      ),
     [anchor],
   );
 
@@ -104,7 +115,7 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
       opener.current = from;
       setOpen(true);
       setOpens((n) => n + 1);
-      document.dispatchEvent(new CustomEvent(OPENED, { detail: id }));
+      docOf(from ?? anchorNode.current).dispatchEvent(new CustomEvent(OPENED, { detail: id }));
     },
     [id],
   );
@@ -120,7 +131,8 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
       if (next === undefined) {
         // The badge and the callout go, so a focus inside them would fall to
         // the page: it goes to the control they belonged to instead.
-        if (ours(document.activeElement) && document.activeElement !== control) control?.focus();
+        const active = docOf(control).activeElement;
+        if (ours(active) && active !== control) control?.focus();
         setMessage(undefined);
         setOpen(false);
         return;
@@ -145,6 +157,7 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
   // moves to), and when another callout opens.
   useEffect(() => {
     if (!open) return;
+    const doc = docOf(anchor);
     const onKey = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
       // Taken, so a <dialog> the control is in does not close with it.
@@ -157,17 +170,17 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
     const onOther = (event: Event): void => {
       if ((event as CustomEvent<string>).detail !== id) close(false);
     };
-    document.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onLeave);
-    document.addEventListener('focusin', onLeave);
-    document.addEventListener(OPENED, onOther);
+    doc.addEventListener('keydown', onKey);
+    doc.addEventListener('pointerdown', onLeave);
+    doc.addEventListener('focusin', onLeave);
+    doc.addEventListener(OPENED, onOther);
     return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onLeave);
-      document.removeEventListener('focusin', onLeave);
-      document.removeEventListener(OPENED, onOther);
+      doc.removeEventListener('keydown', onKey);
+      doc.removeEventListener('pointerdown', onLeave);
+      doc.removeEventListener('focusin', onLeave);
+      doc.removeEventListener(OPENED, onOther);
     };
-  }, [open, ours, close, id]);
+  }, [open, ours, close, id, anchor]);
 
   const feedback: ReactElement = (
     <>

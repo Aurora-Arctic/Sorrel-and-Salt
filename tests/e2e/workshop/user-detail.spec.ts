@@ -190,3 +190,36 @@ for (const [width, height] of SIZES) {
     });
   }
 }
+
+// In Ladle's frame the callout's listeners must hear the frame's own keys and
+// presses, not the page's around it: Escape closes the callout alone, and a
+// press elsewhere in the dialog closes it.
+for (const { name, control, confirm } of CONTROLS) {
+  test(`${name} refused in Ladle's frame: Escape closes the callout alone, a press elsewhere in the dialog closes it`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/?story=admin--user-detail--in-a-modal&theme=dark');
+    const frame = page.frameLocator('iframe').first();
+    const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });
+    await expect(dialog).toBeVisible();
+    const button = dialog.getByRole('button', { name: control, exact: true });
+    await button.click();
+    await confirm(dialog);
+    const alert = frame.getByRole('alert');
+    await expect(alert).toHaveClass(/is-placed/);
+    await expect(button).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(alert).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await expect(button).toBeFocused();
+
+    const badge = dialog.getByRole('button', { name: /^Show the error for / });
+    await badge.click();
+    await expect(alert).toBeVisible();
+    await dialog.getByRole('heading', { name: 'Bo Fixturewort' }).click();
+    await expect(alert).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+  });
+}
