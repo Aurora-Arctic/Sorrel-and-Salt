@@ -97,7 +97,7 @@ function openMenu(): HTMLElement {
   return screen.getByRole('menu', PLUS);
 }
 
-/** The menu's items, by their labels (a held one's note left out), in order. */
+/** The menu's items, by their labels (a held one's mark left out), in order. */
 const items = (menu: HTMLElement): string[] =>
   within(menu)
     .getAllByRole('menuitem')
@@ -105,7 +105,8 @@ const items = (menu: HTMLElement): string[] =>
 
 /** Every coven by name, the order the menu lists them in. */
 const BY_NAME = [FIRST, THIRD, SECOND];
-const HELD_NOTE = 'Already in My Ingredients';
+/** A held coven's item: its name, then the mark its check stands for. */
+const held = (name: string) => `${name}, in My Ingredients`;
 
 function mockAdd() {
   const calls: AddCupboardEntryMutationVariables[] = [];
@@ -153,9 +154,9 @@ describe('the add icon among several covens', () => {
     const menu = openMenu();
 
     expect(items(menu)).toEqual([FIRST.name, SECOND.name]);
-    const held = within(menu).getByRole('menuitem', { name: FIRST.name });
-    expect(held).toHaveAttribute('aria-disabled', 'true');
-    expect(held).toHaveAccessibleDescription(HELD_NOTE);
+    const holder = within(menu).getByRole('menuitem', { name: held(FIRST.name) });
+    expect(holder).toHaveAttribute('aria-disabled', 'true');
+    expect(holder).not.toHaveAccessibleDescription();
     expect(within(menu).getByRole('menuitem', { name: SECOND.name })).not.toHaveAttribute(
       'aria-disabled',
     );
@@ -167,7 +168,7 @@ describe('the add icon among several covens', () => {
     render(<Cards {...props([entry({ heldIn: [FIRST.id] })], { covens: [FIRST, SECOND] })} />);
     const menu = openMenu();
 
-    fireEvent.click(within(menu).getByRole('menuitem', { name: FIRST.name }));
+    fireEvent.click(within(menu).getByRole('menuitem', { name: held(FIRST.name) }));
 
     await act(async () => {});
     expect(calls).toEqual([]);
@@ -194,8 +195,8 @@ describe('the add icon among several covens', () => {
     const disabled = within(menu)
       .getAllByRole('menuitem')
       .filter((item) => item.getAttribute('aria-disabled') === 'true');
-    expect(disabled).toEqual([within(menu).getByRole('menuitem', { name: SECOND.name })]);
-    expect(disabled[0]).toHaveAccessibleDescription(HELD_NOTE);
+    expect(disabled).toEqual([within(menu).getByRole('menuitem', { name: held(SECOND.name) })]);
+    expect(disabled[0]).not.toHaveAccessibleDescription();
   });
 
   it("adds to the coven chosen, by that coven's id, and reads the page again", async () => {
@@ -310,7 +311,7 @@ describe('the plus after an add', () => {
     expect(plus()).toHaveAccessibleName(PLUS.name);
     expect(plus()).toBeEnabled();
     // The coven just added to is held until the page says so, so the menu cannot add it twice.
-    expect(within(openMenu()).getByRole('menuitem', { name: SECOND.name })).toHaveAttribute(
+    expect(within(openMenu()).getByRole('menuitem', { name: held(SECOND.name) })).toHaveAttribute(
       'aria-disabled',
       'true',
     );

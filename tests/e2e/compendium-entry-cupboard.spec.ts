@@ -23,7 +23,8 @@ test.beforeAll(async () => {
 
 const ADD = 'Add to My Ingredients';
 const SHELF = 'In Your Cupboard';
-const HELD_NOTE = 'Already in My Ingredients';
+// What a held coven's check in the plus's menu stands for, joined to its name.
+const HELD_MARK = 'in My Ingredients';
 const NAME = 'Fixture Shelfwort';
 const HELD = 'In My Ingredients';
 
@@ -254,7 +255,7 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await add().click();
     const held = addMenu.getByRole('menuitem', { name: SECOND });
     await expect(held).toBeDisabled();
-    await expect(held).toHaveAccessibleDescription(HELD_NOTE);
+    await expect(held).toHaveAccessibleName(`${SECOND}, ${HELD_MARK}`);
     await assertNoAccessibilityViolations(page);
     await addMenu.getByRole('menuitem', { name: FIRST }).click();
     await expect.poll(async () => (await heldRows(one.id)).length).toBe(1);

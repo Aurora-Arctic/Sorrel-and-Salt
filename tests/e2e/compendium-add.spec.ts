@@ -193,7 +193,7 @@ test('a member of two covens chooses from the plus which one it adds to, and the
     await expect(menu).toBeVisible();
     const held = menu.getByRole('menuitem', { name: SECOND });
     await expect(held).toHaveAttribute('aria-disabled', 'true');
-    await expect(held).toHaveAccessibleDescription('Already in My Ingredients');
+    await expect(held).toHaveAccessibleName(`${SECOND}, in My Ingredients`);
     await assertNoAccessibilityViolations(page);
     // Choosing the held coven does nothing: the menu stays open and no second row is written.
     // Forced, since Playwright waits on an aria-disabled element as it would on a disabled one.

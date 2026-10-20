@@ -20,8 +20,8 @@ import type { AddIconProps } from './types';
 // needs the browser. claude-docs/components/compendium-cards.md, "The plus".
 
 const ADD = 'Add to My Ingredients';
-/** A held coven's note in the plus's menu, AddToCovenDialog's words for the same. */
-const HELD_NOTE = 'Already in My Ingredients';
+/** What a held coven's check in the plus's menu stands for, joined to the coven's name. */
+const HELD_MARK = 'in My Ingredients';
 /**
  * How long the check holds after a success before it fades back to the plus (the owner's call,
  * 2026-10-20: "about 1s"). Long enough to be seen, short enough that the plus is soon back.
@@ -71,10 +71,10 @@ const Glyph = ({
  * the check in its place. With two or more it is always a menu of every one of them by name (the
  * owner’s calls of 2026-10-20: over the modal picker it first opened, and never adding at once
  * because one coven alone lacks the entry), and choosing one adds there at once. A coven that
- * holds the entry is shown disabled, marked Already in My Ingredients, as AddToCovenDialog marks
- * one; the check says when every one holds it. A refusal is said in a callout under the plus
- * (M12.31), and the focus is given back to the plus for it, since the chosen item went with the
- * menu. The lone plus is `aria-disabled` and not `disabled` while it works, so the focus stays
+ * holds the entry is shown disabled, with a green check after its name, and is named "<coven>, in
+ * My Ingredients" (the owner’s call, 2026-10-20); the plus's own check says when every one holds
+ * it. A refusal is said in a callout under the plus (M12.31), and the focus is given back to the
+ * plus for it, since the chosen item went with the menu. The lone plus is `aria-disabled` and not `disabled` while it works, so the focus stays
  * on it; the menu’s button is disabled while busy, as MenuButton has it.
  */
 const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): ReactElement => {
@@ -152,7 +152,7 @@ const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): R
               .sort((one, other) => one.name.localeCompare(other.name))
               .map(({ id, name }) =>
                 holding.includes(id)
-                  ? { key: id, label: name, onSelect: () => {}, disabled: true, note: HELD_NOTE }
+                  ? { key: id, label: name, onSelect: () => {}, disabled: true, mark: HELD_MARK }
                   : { key: id, label: name, onSelect: () => addTo(id) },
               )}
           />

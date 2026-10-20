@@ -93,17 +93,19 @@ describe('MenuButton', () => {
   // choosing it runs nothing and leaves the menu open.
   describe('a disabled item', () => {
     const withHeld = (onSelect = vi.fn()): MenuButtonItem[] => [
-      { key: 'one', label: 'First Choice', onSelect, disabled: true, note: 'Already Chosen' },
+      { key: 'one', label: 'First Choice', onSelect, disabled: true, mark: 'Already Chosen' },
       { key: 'two', label: 'Second Choice', onSelect: vi.fn() },
     ];
 
-    it('is aria-disabled, named by its label, its note its description', () => {
+    it('is aria-disabled, named by its label and its mark, with no description', () => {
       draw(withHeld());
       fireEvent.click(toggle());
-      const held = within(menu()).getByRole('menuitem', { name: 'First Choice' });
+      const held = within(menu()).getByRole('menuitem', {
+        name: 'First Choice, Already Chosen',
+      });
 
       expect(held).toHaveAttribute('aria-disabled', 'true');
-      expect(held).toHaveAccessibleDescription('Already Chosen');
+      expect(held).not.toHaveAccessibleDescription();
       // aria-disabled, not disabled, so the focus can still land on it.
       expect(held).not.toBeDisabled();
       expect(within(menu()).getByRole('menuitem', { name: 'Second Choice' })).not.toHaveAttribute(
@@ -127,7 +129,7 @@ describe('MenuButton', () => {
       const onSelect = vi.fn();
       draw(withHeld(onSelect));
       fireEvent.click(toggle());
-      const held = within(menu()).getByRole('menuitem', { name: 'First Choice' });
+      const held = within(menu()).getByRole('menuitem', { name: 'First Choice, Already Chosen' });
 
       fireEvent.click(held);
       fireEvent.keyDown(held, { key: 'Enter' });

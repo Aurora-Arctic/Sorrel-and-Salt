@@ -204,9 +204,9 @@ describe('CupboardActions on the public page', () => {
       const [one, two] = within(menu).getAllByRole('menuitem');
       expect(one).toHaveAccessibleName(place(1).name);
       expect(one).not.toHaveAttribute('aria-disabled');
-      expect(two).toHaveAccessibleName(place(2).name);
+      expect(two).toHaveAccessibleName(`${place(2).name}, in My Ingredients`);
       expect(two).toHaveAttribute('aria-disabled', 'true');
-      expect(two).toHaveAccessibleDescription('Already in My Ingredients');
+      expect(two).not.toHaveAccessibleDescription();
 
       fireEvent.click(one!);
       await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());

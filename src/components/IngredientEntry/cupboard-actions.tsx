@@ -86,8 +86,8 @@ const plusOfPlaces = (
     : undefined;
 };
 
-// A held coven's note in the lone Add menu, as AddToCovenDialog and the card's plus word it.
-const HELD_NOTE = 'Already in My Ingredients';
+// What a held coven's check in the lone Add menu stands for, as the card's plus words it.
+const HELD_MARK = 'in My Ingredients';
 
 const PLAIN = 'btn btn--quiet btn--medium';
 
@@ -404,7 +404,7 @@ export default function CupboardActions(
                     label: coven,
                     onSelect: () => {},
                     disabled: true,
-                    note: HELD_NOTE,
+                    mark: HELD_MARK,
                   }
                 : { key: workspaceId, label: coven, onSelect: () => addTo(workspaceId) },
             )}

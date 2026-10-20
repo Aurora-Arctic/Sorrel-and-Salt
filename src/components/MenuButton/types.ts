@@ -23,7 +23,7 @@ export type MenuButtonItem = {
       /** Runs before the link is followed, and may prevent it (a modal opened in place). */
       onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
       disabled?: never;
-      note?: never;
+      mark?: never;
     }
   | {
       onSelect: () => void;
@@ -35,8 +35,13 @@ export type MenuButtonItem = {
        * only: a link that leads nowhere is not a link.
        */
       disabled?: boolean;
-      /** Why, beneath the label, the item’s description rather than part of its name: "Already in My Ingredients". */
-      note?: string;
+      /**
+       * A green check after the label, as a compendium card marks what is held (HeldMark), and
+       * the words it stands for, joined to the item’s name after a comma: "in My Ingredients"
+       * names the item "Hedge Coven, in My Ingredients" (the owner’s call, 2026-10-20, in place
+       * of a note beneath the label).
+       */
+      mark?: string;
     }
 );
 

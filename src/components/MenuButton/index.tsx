@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useListPosition } from '../Combobox/position';
+import { CheckIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps } from './types';
 import './index.scss';
@@ -242,7 +243,8 @@ export default function MenuButton({
               // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
               // in the roving, read as unavailable. A press runs nothing and the menu stays open.
               aria-disabled={item.disabled || undefined}
-              aria-describedby={item.note ? `${menuId}-${item.key}-note` : undefined}
+              // The mark joins the name, since the check that draws it is a glyph and says nothing.
+              aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}
               onClick={() => {
                 if (item.disabled) return;
                 setChosen(item.key);
@@ -251,14 +253,9 @@ export default function MenuButton({
               }}
             >
               {item.label}
-              {/* Hidden from the name, which stays the label; read as the description instead. */}
-              {item.note && (
-                <span
-                  id={`${menuId}-${item.key}-note`}
-                  className="menu-button__note"
-                  aria-hidden="true"
-                >
-                  {item.note}
+              {item.mark && (
+                <span className="menu-button__mark">
+                  <CheckIcon />
                 </span>
               )}
             </button>

@@ -553,7 +553,7 @@ describe('CupboardActions', () => {
       const [here, other] = within(
         screen.getByRole('menu', { name: 'Add to My Ingredients' }),
       ).getAllByRole('menuitem');
-      expect(here).toHaveAccessibleName(HERE.name);
+      expect(here).toHaveAccessibleName(`${HERE.name}, in My Ingredients`);
       expect(here).toHaveAttribute('aria-disabled', 'true');
       expect(other).toHaveAccessibleName(OTHER.name);
       expect(other).not.toHaveAttribute('aria-disabled');

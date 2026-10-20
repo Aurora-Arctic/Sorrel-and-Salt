@@ -172,11 +172,19 @@
   }
 }
 
-// Why an item is disabled, beneath its label: smaller, muted, on a line of its own.
-.menu-button__note {
-  display: block;
-  color: $text-muted;
-  font-size: type-size('caption');
+// The check after a marked item's label (`mark`): HeldMark's green tick, at the glyph size,
+// standing on the label's line however muted the disabled label beside it is (the owner's
+// call, 2026-10-20).
+.menu-button__mark {
+  display: inline-flex;
+  margin-inline-start: space(2);
+  color: $accent;
+  vertical-align: middle;
+
+  svg {
+    width: $glyph-size;
+    height: $glyph-size;
+  }
 }
 
 // The items in the button's own type, top and bottom padding and height, as
