@@ -74,6 +74,7 @@ Numbers are the audit's; each was checked in `/app` on `cc98c0ff`.
 
 **Phone (375)**
 
+<!-- prettier-ignore -->
 35. The card grid holds (`IngredientCardList/index.scss:12`). 37. The pager holds. 38. The facet dialog holds. 39. The measure is applied.
 36. Citation URLs are plain text and `.ingredient-entry__reference` has no `overflow-wrap`, so a long URL scrolls sideways — `src/lib/citation.ts:96,150`, `IngredientEntry/index.scss:501-510`.
 40. `compendium-entry.spec.ts` has no 375 check.
@@ -90,6 +91,7 @@ Lane worktrees `/home/node/worktrees/mb120-<lane>` off the task branch, `node_mo
 **Step 0 (main):** merge `feature/m9.12-add-from-compendium` (`cc98c0ff`) into `feature/mb.120-design-review-compendium`; `npm run codegen` if the SDL moved; one `test:coverage` to set the baseline. `estimate MB.120 10` and the board comment naming the plan.
 
 **Wave A — Lane 1, foundations and the frame** (Sonnet). Files: `src/scss/_variables.scss`, `_mixins.scss`, `PublicFrame/*`, `AppShell/index.scss`, `(public)/compendium/page.tsx`, `tests/e2e/public-frame.spec.ts`, `claude-docs/styling.md`, `components/public-frame.md`.
+
 - `focus-ring` gains an inset parameter (20); a brand-size token and `heading-face` replace both frames' hand-written faces (19); a small-inline-text token (25); drawer and safety-bar tokens as proposed (22, 23) — tokens only, consumers in Wave B.
 - Public nav: `aria-current="page"` and a current rule drawn with `$rule-heavy` so it survives forced colours, in both frames (12, 13); `theme-transition` (21).
 - Compendium page head with eyebrow and lede (1), as `ProposalCompendiumHead`; `ProposalCurrentPage`.
