@@ -187,7 +187,7 @@ export interface CupboardWritesOptions {
   ingredientId: string;
   /** Where a remove leads, replacing the address; left out, the page reads again. */
   removedHref?: Route;
-  /** Closes the caller's confirmation on a refusal, or before a remove leads to `removedHref`; a remove without it closes once the entry is gone. */
+  /** Closes the caller's confirmation on a refusal; a remove's closes with the page it changed. */
   onSettle: () => void;
   /** Shows a refusal's sentence in the caller's alert. */
   onRefused: (message: string) => void;

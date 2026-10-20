@@ -721,6 +721,8 @@ test('a retired compendium entry the coven still holds can be removed, and leave
   await page.goto(listPath(coven));
   await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(1);
 
+  // At a phone width, where the list the remove leads to is checked by axe.
+  await page.setViewportSize({ width: 375, height: 812 });
   await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
   await page.getByRole('button', { name: 'Edit', exact: true }).click();
@@ -731,7 +733,12 @@ test('a retired compendium entry the coven still holds can be removed, and leave
   // The entry page reads nothing once the row is gone, so the remove leads to
   // the coven's Ingredients list rather than a 404.
   await expect(page).toHaveURL(new RegExp(`${listPath(coven)}$`));
-  await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeVisible();
+  // The Edit menu that asked went with the entry page, so the focus lands on
+  // the list's heading rather than falling to the body (the owner's call,
+  // 2026-10-20).
+  await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
   await expect(rowOf(ingredientList(page), 'Fixture Keptwort')).toHaveCount(1);
   await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
 });

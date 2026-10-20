@@ -304,6 +304,42 @@ describe('CupboardActions', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
+  it("gives the Ingredients list's heading the focus once a retired entry's Remove has led there", async () => {
+    mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
+      'RemoveCupboardEntry',
+      () => ({ removeCupboardEntry: BASE.ingredientId }),
+    );
+    router.replace.mockClear();
+    const view = renderOnPage({
+      held: true,
+      removedHref: '/coven/fixture-coven/ingredients' as Route,
+    });
+
+    choose('Remove');
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven/ingredients'),
+    );
+    // Busy until the list arrives: closed here, it would hand the focus to
+    // Edit, which the page swap then takes away with it.
+    expect(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Remov/ }),
+    ).toBeDisabled();
+
+    // The navigation lands: the list's page replaces the entry's in one commit.
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <main>
+          <h1>Ingredients</h1>
+        </main>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1, name: 'Ingredients' })).toHaveFocus(),
+    );
+  });
+
   it("shows the service's refusal when a jar is still held", async () => {
     mockGraphQLError('RemoveCupboardEntry', {
       code: 'VALIDATION',

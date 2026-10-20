@@ -136,6 +136,7 @@ reader would start again from the top. The rows that do this:
 | An invitation on the account page            | Decline (`ReceivedInvitations`)                          |
 | An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                              |
 | A compendium entry's page, held by the coven | Remove, from the Edit menu or the Annotate dialog's More |
+| A retired entry's page                       | Remove, leading to the Ingredients list                  |
 
 The first four ask through `ConfirmedAction`, whose confirmation stays open
 and busy until the page is read again, so it closes in the same step as the
@@ -143,7 +144,11 @@ row goes. Its `returnTo` names the row's button, which is gone by then, so
 step 4 answers. `CupboardActions` keeps its Remove confirmation busy the
 same way, and its `returnTo` names nowhere once the coven no longer holds
 the entry: the button left there offers Add to Cupboard instead, which is
-not where the person was. A refusal closes the confirmation with the row
+not where the person was. A retired entry's Remove leads to the coven's
+Ingredients list instead (the owner's call, 2026-10-20): its confirmation
+stays busy until the list arrives and goes with the entry page in the same
+step, so the opener and `returnTo` are both gone and step 4 finds the list's
+heading. A refusal closes the confirmation with the row
 still there, so the focus goes back to the row's button as usual.
 
 A confirmation asked over a modal's form (`ConfirmOverlay`, as in the M9.19

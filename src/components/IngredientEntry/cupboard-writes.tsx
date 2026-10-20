@@ -148,11 +148,13 @@ export function RemoveDialog({
 
 /**
  * The two writes, with what follows each: a remove leads to `removedHref`,
- * replacing the history entry so Back does not return to what is gone, closing
- * its confirmation first (`onSettle`); where there is none it reads the page
- * again and stays busy, as ConfirmedAction does, until the re-read says the
- * coven no longer holds the entry and the caller closes the confirmation with
- * it, so the focus can go to the page's heading in that one step. Make It Ours
+ * replacing the history entry so Back does not return to what is gone; where
+ * there is none it reads the page again. Either way it stays busy, as
+ * ConfirmedAction does, and its confirmation closes with what the remove
+ * changed (the page it leaves, or the re-read that says the coven no longer
+ * holds the entry), so the focus goes to the heading of the page then showing
+ * in that one step. Closed before, it would give the focus to Edit, which the
+ * change then takes away with it. Make It Ours
  * leads to the own entry it wrote. A refusal, which names its remedy, closes
  * the confirmation and goes to `onRefused` as the service wrote it.
  */
@@ -172,10 +174,8 @@ export function useCupboardWrites({
   const remove = useMutation({
     mutationFn: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),
     onSuccess: () => {
-      if (removedHref) {
-        onSettle();
-        navigate(removedHref, { replace: true });
-      } else refresh();
+      if (removedHref) navigate(removedHref, { replace: true });
+      else refresh();
     },
     onError: refused,
   });
@@ -190,8 +190,8 @@ export function useCupboardWrites({
   return {
     remove: {
       run: () => remove.mutate(),
-      // Busy past the write too while the page reads again (above).
-      pending: remove.isPending || (remove.isSuccess && !removedHref),
+      // Busy past the write too, until the page it changed arrives (above).
+      pending: remove.isPending || remove.isSuccess,
     },
     makeOurs: { run: () => makeOurs.mutate(), pending: makeOurs.isPending },
   };
