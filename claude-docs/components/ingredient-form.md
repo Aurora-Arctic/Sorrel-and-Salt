@@ -635,7 +635,8 @@ provides them, and its errors render through `FieldError`.
   and Note. The two days are `<input type="date">`.
 - **One How to Cite tip, in place of a hint per field** (the owner's call,
   2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
-  sits at the panel's head, both New Reference and Edit Source, and says
+  sits at the end of the panel's head, just before its ×, in New Reference
+  and Edit Source alike (the owner's call, 2026-10-20), and says
   the rules once: the first author inverted, edition and volume as printed,
   contributors as a sentence, a date as precise as the source gives it,
   underscores round a title inside a title to italicise it (MB.151), and a

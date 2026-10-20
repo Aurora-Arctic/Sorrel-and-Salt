@@ -340,36 +340,41 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 }
 
 /**
- * The panel's top line: what it says first, if anything, and a × that closes
- * it as Cancel does (MB.258), so a long panel can be left without scrolling
- * to its foot. Named for the panel, since the modal around it has a Close of
+ * The panel's top line: what it says first, if anything, and at its end edge
+ * any tip it carries beside a × that closes it as Cancel does (MB.258), so a
+ * long panel can be left without scrolling to its foot. Named for the panel, since the modal around it has a Close of
  * its own; held while a save is in flight, as Cancel is.
  */
 function PanelHead({
   legend,
   held = false,
   onClose,
+  tip,
   children,
 }: {
   legend: string;
   held?: boolean;
   onClose: () => void;
+  tip?: ReactNode;
   children?: ReactNode;
 }): ReactElement {
   return (
     <div className="ingredient-form__panel-head">
       {children}
-      <IconTip tip="Close">
-        <button
-          type="button"
-          className="ingredient-form__icon-button ingredient-form__panel-close"
-          aria-label={`Close ${legend}`}
-          disabled={held}
-          onClick={onClose}
-        >
-          <RemoveIcon />
-        </button>
-      </IconTip>
+      <div className="ingredient-form__panel-end">
+        {tip}
+        <IconTip tip="Close">
+          <button
+            type="button"
+            className="ingredient-form__icon-button"
+            aria-label={`Close ${legend}`}
+            disabled={held}
+            onClick={onClose}
+          >
+            <RemoveIcon />
+          </button>
+        </IconTip>
+      </div>
     </div>
   );
 }
@@ -537,13 +542,17 @@ function PanelForm({
           <legend className="fieldset__legend" id={legendId}>
             {legend}
           </legend>
-          <PanelHead legend={legend} held={isSubmitting} onClose={onCancel}>
+          <PanelHead
+            legend={legend}
+            held={isSubmitting}
+            onClose={onCancel}
+            tip={<HowToCite id={citeId} />}
+          >
             {editing && (
               <p className="ingredient-form__panel-note" id={noteId}>
                 A change here reaches every entry citing this source.
               </p>
             )}
-            <HowToCite id={citeId} />
             {/* Never the modal's header: that is the ingredient form's history. */}
             <HeaderSlotContext.Provider value={null}>
               <FormHistoryButtons />

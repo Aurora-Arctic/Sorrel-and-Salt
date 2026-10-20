@@ -658,8 +658,9 @@ $skeleton-fade: 300ms;
     padding: 0 space(1);
   }
 
-  // Its top line (MB.258): the note, if it has one, and the × at the end,
-  // which keeps to the right edge with no note beside it.
+  // Its top line (MB.258): the note, if it has one, and at the end the How
+  // to Cite tip beside the ×, which keep to the right edge with no note
+  // beside them.
   .ingredient-form__panel-head {
     display: flex;
     gap: space(2);
@@ -667,7 +668,10 @@ $skeleton-fade: 300ms;
     justify-content: space-between;
   }
 
-  .ingredient-form__panel-close {
+  .ingredient-form__panel-end {
+    display: flex;
+    gap: space(1);
+    align-items: center;
     margin-inline-start: auto;
   }
 
