@@ -64,6 +64,7 @@ describe('StockBadge', () => {
       act(() => badge.blur());
 
       fireEvent.mouseEnter(badge);
+      act(() => vi.advanceTimersByTime(300));
       expect(tip()).toBeInTheDocument();
       fireEvent.mouseLeave(badge);
       act(() => vi.advanceTimersByTime(200));

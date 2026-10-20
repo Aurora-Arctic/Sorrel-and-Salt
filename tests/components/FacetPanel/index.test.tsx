@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FacetPanel from '@/components/FacetPanel';
@@ -294,7 +294,7 @@ describe('FacetPanel', () => {
     expect(sent('categoryMode')).toEqual(['any']);
   });
 
-  it('keeps Match below two categories, on All, disabled and with a hint, and enables it at two', () => {
+  it('keeps Match below two categories, on All, disabled and with a hint, and enables it at two', async () => {
     stubViewport(true);
     const { rerender } = render(
       <FacetPanel {...props({ categories: ['warding'], categoryMode: 'any' })} />,
@@ -313,7 +313,7 @@ describe('FacetPanel', () => {
       stuck.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
     );
     fireEvent.mouseEnter(stuck);
-    expect(bubble).toHaveAttribute('aria-hidden', 'false');
+    await waitFor(() => expect(bubble).toHaveAttribute('aria-hidden', 'false'));
 
     rerender(
       <FacetPanel {...props({ categories: ['warding', 'mending'], categoryMode: 'any' })} />,
@@ -349,7 +349,7 @@ describe('FacetPanel', () => {
       }
     });
 
-    it('shows the enabled Match hint on hover and on focus of its summary, and not while the menu is open', () => {
+    it('shows the enabled Match hint on hover and on focus of its summary, and not while the menu is open', async () => {
       openPanel({ categories: ['warding', 'mending'] });
       const bubble = () =>
         document.getElementById(
@@ -357,7 +357,7 @@ describe('FacetPanel', () => {
         ) as HTMLElement;
       expect(bubble()).toHaveAttribute('aria-hidden', 'true');
       fireEvent.mouseEnter(summary());
-      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      await waitFor(() => expect(bubble()).toHaveAttribute('aria-hidden', 'false'));
       fireEvent.mouseLeave(summary());
       fireEvent.focus(summary());
       expect(bubble()).toHaveAttribute('aria-hidden', 'false');
@@ -578,7 +578,7 @@ describe('FacetPanel', () => {
       expect(chip.closest('fieldset')).toHaveAccessibleDescription();
     });
 
-    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+    it('opens the hint when the pointer rests on the disabled chip itself', async () => {
       withToxic([
         { value: 'toxic', label: 'Toxic', count: 0 },
         { value: 'not_toxic', label: 'Not Toxic', count: 9 },
@@ -590,7 +590,7 @@ describe('FacetPanel', () => {
         ) as HTMLElement;
       expect(bubble()).toHaveAttribute('aria-hidden', 'true');
       fireEvent.mouseEnter(chip);
-      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      await waitFor(() => expect(bubble()).toHaveAttribute('aria-hidden', 'false'));
     });
 
     it('is enabled, with no hint, when both counts are above zero', () => {
@@ -651,7 +651,7 @@ describe('FacetPanel', () => {
       expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
     });
 
-    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+    it('opens the hint when the pointer rests on the disabled chip itself', async () => {
       withSource([
         { value: 'local', label: 'Local', count: 6 },
         { value: 'compendium', label: 'Compendium', count: 0 },
@@ -663,7 +663,7 @@ describe('FacetPanel', () => {
         ) as HTMLElement;
       expect(bubble()).toHaveAttribute('aria-hidden', 'true');
       fireEvent.mouseEnter(chip);
-      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      await waitFor(() => expect(bubble()).toHaveAttribute('aria-hidden', 'false'));
     });
   });
 

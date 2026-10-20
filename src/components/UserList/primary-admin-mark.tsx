@@ -13,11 +13,16 @@ import './controls.scss';
 // button's name, so it is hidden from assistive technology while closed, as
 // InfoTip's is (claude-docs/components/user-list.md).
 const PrimaryAdminMark = (): ReactElement => {
-  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
     // Hover on the wrapper, which holds the tip as well as the mark.
-    <span ref={anchor} className="user-list__primary" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span
+      ref={anchor}
+      className="user-list__primary"
+      onMouseEnter={showSoon}
+      onMouseLeave={hideSoon}
+    >
       {/* A tap opens rather than toggles, as InfoTip's: on touch the emulated
           hover has already opened it. */}
       <button

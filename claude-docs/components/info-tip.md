@@ -20,6 +20,12 @@ It follows WCAG 1.4.13, content on hover or focus:
 - **It opens on hover, on a tap, and on the ⓘ's focus.** A tap opens rather
   than toggles: on touch the emulated hover has already opened it, and a
   toggle would shut it again at once.
+- **Hover waits 300ms; focus and a tap do not**, the owner's call
+  (2026-10-20). A pointer crossing a form on its way somewhere else used to
+  open every tip it passed; now a tip opens only once the pointer rests on
+  its control, and a pointer that leaves sooner opens nothing. Focus and a
+  tap are asked for on purpose, so they open at once. This holds for every
+  tip built on `useTip`, below.
 - **Never on the field's own focus**, the owner's call in MB.133, reversing
   M5.9: a tip opening on every field entered cluttered the form for little
   value. The cost is a sighted keyboard user in Safari, or Firefox on
@@ -53,6 +59,11 @@ hook, which differed only by `canOpen`, this one. A caller may close a tip
 for reasons of its own through `hide`: Combobox's qualifier closes its tip
 at the first printable key and when its list opens, so it never sits over
 what is being typed.
+
+A caller wires `showSoon` to hover and `show` to focus and a tap. A third
+argument, `{ openDelayMs, closeDelayMs }`, changes the two waits from 300ms
+and 150ms; [`IconTip`](icon-tip.md) sets the close to `0`, since its bubble
+cannot be hovered.
 
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its

@@ -193,7 +193,7 @@ export function ChoiceChip<T extends string>({
       <div
         ref={tip.anchor}
         className="facet-chip__bar"
-        onMouseEnter={chipHint ? tip.show : undefined}
+        onMouseEnter={chipHint ? tip.showSoon : undefined}
         onMouseLeave={chipHint ? tip.hideSoon : undefined}
       >
         <fieldset
