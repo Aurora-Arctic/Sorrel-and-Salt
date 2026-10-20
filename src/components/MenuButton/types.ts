@@ -9,7 +9,13 @@ export type MenuButtonItem = {
   label: string;
   /** Drawn in the destructive colour, as a `.btn--destructive` would be. */
   destructive?: boolean;
-  /** Drawn in the accent green, for what adds something: "Add to Cupboard". */
+  /**
+   * The menu's one primary action, pointed at in the green highlight where
+   * every other plain item takes the grey: "Edit Ingredient". A constructive
+   * item is primary already.
+   */
+  primary?: boolean;
+  /** Drawn in the accent green, for what adds something and is the menu's primary action: "Add to Cupboard". */
   constructive?: boolean;
 } & (
   | {

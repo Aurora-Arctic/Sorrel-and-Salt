@@ -48,7 +48,7 @@ export default function OwnEntryActions({
   });
 
   const items: MenuButtonItem[] = [
-    { key: 'edit', label: 'Edit Ingredient', href: edit.href, onClick: openEdit },
+    { key: 'edit', label: 'Edit Ingredient', primary: true, href: edit.href, onClick: openEdit },
     ...(linkHref
       ? [{ key: 'link', label: 'Link to the Compendium', href: linkHref, onClick: openLink }]
       : []),

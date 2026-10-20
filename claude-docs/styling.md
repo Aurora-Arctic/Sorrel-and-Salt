@@ -73,11 +73,12 @@ to.
   switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
-  skeleton's bars, an entry's targeted section, and the hover of every
+  skeleton's bars, an entry's targeted section, MenuButton's plain item
+  pointed at, focused or chosen, and the hover of every
   navigation link, tab and outlined chip), `$fill-highlight` (the accent 12%
-  into whatever is behind: a menu's item and a suggestion list's row pointed
-  at, focused or chosen, in MenuButton, the account menu, the shell's menu
-  and Combobox), `$fill-highlight-field` (the same 12% over the field's
+  into whatever is behind: MenuButton's one primary or constructive item, and
+  a menu's item and a suggestion list's row in the account menu, the shell's
+  menu and Combobox, pointed at, focused or chosen), `$fill-highlight-field` (the same 12% over the field's
   ground: a quiet button pointed at), `$hairline` (the muted ink 45%
   into whatever is behind: the ingredient form's section rules, the tab
   strip's shade, a quiet button's edge, the tab row's track), `$edge-highlight` (the accent 45%

@@ -85,10 +85,13 @@
   white-space: nowrap;
   @include theme-transition(background-color);
 
+  // Grey, the quiet fill: green marks a menu's one primary action alone
+  // (`--primary`, below), so every other plain item is pointed at, focused
+  // and chosen in the grey (the owner's call, 2026-10-20).
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
-    background-color: $fill-highlight;
+    background-color: $fill-quiet;
   }
 
   // Held, not faded: the menu's own fade-out is the only motion on the way out.
@@ -126,9 +129,22 @@
   }
 }
 
-// What adds something, in the accent green and filled on hover and focus as
-// the destructive item is, so the two read as a pair (the owner's call,
-// 2026-10-19).
+// A menu's one primary action, Edit Ingredient on the ingredient page:
+// the green highlight pointed at, focused and chosen, where every other item
+// takes the grey (the owner's call, 2026-10-20).
+.menu-button__item--primary {
+  &:hover,
+  &:focus-visible,
+  .is-closing &.is-chosen {
+    background-color: $fill-highlight;
+  }
+}
+
+// What adds something, Add to Cupboard: the entry page's primary action, in
+// the accent green, and pointed at, focused and chosen the green highlight
+// with its text in the accent's hover shade, which holds 4.5:1 on the tint
+// where the plain accent does not (tests/scss/tokens.test.ts). Not filled
+// solid as the destructive item is (the owner's call, 2026-10-20).
 .menu-button__item--constructive {
   color: $accent;
   @include theme-transition(background-color, color);
@@ -140,8 +156,8 @@
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
-    background-color: $accent;
-    color: $text-on-color;
+    background-color: $fill-highlight;
+    color: $accent-hover;
   }
 }
 

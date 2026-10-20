@@ -220,6 +220,11 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('a highlighted row’s text', tokens['--text-primary'], lit, 4.5);
     row('a highlighted row’s muted text', tokens['--text-muted'], lit, 4.5);
     row('a quiet button’s label pointed at', tokens['--text-primary'], lit, 4.5);
+    // A menu's constructive item, Add to Cupboard, pointed at: the highlight,
+    // with its text in the accent's hover shade, as a linked chip pointed at
+    // takes it; the plain accent falls short on the tint in the light theme
+    // (the owner's call, 2026-10-20).
+    row('a constructive menu item pointed at', tokens['--accent-hover'], lit, 4.5);
 
     // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
     // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is

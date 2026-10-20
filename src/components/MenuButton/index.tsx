@@ -49,6 +49,7 @@ const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
   [
     'menu-button__item',
     item.destructive && 'menu-button__item--destructive',
+    item.primary && 'menu-button__item--primary',
     item.constructive && 'menu-button__item--constructive',
     chosen && 'is-chosen',
   ]
