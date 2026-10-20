@@ -165,12 +165,18 @@ test('a source with a long url wraps inside the column on a phone', async ({
     );
     const reference = await insertReference(
       sql,
-      { kind: 'web_page', title: 'A Fixture Page With a Long Address', url },
+      {
+        kind: 'web_page',
+        title: 'A Fixture Page With a Long Address',
+        url,
+        accessed: '2026-01-01',
+      },
       author,
     );
     await insertReferenceLink(sql, ingredient, reference, author);
   });
 
+  await page.setViewportSize({ width: 375, height: 700 });
   await page.goto(`/compendium/ingredients/${slugify(name)}`);
 
   const bibliography = page.getByRole('list', { name: 'Bibliography' });

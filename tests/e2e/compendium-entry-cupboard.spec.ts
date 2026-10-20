@@ -328,7 +328,7 @@ test('the Quick Look window has the plus, then the check, on a compendium list f
       await expect(details()).toBeVisible();
       // Why a missing plus is not a window still loading: the pencil or the page link is there.
       await expect(
-        details().getByRole('link', { name: /^See in (Compendium|My Ingredients)$/ }),
+        details().getByRole('link', { name: /^See in (Compendium|Your Coven)$/ }),
       ).toBeVisible();
     };
 
