@@ -53,6 +53,12 @@ vi.mock('@/components/IngredientForm', () => ({
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 
+// The plus's covens (M9.12) are plus-covens.ts's to read; here only which entries ask for them,
+// and that what comes back reaches the pair beside the pencil. None unless a test says so.
+const covensHolding = vi.fn();
+const plusCovensOf = vi.fn();
+vi.mock('@/app/plus-covens', () => ({ covensHolding, plusCovensOf }));
+
 // The cupboard buttons (M12.17) are client parts that send mutations, so the page
 // renders under a query client.
 const renderPage = (ui: ReactElement) =>
@@ -124,6 +130,8 @@ beforeEach(() => {
   entryValues.mockResolvedValue(EMPTY_VALUES);
   getCupboardEntry.mockResolvedValue(null);
   compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0 });
+  covensHolding.mockResolvedValue([]);
+  plusCovensOf.mockResolvedValue(undefined);
 });
 
 describe('the coven ingredient page', () => {
@@ -301,6 +309,63 @@ describe('the coven ingredient page', () => {
 
     expect(ownDialog()).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
+  });
+});
+
+describe('the coven ingredient page’s plus', () => {
+  // The owner's call, 2026-10-20: the plus stands left of the pencil on a coven's page too.
+  const OTHER = { id: 'w-other', name: 'Other Coven' };
+  const HOLDING = [{ id: WORKSPACE.id, slug: WORKSPACE.slug, name: WORKSPACE.name }];
+
+  it('asks for the covens holding a compendium entry, this coven the default, and draws the plus', async () => {
+    covensHolding.mockResolvedValue(HOLDING);
+    plusCovensOf.mockResolvedValue({
+      workspaceId: WORKSPACE.id,
+      covens: [{ id: WORKSPACE.id, name: WORKSPACE.name }, OTHER],
+      heldIn: [WORKSPACE.id],
+    });
+    await open(compendiumRow());
+
+    expect(covensHolding).toHaveBeenCalledWith(ID);
+    expect(plusCovensOf).toHaveBeenCalledWith(HOLDING, WORKSPACE.id);
+    expect(screen.getByRole('button', { name: 'Add to My Ingredients' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+  });
+
+  it('draws the check in its place once every coven that may add holds the entry', async () => {
+    plusCovensOf.mockResolvedValue({
+      workspaceId: WORKSPACE.id,
+      covens: [{ id: WORKSPACE.id, name: WORKSPACE.name }],
+      heldIn: [WORKSPACE.id],
+    });
+    await open(compendiumRow());
+
+    expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
+  });
+
+  it("asks nothing for the coven's own entry, which takes neither plus nor check", async () => {
+    // Why it could have drawn one: a compendium entry given the same covens does (above).
+    plusCovensOf.mockResolvedValue({
+      workspaceId: WORKSPACE.id,
+      covens: [{ id: WORKSPACE.id, name: WORKSPACE.name }, OTHER],
+      heldIn: [],
+    });
+    await open(covenRow());
+
+    expect(plusCovensOf).not.toHaveBeenCalled();
+    expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+  });
+
+  it('asks nothing for a retired entry, which the compendium no longer offers', async () => {
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+
+    expect(plusCovensOf).not.toHaveBeenCalled();
   });
 });
 

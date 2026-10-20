@@ -12,7 +12,8 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 // leaves the viewer on the public page. A viewer is offered nothing. The In Your Cupboard shelf
 // before the name shows whoever's coven holds the entry, a viewer's included, and no visitor or
 // member whose covens do not. A member of two covens chooses which from the plus's menu, the
-// holding coven shown there disabled. Which coven the other choices ask for is the component's
+// holding coven shown there disabled, on the public page and a coven's own page of the entry
+// alike; once every coven holds it, the card's check stands in the plus's place. Which coven the other choices ask for is the component's
 // tests' (tests/components/IngredientEntry/public-cupboard-actions.test.tsx), and the plus on the
 // cards is compendium-add.spec.ts's.
 
@@ -24,6 +25,7 @@ const ADD = 'Add to My Ingredients';
 const SHELF = 'In Your Cupboard';
 const HELD_NOTE = 'Already in My Ingredients';
 const NAME = 'Fixture Shelfwort';
+const HELD = 'In My Ingredients';
 
 test('a member adds the entry from its public page, and the Edit menu then offers its removal', async ({
   page,
@@ -68,6 +70,7 @@ test('a member adds the entry from its public page, and the Edit menu then offer
   const add = () => page.getByRole('main').getByRole('button', { name: ADD });
   const menu = () => page.getByRole('button', { name: `Edit ${NAME}`, exact: true });
   const shelf = () => page.getByRole('button', { name: SHELF });
+  const check = () => page.getByRole('main').getByRole('img', { name: HELD });
 
   // Why the add is this test's: the entry is live and public, and the coven does not hold it.
   expect(await heldRows()).toHaveLength(0);
@@ -90,8 +93,10 @@ test('a member adds the entry from its public page, and the Edit menu then offer
       page.getByRole('status').filter({ hasText: 'Added to Fixture Coven Shelf.' }),
     ).toHaveCount(1);
     await expect(menu()).toBeVisible();
-    // Every coven of the member's holds it now, so no plus is left.
+    // Every coven of the member's holds it now, so the card's check stands where the plus was
+    // (the owner's call, 2026-10-20).
     await expect(add()).toHaveCount(0);
+    await expect(check()).toBeVisible();
     await expect(shelf()).toBeVisible();
     expect(await heldRows()).toHaveLength(1);
     await assertNoAccessibilityViolations(page);
@@ -118,6 +123,8 @@ test('a member adds the entry from its public page, and the Edit menu then offer
     await open();
     await expect(shelf()).toBeVisible();
     await expect(add()).toHaveCount(0);
+    // A viewer may add nowhere, so no check either.
+    await expect(check()).toHaveCount(0);
     await signInAgainAs(page, coven.users.B);
     await open();
   });
@@ -184,9 +191,9 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
   } finally {
     await admin.close();
   }
-  const [{ slug }] = await withSql(
-    (sql) => sql<{ slug: string }[]>`
-      select slug from ingredients
+  const [{ id: ingredientId, slug }] = await withSql(
+    (sql) => sql<{ id: string; slug: string }[]>`
+      select id, slug from ingredients
       where name = ${NAME_TWO} and workspace_id is null and deleted_at is null`,
   );
   const heldRows = (workspaceId: string) =>
@@ -231,6 +238,18 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await page.keyboard.press('Escape');
   });
 
+  await test.step('the first coven’s own page of the entry has the plus too, its holder disabled (the owner’s call, 2026-10-20)', async () => {
+    await page.goto(`/coven/${one.slug}/ingredients/${ingredientId}`);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME_TWO);
+    await add().click();
+    await expect(addMenu.getByRole('menuitem')).toHaveCount(2);
+    await expect(addMenu.getByRole('menuitem', { name: FIRST })).toBeEnabled();
+    await expect(addMenu.getByRole('menuitem', { name: SECOND })).toBeDisabled();
+    await page.keyboard.press('Escape');
+    await page.goto(`/compendium/ingredients/${slug}`);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME_TWO);
+  });
+
   await test.step('the plus stays for the first coven, the second disabled in its menu, and adds there', async () => {
     await add().click();
     const held = addMenu.getByRole('menuitem', { name: SECOND });
@@ -239,10 +258,16 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await assertNoAccessibilityViolations(page);
     await addMenu.getByRole('menuitem', { name: FIRST }).click();
     await expect.poll(async () => (await heldRows(one.id)).length).toBe(1);
-    // Both hold it now: no plus, and no check in its place.
+    // Both hold it now: the card's check in the plus's place (the owner's call, 2026-10-20).
     await expect(add()).toHaveCount(0);
-    await expect(
-      page.getByRole('main').getByRole('img', { name: 'In My Ingredients' }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('main').getByRole('img', { name: HELD })).toBeVisible();
+  });
+
+  await test.step('the coven’s own page of the entry shows the check as well', async () => {
+    await page.goto(`/coven/${one.slug}/ingredients/${ingredientId}`);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME_TWO);
+    await expect(add()).toHaveCount(0);
+    await expect(page.getByRole('main').getByRole('img', { name: HELD })).toBeVisible();
+    await assertNoAccessibilityViolations(page);
   });
 });

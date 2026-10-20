@@ -9,7 +9,8 @@ import { entryDescription, publicPageMetadata } from '../../../../../lib/page-me
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
 import { entryValues } from '@/app/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
-import { covensHolding, publicCupboardOf } from './cupboard';
+import { publicCupboardOf } from './cupboard';
+import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
 // One compendium entry, at its public address (M8.19; MB.80): readable by

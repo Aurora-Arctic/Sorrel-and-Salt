@@ -5,6 +5,7 @@ import type {
 } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
@@ -207,7 +208,21 @@ export interface CupboardProps {
    * reaches. Left out, a remove reads the page again, which offers Add.
    */
   removedHref?: Route;
+  /**
+   * The plus beside the pencil (the owner's call, 2026-10-20): the viewer's covens that may
+   * add, this one among them where it may, and which hold the entry. Given, Add leaves the
+   * Edit menu for it; left out (a coven's own entry, a retired one, no coven that may add),
+   * neither the plus nor its check is drawn. `plusCovensOf` (src/app/plus-covens.ts) reads it.
+   */
+  plus?: CupboardPlus;
 }
+
+/**
+ * The plus's covens, on the coven's entry page (and the details modal after it): AddIcon's
+ * props but the entry, which the page already has. The check stands in its place once every
+ * one of `covens` is in `heldIn`.
+ */
+export type CupboardPlus = Omit<AddIconProps, 'ingredientId'>;
 
 /** What the client buttons need to draw: the props above, and the entry's two sides for the form. */
 export interface CupboardActionsProps extends CupboardProps {

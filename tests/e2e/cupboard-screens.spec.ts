@@ -7,7 +7,7 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
 // The three cupboard screens on a compendium entry seen from a coven (M12.17):
-// Add to Cupboard, then Annotate and Remove from the Edit menu. One walk:
+// the plus beside the pencil (Add), then Annotate and Remove from the Edit menu. One walk:
 // the owner adds the entry, annotates its label, hands the label back to the
 // Compendium, and removes the entry.
 
@@ -51,6 +51,10 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
     await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
   };
 
+  // Add is the card's plus beside the pencil, as on the public page (the owner's call, 2026-10-20).
+  const plus = () =>
+    page.getByRole('main').getByRole('button', { name: 'Add to My Ingredients', exact: true });
+
   // Why the buttons could show: the owner holds ingredient:create, update and
   // delete, and the coven does not hold the entry yet.
   await page.goto(entryPage);
@@ -69,21 +73,25 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
         })
       : route.continue(),
   );
-  await page.getByRole('button', { name: 'Add to Cupboard', exact: true }).click();
+  await plus().click();
   const refusal = page.getByRole('alert').filter({ hasText: 'This entry could not be added.' });
   await expect(refusal).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Show the error for Add to Cupboard' }),
+    page.getByRole('button', { name: 'Show the error for Add to My Ingredients' }),
   ).toBeVisible();
   expect(await heading('Fixture Screens Wort').boundingBox()).toEqual(before);
   await refusal.getByRole('button', { name: 'Dismiss' }).click();
   await expect(refusal).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Add to Cupboard', exact: true })).toBeFocused();
+  await expect(plus()).toBeFocused();
   await page.unrouteAll();
 
-  await page.getByRole('button', { name: 'Add to Cupboard', exact: true }).click();
+  await plus().click();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Add to Cupboard', exact: true })).toHaveCount(0);
+  await expect(plus()).toHaveCount(0);
+  // The one coven that may add holds it now: the card's check in the plus's place.
+  await expect(
+    page.getByRole('main').getByRole('img', { name: 'In My Ingredients' }),
+  ).toBeVisible();
   // The failed try's badge went with the button it belonged to.
   await expect(page.getByRole('button', { name: /^Show the error for / })).toHaveCount(0);
 
@@ -124,7 +132,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
 
   await choose('Remove');
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Add to Cupboard', exact: true })).toBeVisible();
+  await expect(plus()).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   // The confirmation stays until the re-read drops the entry, then closes onto
   // the page's heading: Remove went with the menu, and the button left offers
