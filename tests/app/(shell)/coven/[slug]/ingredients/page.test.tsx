@@ -1,10 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
+import { Navigating } from '../../../../../support/navigating';
 
 // A coven's Ingredients page (M9.6). The guard and the services are mocked, since what they
 // decide is their own tests'; the page's own reads run for real over them. Here: the guard on
@@ -324,6 +325,151 @@ describe("the coven Ingredients page's edit dialog", () => {
 
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
+  });
+});
+
+describe("the coven Ingredients page's details modal", () => {
+  const asRole = (role: string) =>
+    requireCovenMembership.mockResolvedValue({
+      workspace: COVEN,
+      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
+    });
+  const FILTERED_HREF = '/coven/fixture-coven/ingredients?source=local';
+  const details = (name: string) => screen.queryByRole('dialog', { name: `Ingredient, ${name}` });
+  const editDialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+  const SALT = row('b2', 'Fixture Salt', null);
+
+  beforeEach(() => {
+    heldCompendiumEntry.mockImplementation(async (_membership: unknown, id: string) =>
+      id === 'b2'
+        ? {
+            entry: SALT,
+            cupboardEntry: { ingredientId: 'b2', label: 'House Salt', description: null },
+          }
+        : undefined,
+    );
+  });
+
+  it("gives each card a Quick Look to the list's own address with ?entry=<id>, filter kept, and reads nothing until asked", async () => {
+    await renderPage({ source: 'local' });
+    expect(screen.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+      'href',
+      `${FILTERED_HREF}&entry=a1`,
+    );
+    expect(screen.getByRole('link', { name: 'Quick Look House Salt' })).toHaveAttribute(
+      'href',
+      `${FILTERED_HREF}&entry=b2`,
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(getIngredient).not.toHaveBeenCalled();
+  });
+
+  it('opens the details at once on a plain press of Quick Look', async () => {
+    const page = await Page({
+      params: Promise.resolve({ slug: COVEN.slug }),
+      searchParams: Promise.resolve({ source: 'local' }),
+    });
+    render(
+      <Navigating push={router.push}>
+        <QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>
+      </Navigating>,
+    );
+    let handled = true;
+    await act(async () => {
+      handled = fireEvent.click(screen.getByRole('link', { name: 'Quick Look Testwort' }));
+    });
+    expect(handled).toBe(false);
+    expect(router.push).toHaveBeenCalledWith(`${FILTERED_HREF}&entry=a1`);
+    // Only the details: the press shows in their place, not in the edit modal's too.
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(details('Testwort')).toBeInTheDocument();
+  });
+
+  it("opens the coven's own entry under ?entry=<id>, read as the member, with its full page in the coven", async () => {
+    await renderPage({ source: 'local', entry: 'a1' });
+    expect(getIngredient).toHaveBeenCalledWith(session, 'a1', COVEN.id);
+    const dialog = details('Testwort')!;
+    expect(within(dialog).getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/ingredients/a1',
+    );
+  });
+
+  it("gives an owner and a member Edit on the coven's own entry, opening the edit modal over the details", async () => {
+    for (const role of ['owner', 'member']) {
+      asRole(role);
+      await renderPage({ source: 'local', entry: 'a1' });
+      expect(within(details('Testwort')!).getByRole('link', { name: 'Edit' })).toHaveAttribute(
+        'href',
+        `${FILTERED_HREF}&entry=a1&edit=a1`,
+      );
+      cleanup();
+    }
+  });
+
+  it('gives a viewer the details, and no Edit in them', async () => {
+    asRole('viewer');
+    await renderPage({ entry: 'a1' });
+    // The details opened, so Edit's absence is the role's, not a missing dialog.
+    const dialog = details('Testwort')!;
+    expect(within(dialog).getByRole('link', { name: 'Open Full Page' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(entryValues).not.toHaveBeenCalled();
+  });
+
+  it("opens a compendium entry the cupboard holds under the coven's label, with no Edit", async () => {
+    await renderPage({ entry: 'b2' });
+    expect(heldCompendiumEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ workspaceId: COVEN.id }),
+      'b2',
+    );
+    const dialog = details('House Salt')!;
+    expect(within(dialog).getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/ingredients/b2',
+    );
+    expect(within(dialog).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+  });
+
+  it('opens nothing for a compendium entry the cupboard does not hold', async () => {
+    getIngredient.mockResolvedValue(row('c3', 'Other Salt', null));
+    await renderPage({ entry: 'c3' });
+    // The read found the row: the cupboard, not the lookup, said no.
+    expect(heldCompendiumEntry).toHaveBeenCalledWith(expect.anything(), 'c3');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens nothing for an id the coven cannot reach', async () => {
+    getIngredient.mockRejectedValue(new NotFound('No such ingredient'));
+    await renderPage({ entry: 'gone' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('lets any other failure of the read through', async () => {
+    getIngredient.mockRejectedValue(new Error('connection lost'));
+    await expect(renderPage({ entry: 'a1' })).rejects.toThrow('connection lost');
+  });
+
+  it('closes back to the filtered list', async () => {
+    await renderPage({ source: 'local', entry: 'a1' });
+    await act(async () => {
+      fireEvent.click(within(details('Testwort')!).getByRole('button', { name: 'Close' }));
+      // The close waits on the fade.
+      fireEvent.transitionEnd(details('Testwort')!);
+    });
+    expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
+  });
+
+  it('opens the edit modal over the details, and a save or Cancel goes back to the details, fetched again', async () => {
+    await renderPage({ source: 'local', entry: 'a1', edit: 'a1' });
+    expect(details('Testwort')).toBeInTheDocument();
+    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Save' }));
+    expect(router.replace.mock.lastCall?.[0]).toBe(`${FILTERED_HREF}&entry=a1`);
+    // Fetched again, so the list and the details beneath both show the save.
+    expect(router.refresh).toHaveBeenCalled();
+
+    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
+    expect(router.replace.mock.lastCall?.[0]).toBe(`${FILTERED_HREF}&entry=a1`);
   });
 });
 

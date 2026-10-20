@@ -10,8 +10,10 @@ import type { CovenIngredientPage } from './types';
 import { entryValues } from '@/app/entry-values';
 import type { CovenMembership } from '@/modules/coven';
 import {
+  applyCupboardEntry,
   countWorkspaceIngredients,
   getIngredient,
+  heldCompendiumEntry,
   listWorkspaceIngredients,
   stockOf,
   variantsOf,
@@ -115,4 +117,27 @@ export async function readEditedEntry(workspaceId: string, id: string) {
   }
   if (entry.workspaceId !== workspaceId) return undefined;
   return { entry, values: await entryValues(entry, session) };
+}
+
+/**
+ * The entry `?entry=<id>` opens the details of over the list (M12.5), read as the signed-in
+ * member, any role: the coven's own entry, or a compendium entry its cupboard holds, under
+ * the coven's label, a retired one included, as the list shows it. Nothing for an id the
+ * coven cannot reach, or a compendium entry the cupboard does not hold, which the list
+ * never shows: the list then opens no modal, as `readEditedEntry`'s does. Any other failure
+ * of the read is let through rather than called no entry.
+ */
+export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
+  const session = await requireSession();
+  let entry: Awaited<ReturnType<typeof getIngredient>>;
+  try {
+    entry = await getIngredient(session, id, membership.workspaceId);
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    throw error;
+  }
+  if (entry.workspaceId === membership.workspaceId) return { shown: entry, own: true };
+  const held = await heldCompendiumEntry(membership, id);
+  if (!held) return undefined;
+  return { shown: applyCupboardEntry(held.entry, held.cupboardEntry), own: false };
 }
