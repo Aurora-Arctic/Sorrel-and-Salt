@@ -76,7 +76,8 @@ is outweighed by one more class, so no Combobox variant was needed.
 - **The box keeps `.input`'s shape and changes its look.** Its corners,
   `radius('control')`, come from the `field-box` mixin that `.input` includes;
   the switcher sets no radius of its own. Over that it lays a `$hairline`
-  border, a transparent ground, `$fill-quiet` on hover, and the border in
+  border, a transparent ground, the highlight on hover (`$fill-highlight`,
+  its border `$edge-highlight`, the owner's call of 2026-10-20), and the border in
   `$text-primary` while open (a change of weight, not of hue). It is at least
   `$control-height` tall, with the chevron on the right.
 - **Two widths are named at the head of `index.scss`**:

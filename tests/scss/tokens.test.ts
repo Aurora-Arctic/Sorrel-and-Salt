@@ -132,14 +132,20 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
     // The tab row's pills (TabbedPage/index.scss): the open tab's label on its
     // pill, the accent 18% into the card, and the pill's accent edge against
-    // the track, the quiet fill (the muted ink 18% into the card), the line
-    // that marks which tab is open, since the fill alone sits under 3:1
-    // against the track. The other labels are the muted ink on that track.
+    // the track, the highlight (the accent 12% over the page or a card, the
+    // owner's call of 2026-10-20), the line that marks which tab is open,
+    // since the fill alone sits under 3:1 against the track. The other labels
+    // are the muted ink on that track.
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
-    const track = mixed(toHex(tokens['--text-muted'], theme), card, 0.18);
-    row('--text-muted on the tab track', tokens['--text-muted'], track, 4.5);
-    row("the open tab's edge on the track", accent, track, 3);
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      const track = mixed(accent, under, 0.12);
+      row(`--text-muted on the tab track on the ${ground}`, tokens['--text-muted'], track, 4.5);
+      row(`the open tab's edge on the track on the ${ground}`, accent, track, 3);
+    }
     // Every Edit pencil (the `icon-button-edit` mixin, _mixins.scss), a
     // control, so 3:1: the accent on the grounds it sits on — a list's
     // unbanded row on the page; a banded row, a stacked card and the modal's
@@ -204,6 +210,21 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('a highlighted row’s text', tokens['--text-primary'], lit, 4.5);
     row('a highlighted row’s muted text', tokens['--text-muted'], lit, 4.5);
     row('a quiet button’s label pointed at', tokens['--text-primary'], lit, 4.5);
+    // The same highlight on the navigation (the owner's call of 2026-10-20,
+    // M8.17): the top bar's links and the coven switcher, SectionNav's tabs
+    // and its current one, PageNav's links, the public header's links and an
+    // outlined facet chip pointed at, each on the page or a card. Their labels
+    // (the body ink pointed at, the muted ink a SectionNav tab keeps at rest
+    // beside the current one) hold 4.5:1, and the focus ring, the body ink,
+    // the 3:1 a control's mark needs, which the text row already clears.
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      const navLit = mixed(accent, under, 0.12);
+      row(`a highlighted link's text on the ${ground}`, tokens['--text-primary'], navLit, 4.5);
+      row(`a highlighted link's muted text on the ${ground}`, tokens['--text-muted'], navLit, 4.5);
+    }
 
     // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
     // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is

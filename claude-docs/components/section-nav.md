@@ -41,7 +41,7 @@ icon set.
 ## Contracts
 
 - **The page you are on is told by weight and shape, never hue alone.** Its
-  link carries `aria-current="page"`, weight 500, a quiet fill and the heavy
+  link carries `aria-current="page"`, weight 500, the highlight fill and the heavy
   accent rule (`$rule-heavy`); its icon takes the accent and a heavier
   stroke. A section is current by `exact` (its own address only) or else by
   `isAtPath` (`src/lib/at-path.ts`) on its `href` and each of its `matches`.
@@ -90,7 +90,7 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
 - **Wider than `$shell-phone-width`.** The nav stretches to the context row
   it sits in, and each tab fills the row's height (`$context-row-height`, 56px
   in the design): icon then label, `space(4)` of padding either side, a
-  no gap between tabs (the owner's call, MB.7's review), so their hover fills meet. Muted ink; on hover the `$fill-quiet` fill and
+  no gap between tabs (the owner's call, MB.7's review), so their hover fills meet. Muted ink; on hover the highlight, `$fill-highlight` (the owner's call of 2026-10-20), and
   the body ink; the current tab keeps that fill, weight 500, the accent icon,
   and a `$rule-heavy` accent rule along its foot, one pixel below the row so
   it covers the row's hairline. The focus ring is the shared `focus-ring`,

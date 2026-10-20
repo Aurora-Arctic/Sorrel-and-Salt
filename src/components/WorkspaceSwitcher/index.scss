@@ -40,8 +40,8 @@ $switcher-list-min-width: 15rem;
     }
 
     &:hover {
-      border-color: $hairline;
-      background-color: $fill-quiet;
+      border-color: $edge-highlight;
+      background-color: $fill-highlight;
     }
 
     // Open is told by the edge going from a hairline to the body ink, a

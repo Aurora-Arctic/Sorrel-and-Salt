@@ -149,12 +149,13 @@ it renders.
   content.
 - **The pills** (MB.7, drawn in its design review; they were a larger
   segmented control until then): one rounded track, `2.25rem` tall, in the
-  quiet fill (`$fill-quiet`) edged by a `$hairline`, with `0.125rem` of padding round the pills; each pill the caption
+  highlight (`$fill-highlight`, the accent 12% over what is behind) edged by
+  `$edge-highlight` (the owner's call of 2026-10-20: the accent's wash wherever the grey one was), with `0.125rem` of padding round the pills; each pill the caption
   size at weight 500 with `space(3)` either side of its label, in the muted
   ink, turning to the body ink on hover; the open tab a pill, the accent 18%
   into the card, edged 1px in the accent, its label in the body ink. The
   fill alone sits under WCAG 1.4.11's 3:1 against the track, so the edge
-  carries it. The two mixes are local to the stylesheet;
+  carries it. The pill's mix is local to the stylesheet;
   `tests/scss/tokens.test.ts` holds the open label and edge, and the muted
   labels on the track, to their floors in both themes. The pill has no shadow
   now. The row clears the list's marker, indent and item margins itself.

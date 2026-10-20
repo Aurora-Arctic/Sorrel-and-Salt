@@ -8,8 +8,8 @@
 // `$shell-phone-width` the sections that fit are tabs filling the context
 // row's height and the rest go behind More; at or under it the row becomes a bar along the window's foot.
 
-// The row's own ground and the current tab's: a quiet fill, the same one a
-// hover takes, with the heavy accent rule telling the current tab, so
+// The current tab's ground: the highlight, the accent's wash, the same one a
+// hover takes (the owner's call of 2026-10-20, M8.17), with the heavy accent rule telling the current tab, so
 // hue is never the only sign.
 
 .section-nav {
@@ -60,7 +60,7 @@
   @include theme-transition(background-color, color);
 
   &:hover {
-    background-color: $fill-quiet;
+    background-color: $fill-highlight;
     color: $text-primary;
   }
 
@@ -72,7 +72,7 @@
   }
 
   &[aria-current='page'] {
-    background-color: $fill-quiet;
+    background-color: $fill-highlight;
     color: $text-primary;
     font-weight: 500;
   }
@@ -322,11 +322,11 @@
   .section-nav .section-nav__list > li > .section-nav__link[aria-current='page'] {
     background-color: transparent;
 
-    // The wash still answers a hover and marks More open, as on any tab:
+    // The highlight still answers a hover and marks More open, as on any tab:
     // the rule above outranks the tab's own hover, so it is said again here.
     &:hover,
     &[aria-expanded='true'] {
-      background-color: $fill-quiet;
+      background-color: $fill-highlight;
     }
   }
 

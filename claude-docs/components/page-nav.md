@@ -53,8 +53,8 @@ The account page's sections are panels; the coven index's are plain
 ## Styling
 
 - A column in both layouts; each entry a row padded `space(1) space(4)`, square,
-  not control-tall, with no underline, `$text-muted` ink, and `$text-primary` on a `$fill-quiet`
-  wash on hover. The focus ring is the shared mixin.
+  not control-tall, with no underline, `$text-muted` ink, and `$text-primary` on the highlight,
+  `$fill-highlight`, on hover (the owner's call of 2026-10-20). The focus ring is the shared mixin.
 - On a wide screen the column sits left of the page, so the text is
   right-aligned and the current bar (`$rule-heavy` wide, straight, accent) is
   on the right edge, facing the page. On a phone the text is left-aligned and
