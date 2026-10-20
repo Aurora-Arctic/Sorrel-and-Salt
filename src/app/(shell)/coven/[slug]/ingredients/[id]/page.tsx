@@ -46,7 +46,7 @@ const ANNOTATED_TIP =
   'This page is an annotated version of the compendium’s page. The link opens the original version.';
 const SAME_TIP = 'This is the compendium entry that names the same thing. Compare them here.';
 const SIMILAR_TIP =
-  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. If one of them is the same thing, Link to Selected moves your jars and spell layers to it and removes this entry.';
+  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. Any of them might be the same thing. This page does not change your entry; the links open the compendium\u2019s pages.';
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -241,17 +241,11 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
             ? {
                 tip: SIMILAR_TIP,
                 entries: matches.entries.map((match) => ({
-                  id: match.id,
                   title: pageTitleOf(match),
                   href: publicAddress(match.slug),
-                  // The coven's page for the compendium entry, which a convert lands on.
-                  thenHref: `/coven/${workspace.slug}/ingredients/${match.id}` as Route,
                 })),
                 total: matches.total,
                 allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
-                convert: matches.canConvert
-                  ? { workspaceId: workspace.id, localId: entry.id }
-                  : undefined,
               }
             : undefined
         }

@@ -14,7 +14,7 @@ import { type IngredientFixture, type Overrides, makeIngredient } from '../../..
 // per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
-const none = { kind: 'none', entries: [], total: 0, canConvert: false };
+const none = { kind: 'none', entries: [], total: 0 };
 
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
@@ -54,7 +54,6 @@ describe('compendiumMatchesOf', () => {
     expect(found.kind).toBe('same');
     expect(found.entries.map(({ id }) => id)).toEqual([same]);
     expect(found.total).toBe(1);
-    expect(found.canConvert).toBe(false);
     expect(Object.keys(found.entries[0] ?? {}).sort()).toEqual([
       'canonicalName',
       'id',
@@ -63,7 +62,7 @@ describe('compendiumMatchesOf', () => {
     ]);
   });
 
-  it('gives an entry with no formal name each exact label match, and a member the right to convert', async () => {
+  it('gives an entry with no formal name each exact label match', async () => {
     const ids = [
       await add({ name: "Fixture Cat's Claw", canonicalName: 'Fixtura b' }),
       await add({ name: "fixture cat's claw", canonicalName: 'Fixtura a' }),
@@ -76,17 +75,16 @@ describe('compendiumMatchesOf', () => {
     expect(found.entries.map(({ id }) => id).sort()).toEqual([...ids].sort());
     expect(found.entries.map(({ id }) => id)).not.toContain(other);
     expect(found.total).toBe(2);
-    expect(found.canConvert).toBe(true);
   });
 
-  it('lets a viewer read the matches but not convert, where a member may', async () => {
+  it('gives a viewer the same matches as a member', async () => {
     await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
     const local = await add({ name: 'Fixturewort', workspaceId: WORKSPACE_W_ID });
 
-    expect((await replacedBy(local, WORKSPACE_W_ID, B)).canConvert).toBe(true);
+    const member = await replacedBy(local, WORKSPACE_W_ID, B);
     const viewer = await replacedBy(local, WORKSPACE_W_ID, C);
     expect(viewer.total).toBe(1);
-    expect(viewer.canConvert).toBe(false);
+    expect(viewer).toEqual(member);
   });
 
   it('gives nothing for a compendium entry, whoever asks', async () => {
