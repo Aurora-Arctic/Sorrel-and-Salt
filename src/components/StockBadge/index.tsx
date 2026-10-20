@@ -2,14 +2,15 @@
 
 import { type ReactElement, useId } from 'react';
 import IconTip from '../IconTip';
-import { stockState } from './stock-state';
-import type { StockBadgeProps } from './types';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { stockState, worstStock } from './stock-state';
+import type { CardStockBadgeProps, StockBadgeProps } from './types';
 import './index.scss';
 
-// A jar's Low Stock or Out of Stock badge (M9.8, story 23): per jar, in the
-// jar-line slot the ingredient card leaves, so a card holding two forms can
-// flag one and not the other. Nothing to flag, nothing rendered: a consumer
-// renders it every time and checks nothing.
+// A jar's Low Stock or Out of Stock badge (M9.8, story 23), in two shapes over one
+// drawing: `StockBadge` for one jar, on each form line of the Quick Look window, and
+// `CardStockBadge` for a coven card, one badge for the worst of its jars (M9.9).
+// Nothing to flag, nothing rendered: a consumer renders it every time and checks nothing.
 //
 // Each state is its drawing alone in a small square (the owner's call,
 // 2026-10-20), so neither can rest on colour: Low is a double chevron on the
@@ -54,33 +55,59 @@ const Drawing = ({ out }: { out: boolean }): ReactElement => (
 const withUnit = (amount: number, unit: string | null | undefined): string =>
   unit ? `${amount} ${unit}` : `${amount}`;
 
-export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
+/**
+ * The drawn badge both exports share: a button whose only job is its tip, named
+ * for its state, and described by `description` where it says more than the name.
+ */
+const Badge = ({
+  out,
+  tip,
+  description,
+}: {
+  out: boolean;
+  tip: string;
+  description?: string;
+}): ReactElement => {
   const descriptionId = useId();
-  const state = stockState(quantity, threshold);
-  if (state === 'ok') return null;
-
-  const out = state === 'out';
-  // `low` means a quantity and a threshold above 0 both exist.
-  const tip = out ? 'Out of Stock' : `Low Stock at ${withUnit(threshold as number, unit)} or less`;
-  const name = out ? 'Out of Stock' : 'Low Stock';
-
   return (
     <IconTip tip={tip}>
       <button
         type="button"
         className={`badge stock-badge ${out ? 'badge--out-of-stock stock-badge--out' : 'badge--low-stock stock-badge--low'}`}
-        aria-label={name}
-        aria-describedby={out ? undefined : descriptionId}
+        aria-label={out ? 'Out of Stock' : 'Low Stock'}
+        aria-describedby={description ? descriptionId : undefined}
       >
         <Drawing out={out} />
       </button>
-      {out ? null : (
+      {description && (
         <span id={descriptionId} className="visually-hidden">
-          {tip}
+          {description}
         </span>
       )}
     </IconTip>
   );
 };
 
-export { stockState };
+export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
+  const state = stockState(quantity, threshold);
+  if (state === 'ok') return null;
+  if (state === 'out') return <Badge out tip="Out of Stock" />;
+  // `low` means a quantity and a threshold above 0 both exist.
+  const tip = `Low Stock at ${withUnit(threshold as number, unit)} or less`;
+  return <Badge out={false} tip={tip} description={tip} />;
+};
+
+/**
+ * A coven card's one badge (M9.9): the worst state across its jars, the tip and
+ * the description naming the forms in it, "Low Stock: Flower". Nothing to flag,
+ * nothing rendered, as for one jar.
+ */
+export const CardStockBadge = ({ jars }: CardStockBadgeProps): ReactElement | null => {
+  const worst = worstStock(jars);
+  if (!worst) return null;
+  const out = worst.state === 'out';
+  const words = `${out ? 'Out of Stock' : 'Low Stock'}: ${worst.forms.map(formLabel).join(', ')}`;
+  return <Badge out={out} tip={words} description={words} />;
+};
+
+export { stockState, worstStock };
