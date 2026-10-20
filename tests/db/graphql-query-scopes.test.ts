@@ -384,6 +384,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   updateStock: write(
     `mutation { updateStock(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: {}) { id } }`,
   ),
+  saveStock: write(
+    `mutation { saveStock(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}", input: { create: [], update: [], delete: [] }) { id } }`,
+  ),
   deleteStock: write(
     `mutation { deleteStock(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
   ),
@@ -575,6 +578,7 @@ const OPEN_WRITES = [
   // The coven's `inventory: update` decides, which the stock service checks (M9.4).
   'addIngredientToWorkspace',
   'updateStock',
+  'saveStock',
   'deleteStock',
   'addCupboardEntry',
   'annotateCupboardEntry',
