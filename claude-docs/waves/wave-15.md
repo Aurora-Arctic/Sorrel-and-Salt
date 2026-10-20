@@ -4,6 +4,8 @@ Every other wave is complete first. This one is mostly verification, but not pur
 
 **M15.5 follows M15.4**, minted on 2026-10-19 on the owner's call: tooltips on the admin Users page's and a coven's Members page's roles, saying what each role may do. The pages' own waves are closed, and it lands before M11.8, whose axe sweep scans the open tooltips. It is a prerequisite for nothing.
 
+**M15.6 and M15.7 follow MB.149**, minted on 2026-10-20 on the owner's call from a profile of a production build with the processor slowed 6×. M15.6 swaps the theme toggle's hundreds of colour fades for one cross-fade, and M15.7 makes taps, dialogs and search respond sooner on a slow device. Both change code, so they precede M11.11's verification passes, M15.6 first because it is the larger freeze. Neither depends on the wave, so either can be pulled earlier.
+
 **MW.15 closes the project.** It is the one close-out pass that survives, since MB.31 retired MW.3 through MW.14 and MW.1 and MW.2 already ran, and it is sized at 3h because it carries the v1 close-out M11.15 held ([`tasks/mw.md`](../tasks/mw.md)).
 
 **M7.A.1 is unscheduled by design**: trigger-based, not wave-based, and a prerequisite for nothing; its trigger is in [`tasks/m7a.md`](../tasks/m7a.md). It sits on this wave's milestone, last in its row, because that is the latest point it could still fire before v1, and every open task needs a milestone and a place on the board. The trigger, not the milestone or the position, is what starts it.
