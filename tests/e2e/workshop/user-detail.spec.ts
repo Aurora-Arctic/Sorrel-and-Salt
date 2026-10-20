@@ -132,3 +132,61 @@ for (const width of WIDTHS) {
     });
   }
 }
+
+// As the owner reviews it: the story in Ladle's own page rather than its bare
+// preview, where an iframed story (`meta.iframed`) is drawn into an iframe by
+// script running in the page around it. The callout must find its dialog
+// across that boundary, at the widths a review is held at. Not at a phone's:
+// there Ladle's page gives the frame a strip above its story list, too short
+// to press in, and the bare preview above stands for the phone.
+const SIZES = [
+  [1512, 982],
+  [1440, 900],
+  [1280, 800],
+  [1024, 800],
+  [768, 900],
+] as const;
+
+for (const [width, height] of SIZES) {
+  for (const { name, control, confirm } of CONTROLS) {
+    test(`${name} refused in Ladle's frame at ${width}×${height}: the callout inside the dialog, its end under the control's`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/?story=admin--user-detail--in-a-modal&theme=dark');
+      const frame = page.frameLocator('iframe').first();
+      const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });
+      await expect(dialog).toBeVisible();
+      const button = dialog.getByRole('button', { name: control, exact: true });
+      await button.click();
+      await confirm(dialog);
+
+      const alert = frame.getByRole('alert');
+      await expect(alert).toHaveClass(/is-placed/);
+      const at = (await button.boundingBox())!;
+      const under = (await alert.boundingBox())!;
+      const box = (await dialog.boundingBox())!;
+      test.info().annotations.push({
+        type: 'measured',
+        description: JSON.stringify({
+          width,
+          name,
+          calloutRight: under.x + under.width,
+          buttonRight: at.x + at.width,
+          dialogRight: box.x + box.width,
+          calloutLeft: under.x,
+          dialogLeft: box.x,
+        }),
+      });
+      if (SHOTS && name === 'Change Role') {
+        await page.screenshot({ path: `${SHOTS}/frame-userdetail-${width}x${height}.png` });
+      }
+
+      expect(under.x).toBeGreaterThanOrEqual(box.x);
+      expect(under.x + under.width).toBeLessThanOrEqual(box.x + box.width);
+      // The button stands at the dialog's right, so its start would run past
+      // the dialog's edge at every width: its end stands under the button's.
+      expect(Math.abs(under.x + under.width - (at.x + at.width))).toBeLessThanOrEqual(1);
+    });
+  }
+}

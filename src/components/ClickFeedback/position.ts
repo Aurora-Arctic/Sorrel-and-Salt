@@ -31,10 +31,14 @@ const MAX_REM = 20;
  * `data-tip-boundary`, as a tip's is, or the `<dialog>` the control sits in,
  * else the screen. A dialog, since a callout running past its edge reads as
  * loose from it (the owner's call, 2026-10-20); the callout is fixed, so the
- * dialog clips nothing of it, and the box is a measure only.
+ * dialog clips nothing of it, and the box is a measure only. Asked of the node
+ * rather than `instanceof Element`: a story Ladle draws into an iframe runs its
+ * script in the page around it, whose `Element` the frame's nodes are not.
  */
-const boxOf = (reference: unknown): Element | null =>
-  reference instanceof Element ? reference.closest('[data-tip-boundary], dialog') : null;
+const boxOf = (reference: unknown): Element | null => {
+  const node = reference as Element | null;
+  return typeof node?.closest === 'function' ? node.closest('[data-tip-boundary], dialog') : null;
+};
 
 const edges = ({ elements }: { elements: { reference: unknown } }) => {
   const box = boxOf(elements.reference);
@@ -54,8 +58,12 @@ const narrow: Middleware = {
   fn: ({ elements }) => {
     const node = elements.floating;
     const box = boxOf(elements.reference);
-    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const viewport = document.documentElement.clientWidth;
+    // The control's own document and window, which in an iframed story are
+    // the frame's rather than the script's.
+    const doc = (elements.reference as Element).ownerDocument;
+    const view = doc.defaultView ?? window;
+    const rem = parseFloat(view.getComputedStyle(doc.documentElement).fontSize) || 16;
+    const viewport = doc.documentElement.clientWidth;
     const { left, right } = box ? box.getBoundingClientRect() : { left: 0, right: viewport };
     const widest = Math.min(MAX_REM * rem, viewport - 2 * EDGE_PX);
     // From the page, not `rects`: a fixed callout's rects are measured from
