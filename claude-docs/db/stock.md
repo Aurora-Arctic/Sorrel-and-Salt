@@ -253,7 +253,9 @@ stock.
   threshold, `createStock` writes 3 for a count unit, and 10 g or 15 ml
   converted into the jar's own unit with `unitConvert` for a weight or a
   volume: 10 g is 0.01 in kilograms and 15 ml is 3 in teaspoons. A threshold the
-  input states, `0` included, is kept. A jar with no unit gets none.
+  input states, `0` included, is kept. A jar with no unit gets none. The rule is
+  `defaultThreshold` in `validation/default-threshold.ts`, in `validation/` (the seed may reach only that, `schema/` and the index), so
+  the demo seed (which may not import a service) reads the same one.
   `updateStock` applies it once, to a jar that had no unit and gets one while its
   threshold is empty (M9.9); a threshold the jar holds or the input states, `0`
   included, is kept, and a jar that already had a unit gets none.

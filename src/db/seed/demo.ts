@@ -2,6 +2,9 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissing, insertMissingBy, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
+import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
+import { type Unit, dimensionOf } from '../../modules/ingredients/schema/units';
+import { defaultThreshold } from '../../modules/ingredients/validation/default-threshold';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
@@ -29,8 +32,9 @@ import type {
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
 // It adds W's cupboard (three compendium entries held, two of them annotated),
-// W's own ingredients, so the jars mix both kinds, and one custom one-off layer
-// with no `ingredient_id` (claude-docs/db/demo-scenario.md, "The demo scenario").
+// W's own ingredients, so the jars mix both kinds, one custom one-off layer
+// with no `ingredient_id`, and W's stock: seven jars of what it holds
+// (claude-docs/db/demo-scenario.md, "The demo scenario").
 // Writes go through the handle `seed()` was given — see minimal.ts.
 
 /** Story 29's one-field stub: a thing no naming system names, so `none`. */
@@ -92,12 +96,15 @@ export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
 /** Everything W has of its own. Seeded into W, and invisible from X. */
 export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [HEARTH_ASH, CATS_CLAW];
 
+/** A layer's ingredient that names an entry, in either tier: all but the custom one-off. */
+type NamedIngredient = Extract<SeedLayerIngredient, { entry: unknown }>;
+
 /**
  * A compendium entry, `standard` or the curated list, looked up at module load
  * so a layer naming a missing entry fails on import rather than at a foreign
  * key later.
  */
-function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredient {
+function fromCompendium(name: string, canonicalName?: string): NamedIngredient {
   const entry = [...COMPENDIUM_INGREDIENTS, ...COMPENDIUM.flatMap((shard) => shard.entries)].find(
     (candidate) =>
       candidate.name === name && (candidate.canonicalName ?? undefined) === canonicalName,
@@ -111,9 +118,93 @@ function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredie
 
   return { tier: 'compendium', entry };
 }
-function fromWorkspace(entry: SeedWorkspaceIngredient): SeedLayerIngredient {
+function fromWorkspace(entry: SeedWorkspaceIngredient): NamedIngredient {
   return { tier: 'workspace', entry };
 }
+
+/**
+ * One jar of stock W holds: the entry by tier and identity, the form it holds
+ * (the form's text, matched without case), and what the row says of it. A
+ * `unit` carries its dimension, and a threshold left out is the dimension's
+ * default, as `createStock` fills it (claude-docs/db/demo-scenario.md,
+ * "W's stock").
+ */
+export interface SeedStock {
+  id: string;
+  ingredient: NamedIngredient;
+  form: string;
+  quantity?: string;
+  unit?: Unit;
+  lowStockThreshold?: string;
+  source?: string;
+  acquiredDate?: string;
+}
+
+/**
+ * W's stock, fixed ids in a block of their own (`…0003-…`). Every compendium
+ * entry named here is in `WORKSPACE_W_CUPBOARD`: a jar on a compendium
+ * variant needs its entry's cupboard row (M12.13, decision 11).
+ */
+export const DEMO_STOCK: SeedStock[] = [
+  // Own entries.
+  {
+    id: '00000000-0000-0000-0003-000000000001',
+    ingredient: fromWorkspace(HEARTH_ASH),
+    form: 'ash',
+    quantity: '250.000',
+    unit: 'g',
+    source: 'Swept from the grate after the Yule fire',
+    acquiredDate: '2025-12-22',
+  },
+  // Held and never weighed: no quantity and no unit, so no threshold either.
+  {
+    id: '00000000-0000-0000-0003-000000000002',
+    ingredient: fromWorkspace(CATS_CLAW),
+    form: 'bark',
+  },
+  // Rosemary in two forms: two jar lines on one card, in two dimensions.
+  {
+    id: '00000000-0000-0000-0003-000000000003',
+    ingredient: fromCompendium('Rosemary', 'Salvia rosmarinus'),
+    form: 'Herb',
+    quantity: '60.000',
+    unit: 'g',
+    source: 'The bush by the back door',
+  },
+  {
+    id: '00000000-0000-0000-0003-000000000004',
+    ingredient: fromCompendium('Rosemary', 'Salvia rosmarinus'),
+    form: 'Oil',
+    quantity: '45.000',
+    unit: 'ml',
+  },
+  // Below the default 10 g, so the Low badge shows.
+  {
+    id: '00000000-0000-0000-0003-000000000005',
+    ingredient: fromCompendium('German Chamomile', 'Matricaria chamomilla'),
+    form: 'Flower',
+    quantity: '8.000',
+    unit: 'g',
+  },
+  // A set threshold, 12 drops, where the default would be 3.
+  {
+    id: '00000000-0000-0000-0003-000000000006',
+    ingredient: fromCompendium('German Chamomile', 'Matricaria chamomilla'),
+    form: 'Oil',
+    quantity: '20.000',
+    unit: 'drop',
+    lowStockThreshold: '12.000',
+  },
+  // Counted rather than weighed.
+  {
+    id: '00000000-0000-0000-0003-000000000007',
+    ingredient: fromCompendium('Ginger', 'Zingiber officinale'),
+    form: 'Root',
+    quantity: '6.000',
+    unit: 'piece',
+    acquiredDate: '2026-09-30',
+  },
+];
 
 /** The jars, fixed ids in a block of their own (`…0002-…`). */
 export const DEMO_SPELLS: SeedSpell[] = [
@@ -235,6 +326,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     const ingredientIds = await ingredientIdByIdentity(tx);
     await insertMissingLayers(tx, ingredientIds, await variantIdByIngredient(tx));
     await insertMissingSpellCategories(tx, await categoryIdByName(tx));
+    await insertMissingStock(tx, ingredientIds);
   });
 }
 
@@ -366,6 +458,67 @@ async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, s
     if (!held || row.form.toLowerCase() < held.form.toLowerCase()) first.set(row.ingredientId, row);
   }
   return new Map([...first].map(([ingredientId, row]) => [ingredientId, row.id]));
+}
+
+/**
+ * W's jars, keyed by the coven and the form, ignoring `deleted_at` so a jar the
+ * coven threw out is not put back and one it edited is not written over. Keyed
+ * on the pair the live-unique index guards (`inventory_items_workspace_id_variant_id_unique`)
+ * rather than on the fixed id, so a jar the coven added itself for the same
+ * form is met and not collided with. The threshold is the dimension's default
+ * unless the jar sets one, from the rule `createStock` reads.
+ */
+async function insertMissingStock(
+  tx: SeedTransaction,
+  ingredientIds: Map<string, string>,
+): Promise<void> {
+  const variants = await tx
+    .select({
+      id: ingredientVariants.id,
+      ingredientId: ingredientVariants.ingredientId,
+      form: ingredientVariants.form,
+    })
+    .from(ingredientVariants)
+    .where(isNull(ingredientVariants.deletedAt));
+  const variantIdByForm = new Map(
+    variants.map((row) => [`${row.ingredientId}|${row.form.toLowerCase()}`, row.id]),
+  );
+
+  const wanted = DEMO_STOCK.map((stock) => {
+    const ingredientId = ingredientIdFor(stock.ingredient, ingredientIds);
+    return {
+      stock,
+      workspaceId: WORKSPACE_W_ID,
+      ingredientId,
+      variantId: requireFrom(
+        variantIdByForm,
+        `${ingredientId}|${stock.form.toLowerCase()}`,
+        () =>
+          `A demo jar names "${stock.ingredient.entry.name}" in "${stock.form}", which has no such form.`,
+      ),
+    };
+  });
+
+  await insertMissingBy(tx, inventoryItems, wanted, {
+    columns: ['workspaceId', 'variantId'],
+    where: eq(inventoryItems.workspaceId, WORKSPACE_W_ID),
+    toRow: ({ stock, workspaceId, ingredientId, variantId }) => {
+      const unit = stock.unit ?? null;
+      const threshold = stock.lowStockThreshold ?? defaultThreshold(unit);
+      return {
+        id: stock.id,
+        workspaceId,
+        ingredientId,
+        variantId,
+        quantityOnHand: stock.quantity ?? null,
+        unit,
+        unitDimension: unit === null ? null : dimensionOf(unit),
+        lowStockThreshold: threshold === null ? null : String(threshold),
+        source: stock.source ?? null,
+        acquiredDate: stock.acquiredDate ?? null,
+      };
+    },
+  });
 }
 
 /**

@@ -14,8 +14,8 @@ import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { inventoryItems } from '../schema/inventory-items';
 import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
-import { type Unit, dimensionOf } from '../schema/units';
-import { unitConvert } from '../units/convert';
+import { dimensionOf } from '../schema/units';
+import { defaultThreshold } from '../validation/default-threshold';
 import { StockInput } from '../validation/stock';
 import { heldCompendiumEntry } from './cupboard-entries';
 import type { StockKey, StockValues } from '../types';
@@ -256,20 +256,4 @@ function stockColumns(input: StockInput) {
     source: input.source,
     acquiredDate: input.acquiredDate,
   };
-}
-
-/**
- * §5's default low-stock threshold in `unit`: 3 of a count unit, and 10 g or
- * 15 ml converted into a weight or a volume — none without a unit. Converted
- * rather than written per unit, so a unit added to the vocabulary gets one.
- */
-function defaultThreshold(unit: Unit | null): number | null {
-  if (unit === null) return null;
-  const dimension = dimensionOf(unit);
-  if (dimension === 'count') return 3;
-  const converted =
-    dimension === 'weight' ? unitConvert(10, 'g', unit) : unitConvert(15, 'ml', unit);
-  // Within one dimension the converter has nothing to refuse.
-  if (!converted.ok) throw new Error(`no default threshold in ${unit}: ${converted.reason}`);
-  return converted.value;
 }
