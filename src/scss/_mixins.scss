@@ -865,6 +865,7 @@
   --shadow-lifted: 0 8px 20px #{$shadow-dark};
   --surface-card-hover: #{$soot-lifted};
   --dismiss-ink: #{$dismiss-ink-dark};
+  --card-more-ink: #{$card-more-ink-dark};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -891,6 +892,7 @@
   --shadow-lifted: 0 8px 20px #{$shadow-light};
   --surface-card-hover: #{$parchment-lifted};
   --dismiss-ink: var(--text-primary);
+  --card-more-ink: #{$iron-gall};
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 

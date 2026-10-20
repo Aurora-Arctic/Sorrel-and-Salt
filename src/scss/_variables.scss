@@ -89,6 +89,10 @@ $shadow-light: rgba(35, 32, 26, 0.18);
 // over the card where the body text is chalk, as design F has it (M12.31).
 $dismiss-ink-dark: #fff;
 
+// A coven card's More (the three dots) in the dark theme, pure white, the owner's call
+// (2026-10-20); the light theme draws them in $iron-gall, its body text.
+$card-more-ink-dark: #fff;
+
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
@@ -369,6 +373,7 @@ $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
 $surface-card-hover: var(--surface-card-hover);
 $dismiss-ink: var(--dismiss-ink);
+$card-more-ink: var(--card-more-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks
