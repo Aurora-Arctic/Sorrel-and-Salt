@@ -661,7 +661,6 @@ const IngredientForm = ({
                       <TextField<IngredientFormValues>
                         name="canonicalName"
                         label="Formal Name"
-                        hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
                         placeholder="Add formal name"
                         note={
                           kind === NAMELESS_KIND
@@ -693,7 +692,6 @@ const IngredientForm = ({
                         }}
                         legend="Folk Names"
                         entry="Folk Name"
-                        hint="Other names it goes by. A search finds it by any of them."
                         placeholder="Add a folk name"
                       />
                     </CollapsibleSection>
@@ -713,16 +711,11 @@ const IngredientForm = ({
                       <TextField<IngredientFormValues>
                         name="safetyNotes"
                         label="Safety Notes"
-                        hint="Toxicity, allergies, and anything to take care over when handling or burning it."
                         placeholder="Add safety notes"
                         multiline
                       />
                       {/* Its own flag: a toxic form says so on its own (M11.21). */}
-                      <ToggleField
-                        name="toxic"
-                        label="Toxic"
-                        hint="On if any part of it is poisonous."
-                      />
+                      <ToggleField name="toxic" label="Toxic" />
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Correspondences"
@@ -755,7 +748,6 @@ const IngredientForm = ({
                         pickOnly={compendium}
                         legend="Celestial Bodies"
                         entry="Celestial Body"
-                        hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
                         placeholder="Add a body"
                       />
                       <LookupListField
@@ -766,7 +758,6 @@ const IngredientForm = ({
                         pickOnly={compendium}
                         legend="Zodiac Signs"
                         entry="Zodiac Sign"
-                        hint="The signs it answers to."
                         placeholder="Add a sign"
                       />
                       <ListField
@@ -785,7 +776,6 @@ const IngredientForm = ({
                         pickOnly={compendium}
                         legend="Deities"
                         entry="Deity"
-                        hint="The gods and spirits it is sacred to."
                         placeholder="Add a deity"
                       />
                     </CollapsibleSection>
@@ -808,7 +798,6 @@ const IngredientForm = ({
                         name="substitutes"
                         legend="Substitute Ingredients"
                         entry="Substitute Ingredient"
-                        hint="Other ingredients to use in its place when this one is not to hand."
                         placeholder="Add a substitute"
                       />
                       {/* Which form of each linked ingredient, when it comes in several (MB.215). */}

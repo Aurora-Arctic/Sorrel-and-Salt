@@ -86,8 +86,8 @@ and Sources (references). Their headings are `h4`s,
 a level beneath the Variants `h3`, and each folds as the ingredient's do
 (["Sections"](#sections)).
 
-**Every field shows a short action while it is empty**, and what it is for
-sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
+**Every field shows a short action while it is empty**, and what it is for,
+where its label does not say it, sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
 "Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
 panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
@@ -110,11 +110,14 @@ field shows none: the browser draws its own format there.
   still refuses a save that ignores it.
 
 - **A field's hint is an info tip beside its label**, [`InfoTip`](info-tip.md),
-  not a line beneath it, on every field whose meaning is not plain from its
-  label: name, classification, formal name, form, folk names, celestial bodies,
-  zodiac signs, colours, deities, substitute ingredients, categories and
-  safety notes.
-  The colours tip says each is a correspondence, not the colour the thing is.
+  not a line beneath it, kept only where the label cannot carry a rule, a
+  flow or a format with a trap ([`info-tip.md`](info-tip.md), "When a field
+  gets a tip", the owner's call, 2026-10-20): classification (what Unknown and
+  None mean), colours (each is a correspondence, not the colour the thing
+  is), the Variants list, References and a reference's locator. The rest,
+  which restated their labels, went: name, formal name, form, folk names,
+  celestial bodies, zodiac signs, deities, substitute ingredients, categories,
+  safety notes and both Toxic toggles.
   How a tip opens and is read is [`info-tip.md`](info-tip.md#behaviour). A field's `note` is the one line kept beneath a label, for a state
   that must stay in view: only the formal name's reason for being shut uses
   it.
@@ -933,9 +936,9 @@ variant's fields but its Form has a **Copy From Ingredient** icon button
 Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
 References. The ingredient's own fields have none, and nor has a form's
 Toxic toggle: its flag is its own and never the ingredient's (M11.21).
-Each Toxic toggle carries a hint behind its info tip, as every other field
-does: the ingredient's is on when any part of it is poisonous, and a form's
-when that form is.
+Neither Toxic toggle carries a hint (2026-10-20): the ingredient's is on when
+any part of it is poisonous, and a form's when that form is, and the label
+says as much.
 
 - **Where it sits.** A small quiet button, `.btn--small.btn--quiet`, at the
   right end of the field's label row or legend, after its tip, through the

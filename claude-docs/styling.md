@@ -746,7 +746,10 @@ The class layer every form is built from, in `_primitives.scss`:
   does not say why reads as broken. `IngredientForm` was the first form built
   this way, and the Reason fields of the user list's confirmations and the
   admin invite form took it at MB.115's review; any other form adopts it at
-  its own design review.
+  its own design review. Not every field gets one: a tip earns its place
+  only by stating a rule, a flow or a format with a trap
+  ([`components/info-tip.md`](components/info-tip.md), "When a field gets a
+  tip").
 - **A radio group takes the form's gap, not a margin of its own.**
   `.fieldset.radio-group` (`RadioGroupField`) has a `space(5)` block margin
   that sets it apart from the text around it where nothing else spaces it, as

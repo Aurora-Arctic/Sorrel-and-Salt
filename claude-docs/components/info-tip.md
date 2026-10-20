@@ -71,6 +71,25 @@ description, and the button reads it as its own. A screen reader user never
 has to open the tip to hear the hint. `role="tooltip"` names what it is when
 it is open.
 
+## When a field gets a tip
+
+The owner's rule (2026-10-20), after forms grew an ⓘ on almost every field:
+
+- **Keep a tip only when it states a rule, a flow, or a format with a
+  trap**, something the label cannot carry: what a classification of None
+  does to the formal name, that the Reason lands in the audit record, that
+  a searched value's suggestions match its description.
+- **Remove a tip that restates its label.** "The signs it answers to" beside
+  Zodiac Signs adds nothing but a stop.
+- **A tip that only gives a format becomes the placeholder**, one or two
+  words of example (`Shelley, Mary`, `2nd ed.`), rather than a tip.
+- **Many tips about one way of writing become one**, at the head of the
+  group: the reference panel's thirteen became its How to Cite tip.
+
+A field with no hint names no hint id in its `aria-describedby`
+(`fieldDescription`, [`field.md`](field.md)), so removing one leaves nothing
+dangling.
+
 ## Placement
 
 **Every tip positions itself as it opens and stays on screen** (M8.14,
