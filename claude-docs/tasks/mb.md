@@ -4047,7 +4047,7 @@ _Acceptance criteria:_
 - Owner-only controls read as such, and a viewer's page shows no control it cannot use
 - The acceptance page reads correctly signed in, signed out, and for an expired or used link, or an invitation into a deleted coven
 
-**MB.120 — Design review: the public compendium and shared ingredient components** · 3h
+**MB.120 — Design review: the public compendium and shared ingredient components** · 10h
 
 _Story:_ As a visitor, I want the public compendium to look finished and read well on any device, so that it earns trust as a reference.
 
