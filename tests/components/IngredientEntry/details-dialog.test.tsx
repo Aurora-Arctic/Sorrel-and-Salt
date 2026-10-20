@@ -45,17 +45,14 @@ describe('DetailsDialog', () => {
     );
 
     expect(within(dialog()).getByText('A summary')).toBeInTheDocument();
-    expect(within(dialog()).getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
-      'href',
-      PAGE,
-    );
+    expect(within(dialog()).getByRole('link', { name: 'View Page' })).toHaveAttribute('href', PAGE);
     // Edit is offered only when the page gives one.
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
     // Only to read, with its links in the header: the body takes its own Tab stop.
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
-  it('puts Open Full Page in the scrolling body, after the summary', () => {
+  it('puts View Page in the scrolling body, after the summary', () => {
     render(
       <DetailsDialog
         closeHref={LIST}
@@ -63,7 +60,7 @@ describe('DetailsDialog', () => {
       />,
     );
 
-    const open = within(dialog()).getByRole('link', { name: 'Open Full Page' });
+    const open = within(dialog()).getByRole('link', { name: 'View Page' });
     const summary = within(dialog()).getByText('A summary');
     // Why it could be elsewhere: the header has a slot for a modal's own controls.
     // It is in the scroll body, with the summary, and after it.
@@ -72,7 +69,7 @@ describe('DetailsDialog', () => {
     expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("goes to the entry's page on a press of Open Full Page, as the site's link does", async () => {
+  it("goes to the entry's page on a press of View Page, as the site's link does", async () => {
     render(
       <Navigating push={router.push}>
         <DetailsDialog
@@ -83,7 +80,7 @@ describe('DetailsDialog', () => {
     );
 
     await act(async () => {
-      fireEvent.click(within(dialog()).getByRole('link', { name: 'Open Full Page' }));
+      fireEvent.click(within(dialog()).getByRole('link', { name: 'View Page' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(PAGE);

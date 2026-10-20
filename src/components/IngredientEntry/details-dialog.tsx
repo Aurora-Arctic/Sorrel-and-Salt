@@ -15,7 +15,7 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // body as a function, which a server page cannot hand down; the summary
 // arrives as the page's rendered children. Its Edit sits in the modal's
 // header, where a modal's own controls go (claude-docs/components/modal.md,
-// "A control in the header"), and Open Full Page in a bar at its foot.
+// "A control in the header"), and View Page in a bar at its foot.
 
 /** The Edit pencil, in the header, or above the summary where the modal has no slot. */
 function DetailsActions({ heading, editAction }: IngredientDetailsOpened): ReactElement | null {
@@ -27,19 +27,20 @@ function DetailsActions({ heading, editAction }: IngredientDetailsOpened): React
 }
 
 /**
- * Open Full Page: a bar fixed to the foot of the modal while the body scrolls
- * under it (the owner's call, 2026-10-20), holding the one green button, full
- * width. Still a link, to the entry's page, with the loading standard's target.
+ * View Page: a bar fixed to the foot of the modal while the body scrolls
+ * under it (the owner's call, 2026-10-20), holding the one green button, large
+ * (the site's full-size `.btn`) and centred. Still a link, to the entry's page,
+ * with the loading standard's target.
  */
-function OpenFullPageBar({ pageHref }: IngredientDetailsOpened): ReactElement {
+function ViewPageBar({ pageHref }: IngredientDetailsOpened): ReactElement {
   return (
     <div className="ingredient-details-foot">
       <PendingLink
-        className="btn btn--solid btn--medium ingredient-details-foot__open"
+        className="btn btn--solid"
         href={pageHref}
         navigationTarget={ingredientLinkTarget(pageHref)}
       >
-        Open Full Page
+        View Page
       </PendingLink>
     </div>
   );
@@ -61,7 +62,7 @@ export default function DetailsDialog({
             <>
               <DetailsActions {...opened} />
               {opened.children}
-              <OpenFullPageBar {...opened} />
+              <ViewPageBar {...opened} />
             </>
           ),
         }

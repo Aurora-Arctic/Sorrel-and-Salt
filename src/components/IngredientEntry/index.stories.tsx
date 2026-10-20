@@ -494,7 +494,7 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // in DetailsDialog, over the list. The workshop's router goes nowhere, so Close,
 // Escape and the links leave Open Again (`Reopenable`), as Modal's stories do.
 
-/** The modal opened over a list, as the page builds it: the entry's head, Open Full Page, the summary. */
+/** The modal opened over a list, as the page builds it: the entry's head, View Page, the summary. */
 const Details = ({
   detail,
   listHref,
@@ -530,7 +530,7 @@ const OWN: IngredientDetail = {
   }),
 };
 
-// From the coven's list, its own entry: Open Full Page and Edit in the header,
+// From the coven's list, its own entry: View Page and Edit in the header,
 // then the safety note with the line naming the form that carries its own, the
 // correspondences, folk names and categories.
 export const DetailsFromCovenList: Story = () => (
@@ -547,7 +547,7 @@ export const DetailsFromCovenList: Story = () => (
 DetailsFromCovenList.meta = { iframed: true };
 
 // From the public compendium, to anyone but a curator: the same summary, and
-// only Open Full Page.
+// only View Page.
 export const DetailsFromCompendium: Story = () => (
   <Details
     detail={FULL}

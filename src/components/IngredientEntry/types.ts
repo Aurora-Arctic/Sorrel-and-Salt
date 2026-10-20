@@ -217,7 +217,7 @@ export interface CupboardActionsProps extends CupboardProps {
 export interface IngredientDetailsOpened {
   /** The entry's name and formal name, under the eyebrow "Ingredient" (`detailsHeading`). */
   heading: ModalHeading;
-  /** The entry's own page, which Open Full Page reaches. */
+  /** The entry's own page, which View Page reaches. */
   pageHref: Route;
   /**
    * An Edit that opens the edit modal over the details, for whoever may edit

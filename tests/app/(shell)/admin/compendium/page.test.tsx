@@ -705,7 +705,7 @@ describe('the /admin/compendium details modal', () => {
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(within(details()).getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+    expect(within(details()).getByRole('link', { name: 'View Page' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${TESTWORT.slug}`,
     );
