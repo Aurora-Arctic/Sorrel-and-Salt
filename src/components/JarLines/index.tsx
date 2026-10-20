@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import EditStock from '../EditStock';
 import FormIcon from '../FormIcon';
 import { StockBadge } from '../StockBadge';
 import type { JarLinesProps } from './types';
@@ -9,8 +8,8 @@ import type { JarLinesProps } from './types';
 // quantity first and the stock badge last, which the card's primitives (`.specimen__stock > ul`)
 // lay out. Plain data in, so the Ingredients page, the workshop's stories and a test all draw
 // the same line. The dot is decorative, with the comma a screen reader hears in its place; the
-// owner's rule is "dot, never a comma". Given `edit`, a member's line ends in Edit Stock (M9.9). claude-docs/components/jar-lines.md.
-export default function JarLines({ jars, edit }: JarLinesProps): ReactElement {
+// owner's rule is "dot, never a comma". claude-docs/components/jar-lines.md.
+export default function JarLines({ jars }: JarLinesProps): ReactElement {
   return (
     <ul>
       {jars.map((jar) => (
@@ -26,12 +25,6 @@ export default function JarLines({ jars, edit }: JarLinesProps): ReactElement {
                 : jar.quantity}
           </span>
           <StockBadge quantity={jar.quantity} threshold={jar.threshold} unit={jar.unit} />
-          {edit && (
-            <EditStock
-              workspaceId={edit.workspaceId}
-              jar={{ ...jar, ingredient: edit.ingredient }}
-            />
-          )}
         </li>
       ))}
     </ul>

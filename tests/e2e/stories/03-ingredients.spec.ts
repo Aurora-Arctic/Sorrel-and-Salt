@@ -323,22 +323,26 @@ test(
       await expect(rowOf(list, 'Selenite')).toHaveCount(0);
     });
 
-    await test.step('the threshold shows on the row, and raising it makes the row low', async () => {
-      await page.goto(listPath(coven));
-      const row = rowOf(list, 'Selenite');
-      const editor = stockEditor(row, 'Selenite', 'Crystal');
-      await editor.open.click();
-      await expect(editor.threshold).toHaveValue('3');
-      await editor.threshold.fill('5');
-      await editor.save.click();
+    // Pending: this step presses the card's pencil. Edit Stock left the cards (the owner's call, 2026-10-20) and comes back in the Quick Look and on the entry page, where it returns.
+    await test.step.skip(
+      'the threshold shows on the row, and raising it makes the row low',
+      async () => {
+        await page.goto(listPath(coven));
+        const row = rowOf(list, 'Selenite');
+        const editor = stockEditor(row, 'Selenite', 'Crystal');
+        await editor.open.click();
+        await expect(editor.threshold).toHaveValue('3');
+        await editor.threshold.fill('5');
+        await editor.save.click();
 
-      await expect(lowBadge(row)).toBeVisible();
-      const [stock] = await withSql(
-        (sql) => sql<{ threshold: number }[]>`
+        await expect(lowBadge(row)).toBeVisible();
+        const [stock] = await withSql(
+          (sql) => sql<{ threshold: number }[]>`
           select low_stock_threshold::float as threshold from inventory_items where id = ${seleniteId}`,
-      );
-      expect(stock.threshold).toBe(5);
-    });
+        );
+        expect(stock.threshold).toBe(5);
+      },
+    );
   },
 );
 
@@ -352,9 +356,18 @@ async function stockOf(id: string) {
   return row;
 }
 
-test(
+// Pending as a whole: every step presses the card's pencil. Edit Stock left the cards (the owner's call, 2026-10-20) and comes back in the Quick Look and on the entry page,
+// and this returns with it, steps unchanged.
+test.fixme(
   'quantity, unit and threshold are edited on the row, by mouse or keyboard, and a failed save rolls back and says so',
-  { tag: '@story-24' },
+  {
+    tag: '@story-24',
+    annotation: {
+      type: 'fixme',
+      description:
+        'Edit Stock leaves the cards; it returns in the Quick Look and on the entry page',
+    },
+  },
   async ({ page }) => {
     const coven = await ownCoven(page, 24);
     const { testwortStock, rosemaryStock } = await withSql(async (sql) => {

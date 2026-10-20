@@ -17,14 +17,3 @@ export const Default: Story = () => (
     ]}
   />
 );
-
-// A member's lines: each ends in Edit Stock.
-export const Editable: Story = () => (
-  <JarLines
-    edit={{ workspaceId: 'workshop', ingredient: 'Testwort' }}
-    jars={[
-      { id: 'a', form: 'dried leaf', icon: 'botanical', quantity: 6, unit: 'g', threshold: 10 },
-      { id: 'd', form: 'resin', icon: null, quantity: null, unit: null, threshold: null },
-    ]}
-  />
-);

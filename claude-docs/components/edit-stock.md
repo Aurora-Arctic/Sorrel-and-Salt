@@ -1,6 +1,6 @@
 # EditStock
 
-`src/components/EditStock/` — the Edit pencil on a jar line and the dialog it opens (M9.9). It changes one jar's quantity, unit and low-stock threshold, saved as `updateStock`.
+`src/components/EditStock/` — the Edit pencil for a jar and the dialog it opens (M9.9). The pencil is **not mounted anywhere yet**: it left the cards' jar lines on the owner's call of 2026-10-20, and returns in the Quick Look window and in a section of the coven's ingredient page, neither built yet. The component, its tests and its story stay for those to mount. It changes one jar's quantity, unit and low-stock threshold, saved as `updateStock`.
 
 ## Props
 
@@ -24,7 +24,7 @@ The body is a react-hook-form form around [`StockFields`](stock-fields.md) and a
 
 ## Who sees it
 
-The button is drawn only for a member who may update stock: the Ingredients page passes `canEditStock` (`rolePermits(role, { inventory: ['update'] })`) down through `CovenCards` and `JarLines`. A viewer sees the jar lines with no pencil. The service refuses a viewer and a non-member regardless ([`../db/stock.md`](../db/stock.md)); hiding the button is courtesy, not the guard.
+The button is for a member who may update stock, `rolePermits(role, { inventory: ['update'] })`, so whoever mounts it asks for that permission and a viewer gets no pencil (the Ingredients page passed it as `canEditStock` while the cards carried the pencil). The service refuses a viewer and a non-member regardless ([`../db/stock.md`](../db/stock.md)); hiding the button is courtesy, not the guard.
 
 ## Tests
 

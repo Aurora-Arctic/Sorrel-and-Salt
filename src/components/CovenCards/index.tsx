@@ -80,7 +80,6 @@ const CovenCards = ({
   position,
   total,
   canAdd,
-  canEditStock,
 }: CovenCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -120,12 +119,7 @@ const CovenCards = ({
             retired={entry.retired}
             actions={actionsOf(entry, workspaceId, covenSlug)}
           >
-            {entry.jars.length > 0 && (
-              <JarLines
-                jars={entry.jars}
-                edit={canEditStock ? { workspaceId, ingredient: entry.label } : undefined}
-              />
-            )}
+            {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
           </IngredientCard>
         ))}
       </IngredientCardList>
