@@ -23,11 +23,11 @@
   margin-block-start: 0;
 }
 
-// The covens stand a step further apart than the entry's other lists, space(2)
-// over the lists' space(1), so each coven's link reads as its own target (the
-// owner's call, 2026-10-20). Through the summary, so it outranks .ingredient-entry__list.
+// The covens stand two steps further apart than the entry's other lists, space(3)
+// (12px) over the lists' space(1), so each coven's link reads as its own target (the
+// owner's calls, 2026-10-20). Through the summary, so it outranks .ingredient-entry__list.
 .ingredient-summary .ingredient-summary__covens {
-  gap: space(2);
+  gap: space(3);
 }
 
 // In Your Covens: each coven's link led by the In Your Cupboard shelf, the name
@@ -51,6 +51,9 @@
   vertical-align: top;
   gap: space(2);
   font-weight: 400;
+  // The green text keeps its colour; only the underline fades, at 75% since the
+  // light accent needs it for 3:1 (the owner's call, 2026-10-20; `faded-underline`).
+  @include faded-underline($rest: 75%);
 
   > svg {
     flex: none;
