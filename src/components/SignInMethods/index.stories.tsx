@@ -2,7 +2,6 @@ import type { Story } from '@ladle/react';
 import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
 import { usePressOnMount } from '../../../.ladle/press';
-import ActionFailure from '../ActionFailure';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
 import PageNav from '../PageNav';
@@ -132,9 +131,7 @@ const WholeAccountPage = ({
         <h2 id="account-invitations-heading">Invitations</h2>
         <p className="lede">Covens that have invited this email address to join them.</p>
       </div>
-      <ActionFailure>
-        <ReceivedInvitations invitations={[]} />
-      </ActionFailure>
+      <ReceivedInvitations invitations={[]} />
     </section>
   </main>
 );
