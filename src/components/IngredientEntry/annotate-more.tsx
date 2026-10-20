@@ -4,12 +4,15 @@ import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
+import { ConfirmQuestion } from '../Modal';
 import {
   CUPBOARD_MENU_LABEL,
-  MakeItOursDialog,
-  RemoveDialog,
+  MAKE_IT_OURS_DETAILS,
+  MakeItOursQuestion,
+  RemoveQuestion,
   useCupboardWrites,
 } from './cupboard-writes';
+import { UNSAVED_CHANGES_NOT_KEPT } from './link-confirm';
 import type { AnnotateMoreProps } from './types';
 
 // The Annotate dialog's Make It Ours and Remove (M8.17), set apart at the
@@ -18,11 +21,12 @@ import type { AnnotateMoreProps } from './types';
 // with Remove in its destructive item style and both items in the button's
 // own type (the owner's call of 2026-10-20), opening upward so it stays
 // inside the dialog; with one, that one as a button of its own, Remove
-// destructive, so a menu never holds a single choice. Either asks in the same
-// confirmation dialog the entry page opens, here over this one. A write
-// leaves the dialog with whatever it held unsaved: Remove deletes the
-// annotations, and Make It Ours copies the saved ones, which its question
-// says while the form holds changes.
+// destructive, so a menu never holds a single choice. Either asks in the
+// form's own question card, the card, scrim and focus handling of Delete and
+// Link and of "You have unsaved changes", not in a second dialog over this one
+// (the owner's call, 2026-10-20). A write leaves the dialog with whatever it
+// held unsaved: Remove deletes the annotations, and Make It Ours copies the
+// saved ones, which its question says while the form holds changes.
 
 interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   workspaceId: string;
@@ -34,6 +38,11 @@ interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   onRefused: (message: string) => void;
   /** The form holds unsaved changes. */
   dirty: boolean;
+  /**
+   * The form's unsaved-changes question is asking: the question here steps
+   * aside, both being drawn in the one place, and comes back on Keep Editing.
+   */
+  discardAsking: boolean;
 }
 
 export default function AnnotateMore({
@@ -47,12 +56,17 @@ export default function AnnotateMore({
   closeHref,
   onRefused,
   dirty,
+  discardAsking,
 }: AnnotateMoreBodyProps): ReactElement | null {
   const [asking, setAsking] = useState<'remove' | 'own'>();
-  // The menu's button or the single one, where the focus goes back to once a
-  // question closes, since a menu item that opened it goes with the menu.
+  // The menu's button or the single one. The card hands the focus back to
+  // whatever held it as it opened, and a menu item that chose goes with its
+  // menu, so the focus is put on this first.
   const trigger = useRef<HTMLButtonElement>(null);
-  const back = () => trigger.current;
+  const ask = (what: 'remove' | 'own') => () => {
+    trigger.current?.focus();
+    setAsking(what);
+  };
   const settle = () => setAsking(undefined);
   const writes = useCupboardWrites({
     workspaceId,
@@ -64,11 +78,9 @@ export default function AnnotateMore({
     onRefused,
   });
   const items: MenuButtonItem[] = [
-    ...(canMakeOurs
-      ? [{ key: 'own', label: 'Make It Ours', onSelect: () => setAsking('own') }]
-      : []),
+    ...(canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: ask('own') }] : []),
     ...(canRemove
-      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: () => setAsking('remove') }]
+      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: ask('remove') }]
       : []),
   ];
   const only = items.length === 1 ? items[0] : undefined;
@@ -89,23 +101,40 @@ export default function AnnotateMore({
           ref={trigger}
           type="button"
           className={only.destructive ? 'btn btn--destructive' : 'btn btn--quiet'}
-          onClick={() => setAsking(only.key === 'own' ? 'own' : 'remove')}
+          onClick={ask(only.key === 'own' ? 'own' : 'remove')}
         >
           {only.label}
         </button>
       )}
-      {asking === 'own' && (
-        <MakeItOursDialog
-          name={name}
-          write={writes.makeOurs}
-          unsaved={dirty}
-          onClose={settle}
-          returnTo={back}
-        />
-      )}
-      {asking === 'remove' && (
-        <RemoveDialog name={name} write={writes.remove} onClose={settle} returnTo={back} />
-      )}
+      <ConfirmQuestion
+        key="own"
+        asked={asking === 'own' && !discardAsking}
+        question={<MakeItOursQuestion name={name} />}
+        details={
+          <>
+            <p>{MAKE_IT_OURS_DETAILS}</p>
+            {dirty && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
+          </>
+        }
+        tone="solid"
+        confirmLabel="Make It Ours"
+        busyLabel="Making It Ours"
+        keepLabel="Cancel"
+        busy={writes.makeOurs.pending}
+        onConfirm={async () => writes.makeOurs.run()}
+        onKeep={settle}
+      />
+      <ConfirmQuestion
+        key="remove"
+        asked={asking === 'remove' && !discardAsking}
+        question={<RemoveQuestion name={name} />}
+        confirmLabel="Remove"
+        busyLabel="Removing"
+        keepLabel="Cancel"
+        busy={writes.remove.pending}
+        onConfirm={async () => writes.remove.run()}
+        onKeep={settle}
+      />
     </>
   );
 }

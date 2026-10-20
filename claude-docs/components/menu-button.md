@@ -8,16 +8,16 @@ It follows the menu-button pattern of the ARIA Authoring Practices Guide, as the
 
 `MenuButtonProps` (`types.ts`):
 
-| Prop         | What it is                                                                                     |
-| ------------ | ---------------------------------------------------------------------------------------------- |
-| `label`      | The button's text and accessible name, and the menu's accessible name, in title case: "Edit"   |
-| `className`  | The button's classes: `btn btn--quiet btn--medium`                                             |
-| `items`      | The choices, in order (`MenuButtonItem`)                                                       |
-| `busy`       | Optional: one of the choices is in flight. The button shows the spinner and is disabled        |
-| `busyLabel`  | Optional: the label while busy, "Adding"                                                       |
-| `ref`        | Optional: the button, so a caller can give the focus back to it after a dialog a choice opened |
-| `opens`      | Optional: `below`, the default, or `above`, for a button at the foot of a dialog               |
-| `buttonType` | Optional: the items take the button's type, its face, size and weight; off by default          |
+| Prop         | What it is                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| `label`      | The button's text and accessible name, and the menu's accessible name, in title case: "Edit"           |
+| `className`  | The button's classes: `btn btn--quiet btn--medium`                                                     |
+| `items`      | The choices, in order (`MenuButtonItem`)                                                               |
+| `busy`       | Optional: one of the choices is in flight. The button shows the spinner and is disabled                |
+| `busyLabel`  | Optional: the label while busy, "Adding"                                                               |
+| `ref`        | Optional: the button, so a caller can give the focus back to it after a dialog a choice opened         |
+| `opens`      | Optional: `below`, the default, or `above`, for a button at the foot of a dialog                       |
+| `buttonType` | Optional: the items take the button's type and height, with one step less at the sides; off by default |
 
 A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructive` or `constructive`. It is either a link, with `href` and an optional `onClick` that runs first and may prevent the navigation, or an action, with `onSelect`.
 
@@ -30,7 +30,7 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 - **Above, at a dialog's foot.** With `opens="above"` the menu hangs over the button instead of under it, so a menu at the foot of a dialog stays inside the dialog rather than running past its edge (M8.17, the Annotate dialog's More). It keeps to the button's end edge either way, which keeps it inside a narrow dialog too, and fades the same.
 - **It fills a stretched box.** The button grows to fill the box a layout gives it, as a narrow form's stacked foot makes every button full width (M8.17); otherwise the box is the button's own width.
 - **Look.** The menu is the bar's Add Ingredient menu: a card hung under (or over) the button's end edge, small text, and the quiet fill on hover and focus. A destructive choice is in the destructive colour, and filled with it on hover and focus as `.btn--destructive` is (the owner's call, 2026-10-19).
-- **In the button's type.** With `buttonType` the items take the button's own face, size and weight, as `.btn` sets them, rather than the lighter item every other menu keeps. Only the Annotate dialog's More sets it, since its two items are the actions of the dialog's foot (the owner's call, 2026-10-20). A destructive choice stays destructive.
+- **In the button's type.** With `buttonType` the items take the button's own face, size and weight, as `.btn` sets them, and its top and bottom padding and height (`space(2)`, `$control-height`), with the sides one step less than the button's, `space(4)` for its `space(5)` ("not so much left and right"), rather than the lighter, shorter item every other menu keeps. Only the Annotate dialog's More sets it, since its two items are the actions of the dialog's foot (the owner's call, 2026-10-20). A destructive choice stays destructive.
 
 ## Where it is tested
 

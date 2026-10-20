@@ -49,11 +49,13 @@ is the wrapper every admin page opens it through (below).
   If the element closed itself first, the address would still say the modal
   was open.
 - **A dialog opened from inside another closes alone on Escape** (M8.17).
-  A confirmation asked from a dialog's contents, such as the Annotate
-  dialog's Remove, is a second `Modal` rendered inside the first. The browser
-  sends Escape's `cancel` event to the topmost dialog only, but React passes
-  it up its own tree to the outer dialog's handler too, which closed both.
-  Each dialog now answers only a `cancel` aimed at itself.
+  A `Modal` rendered inside another's contents is a second dialog over the
+  first. The browser sends Escape's `cancel` event to the topmost dialog
+  only, but React passes it up its own tree to the outer dialog's handler
+  too, which closed both. Each dialog now answers only a `cancel` aimed at
+  itself. Nothing in the app opens one inside another now: the Annotate
+  dialog's More, which did, asks over its form instead (the owner's call,
+  2026-10-20), so the fix stays only until the owner decides on it.
 - **It fades in and out** (M5.5, the owner's call), dialog and backdrop
   together over 150ms. In is CSS alone, `@starting-style` as `showModal()`
   shows it. Out is the component's, since the owner's unmount would take it
@@ -208,8 +210,10 @@ each form.
 A form asks before it acts, "Delete this?" or "Discard them?", on a card
 drawn over the form rather than where its buttons were (MB.115, the owner's
 call): one way of asking across the admin forms. `ConfirmOverlay`, in
-`confirm-overlay.tsx`, is that card; the unsaved-changes question and every
-form's Delete question are drawn through it.
+`confirm-overlay.tsx`, is that card; the unsaved-changes question, every
+form's Delete question, Link to the Compendium's question over the edit
+dialog, and the Annotate dialog's Make It Ours and Remove (M8.17, the
+owner's call of 2026-10-20) are drawn through it, never a second dialog.
 
 | Prop         | What it is                                                                   |
 | ------------ | ---------------------------------------------------------------------------- |

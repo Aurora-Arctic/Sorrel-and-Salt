@@ -17,7 +17,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // The Annotate dialog's foot (M8.17; claude-docs/components/ingredient-entry.md):
 // Make It Ours and Remove, each offered only on the member's permission, in a
 // More menu when both are and as a button of its own when one is, and each
-// asked in the same confirmation dialog the entry page opens, over this one.
+// asked in the form's own question card over it, as Delete and Link ask, not
+// in a second dialog (the owner's call, 2026-10-20).
 // A remove leaves for where the dialog closes to; Make It Ours for the own
 // entry it writes, warning first when the form holds unsaved changes.
 
@@ -62,7 +63,11 @@ function renderDialog(props: Partial<AnnotateDialogProps> = {}) {
 
 const dialog = () => screen.getByRole('dialog', { name: 'Annotate This Entry' });
 const more = () => within(dialog()).queryByRole('button', { name: CUPBOARD_MENU_LABEL });
-const asked = (title: string) => screen.getByRole('dialog', { name: title });
+const REMOVE = /^Remove Testwort from your cupboard\?/;
+const OURS = /^Make Testwort your coven's own\?/;
+/** The question card, a group named by its question, inside the Annotate dialog. */
+const asked = (name: RegExp) => within(dialog()).getByRole('group', { name });
+const gone = (name: RegExp) => screen.queryByRole('group', { name });
 
 function choices(): string[] {
   fireEvent.click(more()!);
@@ -94,14 +99,14 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     const view = renderDialog({ more: { ...MORE, canMakeOurs: false } });
     expect(more()).not.toBeInTheDocument();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Remove' }));
-    expect(asked('Remove from Cupboard')).toBeInTheDocument();
+    expect(asked(REMOVE)).toBeInTheDocument();
 
     view.unmount();
     const ours = renderDialog({ more: { ...MORE, canRemove: false } });
     expect(more()).not.toBeInTheDocument();
     expect(within(dialog()).queryByRole('button', { name: 'Remove' })).toBeNull();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Make It Ours' }));
-    expect(asked('Make It Ours')).toBeInTheDocument();
+    expect(asked(OURS)).toBeInTheDocument();
 
     ours.unmount();
     renderDialog({ more: { ...MORE, canMakeOurs: false, canRemove: false } });
@@ -127,12 +132,12 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     choose('Remove');
-    expect(asked('Remove from Cupboard')).toHaveTextContent(/Remove Testwort from your cupboard/);
-    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Cancel' }));
+    expect(asked(REMOVE)).toBeInTheDocument();
+    // Over the form in its own dialog, not a dialog of its own.
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    press(within(asked(REMOVE)).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Remove from Cupboard' })).toBeNull(),
-    );
+    await waitFor(() => expect(gone(REMOVE)).toBeNull());
     expect(dialog()).toBeInTheDocument();
     expect(calls).toEqual([]);
   });
@@ -149,7 +154,7 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     choose('Remove');
-    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Remove' }));
+    press(within(asked(REMOVE)).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
     expect(router.push).not.toHaveBeenCalled();
@@ -164,7 +169,7 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog({ more: { ...MORE, removedHref: '/coven/fixture-coven/ingredients' as Route } });
 
     choose('Remove');
-    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Remove' }));
+    press(within(asked(REMOVE)).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven/ingredients'),
@@ -179,10 +184,10 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     choose('Remove');
-    press(within(asked('Remove from Cupboard')).getByRole('button', { name: 'Remove' }));
+    press(within(asked(REMOVE)).getByRole('button', { name: 'Remove' }));
 
     expect(await within(dialog()).findByRole('alert')).toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: 'Remove from Cupboard' })).toBeNull();
+    expect(gone(REMOVE)).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
@@ -195,8 +200,9 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     choose('Make It Ours');
-    expect(asked('Make It Ours')).toHaveTextContent(/Make Testwort your coven's own/);
-    press(within(asked('Make It Ours')).getByRole('button', { name: 'Make It Ours' }));
+    expect(asked(OURS)).toBeInTheDocument();
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    press(within(asked(OURS)).getByRole('button', { name: 'Make It Ours' }));
 
     await waitFor(() =>
       expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven/ingredients/fixture-own'),
@@ -210,13 +216,34 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     choose('Make It Ours');
-    expect(within(asked('Make It Ours')).queryByText(UNSAVED_CHANGES_NOT_KEPT)).toBeNull();
-    press(within(asked('Make It Ours')).getByRole('button', { name: 'Cancel' }));
+    expect(within(asked(OURS)).queryByText(UNSAVED_CHANGES_NOT_KEPT)).toBeNull();
+    press(within(asked(OURS)).getByRole('button', { name: 'Cancel' }));
 
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Description' }), {
       target: { value: 'Fixture unsaved note' },
     });
     choose('Make It Ours');
-    expect(within(asked('Make It Ours')).getByText(UNSAVED_CHANGES_NOT_KEPT)).toBeInTheDocument();
+    expect(within(asked(OURS)).getByText(UNSAVED_CHANGES_NOT_KEPT)).toBeInTheDocument();
+  });
+
+  // The form's unsaved-changes question is drawn in the same place: while it
+  // asks, Make It Ours's steps aside, and Keep Editing brings it back, as the
+  // admin forms' Delete does.
+  it("steps aside for the form's unsaved-changes question and comes back after it", async () => {
+    renderDialog();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Description' }), {
+      target: { value: 'Fixture unsaved note' },
+    });
+    choose('Make It Ours');
+    expect(asked(OURS)).toBeInTheDocument();
+
+    press(within(dialog()).getByRole('button', { name: 'Close' }));
+    expect(
+      await within(dialog()).findByRole('group', { name: /You have unsaved changes/ }),
+    ).toBeInTheDocument();
+    expect(gone(OURS)).toBeNull();
+
+    press(within(dialog()).getByRole('button', { name: 'Keep Editing' }));
+    expect(await within(dialog()).findByRole('group', { name: OURS })).toBeInTheDocument();
   });
 });

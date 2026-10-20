@@ -215,11 +215,6 @@ export interface CupboardQuestionProps {
   returnTo: () => HTMLElement | null | undefined;
 }
 
-export interface MakeItOursDialogProps extends CupboardQuestionProps {
-  /** Asked over a form holding unsaved changes, which the dialog says are not kept. */
-  unsaved?: boolean;
-}
-
 /**
  * The Annotate dialog's Make It Ours and Remove (M8.17): the coven's address segment, which
  * of Make It Ours and Remove the member may use, from the same permissions the

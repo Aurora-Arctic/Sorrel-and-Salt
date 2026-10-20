@@ -8,22 +8,16 @@ import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import BusyButton from '../BusyButton';
 import Modal from '../Modal';
-import { UNSAVED_CHANGES_NOT_KEPT } from './link-confirm';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import type {
-  CupboardQuestionProps,
-  CupboardWritesOptions,
-  CupboardWrites,
-  MakeItOursDialogProps,
-} from './types';
+import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
 
 // Make It Ours (M12.23) and Remove (M12.17), the two writes a coven's member
 // makes to a compendium entry it holds, shared by the entry page's Edit menu
 // and the Annotate dialog's More menu (M8.17), so the two ask the same
-// question, in the same confirmation dialog, and land in the same place. The
-// Annotate dialog opens it over itself, a dialog inside a dialog, as the owner
-// asked on 2026-10-19 (Modal answers only its own Escape).
+// question and land in the same place. The entry page asks in a dialog; the
+// Annotate dialog asks in its form's own question card, as its Delete and Link
+// do, rather than a dialog inside a dialog (the owner's call, 2026-10-20).
 
 /**
  * The Annotate dialog's menu of further cupboard writes. "More", the owner's
@@ -72,16 +66,14 @@ export function RemoveQuestion({ name }: { name: string }): ReactElement {
 
 /**
  * Make It Ours asked in a dialog, as Leave Coven asks (the owner's call,
- * 2026-10-19). Over the Annotate form with unsaved changes it adds Link to the
- * Compendium's sentence: the copy takes the saved annotations alone.
+ * 2026-10-19), on the entry page.
  */
 export function MakeItOursDialog({
   name,
   write,
-  unsaved = false,
   onClose,
   returnTo,
-}: MakeItOursDialogProps): ReactElement {
+}: CupboardQuestionProps): ReactElement {
   return (
     <Modal title="Make It Ours" onClose={onClose} returnTo={returnTo}>
       {(close) => (
@@ -90,7 +82,6 @@ export function MakeItOursDialog({
             <MakeItOursQuestion name={name} />
           </p>
           <p>{MAKE_IT_OURS_DETAILS}</p>
-          {unsaved && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
           <div className="modal__actions">
             <BusyButton
               className="btn btn--solid"

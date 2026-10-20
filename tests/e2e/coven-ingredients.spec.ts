@@ -581,11 +581,14 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
   await expectMenuInsideDialog();
-  // Its items in More's own type, face, size and weight (the owner's call of
-  // 2026-10-20), where every other menu keeps the lighter item.
+  // Its items in More's own type, face, size and weight, and its top and
+  // bottom padding and height (the owner's calls of 2026-10-20), where every
+  // other menu keeps the lighter, shorter item.
   const typeOf = (element: Element) => {
     const style = getComputedStyle(element);
-    return `${style.fontFamily} ${style.fontSize} ${style.fontWeight}`;
+    return [style.fontFamily, style.fontSize, style.fontWeight]
+      .concat([style.paddingTop, style.paddingBottom, style.minHeight])
+      .join(' ');
   };
   const moreType = await moreButton.evaluate(typeOf);
   for (const item of await menu.getByRole('menuitem').all()) {
@@ -605,13 +608,17 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await page.keyboard.press('Escape');
   await page.setViewportSize(wide);
 
-  // The question is the entry page's confirmation dialog, over this one:
-  // Escape closes it alone, the focus back on More.
-  const question = page.getByRole('dialog', { name: 'Remove from Cupboard' });
+  // The question is the form's own card, over the form in this dialog, as
+  // Delete and Link ask (the owner's call, 2026-10-20): Cancel keeps the
+  // dialog, the focus back on More.
+  const question = dialog.getByRole('group', {
+    name: /^Remove Fixture Our Notewort from your cupboard\?/,
+  });
   await moreButton.click();
   await menu.getByRole('menuitem', { name: 'Remove' }).click();
-  await expect(question).toContainText('Remove Fixture Our Notewort from your cupboard?');
-  await page.keyboard.press('Escape');
+  await expect(question).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(1);
+  await question.getByRole('button', { name: 'Cancel' }).click();
   await expect(question).toHaveCount(0);
   await expect(dialog).toBeVisible();
   await expect(moreButton).toBeFocused();

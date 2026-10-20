@@ -37,7 +37,7 @@ export default function AnnotateDialog({
               onDone={done}
               aside={
                 more &&
-                (({ onRefused, dirty }) => (
+                (({ onRefused, dirty, discardAsking }) => (
                   <AnnotateMore
                     {...more}
                     workspaceId={opened.workspaceId}
@@ -46,6 +46,7 @@ export default function AnnotateDialog({
                     closeHref={closeHref}
                     onRefused={onRefused}
                     dirty={dirty}
+                    discardAsking={discardAsking}
                   />
                 ))
               }
