@@ -55,20 +55,16 @@ export default function FormalName({
       : (NAME_TIPS[entry.nomenclature] ?? FORMAL_NAME_TIP);
   let value: ReactNode;
   if (entry.nomenclature === NAMELESS_KIND) {
-    value = <span className="ingredient-entry__empty">None</span>;
+    value = 'None';
   } else if (formal === '') {
-    value = <span className="ingredient-entry__empty">Not yet looked up</span>;
+    value = 'Not yet looked up';
   } else if (isBinomial(entry.nomenclature)) {
     // `i` rather than `em`: a taxonomic name is set apart, not stressed.
     value = <i className="binomial">{formal}</i>;
   } else if (NAME_LABELS[entry.nomenclature]) {
     value = formal;
   } else {
-    value = (
-      <>
-        {formal} <span className="ingredient-entry__empty">(unconfirmed)</span>
-      </>
-    );
+    value = `${formal} (unconfirmed)`;
   }
   return (
     // The name alone, as an eyebrow over the heading, with what it is in a

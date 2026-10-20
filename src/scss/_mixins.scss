@@ -905,6 +905,14 @@
   // Between floating and elevated: a card that rises under the pointer.
   --shadow-lifted: 0 8px 20px #{$shadow-dark};
   --surface-card-hover: #{$soot-lifted};
+  --drawer-slot: #{$drawer-slot-dark};
+  --drawer-floor: #{$drawer-floor-dark};
+  --drawer-side: #{$drawer-side-dark};
+  --drawer-back: #{$drawer-back-dark};
+  --drawer-seam: #{$drawer-seam-dark};
+  --drawer-shade: #{$drawer-shade-dark};
+  --drawer-shade-fade: #{$drawer-shade-fade-dark};
+  --drawer-shade-edge: #{$drawer-shade-edge-dark};
   --dismiss-ink: #{$dismiss-ink-dark};
   --card-more-ink: #{$card-more-ink-dark};
   --ornament-screen: 0.3;
@@ -932,6 +940,14 @@
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};
   --surface-card-hover: #{$parchment-lifted};
+  --drawer-slot: #{$drawer-slot-light};
+  --drawer-floor: #{$drawer-floor-light};
+  --drawer-side: #{$drawer-side-light};
+  --drawer-back: #{$drawer-back-light};
+  --drawer-seam: #{$drawer-seam-light};
+  --drawer-shade: #{$drawer-shade-light};
+  --drawer-shade-fade: #{$drawer-shade-fade-light};
+  --drawer-shade-edge: #{$drawer-shade-edge-light};
   --dismiss-ink: var(--text-primary);
   --card-more-ink: #{$iron-gall};
   --ornament-screen: 0;

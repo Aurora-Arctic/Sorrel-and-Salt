@@ -36,8 +36,8 @@ function formsCarrying(labels: readonly string[]): string {
       ? labels[0]
       : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
   return labels.length === 1
-    ? `The ${named} form carries its own caution; the entry's page shows it.`
-    : `The ${named} forms carry their own cautions; the entry's page shows them.`;
+    ? `The ${named} form carries its own caution; the ingredient's page shows it.`
+    : `The ${named} forms carry their own cautions; the ingredient's page shows them.`;
 }
 
 export default function IngredientSummary({
@@ -86,7 +86,7 @@ export default function IngredientSummary({
   if (!listed && !said(shown.description) && !said(shown.safetyNotes) && cautioned.length === 0) {
     return (
       <div className="ingredient-summary">
-        <p className="ingredient-summary__nothing">Nothing recorded yet.</p>
+        <p className="ingredient-entry__empty">Nothing recorded yet.</p>
         {inYourCovens && <div className="ingredient-entry__side">{inYourCovens}</div>}
       </div>
     );

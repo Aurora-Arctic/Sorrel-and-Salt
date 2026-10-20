@@ -93,13 +93,23 @@ is the wrapper every admin page opens it through (below).
   from assistive technology, inside a button named "Close". It is a 2rem ×
   in a 2rem square (`$close-target`, a 2.5rem one from M5.5 until the owner's call of
   2026-10-20, still past WCAG 2.5.8's 24px), taken out of the header's flow and set
-  `$close-inset` (`space(2)`, 8px) in from the dialog's top and right edges, so every
-  dialog has it closer to the corner than the padding put it (its middle 24px from each
-  edge, where it was 40px). The inset keeps it inside the corner's rounding, and the
+  `$close-inset` (`space(5)`, 24px, the dialog's padding) in from the dialog's top and
+  right edges (the owner's call, 2026-10-20: it was 8px in until then, and 40px before
+  that), so on every dialog its right edge is the right edge of the head's lines beneath
+  it, the formal name's pencil among them, and it is level with the head's first line. The
   header, being taller than the × reaches, keeps it clear of the body's scrollbar beneath
   it. The head stops short of it (`$close-reserve`), so a long name wraps rather than runs
   under it, and the × is level with the head's first line, as in MB.115, rather than
   adrift beside a name wrapped over lines.
+  A head with an eyebrow first and no top line (an edit dialog's "Edit Ingredient", an
+  add's destination) has the eyebrow for its first line, so the × is raised to put its
+  middle on the eyebrow text's middle (the owner's call, 2026-10-20): the inset less half
+  of what the 32px target is taller than the eyebrow's line (`$eyebrow-line`, the
+  overline size at the 1.65 a paragraph is given, 19.8px), 17.9px from the top, a middle at
+  33.9px in place of 40px, written with `:has()` so a browser without it keeps the inset.
+  A head with a top line keeps the inset, level with that line, and a dialog with no
+  eyebrow (Add Category) keeps it too, the title being its first line, 40px to the × and
+  about 55px to the title's middle.
 - **A click outside asks the owner to close it** (M5.5, the owner's call,
   reversing M5.6's "no close on a backdrop click"), through `onClose` as
   Close and Escape do. The backdrop is the dialog's own box to an event, so
@@ -429,11 +439,15 @@ the details window passes them; every other dialog is drawn as before (the owner
   the viewport within the scrolling dialog.
 - **`topEnd`** is the head's top line, over the formal name and the title, with Close
   on it (the owner's call, 2026-10-20): the details window puts the entry page's top-bar
-  marks there, New or Updated then the safety badge, so they stand beside the × as they
-  stand beside the back link on the page. Its presence, even empty, gives the head that
-  line (`.modal-dialog__top`, a flex row ending at the ×, level with the × and lifted
-  into the dialog's top padding by the × 's inset), so the × has a band of its own and what
-  stands at the end of the lines under it clears it. The × comes after the marks in the
+  marks there, New or Updated then the safety badge, at the start of the line (the owner's
+  call, 2026-10-20), level with the × at its far end. Its presence, even empty, gives the
+  head that line (`.modal-dialog__top`, a flex row as tall as the ×, which stands over
+  its end), so the × has a band of its own and what stands at the end of the lines under
+  it clears it. The line stands 16px above the formal name's line (the owner's call, 2026-10-20): the head's
+  own 8px gap and a `space(2)` margin more, from 8px. The margin is written on
+  `.modal-dialog__heading > .modal-dialog__top`, since the layout's `.header > *` zeroes a
+  child's margin at the weight of one class. A 12px gap (`space(1)` of margin) was the other
+  option shown. The × comes after the marks in the
   markup too, as on screen. Without `topEnd` the × stands in the corner beside the head's
   first line, as before, after the head in the markup.
 - **`formalActions`** is a node for the end of the formal name's line: the details
@@ -713,14 +727,31 @@ back, so a column keeps the content width it had.
 **The page behind does not scroll while it is open** (M5.5, the owner's
 call). `showModal()` makes the page inert, but a wheel over the backdrop
 still scrolled it. `:root:has(.modal-dialog:modal)` sets `overflow: hidden`,
-in CSS so no listener can leave the page locked. Nothing behind it shifts
-sideways as the scrollbar goes: every page keeps the scrollbar's room,
-scrolling or not (`scrollbar-gutter: stable` on `html`, `globals.scss`),
-so that nothing behind a modal moves (the owner's call, 2026-10-20). It used
-to be set only while a modal was open, so a page with no scrollbar gained the
-room as one opened and moved by half of it, 7.5px in Chromium. The body's own
-scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
-out of reach.
+in CSS so no listener can leave the page locked.
+
+**Nothing behind it moves sideways as the scrollbar goes** (the owner's call,
+2026-10-20). Hiding the page's scroll takes its scrollbar away, which on a
+system whose scrollbars take room (Windows, most Linux desktops, a Mac set to
+show them always) would widen the page by about 15px and move centred content
+by half of that. So as the first modal opens, `holdPage` (`page-hold.ts`)
+measures the scrollbar, `window.innerWidth - document.documentElement.clientWidth`,
+and only where that is more than 0 sets the width on the root as
+`--scrollbar-width`. The root's padding takes the scrollbar's place for as long
+as a modal holds the page, and the fixed elements anchored to the right edge
+(the theme toggle's corner, the impersonation banner, the page bar and the salt
+corner of the backdrop) read the same property, so they stay put too. A modal
+opened over another does not measure again, the scrollbar being gone by then,
+and the room is given back only when the last one closes. A page with no
+scrollbar, or one whose scrollbars float over it, sets nothing.
+
+This JavaScript measurement replaces a CSS-only one, `scrollbar-gutter: stable`,
+which reserves the scrollbar's room. Set only while a modal was open, a page
+with no scrollbar gained the room as one opened and moved by half of it. Set on
+every page, it left a blank strip beside the header on a page that fits the
+window, so the header and its menu stopped short of the right edge (the
+owner turned it down: the owner's call, 2026-10-20). The body's own scroll is
+`overscroll-behavior: contain`, and it keeps it, so nothing in it is out of
+reach.
 
 **The skeleton** (M9.18) is the shared `Skeleton` of the `form` shape
 ([`skeleton.md`](skeleton.md)); `ModalLoading` only renders it.
