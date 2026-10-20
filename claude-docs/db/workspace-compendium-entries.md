@@ -124,17 +124,6 @@ Two jars, or two layers in one spell, of the same form would break a unique inde
 
 `tests/modules/ingredients/services/convert-local-to-compendium.test.ts` holds the rules, the rollback included (a trigger fails the cupboard insert after the moves), and `tests/modules/ingredients/graphql/convert-local-to-compendium.test.ts` the transport's half.
 
-#### Splitting an own entry across several
-
-M8.17 widens the convert to more than one compendium entry (the owner's call, 2026-10-20), for the coven that finds its own entry had held two things — a root and a leaf it had filed together, say, that the compendium keeps apart. `splitLocalIntoCompendiumEntries(session, workspaceId, localId, picks, assignments)` takes a list of compendium entries (the _picks_) and moves the own entry's forms among them; `convertLocalToCompendiumEntry` is now its one-pick case, so there is one path and its rules above hold for both.
-
-- **Where each form goes.** A form goes to the pick with a form of the same folded name. Where two picks both have it, the caller's assignment (`{ formId, compendiumId }`) decides. An assignment naming a form the own entry does not have live, or a pick without a form of that name, is refused beside `assignments`; a form cannot be sent to a form of another name.
-- **A form with no home.** One that holds something and matches no pick is refused as before, the message naming it ("None of the compendium entries has a … form" once there are several). One that holds something, two picks have and no assignment names is refused too, beside `forms`, naming the picks. Either holding nothing is left behind; only a form no pick has is listed in `dropped.forms`, since the other's name lives on in both picks.
-- **One cupboard row per pick**, each with what the own entry said differently from that pick — but the own name as a label on one pick at most, since two rows of one coven may not share a label. `labelOn` names that pick: left out it is the first, `null` is none, and an id that is not a pick is refused beside `labelOn` with nothing moved (the owner's call, 2026-10-20). The label-taken check runs for that pick alone. A pick the coven already holds is refused beside `ingredientId`, by name once there are several.
-- **All or nothing.** The jar and layer clashes are checked across every pick before anything moves, in the one transaction, so the own entry is deleted only once every form holding something has moved.
-
-`tests/modules/ingredients/services/split-local-into-compendium.test.ts` holds what a second pick adds, and `tests/modules/ingredients/graphql/split-local-into-compendium.test.ts` the transport's half.
-
 ### Converting a compendium entry into our own
 
 M12.23 adds `convertCompendiumEntryToLocal(session, workspaceId, ingredientId)`, the other way round. It turns a compendium entry the coven holds into the coven's own ingredient, for the coven that wants to change what a cupboard row cannot override, such as the forms and sources, or to keep an entry the curators retired. The entry page offers it as **Make It Ours**. A new own ingredient is written, the coven's jars and spell layers move onto its forms, and the cupboard row is soft-deleted. The compendium entry itself is never written, and no other coven's cupboard changes.

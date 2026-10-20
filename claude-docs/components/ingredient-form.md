@@ -37,8 +37,7 @@ a coven's id writes to that coven — a new ingredient, or the coven's own
 `null` writes the compendium — a new entry, or the `entry` given. Either
 tier's edit offers Delete Ingredient (the coven's since M8.17, moved from
 M9.10 on the owner's call, 2026-10-19). The coven's edit draws it in its
-foot's More, beside Link to the Compendium, through the form's `aside`
-([`ingredient-entry.md`](ingredient-entry.md), "Edit").
+foot, as the compendium's does ([`ingredient-entry.md`](ingredient-entry.md), "Edit").
 
 | Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

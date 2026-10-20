@@ -89,7 +89,7 @@ export async function openEditIngredient(
 
 /**
  * Opens the edit from the entry's page (M8.19), where Edit is a menu of Edit
- * Ingredient, Link to the Compendium and Delete Ingredient (M8.17), and its
+ * Ingredient and Delete Ingredient (M8.17), and its
  * sections, as `openEditIngredient` does from a row.
  */
 export async function openEditIngredientFromMenu(

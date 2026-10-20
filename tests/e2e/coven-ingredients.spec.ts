@@ -21,6 +21,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { editIngredientDialog } from './stories/ingredient-dialogs';
 
 // The coven's Ingredients page (M9.6), against the built server. Stories 20–27
 // (tests/e2e/stories/03-ingredients) walk a member through the list and its
@@ -33,7 +34,8 @@ import {
 // compendium entry's card opens Annotate over the list and closes back to its
 // search (M8.17), a coven's own entry is deleted from its edit dialog over
 // the list (M8.17), a card's More near the window's foot opens above it
-// inside the window (M8.17), and the page passes axe at both densities and at
+// inside the window (M8.17), an Edit Ingredient dialog opened from the entry
+// page's Edit menu and cancelled gives the menu its focus back (M8.17), and the page passes axe at both densities and at
 // a phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
@@ -611,7 +613,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await page.setViewportSize(wide);
 
   // The question is the form's own card, over the form in this dialog, as
-  // Delete and Link ask (the owner's call, 2026-10-20): Cancel keeps the
+  // Delete asks (the owner's call, 2026-10-20): Cancel keeps the
   // dialog, the focus back on More.
   const question = dialog.getByRole('group', {
     name: /^Remove Fixture Our Notewort from your cupboard\?/,
@@ -670,9 +672,7 @@ test("a coven's own entry is deleted from its edit dialog over the list, back on
     .getByRole('link', { name: 'Edit Fixture Gonewort, Fixtura abiens' })
     .click();
   const dialog = page.getByRole('dialog', { name: /Fixture Gonewort/ });
-  // An owner may link too, so Delete shares the foot's More with Link (M8.17).
-  await dialog.getByRole('button', { name: 'More', exact: true }).click();
-  await dialog.getByRole('menuitem', { name: 'Delete Ingredient' }).click();
+  await dialog.getByRole('button', { name: 'Delete Ingredient', exact: true }).click();
   const question = dialog.getByRole('group', { name: /Delete/ });
   await expect(question).toContainText('Fixture Gonewort');
   await question.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -726,10 +726,7 @@ test("a card's More opened near the window's foot opens above it, inside the win
     await page.setViewportSize({ width, height });
     await more.scrollIntoViewIfNeeded();
     await more.click();
-    await expect(menu.getByRole('menuitem')).toHaveText([
-      'Link to the Compendium',
-      'Delete Ingredient',
-    ]);
+    await expect(menu.getByRole('menuitem')).toHaveText(['Delete Ingredient']);
     const at = (await more.boundingBox())!;
     const box = (await menu.boundingBox())!;
     // Why it could have opened below: the room under More is less than the menu.
@@ -800,4 +797,38 @@ test('a retired compendium entry the coven still holds can be removed, and leave
   await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+// The entry page's Edit menu (M8.17): choosing Edit Ingredient opens the dialog,
+// and Cancel closes it with the focus back on the menu's button, the item that
+// chose having gone with the menu.
+test('Edit Ingredient, opened from the Edit menu and cancelled, gives the menu its focus back', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Edit Focus', 'gate-edit-focus.test', {
+    A: 'owner',
+    B: 'member',
+  });
+  const own = await withSql((sql) =>
+    localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Testwort',
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+    }),
+  );
+  await signInAgainAs(page, coven.users.B);
+  await page.goto(`${listPath(coven)}/${own.ingredientId}`);
+
+  const edit = page.getByRole('main').getByRole('button', { name: 'Edit', exact: true });
+  await edit.click();
+  await page
+    .getByRole('menu', { name: 'Edit' })
+    .getByRole('menuitem', { name: 'Edit Ingredient' })
+    .click();
+  const dialog = editIngredientDialog(page, 'Testwort', 'Fixtura testalis');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(edit).toBeFocused();
 });

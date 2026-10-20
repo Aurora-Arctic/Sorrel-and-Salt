@@ -553,7 +553,7 @@ its `min-height`, its vertical padding a step short of it so the minimum
 decides; and the combobox's text line is the control's height less its edge
 and padding. It is a minimum, so a list's box still grows with its rows of
 entries. 44.5 rather than 44 is what a button measured at its own padding,
-and both clear WCAG 2.5.5's 44px. The compact scale is the one step down: `$compact-control`, 2.5rem, which the `compact-controls` mixin sets on the one-line controls inside whatever includes it, the filter panel and the Link dialog's Goes To column today (M9.7; [`components/facet-panel.md`](components/facet-panel.md)).
+and both clear WCAG 2.5.5's 44px.
 
 Below body copy, type takes one of five sizes by role from `type-size()`:
 `small` (0.875rem) for what a person acts on — labels, buttons, notices,
