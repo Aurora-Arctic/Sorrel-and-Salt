@@ -79,8 +79,12 @@ in the filter slot to carry.
   shut it is a margin outside the box, so a stuck row ends at the bottom of its
   controls with no empty strip under them; as the tray opens it rolls into the box as
   padding and the margin shrinks by as much (so nothing on the page moves), and as the
-  tray closes it rolls back, on the tray's own slide (`350ms ease`, none under reduced
-  motion). The search sentence under the row takes that `space(2)` back from the
+  tray closes it rolls back. It follows the tray's edge, not its 350ms clock: it opens in
+  12ms (on `ease`, a ~400px tray's edge has moved 8px by then; 250 to 550px: 10 to 17ms) and
+  on closing waits 286ms, then rolls up in 64ms on `ease-out` (the edge is within 8px of the
+  row for the last 55 to 79ms). The open rule times the way in, the base rule the way
+  back (a transition takes the timing of the state it ends in). None under reduced
+  motion. The search sentence under the row takes that `space(2)` back from the
   frame's gap, so it sits a gap from the input as the cards sit a gap from it. The
   tray hangs from the form inside, so none of this moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client

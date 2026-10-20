@@ -45,12 +45,18 @@ $page-gutter: space(4);
   margin-block-start: calc(-1 * #{$stuck-pad});
   margin-block-end: space(2);
   padding-block: $stuck-pad 0;
-  // The tray's own length and curve (FacetPanel's `.facet-panel__clip`, `--slide-ms`, set on the
-  // clip inside and so unreadable here: the same 350ms).
+  // The 8px under the row follows the tray's edge, not its clock. The tray (FacetPanel's
+  // `.facet-panel__clip`, `--slide-ms`, set on the clip inside and so unreadable here) slides
+  // 350ms on `ease`, and its edge covers hundreds of px; 8px rolling over all 350ms looked slow
+  // beside it. On `ease` a ~400px tray's edge has moved 8px by 12ms (250 to 550px: 10 to 17ms),
+  // so it opens in 12ms. Closing, the edge is within 8px of the row for the last ~64ms (55 to
+  // 79ms over the same heights), so the space waits 350 - 64 = 286ms and rolls up then, on
+  // `ease-out`, the shape of that tail. This rule times the way back to closed, the open rule
+  // below the way out of it (a transition takes the timing of the state it ends in).
   transition:
     box-shadow $modal-fade,
-    padding-block-end var(--slide-ms, 350ms) ease,
-    margin-block-end var(--slide-ms, 350ms) ease;
+    padding-block-end 64ms ease-out 286ms,
+    margin-block-end 64ms ease-out 286ms;
 
   @include reduced-motion {
     transition: none;
@@ -62,6 +68,14 @@ $page-gutter: space(4);
   &:has(.facet-panel__clip--open) {
     margin-block-end: 0;
     padding-block-end: space(2);
+    transition:
+      box-shadow $modal-fade,
+      padding-block-end 12ms ease,
+      margin-block-end 12ms ease;
+
+    @include reduced-motion {
+      transition: none;
+    }
   }
 
   &[data-stuck] {
