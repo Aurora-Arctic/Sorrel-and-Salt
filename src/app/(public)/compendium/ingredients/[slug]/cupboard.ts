@@ -5,15 +5,14 @@ import type {
   CupboardPlace,
   PublicCupboardProps,
 } from '../../../../../components/IngredientEntry/types';
-import { Forbidden } from '../../../../../lib/errors';
 import { getSession } from '../../../../../lib/request-session';
 import { single } from '../../../../../lib/search-params';
 import { covenRolesIfSignedIn, viewerIfSignedIn } from '../../../../../lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import {
   getCupboardEntry,
-  heldCompendiumEntryIdsIn,
   MAKE_IT_OURS_PERMISSION,
+  type HoldingCoven,
   type IngredientRow,
 } from '@/modules/ingredients';
 
@@ -24,18 +23,6 @@ import {
 // viewer's own memberships, never the address: `?annotate=<covenSlug>` only picks among them,
 // and a slug naming none of them, or one that may not annotate there, is ignored before any
 // read is made. claude-docs/components/ingredient-entry.md, "On the public page".
-
-/** The viewer's held covens, by coven id; a refusal reads as none, and the write says no. */
-async function heldIn(workspaceIds: readonly string[], id: string) {
-  const session = await getSession();
-  if (!session) return new Map<string, ReadonlySet<string>>();
-  try {
-    return await heldCompendiumEntryIdsIn(session, workspaceIds, [id]);
-  } catch (error) {
-    if (error instanceof Forbidden) return new Map<string, ReadonlySet<string>>();
-    throw error;
-  }
-}
 
 export async function publicCupboardOf(
   entry: Pick<
@@ -51,17 +38,13 @@ export async function publicCupboardOf(
   >,
   own: Route,
   searchParams: Record<string, string | string[] | undefined>,
+  holding: readonly HoldingCoven[],
 ): Promise<PublicCupboardProps | undefined> {
   const shell = await viewerIfSignedIn();
   const writable = shell?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   if (writable.length === 0) return undefined;
-  const [roles, held] = await Promise.all([
-    covenRolesIfSignedIn(),
-    heldIn(
-      writable.map(({ id }) => id),
-      entry.id,
-    ),
-  ]);
+  const roles = await covenRolesIfSignedIn();
+  const held = new Set(holding.map(({ id }) => id));
   const covens: CupboardPlace[] = writable.flatMap(({ id, slug, name }) => {
     const role = roles?.get(id);
     if (!role) return [];
@@ -70,7 +53,7 @@ export async function publicCupboardOf(
         workspaceId: id,
         covenSlug: slug,
         name,
-        held: held.get(id)?.has(entry.id) === true,
+        held: held.has(id),
         canAdd: rolePermits(role, { ingredient: ['create'] }),
         canAnnotate: rolePermits(role, { ingredient: ['update'] }),
         canRemove: rolePermits(role, { ingredient: ['delete'] }),

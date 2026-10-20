@@ -357,9 +357,48 @@ describe('IngredientEntry', () => {
     expect(headCaution()).toBeNull();
     unmount();
 
-    // Why it can show: the oil form has notes, and the entry has none of its own.
-    renderEntry();
+    // Why it can show: the oil form has notes, and the entry has none of its own. Not
+    // flagged Toxic, which would stand in Caution's place (SafetyMark).
+    renderEntry({
+      detail: detail({
+        variants: [
+          variantRow('testroot'),
+          variantRow('testoil', { safetyNotes: 'Fixture oil caution.' }),
+        ],
+      }),
+    });
     expect(headCaution()).not.toBeNull();
+  });
+
+  // The head's one safety badge rides the back row, after New or Updated, and the name's
+  // row holds the name alone (the owner's call, 2026-10-20).
+  it('draws one safety badge in its head, Toxic over Caution, read after New and before the name', () => {
+    renderEntry({
+      detail: detail({
+        entry: entryRow({ createdAt: new Date(), safetyNotes: 'A fixture caution.' }),
+      }),
+    });
+    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    const toxic = within(head).getAllByText('Toxic', { exact: true });
+    expect(toxic).toHaveLength(1);
+    expect(headCaution()).toBeNull();
+    const recency = within(head).getByText('New', { exact: true });
+    const follows = (a: Element, b: Element) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(recency, toxic[0]!)).toBe(true);
+    expect(follows(toxic[0]!, screen.getByRole('heading', { level: 1 }))).toBe(true);
+  });
+
+  it('draws the safety badge with no back link or recency mark to share its row', () => {
+    renderEntry();
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByRole('link', { name: /^Back to/ })).toBeNull();
+    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    const toxic = within(head).getByText('Toxic', { exact: true });
+    expect(
+      toxic.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
   });
 
   it('names its folk names, categories and substitutes lists, one item each', () => {
@@ -981,11 +1020,15 @@ describe('IngredientEntry edit', () => {
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     unmount();
 
+    // A curator in no coven: Edit is the head's one choice, the pencil named Edit and the
+    // entry, and no labelled Edit link is left under the name.
     renderEntry({ edit: edit() });
-    expect(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
       'href',
       `${PUBLIC}?edit`,
     );
+    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /^Edit/ })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
   });
@@ -999,7 +1042,7 @@ describe('IngredientEntry edit', () => {
     expect(dialog()).not.toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Edit Testwort' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
@@ -1226,6 +1269,27 @@ describe('IngredientEntry on a coven page', () => {
 
     expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+// The public page's shelf (M9.12): a compendium entry any of the viewer's covens holds carries
+// In Your Cupboard before its name, as it does on the coven's own page.
+describe('IngredientEntry on the public page, held in a coven', () => {
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+
+  it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
+    renderEntry({ heldInCovens: true });
+
+    const mark = shelf()!;
+    const heading = screen.getByRole('heading', { level: 1, name: 'Testwort' });
+    expect(mark.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('puts no shelf on a compendium entry no coven of the viewer’s holds', () => {
+    renderEntry({ heldInCovens: false });
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
+    expect(shelf()).toBeNull();
   });
 });
 

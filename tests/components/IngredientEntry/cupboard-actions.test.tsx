@@ -85,6 +85,13 @@ function renderOnPage(props: Partial<CupboardActionsProps> = {}) {
 const button = (name: string) => screen.queryByRole('button', { name });
 
 /** The Edit menu's choices, in order, after opening it. */
+/** The open Edit menu's choices, read without pressing. */
+function shownChoices(): string[] {
+  return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
+    .getAllByRole('menuitem')
+    .map((item) => item.textContent ?? '');
+}
+
 function choices(): string[] {
   fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
   const items = within(screen.getByRole('menu', { name: 'Edit Testwort' })).getAllByRole(
@@ -113,10 +120,12 @@ describe('CupboardActions', () => {
     fireEvent.mouseEnter(pencil);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
-    const items = choices();
-    // The open menu takes the tip, still showing, away; IconTip's watcher sets that state after the press.
-    await act(async () => {});
-    expect(items).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
+    // press: inside an async act, so that update is awaited rather than left outside it.
+    await act(async () => {
+      fireEvent.click(pencil);
+    });
+    expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
   it('offers Add to Cupboard alone, as a plain button, while the coven does not hold the entry', () => {
@@ -511,5 +520,72 @@ describe('CupboardActions', () => {
       expect(button('Show the error for Add to Cupboard')).not.toBeInTheDocument(),
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  // The plus beside the pencil on a coven's page too (the owner's call, 2026-10-20): the page's
+  // `plus` names every coven the viewer may add in and which of them hold the entry.
+  describe('the plus', () => {
+    const OTHER = { id: '00000000-0000-4000-8000-000000000009', name: 'Other Coven' };
+    const HERE = { id: BASE.workspaceId, name: 'Fixture Coven' };
+
+    it('stands before the pencil and takes Add out of it, a menu of the covens with this one disabled once it holds the entry', async () => {
+      const calls: unknown[] = [];
+      mockGraphQLMutation<AddCupboardEntryMutation, Record<string, unknown>>(
+        'AddCupboardEntry',
+        (variables) => {
+          calls.push(variables);
+          return { addCupboardEntry: { id: 'fixture' } };
+        },
+      );
+      renderActions({
+        held: true,
+        plus: { workspaceId: HERE.id, covens: [HERE, OTHER], heldIn: [HERE.id] },
+      });
+
+      const plus = screen.getByRole('button', { name: 'Add to My Ingredients' });
+      const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
+      expect(plus.compareDocumentPosition(pencil) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+      fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+
+      fireEvent.click(plus);
+      const [here, other] = within(
+        screen.getByRole('menu', { name: 'Add to My Ingredients' }),
+      ).getAllByRole('menuitem');
+      expect(here).toHaveAccessibleName(HERE.name);
+      expect(here).toHaveAttribute('aria-disabled', 'true');
+      expect(other).toHaveAccessibleName(OTHER.name);
+      expect(other).not.toHaveAttribute('aria-disabled');
+
+      fireEvent.click(other!);
+      await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+      expect(calls).toEqual([{ workspaceId: OTHER.id, ingredientId: BASE.ingredientId }]);
+    });
+
+    it('stands in for Add to Cupboard while this coven, the only one that may add, lacks the entry', () => {
+      renderActions({ plus: { workspaceId: HERE.id, covens: [HERE], heldIn: [] } });
+
+      expect(button('Add to My Ingredients')).not.toHaveAttribute('aria-haspopup');
+      expect(button('Add to Cupboard')).not.toBeInTheDocument();
+    });
+
+    it("gives way to the card's check once every coven that may add holds the entry", () => {
+      renderActions({
+        held: true,
+        plus: { workspaceId: HERE.id, covens: [HERE], heldIn: [HERE.id] },
+      });
+
+      expect(button('Add to My Ingredients')).not.toBeInTheDocument();
+      expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
+      expect(button('Edit Testwort')).toBeInTheDocument();
+    });
+
+    it('draws neither plus nor check without one', () => {
+      // Why one could have shown: the same props with a `plus` draw it (above).
+      renderActions({ held: true });
+
+      expect(button('Add to My Ingredients')).not.toBeInTheDocument();
+      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+    });
   });
 });

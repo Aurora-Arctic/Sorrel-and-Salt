@@ -13,11 +13,11 @@ import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
 import type { AddIconProps } from './types';
 
-// The two marks at a compendium card's bottom right, before a curator's Edit (M9.12, the owner's
-// call, 2026-10-20): a plus while the entry is not in every coven the viewer may write in, a
-// check once it is. Icons alone: the plus named by its tip and an accessible name
-// (`visually-hidden`), as the pencil beside them is, the check by its `aria-label`. Their own file, because the card itself stays a server component
-// and a press needs the browser.
+// The plus: Add to My Ingredients as an icon (M9.12, the owner's calls, 2026-10-20), at a
+// compendium card's bottom right and beside the public entry page's pencil, so both are one
+// control. Named by its tip and an accessible name (`visually-hidden`), as the pencil beside
+// it is. A client component of its own, because the card stays a server component and a press
+// needs the browser. claude-docs/components/compendium-cards.md, "The plus".
 
 const ADD = 'Add to My Ingredients';
 /** A held coven's note in the plus's menu, AddToCovenDialog's words for the same. */
@@ -77,12 +77,7 @@ const Glyph = ({
  * menu. The lone plus is `aria-disabled` and not `disabled` while it works, so the focus stays
  * on it; the menu’s button is disabled while busy, as MenuButton has it.
  */
-export const AddIcon = ({
-  workspaceId,
-  ingredientId,
-  covens,
-  heldIn,
-}: AddIconProps): ReactElement => {
+const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): ReactElement => {
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: ADD });
   const { anchorRef } = feedback;
@@ -191,14 +186,4 @@ export const AddIcon = ({
   );
 };
 
-/**
- * The check: every coven the viewer may write in holds this entry. A status mark, not a link
- * (the owner’s call, 2026-10-20): the details modal’s In Your Covens list carries the links
- * to each coven’s copy. An image named In My Ingredients, and no tip, since a tip opens on
- * hover or focus and a mark that takes no focus would show it to the pointer alone (WCAG 2.1.1).
- */
-export const HeldMark = (): ReactElement => (
-  <span className="icon-tip__held" role="img" aria-label="In My Ingredients">
-    <CheckIcon />
-  </span>
-);
+export default AddIcon;

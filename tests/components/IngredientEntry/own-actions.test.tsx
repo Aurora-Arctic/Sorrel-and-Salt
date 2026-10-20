@@ -51,6 +51,13 @@ function renderOnPage(edit?: IngredientEntryEdit) {
 
 const menuButton = () => screen.getByRole('button', { name: 'Edit Testwort' });
 
+/** The open Edit menu's choices, read without pressing. */
+function shownChoices(): string[] {
+  return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
+    .getAllByRole('menuitem')
+    .map((item) => item.textContent ?? '');
+}
+
 function choices(): string[] {
   fireEvent.click(menuButton());
   return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
@@ -92,10 +99,12 @@ describe('OwnEntryActions', () => {
     fireEvent.mouseEnter(pencil);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
-    const items = choices();
-    // The open menu takes the tip, still showing, away; IconTip's watcher sets that state after the press.
-    await act(async () => {});
-    expect(items).toEqual(['Edit Ingredient', 'Delete Ingredient']);
+    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
+    // press: inside an async act, so that update is awaited rather than left outside it.
+    await act(async () => {
+      fireEvent.click(pencil);
+    });
+    expect(shownChoices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
   });
 
   it('offers Edit and Delete in one Edit menu, Edit at its address', () => {

@@ -353,6 +353,51 @@ export const AnnotateOrRemove: Story = () => (
   <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
 );
 
+// The head's three lines (the owner's call, 2026-10-20): the way back with New, the safety
+// badge just right of New; the formal name with the Edit pencil at its end; the name alone.
+const BACK = { href: '/coven/fixture-coven/ingredients' as Route, label: 'Ingredients' };
+
+export const NewWithBack: Story = () => (
+  <Entry
+    detail={{ ...FULL, entry: entryRow({ createdAt: new Date() }), cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    back={BACK}
+  />
+);
+
+// Both names long enough to wrap: the pencil keeps the formal name's first line.
+export const LongNames: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        name: 'Testwort Longer Nameicanicusmus',
+        canonicalName: 'Fixtura testalis longissimanicusmus var. fixturissima subsp. testarum',
+        updatedAt: new Date(),
+      }),
+      cupboardEntry: cupboardEntry(),
+    }}
+    cupboard={CUPBOARD}
+    back={BACK}
+  />
+);
+
+// No formal name: the line still stands, saying None, and the pencil keeps to it.
+export const NoFormalNameWithEdit: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        name: 'Fixture Crossroads Dust',
+        canonicalName: null,
+        nomenclature: 'none',
+      }),
+      cupboardEntry: cupboardEntry(),
+    }}
+    cupboard={CUPBOARD}
+  />
+);
+
 export const ViewerSeesNoCupboardButtons: Story = () => (
   <Entry
     detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
