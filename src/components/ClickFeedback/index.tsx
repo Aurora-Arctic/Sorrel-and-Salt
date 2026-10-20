@@ -82,7 +82,14 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
   const calloutPlace = useCalloutPlace(anchor, calloutFade.drawn);
   const badgePlace = useBadgePlace(anchor, badgeFade.drawn, beside);
 
-  const anchorRef = useCallback((node: HTMLElement | null) => setAnchor(node), []);
+  // The control also in a ref, for `report`: a report made before the
+  // control's first render is over (a press on mount) would read the state as
+  // null, and take the corner and no opener.
+  const anchorNode = useRef<HTMLElement | null>(null);
+  const anchorRef = useCallback((node: HTMLElement | null) => {
+    anchorNode.current = node;
+    setAnchor(node);
+  }, []);
 
   /** Whether `target` is the control, the badge, the callout, or inside one. */
   const ours = useCallback(
@@ -109,20 +116,21 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
 
   const report = useCallback(
     (next: string | undefined) => {
+      const control = anchorNode.current;
       if (next === undefined) {
         // The badge and the callout go, so a focus inside them would fall to
         // the page: it goes to the control they belonged to instead.
-        if (ours(document.activeElement) && document.activeElement !== anchor) anchor?.focus();
+        if (ours(document.activeElement) && document.activeElement !== control) control?.focus();
         setMessage(undefined);
         setOpen(false);
         return;
       }
       setMessage(next);
       setSaid(next);
-      setBeside(anchor ? borderless(anchor) : false);
-      openFrom(anchor);
+      setBeside(control ? borderless(control) : false);
+      openFrom(control);
     },
-    [anchor, ours, openFrom],
+    [ours, openFrom],
   );
 
   // The control described by its last failure, beside any description it has.

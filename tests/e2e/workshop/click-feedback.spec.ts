@@ -133,6 +133,22 @@ test.describe('the callout’s place', () => {
     await expectUnder(alert, control);
   });
 
+  for (const story of ['borderless', 'near-right-edge']) {
+    test(`in ${story}, refused as it mounts, the badge stands beside the borderless control`, async ({
+      page,
+    }) => {
+      await openStory(page, story, 'dark', 1280);
+      await placed(page);
+      const control = page.getByRole('button', { name: 'Annotate', exact: true });
+      const mark = badge(page, 'Annotate');
+      await expect(mark).toHaveClass(/is-placed/);
+
+      // Why it could go wrong: the story reports before the control's first
+      // render is over, and the side is read from the control as it reports.
+      expect((await box(mark)).left - (await box(control)).right).toBeGreaterThanOrEqual(4 - 0.5);
+    });
+  }
+
   for (const theme of THEMES) {
     test(`at 375px in ${theme}, inside the window’s margins, and axe finds nothing`, async ({
       page,
