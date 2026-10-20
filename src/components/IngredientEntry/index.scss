@@ -421,7 +421,12 @@ $jump-link-line: 1.25;
   }
 }
 
-.ingredient-entry__back {
+// A note's and a bibliography entry's way back to where it is cited: its own
+// class, not the top Back link's, whose pull to the column's edge would draw
+// it back over the gap before it. A step off the citation and off each other,
+// kept whole with its number.
+.ingredient-entry__return {
+  margin-inline-start: space(2);
   white-space: nowrap;
 }
 

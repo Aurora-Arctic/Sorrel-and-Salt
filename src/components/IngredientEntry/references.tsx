@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { Fragment } from 'react';
 import { citationText, byCitation, renderCitation } from '../../lib/citation';
 import { renderShortCitation } from '../../lib/short-citation';
 import type { CitationPart } from '../../lib/types';
@@ -161,9 +162,12 @@ function NoteItem({ note }: { note: Note }): ReactElement {
   return (
     <li id={noteId(number)} className="ingredient-entry__note">
       <a href={`#${entryId(reference)}`}>{italicised(located ? short : closed(short))}</a>
-      {located && ` ${endNote(locator!.trim())}`}{' '}
+      {located && ` ${endNote(locator!.trim())}`}
+      {/* No space before the arrow: its margin spaces it, and `<wbr>` keeps
+          the break a space would give, so a long citation still wraps here. */}
+      <wbr />
       <a
-        className="ingredient-entry__back"
+        className="ingredient-entry__return"
         href={`#${markId(number)}`}
         aria-label={`Back to ${sectionLabel}`}
       >
@@ -187,18 +191,19 @@ function BibliographyItem({ entry }: { entry: Entry }): ReactElement {
           </a>
         </>
       )}
+      {/* As in a note: each arrow's margin spaces it, and `<wbr>` keeps the break. */}
       {notes.map((number) => (
-        <span key={number}>
-          {' '}
+        <Fragment key={number}>
+          <wbr />
           <a
-            className="ingredient-entry__back"
+            className="ingredient-entry__return"
             href={`#${noteId(number)}`}
             aria-label={`Back to Note ${number}`}
           >
             <span aria-hidden="true">↩</span>
             <sup>{number}</sup>
           </a>
-        </span>
+        </Fragment>
       ))}
     </li>
   );
