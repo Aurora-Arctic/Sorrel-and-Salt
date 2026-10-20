@@ -577,6 +577,7 @@ export const DetailsSparse: Story = () => (
       entry: entryRow({
         name: 'Fixture Reedling',
         canonicalName: 'Fixtura palustris',
+        description: 'A thin reed of fixture marshes.',
         elements: ['water'],
         celestialBodies: null,
         zodiacSigns: null,
@@ -637,6 +638,7 @@ export const DetailsToxic: Story = () => (
       entry: entryRow({
         name: 'Fixture Banewort',
         canonicalName: 'Fixtura venenosa',
+        description: 'A tall fixture herb with purple bells.\nEvery part of it is poisonous.',
         toxic: true,
         safetyNotes: 'Poisonous in every part.\nKeep from children and animals.',
       }),

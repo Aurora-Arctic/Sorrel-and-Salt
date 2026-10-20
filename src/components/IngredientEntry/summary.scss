@@ -1,10 +1,10 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The details modal's body (M12.5): the caution, then the page's side column
-// of blocks, stacked at every width (the owner's call, 2026-10-20), as the
-// 32rem modal has no room for the page's two columns. One rhythm: the caution
-// stands off the first block by the side column's own gap between blocks.
+// The details modal's body (M12.5): the description, the caution, then the
+// page's side column of blocks, stacked at every width (the owner's call,
+// 2026-10-20), as the 32rem modal has no room for the page's two columns. One
+// rhythm: each part stands off the next by the side column's own gap.
 .ingredient-summary {
   @include stack(6);
 }

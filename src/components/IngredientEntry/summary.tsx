@@ -17,9 +17,9 @@ import './summary.scss';
 
 // The details modal's body (M12.5): the entry page's Details section, drawn by
 // the page's own blocks in the page's order, cut to the owner's choice (the
-// caution, then the correspondences, folk names and categories). No
-// description, forms, substitutes, references or Similar: Open Full Page has
-// those. Shown as the list names the entry, the coven's annotations laid over a
+// description, the caution, then the correspondences, folk names and
+// categories; the description added by the owner's call, 2026-10-20). No
+// forms, substitutes, references or Similar: Open Full Page has those. Shown as the list names the entry, the coven's annotations laid over a
 // held compendium entry as the page lays them. Each form's caution stays on the
 // page's form sections; a line here says which forms carry one (the owner's
 // call, 2026-10-20). An empty block or correspondence row is left out here,
@@ -47,7 +47,7 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
   // With every section hidden, one line says so rather than leave the body blank
   // (the owner's call, 2026-10-20).
-  if (!listed && !said(shown.safetyNotes) && cautioned.length === 0) {
+  if (!listed && !said(shown.description) && !said(shown.safetyNotes) && cautioned.length === 0) {
     return (
       <div className="ingredient-summary">
         <p className="ingredient-summary__nothing">Nothing recorded yet.</p>
@@ -58,6 +58,11 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
     <div className="ingredient-summary">
       {/* No Details heading: the dialog's title names the entry, and its h2
           over a second h2 read as two titles. The blocks keep the page's h3s. */}
+      {/* The page's own description: a `<p>`, so at the measure, keeping its
+          typed line breaks. Left out when empty, where the page says so. */}
+      {said(shown.description) && (
+        <p className="ingredient-entry__description">{shown.description}</p>
+      )}
       <SafetyNote
         safetyNotes={shown.safetyNotes}
         level={3}

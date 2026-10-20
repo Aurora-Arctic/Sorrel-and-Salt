@@ -132,14 +132,59 @@ describe('IngredientSummary', () => {
     expect(within(caution).queryByText('Fixture entry caution.')).not.toBeInTheDocument();
   });
 
-  it('leaves out the description, the forms, the substitutes, the references and Similar', () => {
+  it('shows the description first, above the caution', () => {
     render(<IngredientSummary detail={full()} />);
 
-    // Why they could show: the detail carries a description, forms and substitutes,
-    // and the summary is drawn. No Details heading: the dialog's title names the entry.
+    const description = screen.getByText('A fixture description.');
+    const caution = screen.getByRole('region', { name: 'Caution' });
+    expect(
+      description.compareDocumentPosition(caution) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("shows the coven's description laid over a held compendium entry's", () => {
+    render(
+      <IngredientSummary
+        detail={full({
+          cupboardEntry: {
+            id: 'held',
+            workspaceId: '00000000-0000-4000-8000-0000000000c1',
+            ingredientId: '00000000-0000-4000-8000-000000000001',
+            label: null,
+            description: 'Fixture coven description.',
+            safetyNotes: null,
+            elements: null,
+            celestialBodies: null,
+            zodiacSigns: null,
+            colors: null,
+            ...STAMPS,
+          } as NonNullable<IngredientDetail['cupboardEntry']>,
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Fixture coven description.')).toBeInTheDocument();
+    expect(screen.queryByText('A fixture description.')).not.toBeInTheDocument();
+  });
+
+  it('draws no description when the entry has none, and no line saying so', () => {
+    render(
+      <IngredientSummary detail={full({ entry: entryDetail({ description: '  ' }).entry })} />,
+    );
+
+    // Why it could show: the summary is drawn, with its caution from a form.
+    expect(screen.getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+    expect(screen.queryByText('A fixture herb.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No description recorded.')).not.toBeInTheDocument();
+  });
+
+  it('leaves out the forms, the substitutes, the references and Similar', () => {
+    render(<IngredientSummary detail={full()} />);
+
+    // Why they could show: the detail carries forms and substitutes, and the
+    // summary is drawn. No Details heading: the dialog's title names the entry.
     expect(screen.getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument();
-    expect(screen.queryByText('A fixture description.')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Forms' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Substitutes' })).not.toBeInTheDocument();
     expect(screen.queryByText('Fixture Swapleaf')).not.toBeInTheDocument();
@@ -181,7 +226,7 @@ describe('IngredientSummary', () => {
     render(
       <IngredientSummary
         detail={full({
-          entry: entryDetail({ elements: null, celestialBodies: null }).entry,
+          entry: entryDetail({ description: null, elements: null, celestialBodies: null }).entry,
           folkNames: [],
           categories: [],
           deities: [],
@@ -206,7 +251,7 @@ describe('IngredientSummary', () => {
     unmount();
 
     // A caution alone is something recorded.
-    render(
+    const { unmount: unmount2 } = render(
       <IngredientSummary
         detail={full({
           folkNames: [],
@@ -218,6 +263,22 @@ describe('IngredientSummary', () => {
       />,
     );
     expect(screen.getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    unmount2();
+
+    // So is a description alone.
+    render(
+      <IngredientSummary
+        detail={full({
+          folkNames: [],
+          categories: [],
+          deities: [],
+          variants: [],
+          entry: entryDetail({ description: 'Fixture lone description.' }).entry,
+        })}
+      />,
+    );
+    expect(screen.getByText('Fixture lone description.')).toBeInTheDocument();
     expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
   });
 
