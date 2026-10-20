@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { HTML_REPORT, baseConfig } from './playwright.config';
+import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import { WORKSHOP_HMR_PORT, WORKSHOP_PORT, browserUrl, serverUrl } from './tests/e2e/slots';
 
 // The workshop specs, tests/e2e/workshop/: a component measured in its Ladle

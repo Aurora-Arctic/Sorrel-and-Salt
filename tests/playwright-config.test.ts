@@ -164,4 +164,17 @@ describe('playwright.workshop.config.ts', () => {
     expect(server?.env?.LADLE_HMR_PORT).toBe('8503');
     expect(server?.command).toContain('--port 8502');
   });
+
+  // CI's workshop job has no database and no .env.local, and the config must
+  // still load: it shares nothing with the e2e config that builds the slot
+  // servers' environment, which reads DATABASE_URL as it is imported. The
+  // devcontainer's shell sets DATABASE_URL, so without the stub this case
+  // would pass on a broken config.
+  it('loads with DATABASE_URL unset, as on CI', async () => {
+    vi.resetModules();
+    vi.stubEnv('DATABASE_URL', undefined);
+    expect(process.env.DATABASE_URL).toBeUndefined();
+    const { default: config } = await import('../playwright.workshop.config');
+    expect(config.testDir).toMatch(/workshop/);
+  });
 });
