@@ -70,7 +70,7 @@ Low Stock wears `.badge--low-stock`, the muted tinted palette. Out of Stock wear
 saturation pulled down; the owner chose it on 2026-10-18. Safety stays the only
 solid, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning
 never rests on colour: the two drawings differ, the slashed ring in place of the
-double chevron. Both badges are the same 24px square (the cards' `.badge` size
+double chevron. Both badges are the same square, `$stock-badge-size` (24px; the jar lines inset it so it centres on the actions' icon below, see [`jar-lines.md`](jar-lines.md)) (the cards' `.badge` size
 rules would pad it, so `.ingredient-card .specimen__stock .stock-badge` zeroes the
 padding). Until 2026-10-20 they carried the words ("Low · 6 g", "Out of Stock"), and
 Out of Stock a 2px border and a heavier weight to tell it from Low; with the words

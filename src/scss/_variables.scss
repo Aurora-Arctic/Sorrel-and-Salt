@@ -245,6 +245,11 @@ $badge-palettes: (
     )
 );
 
+// The stock badge's square (M9.8): its drawing alone, as tall as a medium or small badge
+// (24px). The jar lines inset it from the card's right edge by half the difference to the
+// large icon button below it, so the two centre on one line (_primitives.scss).
+$stock-badge-size: 1.5rem;
+
 // The three sizes of a badge (the owner, M8.14), set in one place. Default is what a
 // badge has everywhere; medium and small are for the ingredient card only (regular and
 // compact), one step down in text. The two smaller sizes hold 24px (1.5rem) tall, the

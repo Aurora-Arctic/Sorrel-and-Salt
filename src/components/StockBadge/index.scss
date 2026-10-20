@@ -11,8 +11,8 @@
   // cards' `.badge` size rules set a padding of their own, so this one is zeroed
   // beside the card's (IngredientCard/index.scss).
   box-sizing: border-box;
-  inline-size: 1.5rem;
-  block-size: 1.5rem;
+  inline-size: $stock-badge-size;
+  block-size: $stock-badge-size;
   padding: 0;
   justify-content: center;
 }
