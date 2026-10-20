@@ -13,7 +13,7 @@ import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
 import LinkHint, { LinkIconHint } from '../LinkHint';
-import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
+import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { slugify } from '../../lib/slugify';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import {
@@ -435,12 +435,10 @@ const IngredientEntry = ({
               inCoven={cupboard !== undefined}
               annotated={held && isAnnotated(cupboardEntry)}
               retired={retired}
-            />
-            <CautionMark
+              toxic={entry.toxic}
               safetyNotes={shown.safetyNotes}
               variants={variants.map(({ variant }) => variant)}
             />
-            <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
         {movedAway && (

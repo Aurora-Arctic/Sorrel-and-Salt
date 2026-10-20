@@ -17,7 +17,7 @@ care (M8.13a, story 53). Three components share the directory:
 
 This directory owns safety presentation for the whole project. The card (M8.14),
 the entry page (M8.19) and the spell builder's toxic-ingredient warning (M10.18)
-each use these two as they are, and none of them draws a warning of its own.
+each use these two as they are, and none of them draws a warning of its own. In a badge row, the card's and the entry page's head, `EntryMarks` draws them, last, as the red group ([`entry-marks.md`](entry-marks.md), "The order").
 
 ## Props
 

@@ -1,20 +1,21 @@
 # EntryMarks
 
-`src/components/EntryMarks/` — the badges saying whose an ingredient entry is
-(M8.14). The ingredient card and the head of the entry page (`IngredientEntry`)
+`src/components/EntryMarks/` — an ingredient entry's badge row: the badges saying whose it is
+(M8.14), and its Caution and Toxic warnings. The ingredient card and the head of the entry page (`IngredientEntry`)
 both draw them through this one component, so the two cannot drift.
 
 ## Props
 
 `EntryMarksProps` (`types.ts`):
 
-| Prop         | What it is                                                                                                                   |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `kind`       | `own`, `cupboard` or `compendium`: the three kinds below                                                                     |
-| `annotated`  | The cupboard row overrides a field of the compendium's. Only a `cupboard` entry shows it                                     |
-| `retired`    | The curators retired the entry (M12.24)                                                                                      |
-| `inCoven`    | Read inside a coven: a `compendium` entry then shows Compendium. Left out on the public compendium                           |
-| `provenance` | Compendium and Annotated, the two marks saying where a held entry came from. On by default; the ingredient card turns it off |
+| Prop                               | What it is                                                                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `kind`                             | `own`, `cupboard` or `compendium`: the three kinds below                                                                                                                             |
+| `annotated`                        | The cupboard row overrides a field of the compendium's. Only a `cupboard` entry shows it                                                                                             |
+| `retired`                          | The curators retired the entry (M12.24)                                                                                                                                              |
+| `inCoven`                          | Read inside a coven: a `compendium` entry then shows Compendium. Left out on the public compendium                                                                                   |
+| `provenance`                       | Compendium and Annotated, the two marks saying where a held entry came from. On by default; the ingredient card turns it off                                                         |
+| `toxic`, `safetyNotes`, `variants` | The ingredient's own flag and notes, and the forms the caller shows; any one set shows Toxic or Caution, drawn by `ToxicMark` and `CautionMark` ([`safety-note.md`](safety-note.md)) |
 
 ## The three kinds
 
@@ -37,14 +38,30 @@ A retired entry shows **Retired** in place of Compendium (it was worded "No Long
 
 **The card leaves Compendium and Annotated off** (the owner's call, 2026-10-20). A coven's card shows Local, Retired, Caution and Toxic, and never Compendium or Annotated: where a held entry came from, and whether the coven changed it, is the entry page's to say. `IngredientCard` passes `provenance={false}`; the entry page's head leaves it on, so both still draw through this one component. The Quick Look details modal draws no badges at all.
 
+## The order: green first, red last
+
+Every badge row is drawn by this component, so the order holds in one place rather than in each caller's markup (the owner's call, 2026-10-20). Each badge belongs to a group by its palette's colour, and the row draws the green group, then the neutral, then the red. Inside a group the badges keep the order they are built in. The sort is `byTone` in `index.tsx`, the same shape as MenuButton's `greenFirst`.
+
+| Badge      | Palette     | Colour                 | Group   |
+| ---------- | ----------- | ---------------------- | ------- |
+| Local      | `local`     | sorrel green tint      | green   |
+| Annotated  | `annotated` | Local's inks           | green   |
+| Compendium | `low-stock` | chalk on the muted ink | neutral |
+| Retired    | `retired`   | chalk on the muted ink | neutral |
+| Caution    | `caution`   | wax red tint           | red     |
+| Toxic      | `safety`    | solid wax red          | red     |
+
+So a held, annotated entry with notes reads Annotated, Compendium, Caution, Toxic, and a retired, annotated one Annotated, Retired, Caution, Toxic. Low (`low-stock`, neutral) and Out of Stock (`out-of-stock`, a muted wax tint, red) are `StockBadge`s on the jar lines, one to a line, so they share no row with these. The form heading's lone `ToxicMark` on the entry page is a row of one.
+
 ## Contracts
 
 - **The caller reads the kind, this component works nothing out.** The page passes
   `kind` from `workspaceId` and `cupboardEntry`, and `annotated` from
   `isAnnotated`; the card is handed `kind` and `retired` by its caller, and no
   `annotated`, which it never shows.
-- **No wrapper.** It renders the badges bare, so the caller lays them in its own
-  `.badges` row beside the Toxic mark. With nothing to show it renders nothing.
+- **No wrapper.** It renders the badges bare, Caution and Toxic included, inside the
+  caller's own row (`.specimen__badges` on the card, `.badges` on the entry page). With
+  nothing to show it renders nothing.
 - **Local is a `span`; Compendium is an `output` element**, so it carries the
   `status` role: on the page from the start, never announced. Retired and Annotated are `button`s (not statuses) with the tip described by `aria-describedby`, so a screen reader hears the reason without opening it.
 - Meaning is the badge's words, never its tint alone.

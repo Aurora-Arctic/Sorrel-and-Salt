@@ -6,7 +6,6 @@ import CategoryChips from '../CategoryChips';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import LinkHint from '../LinkHint';
-import { CautionMark, ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
 import './index.scss';
@@ -80,9 +79,14 @@ const IngredientCard = ({
         </div>
         {marked && (
           <div className="specimen__badges">
-            <EntryMarks kind={kind} retired={retired} provenance={false} />
-            <CautionMark safetyNotes={safetyNotes} variants={variants} />
-            <ToxicMark toxic={toxic} variants={variants} />
+            <EntryMarks
+              kind={kind}
+              retired={retired}
+              provenance={false}
+              toxic={toxic}
+              safetyNotes={safetyNotes}
+              variants={variants}
+            />
           </div>
         )}
       </div>

@@ -114,6 +114,55 @@ describe('EntryMarks', () => {
   });
 });
 
+// Green first, red last, on every badge row (the owner's call, 2026-10-20):
+// EntryMarks draws the whole row, Caution and Toxic included, so the order
+// holds in one place. Asserted by document order, never by class or copy.
+describe('EntryMarks badge order', () => {
+  const precedes = (first: Element | null, second: Element | null): boolean =>
+    first !== null &&
+    second !== null &&
+    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const caution = () => screen.queryByText('Caution', { exact: true });
+  const toxic = () => screen.queryByText('Toxic', { exact: true });
+
+  it('draws a green mark first, ahead of a neutral one built before it', () => {
+    render(<EntryMarks kind="cupboard" retired annotated />);
+
+    expect(precedes(annotated(), retired())).toBe(true);
+  });
+
+  it('draws Annotated ahead of Compendium, and Local ahead of the red marks', () => {
+    const cupboard = render(<EntryMarks kind="cupboard" annotated />);
+    expect(precedes(annotated(), held())).toBe(true);
+    cupboard.unmount();
+
+    render(<EntryMarks kind="own" toxic safetyNotes="Fixture caution." />);
+    expect(precedes(local(), caution())).toBe(true);
+    expect(precedes(local(), toxic())).toBe(true);
+  });
+
+  it('draws the red marks last, Caution before Toxic', () => {
+    render(<EntryMarks kind="cupboard" retired annotated toxic safetyNotes="Fixture caution." />);
+
+    for (const mark of [annotated(), retired()]) {
+      expect(precedes(mark, caution())).toBe(true);
+    }
+    expect(precedes(caution(), toxic())).toBe(true);
+  });
+
+  it('reads Caution and Toxic from a form as well as the ingredient', () => {
+    render(
+      <EntryMarks
+        kind="compendium"
+        variants={[{ form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true }]}
+      />,
+    );
+
+    expect(caution()).toBeInTheDocument();
+    expect(toxic()).toBeInTheDocument();
+  });
+});
+
 describe('RecencyMark (MB.106)', () => {
   it.each([
     ['new', 'New', 'Updated'],
