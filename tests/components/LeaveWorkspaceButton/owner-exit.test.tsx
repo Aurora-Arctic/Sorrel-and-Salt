@@ -169,6 +169,25 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(graphqlRequest.mock.calls[0][1]).toEqual({ workspaceId: ID });
   });
 
+  // A refusal asked over the dialog is said at the dialog's top, a plain
+  // notice inside it, as the hand-over's are, never a callout over it.
+  it('says a refused deletion at the top of the dialog, which stays open', async () => {
+    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+    const dialog = await openDialog();
+    fireEvent.click(deleteIt(dialog));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete Coven' }));
+    const confirmation = await screen.findByRole('group', { name: /Delete Fixture Coven/ });
+
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Delete Coven' }));
+
+    const alert = await within(dialog).findByRole('alert');
+    expect(
+      alert.compareDocumentPosition(deleteIt(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it('offers the deletion alone when there is no one to hand it to', async () => {
     const dialog = await openDialog([]);
 

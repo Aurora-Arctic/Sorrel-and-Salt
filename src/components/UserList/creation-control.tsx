@@ -70,6 +70,7 @@ const CreationControl = ({
       busy="Approving"
       confirmClass="btn btn--solid"
       withNote
+      announcement={`${name} may now create covens.`}
       inModal={inModal}
       send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
     />
@@ -88,6 +89,7 @@ const CreationControl = ({
       busy="Revoking"
       confirmClass="btn btn--destructive"
       withNote
+      announcement={`${name} may no longer create covens.`}
       inModal={inModal}
       send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
     />

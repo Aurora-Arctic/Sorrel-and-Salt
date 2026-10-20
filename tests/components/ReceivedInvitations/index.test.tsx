@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ActionFailure from '@/components/ActionFailure';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import ReceivedInvitations from '@/components/ReceivedInvitations';
 import type { ReceivedInvitationEntry } from '@/components/ReceivedInvitations/types';
 import type {
@@ -9,6 +9,7 @@ import type {
   DeclineInvitationByIdMutation,
   DeclineInvitationByIdMutationVariables,
 } from '@/gql/graphql';
+import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The invitations addressed to the signed-in account, on the account page
@@ -39,7 +40,8 @@ const INVITATIONS: readonly ReceivedInvitationEntry[] = [
   },
 ];
 
-const show = () => render(<ReceivedInvitations invitations={INVITATIONS} />);
+const show = () =>
+  render(<ReceivedInvitations invitations={INVITATIONS} />, { wrapper: StatusRegionProvider });
 const acceptFor = (covenName: string) =>
   screen.getByRole('button', { name: `Accept the invitation to ${covenName}` });
 
@@ -91,10 +93,12 @@ describe('ReceivedInvitations', () => {
     // The shell's layout outlives a navigation; the refresh redraws its count.
     expect(router.refresh).toHaveBeenCalledOnce();
     expect(calls).toEqual([{ id: 'i-2' }]);
-    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button).toHaveAttribute('aria-busy', 'true');
     // Only the row that was clicked is sent.
-    expect(acceptFor('Fixture Coven')).toBeEnabled();
+    expect(acceptFor('Fixture Coven')).not.toHaveAttribute('aria-disabled');
+    // The coven it opens is the news; the status region says nothing.
+    expect(announced()).toBe('');
   });
 
   describe('an Accept the service refuses', () => {
@@ -104,43 +108,43 @@ describe('ReceivedInvitations', () => {
         message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
       });
 
-    it('says it in the alert above the list when the page gives a place for it', async () => {
+    it('says it under the button, the focus kept on it, and offers Accept again', async () => {
       refuse();
-      render(
-        <ActionFailure>
-          <ReceivedInvitations invitations={INVITATIONS} />
-        </ActionFailure>,
-      );
+      show();
+      const button = acceptFor('Fixture Coven');
 
-      fireEvent.click(acceptFor('Fixture Coven'));
+      act(() => button.focus());
+      fireEvent.click(button);
 
-      const alert = await screen.findByRole('alert');
-      const table = screen.getByRole('table', { name: 'Your Invitations' });
-      expect(table).not.toContainElement(alert);
-      expect(alert.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(acceptFor('Fixture Coven')).toBeEnabled();
+      await expectRefusalUnder(button, 'Accept the invitation to Fixture Coven');
+      expect(button).not.toHaveAttribute('aria-disabled');
       expect(router.push).not.toHaveBeenCalled();
     });
 
-    it('says it beside the row outside such a place, and offers Accept again', async () => {
-      refuse();
+    it('sends once while the first press is in flight', async () => {
+      let calls = 0;
+      mockGraphQLMutation<AcceptInvitationByIdMutation, AcceptInvitationByIdMutationVariables>(
+        'AcceptInvitationById',
+        (variables) => {
+          calls += 1;
+          return {
+            acceptInvitationById: { id: String(variables.id), acceptedAt: '2026-10-13T00:00:00Z' },
+          };
+        },
+      );
       show();
+      const button = acceptFor('Fixture Coven');
 
-      fireEvent.click(acceptFor('Fixture Coven'));
+      fireEvent.click(button);
+      fireEvent.click(button);
 
-      const alert = await screen.findByRole('alert');
-      expect(screen.getByRole('table', { name: 'Your Invitations' })).toContainElement(alert);
-      expect(acceptFor('Fixture Coven')).toBeEnabled();
-      expect(router.push).not.toHaveBeenCalled();
+      await waitFor(() => expect(router.push).toHaveBeenCalledOnce());
+      expect(calls).toBe(1);
     });
 
     it('clears the alert when Accept is tried again', async () => {
       refuse();
-      render(
-        <ActionFailure>
-          <ReceivedInvitations invitations={INVITATIONS} />
-        </ActionFailure>,
-      );
+      show();
       fireEvent.click(acceptFor('Fixture Coven'));
       await screen.findByRole('alert');
       mockGraphQLMutation<AcceptInvitationByIdMutation, AcceptInvitationByIdMutationVariables>(
@@ -156,7 +160,7 @@ describe('ReceivedInvitations', () => {
     });
   });
 
-  it('asks before declining, then sends only that invitation’s id and reads the page again', async () => {
+  it('asks before declining, then sends only that invitation’s id, reads the page again and says so', async () => {
     const calls: DeclineInvitationByIdMutationVariables[] = [];
     mockGraphQLMutation<DeclineInvitationByIdMutation, DeclineInvitationByIdMutationVariables>(
       'DeclineInvitationById',
@@ -181,9 +185,10 @@ describe('ReceivedInvitations', () => {
     expect(calls).toEqual([{ id: 'i-2' }]);
     // Declining leaves the page where it is: no coven is opened.
     expect(router.push).not.toHaveBeenCalled();
+    expect(announced()).toContain('Testwort Circle');
   });
 
-  it('says the service’s refusal beside the row and offers Decline again', async () => {
+  it('says the service’s refusal under Decline, the focus back on it, and offers Decline again', async () => {
     mockGraphQLError('DeclineInvitationById', {
       code: 'FORBIDDEN',
       message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
@@ -194,7 +199,10 @@ describe('ReceivedInvitations', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Decline' }));
 
-    expect(await screen.findByRole('alert')).toBeVisible();
+    await expectRefusalUnder(
+      declineFor('Fixture Coven'),
+      'Decline the invitation to Fixture Coven',
+    );
     expect(declineFor('Fixture Coven')).toBeEnabled();
     expect(router.refresh).not.toHaveBeenCalled();
   });

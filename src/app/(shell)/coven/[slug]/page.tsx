@@ -4,7 +4,6 @@ import type { Route } from 'next';
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
 import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton';
-import ActionFailure from '../../../../components/ActionFailure';
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
 import { WORKSPACE_ROLE_ACCESS } from '../../../../components/MemberList/role-access';
@@ -115,40 +114,38 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           )}
         </ul>
       </section>
-      {/* One place for a refusal, above both sections' buttons. Leave is here,
-          not on the members page, because a viewer cannot open that page and
-          must still be able to go. Delete asks for the permission M6.14's
-          service checks, never a rank
+      {/* Each button says its own refusal under itself. Leave is here, not
+          on the members page, because a viewer cannot open that page and must
+          still be able to go. Delete asks for the permission M6.14's service
+          checks, never a rank
           (claude-docs/auth/coven-guard.md, "The coven index page"). */}
-      <ActionFailure>
+      <section
+        id="coven-membership"
+        className="page-frame__section"
+        aria-labelledby="coven-membership-heading"
+      >
+        <h2 id="coven-membership-heading">Your Membership</h2>
+        <div className="form__actions">
+          <LeaveWorkspaceButton
+            workspaceId={workspace.id}
+            name={workspace.name}
+            successors={successors}
+          />
+        </div>
+      </section>
+      {canDelete && (
         <section
-          id="coven-membership"
+          id="coven-delete"
           className="page-frame__section"
-          aria-labelledby="coven-membership-heading"
+          aria-labelledby="coven-delete-heading"
         >
-          <h2 id="coven-membership-heading">Your Membership</h2>
+          <h2 id="coven-delete-heading">Delete This Coven</h2>
+          <p>Closes its ingredients and its grimoire to every member, other owners included.</p>
           <div className="form__actions">
-            <LeaveWorkspaceButton
-              workspaceId={workspace.id}
-              name={workspace.name}
-              successors={successors}
-            />
+            <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />
           </div>
         </section>
-        {canDelete && (
-          <section
-            id="coven-delete"
-            className="page-frame__section"
-            aria-labelledby="coven-delete-heading"
-          >
-            <h2 id="coven-delete-heading">Delete This Coven</h2>
-            <p>Closes its ingredients and its grimoire to every member, other owners included.</p>
-            <div className="form__actions">
-              <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />
-            </div>
-          </section>
-        )}
-      </ActionFailure>
+      )}
     </main>
   );
 }

@@ -8,6 +8,8 @@ import type {
   RevokeAdminInvitationMutation,
   RevokeAdminInvitationMutationVariables,
 } from '@/gql/graphql';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { expectGuardedWaysOut } from '../../support/discard-guard';
 import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
@@ -188,7 +190,7 @@ describe('AdminInvitations', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('revokes an invitation after asking, naming the address', async () => {
+  it('revokes an invitation after asking, naming the address, and says so', async () => {
     const calls: RevokeAdminInvitationMutationVariables[] = [];
     mockGraphQLMutation<RevokeAdminInvitationMutation, RevokeAdminInvitationMutationVariables>(
       'RevokeAdminInvitation',
@@ -197,7 +199,7 @@ describe('AdminInvitations', () => {
         return { revokeAdminInvitation: { id: 'i1' } };
       },
     );
-    render(<AdminInvitations invitations={INVITATIONS} />);
+    render(<AdminInvitations invitations={INVITATIONS} />, { wrapper: StatusRegionProvider });
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Revoke the invitation to ada@example.test' }),
@@ -210,6 +212,28 @@ describe('AdminInvitations', () => {
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(calls).toEqual([{ id: 'i1' }]);
+    expect(announced()).toContain('ada@example.test');
+  });
+
+  it('says why under Revoke when the service refuses, and reads nothing again', async () => {
+    mockGraphQLError('RevokeAdminInvitation', {
+      code: 'FORBIDDEN',
+      message: 'That invitation is no longer pending',
+    });
+    render(<AdminInvitations invitations={INVITATIONS} />);
+    const name = 'Revoke the invitation to ada@example.test';
+
+    fireEvent.click(screen.getByRole('button', { name }));
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('dialog', { name: 'Revoke Invitation' })).getByRole('button', {
+          name: 'Revoke',
+        }),
+      );
+    });
+
+    await expectRefusalUnder(screen.getByRole('button', { name }), name);
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 
   // In view but unusable while paused, as the role controls are (MB.63).

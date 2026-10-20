@@ -14,7 +14,6 @@ import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { ModalButton } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import ActionFailure, { useActionFailure } from '../ActionFailure';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
@@ -40,25 +39,53 @@ const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElem
   // ModalButton takes the focus back to it however the dialog closes.
   <ModalButton label="Leave Coven" className="btn" title="Leave Coven">
     {(close) => (
-      // Its own failure place, so a refusal shows in the dialog rather than
-      // on the page behind it.
-      <ActionFailure>
-        {successors.length === 0 ? (
-          <SoleMember workspaceId={workspaceId} name={name} onCancel={close} />
-        ) : (
-          <Options workspaceId={workspaceId} name={name} successors={successors} onCancel={close} />
-        )}
-      </ActionFailure>
+      <ExitDialog workspaceId={workspaceId} name={name} successors={successors} onCancel={close} />
     )}
   </ModalButton>
 );
+
+type Report = (message: string | undefined) => void;
+
+/**
+ * The dialog's body, which says a refusal at its top, a plain notice inside
+ * the dialog rather than a callout over it (M12.31's rule 6). Its own
+ * component, so the refusal goes when the dialog closes.
+ */
+const ExitDialog = ({
+  workspaceId,
+  name,
+  successors,
+  onCancel,
+}: OwnerExitProps & { onCancel: () => void }): ReactElement => {
+  const [failure, setFailure] = useState<string>();
+  return (
+    <>
+      {failure && <Notice kind="error">{failure}</Notice>}
+      {successors.length === 0 ? (
+        <SoleMember workspaceId={workspaceId} name={name} onCancel={onCancel} report={setFailure} />
+      ) : (
+        <Options
+          workspaceId={workspaceId}
+          name={name}
+          successors={successors}
+          onCancel={onCancel}
+          report={setFailure}
+        />
+      )}
+    </>
+  );
+};
 
 /** Nobody else is in the coven, so deleting it is the whole answer. */
 const SoleMember = ({
   workspaceId,
   name,
   onCancel,
-}: Pick<OwnerExitProps, 'workspaceId' | 'name'> & { onCancel: () => void }): ReactElement => (
+  report,
+}: Pick<OwnerExitProps, 'workspaceId' | 'name'> & {
+  onCancel: () => void;
+  report: Report;
+}): ReactElement => (
   <>
     <p>
       Leave <strong>{name}</strong>? You are its only member, so leaving would leave it with no one.
@@ -68,7 +95,13 @@ const SoleMember = ({
       Nothing is destroyed, but only an administrator with database access can restore it.
     </Notice>
     <div className="modal__actions">
-      <DeleteWorkspaceButton workspaceId={workspaceId} name={name} inModal onlyOwner />
+      <DeleteWorkspaceButton
+        workspaceId={workspaceId}
+        name={name}
+        inModal
+        onlyOwner
+        onFailure={report}
+      />
       <button className="btn btn--quiet" type="button" onClick={onCancel}>
         Cancel
       </button>
@@ -81,9 +114,9 @@ const Options = ({
   name,
   successors,
   onCancel,
-}: OwnerExitProps & { onCancel: () => void }): ReactElement => {
+  report,
+}: OwnerExitProps & { onCancel: () => void; report: Report }): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
-  const failure = useActionFailure();
   const id = useId();
   const ownerField = fieldDescription({ id: `${id}-owner` });
   // One other member is offered by name, with nothing to search (the owner's
@@ -96,7 +129,7 @@ const Options = ({
   async function handOverAndLeave() {
     if (!picked) return;
     setSending(true);
-    failure?.report(undefined);
+    report(undefined);
     const successor = successors.find(({ userId }) => userId === picked);
     try {
       await graphqlRequest(PromoteSuccessorDocument, {
@@ -106,7 +139,7 @@ const Options = ({
       });
     } catch (error) {
       setSending(false);
-      failure?.report(readGraphqlFailure(error).alert);
+      report(readGraphqlFailure(error).alert);
       return;
     }
     try {
@@ -114,7 +147,7 @@ const Options = ({
     } catch (error) {
       setSending(false);
       // Said plainly: the first half happened and stands.
-      failure?.report(
+      report(
         `${successor?.name ?? 'They'} is now an owner, but you did not leave. ${readGraphqlFailure(error).alert}`,
       );
       return;
@@ -184,7 +217,13 @@ const Options = ({
         ) : (
           // The confirm for this choice: it asks M6.14's question over the
           // dialog, and nothing is deleted from the dialog itself.
-          <DeleteWorkspaceButton workspaceId={workspaceId} name={name} inModal onlyOwner />
+          <DeleteWorkspaceButton
+            workspaceId={workspaceId}
+            name={name}
+            inModal
+            onlyOwner
+            onFailure={report}
+          />
         )}
         <button className="btn btn--quiet" type="button" disabled={sending} onClick={onCancel}>
           Cancel
