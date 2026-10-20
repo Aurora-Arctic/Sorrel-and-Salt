@@ -14,11 +14,12 @@ const SafetyNote = ({
   safetyNotes,
   variants = [],
   level = 3,
+  footnote,
 }: SafetyNoteProps): ReactElement | null => {
   const headingId = useId();
   const forms = variants.filter((variant) => said(variant.safetyNotes));
 
-  if (!said(safetyNotes) && forms.length === 0) {
+  if (!said(safetyNotes) && forms.length === 0 && !footnote) {
     return null;
   }
 
@@ -42,6 +43,7 @@ const SafetyNote = ({
           ))}
         </dl>
       )}
+      {footnote}
     </section>
   );
 };

@@ -11,6 +11,8 @@ import {
   ListBlock,
   said,
 } from './blocks';
+// The page's own stylesheet, for its blocks: a list page draws no entry page to load it.
+import './index.scss';
 import './summary.scss';
 
 // The details modal's body (M12.5): the entry page's Details section, drawn by
@@ -40,46 +42,45 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
   const cautioned = variants
     .filter(({ variant }) => said(variant.safetyNotes))
     .map(({ variant }) => variant.form);
-  const hasText = said(shown.safetyNotes) || cautioned.length > 0;
   return (
     <div className="ingredient-summary">
-      <section className="ingredient-entry__section" aria-labelledby="summary-details-heading">
-        <h2 id="summary-details-heading">Details</h2>
-        {hasText && (
-          <div className="ingredient-entry__text">
-            <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
-            {cautioned.length > 0 && (
-              <p className="ingredient-summary__forms-caution">{formsCarrying(cautioned)}</p>
-            )}
-          </div>
-        )}
-        <div className="ingredient-entry__side">
-          <CorrespondenceBlock
-            block={blockOf('summary', 'correspondences')}
-            rows={correspondences(shown, deities)}
-            level={3}
-          />
-          <ListBlock
-            block={blockOf('summary', 'folk-names')}
-            title="Folk Names"
-            level={3}
-            empty="No folk names recorded."
-          >
-            {folkNames.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ListBlock>
-          <ListBlock
-            block={blockOf('summary', 'categories')}
-            title="Categories"
-            level={3}
-            empty="No categories recorded."
-            className="ingredient-entry__chips"
-          >
-            {categoryItems(categories)}
-          </ListBlock>
-        </div>
-      </section>
+      {/* No Details heading: the dialog's title names the entry, and its h2
+          over a second h2 read as two titles. The blocks keep the page's h3s. */}
+      <SafetyNote
+        safetyNotes={shown.safetyNotes}
+        level={3}
+        footnote={
+          cautioned.length > 0 && (
+            <p className="ingredient-summary__forms-caution">{formsCarrying(cautioned)}</p>
+          )
+        }
+      />
+      <div className="ingredient-entry__side">
+        <CorrespondenceBlock
+          block={blockOf('summary', 'correspondences')}
+          rows={correspondences(shown, deities)}
+          level={3}
+        />
+        <ListBlock
+          block={blockOf('summary', 'folk-names')}
+          title="Folk Names"
+          level={3}
+          empty="No folk names recorded."
+        >
+          {folkNames.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ListBlock>
+        <ListBlock
+          block={blockOf('summary', 'categories')}
+          title="Categories"
+          level={3}
+          empty="No categories recorded."
+          className="ingredient-entry__chips"
+        >
+          {categoryItems(categories)}
+        </ListBlock>
+      </div>
     </div>
   );
 }

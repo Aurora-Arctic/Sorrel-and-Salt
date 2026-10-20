@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 /**
@@ -25,6 +26,12 @@ export interface SafetyNoteProps {
   variants?: readonly SafetyVariant[];
   /** The Caution heading's level, one below the heading it sits under. Defaults to 3. */
   level?: SafetyHeadingLevel;
+  /**
+   * A line after the notes, inside the caution, for a consumer that shows no
+   * forms: the details modal names the forms that carry their own (M12.5).
+   * It shows the caution by itself when there are no notes.
+   */
+  footnote?: ReactNode;
 }
 
 export interface ToxicMarkProps {

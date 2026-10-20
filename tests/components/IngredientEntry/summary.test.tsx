@@ -107,8 +107,10 @@ describe('IngredientSummary', () => {
 
   it('names the forms that carry a caution of their own, and no form when none does', () => {
     const { unmount } = render(<IngredientSummary detail={full()} />);
-    // The form with notes is named; the one without is not.
-    expect(screen.getByText(new RegExp(formLabel('testoil')))).toBeInTheDocument();
+    // The form with notes is named, inside the caution, so the two read as one
+    // warning; the one without is not.
+    const caution = screen.getByRole('region', { name: 'Caution' });
+    expect(within(caution).getByText(new RegExp(formLabel('testoil')))).toBeInTheDocument();
     expect(screen.queryByText(new RegExp(formLabel('testroot')))).not.toBeInTheDocument();
     unmount();
 
@@ -122,11 +124,21 @@ describe('IngredientSummary', () => {
     expect(screen.queryByText(new RegExp(formLabel('testoil')))).not.toBeInTheDocument();
   });
 
+  it("draws the caution for a form's alone, naming the form, when the entry has none of its own", () => {
+    render(<IngredientSummary detail={full({ entry: entryDetail().entry })} />);
+
+    const caution = screen.getByRole('region', { name: 'Caution' });
+    expect(within(caution).getByText(new RegExp(formLabel('testoil')))).toBeInTheDocument();
+    expect(within(caution).queryByText('Fixture entry caution.')).not.toBeInTheDocument();
+  });
+
   it('leaves out the description, the forms, the substitutes, the references and Similar', () => {
     render(<IngredientSummary detail={full()} />);
 
-    // Why they could show: the detail carries a description, forms and substitutes.
-    expect(screen.getByRole('heading', { name: 'Details' })).toBeInTheDocument();
+    // Why they could show: the detail carries a description, forms and substitutes,
+    // and the summary is drawn. No Details heading: the dialog's title names the entry.
+    expect(screen.getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument();
     expect(screen.queryByText('A fixture description.')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Forms' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Substitutes' })).not.toBeInTheDocument();

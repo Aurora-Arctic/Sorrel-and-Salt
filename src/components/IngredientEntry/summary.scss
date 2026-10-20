@@ -1,15 +1,33 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The details modal's section stacks at every width (the owner's call,
-// 2026-10-20): the page's two columns follow the viewport, and in the 32rem
-// modal they left the text column a few rem wide. As the page stacks below a
-// tablet's width, with the same steps.
-.ingredient-summary .ingredient-entry__section {
-  @include stack(4);
+// The details modal's body (M12.5): the caution, then the page's side column
+// of blocks, stacked at every width (the owner's call, 2026-10-20), as the
+// 32rem modal has no room for the page's two columns. One rhythm: the caution
+// stands off the first block by the side column's own gap between blocks.
+.ingredient-summary {
+  @include stack(6);
 }
 
+// A bare `section` carries the document rhythm's margin (_layout.scss), which
+// would add 16px above the caution and below it on top of the stack's gap.
+.ingredient-summary .safety-note {
+  margin: 0;
+}
+
+// The side column's own top margin and grid column are the page's, set
+// against the viewport, which would put 16px under the caution on a phone and
+// none on a desktop; the stack above spaces it instead.
+.ingredient-summary .ingredient-entry__side {
+  grid-column: auto;
+  margin-block-start: 0;
+}
+
+// The line naming the forms with their own cautions, inside the caution so the
+// two read as one warning, in the muted ink. The section's own gap spaces it
+// from the notes, as it spaces the notes from each other.
 .ingredient-summary__forms-caution {
   margin: 0;
+  max-width: $measure;
   color: $text-muted;
 }
