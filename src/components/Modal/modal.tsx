@@ -15,6 +15,7 @@ import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
 import { firstShownField } from './fields';
 import { pageHeading } from './page-heading';
+import { holdPage } from './page-hold';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
@@ -101,12 +102,15 @@ const Modal = ({
     if (!dialog) return;
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
     let cancelled = false;
+    let release: (() => void) | undefined;
     if (!dialog.open) {
       if (!taken.current) {
         taken.current = true;
         const active = document.activeElement;
         opener.current = active === document.body ? null : active;
       }
+      // Measured before showModal(), while the scrollbar it is to replace is still there.
+      release = holdPage();
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
       // Close, in the header; the person opened the dialog to fill it in, so
@@ -127,6 +131,7 @@ const Modal = ({
     return () => {
       cancelled = true;
       dialog.close();
+      release?.();
       // Strict Mode's rehearsal leaves the dialog in the page; only a real
       // unmount takes it out, and only that gives the focus back.
       if (!dialog.isConnected) giveFocusBack(opener.current, fallback.current);

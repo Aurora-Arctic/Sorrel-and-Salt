@@ -824,3 +824,77 @@ describe('Modal', () => {
     });
   });
 });
+
+// While a modal is open the root's scroll is hidden, and the scrollbar's room
+// is given back as padding (Modal/page-hold.ts): the width is published as
+// `--scrollbar-width` only where the page had a scrollbar, and only until the
+// last modal closes. The padding itself is presentation, measured by hand.
+describe('Modal holding the page', () => {
+  const root = document.documentElement;
+  const widthOf = () => root.style.getPropertyValue('--scrollbar-width');
+
+  // happy-dom lays nothing out, so the root's width is set to say whether
+  // the page has a scrollbar: narrower than the window means it has one.
+  function pageWithScrollbar(scrollbar: number) {
+    Object.defineProperty(root, 'clientWidth', {
+      configurable: true,
+      get: () => window.innerWidth - scrollbar,
+    });
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(root, 'clientWidth');
+  });
+
+  it('gives the room back while open where the page has a scrollbar, and takes it back on close', () => {
+    pageWithScrollbar(15);
+    expect(widthOf()).toBe('');
+
+    const { unmount } = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(widthOf()).toBe('15px');
+
+    unmount();
+    expect(widthOf()).toBe('');
+  });
+
+  it('sets nothing where the page has no scrollbar', () => {
+    pageWithScrollbar(0);
+
+    const { unmount } = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Edit Category' })).toHaveAttribute('open');
+    expect(widthOf()).toBe('');
+    unmount();
+  });
+
+  // A second modal opens once the scrollbar is already gone, so it must not
+  // measure again, and the first closing must not give the room back early.
+  it('keeps the room until the last of two open modals closes', () => {
+    pageWithScrollbar(15);
+    const first = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    pageWithScrollbar(0);
+    const second = render(
+      <Modal title="Delete Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(widthOf()).toBe('15px');
+
+    first.unmount();
+    expect(widthOf()).toBe('15px');
+
+    second.unmount();
+    expect(widthOf()).toBe('');
+  });
+});

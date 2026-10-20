@@ -142,13 +142,18 @@ $close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(
 
 // While a dialog is open the page behind it holds still, the owner's call
 // during M5.5: `showModal()` makes the page inert, but a wheel over the
-// backdrop still scrolled it. CSS alone, so no listener can leave it locked.
-// Nothing shifts sideways as the scrollbar goes, since the page keeps its room
-// whether it scrolls or not (`scrollbar-gutter`, globals.scss); set only
-// here, a page with no scrollbar gained the room as a modal opened and moved.
-// The dialog keeps its own scroll, so nothing in it is out of reach.
+// backdrop still scrolled it. The overflow is CSS, so no listener can leave
+// the page locked. The room the scrollbar took is given back as padding,
+// `--scrollbar-width`, which `holdPage` (page-hold.ts) measures as the first
+// modal opens and sets only where there was a scrollbar, so nothing behind
+// moves (the owner's call, 2026-10-20). It replaces `scrollbar-gutter: stable`:
+// kept on every page it left a blank strip beside the header on a page that
+// fits the window, and kept only here a page with no scrollbar gained the room
+// as a modal opened. The dialog keeps its own scroll, so nothing in it is out
+// of reach.
 :root:has(.modal-dialog:modal) {
   overflow: hidden;
+  padding-inline-end: var(--scrollbar-width, 0);
 }
 
 // A long form's width (M5.5), the compendium entry's first: its list fields

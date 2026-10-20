@@ -25,7 +25,8 @@ $theme-toggle-icon-arc: 130deg;
   // Beneath anything in the page's flow above it: the impersonation banner
   // on a touch screen (MB.53).
   top: $top-inset;
-  right: 0;
+  // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
+  right: var(--scrollbar-width, 0);
   // Above the impersonation banner, which runs beneath this corner (MB.53).
   z-index: layer('toggle');
   display: flex;

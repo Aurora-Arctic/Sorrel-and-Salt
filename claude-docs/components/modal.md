@@ -712,14 +712,31 @@ back, so a column keeps the content width it had.
 **The page behind does not scroll while it is open** (M5.5, the owner's
 call). `showModal()` makes the page inert, but a wheel over the backdrop
 still scrolled it. `:root:has(.modal-dialog:modal)` sets `overflow: hidden`,
-in CSS so no listener can leave the page locked. Nothing behind it shifts
-sideways as the scrollbar goes: every page keeps the scrollbar's room,
-scrolling or not (`scrollbar-gutter: stable` on `html`, `globals.scss`),
-so that nothing behind a modal moves (the owner's call, 2026-10-20). It used
-to be set only while a modal was open, so a page with no scrollbar gained the
-room as one opened and moved by half of it, 7.5px in Chromium. The body's own
-scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
-out of reach.
+in CSS so no listener can leave the page locked.
+
+**Nothing behind it moves sideways as the scrollbar goes** (the owner's call,
+2026-10-20). Hiding the page's scroll takes its scrollbar away, which on a
+system whose scrollbars take room (Windows, most Linux desktops, a Mac set to
+show them always) would widen the page by about 15px and move centred content
+by half of that. So as the first modal opens, `holdPage` (`page-hold.ts`)
+measures the scrollbar, `window.innerWidth - document.documentElement.clientWidth`,
+and only where that is more than 0 sets the width on the root as
+`--scrollbar-width`. The root's padding takes the scrollbar's place for as long
+as a modal holds the page, and the fixed elements anchored to the right edge
+(the theme toggle's corner, the impersonation banner, the page bar and the salt
+corner of the backdrop) read the same property, so they stay put too. A modal
+opened over another does not measure again, the scrollbar being gone by then,
+and the room is given back only when the last one closes. A page with no
+scrollbar, or one whose scrollbars float over it, sets nothing.
+
+This JavaScript measurement replaces a CSS-only one, `scrollbar-gutter: stable`,
+which reserves the scrollbar's room. Set only while a modal was open, a page
+with no scrollbar gained the room as one opened and moved by half of it. Set on
+every page, it left a blank strip beside the header on a page that fits the
+window, so the header and its menu stopped short of the right edge (the
+owner turned it down: the owner's call, 2026-10-20). The body's own scroll is
+`overscroll-behavior: contain`, and it keeps it, so nothing in it is out of
+reach.
 
 **The skeleton** (M9.18) is the shared `Skeleton` of the `form` shape
 ([`skeleton.md`](skeleton.md)); `ModalLoading` only renders it.

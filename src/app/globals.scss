@@ -29,17 +29,6 @@ html {
   scroll-behavior: smooth;
 }
 
-// The scrollbar's room is kept on every page, scrolling or not, so nothing
-// moves sideways when a scrollbar comes or goes: opening a modal hides it
-// (Modal/index.scss), and a page that grows past the window gains one. Set
-// here, not only while a modal is open, since a page with no scrollbar would
-// then gain the room as the modal opens and shift by half of it; nothing
-// behind a modal moves (the owner's call, 2026-10-20). Overlay scrollbars take no room, so it changes nothing there.
-html {
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the content shifts by a scrollbar width as a scrollbar comes or goes, widely available 2027-06-11
-  scrollbar-gutter: stable;
-}
-
 // Inside the shell a scroll that brings a focused control into view lands
 // it below the sticky bar, and on a phone above the fixed section bar.
 html:has(.app-shell) {
