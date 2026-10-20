@@ -22,14 +22,14 @@ test.beforeAll(async () => {
 });
 
 const ADD = 'Add to My Ingredients';
-const SHELF = 'In Your Covens';
+const SHELF = 'In Your Cupboard';
 // What a held coven's check in the plus's menu stands for, joined to its name.
-const HELD_MARK = 'already added';
+const HELD_MARK = 'in its cupboard';
 const NAME = 'Fixture Shelfwort';
-// The plus and the check are named by their tips and then the entry (MB.120); a role name
-// matches in part, so ADD and HELD find them. HELD keeps the colon, so it never finds the
-// shelf, which is named In Your Covens alone (SHELF, matched exactly).
-const HELD = 'In Your Covens:';
+// The plus and the check are tipped and named by their words and then the entry (MB.120); a
+// role name matches in part, so ADD and HELD find them. HELD keeps the colon, so it finds only
+// the check, never the shelf, which is named In Your Cupboard alone (SHELF, matched exactly).
+const HELD = 'In Every Cupboard:';
 
 test('a member adds the entry from its public page, and the three dots then offer its removal', async ({
   page,

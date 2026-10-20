@@ -44,7 +44,7 @@ const resolveCompendiumSlug = vi.fn();
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
-// The viewer's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// The viewer's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
@@ -334,7 +334,7 @@ describe("the public compendium page, with an entry's details open", () => {
     expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
     // A visitor has no covens, so the page asks for none.
     expect(covensHoldingEntry).not.toHaveBeenCalled();
-    expect(within(dialog).queryByRole('list', { name: 'In Your Covens' })).toBeNull();
+    expect(within(dialog).queryByRole('list', { name: 'In Your Cupboards' })).toBeNull();
   });
 
   it("lists a signed-in viewer's own covens that hold the entry in the details, read with their session", async () => {
@@ -345,7 +345,7 @@ describe("the public compendium page, with an entry's details open", () => {
     await renderPage({ ...SEARCH, entry: NODE.id });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
-    const covens = within(details()!).getByRole('list', { name: 'In Your Covens' });
+    const covens = within(details()!).getByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
       'href',
       `/coven/fixture-coven/ingredients/${NODE.id}`,

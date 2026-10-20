@@ -107,7 +107,7 @@ const items = (menu: HTMLElement): string[] =>
 /** Every coven by name, the order the menu lists them in. */
 const BY_NAME = [FIRST, THIRD, SECOND];
 /** A held coven's item: its name, then the mark its check stands for. */
-const held = (name: string) => `${name}, already added`;
+const held = (name: string) => `${name}, in its cupboard`;
 
 function mockAdd() {
   const calls: AddCupboardEntryMutationVariables[] = [];
@@ -269,10 +269,10 @@ describe('the add icon among several covens', () => {
     expect(screen.getAllByRole('button', { name: /^Add to My Ingredients/ })).toEqual([
       screen.getByRole('button', { name: 'Add to My Ingredients: Fixture Heldone' }),
     ]);
-    expect(screen.getAllByRole('button', { name: /^In Your Covens/ })).toEqual([
-      screen.getByRole('button', { name: 'In Your Covens: Fixture Heldall' }),
+    expect(screen.getAllByRole('button', { name: /^In Every Cupboard/ })).toEqual([
+      screen.getByRole('button', { name: 'In Every Cupboard: Fixture Heldall' }),
     ]);
-    expect(screen.queryByRole('link', { name: /^In Your Covens/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /^In Every Cupboard/ })).toBeNull();
   });
 });
 

@@ -578,7 +578,7 @@ describe('CupboardActions', () => {
       const [here, other] = within(
         screen.getByRole('menu', { name: /^Add to My Ingredients: / }),
       ).getAllByRole('menuitem');
-      expect(here).toHaveAccessibleName(`${HERE.name}, already added`);
+      expect(here).toHaveAccessibleName(`${HERE.name}, in its cupboard`);
       expect(here).toHaveAttribute('aria-disabled', 'true');
       expect(other).toHaveAccessibleName(OTHER.name);
       expect(other).not.toHaveAttribute('aria-disabled');
@@ -605,7 +605,7 @@ describe('CupboardActions', () => {
       expect(
         screen.queryByRole('button', { name: /^Add to My Ingredients: / }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^In Your Covens: / })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toBeInTheDocument();
     });
 
@@ -616,7 +616,7 @@ describe('CupboardActions', () => {
       expect(
         screen.queryByRole('button', { name: /^Add to My Ingredients: / }),
       ).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^In Your Covens: / })).toBeNull();
+      expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
     });
   });
 });

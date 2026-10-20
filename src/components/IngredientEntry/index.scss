@@ -221,7 +221,7 @@ $formal-line: $icon-size;
   margin: 0;
 }
 
-// In Your Covens: the shelf before the name, at the heading's size and in
+// In Your Cupboard: the shelf before the name, at the heading's size and in
 // the muted ink, so it reads as a mark on the name and not part of it (the
 // owner's mock-up, 2026-10-19). A button to carry its tip, which a press opens
 // too (held-mark.tsx).
@@ -673,7 +673,7 @@ $replaces-gap: space(5);
 // on the `:target` highlight, `$accent-hover` is above 6:1), as the admin
 // compendium's name links do. The underline stays, since it is what marks
 // them as links without the colour, but faded (`faded-underline`, _mixins.scss).
-// The covens under In Your Covens in the details modal (summary.scss) share it
+// The covens under In Your Cupboards in the details modal (summary.scss) share it
 // (the owner's call, 2026-10-20).
 .ingredient-entry__marks a,
 .ingredient-entry__references a,

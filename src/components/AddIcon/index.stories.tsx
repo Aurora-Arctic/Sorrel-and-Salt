@@ -27,7 +27,7 @@ export const OneCoven: Story = () => (
 );
 
 // Two covens: the plus is a menu of both, and the first already holds the entry, so it is
-// disabled and marked already added.
+// disabled and marked in its cupboard.
 export const SeveralCovens: Story = () => (
   <AddIcon name={NAME} workspaceId={ONE} ingredientId="fixture" covens={COVENS} heldIn={[ONE]} />
 );
@@ -73,5 +73,6 @@ export const Returning: Story = () => (
   </IconTip>
 );
 
-// Every coven holds it: CompendiumCards' check stands in the plus's place, tipped In Your Covens.
+// Every coven holds it: CompendiumCards' check stands in the plus's place, tipped In Every Cupboard
+// and the entry's name.
 export const Held: Story = () => <HeldMark name={NAME} />;

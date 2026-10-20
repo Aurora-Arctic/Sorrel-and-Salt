@@ -8,25 +8,29 @@ import '../AddIcon/index.scss';
 // plus itself is AddIcon's.
 
 /**
- * The tip, and the start of the name: the one noun the compendium uses for "you hold this", as
- * the details modal's In Your Covens list does (MB.120, in place of In All Covens).
+ * The start of the tip and the name: the compendium's one noun for "you hold this" is the
+ * cupboard, as the entry page's In Your Cupboard and the details modal's In Your Cupboards say
+ * (MB.120, the owner's call, 2026-10-20, in place of In All Covens).
  */
-export const HELD_ALL_TIP = 'In Your Covens';
+export const HELD_ALL_TIP = 'In Every Cupboard';
 
 /**
  * The check: every coven the viewer may write in holds this entry. A status mark, not a link
- * (the owner’s call, 2026-10-20): the details modal’s In Your Covens list carries the links
- * to each coven’s copy. Tipped In Your Covens, and named that and then the entry, "In Your
- * Covens: Testwort, Formalis testis", as the plus is (MB.120), so a list of buttons tells one
- * card's check from the next. A
+ * (the owner’s call, 2026-10-20): the details modal’s In Your Cupboards list carries the links
+ * to each coven’s copy. Tipped and named In Every Cupboard and then the entry, "In Every
+ * Cupboard: Testwort, Formalis testis", as the plus is (MB.120; the owner's call, 2026-10-20,
+ * that the tip says the name too), so a list of buttons tells one card's check from the next. A
  * button to carry its tip, as the entry page's shelf is: the tip opens on hover, on focus,
  * so the keyboard reaches it (WCAG 2.1.1), and on a press, as InfoTip's ⓘ does, so a tap
  * shows it on touch (the owner's call, 2026-10-20). The press does nothing else.
  */
-export const HeldMark = ({ name }: { name: string }): ReactElement => (
-  <IconTip tip={HELD_ALL_TIP} opensOnPress>
-    <button type="button" className="add-icon--held" aria-label={`${HELD_ALL_TIP}: ${name}`}>
-      <CheckIcon />
-    </button>
-  </IconTip>
-);
+export const HeldMark = ({ name }: { name: string }): ReactElement => {
+  const label = `${HELD_ALL_TIP}: ${name}`;
+  return (
+    <IconTip tip={label} opensOnPress>
+      <button type="button" className="add-icon--held" aria-label={label}>
+        <CheckIcon />
+      </button>
+    </IconTip>
+  );
+};

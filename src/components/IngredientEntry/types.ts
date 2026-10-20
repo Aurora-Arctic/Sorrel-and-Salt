@@ -130,7 +130,7 @@ export interface IngredientEntryProps {
   covens?: PublicCupboardProps;
   /**
    * The public page's (M9.12): one of the viewer's covens, of any role, holds this entry, read
-   * by `covensHoldingEntry` as the details modal's In Your Covens is. Draws the shelf before the
+   * by `covensHoldingEntry` as the details modal's In Your Cupboards is. Draws the shelf before the
    * name and nothing else; false for a visitor.
    */
   heldInCovens?: boolean;
@@ -262,7 +262,7 @@ export interface IngredientDetailsOpened {
    * no badge shows.
    */
   marks?: DetailsMarks;
-  /** The entry's own page, which the foot's link (See in Compendium or See in Your Coven) reaches. */
+  /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
   /**
    * An Edit that opens the edit modal over the details, for whoever may edit

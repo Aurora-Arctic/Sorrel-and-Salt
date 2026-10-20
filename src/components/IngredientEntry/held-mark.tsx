@@ -9,11 +9,12 @@ import IconTip from '../IconTip';
 // are, and outside the `h1` so the heading reads as the name alone. The tip
 // opens on hover, on focus, and on a press, as InfoTip's ⓘ does, so a tap shows
 // it on touch (the owner's call, 2026-10-20); the press does nothing else.
-// claude-docs/components/ingredient-entry.md, "In Your Covens".
+// The words are the compendium's one noun for "you hold this", the cupboard (MB.120, the
+// owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md, "In Your Cupboard".
 
-export const HELD_TIP = 'In Your Covens';
+export const HELD_TIP = 'In Your Cupboard';
 
-// Exported for the details modal's In Your Covens links, which each lead with it.
+// Exported for the details modal's In Your Cupboards links, which each lead with it.
 export const ShelfIcon = (): ReactElement => (
   <svg
     viewBox="0 0 32 32"

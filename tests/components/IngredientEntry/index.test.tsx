@@ -1272,9 +1272,9 @@ describe('IngredientEntry on a coven page', () => {
 });
 
 // The public page's shelf (M9.12): a compendium entry any of the viewer's covens holds carries
-// In Your Covens before its name, as it does on the coven's own page.
+// In Your Cupboard before its name, as it does on the coven's own page.
 describe('IngredientEntry on the public page, held in a coven', () => {
-  const shelf = () => screen.queryByRole('button', { name: 'In Your Covens' });
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
   it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
     renderEntry({ heldInCovens: true });
@@ -1286,16 +1286,16 @@ describe('IngredientEntry on the public page, held in a coven', () => {
 
   // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
   // so it shows on touch. A click here focuses nothing, so the press alone opens it.
-  it('opens the In Your Covens tip when the shelf is pressed', () => {
+  it('opens the In Your Cupboard tip when the shelf is pressed', () => {
     renderEntry({ heldInCovens: true });
     const mark = shelf()!;
     const tips = () =>
       screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-    expect(tips()).not.toContain('In Your Covens');
+    expect(tips()).not.toContain('In Your Cupboard');
 
     fireEvent.click(mark);
     expect(mark).not.toHaveFocus();
-    expect(tips()).toContain('In Your Covens');
+    expect(tips()).toContain('In Your Cupboard');
   });
 
   it('puts no shelf on a compendium entry no coven of the viewer’s holds', () => {

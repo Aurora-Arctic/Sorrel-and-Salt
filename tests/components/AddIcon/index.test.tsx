@@ -40,32 +40,32 @@ function tipOf(control: HTMLElement): string | null {
 }
 
 describe('the plus names its entry', () => {
-  it('names the lone plus by its entry, its short tip first', () => {
+  it('names and tips the lone plus by its entry', () => {
     render(<Plus covens={[ONE]} />);
     const plus = screen.getByRole('button', { name: `Add to My Ingredients: ${NAME}` });
-    expect(tipOf(plus)).toBe('Add to My Ingredients');
+    expect(tipOf(plus)).toBe(`Add to My Ingredients: ${NAME}`);
   });
 
-  it("names the menu's plus by its entry, its short tip first", () => {
+  it("names and tips the menu's plus by its entry", () => {
     render(<Plus covens={[ONE, TWO]} />);
     const plus = screen.getByRole('button', { name: `Add to My Ingredients: ${NAME}` });
-    expect(tipOf(plus)).toBe('Add to My Ingredients');
+    expect(tipOf(plus)).toBe(`Add to My Ingredients: ${NAME}`);
   });
 
-  it('names its menu by the entry, and marks a held coven already added', () => {
+  it('names its menu by the entry, and marks a held coven in its cupboard', () => {
     render(<Plus covens={[ONE, TWO]} />);
     fireEvent.click(screen.getByRole('button', { name: `Add to My Ingredients: ${NAME}` }));
     const menu = screen.getByRole('menu', { name: `Add to My Ingredients: ${NAME}` });
     expect(
-      within(menu).getByRole('menuitem', { name: `${TWO.name}, already added` }),
+      within(menu).getByRole('menuitem', { name: `${TWO.name}, in its cupboard` }),
     ).toHaveAttribute('aria-disabled', 'true');
   });
 });
 
 describe('the held check names its entry', () => {
-  it('is In Your Covens and the entry, its short tip first', () => {
+  it('is named and tipped In Every Cupboard and the entry', () => {
     render(<HeldMark name={NAME} />);
-    const check = screen.getByRole('button', { name: `In Your Covens: ${NAME}` });
-    expect(tipOf(check)).toBe('In Your Covens');
+    const check = screen.getByRole('button', { name: `In Every Cupboard: ${NAME}` });
+    expect(tipOf(check)).toBe(`In Every Cupboard: ${NAME}`);
   });
 });

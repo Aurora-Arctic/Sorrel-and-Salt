@@ -204,7 +204,7 @@ describe('the public entry page’s cupboard choices', () => {
   });
 });
 
-// The In Your Covens shelf before the name (M9.12): shown when any coven of the viewer's holds
+// The In Your Cupboard shelf before the name (M9.12): shown when any coven of the viewer's holds
 // the entry, viewers' covens included, from the one held read that feeds the choices too.
 describe('the public entry page’s shelf mark', () => {
   const heldInCovens = async () => (await entryProps()).heldInCovens;

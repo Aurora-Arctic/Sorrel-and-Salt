@@ -18,12 +18,12 @@
 
 ## Contracts
 
-- **One coven adds at once; two or more are a menu.** With one writable coven, a press sends `addCupboardEntry` there and reads the page again. With two or more, the plus is a [`MenuButton`](menu-button.md) of every one of them by name, and a coven that holds the entry is a disabled item named **<coven>, already added**.
-- **Its name is the tip and then the entry:** **Add to My Ingredients: Testwort, Formalis testis** (MB.120). The tip, Add to My Ingredients, begins the name, so the words on screen are the first words of the name (WCAG 2.5.3). The colon is there because a formal name holds a comma of its own. The menu takes the same name. The reasoning is in [`compendium-cards.md`](compendium-cards.md), "Names".
+- **One coven adds at once; two or more are a menu.** With one writable coven, a press sends `addCupboardEntry` there and reads the page again. With two or more, the plus is a [`MenuButton`](menu-button.md) of every one of them by name, and a coven that holds the entry is a disabled item named **<coven>, in its cupboard**.
+- **Its name and its tip are the words and then the entry:** **Add to My Ingredients: Testwort, Formalis testis** (MB.120; the owner's call, 2026-10-20, that the tip says the entry too), so the words on screen are the name (WCAG 2.5.3). The colon is there because a formal name holds a comma of its own. The menu takes the same name. The reasoning is in [`compendium-cards.md`](compendium-cards.md), "Names".
 - **Busy keeps the focus.** From the press until the page has been read again, the plus shows the shared spinner and carries `aria-busy` and `aria-disabled`, never `disabled`, so the focus stays on it (MB.120). A press while busy does nothing.
 - **After an add**, the spinner turns into the check, which holds for `ADDED_HOLD_MS` (1s) and then fades back to the plus; where the add left every coven holding the entry, the check stays until the page draws `HeldMark` in its place. The button's `data-state` is `added`, then `returning` during the fade. The success is said once, "Added to <coven>.", through the page's status region.
 - **A refusal** is said in a callout under the plus ([`click-feedback.md`](click-feedback.md)), whose badge is named Show the error for <the plus's name>, and the focus goes back to the plus.
-- **The held check**, `HeldMark` in `src/components/CompendiumCards/held-mark.tsx`, takes the plus's place once every writable coven holds the entry. It is tipped **In Your Covens** and named that and then the entry. Its look lives here, in `.add-icon--held`, since it stands where the plus stood.
+- **The held check**, `HeldMark` in `src/components/CompendiumCards/held-mark.tsx`, takes the plus's place once every writable coven holds the entry. It is tipped and named **In Every Cupboard** and then the entry: **In Every Cupboard: Testwort, Formalis testis**. Its look lives here, in `.add-icon--held`, since it stands where the plus stood.
 
 ## Styling
 

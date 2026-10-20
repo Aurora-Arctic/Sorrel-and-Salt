@@ -136,7 +136,7 @@ describe('CompendiumCards', () => {
   describe('the add icon', () => {
     /** Any card's plus, and any card's check: each is named by its tip and then its entry. */
     const PLUS = { name: /^Add to My Ingredients: / };
-    const HELD = { name: /^In Your Covens: / };
+    const HELD = { name: /^In Every Cupboard: / };
     const addTo = (slug: string) => {
       const item = screen
         .getAllByRole('listitem')
@@ -160,39 +160,40 @@ describe('CompendiumCards', () => {
     });
 
     // The owner's calls, 2026-10-20: the check is a status mark, not a link, since the details
-    // modal's In Your Covens list carries the links to each coven's copy; it is tipped In Your
-    // Covens (MB.120, the one noun for "you hold this", in place of In All Covens) and named that
-    // and its entry, a button only to carry its tip, as the entry page's shelf is.
-    it('swaps the plus for a check named In Your Covens and its entry on a card every coven holds, tipped and no link', () => {
+    // modal's In Your Cupboards list carries the links to each coven's copy; it is tipped and
+    // named In Every Cupboard and its entry (MB.120, the one noun for "you hold this", in place of
+    // In All Covens; the tip says the name too), a button only to carry its tip, as the entry
+    // page's shelf is.
+    it('swaps the plus for a check named and tipped In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
       expect(screen.getAllByRole('button', PLUS)).toHaveLength(2);
       const mark = screen.getByRole('button', HELD);
-      expect(mark).toHaveAccessibleName('In Your Covens: Testwort, Fixtura testalis');
+      expect(mark).toHaveAccessibleName('In Every Cupboard: Testwort, Fixtura testalis');
       expect(mark.closest('a')).toBeNull();
       expect(screen.queryByRole('link', HELD)).toBeNull();
 
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain('In Your Covens');
+      expect(tips()).not.toContain('In Every Cupboard: Testwort, Fixtura testalis');
       act(() => mark.focus());
-      expect(tips()).toContain('In Your Covens');
+      expect(tips()).toContain('In Every Cupboard: Testwort, Fixtura testalis');
     });
 
     // The owner's call, 2026-10-20: a press opens the check's tip, as a tap does on InfoTip's ⓘ,
     // so it shows on touch, where there is no hover. A click here focuses nothing, so the
     // press alone opens it.
-    it('opens the In Your Covens tip when the check is pressed', () => {
+    it('opens the In Every Cupboard tip when the check is pressed', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
       const mark = screen.getByRole('button', HELD);
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain('In Your Covens');
+      expect(tips()).not.toContain('In Every Cupboard: Testwort, Fixtura testalis');
 
       fireEvent.click(mark);
       expect(mark).not.toHaveFocus();
-      expect(tips()).toContain('In Your Covens');
+      expect(tips()).toContain('In Every Cupboard: Testwort, Fixtura testalis');
     });
 
     it('draws neither without a coven to add to', () => {

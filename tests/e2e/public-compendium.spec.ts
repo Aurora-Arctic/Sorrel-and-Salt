@@ -19,7 +19,7 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
 const ADD = 'Add to My Ingredients';
-const HELD = 'In Your Covens';
+const HELD = 'In Every Cupboard';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

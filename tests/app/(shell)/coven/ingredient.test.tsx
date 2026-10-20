@@ -332,7 +332,7 @@ describe('the coven ingredient page’s plus', () => {
     expect(covensHolding).toHaveBeenCalledWith(ID);
     expect(plusCovensOf).toHaveBeenCalledWith(HOLDING, WORKSPACE.id);
     expect(screen.getByRole('button', { name: /^Add to My Ingredients: / })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^In Your Covens: / })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
 
   it('draws the check in its place once every coven that may add holds the entry', async () => {
@@ -343,7 +343,7 @@ describe('the coven ingredient page’s plus', () => {
     });
     await open(compendiumRow());
 
-    expect(screen.getByRole('button', { name: /^In Your Covens: / })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^In Every Cupboard: / })).toBeInTheDocument();
   });
 
   it("asks nothing for the coven's own entry, which takes neither plus nor check", async () => {
@@ -356,7 +356,7 @@ describe('the coven ingredient page’s plus', () => {
     await open(covenRow());
 
     expect(plusCovensOf).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: /^In Your Covens: / })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
 
   it('asks nothing for a retired entry, which the compendium no longer offers', async () => {
@@ -428,7 +428,7 @@ describe('the coven ingredient page’s Annotate', () => {
 // name for one the cupboard holds (the owner's call, 2026-10-19).
 describe('the coven ingredient page’s marks', () => {
   const compendiumMark = () => screen.queryByRole('status');
-  const shelf = () => screen.queryByRole('button', { name: 'In Your Covens' });
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
   it('marks a compendium entry the coven does not hold as from the Compendium, with no shelf', async () => {
     await open(compendiumRow());

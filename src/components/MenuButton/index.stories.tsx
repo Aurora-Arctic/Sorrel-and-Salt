@@ -65,7 +65,7 @@ const Foot = () => (
 export const OpensAbove: Story = () => <Foot />;
 
 // The plus's menu of covens (M9.12): a coven that holds the entry is disabled, its name followed
-// by the green check (`mark`) and named "Fixture Coven Two, already added".
+// by the green check (`mark`) and named "Fixture Coven Two, in its cupboard".
 export const MarkedItem: Story = () => (
   <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
     <MenuButton
@@ -78,7 +78,7 @@ export const MarkedItem: Story = () => (
           label: 'Fixture Coven Two',
           onSelect: () => {},
           disabled: true,
-          mark: 'already added',
+          mark: 'in its cupboard',
         },
       ]}
     />

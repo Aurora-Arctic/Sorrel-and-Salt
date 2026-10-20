@@ -218,7 +218,7 @@ describe('CupboardActions on the public page', () => {
       const [one, two] = within(menu).getAllByRole('menuitem');
       expect(one).toHaveAccessibleName(place(1).name);
       expect(one).not.toHaveAttribute('aria-disabled');
-      expect(two).toHaveAccessibleName(`${place(2).name}, already added`);
+      expect(two).toHaveAccessibleName(`${place(2).name}, in its cupboard`);
       expect(two).toHaveAttribute('aria-disabled', 'true');
       expect(two).not.toHaveAccessibleDescription();
 
@@ -249,14 +249,14 @@ describe('CupboardActions on the public page', () => {
 
       expect(screen.getByRole('link', { name: 'Edit in Compendium Testwort' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
-      expect(screen.getByRole('button', { name: /^In Your Covens: / })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^In Every Cupboard: / })).toBeInTheDocument();
     });
 
     it('is not drawn, nor the check, for covens that may not add', () => {
       show(props([place(1, { canAdd: false }), place(2, { held: true, canAdd: false })]));
 
       expect(screen.queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
-      expect(screen.queryByRole('button', { name: /^In Your Covens: / })).toBeNull();
+      expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
     });
   });
 
