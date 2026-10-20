@@ -74,9 +74,11 @@ $page-gutter: space(4);
 // the row draws a copy instead (claude-docs/components/backdrop.md, "The copy in the search
 // row"). A direct child of the `<search>`, not of the form, whose `container-type` would
 // become the containing block of the fixed copies. `z-index: -1` paints it above the box's
-// own background and beneath the controls. The `clip-path` cuts the fixed copies to the row
+// own background and beneath the controls. A solid `mask-image` cuts the fixed copies to the row
 // and makes the layer a stacking context, so they blend with its page colour, as the real one
-// does with the page's. It is on this layer and never on the `<search>`, which would cut
+// does with the page's. A mask, not a `clip-path`: a clip's edge is anti-aliased at a half pixel
+// (an odd-width window centres the page on one), and there the copies drew a lighter one-pixel line
+// over the real sorrel; the mask's edge matches it. It is on this layer and never on the `<search>`, which would cut
 // off the stuck shadow and the tray. It reaches a gutter past the row either side, so a card
 // under the row (its hover shadow carries 20px) shows no shadow beside it.
 .ingredient-search > search > .filter-sorrel {
@@ -84,7 +86,7 @@ $page-gutter: space(4);
   inset: 0 calc(-1 * #{$page-gutter});
   z-index: -1;
   pointer-events: none;
-  clip-path: inset(0);
+  mask-image: linear-gradient(#000, #000);
   background-color: $surface-page;
 
   &::before,
