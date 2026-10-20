@@ -92,18 +92,26 @@ describe('LinkForm', () => {
     expect(within(picks()!).getAllByRole('listitem')).toHaveLength(1);
   });
 
-  it("opens a pick's summary from its ⓘ", async () => {
-    // The summary's own read, answered with a refusal so its sentence shows where it opened.
-    mockGraphQLError('IngredientSummary', { code: 'NOT_FOUND', message: 'No such ingredient' });
+  it("shows a pick's formal name and forms while its name is hovered or its × has focus, and Escape closes them", async () => {
     show([ROOT]);
     await pick('Splitwort');
-    const about = screen.getByRole('button', { name: 'About Splitwort' });
-    expect(about).toHaveAttribute('aria-expanded', 'false');
+    const tip = () => screen.queryByRole('tooltip');
+    const detail = 'Fixtura splitta · Rootform, Leafform';
+    // Shut until asked, and nothing beside the row opens a summary.
+    expect(tip()).toBeNull();
+    expect(within(picks()!).getAllByRole('button')).toHaveLength(1);
 
-    press(about);
+    fireEvent.mouseEnter(within(picks()!).getByText('Splitwort'));
+    expect(tip()).toHaveTextContent(detail);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(tip()).toBeNull();
 
-    expect(about).toHaveAttribute('aria-expanded', 'true');
-    expect(await within(picks()!).findByRole('alert')).toHaveTextContent('No such ingredient');
+    const remove = screen.getByRole('button', { name: 'Remove Splitwort' });
+    act(() => remove.focus());
+    expect(tip()).toHaveTextContent(detail);
+    expect(remove).toHaveAccessibleDescription(detail);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(tip()).toBeNull();
   });
 
   it('marks a form that holds nothing and no pick has as moving nothing, the reason told to a screen reader', async () => {

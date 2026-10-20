@@ -134,23 +134,6 @@ export function AnnotateIcon(): ReactElement {
   );
 }
 
-/** A circled i: what this is, opened beside it. */
-export function InfoIcon(): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.25" />
-      <path
-        d="M8 7.25V11.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="8" cy="4.9" r="0.9" fill="currentColor" />
-    </svg>
-  );
-}
-
 /**
  * Three dots stacked, ⋮: more choices, in a menu. A list card's More (M8.17,
  * the owner's call, 2026-10-20); a More drawn with words keeps its chevron.

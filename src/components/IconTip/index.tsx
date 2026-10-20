@@ -5,7 +5,6 @@ export { AnnotateLink, EditLink } from './edit-link';
 export {
   CopyIcon,
   DotsIcon,
-  InfoIcon,
   LinkIcon,
   AnnotateIcon,
   PencilIcon,

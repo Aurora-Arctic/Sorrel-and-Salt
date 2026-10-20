@@ -11,10 +11,9 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import BusyButton from '../BusyButton';
 import Combobox from '../Combobox';
 import { FieldShell, fieldDescription } from '../Field';
-import IconTip, { InfoIcon } from '../IconTip';
 import { RemoveIcon } from '../IngredientForm/icons';
-import { SubstituteSummary } from '../IngredientForm/substitute-summary';
 import { useCompendiumSubstitutes } from '../IngredientForm/suggestions';
+import { useTip } from '../InfoTip/use-tip';
 import Notice from '../Notice';
 import type { LinkFormProps, LinkPick } from './types';
 import './link-form.scss';
@@ -24,7 +23,8 @@ const NOTHING_MOVES =
   'This form holds no jars or spells, and none of the picked entries has it, so nothing moves.';
 
 // The Link dialog's body (M8.17): a search of the compendium whose picks list
-// as rows beneath it, as References' do, each with its summary behind ⓘ, then
+// as rows beneath it, as References' do, each with its formal name and forms
+// in a tooltip on its name, as a substitute chip shows its detail, then
 // the form map, which says where each of the coven's forms goes. A form goes
 // to the one pick with a form of its name, matched as the service matches
 // (trimmed, lower-cased); where two picks have it the member chooses, and a
@@ -74,6 +74,66 @@ function holdsText(jars: number, spells: number): string {
   return parts.length ? parts.join(' · ') : 'Nothing';
 }
 
+/**
+ * One pick's row: its name, its formal name and forms, and its ×. The formal
+ * name and forms also show in a tooltip while the name is hovered or the ×
+ * has focus, closed by Escape, as a substitute chip's detail does (MB.164,
+ * Combobox/entry.tsx): the chip's text is not in the tab order unless it opens
+ * something, so its × carries the focus and reads the detail as its
+ * description, and so does this one.
+ */
+function PickRow({ pick, onRemove }: { pick: LinkPick; onRemove: () => void }): ReactElement {
+  const detailId = useId();
+  const { canonicalName, forms } = pick.link;
+  const hasDetail = Boolean(canonicalName) || forms.length > 0;
+  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(
+    () => hasDetail,
+    'top-start',
+  );
+  const detail = (
+    <>
+      {canonicalName && <i>{canonicalName}</i>}
+      {canonicalName && forms.length > 0 && ' · '}
+      {forms.map(formLabel).join(', ')}
+    </>
+  );
+  return (
+    <li className="link-form__pick">
+      <span className="link-form__pick-name">
+        {/* Hover on a wrapper holding the tooltip as well as the name, so the
+            pointer can move onto the tooltip without closing it. */}
+        <span ref={anchor} onMouseEnter={show} onMouseLeave={hideSoon}>
+          {pick.name}
+          {/* In the page while closed, faded out and aria-hidden, so it
+              fades both ways and the × can still read it. */}
+          <span
+            ref={bubble}
+            id={detailId}
+            role="tooltip"
+            style={bubbleStyle}
+            className={open ? 'link-form__tip is-open' : 'link-form__tip'}
+            aria-hidden={!open}
+          >
+            {detail}
+          </span>
+        </span>{' '}
+        <small>{detail}</small>
+      </span>
+      <button
+        type="button"
+        className="link-form__icon-button link-form__remove"
+        aria-label={`Remove ${pick.name}`}
+        aria-describedby={hasDetail ? detailId : undefined}
+        onFocus={show}
+        onBlur={hide}
+        onClick={onRemove}
+      >
+        <RemoveIcon />
+      </button>
+    </li>
+  );
+}
+
 export default function LinkForm({
   workspaceId,
   localId,
@@ -87,7 +147,6 @@ export default function LinkForm({
   const [text, setText] = useState('');
   const [active, setActive] = useState(false);
   const [picks, setPicks] = useState<LinkPick[]>([]);
-  const [about, setAbout] = useState<string>();
   /** Where each form two picks share goes, by form id, as chosen. */
   const [chosen, setChosen] = useState<Record<string, string>>({});
   /** The pick chosen to keep the name; `undefined` is the first pick, `null` none. */
@@ -166,49 +225,17 @@ export default function LinkForm({
       </FieldShell>
       {picks.length > 0 && (
         <ul className="link-form__picks" aria-label="Picked Entries">
-          {picks.map((pick) => {
-            const open = about === pick.id;
-            const detailId = `${id}-${pick.id}-about`;
-            return (
-              <li key={pick.id} className="link-form__pick">
-                <span className="link-form__pick-name">
-                  {pick.name}{' '}
-                  <small>
-                    {pick.link.canonicalName && <i>{pick.link.canonicalName}</i>}
-                    {pick.link.canonicalName && pick.link.forms.length > 0 && ' · '}
-                    {pick.link.forms.map(formLabel).join(', ')}
-                  </small>
-                </span>
-                <IconTip tip="About">
-                  <button
-                    type="button"
-                    className="link-form__icon-button"
-                    aria-label={`About ${pick.name}`}
-                    aria-expanded={open}
-                    aria-controls={detailId}
-                    onClick={() => setAbout(open ? undefined : pick.id)}
-                  >
-                    <InfoIcon />
-                  </button>
-                </IconTip>
-                <button
-                  type="button"
-                  className="link-form__icon-button link-form__remove"
-                  aria-label={`Remove ${pick.name}`}
-                  onClick={() => {
-                    setPicks(picks.filter(({ id }) => id !== pick.id));
-                    // The name goes back to the first pick, not to none.
-                    if (keepOn === pick.id) setKeepOn(undefined);
-                  }}
-                >
-                  <RemoveIcon />
-                </button>
-                <div id={detailId} className="link-form__about entry-summary" hidden={!open}>
-                  {open && <SubstituteSummary link={pick.link} workspaceId={workspaceId} />}
-                </div>
-              </li>
-            );
-          })}
+          {picks.map((pick) => (
+            <PickRow
+              key={pick.id}
+              pick={pick}
+              onRemove={() => {
+                setPicks(picks.filter(({ id }) => id !== pick.id));
+                // The name goes back to the first pick, not to none.
+                if (keepOn === pick.id) setKeepOn(undefined);
+              }}
+            />
+          ))}
         </ul>
       )}
       {picks.length > 0 && rows.length > 0 && (

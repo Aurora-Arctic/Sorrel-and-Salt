@@ -52,7 +52,7 @@ follows `href` as before.
   (M8.17, 2026-10-19).
 - **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
   vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
-  "More", even where the card holds one choice (M8.17). `InfoIcon` is the ⓘ beside each pick in the Link dialog.
+  "More", even where the card holds one choice (M8.17).
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),

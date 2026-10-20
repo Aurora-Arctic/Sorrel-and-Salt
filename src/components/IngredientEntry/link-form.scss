@@ -7,7 +7,7 @@
 // its own rules wherever it is opened.
 //
 // The Link dialog's body (M8.17): the picks as rows beneath the search box,
-// drawn as References' rows are (MB.154), each with its ⓘ and ×; then the
+// drawn as References' rows are (MB.154), each with its ×; then the
 // form map, a table that scrolls sideways inside its own box at a phone's
 // width rather than the dialog. claude-docs/components/ingredient-entry.md,
 // "Link to the Compendium".
@@ -27,7 +27,7 @@
 
 .link-form__pick {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: space(2) space(1);
   align-items: center;
   padding: space(1) space(1) space(1) space(3);
@@ -53,22 +53,20 @@
 .link-form__icon-button {
   @include icon-button;
 
-  &[aria-expanded='true'] {
-    color: $text-primary;
-  }
-
   &.link-form__remove {
     @include icon-button-remove;
   }
 }
 
-// What ⓘ opens beneath the row: the pick's summary.
-.link-form__about {
-  grid-column: 1 / -1;
+// A pick's formal name and forms, in InfoTip's bubble and its fade, above
+// the name from its left edge, as a substitute chip's detail is
+// (.combobox__entry-tip); `useTip` keeps it on the screen.
+.link-form__tip {
+  @include tip-above;
 
-  &[hidden] {
-    display: none;
-  }
+  // Border-box, so the padding sits inside the measure rather than past it.
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 
 // The column's space(3) gap (0.75rem) plus this margin (0.75rem) gives the
