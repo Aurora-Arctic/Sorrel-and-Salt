@@ -238,6 +238,20 @@ describe('ReferencePanel', () => {
     for (const label of KINDS[0].fields) expect(inPanel(label)).not.toHaveAccessibleDescription();
   });
 
+  // One rule to a line, a list a screen reader can step through (the owner's
+  // call, 2026-10-20), rather than one run-on paragraph.
+  it('gives How to Cite one list item per rule', () => {
+    renderPanel();
+
+    const tipId = within(panel())
+      .getByRole('button', { name: 'About How to Cite' })
+      .getAttribute('aria-describedby');
+    const tip = screen.getAllByRole('tooltip', { hidden: true }).find((el) => el.id === tipId);
+    if (!tip) throw new Error('No How to Cite tip');
+    const list = within(tip).getByRole('list', { hidden: true });
+    expect(within(list).getAllByRole('listitem', { hidden: true }).length).toBeGreaterThan(1);
+  });
+
   // What the schema refuses is validation/reference.test.ts's; here, that the
   // panel runs it, and where a refusal and a server's land.
   it('puts a resolver error beside its field, focused and sending nothing, and a server field error through the same element', async () => {

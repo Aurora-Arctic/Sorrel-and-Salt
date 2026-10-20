@@ -658,26 +658,37 @@ $skeleton-fade: 300ms;
     padding: 0 space(1);
   }
 
-  // Its top line (MB.258): the note, if it has one, and at the end the How
-  // to Cite tip beside the ×, which keep to the right edge with no note
-  // beside them.
+  // Its head (MB.258; the owner's calls, 2026-10-20), one line: the note,
+  // if it has one, at the start; at the end the panel's Undo and Redo, then
+  // the How to Cite tip and the ×. Where the note would be squeezed under
+  // 14rem, as on a phone, the end group drops to a line of its own beneath
+  // it, still at the right, rather than wrap the note a word a line. The tip
+  // and the × abut, each its full `$icon-size` target, and the group stands
+  // out into the panel's padding at the end, so the × sits near the edge
+  // rather than a full padding in from it.
   .ingredient-form__panel-head {
     display: flex;
+    flex-wrap: wrap;
     gap: space(2);
     align-items: center;
-    justify-content: space-between;
   }
 
   .ingredient-form__panel-end {
     display: flex;
-    gap: space(1);
+    flex: none;
     align-items: center;
-    margin-inline-start: auto;
+    margin-inline: auto calc(-1 * #{space(2)});
+
+    .form-history {
+      align-self: center;
+      margin-inline-end: space(1);
+    }
   }
 
   // What an edit reaches, or that the source is loading: a caption's ink,
   // as the tier's, above the fields.
   .ingredient-form__panel-note {
+    flex: 1 1 14rem;
     margin: 0;
     color: $text-muted;
     font-size: type-size('caption');
@@ -688,6 +699,19 @@ $skeleton-fade: 300ms;
   > .form__actions {
     margin-block: space(2);
   }
+}
+
+// How to Cite's rules, one to a line (the owner's call, 2026-10-20), a
+// small step apart. Spans given the list roles, so they are made blocks
+// here; the bubble's own `max-content` width keeps it to the longest rule.
+.ingredient-form__cite-rules {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+}
+
+.ingredient-form__cite-rule {
+  display: block;
 }
 
 // The Variants section (MB.221): each form a card, one summary line with its

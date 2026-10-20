@@ -340,9 +340,10 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 }
 
 /**
- * The panel's top line: what it says first, if anything, and at its end edge
- * any tip it carries beside a × that closes it as Cancel does (MB.258), so a
- * long panel can be left without scrolling to its foot. Named for the panel, since the modal around it has a Close of
+ * The panel's head, one line: what it says first, if anything, and at its end
+ * edge its own Undo and Redo, any tip it carries, and a × that closes it as
+ * Cancel does (MB.258), so a long panel can be left without scrolling to its
+ * foot. The × stays last, the one stop before the panel's first field. Named for the panel, since the modal around it has a Close of
  * its own; held while a save is in flight, as Cancel is.
  */
 function PanelHead({
@@ -350,18 +351,21 @@ function PanelHead({
   held = false,
   onClose,
   tip,
+  history,
   children,
 }: {
   legend: string;
   held?: boolean;
   onClose: () => void;
   tip?: ReactNode;
+  history?: ReactNode;
   children?: ReactNode;
 }): ReactElement {
   return (
     <div className="ingredient-form__panel-head">
       {children}
       <div className="ingredient-form__panel-end">
+        {history}
         {tip}
         <IconTip tip="Close">
           <button
@@ -383,15 +387,29 @@ function PanelHead({
  * How to cite, said once for the whole panel rather than beside each field
  * (the owner's call, 2026-10-20): the panel's `aria-describedby` names it,
  * so it is read on entering the panel. A title inside a title, the one
- * format a placeholder cannot show, is here (MB.151).
+ * format a placeholder cannot show, is here (MB.151). One rule to a line,
+ * as a list of spans given the list roles: the bubble is a `span`, which
+ * may not hold a `ul`.
  */
+const CITE_RULES = [
+  'Names as printed, the first author inverted: Shelley, Mary',
+  'Edition and volume as printed: 2nd ed., Vol. 2',
+  'Contributors as a sentence: Translated by Angela Hall',
+  'A date as precise as the source gives it',
+  'Underscores round a title inside a title italicise it: _Hamlet_',
+  'A note prints after the citation, in brackets',
+];
+
 function HowToCite({ id }: { id: string }): ReactElement {
   return (
     <InfoTip id={id} label="How to Cite">
-      Names as printed, the first author inverted: Shelley, Mary. Edition and volume as printed: 2nd
-      ed., Vol. 2. Contributors as a sentence: Translated by Angela Hall. A date as precise as the
-      source gives it. Underscores round a title inside a title italicise it: _Hamlet_. A note
-      prints after the citation, in brackets.
+      <span role="list" className="ingredient-form__cite-rules">
+        {CITE_RULES.map((rule) => (
+          <span key={rule} role="listitem" className="ingredient-form__cite-rule">
+            {rule}
+          </span>
+        ))}
+      </span>
     </InfoTip>
   );
 }
@@ -547,16 +565,18 @@ function PanelForm({
             held={isSubmitting}
             onClose={onCancel}
             tip={<HowToCite id={citeId} />}
+            history={
+              // Never the modal's header: that is the ingredient form's history.
+              <HeaderSlotContext.Provider value={null}>
+                <FormHistoryButtons />
+              </HeaderSlotContext.Provider>
+            }
           >
             {editing && (
               <p className="ingredient-form__panel-note" id={noteId}>
                 A change here reaches every entry citing this source.
               </p>
             )}
-            {/* Never the modal's header: that is the ingredient form's history. */}
-            <HeaderSlotContext.Provider value={null}>
-              <FormHistoryButtons />
-            </HeaderSlotContext.Provider>
           </PanelHead>
           {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
           <SelectField<ReferenceFormValues>

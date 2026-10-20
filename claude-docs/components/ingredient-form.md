@@ -637,10 +637,14 @@ provides them, and its errors render through `FieldError`.
   2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
   sits at the end of the panel's head, just before its ×, in New Reference
   and Edit Source alike (the owner's call, 2026-10-20), and says
-  the rules once: the first author inverted, edition and volume as printed,
-  contributors as a sentence, a date as precise as the source gives it,
-  underscores round a title inside a title to italicise it (MB.151), and a
-  note printing after the citation in brackets. The panel's
+  the rules once, each on a line of its own: the first author inverted,
+  edition and volume as printed, contributors as a sentence, a date as
+  precise as the source gives it, underscores round a title inside a title
+  to italicise it (MB.151), and a note printing after the citation in
+  brackets. The rules are a list, read as separate lines; since the bubble
+  is a `<span>` and may not hold a `<ul>`, they are spans with the `list`
+  and `listitem` roles, and the bubble is only as wide as its longest
+  rule needs, up to the tip's cap. The panel's
   `aria-describedby` names it, after an edit's reach note, so it is read on
   entering the panel rather than with every field. A field whose format
   matters shows an example as its placeholder instead of an action:
@@ -674,8 +678,13 @@ provides them, and its errors render through `FieldError`.
 - **A × at its top closes it too** (MB.258), so a panel taller than the
   dialog can be left without scrolling to its foot. It does exactly what
   Cancel does, saving nothing and asking nothing, and is held with Cancel
-  while a save is in flight. It shares the note's line, at its right end,
-  and is named for the panel, "Close New Reference" or "Close Edit Source",
+  while a save is in flight. The panel's head is one line (the owner's
+  call, 2026-10-20): the note, if there is one, at the start, and at the
+  end the panel's Undo and Redo, the How to Cite ⓘ and the ×, the ⓘ and ×
+  abutting and the group standing into the panel's padding so the × sits
+  near the edge. Where the note would be squeezed under 14rem, as on a
+  phone, the group drops to a line of its own beneath it, still at the
+  right. The × is named for the panel, "Close New Reference" or "Close Edit Source",
   since the modal's own × is "Close". It comes before Kind in Tab order, as
   it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
@@ -1383,7 +1392,8 @@ inside this one, so the two must not share a list:
   `ignore` is the backstop for the moment the panel's loading shell is up and
   has no listener yet.
 - `PanelForm` (`reference-panel.tsx`) runs its own `useFormHistory`,
-  provider and `FormHistoryButtons`, in `PanelHead` beside Close. They sit
+  provider and `FormHistoryButtons`, in `PanelHead` before How to Cite and
+  Close. They sit
   under a `HeaderSlotContext` set to `null`, so they draw there and never
   portal into the modal's header, which is the ingredient's.
 
