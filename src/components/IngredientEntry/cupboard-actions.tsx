@@ -4,16 +4,23 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
+import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
-import Notice from '../Notice';
 import AnnotateDialog from './annotate-dialog';
 import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-writes';
 import { ANNOTATE_HEADING } from './annotate-heading';
@@ -32,6 +39,10 @@ import type { CupboardActionsProps } from './types';
 // each is only the door, and the service is the guard. Every write goes
 // through /api/graphql. Make It Ours and Remove are `cupboard-writes.tsx`'s,
 // shared with the Annotate dialog's More menu, which the page passes on (M8.17).
+// A refusal of Add to Cupboard, Make It Ours or Remove is one callout under the
+// button that keeps the focus, the Edit menu's or the lone button (M12.31's
+// design F, `useClickFeedback`), which floats rather than taking room beside the
+// title; the three share it, since one press at a time can fail.
 
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
@@ -42,6 +53,38 @@ const AddCupboardEntryDocument = graphql(`
 `);
 
 const PLAIN = 'btn btn--quiet btn--medium';
+
+const LABEL = {
+  edit: 'Edit Compendium Entry',
+  add: 'Add to Cupboard',
+  annotate: 'Annotate',
+  own: 'Make It Ours',
+  remove: 'Remove',
+} as const;
+
+/**
+ * What the failure badge calls the button that keeps the focus: the menu's
+ * "Edit" when two or more choices share it, the lone button's own label
+ * otherwise. Worked out from the same permissions as the choices, ahead of
+ * them, since the hook that draws the badge is called before the choices'
+ * handlers exist.
+ */
+function feedbackName(
+  p: Pick<CupboardActionsProps, 'held' | 'canAdd' | 'canAnnotate' | 'canMakeOurs' | 'canRemove'> & {
+    edit: boolean;
+  },
+): string {
+  const keys = (
+    [
+      p.edit && 'edit',
+      !p.held && p.canAdd && 'add',
+      p.held && p.canAnnotate && 'annotate',
+      p.held && p.canMakeOurs && 'own',
+      p.held && p.canRemove && 'remove',
+    ] as const
+  ).filter((key): key is keyof typeof LABEL => key !== false);
+  return keys.length === 1 ? LABEL[keys[0]] : 'Edit';
+}
 
 export default function CupboardActions({
   workspaceId,
@@ -59,7 +102,6 @@ export default function CupboardActions({
   edit,
 }: CupboardActionsProps): ReactElement | null {
   const { refresh } = usePendingNavigation();
-  const [alert, setAlert] = useState<string>();
   // Which of the two confirmations is open, one at a time. The Annotate dialog
   // is the address's instead (`annotate.opened`), as the curator's Edit is.
   const [asking, setAsking] = useState<'remove' | 'own'>();
@@ -70,7 +112,20 @@ export default function CupboardActions({
   // Cupboard), so it names nowhere and Modal gives the focus to the page's
   // heading, as a row's Remove does (M8.17). Read as the dialog closes, after
   // this render's layout, so the ref is the commit's own.
-  const trigger = useRef<HTMLButtonElement>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  // The callout hangs from the same button, named as the badge says it: the
+  // menu's "Edit", or the lone button's own label.
+  const feedback = useClickFeedback({
+    name: feedbackName({ edit: !!edit, held, canAdd, canAnnotate, canMakeOurs, canRemove }),
+  });
+  const { anchorRef } = feedback;
+  const triggerRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      trigger.current = node;
+      anchorRef(node);
+    },
+    [anchorRef],
+  );
   const link = useRef<HTMLAnchorElement>(null);
   const heldNow = useRef(held);
   useLayoutEffect(() => {
@@ -94,10 +149,16 @@ export default function CupboardActions({
 
   const settle = (): void => setAsking(undefined);
 
+  // The entry as the coven calls it, for the two confirmations.
+  const name = overrides.label ?? compendium.name;
+
   const add = useMutation({
     mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
-    onSuccess: () => refresh(),
-    onError: (error) => setAlert(readGraphqlFailure(error).alert),
+    onSuccess: () => {
+      refresh();
+      feedback.announce(`Added ${name} to your cupboard.`);
+    },
+    onError: (error) => feedback.report(readGraphqlFailure(error).alert),
   });
   // Make It Ours and Remove, shared with the Annotate dialog's More menu.
   const writes = useCupboardWrites({
@@ -106,38 +167,34 @@ export default function CupboardActions({
     ingredientId,
     removedHref,
     onSettle: settle,
-    onRefused: setAlert,
+    onRefused: feedback.report,
   });
 
-  // The entry as the coven calls it, for the two confirmations.
-  const name = overrides.label ?? compendium.name;
   const ask = (what: 'remove' | 'own') => () => {
-    setAlert(undefined);
+    feedback.report(undefined);
     setAsking(what);
   };
   const items: MenuButtonItem[] = [
-    ...(edit
-      ? [{ key: 'edit', label: 'Edit Compendium Entry', href: edit.href, onClick: openEdit }]
-      : []),
+    ...(edit ? [{ key: 'edit', label: LABEL.edit, href: edit.href, onClick: openEdit }] : []),
     ...(!held && canAdd
       ? [
           {
             key: 'add',
-            label: 'Add to Cupboard',
+            label: LABEL.add,
             constructive: true,
             onSelect: () => {
-              setAlert(undefined);
+              feedback.report(undefined);
               add.mutate();
             },
           },
         ]
       : []),
     ...(held && canAnnotate
-      ? [{ key: 'annotate', label: 'Annotate', href: annotate.href, onClick: openAnnotate }]
+      ? [{ key: 'annotate', label: LABEL.annotate, href: annotate.href, onClick: openAnnotate }]
       : []),
-    ...(held && canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: ask('own') }] : []),
+    ...(held && canMakeOurs ? [{ key: 'own', label: LABEL.own, onSelect: ask('own') }] : []),
     ...(held && canRemove
-      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: ask('remove') }]
+      ? [{ key: 'remove', label: LABEL.remove, destructive: true, onSelect: ask('remove') }]
       : []),
   ];
   if (items.length === 0) return null;
@@ -149,7 +206,7 @@ export default function CupboardActions({
     <div className="ingredient-entry__cupboard">
       {only === undefined ? (
         <MenuButton
-          ref={trigger}
+          ref={triggerRef}
           label="Edit"
           className={PLAIN}
           items={items}
@@ -160,7 +217,7 @@ export default function CupboardActions({
         <EditButton href={edit.href} entry={edit.entry} />
       ) : only.key === 'add' ? (
         <BusyButton
-          ref={trigger}
+          ref={triggerRef}
           className="btn btn--solid btn--medium"
           busy={add.isPending}
           busyLabel="Adding"
@@ -175,7 +232,7 @@ export default function CupboardActions({
         </Link>
       ) : (
         <button
-          ref={trigger}
+          ref={triggerRef}
           type="button"
           className={only.destructive ? 'btn btn--destructive btn--medium' : PLAIN}
           onClick={() => only.href === undefined && only.onSelect()}
@@ -185,6 +242,7 @@ export default function CupboardActions({
       )}
       {/* Asked in a dialog over the page, as Leave Coven asks (the owner's
           call, 2026-10-19), rather than in the title's row. */}
+      {feedback.feedback}
       {asking === 'own' && (
         <MakeItOursDialog name={name} write={writes.makeOurs} onClose={settle} returnTo={back} />
       )}
@@ -197,7 +255,6 @@ export default function CupboardActions({
         opened={annotate.opened ? { workspaceId, ingredientId, compendium, overrides } : undefined}
         more={{ covenSlug, canMakeOurs, canRemove, removedHref }}
       />
-      {alert && <Notice kind="error">{alert}</Notice>}
     </div>
   );
 }
