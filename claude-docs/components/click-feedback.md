@@ -9,7 +9,8 @@ is `claude-docs/design-decisions/m12.31-click-feedback-outside-forms.md` §5.
 It replaced `ActionFailure`, which M12.31 removed. `ConfirmedAction`
 ([`user-list.md`](user-list.md)) is built on it, so every confirmed action
 outside a dialog says its refusal this way and its success through
-`announcement`.
+`announcement`; inside one, only the user modal's Change Role and Approve or
+Revoke do (`refusalInModal`), the others keeping a notice in the dialog.
 
 | File                | What it holds                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |

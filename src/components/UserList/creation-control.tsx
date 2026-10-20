@@ -72,6 +72,9 @@ const CreationControl = ({
       withNote
       announcement={`${name} may now create covens.`}
       inModal={inModal}
+      // Beside its fact in the user's modal, not in a button row: a refusal
+      // there is the callout too (the owner's call, 2026-10-20).
+      refusalInModal="callout"
       send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
     />
   ) : (
@@ -91,6 +94,9 @@ const CreationControl = ({
       withNote
       announcement={`${name} may no longer create covens.`}
       inModal={inModal}
+      // Beside its fact in the user's modal, not in a button row: a refusal
+      // there is the callout too (the owner's call, 2026-10-20).
+      refusalInModal="callout"
       send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
     />
   );

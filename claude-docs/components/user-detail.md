@@ -38,7 +38,11 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   row's are (MB.63). With `inModal`, `ConfirmedAction` asks over this modal's
   body through `ConfirmOverlay`, its warning and Reason field included,
   rather than open a second modal on top; a success reads the page again, so
-  the modal shows the new value and the other action.
+  the modal shows the new value and the other action. A refusal is the
+  callout under the control, with its badge, as on the row, rather than a
+  notice in the modal (`refusalInModal="callout"`; the owner's exception to
+  M12.31's rule 6, 2026-10-20): it floats over the rows, so nothing below
+  moves, and Escape closes it and leaves the modal open.
 - **The marks are the list's own.** `ProviderLogo` lives in
   `UserList/marks.tsx` beside the table's `Mark`, and imports the list's
   stylesheet, so both draw the same; the check and cross are the list's icons

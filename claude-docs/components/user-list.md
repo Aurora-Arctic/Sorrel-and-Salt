@@ -264,8 +264,11 @@ head, both built by the page per row, as the other admin lists carry
   the modal and floats under it, with the badge on the button. With
   `inModal`, where the button already sits in a dialog, the refusal stays in
   that dialog as a plain `Notice` (the owner's call): on its own line above a
-  dialog's button row, through the shared `.modal__actions` style, and on its
-  own line under the control in the user modal's values. A
+  dialog's button row, through the shared `.modal__actions` style. A control
+  passing `refusalInModal="callout"` says it in the callout under it even
+  there: the user modal's `RoleControl` and `CreationControl`, which stand
+  beside a fact rather than in a button row (the owner's exception to
+  M12.31's rule 6, 2026-10-20). A
   promotion warns on an unverified address as Approve does, in its own verb
   (above); a demotion does not.
 - **The switch on admin changes is the Users tab's action** (MB.63,

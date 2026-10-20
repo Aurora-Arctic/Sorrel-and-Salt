@@ -22,7 +22,9 @@ import './controls.scss';
 // than taking room in a row. Inside a modal already, the user's (M9.19), it
 // asks over that modal's body through `ConfirmOverlay` instead, as the
 // forms' questions do, rather than open a second modal on top, and its
-// refusal stays in that dialog as a plain notice (the rule's item 6). The
+// refusal stays in that dialog as a plain notice (the rule's item 6), or,
+// for a control beside a fact (the user modal's role and creation
+// controls), is the same callout under it (the owner's exception). The
 // service is the guard; this only puts it where an admin looks
 // (claude-docs/components/user-list.md).
 
@@ -44,6 +46,7 @@ const ConfirmedAction = ({
   choices,
   closeOnSent = false,
   inModal = false,
+  refusalInModal = 'notice',
 }: ConfirmedActionProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const warningId = useId();
@@ -83,9 +86,9 @@ const ConfirmedAction = ({
 
   // Outside a modal, a callout under the control. Inside one, a plain notice
   // in that dialog, which a button row's style lifts onto its own line above
-  // the buttons (the owner's call).
+  // the buttons (the owner's call), unless the control asks for the callout.
   function report(message: string | undefined) {
-    if (inModal) setFailure(message);
+    if (inModal && refusalInModal === 'notice') setFailure(message);
     else feedback.report(message);
   }
 
