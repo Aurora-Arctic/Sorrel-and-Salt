@@ -23,6 +23,13 @@
   margin-block-start: 0;
 }
 
+// The covens stand a step further apart than the entry's other lists, space(2)
+// over the lists' space(1), so each coven's link reads as its own target (the
+// owner's call, 2026-10-20). Through the summary, so it outranks .ingredient-entry__list.
+.ingredient-summary .ingredient-summary__covens {
+  gap: space(2);
+}
+
 // In Your Covens: each coven's link led by the In Your Cupboard shelf, the name
 // one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
 // stands at the top of the link, level with the name's first line, so a wrapped
