@@ -243,6 +243,15 @@ export interface CupboardActionsProps extends CupboardProps {
  */
 export type DetailsMarks = Omit<EntryMarksProps, 'provenance' | 'safety'>;
 
+/**
+ * What a coven's own entry's Edit menu (`OwnEntryActions`) needs: the entry, where Edit
+ * goes, and where a delete leads. The entry page passes its whole `IngredientEntryEdit`.
+ */
+export interface OwnEntryActionsProps {
+  edit: Pick<IngredientEntryEdit, 'href' | 'deletedHref' | 'coven'>;
+  entry: EditableEntry;
+}
+
 /** What a details modal's address opens over a list (M12.5). */
 export interface IngredientDetailsOpened {
   /** The entry's name and formal name, under the eyebrow "Ingredient" (`detailsHeading`). */
@@ -262,6 +271,13 @@ export interface IngredientDetailsOpened {
    * a compendium entry it holds). None for anyone else.
    */
   editAction?: RouteModalLink;
+  /**
+   * The page's own Edit menu, Edit and Delete, in place of `editAction`'s plain pencil, for a
+   * coven's own entry on a role that may edit it (the owner's call, 2026-10-20). Edit opens the
+   * edit modal over the details as `editAction` does; a delete leads to `edit.deletedHref`, the
+   * list without the details, which closes them.
+   */
+  ownActions?: OwnEntryActionsProps;
   /**
    * The plus beside the pencil, for a live compendium entry (M9.12; the owner's call, 2026-10-20):
    * every coven the viewer may add in and which hold it, read per request by `plusCovensOf`

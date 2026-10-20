@@ -38,13 +38,22 @@ const ENTRY = `${NAME}, ${FORMAL}`;
 const quickLook = (scope: Locator | Page, entry = ENTRY) =>
   scope.getByRole('link', { name: `Quick Look ${entry}`, exact: true });
 
-/** The details modal, named by its eyebrow and the entry. */
-const detailsDialog = (page: Page, entry = ENTRY) =>
-  page.getByRole('dialog', { name: `Ingredient, ${entry}`, exact: true });
+/** The details modal, named by the entry's name alone. */
+const detailsDialog = (page: Page, name = NAME) => page.getByRole('dialog', { name, exact: true });
 
 /** The details' Edit: the cards' pencil, named for the entry it edits. */
 const editIn = (dialog: Locator, name = NAME) =>
   dialog.getByRole('link', { name: `Edit ${name}`, exact: true });
+
+/** A coven's own entry's menu in the details: the pencil, named for the entry it edits. */
+const ownMenuIn = (dialog: Locator, name = NAME) =>
+  dialog.getByRole('button', { name: `Edit ${name}`, exact: true });
+
+/** Chooses Edit Ingredient from the own-entry menu in the details. */
+const chooseEditIn = async (dialog: Locator, name = NAME) => {
+  await ownMenuIn(dialog, name).click();
+  await dialog.getByRole('menuitem', { name: 'Edit Ingredient' }).click();
+};
 
 test.describe('on the admin Compendium list', () => {
   const slug = ingredientSlug(NAME, FORMAL);
@@ -135,7 +144,7 @@ test.describe('on the admin Compendium list', () => {
     });
     await page.goto(`/admin/compendium?query=${encodeURIComponent(longName)}`);
     await quickLook(page, `${longName}, Fixtura longa`).click();
-    return detailsDialog(page, `${longName}, Fixtura longa`);
+    return detailsDialog(page, longName);
   };
 
   test('a long description is cut behind a full-width Show More bar, which opens it whole and closes it again', async ({
@@ -249,7 +258,7 @@ test.describe('on the admin Compendium list', () => {
     });
     await page.goto(`/admin/compendium?query=${encodeURIComponent(midName)}`);
     await quickLook(page, `${midName}, ${midFormal}`).click();
-    const details = detailsDialog(page, `${midName}, ${midFormal}`);
+    const details = detailsDialog(page, midName);
     const body = details.locator('.modal-dialog__body');
     const overflow = () =>
       body.evaluate((b) => ({
@@ -351,7 +360,7 @@ test.describe("on a coven's Ingredients", () => {
       await quickLook(page).click();
       // Why Edit could be there: the details are open, with their other action.
       await expect(details.getByRole('link', { name: 'View Page' })).toBeVisible();
-      await expect(editIn(details)).toHaveCount(0);
+      await expect(ownMenuIn(details)).toHaveCount(0);
       // The entry's sections, read for the coven.
       await expect(
         details.getByRole('region', { name: 'Caution' }).getByText('Fixture coven caution.'),
@@ -366,14 +375,14 @@ test.describe("on a coven's Ingredients", () => {
         await signInAgainAs(page, coven.users[key]);
         await page.goto(listPath);
         await quickLook(page).click();
-        await expect(editIn(details)).toBeVisible();
+        await expect(ownMenuIn(details)).toBeVisible();
       });
     }
 
     const RENAMED = 'Fixture Seenwort';
-    const renamedDetails = detailsDialog(page, `${RENAMED}, ${FORMAL}`);
+    const renamedDetails = detailsDialog(page, RENAMED);
     await test.step('a save goes back to the details, renamed there and on the list', async () => {
-      await editIn(details).click();
+      await chooseEditIn(details);
       const editing = editIngredientDialog(page, NAME, FORMAL);
       await expect(editing).toBeVisible();
       await editing.getByRole('button', { name: 'Open All' }).click();
@@ -387,7 +396,7 @@ test.describe("on a coven's Ingredients", () => {
     });
 
     await test.step('closing an edit with a change asks before discarding it', async () => {
-      await editIn(renamedDetails, RENAMED).click();
+      await chooseEditIn(renamedDetails, RENAMED);
       const editing = editIngredientDialog(page, RENAMED, FORMAL);
       await expect(editing).toBeVisible();
       await editing.getByRole('button', { name: 'Open All' }).click();
@@ -404,6 +413,47 @@ test.describe("on a coven's Ingredients", () => {
     });
   });
 
+  test("a delete from the details closes them back onto the list, without the entry's row", async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Details Delete', 'details-delete.test', {
+      A: 'owner',
+    });
+    const KEPT = 'Fixture Keptwort';
+    const gone = await withSql(async (sql) => {
+      await localIngredient(sql, coven.id, coven.users.A, {
+        name: KEPT,
+        canonicalName: 'Fixtura servata',
+      });
+      return localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL });
+    });
+    const listPath = `/coven/${coven.slug}/ingredients`;
+    const list = ingredientList(page);
+
+    // Why it could stay: the entry is on the list, live, and its details are open.
+    await page.goto(listPath);
+    await expect(rowOf(list, NAME)).toHaveCount(1);
+    await quickLook(page).click();
+    const details = detailsDialog(page);
+    await expect(details).toBeVisible();
+    await expect(page).toHaveURL(/[?&]entry=/);
+
+    await ownMenuIn(details).click();
+    await details.getByRole('menuitem', { name: 'Delete Ingredient' }).click();
+    const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
+    await expect(question).toContainText(NAME);
+    await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    await expect(details).toHaveCount(0);
+    await expect(page).toHaveURL((url) => url.pathname === listPath && !url.search);
+    await expect(rowOf(list, NAME)).toHaveCount(0);
+    await expect(rowOf(list, KEPT)).toHaveCount(1);
+    const [row] = await withSql(
+      (sql) => sql`select deleted_at from ingredients where id = ${gone.ingredientId}`,
+    );
+    expect(row.deleted_at).not.toBeNull();
+  });
+
   test('the open details pass axe and hold at a phone width', async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Details Phone', 'details-phone.test', {
       A: 'owner',
@@ -417,7 +467,7 @@ test.describe("on a coven's Ingredients", () => {
     await quickLook(page).click();
     const details = detailsDialog(page);
     await expect(details).toBeVisible();
-    await expect(editIn(details)).toBeVisible();
+    await expect(ownMenuIn(details)).toBeVisible();
 
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page);
@@ -461,7 +511,7 @@ test.describe('on the public compendium', () => {
 
     const eye = quickLook(page, PUBLIC_ENTRY);
     await eye.click();
-    const details = detailsDialog(page, PUBLIC_ENTRY);
+    const details = detailsDialog(page, PUBLIC_NAME);
     await expect(details).toBeVisible();
     await expect(page).toHaveURL(/[?&]entry=/);
 

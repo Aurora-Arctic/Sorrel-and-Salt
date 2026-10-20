@@ -706,7 +706,7 @@ describe('the /admin/compendium modal', () => {
 // inside it opens the edit modal over, `?entry=<slug>&edit=<slug>`, so closing
 // the edit goes back to the details.
 describe('the /admin/compendium details modal', () => {
-  const DETAILS_TESTWORT = 'Ingredient, Testwort, Fixtura testalis';
+  const DETAILS_TESTWORT = 'Testwort';
   const ON_DETAILS = `${FILTERED_HREF}&entry=${TESTWORT.slug}`;
   const details = () => screen.getByRole('dialog', { name: DETAILS_TESTWORT });
 

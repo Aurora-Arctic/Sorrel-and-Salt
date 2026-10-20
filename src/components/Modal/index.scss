@@ -245,6 +245,12 @@ $close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(
   }
 }
 
+// Placed by the grid, so whatever stands in it has no margin of its own (an entry page's
+// controls row has one under it).
+.modal-dialog__naming > .modal-dialog__formal-actions > * {
+  margin: 0;
+}
+
 // Gone while nothing is in it (no Edit, no plus).
 .modal-dialog__formal-actions {
   display: flex;

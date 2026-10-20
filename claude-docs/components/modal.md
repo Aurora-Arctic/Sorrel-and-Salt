@@ -446,7 +446,8 @@ the details window passes them; every other dialog is drawn as before (the owner
   the grid. Each is as tall as the pencil, taller than the formal name's line, so their
   margin takes half the difference off each side and their middle stands on the
   line's. With no formal name the title takes the first row and the actions stand beside it.
-  Empty, it takes no room.
+  An action wrapped in a node of its own, as a coven's own entry's Edit menu is, has that wrapper's
+  margin cleared, since the grid places it. Empty, it takes no room.
 - **`under`** is a wrapping row (`.modal-dialog__under`, `space(3)` apart) under the
   qualifier, for the badges. Empty, it takes no room.
 

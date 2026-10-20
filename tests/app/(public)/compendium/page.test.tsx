@@ -283,8 +283,7 @@ describe("the public compendium page, with an entry's details open", () => {
     ...entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name }),
     folkNames: ['Fixture Bane'],
   };
-  const details = () =>
-    screen.queryByRole('dialog', { name: 'Ingredient, Testwort, Fixtura testalis' });
+  const details = () => screen.queryByRole('dialog', { name: 'Testwort' });
   const curator = () => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate: true } });
   const paramsOf = (link: HTMLElement) =>
     Object.fromEntries(new URL(link.getAttribute('href')!, 'https://fixture.test').searchParams);

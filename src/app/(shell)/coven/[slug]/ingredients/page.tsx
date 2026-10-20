@@ -187,11 +187,26 @@ export default async function CovenIngredientsPage({
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
               ...(viewed.plus && { plus: viewed.plus, ingredientId: viewed.shown.id }),
               children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
+              // The page's own Edit menu, Edit and Delete (the owner's call, 2026-10-20): Edit
+              // opens over the details; a delete goes back to the list, which closes them.
               ...(viewed.own &&
                 mayEdit && {
-                  editAction: {
-                    href: covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
-                    heading: editHeading(viewed.shown),
+                  ownActions: {
+                    edit: {
+                      href: covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
+                      deletedHref: listHref,
+                      coven: {
+                        workspaceId: workspace.id,
+                        ingredientsHref: covenIngredientsPath(workspace.slug),
+                        mayPromote: mayEdit,
+                      },
+                    },
+                    entry: {
+                      id: viewed.shown.id,
+                      name: viewed.shown.name,
+                      canonicalName: viewed.shown.canonicalName,
+                      nomenclature: viewed.shown.nomenclature,
+                    },
                   },
                 }),
             }

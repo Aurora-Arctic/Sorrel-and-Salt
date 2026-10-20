@@ -9,7 +9,7 @@ import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
 import { DeleteDialog, useDeleteEntry } from './delete-entry';
 import { editEyebrow } from './edit-heading';
-import type { EditableEntry, IngredientEntryEdit } from './types';
+import type { OwnEntryActionsProps } from './types';
 
 // The Edit menu beside a coven's own entry's title (M8.17), the twin of a
 // compendium entry's CupboardActions: Edit Ingredient and Delete Ingredient.
@@ -22,14 +22,7 @@ import type { EditableEntry, IngredientEntryEdit } from './types';
 // under it (M12.31's design F), which floats rather than taking the row's room.
 // claude-docs/components/ingredient-entry.md.
 
-export default function OwnEntryActions({
-  edit,
-  entry,
-}: {
-  /** The page's Edit, which names the coven (`edit.coven`). */
-  edit: IngredientEntryEdit;
-  entry: EditableEntry;
-}): ReactElement {
+export default function OwnEntryActions({ edit, entry }: OwnEntryActionsProps): ReactElement {
   const [asking, setAsking] = useState(false);
   // The menu's button, where the focus goes back to once Delete's dialog
   // closes, the item that opened it being gone with the menu; once the delete

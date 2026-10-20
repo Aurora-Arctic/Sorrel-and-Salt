@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import { EditLink } from '../IconTip';
+import OwnEntryActions from './own-actions';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
@@ -34,6 +35,7 @@ function headingOf({
   heading,
   marks,
   editAction,
+  ownActions,
   plus,
   ingredientId,
 }: IngredientDetailsOpened): ModalHeading {
@@ -48,7 +50,12 @@ function headingOf({
       )}
     </>
   );
-  const edit = editAction && <EditLink {...editAction} name={heading.title} />;
+  // A coven's own entry has the page's Edit menu, Edit and Delete; any other Edit is a pencil.
+  const edit = ownActions ? (
+    <OwnEntryActions {...ownActions} />
+  ) : (
+    editAction && <EditLink {...editAction} name={heading.title} />
+  );
   // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
   // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
   const add = plus && ingredientId && <PlusMark plus={plus} ingredientId={ingredientId} />;

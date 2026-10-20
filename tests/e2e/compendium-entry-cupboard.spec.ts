@@ -312,8 +312,7 @@ test('the Quick Look window has the plus, then the check, for a member only', as
     // The admin list names an entry by slug, the public and coven lists by id.
     const look = (path: string, by = id) => `${path}${path.includes('?') ? '&' : '?'}entry=${by}`;
     const publicList = `/compendium?query=${encodeURIComponent(NAME_LOOK)}`;
-    const details = () =>
-      page.getByRole('dialog', { name: `Ingredient, ${NAME_LOOK}`, exact: true });
+    const details = () => page.getByRole('dialog', { name: NAME_LOOK, exact: true });
     const add = () => details().getByRole('button', { name: ADD });
     const check = () => details().getByRole('button', { name: HELD });
     const opened = async (path: string, by = id) => {

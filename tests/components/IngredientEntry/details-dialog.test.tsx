@@ -1,8 +1,14 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+  DeleteOwnIngredientMutation,
+  DeleteOwnIngredientMutationVariables,
+} from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { press } from '../../support/interact';
+import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -359,5 +365,92 @@ describe('DetailsDialog plus', () => {
     expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
     expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'In All Covens' })).toBeNull();
+  });
+});
+
+// A coven's own entry has the entry page's Edit menu, Edit and Delete, in its Quick Look window
+// (the owner's call, 2026-10-20); every other entry keeps the plain pencil or none.
+describe('DetailsDialog own entry', () => {
+  const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
+  const ID = '00000000-0000-4000-8000-0000000000bb';
+  const COVEN_LIST = '/coven/fixture-coven/ingredients' as Route;
+  const OWN_EDIT = `${COVEN_LIST}?entry=${ID}&edit=${ID}` as Route;
+  const OWN = {
+    edit: {
+      href: OWN_EDIT,
+      deletedHref: COVEN_LIST,
+      coven: { workspaceId: WORKSPACE_ID, ingredientsHref: COVEN_LIST, mayPromote: true },
+    },
+    entry: { id: ID, ...ENTRY },
+  };
+
+  const view = (opened: boolean, extra: object) => (
+    <QueryClientProvider client={makeQueryClient()}>
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <DetailsDialog
+            closeHref={COVEN_LIST}
+            opened={
+              opened ? { heading: detailsHeading(ENTRY), pageHref: PAGE, ...extra } : undefined
+            }
+          />
+        </RouteModalProvider>
+      </Navigating>
+    </QueryClientProvider>
+  );
+
+  it("offers Edit and Delete in a menu on the pencil for a coven's own entry", () => {
+    render(view(true, { ownActions: OWN }));
+
+    const pencil = within(dialog()).getByRole('button', { name: 'Edit Testwort' });
+    expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
+    fireEvent.click(pencil);
+    const items = within(screen.getByRole('menu', { name: 'Edit Testwort' })).getAllByRole(
+      'menuitem',
+    );
+    expect(items.map((item) => item.textContent)).toEqual(['Edit Ingredient', 'Delete Ingredient']);
+    // Edit opens the edit modal over the details, at the address the page gave.
+    expect(items[0]).toHaveAttribute('href', OWN_EDIT);
+  });
+
+  it('keeps a plain Edit link for any other entry, and offers no menu or Delete', () => {
+    render(view(true, { editAction: { href: EDIT, heading: editHeading(ENTRY) } }));
+
+    // Why a menu could show: the entry has an Edit, as an own entry's does.
+    expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: 'Edit Testwort' })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Delete Ingredient' })).toBeNull();
+  });
+
+  it('offers no Edit at all where the page gave neither', () => {
+    render(view(true, {}));
+
+    expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /^Edit/ })).toBeNull();
+  });
+
+  it('deletes after asking, and leads to the list without the details, which closes them', async () => {
+    const calls: DeleteOwnIngredientMutationVariables[] = [];
+    mockGraphQLMutation<DeleteOwnIngredientMutation, DeleteOwnIngredientMutationVariables>(
+      'DeleteOwnIngredient',
+      (variables) => {
+        calls.push(variables);
+        return { deleteIngredient: String(variables.id) };
+      },
+    );
+    const { rerender } = render(view(true, { ownActions: OWN }));
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Edit Testwort' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Ingredient' }));
+    const ask = screen.getByRole('dialog', { name: 'Delete Ingredient' });
+    // Asked first: nothing is deleted until it is confirmed.
+    expect(calls).toEqual([]);
+    press(within(ask).getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(COVEN_LIST));
+    expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
+    // The list's address no longer names the entry, so the page opens no details.
+    rerender(view(false, {}));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

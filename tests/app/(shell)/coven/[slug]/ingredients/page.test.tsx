@@ -359,7 +359,7 @@ describe("the coven Ingredients page's details modal", () => {
       membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
     });
   const FILTERED_HREF = '/coven/fixture-coven/ingredients?source=local';
-  const details = (name: string) => screen.queryByRole('dialog', { name: `Ingredient, ${name}` });
+  const details = (name: string) => screen.queryByRole('dialog', { name });
   const editDialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
   const SALT = row('b2', 'Fixture Salt', null);
 
@@ -426,14 +426,17 @@ describe("the coven Ingredients page's details modal", () => {
     expect(covensHoldingEntry).not.toHaveBeenCalled();
   });
 
-  it("gives an owner and a member Edit on the coven's own entry, opening the edit modal over the details", async () => {
+  it("gives an owner and a member the Edit menu on the coven's own entry, Edit opening the edit modal over the details", async () => {
     for (const role of ['owner', 'member']) {
       asRole(role);
       await renderPage({ source: 'local', entry: 'a1' });
-      expect(within(details('Testwort')!).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
+      fireEvent.click(within(details('Testwort')!).getByRole('button', { name: 'Edit Testwort' }));
+      const menu = screen.getByRole('menu', { name: 'Edit Testwort' });
+      expect(within(menu).getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
         'href',
         `${FILTERED_HREF}&entry=a1&edit=a1`,
       );
+      expect(within(menu).getByRole('menuitem', { name: 'Delete Ingredient' })).toBeInTheDocument();
       cleanup();
     }
   });
@@ -445,6 +448,7 @@ describe("the coven Ingredients page's details modal", () => {
     const dialog = details('Testwort')!;
     expect(within(dialog).getByRole('link', { name: 'View Page' })).toBeInTheDocument();
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /^Edit\b/ })).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
   });
 
@@ -460,6 +464,8 @@ describe("the coven Ingredients page's details modal", () => {
       '/coven/fixture-coven/ingredients/b2',
     );
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    // Nor the menu a coven's own entry has.
+    expect(within(dialog).queryByRole('button', { name: /^Edit\b/ })).not.toBeInTheDocument();
   });
 
   it("draws the plus in the details of a held compendium entry while another of the member's covens lacks it, and the check once all hold it", async () => {
