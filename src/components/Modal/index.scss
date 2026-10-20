@@ -10,10 +10,11 @@ $modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
 // width, so a column keeps the content width it had.
 $modal-padding: space(5) * 2;
 
-// The × stands this far in from the dialog's top and right edges, and the head stops short of
-// it by as much of its width as it takes past the padding, and a gap.
-$close-inset: space(2);
-$close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(3)});
+// The × stands in the dialog's padding: its top and right edges are the padding's own, so its
+// right edge is the right edge of whatever ends a line beneath it (the formal name's pencil), and the
+// head stops short of it by its width and a gap.
+$close-inset: space(5);
+$close-reserve: calc(#{$close-target} + #{space(3)});
 
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
@@ -157,7 +158,7 @@ $close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(
   width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
-// The × at the dialog's top right corner, out of the header's flow (the owner's call,
+// The × at the dialog's top right, out of the header's flow (the owner's call,
 // 2026-10-20; see `.modal-dialog__close`), so the head's first line is level with
 // it and a name that wraps cannot leave it adrift (MB.115). It stays at the
 // top as a long form scrolls beneath it, the owner's call at MB.115: outside
@@ -195,18 +196,17 @@ $close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(
   padding-inline-end: 0;
 }
 
-// The top line (the owner's call, 2026-10-20): the entry page's top bar, its marks at the end
-// and the × after them, each centred on the × 's own middle. Lifted into the dialog's padding by
-// as much as the × is, so the line is level with the × and the head under it starts no lower
-// than the padding. A little apart from the line under it, so the pencil there clears the ×.
-// Stopped short of the × by its width, which stands in the corner above it.
+// The top line (the owner's call, 2026-10-20): the entry page's top bar, its marks at the start
+// and the × level with them at the far end, as tall as the × is, so each mark is centred on the
+// × 's own middle. A little apart from the line under it, so the pencil there clears the ×.
+// Stopped short of the × by its width, which stands over its end.
 .modal-dialog__top {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: space(2);
-  min-block-size: $icon-size;
-  margin-block: calc(-1 * #{$close-inset}) space(1);
+  min-block-size: $close-target;
+  margin-block-end: space(1);
   padding-inline-end: $close-reserve;
 }
 
@@ -346,12 +346,11 @@ $close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(
   }
 }
 
-// A 2rem × in a `$close-target` square, 2rem too, set `$close-inset` in from the dialog's
-// top and right edges (the owner's call, 2026-10-20: further up and right than the 2.5rem
-// target at the padding's inset, which put its middle 40px from each edge). Still past WCAG
-// 2.2's 24px minimum target, and inside the corner's rounding by the inset. The dialog's
-// header ends well below it, so it is clear of the body's scrollbar, which stands beneath the
-// header. The icon's 2rem is on no scale: it is the × drawn at the size of the target it sits
+// A 2rem × in a `$close-target` square, 2rem too, at the dialog's padding from its top and
+// right edges (the owner's call, 2026-10-20: level with the head's first line, and its right
+// edge on that of the pencil or plus on the formal name's line beneath it). Past WCAG 2.2's
+// 24px minimum target. The dialog's header ends well below it, so it is clear of the body's
+// scrollbar, which stands beneath the header. The icon's 2rem is on no scale: it is the × drawn at the size of the target it sits
 // in, not a length of the layout. Taken out of the flow, so a heading that wraps cannot
 // squeeze the round target to an oval; the head stops short of it (`$close-reserve`).
 .modal-dialog__close {

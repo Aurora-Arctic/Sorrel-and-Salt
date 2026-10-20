@@ -93,9 +93,10 @@ is the wrapper every admin page opens it through (below).
   from assistive technology, inside a button named "Close". It is a 2rem ×
   in a 2rem square (`$close-target`, a 2.5rem one from M5.5 until the owner's call of
   2026-10-20, still past WCAG 2.5.8's 24px), taken out of the header's flow and set
-  `$close-inset` (`space(2)`, 8px) in from the dialog's top and right edges, so every
-  dialog has it closer to the corner than the padding put it (its middle 24px from each
-  edge, where it was 40px). The inset keeps it inside the corner's rounding, and the
+  `$close-inset` (`space(5)`, 24px, the dialog's padding) in from the dialog's top and
+  right edges (the owner's call, 2026-10-20: it was 8px in until then, and 40px before
+  that), so on every dialog its right edge is the right edge of the head's lines beneath
+  it, the formal name's pencil among them, and it is level with the head's first line. The
   header, being taller than the × reaches, keeps it clear of the body's scrollbar beneath
   it. The head stops short of it (`$close-reserve`), so a long name wraps rather than runs
   under it, and the × is level with the head's first line, as in MB.115, rather than
@@ -428,11 +429,11 @@ the details window passes them; every other dialog is drawn as before (the owner
   the viewport within the scrolling dialog.
 - **`topEnd`** is the head's top line, over the formal name and the title, with Close
   on it (the owner's call, 2026-10-20): the details window puts the entry page's top-bar
-  marks there, New or Updated then the safety badge, so they stand beside the × as they
-  stand beside the back link on the page. Its presence, even empty, gives the head that
-  line (`.modal-dialog__top`, a flex row ending at the ×, level with the × and lifted
-  into the dialog's top padding by the × 's inset), so the × has a band of its own and what
-  stands at the end of the lines under it clears it. The × comes after the marks in the
+  marks there, New or Updated then the safety badge, at the start of the line (the owner's
+  call, 2026-10-20), level with the × at its far end. Its presence, even empty, gives the
+  head that line (`.modal-dialog__top`, a flex row as tall as the ×, which stands over
+  its end), so the × has a band of its own and what stands at the end of the lines under
+  it clears it. The × comes after the marks in the
   markup too, as on screen. Without `topEnd` the × stands in the corner beside the head's
   first line, as before, after the head in the markup.
 - **`formalActions`** is a node for the end of the formal name's line: the details
