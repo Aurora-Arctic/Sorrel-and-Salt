@@ -100,6 +100,7 @@ export default function MenuButton({
   icon,
   placement = 'end',
   ref,
+  state,
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
   // Still drawn: open, or fading out.
@@ -181,6 +182,7 @@ export default function MenuButton({
         }}
         type="button"
         className={className}
+        data-state={state}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

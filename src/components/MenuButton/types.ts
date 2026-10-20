@@ -68,6 +68,12 @@ export interface MenuButtonProps {
    */
   icon?: ReactElement;
   /**
+   * A state the caller's stylesheet draws the button from, set as its `data-state`: the
+   * compendium card's plus says `added` while its check shows after an add (M9.12). Left out,
+   * the button has none.
+   */
+  state?: string;
+  /**
    * Which edge of the button the menu hangs from. `end`, the default, is its
    * end edge, for a button at the end of its row (a card's More). `auto` picks
    * as the menu opens: its start edge when the button sits in the start half of

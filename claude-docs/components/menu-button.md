@@ -8,17 +8,18 @@ It follows the menu-button pattern of the ARIA Authoring Practices Guide, as the
 
 `MenuButtonProps` (`types.ts`):
 
-| Prop         | What it is                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------ |
-| `label`      | The button's text and accessible name, and the menu's accessible name, in title case: "Edit"                 |
-| `className`  | The button's classes: `btn btn--quiet btn--medium`                                                           |
-| `items`      | The choices, in order (`MenuButtonItem`)                                                                     |
-| `busy`       | Optional: one of the choices is in flight. The button shows the spinner and is disabled                      |
-| `busyLabel`  | Optional: the label while busy, "Adding"                                                                     |
-| `placement`  | Optional: `end`, the default, or `auto`: which edge of the button the menu hangs from (see "Where it opens") |
-| `ref`        | Optional: the button, so a caller can give the focus back to it after a dialog a choice opened               |
-| `buttonType` | Optional: the items take the button's type and height, with one step less at the sides; off by default       |
-| `icon`       | Optional: an icon drawn in place of the words and the chevron; `label` stays the button's name, hidden       |
+| Prop         | What it is                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `label`      | The button's text and accessible name, and the menu's accessible name, in title case: "Edit"                             |
+| `className`  | The button's classes: `btn btn--quiet btn--medium`                                                                       |
+| `items`      | The choices, in order (`MenuButtonItem`)                                                                                 |
+| `busy`       | Optional: one of the choices is in flight. The button shows the spinner and is disabled                                  |
+| `busyLabel`  | Optional: the label while busy, "Adding"                                                                                 |
+| `placement`  | Optional: `end`, the default, or `auto`: which edge of the button the menu hangs from (see "Where it opens")             |
+| `ref`        | Optional: the button, so a caller can give the focus back to it after a dialog a choice opened                           |
+| `buttonType` | Optional: the items take the button's type and height, with one step less at the sides; off by default                   |
+| `icon`       | Optional: an icon drawn in place of the words and the chevron; `label` stays the button's name, hidden                   |
+| `state`      | Optional: set as the button's `data-state`, so a caller can style a passing state, such as the plus's check after an add |
 
 A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructive`, `primary` or `constructive`. It is either a link, with `href` and an optional `onClick` that runs first and may prevent the navigation, or an action, with `onSelect` and, an action only, an optional `disabled` and `note`.
 
