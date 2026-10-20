@@ -8,6 +8,7 @@ import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
+import CardMore from './card-more';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
@@ -17,23 +18,54 @@ import '../CompendiumList/index.scss';
 // coven's own label, and holds its jars beneath the forms. The foot of a card holds Edit where
 // the page gives the entry an edit address (M8.17): the coven's own entries, for a role that
 // may update them; and Annotate where it gives an annotate address: the compendium entries the
-// cupboard holds, for the same role. Delete waits for M9.10. An empty list is plain text until
-// M9.11 builds its empty state. claude-docs/components/coven-cards.md.
+// cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Link and
+// Delete on an own entry, Make It Ours and Remove on a compendium one. An empty list is plain
+// text until M9.11 builds its empty state. claude-docs/components/coven-cards.md.
 
 // Named with the formal name too, as two entries can share a label.
 const nameOf = (entry: CovenCardEntry): string =>
   entry.canonicalName ? `${entry.label}, ${entry.canonicalName}` : entry.label;
 
-// The foot's one control: Edit on the coven's own entry, Annotate on a compendium entry the
+// The foot's dialog link: Edit on the coven's own entry, Annotate on a compendium entry the
 // cupboard holds, each only where the page gave its address.
-const actionsOf = (entry: CovenCardEntry): ReactElement | undefined => {
+const opensOf = (entry: CovenCardEntry): ReactElement | null => {
   if (entry.editHref && entry.editHeading)
     return <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />;
   if (entry.annotateHref)
     return (
       <AnnotateLink href={entry.annotateHref} heading={ANNOTATE_HEADING} name={nameOf(entry)} />
     );
-  return undefined;
+  return null;
+};
+
+// The foot's controls: the dialog link, then More with whatever else the role may do, which
+// draws nothing when it may do nothing more.
+const actionsOf = (
+  entry: CovenCardEntry,
+  workspaceId: string,
+  covenSlug: string,
+): ReactElement | undefined => {
+  const opens = opensOf(entry);
+  const more = entry.linkHref || entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
+  if (!opens && !more) return undefined;
+  return (
+    <>
+      {opens}
+      {more && (
+        <CardMore
+          id={entry.id}
+          label={entry.label}
+          name={nameOf(entry)}
+          workspaceId={workspaceId}
+          covenSlug={covenSlug}
+          linkHref={entry.linkHref}
+          mayDelete={entry.mayDelete}
+          mayMakeOurs={entry.mayMakeOurs}
+          mayRemove={entry.mayRemove}
+        />
+      )}
+    </>
+  );
 };
 
 const CovenCards = ({
@@ -85,7 +117,7 @@ const CovenCards = ({
             kind={entry.kind}
             annotated={entry.annotated}
             retired={entry.retired}
-            actions={actionsOf(entry)}
+            actions={actionsOf(entry, workspaceId, covenSlug)}
           >
             {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
           </IngredientCard>

@@ -137,3 +137,35 @@ export const WithAnnotate: Story = () => (
     )}
   />
 );
+
+// A member's full foot (M8.17): Edit or Annotate, then More, the vertical dots, with Link and
+// Delete on the coven's own entry and Make It Ours and Remove on a compendium entry.
+export const WithMore: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+            linkHref: `/coven/fixture-coven/ingredients?link=${shown.id}`,
+            mayDelete: true,
+          }
+        : {
+            ...shown,
+            annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}`,
+            mayMakeOurs: true,
+            mayRemove: true,
+          },
+    )}
+  />
+);
+
+// A role that may delete but not link: the coven's own entry's More of one is its bin.
+export const WithLoneBin: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) => (shown.kind === 'own' ? { ...shown, mayDelete: true } : shown))}
+  />
+);

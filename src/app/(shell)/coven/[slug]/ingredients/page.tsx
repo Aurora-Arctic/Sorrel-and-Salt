@@ -74,6 +74,10 @@ export default async function CovenIngredientsPage({
   const mayLink = rolePermits(membership.role, CONVERT_PERMISSION);
   const linkId = typeof query.link === 'string' && query.link ? query.link : undefined;
   const linked = mayLink && linkId ? await readLinkedEntry(workspace.id, linkId) : undefined;
+  // A card's More (M8.17): Delete on the coven's own entry, Make It Ours and
+  // Remove on a compendium entry, on the permissions their services assert.
+  const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
+  const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
 
@@ -118,6 +122,8 @@ export default async function CovenIngredientsPage({
         mayEdit && {
           annotateHref: placed({ annotate: node.id }),
         }),
+      ...(own && mayLink && { linkHref: placed({ link: node.id }) }),
+      ...(own ? { mayDelete } : { mayMakeOurs, mayRemove: mayDelete }),
       annotated: cupboardEntry !== null && isAnnotated(cupboardEntry),
       retired: isRetired(node),
       jars: page.jars[i].flatMap((jar): JarLine[] => {
@@ -203,8 +209,8 @@ export default async function CovenIngredientsPage({
           // permissions the entry page reads; a remove returns to this list.
           more={{
             covenSlug: workspace.slug,
-            canMakeOurs: rolePermits(membership.role, MAKE_IT_OURS_PERMISSION),
-            canRemove: rolePermits(membership.role, { ingredient: ['delete'] }),
+            canMakeOurs: mayMakeOurs,
+            canRemove: mayDelete,
           }}
         />
       )}

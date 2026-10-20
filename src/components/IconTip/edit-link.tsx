@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
-import { AnnotateIcon, PencilIcon } from './icons';
+import { AnnotateIcon, LinkIcon, PencilIcon } from './icons';
 import type { EditLinkProps } from './types';
 
 /**
@@ -47,4 +47,12 @@ export const EditLink = (props: EditLinkProps): ReactElement => (
  */
 export const AnnotateLink = (props: EditLinkProps): ReactElement => (
   <IconLink {...props} verb="Annotate" icon={<AnnotateIcon />} />
+);
+
+/**
+ * A coven's own entry's Link to the Compendium in its list (M8.17), where it
+ * is the card's one further choice: the link's mark in place of a More of one.
+ */
+export const LinkEntryLink = (props: EditLinkProps): ReactElement => (
+  <IconLink {...props} verb="Link" icon={<LinkIcon />} />
 );

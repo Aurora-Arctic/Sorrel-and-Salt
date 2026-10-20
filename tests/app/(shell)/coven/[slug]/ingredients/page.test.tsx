@@ -497,3 +497,40 @@ describe("the coven Ingredients page's Link dialog", () => {
     await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
   });
 });
+
+describe("the coven Ingredients page's card More", () => {
+  const asRole = (role: string) =>
+    requireCovenMembership.mockResolvedValue({
+      workspace: COVEN,
+      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
+    });
+  const FILTERED_HREF = '/coven/fixture-coven/ingredients?source=local';
+  const choicesOf = (name: string): string[] => {
+    fireEvent.click(screen.getByRole('button', { name }));
+    return within(screen.getByRole('menu', { name }))
+      .getAllByRole('menuitem')
+      .map((item) => item.textContent ?? '');
+  };
+
+  it("gives a member Link and Delete on the coven's own entry, Link at ?link=<id> keeping the filter", async () => {
+    await renderPage({ source: 'local' });
+    expect(choicesOf('More for Testwort')).toEqual(['Link to the Compendium', 'Delete Ingredient']);
+    expect(screen.getByRole('menuitem', { name: 'Link to the Compendium' })).toHaveAttribute(
+      'href',
+      `${FILTERED_HREF}&link=a1`,
+    );
+  });
+
+  it('gives a member Make It Ours and Remove on a compendium entry the cupboard holds', async () => {
+    await renderPage();
+    expect(choicesOf('More for House Salt')).toEqual(['Make It Ours', 'Remove']);
+  });
+
+  it('gives a viewer no More, and no bin', async () => {
+    asRole('viewer');
+    await renderPage();
+    expect(screen.getByRole('link', { name: /^Testwort/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^(Delete|Remove) / })).not.toBeInTheDocument();
+  });
+});

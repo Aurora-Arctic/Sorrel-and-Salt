@@ -42,6 +42,29 @@ export interface CovenCardEntry {
    * Annotate shows: the coven's own entry, or a role that may not update.
    */
   annotateHref?: Route;
+  /**
+   * The list's own address with `?link=<id>`, where the card's More offers
+   * Link to the Compendium (M8.17). Given only for the coven's own entry and a
+   * role that may link.
+   */
+  linkHref?: Route;
+  /** The coven's own entry, for a role that may delete it: More offers Delete Ingredient. */
+  mayDelete?: boolean;
+  /** A compendium entry the cupboard holds, for a role that may make it the coven's own. */
+  mayMakeOurs?: boolean;
+  /** A compendium entry the cupboard holds, for a role that may remove it. */
+  mayRemove?: boolean;
+}
+
+/** A card's More (`card-more.tsx`): the entry, its coven, and what the role may do to it. */
+export interface CardMoreProps extends Pick<
+  CovenCardEntry,
+  'id' | 'label' | 'linkHref' | 'mayDelete' | 'mayMakeOurs' | 'mayRemove'
+> {
+  /** The card's name with its formal name, read after each control's verb. */
+  name: string;
+  workspaceId: string;
+  covenSlug: string;
 }
 
 export interface CovenCardsProps extends Pick<

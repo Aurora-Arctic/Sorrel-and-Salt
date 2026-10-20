@@ -167,7 +167,7 @@ describe('CovenCards', () => {
     expect(within(list).queryAllByRole('link', { name: /^Edit/ })).toHaveLength(0);
   });
 
-  it('holds no button on a card', () => {
+  it('holds no button on a card where the role may do nothing more', () => {
     render(<Cards {...props()} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });
     expect(within(list).queryAllByRole('button')).toHaveLength(0);
