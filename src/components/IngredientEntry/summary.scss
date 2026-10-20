@@ -46,6 +46,26 @@
   }
 }
 
+// The description and its Show More, a step apart, the button at its own
+// width rather than the column's.
+.ingredient-summary__description {
+  @include stack(2);
+
+  > button {
+    align-self: flex-start;
+  }
+}
+
+// Its first three lines (the owner's call, 2026-10-20). The prefixed clamp,
+// as it is Baseline Widely Available and the unprefixed `line-clamp` is not;
+// it keeps the paragraph's `pre-line`.
+.ingredient-summary__description-text--cut {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 // The one line an entry with nothing in any section shows, in the muted ink.
 .ingredient-summary__nothing {
   margin: 0;

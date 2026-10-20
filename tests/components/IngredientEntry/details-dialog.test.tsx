@@ -50,7 +50,7 @@ describe('DetailsDialog', () => {
       PAGE,
     );
     // Edit is offered only when the page gives one.
-    expect(within(dialog()).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
     // Only to read, with its links in the header: the body takes its own Tab stop.
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
@@ -87,8 +87,12 @@ describe('DetailsDialog', () => {
         </RouteModalProvider>
       </Navigating>,
     );
-    const edit = within(dialog()).getByRole('link', { name: 'Edit' });
+    // The cards' pencil, named for the entry, with its tip.
+    const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(edit).toHaveAttribute('href', EDIT);
+    fireEvent.mouseEnter(edit);
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    fireEvent.mouseLeave(edit);
 
     await act(async () => {
       fireEvent.click(edit);

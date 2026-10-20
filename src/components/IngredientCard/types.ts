@@ -38,8 +38,6 @@ export interface IngredientCardProps {
   kind: EntryKind;
   /** New or Updated for a compendium entry (`entryRecency`); none for a coven's own. */
   recency?: EntryRecency | null;
-  /** The cupboard row overrides a field of the compendium's. */
-  annotated?: boolean;
   /** The curators retired the entry. */
   retired?: boolean;
   /** The name's heading level, 2 to 5; Defaults to 2. */

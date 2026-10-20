@@ -371,3 +371,13 @@ export interface CompendiumMatches {
   entries: ReplacedCompendiumEntry[];
   total: number;
 }
+
+/**
+ * One of the viewer's own covens that holds a compendium entry, as the details modal's In Your
+ * Covens block links to it (M12.5): enough to name the coven and build its entry's address.
+ */
+export interface HoldingCoven {
+  id: string;
+  slug: string;
+  name: string;
+}

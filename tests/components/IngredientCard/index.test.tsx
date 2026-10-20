@@ -256,19 +256,19 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    it('shows the held mark, and Annotated beside it once a field is overridden', () => {
-      const held = render(<IngredientCard {...BASE} kind="cupboard" />);
-      expect(heldMark()).toBeInTheDocument();
-      expect(screen.getAllByRole('status')).toHaveLength(1);
-      held.unmount();
+    // The owner's call, 2026-10-20: a coven's card says nothing of where a held
+    // entry came from; the entry page and its head still do (EntryMarks' own tests).
+    it('shows neither Compendium nor Annotated on a compendium entry the cupboard holds', () => {
+      const { container } = render(<IngredientCard {...BASE} kind="cupboard" />);
 
-      render(<IngredientCard {...BASE} kind="cupboard" annotated />);
-      expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-      expect(heldMark()).toBeInTheDocument();
-      expect(screen.getAllByRole('status')).toHaveLength(1);
+      expect(heldMark()).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Annotated' })).toBeNull();
+      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      // With no mark left, the cluster is left out, not left empty.
+      expect(container.querySelector('.specimen__badges')).toBeNull();
     });
 
-    it('shows the retired mark in place of the held one', () => {
+    it('shows Retired on a held entry the curators retired', () => {
       render(<IngredientCard {...BASE} kind="cupboard" retired />);
 
       expect(screen.queryAllByRole('status')).toHaveLength(0);

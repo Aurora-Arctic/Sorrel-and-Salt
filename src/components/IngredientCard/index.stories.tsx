@@ -73,8 +73,10 @@ export const MineralName: Story = () => (
   />
 );
 
-export const InCupboardAnnotated: Story = () => (
-  <IngredientCard {...BASE} kind="cupboard" annotated label="Our Testwort">
+// A compendium entry the cupboard holds, under its own label: the card shows neither Compendium
+// nor Annotated, which the entry page shows (the owner's call, 2026-10-20).
+export const InCupboard: Story = () => (
+  <IngredientCard {...BASE} kind="cupboard" label="Our Testwort">
     <Jars />
   </IngredientCard>
 );
@@ -104,27 +106,20 @@ export const ManyForms: Story = () => (
   </IngredientCard>
 );
 
-// Retired, Annotated, Caution and Toxic together: the badges wrap and every row
+// Retired, Caution and Toxic together: the badges wrap and every row
 // starts at the left edge in a narrow column.
-export const RetiredAnnotated: Story = () => (
-  <IngredientCard
-    {...BASE}
-    kind="cupboard"
-    annotated
-    retired
-    safetyNotes="Keep away from open flame."
-  >
+export const RetiredCaution: Story = () => (
+  <IngredientCard {...BASE} kind="cupboard" retired safetyNotes="Keep away from open flame.">
     <Jars />
   </IngredientCard>
 );
 
-// A long name and a long formal name with all four top badges: the name block
+// A long name and a long formal name with all three top badges: the name block
 // and the badges cannot sit side by side, so the badges wrap beneath.
 export const LongName: Story = () => (
   <IngredientCard
     {...BASE}
     kind="cupboard"
-    annotated
     retired
     label="Testwort Longer Nameicanicusmus"
     formalName="Fixtura testalis longissimanicusmus"
@@ -222,7 +217,6 @@ export const CompactLongName: Story = () => (
     <IngredientCard
       {...BASE}
       kind="cupboard"
-      annotated
       retired
       label="Testwort Longer Nameicanicusmus"
       formalName="Fixtura testalis longissimanicusmus"

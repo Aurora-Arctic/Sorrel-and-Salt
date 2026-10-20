@@ -542,11 +542,12 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await expect(rowOf(ingredientList(page), 'Fixture Notewort')).toHaveCount(1);
   await expect(annotateLink).toHaveCount(0);
 
-  // Why the save could leave a mark: the card is not yet annotated.
+  // Why the save could show: the card still carries the compendium's name.
   await signInAgainAs(page, coven.users.A);
   await page.goto(searched);
   const card = rowOf(ingredientList(page), 'Fixture Notewort');
-  await expect(card.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
+  await expect(card).toHaveCount(1);
+  await expect(rowOf(ingredientList(page), 'Fixture Our Notewort')).toHaveCount(0);
   const link = card.getByRole('link', { name: 'Annotate Fixture Notewort, Fixtura notata' });
 
   await link.click();
@@ -565,8 +566,11 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await dialog.getByRole('button', { name: 'Save Annotation' }).click();
   await expect(dialog).toHaveCount(0);
   await backAtSearch();
+  // The save shows as the coven's label; the card wears no Annotated, which is the
+  // entry page's to say (the owner's call, 2026-10-20).
   const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
-  await expect(annotated.getByRole('button', { name: 'Annotated' })).toBeVisible();
+  await expect(annotated).toHaveCount(1);
+  await expect(annotated.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
 
   // More, then Remove: asked first, then gone from the cupboard and the list.
   // The menu opens upward from the dialog's foot and stays inside the dialog,

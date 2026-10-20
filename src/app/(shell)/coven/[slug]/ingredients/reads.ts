@@ -10,6 +10,7 @@ import type { CovenIngredientPage } from './types';
 import { entryValues } from '@/app/entry-values';
 import type { CovenMembership } from '@/modules/coven';
 import {
+  covensHoldingEntry,
   applyCupboardEntry,
   countWorkspaceIngredients,
   getIngredient,
@@ -144,14 +145,16 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   if (entry.workspaceId === membership.workspaceId) {
-    return { shown: entry, own: true, detail: await detailOf() };
+    return { shown: entry, own: true, detail: await detailOf(), covens: [] };
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
-  const read = await detailOf();
+  // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
+  const [read, covens] = await Promise.all([detailOf(), covensHoldingEntry(session, id)]);
   return {
     shown: applyCupboardEntry(held.entry, held.cupboardEntry),
     own: false,
     detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },
+    covens,
   };
 }

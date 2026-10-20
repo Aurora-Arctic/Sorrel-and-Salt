@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import IngredientSummary from '@/components/IngredientEntry/summary';
 import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/ingredients';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -294,5 +294,118 @@ describe('IngredientSummary', () => {
     }
     expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
+  });
+
+  describe('a long description', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    /** The paragraph's measured overflow: jsdom lays nothing out, so each height is the test's. */
+    function measures(scrollHeight: number, clientHeight: number): void {
+      vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(clientHeight);
+    }
+
+    it('is cut to its first lines, Show More opening the rest and Show Less closing it', () => {
+      measures(200, 72);
+      const before = window.location.href;
+      render(<IngredientSummary detail={full()} />);
+
+      const more = screen.getByRole('button', { name: 'Show More' });
+      const description = screen.getByText('A fixture description.');
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+      expect(more).toHaveAttribute('aria-controls', description.id);
+      expect(description.id).not.toBe('');
+
+      fireEvent.click(more);
+      const less = screen.getByRole('button', { name: 'Show Less' });
+      expect(less).toHaveAttribute('aria-expanded', 'true');
+      // Opening it stays in the modal: the address is unchanged.
+      expect(window.location.href).toBe(before);
+
+      fireEvent.click(less);
+      expect(screen.getByRole('button', { name: 'Show More' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    it('shows a description that fits whole, with no toggle', () => {
+      measures(48, 48);
+      render(<IngredientSummary detail={full()} />);
+
+      // Why it could show: the description is drawn.
+      expect(screen.getByText('A fixture description.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Show More' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("in the viewer's covens", () => {
+    const covens = [
+      { id: 'w1', slug: 'fixture-coven', name: 'Fixture Coven' },
+      { id: 'w2', slug: 'second-fixture', name: 'Second Fixture' },
+    ];
+    const ENTRY = entryDetail().entry.id;
+
+    it("links the entry in each coven that holds it, by the coven's name, after the categories", () => {
+      render(<IngredientSummary detail={full()} covens={covens} />);
+
+      const list = screen.getByRole('list', { name: 'In Your Covens' });
+      expect(within(list).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
+        'href',
+        `/coven/fixture-coven/ingredients/${ENTRY}`,
+      );
+      expect(within(list).getByRole('link', { name: 'Second Fixture' })).toHaveAttribute(
+        'href',
+        `/coven/second-fixture/ingredients/${ENTRY}`,
+      );
+      // The last block: the categories come before it in the document.
+      const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+      expect(headings[headings.length - 1]).toBe('In Your Covens');
+      expect(headings).toContain('Categories');
+    });
+
+    it("draws no block when none of the viewer's covens holds it, or for a visitor", () => {
+      const { unmount } = render(<IngredientSummary detail={full()} covens={[]} />);
+      // Why it could show: the body still draws its other blocks.
+      expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+      unmount();
+
+      render(<IngredientSummary detail={full()} />);
+      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+    });
+
+    it("draws no block for a coven's own entry, which only its coven holds", () => {
+      render(
+        <IngredientSummary
+          detail={full({ entry: entryDetail({ workspaceId: 'w1' }).entry })}
+          covens={covens}
+        />,
+      );
+      expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+    });
+
+    it('still says nothing is recorded of an empty entry, with the covens that hold it beneath', () => {
+      render(
+        <IngredientSummary
+          detail={full({
+            entry: entryDetail({ description: null, elements: null, celestialBodies: null }).entry,
+            folkNames: [],
+            categories: [],
+            deities: [],
+            variants: [],
+          })}
+          covens={covens}
+        />,
+      );
+      // The links are where the entry is held, not something recorded of it.
+      expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('list', { name: 'In Your Covens' })).getAllByRole('link'),
+      ).toHaveLength(2);
+    });
   });
 });

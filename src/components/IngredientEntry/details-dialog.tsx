@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
-import { RouteModal, useModalHeaderSlot, useOpenModalClick } from '../Modal';
-import type { RouteModalLink } from '../Modal/types';
+import { EditLink } from '../IconTip';
+import { RouteModal, useModalHeaderSlot } from '../Modal';
 import { DETAILS_PLACE } from './details';
 import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './types';
 
@@ -16,25 +16,17 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // header, where a modal's own controls go (claude-docs/components/modal.md,
 // "A control in the header").
 
-/** Edit, opening the edit modal at once under its head (M9.18). */
-function EditLink({ href, heading }: RouteModalLink): ReactElement {
-  const onClick = useOpenModalClick(href, heading);
-  return (
-    <Link className="btn btn--small btn--quiet" href={href} onClick={onClick}>
-      Edit
-    </Link>
-  );
-}
-
 /** Open Full Page and Edit, in the header, or above the summary where the modal has no slot. */
-function DetailsActions({ pageHref, editAction }: IngredientDetailsOpened): ReactElement {
+function DetailsActions({ heading, pageHref, editAction }: IngredientDetailsOpened): ReactElement {
   const slot = useModalHeaderSlot();
   const actions = (
     <>
       <Link className="btn btn--small btn--quiet" href={pageHref}>
         Open Full Page
       </Link>
-      {editAction && <EditLink {...editAction} />}
+      {/* The cards' pencil with its tip, named for the entry (the owner's call,
+          2026-10-20); a press opens the edit modal at once under its head (M9.18). */}
+      {editAction && <EditLink {...editAction} name={heading.title} />}
     </>
   );
   return slot ? createPortal(actions, slot) : actions;

@@ -11,6 +11,7 @@ import type { IngredientDetailsOpened, IngredientEntryProps } from './types';
 import type {
   CategoryDetail,
   CitedReference,
+  HoldingCoven,
   IngredientDetail,
   IngredientRow,
   IngredientVariantRow,
@@ -497,10 +498,12 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 const Details = ({
   detail,
   listHref,
+  covens,
   ...opened
 }: Omit<IngredientDetailsOpened, 'heading' | 'children'> & {
   detail: IngredientDetail;
   listHref: Route;
+  covens?: readonly HoldingCoven[];
 }) => (
   <Reopenable>
     {() => (
@@ -508,7 +511,7 @@ const Details = ({
         closeHref={listHref}
         opened={{
           heading: detailsHeading(detail.entry),
-          children: <IngredientSummary detail={detail} />,
+          children: <IngredientSummary detail={detail} covens={covens} />,
           ...opened,
         }}
       />
@@ -553,6 +556,45 @@ export const DetailsFromCompendium: Story = () => (
   />
 );
 DetailsFromCompendium.meta = { iframed: true };
+
+// From the public compendium, to a member of two covens that hold the entry: a
+// last block, In Your Covens, links the entry in each by the coven's name.
+export const DetailsInYourCovens: Story = () => (
+  <Details
+    detail={FULL}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    covens={[
+      { id: '00000000-0000-4000-8000-0000000000c1', slug: 'fixture-coven', name: 'Fixture Coven' },
+      {
+        id: '00000000-0000-4000-8000-0000000000c2',
+        slug: 'testwort-circle',
+        name: 'Testwort Circle',
+      },
+    ]}
+  />
+);
+DetailsInYourCovens.meta = { iframed: true };
+
+// A long description, cut to its first three lines, Show More opening the
+// rest in place; the sparse story's short one stands whole with no button.
+export const DetailsLongDescription: Story = () => (
+  <Details
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        ...FULL.entry,
+        description:
+          'A low, grey-leaved fixture herb of dry banks and old walls, gathered at midsummer when its small yellow flowers first open.\n' +
+          'Its leaves are dried in bundles under the eaves and kept through the winter, and its seed heads are left standing for the birds.\n' +
+          'In the fixture covens it is laid under the threshold stone of a new house, burned with the year’s last fire, and steeped for the wash that clears a room after a quarrel.',
+      }),
+    }}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+  />
+);
+DetailsLongDescription.meta = { iframed: true };
 
 // The same, to a curator: Edit opens the compendium's edit modal over the details.
 export const DetailsFromCompendiumForCurator: Story = () => (
