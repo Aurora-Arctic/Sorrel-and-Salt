@@ -90,7 +90,8 @@ a level beneath the Variants `h3`, and each folds as the ingredient's do
 where its label does not say it, sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
 "Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
-panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
+panel's fields "Add a title", "Name the book" and so on, or an example
+where the format matters ("2nd ed."; ["The new reference panel"](#the-new-reference-panel)). `SuggestField`,
 `ListField` (and so `LookupListField`) and `CategoryPicker` take
 `placeholder` for it, and a reference field's spec carries its own. A date
 field shows none: the browser draws its own format there.
@@ -631,9 +632,20 @@ provides them, and its errors render through `FieldError`.
   always, a book's date, a chapter's, article's or entry's container, and a
   web page's address and day read. A printed work's online fields follow
   its publication: Read Through (`host`), Address, Last Modified, Accessed
-  and Note. The two days are `<input type="date">`. A title, a container
-  and a note say in their tip that underscores italicise a title inside
-  them (MB.151).
+  and Note. The two days are `<input type="date">`.
+- **One How to Cite tip, in place of a hint per field** (the owner's call,
+  2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
+  sits at the panel's head, both New Reference and Edit Source, and says
+  the rules once: the first author inverted, edition and volume as printed,
+  contributors as a sentence, a date as precise as the source gives it,
+  underscores round a title inside a title to italicise it (MB.151), and a
+  note printing after the citation in brackets. The panel's
+  `aria-describedby` names it, after an edit's reach note, so it is read on
+  entering the panel rather than with every field. A field whose format
+  matters shows an example as its placeholder instead of an action:
+  Authors "Shelley, Mary", Edition "2nd ed.", Volume "Vol. 2", Place
+  "London", Published "1985", Pages "112–30", Address "https://" and Read
+  Through "Perseus Digital Library". The rest keep their actions.
 - **A kind change keeps what was typed** in every field, but only the
   chosen kind's are sent: `toReferenceInput` sends the rest as null, and a
   blank day as null, since `LocalDate` takes no empty text. The resolver

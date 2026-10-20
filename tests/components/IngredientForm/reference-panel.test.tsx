@@ -223,6 +223,21 @@ describe('ReferencePanel', () => {
     },
   );
 
+  // One tip for how to cite, read once on entering the panel, in place of a
+  // hint beside each field (the owner's call, 2026-10-20).
+  it('describes the panel by one How to Cite tip, and no field by a hint of its own', () => {
+    renderPanel();
+
+    chooseKind('Book');
+
+    const tips = within(panel()).getAllByRole('button', { name: /^About / });
+    expect(tips.map((tip) => tip.getAttribute('aria-label'))).toEqual(['About How to Cite']);
+    const tipId = tips[0].getAttribute('aria-describedby');
+    expect(tipId).toBeTruthy();
+    expect(panel().getAttribute('aria-describedby')?.split(' ')).toContain(tipId);
+    for (const label of KINDS[0].fields) expect(inPanel(label)).not.toHaveAccessibleDescription();
+  });
+
   // What the schema refuses is validation/reference.test.ts's; here, that the
   // panel runs it, and where a refusal and a server's land.
   it('puts a resolver error beside its field, focused and sending nothing, and a server field error through the same element', async () => {
