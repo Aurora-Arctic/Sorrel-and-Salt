@@ -49,7 +49,7 @@ type Report = (message: string | undefined) => void;
 /**
  * The dialog's body, which says Promote and Leave's refusal at its top, a
  * plain notice inside the dialog rather than a callout over it (M12.31's rule
- * 6); Delete says its own beside its button. Its own component, so the
+ * 6); Delete says its own on a line above the buttons. Its own component, so the
  * refusal goes when the dialog closes.
  */
 const ExitDialog = ({

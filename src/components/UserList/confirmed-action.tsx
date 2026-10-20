@@ -82,7 +82,8 @@ const ConfirmedAction = ({
   }, [step, inModal]);
 
   // Outside a modal, a callout under the control. Inside one, a plain notice
-  // beside it, in that dialog (the owner's call).
+  // in that dialog, which a button row's style lifts onto its own line above
+  // the buttons (the owner's call).
   function report(message: string | undefined) {
     if (inModal) setFailure(message);
     else feedback.report(message);

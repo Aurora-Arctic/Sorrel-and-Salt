@@ -67,8 +67,9 @@ member, a viewer) gets the plain one, and the page reads nothing for them.
 - **A refusal is said inside the dialog,** in a plain error `Notice`, not behind it on the page.
   Promote and Leave's is at the dialog's top: the dialog holds it (`ExitDialog` in
   `owner-exit.tsx`) and hands the handover a `report`. The in-dialog Delete Coven says its own
-  beside its button, as every in-dialog confirmed action does (the owner's call, 2026-10-20), with
-  no badge.
+  on a full-width line above the dialog's buttons, as every in-dialog confirmed action does (the
+  owner's calls, 2026-10-20), with no badge: inside the row it squeezed Delete and pushed Cancel
+  past the dialog's edge on a phone. `coven.spec.ts` holds that at 375px.
 - **The service still decides.** Bypassing the dialog, `leaveWorkspace` refuses the only owner.
 
 Why the page and not the refusal: the guard's `LastOwner` carries `remedy` and `promotable`, but
@@ -100,5 +101,5 @@ named coven's id, a replace to the landing and a refresh; a refusal stays on the
 said under the button with the focus on it and the badge bringing it back, and a success
 announces nothing. `owner-exit.test.tsx`: the dialog opens
 with both ways out, the type-ahead and the one-member and no-member shapes, the two requests in
-their order and what each failure leaves, a refused hand-over said at the dialog's top and a refused deletion beside Delete, the Delete confirmation, and that the focus returns to
+their order and what each failure leaves, a refused hand-over said at the dialog's top and a refused deletion inside the dialog, the Delete confirmation, and that the focus returns to
 Leave Coven when the dialog closes by Cancel or Escape.

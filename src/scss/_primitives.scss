@@ -114,6 +114,23 @@
     margin-top: space(4);
   }
 
+  // A confirmed action's refusal inside a dialog (M12.31's rule 6) is a plain
+  // notice rendered after its button, so in a row of buttons it takes its own
+  // full-width line above them rather than a place between them, where it
+  // squeezed the button and pushed the next past the dialog's edge (the
+  // owner's call, 2026-10-20). `order` rather than moving it in the document:
+  // the same notice stands beside a control outside a button row too.
+  .modal__actions:has(> .notice) {
+    flex-wrap: wrap;
+    row-gap: space(4);
+  }
+
+  .modal__actions > .notice {
+    order: -1;
+    flex-basis: 100%;
+    margin: 0;
+  }
+
   // Shape shared by every button in the app, `SignInPanel`'s included
   // (claude-docs/components/sign-in-panel.md, "Provider branding") — that
   // component's brand buttons carry their own colour and mark instead of
