@@ -86,25 +86,41 @@ const button = (name: string) => screen.queryByRole('button', { name });
 
 /** The Edit menu's choices, in order, after opening it. */
 function choices(): string[] {
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  const items = within(screen.getByRole('menu', { name: 'Edit' })).getAllByRole('menuitem');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
+  const items = within(screen.getByRole('menu', { name: 'Edit Testwort' })).getAllByRole(
+    'menuitem',
+  );
   return items.map((item) => item.textContent ?? '');
 }
 
 /** Opens the Edit menu and chooses one of its items. */
 function choose(name: string): void {
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
 
 describe('CupboardActions', () => {
   beforeEach(() => router.push.mockClear());
 
+  // The pencil at the end of the name's row (the owner's call, 2026-10-20): MenuButton's icon
+  // form, named for the entry as the modal's pencil is, with the Edit tip and no word of its own.
+  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', () => {
+    renderActions({ held: true });
+
+    const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
+    expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    fireEvent.mouseEnter(pencil);
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    fireEvent.mouseLeave(pencil);
+    expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+  });
+
   it('offers Add to Cupboard alone, as a plain button, while the coven does not hold the entry', () => {
     renderActions();
 
     expect(button('Add to Cupboard')).toBeInTheDocument();
-    expect(button('Edit')).not.toBeInTheDocument();
+    expect(button('Edit Testwort')).not.toBeInTheDocument();
   });
 
   it('offers Annotate, Make It Ours and Remove, not Add, in the Edit menu once the coven holds it', () => {
@@ -221,7 +237,7 @@ describe('CupboardActions', () => {
     );
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    await waitFor(() => expect(button('Edit')).toHaveFocus());
+    await waitFor(() => expect(button('Edit Testwort')).toHaveFocus());
   });
 
   it('asks before removing, in a dialog, and removes nothing on the way out', async () => {
@@ -233,7 +249,7 @@ describe('CupboardActions', () => {
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    await waitFor(() => expect(button('Edit')).toHaveFocus());
+    await waitFor(() => expect(button('Edit Testwort')).toHaveFocus());
   });
 
   // The entry's page heading takes the focus once the re-read says the coven no
@@ -353,9 +369,9 @@ describe('CupboardActions', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     // The entry stays held, so the focus goes back to its menu, not the heading.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(button('Edit')).toHaveFocus();
+    expect(button('Edit Testwort')).toHaveFocus();
     // The refusal is the menu's callout, which can be brought back by its badge.
-    expect(button('Show the error for Edit')).toBeInTheDocument();
+    expect(button('Show the error for Edit Testwort')).toBeInTheDocument();
   });
 
   it('asks before making it ours, in a dialog, and changes nothing on the way out', async () => {
@@ -366,7 +382,7 @@ describe('CupboardActions', () => {
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(button('Edit')).toBeInTheDocument();
+    expect(button('Edit Testwort')).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -412,8 +428,8 @@ describe('CupboardActions', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
-    expect(button('Edit')).toBeInTheDocument();
-    expect(button('Show the error for Edit')).toBeInTheDocument();
+    expect(button('Edit Testwort')).toBeInTheDocument();
+    expect(button('Show the error for Edit Testwort')).toBeInTheDocument();
   });
 
   it('shares one callout between the writes: a later refusal replaces the first, and the next press clears it', async () => {
@@ -436,12 +452,14 @@ describe('CupboardActions', () => {
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('a jar is held'));
     expect(screen.getAllByRole('alert')).toHaveLength(1);
-    expect(screen.getAllByRole('button', { name: 'Show the error for Edit' })).toHaveLength(1);
+    expect(
+      screen.getAllByRole('button', { name: 'Show the error for Edit Testwort' }),
+    ).toHaveLength(1);
 
     // Opening a question again forgets the last refusal.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     choose('Make It Ours');
-    await waitFor(() => expect(button('Show the error for Edit')).not.toBeInTheDocument());
+    await waitFor(() => expect(button('Show the error for Edit Testwort')).not.toBeInTheDocument());
   });
 
   it("shows Add to Cupboard's refusal under the Edit menu when Add is a menu item, and it can be dismissed", async () => {
@@ -459,12 +477,12 @@ describe('CupboardActions', () => {
     choose('Add to Cupboard');
 
     expect(await screen.findByRole('alert')).toHaveTextContent('not in the Compendium');
-    expect(button('Show the error for Edit')).toBeInTheDocument();
-    expect(button('Edit')).toHaveAccessibleDescription(/not in the Compendium/);
+    expect(button('Show the error for Edit Testwort')).toBeInTheDocument();
+    expect(button('Edit Testwort')).toHaveAccessibleDescription(/not in the Compendium/);
 
     press('Dismiss');
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    expect(button('Edit')).toHaveFocus();
+    expect(button('Edit Testwort')).toHaveFocus();
   });
 
   it("shows Add to Cupboard's refusal under the button itself when it stands alone, and a new press clears it", async () => {

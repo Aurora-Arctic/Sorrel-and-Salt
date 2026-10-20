@@ -63,7 +63,7 @@ test('a member adds the entry from its public page, and the Edit menu then offer
     await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME);
   };
   const add = () => page.getByRole('button', { name: ADD });
-  const menu = () => page.getByRole('button', { name: 'Edit', exact: true });
+  const menu = () => page.getByRole('button', { name: `Edit ${NAME}`, exact: true });
 
   // Why the add is this test's: the entry is live and public, and the coven does not hold it.
   expect(await heldRows()).toHaveLength(0);
@@ -173,7 +173,7 @@ test('a member of two covens chooses from Add to Cupboard’s menu, then adds to
     );
   const add = () => page.getByRole('button', { name: ADD });
   const addMenu = page.getByRole('menu', { name: ADD });
-  const edit = () => page.getByRole('button', { name: 'Edit', exact: true });
+  const edit = () => page.getByRole('button', { name: `Edit ${NAME_TWO}`, exact: true });
 
   // Why the menu is this test's: B may write in both, and neither coven holds the entry.
   expect(await heldRows(one.id)).toHaveLength(0);

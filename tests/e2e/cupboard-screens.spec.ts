@@ -45,9 +45,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   }
   const entryPage = `/coven/${coven.slug}/ingredients/${ingredientId}`;
   const heading = (name: string) => page.getByRole('heading', { level: 1, name });
-  // A choice in the entry's Edit menu.
-  const choose = async (name: string) => {
-    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  // A choice in the entry's Edit menu, the pencil named for the entry as it is called now.
+  const choose = async (name: string, entry = 'Fixture Screens Wort') => {
+    await page.getByRole('button', { name: `Edit ${entry}`, exact: true }).click();
     await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
   };
 
@@ -55,7 +55,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   // delete, and the coven does not hold the entry yet.
   await page.goto(entryPage);
   await expect(heading('Fixture Screens Wort')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Edit Fixture Screens Wort', exact: true }),
+  ).toHaveCount(0);
 
   // A refusal is a callout under the button, which floats: the heading does
   // not move (M12.31). The write is answered in its place, so nothing is added.
@@ -98,7 +100,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
 
   // The form opens on the coven's label; handing it back restores the compendium's.
-  await choose('Annotate');
+  await choose('Annotate', 'Fixture Our Screenwort');
   await dialog.getByRole('button', { name: 'Restore Original: Label' }).click();
   await dialog.getByRole('button', { name: 'Save Annotation' }).click();
   await expect(dialog).toBeHidden();
@@ -115,7 +117,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(dialog).toBeHidden();
   // Closed with nothing changed, the dialog gives the focus back to the menu
   // button its item sat behind, where the press began (M8.17).
-  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeFocused();
+  await expect(
+    page.getByRole('button', { name: 'Edit Fixture Screens Wort', exact: true }),
+  ).toBeFocused();
 
   await choose('Remove');
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();

@@ -97,9 +97,12 @@ export async function openEditIngredientFromMenu(
   name: string,
   formalName?: string,
 ): Promise<Locator> {
-  await page.getByRole('main').getByRole('button', { name: 'Edit', exact: true }).click();
   await page
-    .getByRole('menu', { name: 'Edit' })
+    .getByRole('main')
+    .getByRole('button', { name: `Edit ${name}`, exact: true })
+    .click();
+  await page
+    .getByRole('menu', { name: `Edit ${name}` })
     .getByRole('menuitem', { name: 'Edit Ingredient', exact: true })
     .click();
   const dialog = editIngredientDialog(page, name, formalName);
