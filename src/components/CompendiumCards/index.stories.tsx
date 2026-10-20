@@ -90,15 +90,7 @@ export const Held: Story = () => (
     {...BASE}
     action="add"
     workspaceId={WORKSPACE_ID}
-    entries={ENTRIES.map((entry, at) =>
-      at < 2
-        ? {
-            ...entry,
-            held: true,
-            heldHref: `/coven/fixture-coven/ingredients/${entry.slug}` as Route,
-          }
-        : entry,
-    )}
+    entries={ENTRIES.map((entry, at) => (at < 2 ? { ...entry, held: true } : entry))}
   />
 );
 
@@ -116,7 +108,6 @@ export const InSeveralCovens: Story = () => (
       held: at === ENTRIES.length - 1,
       heldIn:
         at === 0 ? [WORKSPACE_ID] : at === ENTRIES.length - 1 ? [WORKSPACE_ID, SECOND_ID] : [],
-      heldHref: `/coven/fixture-coven/ingredients/${entry.slug}` as Route,
     }))}
   />
 );

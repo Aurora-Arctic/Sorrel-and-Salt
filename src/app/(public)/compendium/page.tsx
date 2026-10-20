@@ -4,11 +4,7 @@ import CompendiumCards from '../../../components/CompendiumCards';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { editHeading } from '../../../components/CompendiumList/heading';
 import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
-import {
-  PUBLIC_COMPENDIUM_PATH,
-  compendiumHref,
-  covenIngredientsHref,
-} from '../../../components/CompendiumList/href';
+import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
 import { detailsHeading } from '../../../components/IngredientEntry/details';
@@ -170,9 +166,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     : undefined;
   const entries = page.edges.map(({ node }, i): CompendiumCardEntry => {
     const heldIn = writable.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ id }) => id);
-    // The check shows only where every coven holds it, and leads to the default coven's list
-    // if that holds it, else the first that does (the default is first in `writable`).
-    const holder = writable.find(({ id }) => heldIn.includes(id)) ?? defaultCoven;
     return {
       id: node.id,
       name: node.name,
@@ -188,11 +181,9 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         href: compendiumHref({ ...list, entry: node.id }, undefined, PUBLIC_COMPENDIUM_PATH),
         heading: detailsHeading(node),
       },
-      ...(holder && {
-        held: heldIn.length === writable.length,
-        heldIn,
-        heldHref: covenIngredientsHref(holder.slug, { query: node.name }),
-      }),
+      // The check shows only where every coven holds it (a mark, not a link: the owner’s call,
+      // 2026-10-20).
+      ...(defaultCoven && { held: heldIn.length === writable.length, heldIn }),
       ...(canEdit && {
         editHref: listWith(node.slug),
         editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),

@@ -13,7 +13,6 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from '@/gql/graphql';
 import { expectRefusalUnder } from '../../support/click-feedback';
 import { sent } from '../../support/filter-form';
-import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -147,73 +146,36 @@ describe('CompendiumCards', () => {
       const buttons = screen.getAllByRole('button', { name: 'Add to My Ingredients' });
       expect(buttons).toHaveLength(ENTRIES.length);
       for (const button of buttons) expect(button).toBeEnabled();
-      expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
     });
 
-    it('swaps the plus for a check link to the entry on a card the coven holds', () => {
-      const held = ENTRIES.map((one, index) =>
-        index === 0
-          ? { ...one, held: true, heldHref: '/coven/fixture-coven/ingredients/a' as Route }
-          : one,
-      );
+    // The owner's call, 2026-10-20: the check is a status mark, not a link. The details
+    // modal's In Your Covens list carries the links to each coven's copy.
+    it('swaps the plus for a check mark on a card every coven holds, a mark and no link', () => {
+      const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
       expect(screen.getAllByRole('button', { name: 'Add to My Ingredients' })).toHaveLength(2);
-      expect(screen.getByRole('link', { name: 'In My Ingredients' })).toHaveAttribute(
-        'href',
-        '/coven/fixture-coven/ingredients/a',
-      );
-    });
-
-    // The loading standard (claude-docs/loading.md): a link that navigates says so while the
-    // coven's list is on its way, rather than looking dead until it arrives.
-    it('says the check is busy while the coven’s list it leads to is on its way', async () => {
-      const held = ENTRIES.map((one, index) =>
-        index === 0
-          ? { ...one, held: true, heldHref: '/coven/fixture-coven/ingredients?query=a' as Route }
-          : one,
-      );
-      render(
-        <Navigating push={router.push}>
-          <Cards {...props({ entries: held, action: 'add' })} />
-        </Navigating>,
-      );
-      const check = screen.getByRole('link', { name: 'In My Ingredients' });
-      expect(check).not.toHaveAttribute('aria-busy');
-
-      await act(async () => {
-        fireEvent.click(check);
-      });
-
-      expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven/ingredients?query=a');
-      expect(check).toHaveAttribute('aria-busy', 'true');
-    });
-
-    it('draws neither where the entry is held but has no address to link', () => {
-      const held = ENTRIES.map((one) => ({ ...one, held: true }));
-      render(<Cards {...props({ entries: held, action: 'add' })} />);
-      expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+      const mark = screen.getByRole('img', { name: 'In My Ingredients' });
+      expect(mark.closest('a')).toBeNull();
+      expect(mark).not.toHaveAttribute('tabindex');
       expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
+      // Nothing in the card's foot under that name takes the focus either.
+      for (const named of screen.getAllByLabelText('In My Ingredients')) {
+        expect(named.closest('a, button')).toBeNull();
+      }
     });
 
     it('draws neither without a coven to add to', () => {
-      const held = ENTRIES.map((one, index) =>
-        index === 0
-          ? { ...one, held: true, heldHref: '/coven/fixture-coven/ingredients/a' as Route }
-          : one,
-      );
+      const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add', workspaceId: undefined })} />);
       expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
     });
 
     it('draws neither where the action is none, even for a held entry', () => {
-      const held = ENTRIES.map((one) => ({
-        ...one,
-        held: true,
-        heldHref: '/coven/fixture-coven/ingredients/a' as Route,
-      }));
+      const held = ENTRIES.map((one) => ({ ...one, held: true }));
       render(<Cards {...props({ entries: held, action: 'none' })} />);
-      expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
     });
 
     it('adds that entry to the coven and reads the page again', async () => {

@@ -4,19 +4,18 @@ import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useCallback, useEffect, useRef } from 'react';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { PendingLink, usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
+import { usePendingNavigation } from '../../lib/navigation';
 import { useClickFeedback } from '../ClickFeedback';
 import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
-import type { AddIconProps, HeldLinkProps } from './types';
+import type { AddIconProps } from './types';
 
 // The two marks at a compendium card's bottom right, before a curator's Edit (M9.12, the owner's
 // call, 2026-10-20): a plus while the entry is not in every coven the viewer may write in, a
-// check once it is. Icons alone, named by their tip and an accessible name (`visually-hidden`),
-// as the pencil beside them is. Their own file, because the card itself stays a server component
+// check once it is. Icons alone: the plus named by its tip and an accessible name
+// (`visually-hidden`), as the pencil beside them is, the check by its `aria-label`. Their own file, because the card itself stays a server component
 // and a press needs the browser.
 
 const ADD = 'Add to My Ingredients';
@@ -116,20 +115,13 @@ export const AddIcon = ({
 };
 
 /**
- * The check: the coven holds this entry, and the link leads to it there, the coven's list
- * filtered to it. A `PendingLink`, as the loading standard has every navigating link
- * (claude-docs/loading.md): busy while the list is on its way, which draws its cards in the
- * public frame's main region, since the coven's frame is not on this page.
+ * The check: every coven the viewer may write in holds this entry. A status mark, not a link
+ * (the owner’s call, 2026-10-20): the details modal’s In Your Covens list carries the links
+ * to each coven’s copy. An image named In My Ingredients, and no tip, since a tip opens on
+ * hover or focus and a mark that takes no focus would show it to the pointer alone (WCAG 2.1.1).
  */
-export const HeldLink = ({ href }: HeldLinkProps): ReactElement => (
-  <IconTip tip="In My Ingredients">
-    <PendingLink
-      className="icon-tip__held"
-      href={href}
-      navigationTarget={ingredientLinkTarget(href, false)}
-    >
-      <CheckIcon />
-      <span className="visually-hidden">In My Ingredients</span>
-    </PendingLink>
-  </IconTip>
+export const HeldMark = (): ReactElement => (
+  <span className="icon-tip__held" role="img" aria-label="In My Ingredients">
+    <CheckIcon />
+  </span>
 );

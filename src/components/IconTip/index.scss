@@ -99,13 +99,24 @@
   @include icon-button-edit;
 }
 
-// A compendium card's plus (Add to My Ingredients) and its check (In My Ingredients), M9.12:
-// Edit's size and green, since adding is constructive. The spinner a press shows takes the
-// glyph's size, as `svg` does in the mixin.
-.icon-tip__add,
-.icon-tip__held {
+// A compendium card's plus (Add to My Ingredients), M9.12: Edit's size and green, since adding
+// is constructive. The spinner a press shows takes the glyph's size, as `svg` does in the mixin.
+.icon-tip__add {
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-edit;
+}
+
+// Its check (In My Ingredients): the same box and green, but a status mark and no control (the
+// owner's call, 2026-10-20), so no pointer and no wash under it.
+.icon-tip__held {
+  @include icon-button($icon-size-large, $glyph-size-large, $cursor: default);
+
+  color: $accent;
+
+  &:hover {
+    background-color: transparent;
+    color: $accent;
+  }
 }
 
 .icon-tip__add .spinner {
