@@ -379,7 +379,6 @@ test.describe('motion', () => {
     await placed(page);
     await settle(page);
     const arriving = await takeFrames(page);
-    console.log('PROBE', JSON.stringify(arriving.callout.slice(0, 14)));
     for (const piece of ['callout', 'badge'] as const) {
       const shown = arriving[piece].filter((frame) => frame.visible);
       // Why the check could pass vacuously: each was seen.
