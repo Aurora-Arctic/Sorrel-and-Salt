@@ -69,7 +69,7 @@ The owner asked for smaller type, about half way to the compact look, with the s
 
 The same card in a tighter look, for a long list. It is not a prop. The look must be switchable before React runs (M9.6 stores the choice and a script sets an attribute before the first paint), and a prop fixes the look at render, which would then disagree with the server's markup on hydration. So the look is a Sass mixin, `ingredient-card-compact` (`_compact.scss`), applied in `index.scss` under `[data-density='compact']:not(:root[data-card-density='regular'] *)`: it applies wherever an ancestor carries the first attribute, unless `<html>` carries `data-card-density="regular"`, which the pre-paint script sets from the stored Compact choice (`card-density-switch.md`). `IngredientCardList` sets it from its `density` prop; a card on its own is wrapped in an element that carries it (stories `Compact`, `Compact Long Name`).
 
-What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the hover lift, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact, with the Compact switch ([`card-density-switch.md`](card-density-switch.md)) to turn it off.
+What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the drawer slide, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact, with the Compact switch ([`card-density-switch.md`](card-density-switch.md)) to turn it off.
 
 ### Jar-section spacing
 
@@ -90,19 +90,21 @@ stays the ingredient's name and the card has exactly one link. The Low badge's t
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
 click. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
 pointer, and the focus ring is drawn on the overlay,
-round the card. Under the pointer, or with focus inside it, the card lightens
-(`$surface-card-hover`: a step lighter in dark, brighter in light) and rises 2px
-with a stronger shadow (`$shadow-lifted`, between floating and elevated), over 150ms.
-Under reduced motion the move and the fade go and the colour and shadow change
-stay. The lift moves `inset-block-start`, never `transform`: a transformed ancestor becomes the
-containing block of the `position: fixed` tip bubbles inside the card, and Floating UI does not
-re-place a bubble when an ancestor's transform starts or ends, so a quick move between cards left
-a bubble in the wrong place. Keep `transform`, `filter`, `will-change`, `contain` and
-`backdrop-filter` off the card for the same reason. Each card is `isolation: isolate`, so its raised
-actions and tips stay inside it, and the card under the pointer or with focus inside it (or with
-one of its tips still open, through `:has()`, since a tip lingers about 150ms after the pointer
-leaves) takes `z-index: 1`, so its tips paint over the cards before and after it. The lift uses
-`:focus-within`, so a click's focus lifts it too.
+round the card.
+
+### The drawer (M12.44)
+
+The card is drawn as the front of an apothecary drawer. The owner approved the "Straight Out" variant of a hover mock on 2026-10-20.
+
+- **The slot.** The component wraps the card in `.ingredient-card-slot`: the hole in the cabinet. It fills the list item's cell, is rounded like the card, and has the slot's interior colour and a soft inset shadow. It never moves. It clips nothing itself, because a `clip-path` or `overflow` on an ancestor of the card would cut off the tips and the category panel that open above the card's top edge.
+- **The slide.** Under the pointer, or with focus inside the slot, the card's face lightens (`$surface-card-hover`), takes a deeper shadow (`$shadow-lifted`) and slides 11px down (`$drawer-travel`) over 300ms (`$motion-medium`). The hover is read from the slot and not the card: the face leaves the pointer's place as it moves, and the slot stays put under it, so the card does not flicker. `:focus-within` means a click's focus opens it too.
+- **The drawer body.** Behind the face sits `.ingredient-card-slot__drawer`, an `aria-hidden` span that only clips, with its `::before` as the box: 10px in from each side of the slot, square-cornered, from 1px below the slot's top to 10px under the face at full travel, so no gap shows. At rest it sits one travel higher, hidden by the clip. Layers, top first: the shadow the face casts (dark for the 10px under it, fading out by 22px), 10px shading bands on each side, 7px side walls, then the back wall (top 38%), a seam easing into the floor (to 48%) and the floor.
+- **Why a sibling painted first, not a negative `z-index` child.** A child with a negative `z-index` paints over its parent's own background, which put the box in front of the card. The drawer is a sibling before the card in the DOM, so the card paints over it.
+- **Why offset and not `transform`.** The slide moves `inset-block-start`: a transformed ancestor becomes the containing block of the `position: fixed` tip bubbles inside the card, and Floating UI does not re-place a bubble when an ancestor's transform starts or ends, so a quick move between cards left a bubble in the wrong place. Keep `transform`, `filter`, `will-change`, `contain` and `backdrop-filter` off the card for the same reason.
+- **Colours.** `--drawer-slot`, `--drawer-floor`, `--drawer-side`, `--drawer-back` and `--drawer-seam` are set per theme with the other surface colours, each a `color.mix()` in `_variables.scss`. Light stirs iron-gall into parchment (floor 9%, sides 18%, slot 25%, back 35%; the owner lightened them from 17, 32, 45 and 65 on 2026-10-20). Dark stirs chalk into soot (floor 17%, sides 25%, back 2%), and its slot is soot and the dark shadow ink in equal parts. In dark the back wall sits almost on the page, so the drawer reads mostly through its sides and shading. The shading (the face's cast shadow and the 10px washes from each side) is a theme token too: `--drawer-shade`, `--drawer-shade-fade` and `--drawer-shade-edge`. Dark keeps black at 0.5, 0.45 and 0.22, as the site's shadows do. Light uses iron-gall at alpha (0.22, 0.2 and 0.12), so it stays in the palette and is lighter: the dark strengths over a light floor read as a hole and the owner found the drawer too dark even after the colours were lightened (2026-10-20).
+- **Reduced motion.** Nothing moves and nothing fades, so the drawer stays hidden; the colour and shadow change stay.
+- **The stack.** The card keeps `isolation: isolate`. The slot makes no stacking context of its own, so the open card (or one with a tip still open, through `:has()`, since a tip lingers about 150ms after the pointer leaves) takes `z-index: 1` among its neighbours and its tips paint over the cards before and after it.
+
 Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
 

@@ -49,45 +49,123 @@
   }
 }
 
-// Under the pointer, or with the link focused, the card lightens and rises. The lift needs no
-// `:has()`: `:focus-within` catches the link's focus, and also a click's, which
+// The slot: the hole in the cabinet the card's face sits in. It never moves or changes size;
+// it takes the list item's whole cell, so a row of cards still ends on one line. Its
+// interior shows only in the strip the face leaves as it slides down. It is a wrapper and not
+// the card's own box so the card keeps no clipping ancestor: a `clip-path` or `overflow` here
+// would cut off the tips and the category panel that open above the card's top edge.
+.ingredient-card-slot {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  border-radius: radius('surface');
+  background-color: $drawer-slot;
+  box-shadow:
+    inset 0 3px 6px rgba(0, 0, 0, 0.45),
+    inset 2px 0 4px rgba(0, 0, 0, 0.3);
+}
+
+// The drawer: the box the face is the front of, seen from above. This span is only the
+// clip that hides it at rest, and `::before` is the box. A sibling before the card in the DOM,
+// not a negative-`z-index` child of it: that paints over its parent's own background, which
+// put the box in front of the card. aria-hidden and out of the pointer's way.
+.ingredient-card-slot__drawer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    // Inset 10px each side, so the drawer is no wider than the slot, and square-cornered.
+    inset-inline: 10px;
+    // At rest it sits one travel higher, out of the clip; open, 1px of cavity shows above
+    // its back wall. Its height runs 10px under the face at full travel, so no gap opens.
+    inset-block-start: calc(1px - #{$drawer-travel});
+    block-size: calc(#{$drawer-travel} + 10px);
+    transition: inset-block-start $motion-medium ease;
+    // Top of the stack first. Straight bands, not blurred shadows: a blur piles up in the
+    // corners and reads as a curve. The face's cast shadow is dark in the 10px under it and
+    // fades out by 22px; a wash of 10px shades in from each wall (shade colours are theme tokens: lighter in light); 7px side walls; then the
+    // back wall (top 38%), a seam easing into the floor (to 48%) and the floor.
+    background:
+      linear-gradient(0deg, $drawer-shade 10px, $drawer-shade-fade 11px, transparent 22px),
+      linear-gradient(90deg, $drawer-shade-edge, transparent 10px),
+      linear-gradient(270deg, $drawer-shade-edge, transparent 10px),
+      linear-gradient(
+        90deg,
+        $drawer-side 0 7px,
+        transparent 7px calc(100% - 7px),
+        $drawer-side calc(100% - 7px)
+      ),
+      linear-gradient(180deg, $drawer-back 0 38%, $drawer-seam 38% 48%, $drawer-floor 48%);
+  }
+}
+
+// Under the pointer, or with the link focused, the face lightens and slides down out of the
+// slot, showing the drawer. Driven from the slot, not the card: the face leaves the pointer's
+// place as it moves, and the slot stays put under it, so the hover does not flicker. The slide
+// needs no `:has()`: `:focus-within` catches the link's focus, and also a click's, which
 // is harmless; only `:focus-visible` on the link itself draws the ring.
 .ingredient-card {
-  // The lift moves `inset-block-start`, not `transform`: a transformed ancestor becomes
+  // The slide moves `inset-block-start`, not `transform`: a transformed ancestor becomes
   // the containing block of a `position: fixed` tip bubble inside it (the Low badge's,
   // the marks'), and Floating UI does not re-place a bubble when an ancestor's transform
   // starts or ends, so a quick move between cards left a bubble in the wrong place.
   inset-block-start: 0;
   transition:
-    inset-block-start 150ms ease,
-    box-shadow 150ms ease,
-    background-color 150ms ease,
+    inset-block-start $motion-medium ease,
+    box-shadow $motion-medium ease,
+    background-color $motion-medium ease,
     color $theme-transition-duration $theme-transition-easing;
-
-  &:hover,
-  &:focus-within {
-    background-color: $surface-card-hover;
-    box-shadow: $shadow-lifted;
-    inset-block-start: -2px;
-    // Above its neighbours while a tip may be open (hover or keyboard focus), so a
-    // tip that spills over the card above is not painted under that card's buttons.
-    z-index: 1;
-  }
 
   // A tip outlives the hover (it stays open a moment after the pointer leaves), so the
   // card stays raised while one of its tips is open.
   &:has([role='tooltip'].is-open) {
     z-index: 1;
   }
+}
 
-  // The colour and shadow change stay; the movement and the fade go.
-  @include reduced-motion {
+.ingredient-card-slot:hover,
+.ingredient-card-slot:focus-within {
+  .ingredient-card {
+    background-color: $surface-card-hover;
+    // The second shadow is cast upward, onto the drawer's rim above the face.
+    box-shadow:
+      $shadow-lifted,
+      0 -3px 5px rgba(0, 0, 0, 0.3);
+    inset-block-start: $drawer-travel;
+    // Above its neighbours while a tip may be open (hover or keyboard focus), so a
+    // tip that spills over the card above is not painted under that card's buttons.
+    z-index: 1;
+  }
+
+  .ingredient-card-slot__drawer::before {
+    inset-block-start: 1px;
+  }
+}
+
+// The colour and shadow change stay; the movement and the fade go.
+@include reduced-motion {
+  .ingredient-card {
     transition: none;
+  }
 
-    &:hover,
-    &:focus-within {
-      inset-block-start: 0;
-    }
+  .ingredient-card-slot:hover .ingredient-card,
+  .ingredient-card-slot:focus-within .ingredient-card {
+    inset-block-start: 0;
+  }
+
+  .ingredient-card-slot__drawer::before {
+    transition: none;
+  }
+
+  .ingredient-card-slot:hover .ingredient-card-slot__drawer::before,
+  .ingredient-card-slot:focus-within .ingredient-card-slot__drawer::before {
+    inset-block-start: calc(1px - #{$drawer-travel});
   }
 }
 

@@ -81,8 +81,40 @@ $wax-caution-light: color.adjust($wax, $saturation: 15%, $lightness: -4%);
 $soot-lifted: color.adjust($soot-raised, $lightness: 3%);
 $parchment-lifted: color.adjust($parchment-raised, $lightness: 2.5%);
 
+// The ink of the dark shadow, kept as a colour so the drawer's slot can mix with it.
+$shadow-ink-dark: #060503;
+
+// The drawer behind an ingredient card's face (M12.44): each plane is the page's own ink
+// stirred into the page, so none is picked by eye. Light darkens toward iron-gall; dark
+// lifts toward chalk, so the floor and sides come forward of the page and the back wall
+// sits almost on it. The slot's interior is the page under the site's shadow ink in dark
+// (the same ink the shadows use), and iron-gall into parchment in light. The seam is the
+// back wall easing into the floor. Percentages are the owner's; light was lightened from the mock's after review (2026-10-20).
+$drawer-slot-light: color.mix($iron-gall, $parchment, 25%);
+$drawer-floor-light: color.mix($iron-gall, $parchment, 9%);
+$drawer-side-light: color.mix($iron-gall, $parchment, 18%);
+$drawer-back-light: color.mix($iron-gall, $parchment, 35%);
+$drawer-seam-light: color.mix($drawer-back-light, $drawer-floor-light, 55%);
+$drawer-slot-dark: color.mix($soot, $shadow-ink-dark, 50%);
+$drawer-floor-dark: color.mix($chalk, $soot, 17%);
+$drawer-side-dark: color.mix($chalk, $soot, 25%);
+$drawer-back-dark: color.mix($chalk, $soot, 2%);
+$drawer-seam-dark: color.mix($drawer-back-dark, $drawer-floor-dark, 55%);
+
+// The shading over the drawer: the shadow the face casts (a strong stop, then a second just
+// under it where the band begins to fade) and the wash from each side wall. Dark shades with
+// black, as the site's shadows do. Light shades with iron-gall at alpha, so it stays in the
+// palette, and lighter: the dark's strengths laid over a light floor read as a hole, which
+// the owner found too dark (2026-10-20).
+$drawer-shade-dark: rgba(0, 0, 0, 0.5);
+$drawer-shade-fade-dark: rgba(0, 0, 0, 0.45);
+$drawer-shade-edge-dark: rgba(0, 0, 0, 0.22);
+$drawer-shade-light: rgba($iron-gall, 0.22);
+$drawer-shade-fade-light: rgba($iron-gall, 0.2);
+$drawer-shade-edge-light: rgba($iron-gall, 0.12);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
-$shadow-dark: rgba(6, 5, 3, 0.8);
+$shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
 
 // The click-feedback callout's Dismiss cross in the dark theme, pure white
@@ -368,6 +400,14 @@ $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
 $surface-card-hover: var(--surface-card-hover);
+$drawer-slot: var(--drawer-slot);
+$drawer-floor: var(--drawer-floor);
+$drawer-side: var(--drawer-side);
+$drawer-back: var(--drawer-back);
+$drawer-seam: var(--drawer-seam);
+$drawer-shade: var(--drawer-shade);
+$drawer-shade-fade: var(--drawer-shade-fade);
+$drawer-shade-edge: var(--drawer-shade-edge);
 $dismiss-ink: var(--dismiss-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
@@ -631,6 +671,11 @@ $switch-width: 2.75rem;
 // switch's thumb sliding (MB.115). Short, so the new state shows before the
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
+// A larger thing moving into place: an ingredient card's face sliding out (M12.44).
+$motion-medium: 300ms;
+// How far a card's face slides down out of its slot, and so how tall the drawer body
+// behind it must be to leave no gap (M12.44).
+$drawer-travel: 11px;
 
 // The loading standard (M12.33; claude-docs/design-decisions/m12.33-plan.md).
 // How long a wait must last before an indicator shows (the spinner, the link

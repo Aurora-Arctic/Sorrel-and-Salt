@@ -52,71 +52,76 @@ const IngredientCard = ({
   const hasActions = actions != null && actions !== false;
 
   return (
-    <article className="ingredient-card specimen">
-      {/* The top right of the card, above the name row (the owner, 2026-10-19). */}
-      <RecencyMark recency={recency} />
-      <div className="specimen__top">
-        <div className="ingredient-card__heading">
-          <Heading className="ingredient-card__name">
-            {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
-            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-              {label} <LinkHint />
-            </PendingLink>
-          </Heading>
-          {formal !== '' && (
-            <p className="meta ingredient-card__formal">
-              {/* `i` rather than `em`: a taxonomic name is set apart, not stressed.
+    // The slot is the cabinet hole the card's face slides out of; the drawer body behind the
+    // face is decorative and painted first, so it sits behind the face (index.scss).
+    <div className="ingredient-card-slot">
+      <span className="ingredient-card-slot__drawer" aria-hidden="true" />
+      <article className="ingredient-card specimen">
+        {/* The top right of the card, above the name row (the owner, 2026-10-19). */}
+        <RecencyMark recency={recency} />
+        <div className="specimen__top">
+          <div className="ingredient-card__heading">
+            <Heading className="ingredient-card__name">
+              {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
+              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+                {label} <LinkHint />
+              </PendingLink>
+            </Heading>
+            {formal !== '' && (
+              <p className="meta ingredient-card__formal">
+                {/* `i` rather than `em`: a taxonomic name is set apart, not stressed.
                   Only a binomial is italic; a mineral or chemical name is upright
                   (the entry page’s rule, `isBinomial`). */}
-              {nomenclature && isBinomial(nomenclature) ? (
-                <i className="binomial">{formal}</i>
-              ) : (
-                formal
-              )}
-            </p>
+                {nomenclature && isBinomial(nomenclature) ? (
+                  <i className="binomial">{formal}</i>
+                ) : (
+                  formal
+                )}
+              </p>
+            )}
+          </div>
+          {marked && (
+            <div className="specimen__badges">
+              <EntryMarks kind={kind} annotated={annotated} retired={retired} />
+              <CautionMark safetyNotes={safetyNotes} variants={variants} />
+              <ToxicMark toxic={toxic} variants={variants} />
+            </div>
           )}
         </div>
-        {marked && (
-          <div className="specimen__badges">
-            <EntryMarks kind={kind} annotated={annotated} retired={retired} />
-            <CautionMark safetyNotes={safetyNotes} variants={variants} />
-            <ToxicMark toxic={toxic} variants={variants} />
-          </div>
-        )}
-      </div>
-      <CategoryChips categories={categories} label={label} />
-      {variants.length > 0 && (
-        <p className="ingredient-card__forms">
-          {variants.map((variant, at) => (
-            <Fragment key={variant.form}>
-              {at > 0 && ' '}
-              <span className="ingredient-card__item">
-                <span className="ingredient-card__form">
-                  <FormIcon name={variant.formChoice?.group.icon ?? null} />
-                  {/* The eye gets a dot drawn in CSS (it is not text, so it is never
+        <CategoryChips categories={categories} label={label} />
+        {variants.length > 0 && (
+          <p className="ingredient-card__forms">
+            {variants.map((variant, at) => (
+              <Fragment key={variant.form}>
+                {at > 0 && ' '}
+                <span className="ingredient-card__item">
+                  <span className="ingredient-card__form">
+                    <FormIcon name={variant.formChoice?.group.icon ?? null} />
+                    {/* The eye gets a dot drawn in CSS (it is not text, so it is never
                       announced, and it can be clipped at the start of a wrapped line);
                       a screen reader gets this comma. Inside the label's own inline span,
                       not a flex child: Chrome sets a flex child apart with spaces, which
                       read "Herb , Oil". */}
-                  <span>
-                    {formLabel(variant.form)}
-                    {at < variants.length - 1 && <span className="spoken-separator">,</span>}
+                    <span>
+                      {formLabel(variant.form)}
+                      {at < variants.length - 1 && <span className="spoken-separator">,</span>}
+                    </span>
                   </span>
                 </span>
-              </span>
-            </Fragment>
-          ))}
-        </p>
-      )}
-      {(jars || hasActions) && (
-        // The foot: the jar lines, then the actions. Pushed to the card's bottom edge
-        // (`margin-top: auto`), so cards in one grid row end on the same line.
-        <div className="specimen__foot">
-          {jars && <div className="specimen__stock">{children}</div>}
-          {hasActions && <div className="specimen__actions">{actions}</div>}
-        </div>
-      )}
-    </article>
+              </Fragment>
+            ))}
+          </p>
+        )}
+        {(jars || hasActions) && (
+          // The foot: the jar lines, then the actions. Pushed to the card's bottom edge
+          // (`margin-top: auto`), so cards in one grid row end on the same line.
+          <div className="specimen__foot">
+            {jars && <div className="specimen__stock">{children}</div>}
+            {hasActions && <div className="specimen__actions">{actions}</div>}
+          </div>
+        )}
+      </article>
+    </div>
   );
 };
 
