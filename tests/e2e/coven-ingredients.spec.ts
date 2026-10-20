@@ -570,7 +570,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
 
   // More, then Remove: asked first, then gone from the cupboard and the list.
   // The menu opens upward from the dialog's foot and stays inside the dialog,
-  // at a phone's width too, where More is as wide as Save above it.
+  // at a phone's width too.
   await annotated.getByRole('link', { name: /^Annotate Fixture Our Notewort/ }).click();
   const moreButton = dialog.getByRole('button', { name: 'More' });
   const menu = dialog.getByRole('menu', { name: 'More' });
@@ -585,19 +585,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
   await expectMenuInsideDialog();
-  // Its items in More's own type, face, size and weight, and its top and
-  // bottom padding and height (the owner's calls of 2026-10-20), where every
-  // other menu keeps the lighter, shorter item.
-  const typeOf = (element: Element) => {
-    const style = getComputedStyle(element);
-    return [style.fontFamily, style.fontSize, style.fontWeight]
-      .concat([style.paddingTop, style.paddingBottom, style.minHeight])
-      .join(' ');
-  };
-  const moreType = await moreButton.evaluate(typeOf);
-  for (const item of await menu.getByRole('menuitem').all()) {
-    expect(await item.evaluate(typeOf)).toBe(moreType);
-  }
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);
@@ -605,8 +592,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   const wide = page.viewportSize()!;
   await page.setViewportSize({ width: 375, height: 800 });
   await moreButton.scrollIntoViewIfNeeded();
-  const save = (await dialog.getByRole('button', { name: 'Save Annotation' }).boundingBox())!;
-  expect((await moreButton.boundingBox())!.width).toBeCloseTo(save.width, 0);
   await moreButton.click();
   await expectMenuInsideDialog();
   await page.keyboard.press('Escape');

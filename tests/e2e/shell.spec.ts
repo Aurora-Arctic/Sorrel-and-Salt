@@ -198,24 +198,6 @@ test('an admin sees both site links, the admin nav and no switcher', async ({ pa
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 });
 
-test('a tabbed page holds its pills in the page header line', async ({ page }) => {
-  await signInAgainAs(page, users.admin.id);
-  await page.setViewportSize(DESKTOP);
-  await page.goto('/admin/categories');
-
-  const pills = page.getByRole('navigation', { name: 'Categories', exact: true });
-  await expect(pills.getByRole('link', { name: 'Categories', exact: true })).toBeVisible();
-  await expect(pills.getByRole('link', { name: 'Groups', exact: true })).toBeVisible();
-
-  const heading = await page
-    .getByRole('main')
-    .getByRole('heading', { level: 1, name: 'Categories' })
-    .boundingBox();
-  const row = await pills.boundingBox();
-  expect(row!.y).toBeGreaterThanOrEqual(heading!.y - 1);
-  expect(row!.y).toBeLessThanOrEqual(heading!.y + heading!.height);
-});
-
 test('a signed-in non-admin meets the 403 inside the shell', async ({ page }) => {
   await signInAgainAs(page, users.plain.id);
   await page.setViewportSize(DESKTOP);

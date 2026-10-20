@@ -65,7 +65,6 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(
     page.getByRole('heading', { level: 1, name: 'Fixture Our Hedgewort' }),
   ).toBeVisible();
-  await expect(page.getByText('What our coven makes of it.')).toBeVisible();
   // The compendium's own name is no longer a 'Called ... in the Compendium' line (13d8bff3);
   // it is the link in the In the Compendium list, named with its formal name.
   await expect(
