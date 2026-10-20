@@ -576,7 +576,7 @@ export const DetailsInYourCovens: Story = () => (
 );
 DetailsInYourCovens.meta = { iframed: true };
 
-// A long description, cut to its first three lines, Show More opening the
+// A long description, cut to its first four lines, Show More opening the
 // rest in place; the sparse story's short one stands whole with no button.
 export const DetailsLongDescription: Story = () => (
   <Details

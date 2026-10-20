@@ -86,14 +86,14 @@
 }
 
 // The description and its Show More bar (the owner's calls, 2026-10-20). The
-// clip box round the paragraph is cut to three lines by the script, which sets
+// clip box round the paragraph is cut to four lines by the script, which sets
 // its height in pixels (summary-description.tsx); without the script it has
 // none and the whole text shows. The cut text fades out into the modal's
 // surface, and under it stands the bar: one real button the full width of the
 // text, on the modal's own surface with only a hairline along its top, the
 // label in the primary ink and a chevron after it. Opening moves the height
-// and the fade together over the short motion while the chevron turns over
-// with them; the bar stays where it is, under the text, and reads Show Less.
+// and the fade together over the medium motion (300ms, the owner's call) while
+// the chevron turns over with them; the bar stays where it is, under the text, and reads Show Less.
 // Under reduced motion nothing moves and each is at once.
 .ingredient-summary__description {
   display: flex;
@@ -103,7 +103,7 @@
 .ingredient-summary__description-clip {
   position: relative;
   overflow: hidden;
-  transition: height $motion-short ease-in-out;
+  transition: height $motion-medium ease-in-out;
 
   // The fade: the surface the text stands on, in from clear at the top, so the
   // last lines go into the bar rather than being cut. It lets the pointer through.
@@ -115,7 +115,7 @@
     background: linear-gradient(to bottom, transparent, $surface-card);
     opacity: 0;
     pointer-events: none;
-    transition: opacity $motion-short ease-in-out;
+    transition: opacity $motion-medium ease-in-out;
   }
 
   @include reduced-motion {
@@ -132,8 +132,11 @@
 }
 
 // The whole bar is the target. No fill and no corners: the modal's surface and
-// the hairline above it, so the hover cue is the label underlined and the
-// chevron in the accent, and the focus is the ring, drawn inside the bar.
+// the hairline above it. Hover and focus leave the label as it is and grow the
+// chevron (below), and the focus is also the ring, drawn inside the bar. Open,
+// the bar stands further from the text it follows, since the fade that ran
+// under it is gone and the last line would otherwise touch it; collapsed it
+// stays close, so the fade runs under it.
 .ingredient-summary__more {
   @include button-reset;
 
@@ -152,10 +155,10 @@
   font-size: type-size('small');
   font-weight: 500;
 
-  &:hover,
-  &:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+  transition: margin-top $motion-medium ease-in-out;
+
+  &[aria-expanded='true'] {
+    margin-top: space(3);
   }
 
   &:focus-visible {
@@ -163,15 +166,22 @@
 
     outline-offset: -2px;
   }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 // The chevron after the label, down while the text is cut and turned over
-// once it is open, in step with the height.
+// once it is open, in step with the height. Pointed at or focused it grows a
+// quarter in the label's own colour, as the ingredient form's fold chevrons do
+// (`scale: 1.25`, IngredientForm/index.scss); `scale` composes with the
+// turn's `transform`.
 .ingredient-summary__more-chevron {
   flex: none;
   transition:
-    transform $motion-short ease-in-out,
-    color $motion-short ease-in-out;
+    transform $motion-medium ease-in-out,
+    scale $motion-short ease-in-out;
 
   [aria-expanded='true'] > & {
     transform: rotate(180deg);
@@ -179,7 +189,7 @@
 
   .ingredient-summary__more:hover > &,
   .ingredient-summary__more:focus-visible > & {
-    color: $accent;
+    scale: 1.25;
   }
 
   @include reduced-motion {

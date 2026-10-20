@@ -366,8 +366,8 @@ describe('IngredientSummary', () => {
       expect(bar).toHaveFocus();
     });
 
-    it('shows a description of three lines or fewer whole, with no toggle', () => {
-      measures(73);
+    it('shows a description of four lines or fewer whole, with no toggle', () => {
+      measures(97);
       render(<IngredientSummary detail={full()} />);
 
       // Why it could show: the description is drawn.
@@ -375,8 +375,8 @@ describe('IngredientSummary', () => {
       expect(screen.queryByRole('button', { name: 'Show More' })).not.toBeInTheDocument();
     });
 
-    it('shows a fourth line behind the toggle', () => {
-      measures(74);
+    it('shows a fifth line behind the toggle', () => {
+      measures(98);
       render(<IngredientSummary detail={full()} />);
 
       expect(screen.getByRole('button', { name: 'Show More' })).toBeInTheDocument();

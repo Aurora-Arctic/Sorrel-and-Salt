@@ -145,7 +145,7 @@ test.describe('on the admin Compendium list', () => {
     const bar = details.getByRole('button', { name: 'Show More' });
     const paragraph = details.locator(`#${(await bar.getAttribute('aria-controls')) ?? ''}`);
 
-    // Why it could be cut: the whole text is longer than the three lines it shows.
+    // Why it could be cut: the whole text is longer than the four lines it shows.
     await expect(bar).toHaveAttribute('aria-expanded', 'false');
     const closed = (await paragraph.evaluate((p) => p.parentElement?.clientHeight)) ?? 0;
     const whole = await paragraph.evaluate((p) => p.scrollHeight);
@@ -155,6 +155,24 @@ test.describe('on the admin Compendium list', () => {
     const textBox = await paragraph.boundingBox();
     expect(Math.round(barBox?.width ?? 0)).toBe(Math.round(textBox?.width ?? -1));
 
+    // Four lines are showing, not three: the clip is four line heights tall.
+    const lineHeight = await paragraph.evaluate((p) => parseFloat(getComputedStyle(p).lineHeight));
+    expect(Math.round(closed / lineHeight)).toBe(4);
+    const gapClosed =
+      (barBox?.y ?? 0) -
+      (await details
+        .locator('.ingredient-summary__description-clip')
+        .evaluate((c) => c.getBoundingClientRect().bottom));
+
+    // Pointed at, the label is not underlined and the chevron grows in the label's own colour.
+    await bar.hover();
+    const chevron = bar.locator('svg');
+    await expect.poll(() => chevron.evaluate((c) => getComputedStyle(c).scale)).toBe('1.25');
+    expect(await bar.evaluate((b) => getComputedStyle(b).textDecorationLine)).toBe('none');
+    expect(await chevron.evaluate((c) => getComputedStyle(c).color)).toBe(
+      await bar.evaluate((b) => getComputedStyle(b).color),
+    );
+
     await bar.click();
     const less = details.getByRole('button', { name: 'Show Less' });
     await expect(less).toHaveAttribute('aria-expanded', 'true');
@@ -163,6 +181,15 @@ test.describe('on the admin Compendium list', () => {
     await expect
       .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
       .toBeGreaterThanOrEqual(whole);
+
+    // Open, the bar stands further from the text than it did under the fade.
+    await expect
+      .poll(
+        async () =>
+          ((await less.boundingBox())?.y ?? 0) -
+          (await paragraph.evaluate((p) => p.getBoundingClientRect().bottom)),
+      )
+      .toBeGreaterThan(gapClosed + 4);
 
     await less.click();
     await expect(details.getByRole('button', { name: 'Show More' })).toHaveAttribute(
