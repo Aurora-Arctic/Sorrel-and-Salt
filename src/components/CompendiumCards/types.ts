@@ -45,11 +45,6 @@ export interface CompendiumCardEntry {
    * leaves those off. Left out, none does.
    */
   heldIn?: readonly string[];
-  /**
-   * Where the check leads: the entry as a coven holds it, the default coven's if it does, else
-   * the first that does. Left out, a held card shows neither mark.
-   */
-  heldHref?: Route;
 }
 
 /**
@@ -102,11 +97,6 @@ export interface AddIconProps {
   covens: readonly CompendiumCoven[];
   /** The ids of those that already hold the entry. */
   heldIn: readonly string[];
-}
-
-/** The check at a card's bottom right: this entry is held, and the link leads to it. */
-export interface HeldLinkProps {
-  href: Route;
 }
 
 export type { CompendiumListFilter };

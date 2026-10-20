@@ -24,8 +24,10 @@
 .menu-button__menu {
   z-index: layer('floating');
   min-width: 11rem;
-  // Clips a hovered first or last item to the rounded corners.
-  overflow: hidden;
+  // A step of air all round, so an item's hover, focus and chosen fill sits
+  // inset from the panel's edge and is never cut by it (the owner's call,
+  // 2026-10-20). The panel needs no clipping now: nothing touches its corners.
+  padding: space(1);
   border: 1px solid $text-muted;
   border-radius: radius('surface');
   background-color: $surface-card;
@@ -66,6 +68,10 @@
   box-sizing: border-box;
   width: 100%;
   padding: space(2) space(4);
+  // All four corners of the fill rounded, one step tighter than the panel's
+  // `surface` radius it is inset within, so the two corners nest (the owner's
+  // call, 2026-10-20).
+  border-radius: radius('control');
   color: $text-primary;
   font-size: type-size('small');
   text-align: start;

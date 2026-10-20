@@ -1,5 +1,4 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -45,7 +44,6 @@ const entry = (over: Partial<CompendiumCardEntry> = {}): CompendiumCardEntry => 
   recency: null,
   held: false,
   heldIn: [],
-  heldHref: undefined,
   ...over,
 });
 
@@ -214,7 +212,6 @@ describe('the add icon among several covens', () => {
   });
 
   it('keeps the plus on a card one coven holds, and the check where all do', () => {
-    const href = '/coven/fixture-coven-one/ingredients?query=Fixture+Salt' as Route;
     render(
       <Cards
         {...props([
@@ -225,13 +222,13 @@ describe('the add icon among several covens', () => {
             slug: 'heldall',
             held: true,
             heldIn: COVENS.map(({ id }) => id),
-            heldHref: href,
           }),
         ])}
       />,
     );
 
     expect(screen.getAllByRole('button', PLUS)).toHaveLength(1);
-    expect(screen.getByRole('link', { name: 'In My Ingredients' })).toHaveAttribute('href', href);
+    expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
   });
 });

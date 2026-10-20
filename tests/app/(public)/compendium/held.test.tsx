@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
 // What the public compendium page tells each card about the viewer's covens (M9.12): whether
-// every coven they may write in holds the entry, which ones do, and where a list shows it. The cards, the cached reads and the viewer
+// every coven they may write in holds the entry, and which ones do. The cards, the cached reads and the viewer
 // are mocked; here: which coven is asked, for which entries, and that a visitor and a viewer are
 // asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
 
@@ -101,7 +101,7 @@ beforeEach(() => {
 });
 
 describe('the public compendium page, for the cards’ held state', () => {
-  it('marks the entry the first writable coven holds, and links the check to that coven’s list under its name', async () => {
+  it('marks the entry the first writable coven holds, and names it in heldIn', async () => {
     viewerIfSignedIn.mockResolvedValue(
       shell(coven('w-view', 'aaa', false), coven('w-1', 'bbb', true)),
     );
@@ -120,11 +120,8 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
     expect(held).toMatchObject({ id: 'id-held', held: true, heldIn: ['w-1'] });
     expect(free).toMatchObject({ id: 'id-free', held: false, heldIn: [] });
-    for (const each of [held, free]) {
-      const href = new URL(each.heldHref as string, 'https://fixture.test');
-      expect(href.pathname).toBe('/coven/bbb/ingredients');
-      expect(href.searchParams.get('query')).toBe(each.name);
-    }
+    // The check is a mark, not a link (the owner’s call, 2026-10-20): no address for it.
+    for (const each of [held, free]) expect(each).not.toHaveProperty('heldHref');
   });
 
   it.each([
@@ -141,7 +138,6 @@ describe('the public compendium page, for the cards’ held state', () => {
     expect(propsGiven().workspaceId).toBeUndefined();
     for (const each of entries) {
       expect(each.held).toBeUndefined();
-      expect(each.heldHref).toBeUndefined();
     }
   });
 
@@ -181,19 +177,6 @@ describe('the public compendium page, for the cards’ held state', () => {
 
       expect(held).toMatchObject({ held: true, heldIn: ['w-1', 'w-2'] });
       expect(free).toMatchObject({ held: false, heldIn: ['w-2'] });
-    });
-
-    it("leads the check to the default coven's list if it holds the entry, else the first that does", async () => {
-      viewerIfSignedIn.mockResolvedValue(both());
-      holding(['id-held'], ['id-held', 'id-free']);
-      const [heldInBoth, onlyInSecond] = await entriesGiven();
-      expect(new URL(heldInBoth.heldHref as string, 'https://fixture.test').pathname).toBe(
-        '/coven/bbb/ingredients',
-      );
-      // Not held by every coven, so no check shows; the address is still the one that holds it.
-      expect(new URL(onlyInSecond.heldHref as string, 'https://fixture.test').pathname).toBe(
-        '/coven/ccc/ingredients',
-      );
     });
   });
 

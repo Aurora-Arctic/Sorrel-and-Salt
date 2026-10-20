@@ -7,7 +7,7 @@ import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientSearch from '../IngredientSearch';
-import { AddIcon, HeldLink } from './add-icon';
+import { AddIcon, HeldMark } from './add-icon';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
@@ -29,8 +29,7 @@ const nameOf = (entry: CompendiumCardEntry): string =>
   entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name;
 
 // The foot's add mark: the plus while some coven the viewer may write in lacks the entry, the
-// check once every one holds it. Both need a default coven; a held entry with no address to lead
-// to shows neither.
+// check once every one holds it. Both need a default coven.
 const markOf = (
   entry: CompendiumCardEntry,
   action: CompendiumCardsProps['action'],
@@ -47,7 +46,7 @@ const markOf = (
         heldIn={entry.heldIn ?? []}
       />
     );
-  return entry.heldHref ? <HeldLink href={entry.heldHref} /> : undefined;
+  return <HeldMark />;
 };
 
 // A curator's Edit, where the page gave the entry an edit address (M8.17).

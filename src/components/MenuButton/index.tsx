@@ -67,6 +67,17 @@ const edgeFor = (button: HTMLElement | null): 'bottom-start' | 'bottom-end' => {
   return left + width / 2 < window.innerWidth / 2 ? 'bottom-start' : 'bottom-end';
 };
 
+/**
+ * The items as drawn: the green one, marked `primary` or `constructive`, first,
+ * and the rest in the caller's order (the owner's call, 2026-10-20). Done here
+ * rather than asked of every caller, so no menu can put its green item
+ * elsewhere. The keys read the page, so they follow this order too.
+ */
+const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
+  const green = (item: MenuButtonItem): boolean => Boolean(item.primary || item.constructive);
+  return [...items.filter(green), ...items.filter((item) => !green(item))];
+};
+
 const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
   [
     'menu-button__item',
@@ -221,7 +232,7 @@ export default function MenuButton({
           if (!open && event.target === event.currentTarget) setDrawn(false);
         }}
       >
-        {items.map((item) =>
+        {greenFirst(items).map((item) =>
           item.href !== undefined ? (
             <Link
               key={item.key}
