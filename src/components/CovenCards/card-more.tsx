@@ -2,7 +2,7 @@
 
 import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
-import IconTip, { BinIcon, DotsIcon, LinkEntryLink } from '../IconTip';
+import IconTip, { BinIcon, DotsIcon } from '../IconTip';
 import {
   MakeItOursDialog,
   RemoveDialog,
@@ -22,8 +22,11 @@ import type { CardMoreProps } from './types';
 // the cupboard holds, Make It Ours and Remove. Link opens its dialog from the
 // list's `?link=<id>`, as Edit does; the other three ask in place, in the
 // dialogs the entry page shares (option A, the owner's call, 2026-10-20),
-// since a confirmation has nothing to share as an address. A lone choice is
-// its own icon instead of a menu of one: the link, or a bin. A write that
+// since a confirmation has nothing to share as an address. A lone Delete or
+// Remove is its own bin instead of a menu of one. A lone Link or Make It Ours
+// stays a menu of one: each needs the delete permission too, so no role
+// reaches either alone today, and no icon is built for a case that cannot
+// happen. A write that
 // takes the card away reads the list again, and the focus then goes to the
 // page's heading, the card's More having gone with it; a refusal gives More
 // the focus back. claude-docs/components/coven-cards.md.
@@ -81,36 +84,36 @@ export default function CardMore({
       : []),
   ];
   if (items.length === 0) return null;
+  // A lone bin: the one choice is Delete or Remove.
   const [only] = items;
+  const bin = items.length === 1 && (only.key === 'delete' || only.key === 'remove');
+  const verb = only.key === 'delete' ? 'Delete' : 'Remove';
 
-  let control: ReactElement;
-  if (items.length > 1)
-    control = (
-      <IconTip tip="More">
-        <MenuButton
-          ref={trigger}
-          label={`More for ${name}`}
-          className="icon-tip__edit"
-          icon={<DotsIcon />}
-          items={items}
-        />
-      </IconTip>
-    );
-  else if (only.href !== undefined)
-    control = <LinkEntryLink href={only.href} heading={linkHeading(label)} name={name} />;
-  else {
-    const verb = only.key === 'delete' ? 'Delete' : 'Remove';
-    control = (
-      <IconTip tip={verb}>
-        <button ref={trigger} type="button" className="icon-tip__remove" onClick={only.onSelect}>
-          <BinIcon />
-          <span className="visually-hidden">
-            {verb} {name}
-          </span>
-        </button>
-      </IconTip>
-    );
-  }
+  const control = bin ? (
+    <IconTip tip={verb}>
+      <button
+        ref={trigger}
+        type="button"
+        className="icon-tip__remove"
+        onClick={only.href === undefined ? only.onSelect : undefined}
+      >
+        <BinIcon />
+        <span className="visually-hidden">
+          {verb} {name}
+        </span>
+      </button>
+    </IconTip>
+  ) : (
+    <IconTip tip="More">
+      <MenuButton
+        ref={trigger}
+        label={`More for ${name}`}
+        className="icon-tip__edit"
+        icon={<DotsIcon />}
+        items={items}
+      />
+    </IconTip>
+  );
 
   const close = () => setAsking(undefined);
   return (

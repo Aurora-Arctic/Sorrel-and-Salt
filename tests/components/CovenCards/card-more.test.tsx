@@ -110,10 +110,14 @@ describe('CardMore', () => {
     expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
   });
 
-  it('draws a lone Link as its own link to the address', () => {
+  it('keeps a lone Link in a menu of one, as no role reaches it alone today', () => {
     renderOnPage({ ...OWN, mayDelete: false });
-    expect(screen.getByRole('link', { name: 'Link Testwort' })).toHaveAttribute('href', LINK_HREF);
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(choices('Testwort')).toEqual(['Link to the Compendium']);
+  });
+
+  it('keeps a lone Make It Ours in a menu of one', () => {
+    renderOnPage({ ...HELD, mayRemove: false });
+    expect(choices('House Salt')).toEqual(['Make It Ours']);
   });
 
   it('draws nothing where the role may do nothing more', () => {
