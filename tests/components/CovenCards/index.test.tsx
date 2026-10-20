@@ -85,6 +85,7 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
 const ENTRIES = [
   entry('e1', 'Testwort', {
     kind: 'own',
+    variants: [{ form: 'fixture herb' }, { form: 'fixture oil' }],
     jars: [
       { id: 'j1', form: 'Fixture Herb', icon: null, quantity: 3, unit: 'oz', threshold: null },
     ],
@@ -164,9 +165,33 @@ describe('CovenCards', () => {
     expect(screen.getAllByText(/Fixture Herb/)).toHaveLength(1);
   });
 
-  it('draws no Edit Stock button on a jar line; the stock is edited from the Quick Look and the entry page', () => {
+  it('draws no forms line, the jar lines standing in its place', () => {
     render(<Cards {...props()} />);
-    expect(screen.queryByRole('button', { name: /^Edit Stock/ })).toBeNull();
+    const card = screen.getByRole('list', { name: 'Ingredients' });
+    // The jar line names the form held; the form held of none is named nowhere.
+    expect(within(card).getAllByText(/Fixture Herb/)).toHaveLength(1);
+    expect(within(card).queryByText(/Fixture Oil/i)).toBeNull();
+  });
+
+  it('draws Edit Stock on a card only when it is given the stock, opening on its jars', () => {
+    const stock = {
+      forms: [
+        { variantId: 'v1', label: 'Fixture Herb' },
+        { variantId: 'v2', label: 'Fixture Oil' },
+      ],
+      jars: [{ id: 'j1', variantId: 'v1', quantity: 3, unit: 'oz', threshold: null }],
+    };
+    render(<Cards {...props({ entries: [{ ...ENTRIES[0]!, stock }, ENTRIES[1]!] })} />);
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const pencils = within(list).getAllByRole('button', { name: /^Edit Stock/ });
+    expect(pencils).toHaveLength(1);
+    expect(pencils[0]).toHaveAccessibleName('Edit Stock, Testwort');
+
+    fireEvent.click(pencils[0]!);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
+    expect(within(dialog).getByRole('spinbutton', { name: 'Quantity, Fixture Herb' })).toHaveValue(
+      3,
+    );
   });
 
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {

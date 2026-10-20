@@ -1,0 +1,48 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A jar's row in the Edit Stock dialog (M9.9): the form's name with Remove at
+// its end, over the three compact amounts, so the bin takes nothing from the
+// amounts' line. A fieldset for the row's name, unboxed: the form's gap is
+// what sets one row from the next. Positioned for the bin.
+.stock-dialog__row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  > .icon-tip {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+  }
+}
+
+// Floated, the legend leaves the fieldset's border and sits in its flow like
+// any child, so the bin's top is the name's. As tall as the bin, the name
+// centred against it, with room kept at its end.
+.stock-dialog__form {
+  display: flex;
+  float: inline-start;
+  align-items: center;
+  min-height: $control-height-compact;
+  padding: 0;
+  padding-inline-end: calc(#{$control-height-compact} + #{space(2)});
+  font-weight: 600;
+}
+
+// Staged for removal: the form struck through and muted, Undo beside it.
+.stock-dialog__row.is-removed {
+  flex-direction: row;
+  align-items: center;
+  gap: space(3);
+
+  .stock-dialog__form {
+    padding-inline-end: 0;
+    color: $text-muted;
+  }
+}

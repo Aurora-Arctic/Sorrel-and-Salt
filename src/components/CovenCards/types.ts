@@ -5,6 +5,7 @@ import type { CardCategory } from '../IngredientCard/types';
 import type { JarLine } from '../JarLines/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { SafetyVariant } from '../SafetyNote/types';
+import type { StockDialogProps } from '../StockDialog/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
 /** One entry of a coven's cupboard as its card shows it, already merged with the coven's label. */
@@ -48,6 +49,11 @@ export interface CovenCardEntry {
   mayMakeOurs?: boolean;
   /** A compendium entry the cupboard holds, for a role that may remove it. */
   mayRemove?: boolean;
+  /**
+   * Every form the entry comes in and the coven's jars of them, for a role that may update the
+   * stock: the foot then draws the Edit Stock pencil (M9.9). Left out, no pencil.
+   */
+  stock?: Pick<StockDialogProps, 'forms' | 'jars'>;
 }
 
 /** A card's More (`card-more.tsx`): the entry, its coven, and what the role may do to it. */

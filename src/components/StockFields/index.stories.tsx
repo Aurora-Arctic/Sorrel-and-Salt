@@ -42,3 +42,37 @@ export const MeasuredPhoneLight: Story = () => (
 
 MeasuredPhoneDark.meta = { theme: 'dark', width: 375 };
 MeasuredPhoneLight.meta = { theme: 'light', width: 375 };
+
+interface Jars {
+  jars: StockFormValues[];
+}
+
+const RowsForm = ({ size }: { size?: 'compact' }): ReactElement => {
+  const methods = useForm<Jars>({
+    defaultValues: {
+      jars: [
+        stockFormValues({ quantity: 250, unit: 'g', threshold: 30 }),
+        stockFormValues({ quantity: 0, unit: 'ml', threshold: 15 }),
+      ],
+    },
+  });
+  return (
+    <FormProvider {...methods}>
+      <form className="form" noValidate>
+        <StockFields<Jars> prefix="jars.0" form="Flower" size={size} />
+        <StockFields<Jars> prefix="jars.1" form="Oil" size={size} />
+      </form>
+    </FormProvider>
+  );
+};
+
+/** Two jars in one form, each field named for its form, at the full size. */
+export const Rows: Story = () => <RowsForm />;
+
+/** The same two jars compact, one short row each, as the stock dialog lays them. */
+export const CompactRows: Story = () => <RowsForm size="compact" />;
+export const CompactRowsPhoneDark: Story = () => <RowsForm size="compact" />;
+export const CompactRowsPhoneLight: Story = () => <RowsForm size="compact" />;
+
+CompactRowsPhoneDark.meta = { theme: 'dark', width: 375 };
+CompactRowsPhoneLight.meta = { theme: 'light', width: 375 };

@@ -17,6 +17,8 @@ export interface CovenIngredientPage extends Page<IngredientRow, CovenListEdge> 
   totalCount: number;
   /** Each entry's live forms, with the group icon each wears. */
   variants: SafetyVariant[][];
+  /** Each entry's variant ids, in the order of `variants`: the stock dialog names a form by its variant. */
+  variantIds: string[][];
   /** Each entry's category chips. */
   categories: CardCategory[][];
   /** The form of every variant on the page, by variant id: a jar names its variant, not its form. */

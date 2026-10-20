@@ -24,6 +24,7 @@ import IngredientSummary from '../../../../../components/IngredientEntry/summary
 // component cannot import.
 import { RouteModalProvider } from '../../../../../components/Modal/route-modal-provider';
 import PageHeader from '../../../../../components/PageHeader';
+import type { StockDialogProps } from '../../../../../components/StockDialog/types';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../lib/numbered-page';
 import { requireCovenMembership } from '../../../../../lib/request-session';
@@ -36,7 +37,9 @@ import {
   heldCompendiumEntry,
   isRetired,
   MAKE_IT_OURS_PERMISSION,
+  type StockRow,
 } from '@/modules/ingredients';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 // A coven's Ingredients (M9.6): what the coven has, as compact cards with their jars. The coven
 // comes from the address and the guard proves the caller is in it, as on every coven page (a
@@ -55,6 +58,21 @@ import {
 // empty cupboard (M9.11). claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
+
+/** What the Edit Stock dialog reads of an entry: every form it comes in, and the coven's jars. */
+const stockOf = (
+  variants: readonly { id: string; form: string }[],
+  jars: readonly StockRow[],
+): Pick<StockDialogProps, 'forms' | 'jars'> => ({
+  forms: variants.map(({ id, form }) => ({ variantId: id, label: formLabel(form) })),
+  jars: jars.map((jar) => ({
+    id: jar.id,
+    variantId: jar.variantId,
+    quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
+    unit: jar.unit,
+    threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
+  })),
+});
 
 export default async function CovenIngredientsPage({
   params,
@@ -88,6 +106,8 @@ export default async function CovenIngredientsPage({
   // Remove on a compendium entry, on the permissions their services assert.
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
+  // The foot's Edit Stock pencil (M9.9), on the permission `saveStock` asserts: none for a viewer.
+  const mayStock = rolePermits(membership.role, { inventory: ['update'] });
   // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
@@ -143,6 +163,12 @@ export default async function CovenIngredientsPage({
       kind: own ? 'own' : 'cupboard',
       ...footOf(own, { ...shown, id: node.id }, placed({ edit: node.id })),
       retired: isRetired(node),
+      ...(mayStock && {
+        stock: stockOf(
+          page.variantIds[i].map((id) => ({ id, form: page.formOf.get(id) ?? '' })),
+          page.jars[i],
+        ),
+      }),
       jars: page.jars[i].flatMap((jar): JarLine[] => {
         const form = page.formOf.get(jar.variantId);
         // A jar whose form is gone from the page was removed between the two reads.
@@ -190,7 +216,19 @@ export default async function CovenIngredientsPage({
               heading: detailsHeading(viewed.shown),
               marks: detailsMarks(viewed.detail, true),
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
-              children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
+              // The coven's jars of it, to every role: each form shows its stock (M9.9).
+              children: (
+                <IngredientSummary
+                  detail={viewed.detail}
+                  covens={viewed.covens}
+                  jars={
+                    stockOf(
+                      viewed.detail.variants.map(({ variant }) => variant),
+                      viewed.jars,
+                    ).jars
+                  }
+                />
+              ),
               // The card's own controls for this entry (the owner's call, 2026-10-20): Edit over the
               // details or Annotate, and More or the bin, whose delete or remove goes back to the
               // list, which closes them.
@@ -204,6 +242,12 @@ export default async function CovenIngredientsPage({
                     viewed.shown,
                     covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
                   ),
+                  ...(mayStock && {
+                    stock: stockOf(
+                      viewed.detail.variants.map(({ variant }) => variant),
+                      viewed.jars,
+                    ),
+                  }),
                 },
                 workspace.id,
                 workspace.slug,

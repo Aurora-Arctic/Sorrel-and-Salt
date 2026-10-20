@@ -30,6 +30,28 @@
   gap: space(3);
 }
 
+// The forms (M9.9), each line a card's jar line in the body size: the icon and the
+// form's name, then on the coven's page a dot, the quantity and the stock badge.
+// The badge follows the quantity rather than standing at the far end as on the
+// card: across the modal's 32rem it would sit apart from the line it flags. The
+// spoken comma is out of the flex flow, as on the card, so the dot has the same
+// gap either side.
+.ingredient-summary__forms > li {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: space(1);
+
+    > .spoken-separator {
+      position: absolute;
+    }
+  }
+}
+
 // In Your Covens: each coven's link led by the In Your Cupboard shelf, the name
 // one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
 // stands at the top of the link, level with the name's first line, so a wrapped

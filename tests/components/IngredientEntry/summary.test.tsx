@@ -108,10 +108,10 @@ describe('IngredientSummary', () => {
   it('names the forms that carry a caution of their own, and no form when none does', () => {
     const { unmount } = render(<IngredientSummary detail={full()} />);
     // The form with notes is named, inside the caution, so the two read as one
-    // warning; the one without is not.
+    // warning; the one without is not. Within the caution: the Forms block names both.
     const caution = screen.getByRole('region', { name: 'Caution' });
     expect(within(caution).getByText(new RegExp(formLabel('testoil')))).toBeInTheDocument();
-    expect(screen.queryByText(new RegExp(formLabel('testroot')))).not.toBeInTheDocument();
+    expect(within(caution).queryByText(new RegExp(formLabel('testroot')))).not.toBeInTheDocument();
     unmount();
 
     render(
@@ -120,8 +120,8 @@ describe('IngredientSummary', () => {
       />,
     );
     // Why it could show: the entry still has forms, and its own caution.
-    expect(screen.getByRole('region', { name: 'Caution' })).toBeInTheDocument();
-    expect(screen.queryByText(new RegExp(formLabel('testoil')))).not.toBeInTheDocument();
+    const own = screen.getByRole('region', { name: 'Caution' });
+    expect(within(own).queryByText(new RegExp(formLabel('testoil')))).not.toBeInTheDocument();
   });
 
   it("draws the caution for a form's alone, naming the form, when the entry has none of its own", () => {
@@ -178,14 +178,13 @@ describe('IngredientSummary', () => {
     expect(screen.queryByText('No description recorded.')).not.toBeInTheDocument();
   });
 
-  it('leaves out the forms, the substitutes, the references and Similar', () => {
+  it('leaves out the substitutes, the references and Similar', () => {
     render(<IngredientSummary detail={full()} />);
 
-    // Why they could show: the detail carries forms and substitutes, and the
+    // Why they could show: the detail carries substitutes, its own and a form's, and the
     // summary is drawn. No Details heading: the dialog's title names the entry.
     expect(screen.getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Forms' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Substitutes' })).not.toBeInTheDocument();
     expect(screen.queryByText('Fixture Swapleaf')).not.toBeInTheDocument();
     expect(screen.queryByText('Fixture Formswap')).not.toBeInTheDocument();
@@ -448,6 +447,84 @@ describe('IngredientSummary', () => {
       expect(
         within(screen.getByRole('list', { name: 'In Your Covens' })).getAllByRole('link'),
       ).toHaveLength(2);
+    });
+  });
+  describe('the forms', () => {
+    const lineOf = (form: string): HTMLElement =>
+      within(screen.getByRole('list', { name: 'Forms' }))
+        .getAllByRole('listitem')
+        .find((item) => item.textContent!.trim().startsWith(formLabel(form)))!;
+
+    it('names each form the entry comes in, after the description, and nothing of stock without jars', () => {
+      render(<IngredientSummary detail={full()} />);
+
+      const items = within(screen.getByRole('list', { name: 'Forms' })).getAllByRole('listitem');
+      expect(items.map((item) => item.textContent!.trim())).toEqual([
+        formLabel('testoil'),
+        formLabel('testroot'),
+      ]);
+      // A compendium page passes no jars: no quantity, no stock state, no badge.
+      expect(screen.queryByText(/Unmeasured|Not Stocked/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Stock/ })).not.toBeInTheDocument();
+      // After the description in the document.
+      const description = screen.getByText('A fixture description.');
+      expect(
+        description.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("shows each form's jar with jars: its quantity, Unmeasured or Not Stocked, and its badge", () => {
+      render(
+        <IngredientSummary
+          detail={full({
+            variants: [
+              variant('testoil', null),
+              variant('testroot', null),
+              variant('testbark', null),
+              variant('testseed', null),
+            ],
+          })}
+          jars={[
+            { variantId: 'variant-testoil', quantity: 3, unit: 'ml', threshold: 5 },
+            { variantId: 'variant-testbark', quantity: null, unit: null, threshold: null },
+            { variantId: 'variant-testseed', quantity: 0, unit: 'g', threshold: null },
+          ]}
+        />,
+      );
+
+      const oil = lineOf('testoil');
+      expect(oil).toHaveTextContent('3 ml');
+      expect(within(oil).getByRole('button', { name: 'Low Stock' })).toBeInTheDocument();
+      expect(lineOf('testbark')).toHaveTextContent('Unmeasured');
+      expect(within(lineOf('testbark')).queryByRole('button')).not.toBeInTheDocument();
+      const seed = lineOf('testseed');
+      expect(seed).toHaveTextContent('0 g');
+      expect(within(seed).getByRole('button', { name: 'Out of Stock' })).toBeInTheDocument();
+      // No jar: the coven holds the form in no jar, which is not out of stock.
+      const root = lineOf('testroot');
+      expect(root).toHaveTextContent('Not Stocked');
+      expect(within(root).queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it('draws no block for an entry with no forms, and counts the forms as something recorded', () => {
+      const bare = {
+        entry: entryDetail({ description: null, elements: null, celestialBodies: null }).entry,
+        folkNames: [],
+        categories: [],
+        deities: [],
+      };
+      const { unmount } = render(
+        <IngredientSummary detail={full({ ...bare, variants: [] })} jars={[]} />,
+      );
+      expect(screen.queryByRole('heading', { name: 'Forms' })).not.toBeInTheDocument();
+      unmount();
+
+      render(
+        <IngredientSummary detail={full({ ...bare, variants: [variant('testroot', null)] })} />,
+      );
+      expect(screen.getByRole('list', { name: 'Forms' })).toHaveTextContent(formLabel('testroot'));
+      expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
     });
   });
 });

@@ -30,6 +30,8 @@ export const Required = (): ReactElement => (
 /** The block around one control: its label row, note, the control, and its error. */
 export function FieldShell({
   label,
+  labelSuffix,
+  size,
   hint,
   note,
   required,
@@ -45,16 +47,17 @@ export function FieldShell({
   className,
 }: FieldShellProps): ReactElement {
   return (
-    <div className={className ? `field ${className}` : 'field'}>
+    <div className={['field', size && `field--${size}`, className].filter(Boolean).join(' ')}>
       {/* Positioned by the primitive: the hint's tip places itself above its
           nearest positioned ancestor (claude-docs/components/info-tip.md). */}
       <div className="field__label-row">
         <label className="field__label" id={labelId} htmlFor={controlId}>
           {label}
+          {labelSuffix && <span className="visually-hidden">, {labelSuffix}</span>}
           {required && <Required />}
         </label>
         {hint && (
-          <InfoTip id={hintId} label={label}>
+          <InfoTip id={hintId} label={labelSuffix ? `${label}, ${labelSuffix}` : label}>
             {hint}
           </InfoTip>
         )}
