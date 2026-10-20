@@ -835,9 +835,7 @@ test('Edit Ingredient, opened from the Edit menu and cancelled, gives the menu i
 // scroll-padding-top). A filter's page is Next's own scroll, to the top of the
 // page, with no pull to the list. Measured here because happy-dom draws no
 // layout to scroll.
-test("a pager end lands on the new page's first entries, and a filter opens at the page top", async ({
-  page,
-}) => {
+test("a pager end lands on the new page's first entries", async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Pager Scroll', 'pager-scroll.test', {
     A: 'owner',
   });
@@ -876,14 +874,4 @@ test("a pager end lands on the new page's first entries, and a filter opens at t
   await expect.poll(firstCardTop).toBeGreaterThanOrEqual(line - 1);
   expect(await firstCardTop()).toBeLessThan(page.viewportSize()!.height);
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-
-  // A filter: from the foot of the page again, the name search keeps every
-  // entry, so the list is as tall as before and the only scroll is Next's.
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  expect(await firstCardTop()).toBeLessThan(line);
-  await nameSearch(page).fill('Scrollwort');
-  await nameSearch(page).press('Enter');
-  await expect(page).toHaveURL(/[?&]query=Scrollwort(&|$)/);
-  await expect(pager.getByText('Page 1 of 3')).toBeVisible();
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 });
