@@ -36,8 +36,8 @@ function formsCarrying(labels: readonly string[]): string {
       ? labels[0]
       : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
   return labels.length === 1
-    ? `The ${named} form carries its own caution; the entry's page shows it.`
-    : `The ${named} forms carry their own cautions; the entry's page shows them.`;
+    ? `The ${named} form carries its own caution; the ingredient's page shows it.`
+    : `The ${named} forms carry their own cautions; the ingredient's page shows them.`;
 }
 
 export default function IngredientSummary({
