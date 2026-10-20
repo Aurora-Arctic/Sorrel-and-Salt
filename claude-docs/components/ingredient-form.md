@@ -1383,18 +1383,21 @@ With a null `workspaceId` the form writes a compendium entry (M5.5), the
 site admin's, through the compendium mutations
 ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
 
-- **An edit says so above the form** (M8.17). Editing a compendium entry,
-  wherever the form opens (the admin Compendium, an entry's page, the public
-  search for a curator), the form draws a plain `Notice` above its fields:
-  "Changes are made to the Compendium, for everyone." An add carries none,
-  and nor does a coven's edit. The wording is the owner's (2026-10-19), and
+- **An edit says so under the dialog's title** (M8.17). Editing a compendium
+  entry, wherever the form opens (the admin Compendium, an entry's page, the
+  public search for a curator), the form draws a plain `Notice`: "Changes are
+  made to the Compendium, for everyone." An add carries none, and nor does a
+  coven's edit. The wording is the owner's (2026-10-19), and
   `COMPENDIUM_EDIT_NOTICE` in
   `src/components/IngredientForm/compendium-notice.ts` is the one place it
-  lives. Its layout class, `.ingredient-form__notice`, sets it apart from
-  the dialog's head and close to the form (the owner's call, 2026-10-19):
-  `space(5)` above it, the form's gap between sections, made of its own
-  `space(2)` on top of the head's `space(4)` padding, which a dialog with
-  no notice keeps; and `space(4)` below it, down to the first section's rule.
+  lives. In a modal it goes in the header, under the title and above the row
+  holding Open All and Undo and Redo (the owner's call, 2026-10-19): the form
+  portals it into the modal's note line (`useModalHeaderNote`,
+  [`modal.md`](modal.md), "A control in the header"). It stands `space(2)`
+  below the title, the gap the row has there in a dialog with no notice, and
+  the row `space(2)` below it; the row keeps its own spacing to the form.
+  Outside a modal it sits above the form. Being in the header, it stays in
+  view as the form scrolls beneath it.
 
 - **The classification is required.** `compendiumResolver` validates with
   `CompendiumIngredientInput`, whose `nomenclature` has no default, since

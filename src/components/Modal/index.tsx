@@ -14,4 +14,9 @@ export { RouteModalProvider, useOpenModalClick } from './route-modal-provider';
 export { ConfirmOverlay } from './confirm-overlay';
 export { DiscardQuestion, useDiscardGuard } from './discard';
 export { ConfirmQuestion } from './confirm-question';
-export { HeaderSlotContext, useModalHeaderSlot } from './header-slot';
+export {
+  HeaderNoteContext,
+  HeaderSlotContext,
+  useModalHeaderNote,
+  useModalHeaderSlot,
+} from './header-slot';

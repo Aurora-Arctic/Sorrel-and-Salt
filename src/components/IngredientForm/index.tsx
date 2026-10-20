@@ -14,7 +14,7 @@ import type {
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { ConfirmQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
+import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import { DiscardAskingContext } from './remove-question';
 import {
@@ -331,6 +331,8 @@ const IngredientForm = ({
   // cannot be used reads as one, rather than faded with the form behind.
   const anyOpen = open.size > 0;
   const headerSlot = useModalHeaderSlot();
+  const headerNote = useModalHeaderNote();
+  const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
   const foldAll = (
     <button
       type="button"
@@ -585,13 +587,13 @@ const IngredientForm = ({
               {/* Where each linked substitute's summary links its entry, read by
           the chips however deep their list sits (MB.115). */}
               <EntryHrefContext.Provider value={entryHref}>
-                {/* An edit of the compendium says so above the form (M8.17), drawn
-          here so every dialog that opens it shows it once. */}
-                {compendium && editing && (
-                  <Notice kind="plain" className="ingredient-form__notice">
-                    {COMPENDIUM_EDIT_NOTICE}
-                  </Notice>
-                )}
+                {/* An edit of the compendium says so (M8.17), drawn here so every
+          dialog that opens it shows it once: under a modal's title, above
+          its Open All row (the owner's call, 2026-10-19), or outside a modal
+          above the form. */}
+                {compendium &&
+                  editing &&
+                  (headerNote ? createPortal(compendiumNotice, headerNote) : compendiumNotice)}
                 {/* `noValidate`: every refusal is the schema's, worded and placed like
           the rest, rather than the browser's own bubble. */}
                 <form

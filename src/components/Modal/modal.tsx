@@ -14,7 +14,7 @@ import {
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
 import { firstShownField } from './fields';
-import { HeaderSlotContext } from './header-slot';
+import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
 
@@ -171,6 +171,7 @@ const Modal = ({
   const [guard] = useState(closeGuardSlot);
   // Held in state, so the contents redraw into it once it is in the page.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  const [headerNote, setHeaderNote] = useState<HTMLElement | null>(null);
 
   // A question a form asks over itself (ConfirmOverlay, MB.115) is drawn in
   // the layer over the body, and holds the body and the control beside the
@@ -282,6 +283,9 @@ const Modal = ({
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>
         </button>
+        {/* Under the heading, for a sentence the contents put there
+            (HeaderNoteContext), above the row of controls. */}
+        <div ref={setHeaderNote} className="modal-dialog__header-note" />
         {/* Under the heading, for a control the contents put there
             (HeaderSlotContext): after the × in Tab order, as on screen. */}
         <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
@@ -292,9 +296,11 @@ const Modal = ({
         <div ref={body} className="modal-dialog__body" aria-busy={loading || undefined}>
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
-              <ConfirmLayerContext.Provider value={layer}>
-                {typeof children === 'function' ? children(close) : children}
-              </ConfirmLayerContext.Provider>
+              <HeaderNoteContext.Provider value={headerNote}>
+                <ConfirmLayerContext.Provider value={layer}>
+                  {typeof children === 'function' ? children(close) : children}
+                </ConfirmLayerContext.Provider>
+              </HeaderNoteContext.Provider>
             </HeaderSlotContext.Provider>
           </CloseGuardContext.Provider>
         </div>

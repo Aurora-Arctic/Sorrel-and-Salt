@@ -384,6 +384,17 @@ asked over the form, the row is held with it
 scrim, the owner's call at M8.16; the ingredient form's Close All is
 `disabled` then too, as a form's Undo and Redo already are.
 
+A sentence about the whole dialog goes on a line of its own between the
+title and the row (M8.17, the owner's call of 2026-10-19): the compendium
+edit's notice, "Changes are made to the Compendium, for everyone." The modal
+hands that line down too (`HeaderNoteContext`), and the contents portal into
+it through `useModalHeaderNote()`. It is a line apart rather than the row's
+first item because the row is a line of controls that never wraps. It stands
+`space(2)` below the title, the gap the row has there without it, and the
+row `space(2)` below it. Empty, it takes no line, so a dialog with no
+sentence is unchanged. It is not held while a question is asked, as it holds
+no control.
+
 ## ModalButton
 
 A button that opens a modal, and the focus back on the button however the

@@ -203,17 +203,6 @@ $skeleton-fade: 300ms;
   }
 }
 
-// The compendium edit's notice above the form (M8.17), set apart from the
-// dialog's head and close to the form it speaks of (the owner's call,
-// 2026-10-19): space(5) above it, the form's gap between sections, its
-// space(2) on top of the head's own space(4) padding (Modal), which a dialog
-// with no notice keeps; and below it, down to the first section's rule, the
-// space(4) that head padding alone set above it before. Both classes, to
-// outrank `.notice`'s zero margin wherever the stylesheets land.
-.notice.ingredient-form__notice {
-  margin-block: space(2) space(4);
-}
-
 // The duplicate warning beneath the name. The region is always in the page,
 // as a live region must be, so it cancels the field's gap while empty and its
 // notice puts the gap back. Being always there, it opens by height round the

@@ -186,6 +186,20 @@ $modal-padding: space(5) * 2;
   color: $text-muted;
 }
 
+// A sentence about the whole dialog under the heading, above the toolbar row
+// (M8.17, the compendium edit's notice, the owner's call of 2026-10-19): as
+// far below the title as the row stands from it without one, and the row as
+// far again below it. Hidden while nothing is in it, so a dialog with no
+// sentence is as it was.
+.modal-dialog__header-note {
+  grid-column: 1 / -1;
+  margin-top: space(2);
+
+  &:empty {
+    display: none;
+  }
+}
+
 // A toolbar row under the heading at every width, for the controls the
 // contents put in the header (the owner's call at M12.10, replacing the
 // under-the-× place MB.115 gave them): the first control at its start, a
