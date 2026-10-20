@@ -1,8 +1,13 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import { Reopenable } from '../../../.ladle/reopenable';
 import IngredientEntry from '.';
-import type { IngredientEntryProps } from './types';
+import DetailsDialog from './details-dialog';
+import { detailsHeading } from './details';
+import { EDIT_ENTRY_EYEBROW } from './edit-heading';
+import IngredientSummary from './summary';
+import type { IngredientDetailsOpened, IngredientEntryProps } from './types';
 import type {
   CategoryDetail,
   CitedReference,
@@ -483,3 +488,172 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <Entry />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The details modal (M12.5): an ingredient's name in a list opens IngredientSummary
+// in DetailsDialog, over the list. The workshop's router goes nowhere, so Close,
+// Escape and the links leave Open Again (`Reopenable`), as Modal's stories do.
+
+/** The modal opened over a list, as the page builds it: the entry's head, Open Full Page, the summary. */
+const Details = ({
+  detail,
+  listHref,
+  ...opened
+}: Omit<IngredientDetailsOpened, 'heading' | 'children'> & {
+  detail: IngredientDetail;
+  listHref: Route;
+}) => (
+  <Reopenable>
+    {() => (
+      <DetailsDialog
+        closeHref={listHref}
+        opened={{
+          heading: detailsHeading(detail.entry),
+          children: <IngredientSummary detail={detail} />,
+          ...opened,
+        }}
+      />
+    )}
+  </Reopenable>
+);
+
+const COVEN_LIST = '/coven/fixture-coven/ingredients' as Route;
+
+/** FULL as the coven's own entry, which its owner or member may edit. */
+const OWN: IngredientDetail = {
+  ...FULL,
+  entry: entryRow({
+    workspaceId: '00000000-0000-4000-8000-0000000000c1',
+    slug: 'testwort-fixtura-testalis',
+  }),
+};
+
+// From the coven's list, its own entry: Open Full Page and Edit in the header,
+// then the safety note with the line naming the form that carries its own, the
+// correspondences, folk names and categories.
+export const DetailsFromCovenList: Story = () => (
+  <Details
+    detail={OWN}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    editAction={{
+      href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
+      heading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+    }}
+  />
+);
+DetailsFromCovenList.meta = { iframed: true };
+
+// From the public compendium, to anyone but a curator: the same summary, and
+// only Open Full Page.
+export const DetailsFromCompendium: Story = () => (
+  <Details
+    detail={FULL}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+  />
+);
+DetailsFromCompendium.meta = { iframed: true };
+
+// The same, to a curator: Edit opens the compendium's edit modal over the details.
+export const DetailsFromCompendiumForCurator: Story = () => (
+  <Details
+    detail={FULL}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    editAction={{
+      href: `/compendium?edit=${FULL.entry.slug}` as Route,
+      heading: { eyebrow: EDIT_ENTRY_EYEBROW, title: 'Testwort' },
+    }}
+  />
+);
+DetailsFromCompendiumForCurator.meta = { iframed: true };
+
+// Sparse: only what is recorded shows. One element and a folk name; the empty
+// correspondence rows, the categories and the safety note are left out, where
+// the page would say "None recorded".
+export const DetailsSparse: Story = () => (
+  <Details
+    detail={{
+      entry: entryRow({
+        name: 'Fixture Reedling',
+        canonicalName: 'Fixtura palustris',
+        elements: ['water'],
+        celestialBodies: null,
+        zodiacSigns: null,
+        colors: null,
+        safetyNotes: null,
+      }),
+      retired: false,
+      cupboardEntry: null,
+      folkNames: ['Marsh Testwort'],
+      categories: [],
+      deities: [],
+      substitutes: [],
+      references: [],
+      variants: [variant('dried stem')],
+    }}
+    listHref={'/compendium' as Route}
+    pageHref={'/compendium/ingredients/fixture-reedling' as Route}
+  />
+);
+DetailsSparse.meta = { iframed: true };
+
+// Every section empty: one line says so rather than leave the body blank.
+export const DetailsNothingRecorded: Story = () => (
+  <Details
+    detail={{
+      entry: entryRow({
+        name: 'Fixture Spar',
+        canonicalName: 'Fixture spar',
+        nomenclature: 'mineral',
+        description: null,
+        elements: null,
+        celestialBodies: null,
+        zodiacSigns: null,
+        colors: null,
+        safetyNotes: null,
+      }),
+      retired: false,
+      cupboardEntry: null,
+      folkNames: [],
+      categories: [],
+      deities: [],
+      substitutes: [],
+      references: [],
+      variants: [variant('chip')],
+    }}
+    listHref={'/compendium' as Route}
+    pageHref={'/compendium/ingredients/fixture-spar' as Route}
+  />
+);
+DetailsNothingRecorded.meta = { iframed: true };
+
+// A toxic entry: its own safety note heads the summary, and the line beneath
+// names the two forms that carry cautions of their own.
+export const DetailsToxic: Story = () => (
+  <Details
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        name: 'Fixture Banewort',
+        canonicalName: 'Fixtura venenosa',
+        toxic: true,
+        safetyNotes: 'Poisonous in every part.\nKeep from children and animals.',
+      }),
+      variants: [
+        variant('oil', { toxic: true, safetyNotes: 'Never take by mouth.' }),
+        variant('root', { toxic: true, safetyNotes: 'Wear gloves to handle it.' }),
+        variant('dried leaf'),
+      ],
+    }}
+    listHref={'/compendium' as Route}
+    pageHref={'/compendium/ingredients/fixture-banewort' as Route}
+  />
+);
+DetailsToxic.meta = { iframed: true };
+
+export const DetailsPhoneDark: Story = () => <DetailsFromCovenList />;
+DetailsPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+
+export const DetailsPhoneLight: Story = () => <DetailsFromCovenList />;
+DetailsPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

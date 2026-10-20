@@ -123,6 +123,9 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `MovedAway`: the notice for the entry that left this address.
 - `FormAddsNothing`: two forms adding nothing, one of them toxic.
 - `PhoneDark`, `PhoneLight`: the full entry at 375px.
+- `DetailsFromCovenList`, `DetailsFromCompendium`, `DetailsFromCompendiumForCurator`: the details modal (M12.5) over a coven's list with Edit, over `/compendium` with Open Full Page alone, and the same for a curator with Edit. Each opens in its own frame, and Open Again brings it back after it closes.
+- `DetailsSparse`, `DetailsNothingRecorded`, `DetailsToxic`: the details modal's body with only what is recorded, with nothing ("Nothing recorded yet."), and a toxic entry's caution naming two cautioned forms.
+- `DetailsPhoneDark`, `DetailsPhoneLight`: the coven's details modal at 375px.
 
 ## Testing
 
