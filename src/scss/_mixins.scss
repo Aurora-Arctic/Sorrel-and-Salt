@@ -138,9 +138,8 @@
 // lowest mixes that hold 3:1 against the page, the card and the `:target`
 // fill in both themes for a link resting in the body ink and pointed at in
 // `$accent-hover`: the entry page's References and marks, IngredientForm's
-// title links. The mixes are worked out for those body-ink links: a link
-// resting in `$accent` takes 75% at rest to hold 3:1, since the light accent
-// at 55% is 2.27:1 on the card (In Your Covens, 3.23:1 at 75%; measured 2026-10-20).
+// title links, the details modal's In Your Covens. A link resting in another
+// colour needs its own mixes worked out before it takes these.
 // No token holds a faded underline, so it is a `color-mix`, as `$fill-quiet` is.
 // Chromium draws no underline under 1px, and `auto` is already 1px for the
 // body text, so a fade is what makes an underline lighter, not a thickness.

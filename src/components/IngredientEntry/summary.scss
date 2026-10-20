@@ -51,9 +51,8 @@
   vertical-align: top;
   gap: space(2);
   font-weight: 400;
-  // The green text keeps its colour; only the underline fades, at 75% since the
-  // light accent needs it for 3:1 (the owner's call, 2026-10-20; `faded-underline`).
-  @include faded-underline($rest: 75%);
+  // Its colours, focus ring and faded underline are the References links' own
+  // rule (index.scss), so they rest in the body ink (the owner's call, 2026-10-20).
 
   > svg {
     flex: none;
