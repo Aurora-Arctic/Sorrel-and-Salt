@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'compact' as *;
@@ -166,6 +167,17 @@
 // badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
 .ingredient-card .badge {
   @include badge-size('medium');
+}
+
+// The badges' first row centred on the name's first line, as the forms line's icons are
+// centred on theirs: the specimen tops them flush (`align-items: flex-start`), which sat the
+// 24px badge above a taller line of name. Half the name's line box less the badge's height,
+// so the step follows the name's size (`heading-size(3)` here, `heading-size(4)` compact).
+// It shows only beside the name; wrapped beneath it, it adds that much to the row gap.
+.ingredient-card .specimen__badges {
+  margin-block-start: calc(
+    (#{heading-size(3)} * 1.15 - #{map.get($badge-sizes, 'medium', 'min-block-size')}) / 2
+  );
 }
 
 // Above the cards beside it while a category panel is open, as the tips are, lifted by
