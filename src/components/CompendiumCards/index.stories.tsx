@@ -61,6 +61,11 @@ const ENTRIES = [
 ];
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
+const SECOND_ID = '00000000-0000-4000-8000-000000000002';
+const COVENS = [
+  { id: WORKSPACE_ID, name: 'Fixture Coven One' },
+  { id: SECOND_ID, name: 'Fixture Coven Two' },
+];
 
 const BASE: CompendiumCardsProps = {
   entries: ENTRIES,
@@ -72,7 +77,7 @@ const BASE: CompendiumCardsProps = {
   action: 'none',
 };
 
-// Someone who can add: the plus at each card's bottom left adds the entry to the coven
+// Someone who can add to one coven: the plus at each card's bottom right adds the entry to it
 // directly, until M9.12's dialog asks for a quantity. The workshop serves no /api/graphql,
 // so a press shows its refusal.
 export const CanAdd: Story = () => (
@@ -97,7 +102,26 @@ export const Held: Story = () => (
   />
 );
 
-// A curator who can add too: the plus at the left, Edit at the right of the same foot.
+// Someone who may write in two covens: the plus opens a picker. The first card is in the first
+// coven already, so that one shows as held and the picker starts on the second; the last is in
+// both, and shows the check.
+export const InSeveralCovens: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    covens={COVENS}
+    entries={ENTRIES.map((entry, at) => ({
+      ...entry,
+      held: at === ENTRIES.length - 1,
+      heldIn:
+        at === 0 ? [WORKSPACE_ID] : at === ENTRIES.length - 1 ? [WORKSPACE_ID, SECOND_ID] : [],
+      heldHref: `/coven/fixture-coven/ingredients/${entry.slug}` as Route,
+    }))}
+  />
+);
+
+// A curator who can add too: the plus, then Edit, side by side at the right of the foot.
 export const CanAddAndEdit: Story = () => (
   <CompendiumCards
     {...BASE}

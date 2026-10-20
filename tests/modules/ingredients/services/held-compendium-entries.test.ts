@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import { heldCompendiumEntryIds } from '@/modules/ingredients';
+import { heldCompendiumEntryIds, heldCompendiumEntryIdsIn } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
@@ -83,5 +83,50 @@ describe('heldCompendiumEntryIds', () => {
     await expect(heldCompendiumEntryIds(asUser(D), WORKSPACE_W_ID, [])).rejects.toBeInstanceOf(
       Forbidden,
     );
+  });
+});
+
+// The compendium page of someone in several covens asks about each of them at once: the plus
+// asks which coven, and marks the ones that already hold the entry.
+describe('heldCompendiumEntryIdsIn', () => {
+  const bothCovens = [WORKSPACE_W_ID, WORKSPACE_X_ID];
+
+  beforeEach(async () => {
+    // B belongs to X as well as W. A setup row through the raw client, once: the database outlives each test.
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${WORKSPACE_X_ID}, ${B.id}, 'member', ${A.id}, ${A.id})
+      on conflict do nothing`;
+  });
+
+  it('answers for each coven by itself, the entries each holds and no others', async () => {
+    const byCoven = await heldCompendiumEntryIdsIn(asUser(B), bothCovens, [held, heldByX, free]);
+
+    expect([...(byCoven.get(WORKSPACE_W_ID) ?? [])]).toEqual([held]);
+    expect([...(byCoven.get(WORKSPACE_X_ID) ?? [])]).toEqual([heldByX]);
+  });
+
+  it('gives an empty set, not a missing key, for a coven that holds none of them', async () => {
+    const byCoven = await heldCompendiumEntryIdsIn(asUser(B), bothCovens, [free]);
+
+    expect([...byCoven.keys()].sort()).toEqual([...bothCovens].sort());
+    expect(byCoven.get(WORKSPACE_W_ID)?.size).toBe(0);
+    expect(byCoven.get(WORKSPACE_X_ID)?.size).toBe(0);
+  });
+
+  it("refuses the whole read when any one coven is not the caller's, by direct id", async () => {
+    // Preconditions: D really does belong to X, and X really does hold the entry; B reads both.
+    expect([...(await heldCompendiumEntryIds(asUser(D), WORKSPACE_X_ID, [heldByX]))]).toEqual([
+      heldByX,
+    ]);
+    expect((await heldCompendiumEntryIdsIn(asUser(B), bothCovens, [heldByX])).size).toBe(2);
+
+    await expect(heldCompendiumEntryIdsIn(asUser(D), bothCovens, [heldByX])).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+  });
+
+  it('reads nothing for no coven', async () => {
+    expect((await heldCompendiumEntryIdsIn(asUser(B), [], [held])).size).toBe(0);
   });
 });

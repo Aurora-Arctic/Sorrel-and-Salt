@@ -37,7 +37,7 @@ const resolveCompendiumSlug = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession: async () => ({ userId: 'user-fixture' }) }));
 vi.mock('@/modules/ingredients', () => ({
   resolveCompendiumSlug,
-  heldCompendiumEntryIds: async () => new Set<string>(),
+  heldCompendiumEntryIdsIn: async () => new Map<string, ReadonlySet<string>>(),
 }));
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));

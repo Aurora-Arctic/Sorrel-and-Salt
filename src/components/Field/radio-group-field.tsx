@@ -129,6 +129,7 @@ export function RadioGroupField<T extends string>({
                 name={name}
                 value={option.value}
                 checked={value === option.value}
+                disabled={option.disabled}
                 aria-describedby={option.description ? descriptionId : undefined}
                 onChange={() => onChange(option.value)}
                 {...pressFeedback}

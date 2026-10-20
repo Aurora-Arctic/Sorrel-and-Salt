@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -10,22 +10,32 @@ import { useClickFeedback } from '../ClickFeedback';
 import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import Spinner from '../Spinner';
+import AddToCovenDialog from './add-to-coven-dialog';
 import type { AddIconProps, HeldLinkProps } from './types';
 
-// The two marks at a compendium card's bottom left (M9.12, the owner's call, 2026-10-20):
-// a plus while the coven does not hold the entry, a check once it does. Icons alone, named by
-// their tip and an accessible name (`visually-hidden`), as the pencil beside them is. Their
-// own file, because the card itself stays a server component and a press needs the browser.
+// The two marks at a compendium card's bottom right, before a curator's Edit (M9.12, the owner's
+// call, 2026-10-20): a plus while the entry is not in every coven the viewer may write in, a
+// check once it is. Icons alone, named by their tip and an accessible name (`visually-hidden`),
+// as the pencil beside them is. Their own file, because the card itself stays a server component
+// and a press needs the browser.
 
 const ADD = 'Add to My Ingredients';
 
 /**
- * The plus. Until M9.12's dialog exists it adds directly, with no quantity: it sends
- * `addCupboardEntry` for the switcher's coven and reads the page again, which then draws the
- * check in its place. `aria-disabled` and not `disabled` while it works, so the focus stays on
- * it and a refusal, said in a callout under it (M12.31), is read from it.
+ * The plus. With one coven to add to it adds directly, with no quantity: it sends
+ * `addCupboardEntry` for that coven and reads the page again, which then draws the check in its
+ * place. With several it opens a modal that asks which (`AddToCovenDialog`). `aria-disabled` and
+ * not `disabled` while it works, so the focus stays on it and a refusal, said in a callout under
+ * it (M12.31), is read from it. The modal says its own refusals.
  */
-export const AddIcon = ({ workspaceId, ingredientId }: AddIconProps): ReactElement => {
+export const AddIcon = ({
+  workspaceId,
+  ingredientId,
+  covens,
+  heldIn,
+}: AddIconProps): ReactElement => {
+  const asking = covens.length > 1;
+  const [picking, setPicking] = useState(false);
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: ADD });
   const add = useMutation({
@@ -48,7 +58,8 @@ export const AddIcon = ({ workspaceId, ingredientId }: AddIconProps): ReactEleme
           onClick={() => {
             if (busy) return;
             feedback.report(undefined);
-            add.mutate();
+            if (asking) setPicking(true);
+            else add.mutate();
           }}
         >
           {busy ? <Spinner /> : <PlusIcon />}
@@ -56,6 +67,16 @@ export const AddIcon = ({ workspaceId, ingredientId }: AddIconProps): ReactEleme
         </button>
       </IconTip>
       {feedback.feedback}
+      {picking && (
+        <AddToCovenDialog
+          workspaceId={workspaceId}
+          ingredientId={ingredientId}
+          covens={covens}
+          heldIn={heldIn}
+          onClose={() => setPicking(false)}
+          onAdded={refresh}
+        />
+      )}
     </>
   );
 };

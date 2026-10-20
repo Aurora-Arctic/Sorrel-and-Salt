@@ -24,7 +24,7 @@ import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import { heldCompendiumEntryIds } from '../../../modules/ingredients';
+import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
 import { readEditPlace } from '../../(shell)/admin/list-page';
@@ -85,17 +85,17 @@ export async function generateMetadata({
 }
 
 /**
- * Which of these entries the coven already holds. Per viewer, so read here and never inside the
- * cached compendium read (rule 6). A refusal reads as nothing held: the plus is then offered,
- * and the add itself says no.
+ * Which of these entries each of the viewer's writable covens already holds, by coven id. Per
+ * viewer, so read here and never inside the cached compendium read (rule 6). A refusal reads as
+ * nothing held: the plus is then offered, and the add itself says no.
  */
-async function heldEntryIds(workspaceId: string, ids: readonly string[]) {
+async function heldEntryIds(workspaceIds: readonly string[], ids: readonly string[]) {
   const session = await getSession();
-  if (!session) return new Set<string>();
+  if (!session) return new Map<string, ReadonlySet<string>>();
   try {
-    return await heldCompendiumEntryIds(session, workspaceId, ids);
+    return await heldCompendiumEntryIdsIn(session, workspaceIds, ids);
   } catch (error) {
-    if (error instanceof Forbidden) return new Set<string>();
+    if (error instanceof Forbidden) return new Map<string, ReadonlySet<string>>();
     throw error;
   }
 }
@@ -134,40 +134,50 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
     categories: new Map(categories.map((category) => [category.id, category])),
   });
-  // Who may add, and to which coven: a role that may create an ingredient and stock it
+  // Who may add, and to which covens: a role that may create an ingredient and stock it
   // (`canWrite`, set in `viewerFor` from the per-role statement). The compendium names no coven
-  // in its address, so the coven is M8.16's choice for a page without one: the first the viewer
-  // may write in. A viewer-only account has none, and neither has a visitor with no account, who
-  // signs in through the header.
-  const writable = viewer?.workspaces.find(({ canWrite }) => canWrite);
-  const held = writable
+  // in its address, so the default is M8.16's choice for a page without one: the first the viewer
+  // may write in, which the plus adds to at once when it is the only one, and which the picker
+  // starts on when there are several. A viewer-only account has none, and neither has a visitor
+  // with no account, who signs in through the header.
+  const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
+  const covens = writable.map(({ id, name }) => ({ id, name }));
+  const defaultCoven = writable[0];
+  const held = defaultCoven
     ? await heldEntryIds(
-        writable.id,
+        covens.map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
-  const entries = page.edges.map(({ node }, i): CompendiumCardEntry => ({
-    id: node.id,
-    name: node.name,
-    slug: node.slug,
-    canonicalName: node.canonicalName,
-    nomenclature: node.nomenclature,
-    categories: chips[i],
-    variants: page.variants[i],
-    toxic: node.toxic,
-    safetyNotes: node.safetyNotes,
-    recency: entryRecency(node.createdAt, node.updatedAt),
-    ...(writable && {
-      held: held?.has(node.id) === true,
-      heldHref: covenIngredientsHref(writable.slug, { query: node.name }),
-    }),
-    ...(canEdit && {
-      editHref: hereWith(node.slug),
-      editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),
-    }),
-  }));
+  const entries = page.edges.map(({ node }, i): CompendiumCardEntry => {
+    const heldIn = writable.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ id }) => id);
+    // The check shows only where every coven holds it, and leads to the default coven's list
+    // if that holds it, else the first that does (the default is first in `writable`).
+    const holder = writable.find(({ id }) => heldIn.includes(id)) ?? defaultCoven;
+    return {
+      id: node.id,
+      name: node.name,
+      slug: node.slug,
+      canonicalName: node.canonicalName,
+      nomenclature: node.nomenclature,
+      categories: chips[i],
+      variants: page.variants[i],
+      toxic: node.toxic,
+      safetyNotes: node.safetyNotes,
+      recency: entryRecency(node.createdAt, node.updatedAt),
+      ...(holder && {
+        held: heldIn.length === writable.length,
+        heldIn,
+        heldHref: covenIngredientsHref(holder.slug, { query: node.name }),
+      }),
+      ...(canEdit && {
+        editHref: hereWith(node.slug),
+        editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),
+      }),
+    };
+  });
 
-  const action = writable ? 'add' : 'none';
+  const action = defaultCoven ? 'add' : 'none';
 
   return (
     // Holds a pressed Edit's opening, as the admin layout does; a plain wrapper for anyone else.
@@ -190,7 +200,8 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         position={page.position}
         total={page.totalCount}
         action={action}
-        workspaceId={writable?.id}
+        workspaceId={defaultCoven?.id}
+        covens={covens}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}

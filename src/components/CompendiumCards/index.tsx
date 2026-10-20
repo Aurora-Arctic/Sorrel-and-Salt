@@ -13,12 +13,13 @@ import '../CompendiumList/index.scss';
 // The public compendium's list (M8.18): the filter row, one card per entry in a grid, and
 // the pager. Render-only, like the admin's table (CompendiumList): the page reads one page
 // under the address's filter and hands it here. Each card is a plain link to the entry's
-// page. A card's foot holds two things: at its left, for someone who can add, the plus
-// (Add to My Ingredients), or the check (In My Ingredients) once the switcher's coven holds the
-// entry; at its right, for a curator, Edit, which opens the compendium's edit dialog over the
-// results (M8.17). The plus adds directly until M9.12's dialog asks for a quantity (the owner's
-// call, 2026-10-20). A visitor with no account sees nothing on the cards and signs in through
-// the header. claude-docs/components/compendium-cards.md.
+// page. A card's foot is one row at its bottom right: for someone who can add, the plus (Add
+// to My Ingredients) or, once every coven they may write in holds the entry, the check (In My
+// Ingredients); then, for a curator, Edit, which opens the compendium's edit dialog over the
+// results (M8.17). The plus adds at once for one coven and opens a picker for several (M9.12, the
+// owner's call, 2026-10-20). The foot's left end is the Quick Look eye's (M12.5). A visitor with
+// no account sees nothing on the cards and signs in through the header.
+// claude-docs/components/compendium-cards.md.
 
 const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
 
@@ -26,23 +27,50 @@ const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${
 const nameOf = (entry: CompendiumCardEntry): string =>
   entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name;
 
-// The foot's left end: the plus while the coven does not hold the entry, the check once it
-// does. Both need the switcher's coven; a held entry with no address to lead to shows neither.
-const startOf = (
+// The foot's add mark: the plus while some coven the viewer may write in lacks the entry, the
+// check once every one holds it. Both need a default coven; a held entry with no address to lead
+// to shows neither.
+const markOf = (
   entry: CompendiumCardEntry,
   action: CompendiumCardsProps['action'],
   workspaceId: string | undefined,
+  covens: CompendiumCardsProps['covens'],
 ): ReactElement | undefined => {
   if (action !== 'add' || !workspaceId) return undefined;
-  if (!entry.held) return <AddIcon workspaceId={workspaceId} ingredientId={entry.id} />;
+  if (!entry.held)
+    return (
+      <AddIcon
+        workspaceId={workspaceId}
+        ingredientId={entry.id}
+        covens={covens ?? []}
+        heldIn={entry.heldIn ?? []}
+      />
+    );
   return entry.heldHref ? <HeldLink href={entry.heldHref} /> : undefined;
 };
 
-// The foot's right end: a curator's Edit, where the page gave the entry an edit address (M8.17).
-const endOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
+// A curator's Edit, where the page gave the entry an edit address (M8.17).
+const editOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
   entry.editHref && entry.editHeading ? (
     <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
   ) : undefined;
+
+// The foot: the add mark, then Edit. Nothing for someone with neither.
+const footOf = (
+  entry: CompendiumCardEntry,
+  action: CompendiumCardsProps['action'],
+  workspaceId: string | undefined,
+  covens: CompendiumCardsProps['covens'],
+): ReactElement | undefined => {
+  const mark = markOf(entry, action, workspaceId, covens);
+  const edit = editOf(entry);
+  return mark || edit ? (
+    <>
+      {mark}
+      {edit}
+    </>
+  ) : undefined;
+};
 
 const CompendiumCards = ({
   entries,
@@ -56,6 +84,7 @@ const CompendiumCards = ({
   total,
   action,
   workspaceId,
+  covens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -90,8 +119,7 @@ const CompendiumCards = ({
             safetyNotes={entry.safetyNotes}
             kind="compendium"
             recency={entry.recency}
-            startActions={startOf(entry, action, workspaceId)}
-            actions={endOf(entry)}
+            actions={footOf(entry, action, workspaceId, covens)}
           />
         ))}
       </IngredientCardList>

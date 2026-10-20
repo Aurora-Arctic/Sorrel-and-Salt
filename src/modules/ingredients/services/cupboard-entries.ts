@@ -952,3 +952,24 @@ export async function heldCompendiumEntryIds(
   const rows = await findCupboardEntriesOf(membership, ingredientIds);
   return new Set(rows.map(({ ingredientId }) => ingredientId));
 }
+
+/**
+ * The same question across several covens, for a viewer in more than one: each coven's held
+ * ids by its id, so the compendium's plus can ask which coven and mark the ones that already
+ * hold the entry (M9.12). One `Membership` proof per coven, each finder scoped by its own, so
+ * a coven the caller is not in refuses the whole read. A coven holding none of them maps to an
+ * empty set, never a missing key.
+ *
+ * @throws {Forbidden} the caller may not read one of these covens' ingredients.
+ */
+export async function heldCompendiumEntryIdsIn(
+  session: Session,
+  workspaceIds: readonly string[],
+  ingredientIds: readonly string[],
+): Promise<ReadonlyMap<string, ReadonlySet<string>>> {
+  // One coven after another, not at once: a refusal then leaves no read still running behind it.
+  const held = new Map<string, ReadonlySet<string>>();
+  for (const workspaceId of workspaceIds)
+    held.set(workspaceId, await heldCompendiumEntryIds(session, workspaceId, ingredientIds));
+  return held;
+}

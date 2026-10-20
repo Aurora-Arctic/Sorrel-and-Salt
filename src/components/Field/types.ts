@@ -150,6 +150,8 @@ export interface RadioOption<T extends string> {
   icon?: ReactNode;
   /** How many entries choosing it would leave, read with its name in the segmented layout: "Toxic (4)". */
   count?: number;
+  /** This one choice cannot be chosen, in the default list layout: the radio is dashed and the group stays live. */
+  disabled?: boolean;
 }
 
 export interface RadioGroupFieldProps<T extends string> {

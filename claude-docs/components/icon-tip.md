@@ -50,7 +50,7 @@ follows `href` as before.
   `AnnotateIcon`, an open book with a filled pencil,
   drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
   (M8.17, 2026-10-19).
-- **Add and held on a compendium card** (`CompendiumCards`' `AddIcon` and `HeldLink`, M9.12): `PlusIcon` on a button tipped "Add to My Ingredients", and `CheckIcon` on a link tipped "In My Ingredients", both `.icon-tip__add`/`.icon-tip__held` (Edit's size and green), at the card's bottom left. The button shows the shared spinner in the plus's place while it works.
+- **Add and held on a compendium card** (`CompendiumCards`' `AddIcon` and `HeldLink`, M9.12): `PlusIcon` on a button tipped "Add to My Ingredients", and `CheckIcon` on a link tipped "In My Ingredients", both `.icon-tip__add`/`.icon-tip__held` (Edit's size and green), at the card's bottom right, ahead of a curator's pencil. The button shows the shared spinner in the plus's place while it works.
 - **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
   vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
   "More", where the card holds two or more choices; and, where its one

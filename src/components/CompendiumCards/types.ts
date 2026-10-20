@@ -30,9 +30,20 @@ export interface CompendiumCardEntry {
   editHref?: Route;
   /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads. */
   editHeading?: ModalHeading;
-  /** The switcher's coven already holds this entry (M9.12): its card shows the check, not the plus. */
+  /**
+   * Every coven the viewer may write in holds this entry (M9.12): its card shows the check, not
+   * the plus. With one such coven that is whether it holds it.
+   */
   held?: boolean;
-  /** Where the check leads: the entry as the coven holds it. Left out, a held card shows neither mark. */
+  /**
+   * The ids of the covens that hold it, among `CompendiumCardsProps.covens`. The plus's picker
+   * shows those as held and cannot choose them. Left out, none does.
+   */
+  heldIn?: readonly string[];
+  /**
+   * Where the check leads: the entry as a coven holds it, the default coven's if it does, else
+   * the first that does. Left out, a held card shows neither mark.
+   */
   heldHref?: Route;
 }
 
@@ -58,20 +69,44 @@ export interface CompendiumCardsProps extends Pick<
   /** What the foot of each card holds. */
   action: CompendiumCardsAction;
   /**
-   * The coven the switcher has chosen, which the plus adds to (M9.12). With `action` `add` and
-   * no coven, the cards show no plus and no check.
+   * The coven the plus adds to (M9.12), and the picker's default: the one Add Ingredient would
+   * choose, which on this page, with no coven in its address, is the first the viewer may write
+   * in. With `action` `add` and no coven, the cards show no plus and no check.
    */
   workspaceId?: string;
+  /**
+   * Every coven the viewer may write in, in the order Add Ingredient lists them. Two or more and
+   * the plus opens a picker of them; fewer and it adds to `workspaceId` at once.
+   */
+  covens?: readonly CompendiumCoven[];
 }
 
-/** The plus at a card's bottom left: add this entry to the coven. */
+/** A coven the viewer may add to, as the picker names it. */
+export interface CompendiumCoven {
+  id: string;
+  name: string;
+}
+
+/** The plus at a card's bottom right: add this entry to a coven, asking which when there are several. */
 export interface AddIconProps {
+  /** The default coven: added to at once with fewer than two `covens`, else the picker's first choice. */
   workspaceId: string;
   /** The compendium entry's id. */
   ingredientId: string;
+  /** Every coven the viewer may write in. */
+  covens: readonly CompendiumCoven[];
+  /** The ids of those that already hold the entry. */
+  heldIn: readonly string[];
 }
 
-/** The check at a card's bottom left: this entry is held, and the link leads to it. */
+/** The picker the plus opens when the viewer may write in several covens. */
+export interface AddToCovenDialogProps extends AddIconProps {
+  onClose: () => void;
+  /** The add succeeded and the modal is closing: the page is to be read again. */
+  onAdded: () => void;
+}
+
+/** The check at a card's bottom right: this entry is held, and the link leads to it. */
 export interface HeldLinkProps {
   href: Route;
 }
