@@ -9,7 +9,6 @@ import {
   findCompendiumMatches,
   annotateCupboardEntry,
   convertCompendiumEntryToLocal,
-  convertLocalToCompendiumEntry,
   removeCupboardEntry,
 } from '../services/cupboard-entries';
 import { getIngredient } from '../services/compendium';
@@ -194,10 +193,10 @@ builder.mutationField('removeCupboardEntry', (t) =>
 
 const DroppedOnConvertRef = builder.objectRef<DroppedOnConvert>('DroppedOnConvert').implement({
   description:
-    "What a convert left behind, by name, each list sorted. An own entry made a compendium entry lists what the compendium entry does not carry, whose rows stay on the deleted own entry; a compendium entry made the coven's own lists what its copy could not hold.",
+    "What Make It Ours could not carry onto the coven's new own entry, by name, each list sorted: a folk name its new name took. The other lists stay empty.",
   fields: (t) => ({
     forms: t.exposeStringList('forms', {
-      description: 'Forms that matched no compendium form and held no jar or spell layer.',
+      description: 'Always empty for a Make It Ours: every form is copied.',
     }),
     folkNames: t.exposeStringList('folkNames'),
     substitutes: t.exposeStringList('substitutes', {
@@ -212,40 +211,6 @@ const DroppedOnConvertRef = builder.objectRef<DroppedOnConvert>('DroppedOnConver
     deities: t.exposeStringList('deities'),
   }),
 });
-
-const ConvertedLocalRef = builder
-  .objectRef<{ entry: CupboardEntryNode; dropped: DroppedOnConvert }>('ConvertedLocal')
-  .implement({
-    description:
-      'An own entry turned into a compendium entry: the cupboard entry written, and what was lost.',
-    fields: (t) => ({
-      entry: t.field({ type: CupboardEntryRef, resolve: (converted) => converted.entry }),
-      dropped: t.field({ type: DroppedOnConvertRef, resolve: (converted) => converted.dropped }),
-    }),
-  });
-
-builder.mutationField('convertLocalToCompendiumEntry', (t) =>
-  t.field({
-    type: ConvertedLocalRef,
-    description:
-      "Turns one of the coven's own entries into the compendium entry it duplicates: its jars and spell layers move to the compendium's forms of the same name, a cupboard entry carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no match, or a jar or a layer would meet one of the compendium's.",
-    args: {
-      workspaceId: t.arg.id({ required: true }),
-      localId: t.arg.id({ required: true }),
-      compendiumId: t.arg.id({ required: true }),
-    },
-    authScopes: { signedIn: true },
-    resolve: async (_root, { workspaceId, localId, compendiumId }, { loaders, ...context }) => {
-      const { entry, dropped } = await convertLocalToCompendiumEntry(
-        sessionOf(context),
-        workspaceId,
-        localId,
-        compendiumId,
-      );
-      return { entry: await nodeOf(entry, loaders), dropped };
-    },
-  }),
-);
 
 const ConvertedCompendiumRef = builder
   .objectRef<ConvertedCompendium>('ConvertedCompendium')

@@ -35,7 +35,7 @@ The repository's scoped writers accept it with no further marking, because they 
 M12.14 adds the reads, in `src/db/repository/cupboard-entries.ts` and the `ingredients` service `services/cupboard-entries.ts`.
 
 - **`findCupboardEntry(membership, ingredientId)`** and **`findCupboardEntriesOf(membership, ingredientIds)`** read the proof's coven's live rows, one or a batch. Each ANDs the proof's `workspace_id` and the row's tombstone filter, and keeps a row only while it names a live compendium entry: the private `inCupboard` filter checks the ingredient exists under `workspace_id IS NULL`. So a row naming a coven's own ingredient is never returned, which is the read filter half of the tier rule above, and neither is the row of an entry the compendium has deleted, which only the escape hatch below reads (M12.24).
-- **`findCompendiumMatchesByName(name)`** answers the live compendium entries whose name or formal name is `name`, exactly but for case. It takes no proof, because the compendium is public. Later tasks read it for the add flow's question when the compendium already has a typed name (M12.20), and, through `compendiumMatchesOf` in `services/replaced-entries.ts`, for a coven's own entry's page (M12.22). With a formal name the matches are kept to the same `identityKey` and fill **In the Compendium**; with none, every exact-name match fills **Similar in the Compendium**, where a radio beside each, and one **Link to Selected** button, call the conversion. The service answers `canConvert` from `CONVERT_PERMISSION`, the same permission the conversion asserts, so the page holds no role check.
+- **`findCompendiumMatchesByName(name)`** answers the live compendium entries whose name or formal name is `name`, exactly but for case. It takes no proof, because the compendium is public. Later tasks read it for the add flow's question when the compendium already has a typed name (M12.20), and, through `compendiumMatchesOf` in `services/replaced-entries.ts`, for a coven's own entry's page (M12.22). With a formal name the matches are kept to the same `identityKey` and fill **In the Compendium**; with none, every exact-name match fills **Similar in the Compendium**, a read-only list of links to the compendium's public pages. It offers no action: turning an own entry into the compendium entry it duplicates was built as M12.21 and removed by M12.42, because linking goes one way in v1 (DESIGN.md §13).
 
 The service reads the row for a member, viewers included, under `{ ingredient: ['read'] }`: `getCupboardEntry` one at a time, and `cupboardEntriesOf` as `Ingredient.cupboardEntry`'s batch, one read per coven named, with a `Forbidden` in a refused coven's slots as `stockOf` answers. A coven's entry page reads the row through `ingredientDetailOf(session, entry, workspaceId)`, whose `cupboardEntry` is null on the public page, which names no coven.
 
@@ -97,32 +97,7 @@ The three take the compendium entry's id, not the row's, because that is what a 
 
 ### Converting an own entry
 
-M12.21 adds `convertLocalToCompendiumEntry(session, workspaceId, localId, compendiumId)` to the same service. It turns one of the coven's own ingredients into the compendium entry it duplicates, for the coven that finds a reference entry for something it had written up itself. Nothing is copied. The coven's jars and spell layers move onto the compendium entry's forms, a cupboard row records what the coven had said differently, and the own ingredient is soft-deleted.
-
-It checks `ingredient: create` and `delete` and `inventory: update`, because it adds a cupboard row, deletes an ingredient and moves jars. Everything happens in one `withAudit` transaction under the coven's stock lock (`lockCovenStock`), so no jar of either entry appears between the checks and the moves, and a failure at any step leaves every row where it was.
-
-**Matching forms.** Each live form of the own ingredient is matched to the compendium form it folds to (`foldForm` in `services/ingredient-rows.ts`: trimmed and lower-cased, as the variants' unique index folds). A form "holds" something when a live jar of the coven is on it, or a live layer of a live spell of the coven, private spells included, whoever wrote them. A form that matches nothing and holds nothing is dropped. A jar on a form deleted earlier is in no read and is not moved; nor is a layer on such a form, which is why a spell laid with one still reads the deleted ingredient through the M5.3 hatch (`findIngredientsInSpellsIncludingSoftDeleted`).
-
-**Moving.** Each jar is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change. Spell layers move the same way, through the writer's `moveLayers`, which sits in `src/db/repository/spells.ts` because the ingredients module may not import the grimoire's schema; `lockLayersOfVariants` beside it reads them locked.
-
-**The cupboard row** carries only what differs: the own name as the label when it is not the compendium's name, the description and safety notes when set and different, and each of the four lists when non-empty and holding other values (order aside). An own ingredient has nothing to inherit, so an empty note or list on it says nothing, and copying it would hide the compendium's value.
-
-**What is lost.** Folk names, substitutes, categories, references and deities have no override on a cupboard row (see "Reading it"). Their rows are not deleted: they stay on the soft-deleted ingredient, as a plain delete leaves them. The answer lists them by name, the ingredient's and its forms' together, each list sorted, beside the forms dropped, so the page can tell the coven what it no longer sees.
-
-| Refusal                                                                          | Error             | Beside         |
-| -------------------------------------------------------------------------------- | ----------------- | -------------- |
-| The caller lacks one of the three permissions; a viewer, or not in the coven     | `Forbidden`       |                |
-| `localId` is not a live ingredient of this coven, another coven's included       | `NotFound`        |                |
-| `compendiumId` is not a live compendium entry                                    | `NotFound`        |                |
-| The coven already holds the compendium entry in its cupboard                     | `ValidationError` | `ingredientId` |
-| Another entry of the coven already uses the own name as its label                | `ValidationError` | `label`        |
-| A form holding a jar or a layer matches no compendium form; the message names it | `ValidationError` | `forms`        |
-| The coven already holds a jar of a matched compendium form: combine them first   | `ValidationError` | `jars`         |
-| One spell lays both a form and the compendium form it matches                    | `ValidationError` | `layers`       |
-
-Two jars, or two layers in one spell, of the same form would break a unique index, and merging them would be a guess at what the coven meant, so both are refused rather than merged. The jar refusal is reachable only for a jar of a compendium form with no cupboard row, which since M12.15 only stock from before that task can be: `createStock` inserts the row with the first jar, and the existing-row refusal comes first. A layer refusal names only forms, never the spell, which may be another member's private one.
-
-`tests/modules/ingredients/services/convert-local-to-compendium.test.ts` holds the rules, the rollback included (a trigger fails the cupboard insert after the moves), and `tests/modules/ingredients/graphql/convert-local-to-compendium.test.ts` the transport's half.
+There is no such conversion in v1. M12.21 built `convertLocalToCompendiumEntry`, which turned one of the coven's own ingredients into the compendium entry it duplicates, and M12.42 removed it with the **This Is It** action on the Similar block: linking goes one way in v1, a coven annotating a compendium entry and making it its own (below), and the other direction waits for v2. DESIGN.md §13 ("Link to the Compendium") says why, and [`m12.42-linking-goes-one-way.md`](../design-decisions/m12.42-linking-goes-one-way.md) records the call.
 
 ### Converting a compendium entry into our own
 
@@ -140,7 +115,7 @@ It checks `ingredient: create` and `delete` and `inventory: update`, because it 
 
 A retired entry the coven still holds converts the same way: its children are read through the coven's cupboard row (`heldBy`), as the page reads them.
 
-**Moving.** Each jar of a copied form is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change; forms are matched by `foldForm`, which is exact here since the copy took the forms' own text. Spell layers move the same way through `moveLayers`, every spell of the coven included, private ones whoever wrote them. A jar or layer on a form deleted earlier is in no read and stays where it is, as in M12.21.
+**Moving.** Each jar of a copied form is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change; forms are matched by `foldForm`, which is exact here since the copy took the forms' own text. Spell layers move the same way through `moveLayers`, every spell of the coven included, private ones whoever wrote them. A jar or layer on a form deleted earlier is in no read and stays where it is.
 
 **What is lost.** Only a folk name the new name took. The answer, a `ConvertedCompendium`, carries the new entry and a `DroppedOnConvert` whose `folkNames` lists it; every other list is empty.
 

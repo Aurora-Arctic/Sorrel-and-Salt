@@ -607,53 +607,41 @@ describe('IngredientEntry', () => {
   });
 
   describe('a coven entry with no formal name', () => {
-    const similar = (convert?: {
-      workspaceId: string;
-      localId: string;
-    }): NonNullable<IngredientEntryProps['similar']> => ({
+    const similar: NonNullable<IngredientEntryProps['similar']> = {
       tip: 'Fixture reason the entries are shown.',
       entries: [1, 2, 3].map((at) => ({
-        id: 'id-' + at,
         title: 'Fixture Similar ' + at,
         href: `/compendium/ingredients/fixture-similar-${at}` as Route,
-        thenHref: `/coven/fixture-coven/ingredients/id-${at}` as Route,
       })),
       total: 5,
       allHref: '/compendium?query=Fixture%20Wort' as Route,
-      convert,
-    });
+    };
     const list = () => screen.getByRole('list', { name: 'Similar in the Compendium' });
 
-    it('heads a Similar block with a ⓘ, three entries and See All, and a radio for each with Link to Selected when it may convert', () => {
-      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+    it('heads a Similar block with a ⓘ, three entries and See All, and offers nothing to do with them', () => {
+      renderEntry({ similar });
 
-      expect(within(list()).getAllByRole('link')).toHaveLength(3);
-      expect(within(list()).getAllByRole('radio')).toHaveLength(3);
-      expect(screen.getByRole('button', { name: 'Link to Selected' })).toBeDisabled();
+      expect(
+        within(list())
+          .getAllByRole('link')
+          .map((link) => link.getAttribute('href')),
+      ).toEqual([1, 2, 3].map((at) => `/compendium/ingredients/fixture-similar-${at}`));
       expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
       expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
+      // A display only (M12.42): no radio to choose an entry, no button to link to one.
+      expect(screen.queryByRole('radio')).toBeNull();
+      expect(within(list()).queryByRole('button')).toBeNull();
+      expect(screen.queryByRole('button', { name: /link to/i })).toBeNull();
     });
 
-    it('puts See All directly under the list, before Link to Selected', () => {
-      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+    it('puts See All directly under the list', () => {
+      renderEntry({ similar });
 
       const seeAll = screen.getByRole('link', { name: /^See All 5/ });
-      const linkTo = screen.getByRole('button', { name: 'Link to Selected' });
       expect(
         list().compareDocumentPosition(seeAll) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
-      expect(
-        seeAll.compareDocumentPosition(linkTo) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    });
-
-    it('shows a viewer the entries, no radios and no Link to Selected', () => {
-      renderEntry({ similar: similar() });
-
-      expect(within(list()).getAllByRole('link')).toHaveLength(3);
-      expect(screen.queryByRole('radio')).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Link to Selected' })).toBeNull();
     });
   });
 

@@ -38,7 +38,6 @@ import {
 import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
 import OwnEntryActions from './own-actions';
-import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
 import {
   blockOf,
@@ -256,25 +255,18 @@ function FormSection({
 function ReplacesBlock({
   replaces,
   heading = 'In the Compendium',
-  convert,
 }: {
   replaces: {
     tip: string;
-    entries: { title: string; href: Route; id?: string; thenHref?: Route }[];
+    entries: { title: string; href: Route }[];
     total: number;
     allHref?: Route;
   };
   heading?: string;
-  /** Given for "Similar in the Compendium" to a role that may convert: a radio beside each entry and Link to Selected. `name` is the own entry's, for the question. */
-  convert?: { workspaceId: string; localId: string; name: string };
 }): ReactElement {
   const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
-  // The entries a conversion can name: those with an id and a page in the coven.
-  const convertible = replaces.entries.flatMap(({ title, href, id, thenHref }) =>
-    id && thenHref ? [{ title, href, id, thenHref }] : [],
-  );
-  // Directly under the list, before Link to Selected, in both blocks (the owner's call, 2026-10-19).
+  // Directly under the list, in both blocks (the owner's call, 2026-10-19).
   const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
     <p className="ingredient-entry__see-all">
       <PendingLink
@@ -294,33 +286,21 @@ function ReplacesBlock({
           {replaces.tip}
         </InfoTip>
       </div>
-      {convert ? (
-        <LinkToCompendium
-          workspaceId={convert.workspaceId}
-          localId={convert.localId}
-          name={convert.name}
-          entries={convertible}
-          labelledBy={block.id}
-          describedBy={whyId}
-          seeAll={seeAll}
-        />
-      ) : (
-        <ul
-          className="ingredient-entry__list ingredient-entry__replaced"
-          aria-labelledby={block.id}
-          aria-describedby={whyId}
-        >
-          {replaces.entries.map(({ title, href }) => (
-            <li key={href}>
-              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-                <span className="ingredient-entry__entry-title">{title}</span>
-                <LinkIconHint />
-              </PendingLink>
-            </li>
-          ))}
-        </ul>
-      )}
-      {convert ? null : seeAll}
+      <ul
+        className="ingredient-entry__list ingredient-entry__replaced"
+        aria-labelledby={block.id}
+        aria-describedby={whyId}
+      >
+        {replaces.entries.map(({ title, href }) => (
+          <li key={href}>
+            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+              <span className="ingredient-entry__entry-title">{title}</span>
+              <LinkIconHint />
+            </PendingLink>
+          </li>
+        ))}
+      </ul>
+      {seeAll}
     </div>
   );
 }
@@ -513,13 +493,7 @@ const IngredientEntry = ({
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
           {replaces && <ReplacesBlock replaces={replaces} />}
-          {similar && (
-            <ReplacesBlock
-              replaces={similar}
-              heading="Similar in the Compendium"
-              convert={similar.convert && { ...similar.convert, name: shown.name }}
-            />
-          )}
+          {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(shown, deities)}
