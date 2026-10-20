@@ -47,15 +47,14 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <Together />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// MB.120's proposal for the note's bar and heading (the MB.120 plan). The
-// recommendation is built into the component: the bar at `$safety-bar-width`
-// (the heavy rule, 3px) and the heading with no stroke. As built, the bar was
-// a raw 4px and the heading carried a 0.6px stroke in its own colour, restored
-// here over the component so the two stand side by side. The owner settles it
-// at sign-off, and the losing stories are deleted then.
+// MB.120's proposal for the note's bar (the MB.120 plan). The recommendation
+// is built into the component: the bar at `$safety-bar-width` (the heavy rule,
+// 3px). As built, the bar was a raw 4px, restored here over the component so
+// the two stand side by side. The heading's stroke is not in question: the
+// owner kept it (2026-10-20). The owner settles the bar at sign-off, and the
+// losing stories are deleted then.
 const AS_BUILT = `
   .proposal-safety-as-built .safety-note { border-inline-start-width: 4px; }
-  .proposal-safety-as-built .safety-note__heading { -webkit-text-stroke: 0.6px currentColor; }
 `;
 
 const AsBuilt = () => (

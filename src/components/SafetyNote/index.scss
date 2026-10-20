@@ -12,18 +12,17 @@
   border-inline-start: $safety-bar-width solid badge-token('safety', 'fill');
 }
 
-// The h4 size whatever its level, at the heading face's 700. It once carried a
-// hairline stroke in its own colour to fake a heavier weight (the owner's call,
-// 2026-10-17). MB.120 proposes dropping it: `-webkit-text-stroke` straddles
-// each letter's outline, so it narrows the letters' openings as it thickens
-// them, and is a prefixed property kept for compatibility; the bar and the
-// red set the note apart already
-// (the as-built heading is the `ProposalSafetyBarAsBuilt` story). As text the
-// fill is 4.28:1 at worst (the dark card), which clears 3:1 only because this is large
+// The h4 size whatever its level, and a hairline stroke in its own colour: the
+// heading face stops at 700, which still read too light here, so the stroke
+// fakes a heavier weight (the owner's call, 2026-10-17, kept at MB.120's review,
+// 2026-10-20: the stroke is the design, not a workaround, so its width is the
+// `$text-stroke-hairline` token). As text the fill is 4.28:1 at worst (the dark
+// card), which clears 3:1 only because this is large
 // text: 24px at 700. Keep it that size and weight, or it fails WCAG.
 .safety-note__heading {
   margin: 0 0 space(2);
   font-size: heading-size(4);
+  -webkit-text-stroke: $text-stroke-hairline currentColor;
   color: badge-token('safety', 'fill');
 }
 

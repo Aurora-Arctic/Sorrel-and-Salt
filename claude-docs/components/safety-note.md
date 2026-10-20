@@ -80,19 +80,18 @@ the page, set apart by a bar of the same safety fill, `$safety-bar-width` (the h
 the bar, the heading and the badge are one red. `$secondary`, the error red,
 was tried for the heading first and read lighter than the bar on dark. A note filled solid with the safety red was far too
 loud (the owner, 2026-10-17). The bar is decoration, since the heading carries
-the meaning. The heading is set at the h4 size at any level, at Cormorant Unicase's 700.
+the meaning. The heading is set at the h4 size at any level, at Cormorant Unicase's 700,
+with a hairline `-webkit-text-stroke` in its own colour, `$text-stroke-hairline`,
+because 700 still read too light (the owner, 2026-10-17). MB.120 proposed
+dropping the stroke and the owner kept it (2026-10-20): it is the design, not a
+workaround.
 
 **MB.120's proposal, built in and awaiting the owner's sign-off.** As built,
-the bar was a raw 4px and the heading carried a 0.6px `-webkit-text-stroke` in
-its own colour, because 700 still read too light (the owner, 2026-10-17). The
-proposal takes the bar to `$safety-bar-width`, so the note's rule is one of the
-site's rule weights, and drops the stroke: a text stroke straddles each
-letter's outline, so it narrows the letters' openings as it thickens them, and
-it is a prefixed property kept for compatibility; the bar and the red set the
-note apart already. The contrast below does not change, since it rests on the
-size and weight. The stories `ProposalSafetyBarAsBuilt` and `ProposalSafetyBar`
-set the two side by side; the losing one is deleted at sign-off, and if the
-stroke stays, `$text-stroke-hairline` is its token.
+the bar was a raw 4px. The proposal takes it to `$safety-bar-width`, so the
+note's rule is one of the site's rule weights. The contrast below does not
+change, since it rests on the size and weight. The stories
+`ProposalSafetyBarAsBuilt` and `ProposalSafetyBar` set the two side by side;
+the losing one is deleted at sign-off.
 
 **The heading must stay large text.** As text, the safety fill measures 4.71:1
 on the dark page and 4.28:1 on the dark card (6.02:1 and 6.69:1 on light). That
@@ -114,7 +113,7 @@ under `Surfaces / Safety Note`:
 - `PhoneDark` and `PhoneLight` show the mark above the note at 375px, in each
   theme.
 - `ProposalSafetyBarAsBuilt` and `ProposalSafetyBar` (MB.120): the note as
-  built, with the 4px bar and the stroked heading, and as proposed; each also
+  built, with the 4px bar, and as proposed; each also
   at 375px in both themes (`…PhoneDark`, `…PhoneLight`).
 
 ## Testing
