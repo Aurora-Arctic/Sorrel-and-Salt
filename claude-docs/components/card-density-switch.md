@@ -21,6 +21,10 @@ The switch has no stylesheet of its own: it is a plain switch control. What it c
 cards. The compact selectors, with the `:not(:root[data-card-density='regular'] *)` guard, are in
 `IngredientCard/index.scss` (the `[data-density='compact']` block, with the `_compact.scss` partial it uses) and `IngredientCardList/index.scss` (the grid).
 
+**On a phone** the switch sits in the coven list's filter row (`CompendiumList/filter.tsx`), and nowhere on the public compendium. The compact grid's narrower column still comes to one card across at 375px.
+
+**Forced colours.** The switch is the `.switch` primitive, whose forced-colours rule paints the thumb in the system's ink ([`styling.md`](../styling.md)).
+
 ## Tests
 
 `tests/components/CardDensitySwitch/index.test.tsx`: default on, starting off from the attribute, the attribute and storage on each toggle, blocked storage, and following an outside change. `tests/app/pre-paint-scripts.test.tsx` covers the script.

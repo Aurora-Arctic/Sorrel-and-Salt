@@ -50,6 +50,10 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 - **A section's heading and rule** (`.menu-button__heading`, `.menu-button__rule`) are small muted caption text and a hairline, both in the item's side padding.
 - **The button** is the caller's (`className`), with the chevron turned over while open (`chevron-flip`). A busy `.btn` takes the disabled look from `.btn[aria-disabled='true']`.
 
+**On a phone** the panel has no rule of its own: Floating UI hangs it below the button or above, whichever has room, and the button fills its box when a narrow form's stacked foot stretches it (M8.17). Under reduced motion the panel appears and goes without fading.
+
+**Forced colours.** The panel keeps its 1px border, so its edge survives where the shadow is dropped, and the check mark is drawn in `currentColor`. An item's hover and chosen fill is a background colour, which forced colours repaints; its focus also draws the inset `focus-ring` outline, which survives. The forced-colours pass over the compendium section, a Wave 14 task still to be minted, checks it (MB.120).
+
 ## Where it is tested
 
 `tests/components/MenuButton/index.test.tsx`: the keys, the closing, a link choice and the busy state, and the edge the menu hangs from (the end edge, even in the start half of the window). The entry page's choices are in `tests/components/IngredientEntry/cupboard-actions.test.tsx`, and the browser walks in `tests/e2e/cupboard-screens.spec.ts` and `tests/e2e/make-it-ours.spec.ts`; the Annotate dialog's More, staying inside the dialog, its items in its type, and full width at 375px, and a card's More near the window's foot opening above it inside the window at a desktop's width and at 375px, in `tests/e2e/coven-ingredients.spec.ts`. Story: `src/components/MenuButton/index.stories.tsx`.

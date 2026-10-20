@@ -26,6 +26,10 @@ whose minimum column is a token: the regular card's, and for `data-density='comp
 `$ingredient-card-min-compact` (16rem, in `_variables.scss`) with a `space(3)` gap. The compact
 card's own rules live in `IngredientCard/index.scss`.
 
+**On a phone** the grid's `min(100%, …)` gives one card across, and a column never overflows a container narrower than its minimum; a desktop shows three or four.
+
+**Forced colours.** No rule of its own; the grid draws nothing. What the cards look like there is [`ingredient-card.md`](ingredient-card.md)'s.
+
 ## Stories
 
 `Compendium Grid` and `Cupboard Grid` (regular), `Cupboard Grid Compact`: the same nine invented entries (`story-fixtures.tsx`), the compendium's without marks, jars or actions, the cupboard's with them.

@@ -34,6 +34,10 @@
 - **`.add-icon[data-state]`**: while the check shows, no wash and the default cursor, the held check's look, so nothing moves when the page swaps one for the other.
 - **`.add-icon__glyphs`, `__check`, `__plus`**: the check and the plus stacked in one grid cell. The check is drawn along its stroke (a dash of 15, run to nothing) over `$arrive-duration` and fades out the same way; under reduced motion nothing is drawn or faded.
 
+**On a phone** the plus and the check have no rule of their own: each is a `$icon-size-large` (2rem) target, above WCAG 2.5.8's 24px.
+
+**Forced colours.** The glyphs are drawn in `currentColor`, so they take the system's ink. The plus has no border, so the wash under the pointer, a background colour, is all that marks a hover there, and the `icon-button` mixin sets no focus outline of its own, so focus shows the browser's, which forced colours keeps. The forced-colours pass over the compendium section is a Wave 14 task, still to be minted (MB.120).
+
 ## Stories and tests
 
 Stories ([`index.stories.tsx`](../../src/components/AddIcon/index.stories.tsx), `Surfaces / Add Icon`): `OneCoven`, `SeveralCovens`, `Busy`, `Added`, `Returning` and `Held`. Busy, Added and Returning are the plus's markup in those states, since only a press reaches them and the workshop serves no `/api/graphql`.

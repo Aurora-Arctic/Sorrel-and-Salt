@@ -49,6 +49,8 @@
 
 The cards have no stylesheet of their own. The card is [`IngredientCard`](ingredient-card.md)'s and the grid [`IngredientCardList`](ingredient-card-list.md)'s; the plus and the check are [`AddIcon`](add-icon.md)'s (`.add-icon`, `.add-icon--held`), the pencil and the dots [`IconTip`](icon-tip.md)'s. `index.tsx` imports `CompendiumList/index.scss`, because the filter and the empty sentence (`emptyText`, `.compendium-list__empty`) are [`CompendiumList`](compendium-list.md)'s own and bring their look with them (MB.120).
 
+**On a phone** and **under forced colours**, the cards are what [`IngredientCard`](ingredient-card.md), [`IngredientCardList`](ingredient-card-list.md) and [`AddIcon`](add-icon.md) make them: one card across, and no rule of their own.
+
 ## Stories and tests
 
 Stories: `Can Add`, `In Several Covens`, `Held`, `Can Add And Edit`, `Can Add Edit And More`, `Curator Can Edit`, `Viewer Only`, `Mid List` and `Empty`. Tests: `tests/components/CompendiumCards/index.test.tsx` and `tests/app/(public)/compendium/page.test.tsx`; the browser flow is `tests/e2e/public-compendium.spec.ts`.

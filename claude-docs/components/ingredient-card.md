@@ -137,6 +137,10 @@ The drawer's measurements are tokens, not pixel literals: its inset from the slo
 (`$drawer-slot-shadow`), with the shade colours as theme tokens (lighter in the light theme).
 The computed styles were checked identical to the pixel values the tokens replaced (MB.120).
 
+**On a phone** the card has no rule of its own: the list gives it the full width, one card across ([`ingredient-card-list.md`](ingredient-card-list.md)), and a long name wraps (see "A long name"). Under reduced motion the face does not slide and the drawer's shading does not transition; the colour and shadow change stay.
+
+**Forced colours.** The card's edge is `modal-surface`'s shadow, which forced colours drops, so the card has no drawn edge there; its badges and chips keep their 1px borders, and its icons are drawn in `currentColor`. The forced-colours pass over the compendium section, a Wave 14 task still to be minted, takes this up (MB.120).
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:

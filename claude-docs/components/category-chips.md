@@ -27,6 +27,10 @@ The panel is `position: fixed`, placed by Floating UI beneath the chip row (the 
 Tokens only, as signed off in MB.120 (2026-10-20). `CategoryChips/index.scss` styles the chip inside the list (`.category-chips .chip`), the `+N` item (`.category-more-item`) and its button (`.category-more__button`, a `space()` step), the toggletip's fixed panel and its fade (`.category-more__panel`), and the compact size (`.category-chips--compact`). The chip itself is the shared `.chip`
 primitive.
 
+**On a phone** the chips wrap with their row. The `+N` panel is fixed and placed by Floating UI, so a narrow card or table frame never clips it; it flips above near the window's foot. The compact size grows the `+N` button's hit area to 24px (WCAG 2.5.8). Under reduced motion the panel appears without fading.
+
+**Forced colours.** No rule of its own: a chip keeps its 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is a Wave 14 task, still to be minted (MB.120).
+
 ## Testing
 
 `tests/components/CategoryChips` covers the chips, the limit and the panel's open and close paths. Placement and height are measured in a browser: `tests/e2e/public-compendium.spec.ts` (the card) and `tests/e2e/admin-compendium.spec.ts` (the table, desktop and phone).
