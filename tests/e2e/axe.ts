@@ -26,6 +26,15 @@ export async function assertNoAccessibilityViolations(page: Page) {
 export async function assertNoSidewaysScroll(page: Page, { restore = false } = {}) {
   const size = restore ? page.viewportSize() : null;
   await page.setViewportSize({ width: 375, height: 812 });
+  // Two frames for what follows the window by itself: a callout or badge placed
+  // by Floating UI moves on the resize event and a frame, not in the same task
+  // (M12.31), so a measurement at once read it where it stood at the old width.
+  await page.evaluate(
+    () =>
+      new Promise<void>((done) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => done()));
+      }),
+  );
   const { scrollWidth, clientWidth, wide } = await page.evaluate(() => {
     const root = document.documentElement;
     // What reaches past the window, named, so a failure says which element
