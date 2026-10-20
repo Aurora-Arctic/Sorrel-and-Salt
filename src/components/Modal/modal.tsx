@@ -69,7 +69,7 @@ const Modal = ({
   qualifier,
   formalName,
   topEnd,
-  titleActions,
+  formalActions,
   under,
   onClose,
   returnTo,
@@ -243,8 +243,7 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
-  // Actions at the title's end share its row, and give way as index.scss sets out. The
-  // hidden comma sits at the heading's end, and the spans beside it are not in the
+  // The hidden comma sits at the heading's end, and the spans beside it are not in the
   // dialog's name.
   const titleHeading = (
     <h2 id={titleId} className="modal-dialog__title">
@@ -263,7 +262,6 @@ const Modal = ({
       <span aria-hidden="true">×</span>
     </button>
   );
-  const titleEnds = titleActions !== undefined;
 
   // The backdrop's click is the pointer's alone; Escape is its keyboard
   // equivalent, handled above.
@@ -320,14 +318,19 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
-          {formalName}
-          {titleEnds ? (
-            <div className="modal-dialog__title-row">
+          {formalActions !== undefined ? (
+            // The formal name, the title, and the actions at the formal name's end: after the
+            // title in the markup, as the entry page's are, and placed on the formal name's line.
+            <div className="modal-dialog__naming">
+              {formalName}
               {titleHeading}
-              <div className="modal-dialog__title-actions">{titleActions}</div>
+              <div className="modal-dialog__formal-actions">{formalActions}</div>
             </div>
           ) : (
-            titleHeading
+            <>
+              {formalName}
+              {titleHeading}
+            </>
           )}
           {under !== undefined && <div className="modal-dialog__under">{under}</div>}
         </div>

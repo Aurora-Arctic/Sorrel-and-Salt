@@ -17,14 +17,14 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // the list's other place, over it. A client part because RouteModal takes its
 // body as a function, which a server page cannot hand down; the summary
 // arrives as the page's rendered children. Its New or Updated marker and safety badge stand on
-// the top line beside Close, through the modal's `topEnd`, its Edit pencil ends the name's
-// first line through `titleActions` (claude-docs/components/modal.md, "A title with its own
+// the top line beside Close, through the modal's `topEnd`, its Edit pencil and plus end the
+// formal name's line through `formalActions` (claude-docs/components/modal.md, "A title with its own
 // end"), and View Page is a bar at its foot.
 
 /**
  * The head's marks and actions (the owner's calls, 2026-10-20). On the top line beside Close, as the
  * entry page's top bar has them: New or Updated, then the one safety badge, Toxic over Caution.
- * Beside the name, at the end of its first line: the Edit pencil, the cards' with its tip,
+ * At the end of the formal name's line, over the name, as the entry page has them: the Edit pencil, the cards' with its tip,
  * named for the entry, a press opening the edit modal at once under its head (M9.18); left of
  * it the plus, or the check once every coven the viewer may add in holds the entry. Under the
  * formal name: the other badges. All the entry page's and the card's own components, so the
@@ -61,7 +61,7 @@ function headingOf({
   return {
     ...heading,
     topEnd: top,
-    ...(actions && { titleActions: actions }),
+    ...(actions && { formalActions: actions }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
   };
 }

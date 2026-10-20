@@ -215,43 +215,44 @@ $close-reserve: calc(#{$close-target} + #{$close-inset} - #{space(5)} + #{space(
   overflow-wrap: anywhere;
 }
 
-// A title with something at its end (`titleBadge` and `titleActions`: the details
-// window's safety badge and Edit pencil) is a row of the title, the badge and the
-// actions, which wraps. Each is a flex item of its own, so as the line runs out of room
-// the last drops first: the actions to a line of their own, then the badge, and a word of
-// the title breaks only when it alone is wider than the dialog (the owner's call,
-// 2026-10-20, replacing a title that took what its end left and broke words to make
-// room). The title's basis is its whole text, so it never gives up room to them; it grows
-// to fill the line, which keeps the badge and the actions at the line's end beside it,
-// and `max-width` lets a long name wrap, and a word wider than the dialog break, rather
-// than spill. What drops lands at the line's start (`justify-content`), under the
-// left-aligned heading; the owner chose it from shots of both, the end being one line away.
-.modal-dialog__title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: flex-start;
-  column-gap: space(2);
+// The formal name, the title and the title's controls (`formalActions`: the details window's
+// Edit pencil and plus), laid out as the entry page lays its own (the owner's call,
+// 2026-10-20): the controls at the end of the formal name's line, over the title, which
+// takes the whole width beneath. The controls come after the title in the markup, as the
+// page's do, and are placed here. The formal name wraps short of them. Each control is as
+// tall as the pencil, which is taller than the formal name's line, so the controls' margin
+// takes half the difference off each side and their middle stands on the line's. With no
+// formal name the title stands in the first row and the controls beside it.
+.modal-dialog__naming {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: space(1) space(2);
+  align-items: start;
+
+  > .modal-dialog__title {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  > .modal-dialog__formal-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  &:not(:has(> .ingredient-entry__formal)) > .modal-dialog__title {
+    grid-column: 1;
+    grid-row: 1;
+  }
 }
 
-.modal-dialog__title-row > .modal-dialog__title {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 100%;
-}
-
-// The badge and the actions, each as tall as the pencil (the badge is shorter), and
-// centred on the title's first line: half the title's line box less its own height.
-// That shows only beside the title; wrapped beneath it, that much is added above them.
-// Gone while nothing is in them (a badge that draws nothing, no Edit).
-.modal-dialog__title-badge,
-.modal-dialog__title-actions {
+// Gone while nothing is in it (no Edit, no plus).
+.modal-dialog__formal-actions {
   display: flex;
-  flex: 0 0 auto;
   align-items: center;
+  justify-self: end;
   gap: space(2);
   min-block-size: $icon-size-large;
-  margin-block-start: calc((#{heading-size(2)} * 1.15 - #{$icon-size-large}) / 2);
+  margin-block: calc((#{$icon-size} - #{$icon-size-large}) / 2);
 
   &:empty {
     display: none;

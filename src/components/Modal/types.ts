@@ -48,11 +48,11 @@ export interface ModalHeading {
    */
   topEnd?: ReactNode;
   /**
-   * After the title, the title's controls: a pencil, a plus. At the end of the title's
-   * first line, dropping to a line of their own, at its start, as the line runs out of room.
-   * Not in the dialog's name.
+   * The title's controls: a pencil, a plus. At the end of the formal name's line, over the
+   * title, as the entry page has them (the owner's call, 2026-10-20), and after the title in
+   * the markup. The formal name wraps short of them. Not in the dialog's name.
    */
-  titleActions?: ReactNode;
+  formalActions?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
   under?: ReactNode;
 }
