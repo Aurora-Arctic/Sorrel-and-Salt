@@ -23,11 +23,12 @@ each use these two as they are, and none of them draws a warning of its own.
 
 `SafetyNoteProps` (`types.ts`):
 
-| Prop          | What it is                                                                         |
-| ------------- | ---------------------------------------------------------------------------------- |
-| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none     |
-| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name |
-| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset  |
+| Prop          | What it is                                                                                                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none                                                                                                                |
+| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name                                                                                                            |
+| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset                                                                                                             |
+| `footnote`    | A line after the notes, inside the caution, for a consumer that shows no forms: the details modal names the forms that carry their own (M12.5). With it, the caution shows even with no notes |
 
 `CautionMarkProps`: `safetyNotes` (the ingredient's own) and `variants`; notes on
 either show the mark, and blank counts as none.
@@ -47,7 +48,7 @@ rather than naming a GraphQL type, so a card's or the entry page's
 
 - **Nothing to say, nothing rendered.** `SafetyNote` returns `null` when
   neither the ingredient nor any form it was given has notes that are more than
-  whitespace. `ToxicMark` returns `null` unless something is flagged. A
+  whitespace, and it was given no `footnote`. `ToxicMark` returns `null` unless something is flagged. A
   consumer renders them both every time and does no checking of its own.
 - **The consumer chooses which forms are shown** (MB.215). A card passes the
   ingredient together with the forms it lists. The entry page uses the note
