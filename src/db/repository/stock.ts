@@ -24,6 +24,15 @@ export async function findStockById(
   return row;
 }
 
+/** The coven's live jars with these ids: M9.9's `saveStock` resolves a batch of them in one read. */
+export function findStockByIds(
+  membership: Membership,
+  ids: readonly string[],
+): Promise<StockRow[]> {
+  if (ids.length === 0) return Promise.resolve([]);
+  return findManyStock(membership, inArray(inventoryItems.id, [...ids]));
+}
+
 /** The coven's live jars of these ingredients, every form of each: M9.4's `Ingredient.stock` batch. */
 export function findStockOfIngredients(
   membership: Membership,

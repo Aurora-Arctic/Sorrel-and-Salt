@@ -59,7 +59,12 @@ export {
   findCupboardEntryIncludingSoftDeleted,
   findWorkspaceIngredientByName,
 } from './cupboard-entries';
-export { COVEN_STOCK_LOCK_NAMESPACE, findStockById, findStockOfIngredients } from './stock';
+export {
+  COVEN_STOCK_LOCK_NAMESPACE,
+  findStockById,
+  findStockByIds,
+  findStockOfIngredients,
+} from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
   findAstrologyValueCount,
