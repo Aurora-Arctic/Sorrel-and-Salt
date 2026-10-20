@@ -6,7 +6,10 @@ the control, read out as an alert; a small warning badge on the control brings
 the callout back once it has closed; and the control's description carries
 the failure until a later try clears it. The rule, and the research behind it,
 is `claude-docs/design-decisions/m12.31-click-feedback-outside-forms.md` §5.
-It replaces `ActionFailure` (`action-failure.md`) as the controls adopt it.
+It replaced `ActionFailure`, which M12.31 removed. `ConfirmedAction`
+([`user-list.md`](user-list.md)) is built on it, so every confirmed action
+outside a dialog says its refusal this way and its success through
+`announcement`.
 
 | File                | What it holds                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |

@@ -71,7 +71,9 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
 - **The user list's own parts.** Revoke asks first through
   `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
-  it was withdrawn." A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  it was withdrawn." Once revoked, the page's status region says "The
+  invitation to <address> is revoked."; a refusal is said in a callout under
+  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
@@ -168,7 +170,7 @@ begin with and Admin sent when chosen, the trimmed variables, the close back to 
 and its refresh, and the notice outlasting the form; Cancel and Escape
 asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;
-Revoke after its confirmation; both controls locked with the pause's
+Revoke after its confirmation, said in the status region, and a refused Revoke said under the button; both controls locked with the pause's
 reason; and the filter: the address a change or the magnifier opens, from the first
 page whatever page is shown, the email trimmed and the switch a bare flag,
 which values offer Clear, the row starting again from a filter shown anew, and New Invitation and

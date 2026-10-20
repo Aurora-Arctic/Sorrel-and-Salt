@@ -169,7 +169,7 @@ head, both built by the page per row, as the other admin lists carry
   until the site opens as the user: a success is a full load of `/`. Cancel
   sends nothing and hands focus back to the row's button. A refusal closes
   the modal and says "You couldn't impersonate <name>. Please try again." in
-  the row, and the page stays.
+  a callout under Impersonate, which has the focus back, and the page stays.
   The endpoint is the guard: the button only puts it where an admin looks.
   The column, heading and cells, has a red rule down its left, and its
   heading's hairline is red where every other is the muted ink, with a faded
@@ -210,10 +210,13 @@ head, both built by the page per row, as the other admin lists carry
   the mutation and stays busy, spinner and "Approving" or "Revoking", until
   `router.refresh()` re-reads the page, whose row then offers the other
   action: the control is keyed by its action, so the refreshed row mounts a
-  fresh one, without the modal, rather than keeping the busy state. A refusal
-  closes the modal, puts the service's message in the row as an alert, and
-  offers the action again. The service is the guard. The alert is a
-  `Notice`, its sentence read by `readGraphqlFailure` (MB.116).
+  fresh one, without the modal, rather than keeping the busy state. Once the
+  action has worked, the page's status region says so: "<name> may now
+  create covens." or "<name> may no longer create covens.". A refusal closes
+  the modal, gives the focus back to the button that opened it, says the
+  service's sentence, read by `readGraphqlFailure` (MB.116), in a callout
+  under that button ([`click-feedback.md`](click-feedback.md)), and offers the action again. The service is the
+  guard.
 - **Approving or promoting an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
   under its question, in a quiet warning `Notice`: "Nobody has confirmed this
@@ -249,11 +252,20 @@ head, both built by the page per row, as the other admin lists carry
   `hint`, MB.115 on the owner's call), and read with the field. A blank
   reason is sent as none, and the service stores what is sent as the ledger
   row's note. The modal, its focus, Cancel, the busy confirm ("Promoting" or
-  "Demoting") and a refusal in the row behave as the creation control's: both
+  "Demoting"), the announcement ("<name> is now <role>.") and a refusal under the button behave as the creation control's: both
   are `confirmed-action.tsx`'s `ConfirmedAction`, each control only its words
   and its write. Impersonate, Pause Admin Changes and the invitations' Revoke
   build one too; Impersonate passes `onSent`, its full load in place of the
-  refresh, and `refusal`, its own sentence in place of the service's. A
+  refresh, and `refusal`, its own sentence in place of the service's.
+  `ConfirmedAction` is built on `useClickFeedback` (M12.31, [`click-feedback.md`](click-feedback.md)).
+  Its `announcement` is the sentence the status region says once the action
+  has worked, and is left out where the success leaves the page. Its
+  `refusal` is either a sentence in place of the service's or a function
+  that wraps the service's sentence, as the members page's controls do with
+  the member's name. A refusal gives the focus back to the button that opened
+  the modal and floats under it, with the badge on the button. With
+  `inModal`, where the button already sits in a dialog, the refusal stays in
+  that dialog as a `Notice`, or goes to the `onFailure` the caller passes. A
   promotion warns on an unverified address as Approve does, in its own verb
   (above); a demotion does not.
 - **The switch on admin changes is the Users tab's action** (MB.63,
@@ -287,7 +299,10 @@ head, both built by the page per row, as the other admin lists carry
   ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
   Resume gives back what the pause stopped, so it sends at once. Either stays
   busy, spinner and "Pausing" or "Resuming", until `router.refresh()`
-  re-reads the page; a refusal says why beside it. For any other admin it is `locked-control.tsx`'s
+  re-reads the page, and the status region then says changes are paused or
+  resumed. A refusal says why in a callout under the button pressed, which
+  keeps the focus: Resume is `aria-disabled` while it sends, not
+  `disabled`, so the focus is not lost. For any other admin it is `locked-control.tsx`'s
   `LockedControl`, as the primary admin's Change Role is: in view,
   `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
   resume admin changes.", that describes it and that each try mounts afresh as
@@ -438,15 +453,15 @@ the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
-while pending with a second press sending nothing, and the refusal; the creation cell: Approve on rows awaiting approval, Revoke on approved ones and nothing on a curator's or an admin's, each modal naming the user and its
+while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back; the creation cell: Approve on rows awaiting approval, Revoke on approved ones and nothing on a curator's or an admin's, each modal naming the user and its
 focus, Cancel sending nothing, each call with its reason and its busy state
-until the refresh, and the refusal in the row; the unverified warning
+until the refresh, the success said in the status region, and the refusal under the button; the unverified warning
 describing Approve for an unverified user, who is still approved, and absent
-from Revoke; the role cell (MB.59, M11.20): Change Role on every row, offering every role but the one held, Promote or Demote by the ladder with a demotion styled destructive, the chosen role and the reason sent trimmed or not at all, Cancel sending nothing, the warning on a promotion of an unverified user and on no demotion, the refusal in the row, and the primary admin's crown and its `aria-disabled` Change Role, described by the
+from Revoke; the role cell (MB.59, M11.20): Change Role on every row, offering every role but the one held, Promote or Demote by the ladder with a demotion styled destructive, the chosen role and the reason sent trimmed or not at all, Cancel sending nothing, the warning on a promotion of an unverified user and on no demotion, the promotion said in the status region, the refusal under the button, and the primary admin's crown and its `aria-disabled` Change Role, described by the
 reason and raising an alert each time it is tried, sending nothing; the
 switch on admin changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
-busy until the refresh, a refusal beside it, and another
+busy until the refresh and then said in the status region, a refusal under the button pressed, Resume's included, and another
 admin's locked switch, described by its reason and raising an alert when
 tried; and, while paused, every Change Role, Approve and coven Revoke locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's

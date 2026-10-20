@@ -65,15 +65,12 @@
 }
 
 // Accept and Decline side by side (M10.34), at the end of the row's line and
-// at a card's top right; a refusal's notice takes a line of its own above.
+// at a card's top right. A refusal floats under its button as a callout, out
+// of the flow, so the row holds nothing else (M12.31).
 .received-invitations__answer {
   display: flex;
   flex-wrap: wrap;
   gap: space(2);
   align-items: center;
   justify-content: flex-end;
-
-  > .notice {
-    flex-basis: 100%;
-  }
 }
