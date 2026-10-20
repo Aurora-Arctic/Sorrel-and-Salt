@@ -107,10 +107,11 @@ test('a member adds a compendium entry with the plus, and the check leads to the
   });
 });
 
-// Someone who may write in two covens is asked which (M9.12, the owner's call, 2026-10-20): the
-// plus opens a confirm modal with a picker. A coven that already holds the entry is listed as
-// held and cannot be chosen, and the card keeps the plus until both hold it.
-test('a member of two covens picks which one the plus adds to, and the card keeps the plus until both hold the entry', async ({
+// Someone who may write in two covens chooses which from the plus (M9.12, the owner's call,
+// 2026-10-20): it is a menu of the covens that lack the entry, adding to the one chosen at once.
+// A coven that holds it is left off, so with one coven left the plus adds there with no menu,
+// and the card keeps the plus until both hold it.
+test('a member of two covens chooses from the plus which one it adds to, and the card keeps the plus until both hold the entry', async ({
   page,
   browser,
   baseURL,
@@ -155,13 +156,10 @@ test('a member of two covens picks which one the plus adds to, and the card keep
         where e.workspace_id = ${workspaceId} and i.name = ${NAME_TWO} and e.deleted_at is null`,
     );
   const card = () => rowOf(compendiumList(page), NAME_TWO);
-  const dialog = page.getByRole('dialog', { name: ADD });
-  // The covens are a dropdown (the owner's call, 2026-10-20): the box, and one coven's option once
-  // it is open.
-  const picker = dialog.getByRole('combobox', { name: 'Coven' });
-  const coven = (name: string) => dialog.getByRole('option', { name: new RegExp(`^${name}`) });
+  const plus = () => card().getByRole('button', { name: ADD });
+  const menu = page.getByRole('menu', { name: ADD });
 
-  // Why the picker is this test's: B may write in both, and neither coven holds the entry.
+  // Why the menu is this test's: B may write in both, and neither coven holds the entry.
   expect(await heldRows(one.id)).toHaveLength(0);
   expect(await heldRows(second)).toHaveLength(0);
 
@@ -169,47 +167,32 @@ test('a member of two covens picks which one the plus adds to, and the card keep
   await page.goto(`/compendium?query=${encodeURIComponent(NAME_TWO)}`);
   await expect(card()).toBeVisible();
 
-  await test.step('the plus opens a picker of both covens instead of adding', async () => {
-    await card().getByRole('button', { name: ADD }).click();
-    await expect(dialog).toBeVisible();
-    await expect(picker).toHaveText(FIRST);
-    await picker.click();
-    await expect(coven(FIRST)).toHaveAttribute('aria-disabled', 'false');
-    await expect(coven(SECOND)).toHaveAttribute('aria-disabled', 'false');
-    await expect(dialog.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
+  await test.step('the plus opens a menu of both covens instead of adding', async () => {
+    await plus().click();
+    await expect(menu).toBeVisible();
+    await expect(plus()).toHaveAttribute('aria-haspopup', 'menu');
+    await expect(menu.getByRole('menuitem')).toHaveText([FIRST, SECOND]);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await heldRows(one.id)).toHaveLength(0);
     expect(await heldRows(second)).toHaveLength(0);
     await assertNoAccessibilityViolations(page);
   });
 
   await test.step('choosing the second coven adds there alone, and the card keeps its plus', async () => {
-    await coven(SECOND).click();
-    await expect(picker).toHaveText(SECOND);
-    await dialog.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
+    await menu.getByRole('menuitem', { name: SECOND }).click();
     await expect.poll(async () => (await heldRows(second)).length).toBe(1);
     expect(await heldRows(one.id)).toHaveLength(0);
-    await expect(card().getByRole('button', { name: ADD })).toBeVisible();
+    await expect(plus()).toBeVisible();
     await expect(card().getByRole('link', { name: HELD })).toHaveCount(0);
   });
 
-  await test.step('the picker now shows the second coven as held, and starts on the first', async () => {
-    await card().getByRole('button', { name: ADD }).click();
-    await expect(dialog).toBeVisible();
-    await expect(picker).toHaveText(FIRST);
-    await picker.click();
-    await expect(coven(SECOND)).toHaveAttribute('aria-disabled', 'true');
-    await expect(coven(SECOND)).toContainText('Already in My Ingredients');
-    await assertNoAccessibilityViolations(page);
-    // Shut the list again, leaving the first coven chosen, so Add is in reach.
-    await picker.press('Escape');
-  });
-
-  await test.step('adding to the first as well swaps the plus for the check', async () => {
-    await dialog.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect(dialog).toHaveCount(0);
+  await test.step('with the first coven alone left, the plus adds there with no menu, and the check takes its place', async () => {
+    // A button of its own now, not the menu toggle it was.
+    await expect(plus()).not.toHaveAttribute('aria-haspopup', 'menu');
+    await plus().click();
     await expect(card().getByRole('link', { name: HELD })).toBeVisible();
-    await expect(card().getByRole('button', { name: ADD })).toHaveCount(0);
+    await expect(plus()).toHaveCount(0);
+    await expect(menu).toHaveCount(0);
     expect(await heldRows(one.id)).toHaveLength(1);
     expect(await heldRows(second)).toHaveLength(1);
   });
