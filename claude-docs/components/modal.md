@@ -438,8 +438,11 @@ edit's notice, "Changes are made to the Compendium, for everyone." The modal
 hands that line down too (`HeaderNoteContext`), and the contents portal into
 it through `useModalHeaderNote()`. It is a line apart rather than the row's
 first item because the row is a line of controls that never wraps. It stands
-`space(2)` below the title, the gap the row has there without it, and the
-row `space(2)` below it. Empty, it takes no line, so a dialog with no
+`space(2)` below the title, the gap the row has there without it. With a
+sentence and a row both present, the row stands `space(4)` below the sentence
+(it was `space(2)`) and the body `space(3)` below the row (it was the
+header's `space(4)`), so the row reads with the form it works rather than
+with the sentence (the owner's call of 2026-10-20). Empty, it takes no line, so a dialog with no
 sentence is unchanged. It is not held while a confirmation is asked, as it holds
 no control.
 

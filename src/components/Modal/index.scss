@@ -188,15 +188,27 @@ $modal-padding: space(5) * 2;
 
 // A sentence about the whole dialog under the heading, above the toolbar row
 // (M8.17, the compendium edit's notice, the owner's call of 2026-10-19): as
-// far below the title as the row stands from it without one, and the row as
-// far again below it. Hidden while nothing is in it, so a dialog with no
-// sentence is as it was.
+// far below the title as the row stands from it without one. The row then
+// sits a step further from the sentence and a step closer to the body than
+// it would without one, so it reads with the form it works rather than with
+// the sentence (the owner's call of 2026-10-20). Hidden while nothing is in
+// it, so a dialog with no sentence is as it was.
 .modal-dialog__header-note {
   grid-column: 1 / -1;
   margin-top: space(2);
 
   &:empty {
     display: none;
+  }
+}
+
+.modal-dialog__header:has(> .modal-dialog__header-note:not(:empty)):has(
+    > .modal-dialog__header-slot:not(:empty)
+  ) {
+  padding-bottom: space(3);
+
+  > .modal-dialog__header-slot {
+    margin-top: space(4);
   }
 }
 
