@@ -21,8 +21,6 @@ type Documents = {
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
     "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n  ) {\n    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.AnnotateCupboardEntryDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceDocument,
-    "\n  mutation UpdateStock($workspaceId: ID!, $id: ID!, $input: StockInput!) {\n    updateStock(workspaceId: $workspaceId, id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateStockDocument,
-    "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryGroupDocument,
@@ -90,6 +88,7 @@ type Documents = {
     "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationDocument,
     "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n": typeof types.AcceptInvitationByIdDocument,
     "\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n": typeof types.DeclineInvitationByIdDocument,
+    "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
@@ -104,8 +103,6 @@ const documents: Documents = {
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceDocument,
     "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n  ) {\n    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.AnnotateCupboardEntryDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceDocument,
-    "\n  mutation UpdateStock($workspaceId: ID!, $id: ID!, $input: StockInput!) {\n    updateStock(workspaceId: $workspaceId, id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateStockDocument,
-    "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryGroupDocument,
@@ -173,6 +170,7 @@ const documents: Documents = {
     "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.RevokeInvitationDocument,
     "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n": types.AcceptInvitationByIdDocument,
     "\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n": types.DeclineInvitationByIdDocument,
+    "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
@@ -222,14 +220,6 @@ export function graphql(source: "\n  mutation AnnotateCupboardEntry(\n    $works
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation UpdateStock($workspaceId: ID!, $id: ID!, $input: StockInput!) {\n    updateStock(workspaceId: $workspaceId, id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateStock($workspaceId: ID!, $id: ID!, $input: StockInput!) {\n    updateStock(workspaceId: $workspaceId, id: $id, input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -498,6 +488,10 @@ export function graphql(source: "\n  mutation AcceptInvitationById($id: ID!) {\n
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n"): (typeof documents)["\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
