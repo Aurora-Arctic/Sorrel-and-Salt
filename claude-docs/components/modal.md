@@ -154,7 +154,7 @@ and busy until the page is read again, so it closes in the same step as the
 row goes. Its `returnTo` names the row's button, which is gone by then, so
 step 4 answers. `CupboardActions` keeps its Remove confirmation busy the
 same way, and its `returnTo` names nowhere once the coven no longer holds
-the entry: the button left there offers Add to Cupboard instead, which is
+the entry: the menu is gone and the plus stands in its place, which is
 not where the person was. A retired entry's Remove leads to the coven's
 Ingredients list instead (the owner's call, 2026-10-20): its confirmation
 stays busy until the list arrives and goes with the entry page in the same

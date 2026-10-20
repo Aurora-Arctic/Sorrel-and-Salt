@@ -330,9 +330,9 @@ export const Annotated: Story = () => (
 
 // The cupboard choices beside the title (M12.17). The workshop has no API, so
 // a press answers with the generic error, which shows in the failure callout
-// under the button (M12.31). A member sees Add to Cupboard while
-// the coven does not hold the entry; an Edit menu of Annotate, Make It Ours
-// (M12.23) and Remove once it does; a viewer sees none.
+// under the button (M12.31). A member sees an Edit menu of Annotate, Make It
+// Ours (M12.23) and Remove once the coven holds the entry; a viewer sees none.
+// Adding is the plus's (AddIcon).
 const CUPBOARD = {
   workspaceId: nextId(),
   covenSlug: 'fixture-coven',
@@ -346,8 +346,6 @@ const CUPBOARD = {
     opened: false,
   },
 };
-
-export const AddToCupboard: Story = () => <Entry cupboard={CUPBOARD} />;
 
 export const AnnotateOrRemove: Story = () => (
   <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />

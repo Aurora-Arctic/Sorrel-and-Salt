@@ -129,11 +129,13 @@ describe('CupboardActions', () => {
     expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
-  it('offers Add to Cupboard alone, as a plain button, while the coven does not hold the entry', () => {
-    renderActions();
+  // Adding is the plus's alone (the owner's call, 2026-10-20): the old Add to Cupboard is gone.
+  it('offers no Add without a plus while the coven lacks the entry, though its role may add', () => {
+    // Why Add could have shown: the role may add (`canAdd`) and the coven lacks the entry.
+    expect(BASE.canAdd && !BASE.held).toBe(true);
+    const { container } = renderActions();
 
-    expect(button('Add to Cupboard')).toBeInTheDocument();
-    expect(button('Edit Testwort')).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('offers Annotate, Make It Ours and Remove, not Add, in the Edit menu once the coven holds it', () => {
@@ -142,15 +144,16 @@ describe('CupboardActions', () => {
     expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
-  it("puts Add to Cupboard first, then a curator's Edit Compendium Entry, a link to the page's edit address", () => {
+  it("puts a curator's Edit Compendium Entry first, a link to the page's edit address", () => {
     renderActions({
+      held: true,
       edit: {
         href: '/coven/fixture-coven/ingredients/fixture?edit' as Route,
         entry: { id: 'fixture', name: 'Testwort', canonicalName: null, nomenclature: 'unknown' },
       },
     });
 
-    expect(choices()).toEqual(['Add to Cupboard', 'Edit Compendium Entry']);
+    expect(choices()).toEqual(['Edit Compendium Entry', 'Annotate', 'Make It Ours', 'Remove']);
     expect(screen.getByRole('menuitem', { name: 'Edit Compendium Entry' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/fixture?edit',
@@ -181,23 +184,6 @@ describe('CupboardActions', () => {
       </QueryClientProvider>,
     );
     expect(container).toBeEmptyDOMElement();
-  });
-
-  it('adds the entry and reads the page again', async () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation<AddCupboardEntryMutation, Record<string, unknown>>(
-      'AddCupboardEntry',
-      (variables) => {
-        calls.push(variables);
-        return { addCupboardEntry: { id: 'fixture' } };
-      },
-    );
-    renderActions();
-
-    press('Add to Cupboard');
-
-    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(calls).toEqual([{ workspaceId: BASE.workspaceId, ingredientId: BASE.ingredientId }]);
   });
 
   it("offers Annotate as a link to the page's ?annotate address", () => {
@@ -475,54 +461,6 @@ describe('CupboardActions', () => {
     await waitFor(() => expect(button('Show the error for Edit Testwort')).not.toBeInTheDocument());
   });
 
-  it("shows Add to Cupboard's refusal under the Edit menu when Add is a menu item, and it can be dismissed", async () => {
-    mockGraphQLError('AddCupboardEntry', {
-      code: 'FORBIDDEN',
-      message: 'Fixture refusal: not in the Compendium',
-    });
-    renderActions({
-      edit: {
-        href: '/coven/fixture-coven/ingredients/fixture?edit' as Route,
-        entry: { id: 'fixture', name: 'Testwort', canonicalName: null, nomenclature: 'unknown' },
-      },
-    });
-
-    choose('Add to Cupboard');
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('not in the Compendium');
-    expect(button('Show the error for Edit Testwort')).toBeInTheDocument();
-    expect(button('Edit Testwort')).toHaveAccessibleDescription(/not in the Compendium/);
-
-    press('Dismiss');
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    expect(button('Edit Testwort')).toHaveFocus();
-  });
-
-  it("shows Add to Cupboard's refusal under the button itself when it stands alone, and a new press clears it", async () => {
-    mockGraphQLError('AddCupboardEntry', {
-      code: 'FORBIDDEN',
-      message: 'Fixture refusal: not in the Compendium',
-    });
-    renderActions();
-
-    press('Add to Cupboard');
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('not in the Compendium');
-    expect(button('Show the error for Add to Cupboard')).toBeInTheDocument();
-    expect(button('Add to Cupboard')).toHaveFocus();
-
-    mockGraphQLMutation<AddCupboardEntryMutation, Record<string, unknown>>(
-      'AddCupboardEntry',
-      () => ({ addCupboardEntry: { id: 'fixture' } }),
-    );
-    press('Add to Cupboard');
-
-    await waitFor(() =>
-      expect(button('Show the error for Add to Cupboard')).not.toBeInTheDocument(),
-    );
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
   // The plus beside the pencil on a coven's page too (the owner's call, 2026-10-20): the page's
   // `plus` names every coven the viewer may add in and which of them hold the entry.
   describe('the plus', () => {
@@ -563,11 +501,10 @@ describe('CupboardActions', () => {
       expect(calls).toEqual([{ workspaceId: OTHER.id, ingredientId: BASE.ingredientId }]);
     });
 
-    it('stands in for Add to Cupboard while this coven, the only one that may add, lacks the entry', () => {
+    it('is a plain button, no menu, while this coven, the only one that may add, lacks the entry', () => {
       renderActions({ plus: { workspaceId: HERE.id, covens: [HERE], heldIn: [] } });
 
       expect(button('Add to My Ingredients')).not.toHaveAttribute('aria-haspopup');
-      expect(button('Add to Cupboard')).not.toBeInTheDocument();
     });
 
     it("gives way to the card's check once every coven that may add holds the entry", () => {

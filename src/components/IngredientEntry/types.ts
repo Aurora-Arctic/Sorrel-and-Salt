@@ -114,8 +114,8 @@ export interface IngredientEntryProps {
   };
   /**
    * The cupboard buttons (M12.17), for a compendium entry seen from a coven:
-   * Add to Cupboard, or Annotate This Entry and Remove from Cupboard once the
-   * coven holds it, each only for a member whose role permits it. Left out on
+   * the plus (`plus`) while some coven may still add it, and Annotate, Make It
+   * Ours and Remove once the coven holds it, each only for a member whose role permits it. Left out on
    * the public page and for a coven's own entry.
    */
   cupboard?: CupboardProps;
@@ -356,25 +356,7 @@ export interface CupboardQuestionProps {
   covens?: CovenChoiceProps;
 }
 
-/**
- * The dialog Add to Cupboard opens inside the Edit menu where two or more
- * covens may add (M9.12): which one.
- */
-export interface AddToCovenDialogProps {
-  /** The page's default coven, chosen first where it lacks the entry. */
-  workspaceId: string;
-  /** The compendium entry's id. */
-  ingredientId: string;
-  /** Every coven that may add, as `{ id, name }`. */
-  covens: readonly { id: string; name: string }[];
-  /** The ids of those that already hold the entry: listed, and not choosable. */
-  heldIn: readonly string[];
-  onClose: () => void;
-  /** The add succeeded and the modal is closing: the page is to be read again. */
-  onAdded: () => void;
-}
-
-/** A dropdown of the viewer's covens, as Add's picker asks (M9.12). */
+/** A dropdown of the viewer's covens, as Make It Ours and Remove ask above their question (M9.12). */
 export interface CovenChoiceProps {
   options: readonly { id: string; name: string }[];
   chosen: string;
