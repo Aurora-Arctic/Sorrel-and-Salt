@@ -114,7 +114,11 @@ export default function AnnotateMore({
         details={
           <>
             <p>{MAKE_IT_OURS_DETAILS}</p>
-            {dirty && <Notice kind="warn">{UNSAVED_CHANGES_LOST}</Notice>}
+            {dirty && (
+              <Notice kind="warn" className="confirm-overlay__warning">
+                {UNSAVED_CHANGES_LOST}
+              </Notice>
+            )}
           </>
         }
         tone="solid"

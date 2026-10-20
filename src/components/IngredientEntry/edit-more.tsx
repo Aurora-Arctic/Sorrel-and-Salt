@@ -100,7 +100,11 @@ export default function EditMore({
               <p>
                 Next, choose the compendium entries it becomes. Nothing moves until you press Link.
               </p>
-              {dirty && <Notice kind="warn">{UNSAVED_CHANGES_LOST}</Notice>}
+              {dirty && (
+                <Notice kind="warn" className="confirm-overlay__warning">
+                  {UNSAVED_CHANGES_LOST}
+                </Notice>
+              )}
             </>
           }
           tone="solid"

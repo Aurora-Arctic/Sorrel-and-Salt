@@ -318,6 +318,17 @@ $modal-padding: space(5) * 2;
   margin: 0;
 }
 
+// A warning among a question's details, Link to the Compendium's and Make It
+// Ours's that unsaved changes are lost (M8.17): a step more room than a
+// paragraph gets on each side, space(3) above where the paragraph before it
+// leaves space(2), and space(5) below where the answers stand space(4) off,
+// margins that collapse with theirs (the owner's call, 2026-10-20). A class
+// the caller gives the Notice, so no other Notice in a card moves. Both
+// classes, to outrank `.notice`'s zero margin.
+.notice.confirm-overlay__warning {
+  margin-block: space(3) space(5);
+}
+
 // The safe answer takes the focus by script as the card comes, and a browser
 // draws a scripted focus's ring only when the focus it replaced had one: after
 // a pointer press on Close, Cancel or the backdrop it held the focus unseen.

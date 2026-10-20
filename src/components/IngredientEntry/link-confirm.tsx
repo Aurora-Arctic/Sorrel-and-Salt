@@ -100,7 +100,11 @@ export default function LinkConfirm({
   const body = (close: () => void) => (
     <>
       <p>Your jars and spells move to the compendium’s entry, and your own entry is removed.</p>
-      {over === 'form' && <Notice kind="warn">{UNSAVED_CHANGES_LOST}</Notice>}
+      {over === 'form' && (
+        <Notice kind="warn" className="confirm-overlay__warning">
+          {UNSAVED_CHANGES_LOST}
+        </Notice>
+      )}
       {failure && <Notice kind="error">{failure}</Notice>}
       <div className="modal__actions">
         <BusyButton

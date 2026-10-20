@@ -267,6 +267,7 @@ owner's call of 2026-10-20) are drawn through it, never a second dialog.
 | `flashes`    | The discard guard's count of ways out tried again, each a flash of the card  |
 | `children`   | What follows the question: a field, a live region, the `.modal__actions` row |
 
+- **A warning among the details.** A `warn` [`Notice`](notice.md) given the class `confirm-overlay__warning` stands a step further from its neighbours than a paragraph does: `space(3)` above, where the paragraph before it leaves `space(2)`, and `space(5)` below, where the answers stand `space(4)` off. Link to the Compendium's and Make It Ours's "Changes you have not saved are lost." take it (M8.17, the owner's call of 2026-10-20); any other Notice in a card keeps its zero margin.
 - **Where it is drawn.** The form renders it after its own buttons, which
   stay where they are, and the card portals into the modal's layer,
   `ConfirmLayerContext`, a slot as the header's control place is, since the
