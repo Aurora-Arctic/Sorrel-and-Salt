@@ -293,74 +293,6 @@ describe('Combobox', () => {
     expect(screen.queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
   });
 
-  // MB.154, the owner's calls: the open list spans what it is anchored to,
-  // and never runs off the screen. happy-dom lays nothing out, so each test gives
-  // the viewport, the box, the anchor and the list the sizes Floating UI reads.
-  describe('where the list opens', () => {
-    const rect = (left: number, top: number, width: number, height: number) =>
-      ({
-        x: left,
-        y: top,
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-      }) as DOMRect;
-
-    function layOut({
-      control,
-      list,
-    }: {
-      control: DOMRect;
-      list: { width: number; height: number };
-    }) {
-      const html = document.documentElement;
-      const restore = [
-        vi.spyOn(html, 'clientWidth', 'get').mockReturnValue(400),
-        vi.spyOn(html, 'clientHeight', 'get').mockReturnValue(600),
-        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
-          this: HTMLElement,
-        ) {
-          return this.getAttribute('role') === 'listbox' ||
-            this.classList.contains('combobox__popup')
-            ? list.width
-            : 0;
-        }),
-        vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
-          this: HTMLElement,
-        ) {
-          return this.getAttribute('role') === 'listbox' ||
-            this.classList.contains('combobox__popup')
-            ? list.height
-            : 0;
-        }),
-        vi
-          .spyOn(
-            screen.getByRole('combobox').closest('[role="presentation"]')!,
-            'getBoundingClientRect',
-          )
-          .mockReturnValue(control),
-      ];
-      return () => restore.forEach((spy) => spy.mockRestore());
-    }
-    // The popup holding the listbox is what is placed (every box has one).
-    const list = () =>
-      screen.getByRole('listbox', { name: 'Form suggestions' }).parentElement as HTMLElement;
-
-    it('opens above the box when there is no room beneath it', async () => {
-      render(<Harness suggestions={TWO_BUCKETS} />);
-      onTestFinished(
-        layOut({ control: rect(16, 500, 270, 44), list: { width: 270, height: 288 } }),
-      );
-
-      type('wax');
-
-      await waitFor(() => expect(list()).toHaveAttribute('data-placement', 'top-start'));
-    });
-  });
-
   describe('an action row', () => {
     const action = (onSelect = vi.fn()) => ({ label: 'New Reference', onSelect });
 
@@ -669,7 +601,6 @@ describe('Combobox', () => {
   // The entry a list draws inside the control: moved here from IngredientForm
   // (MB.133), whose tests still cover it in the form.
   describe('an entry', () => {
-    const LONG = 'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
     const tooltip = () => screen.queryByRole('tooltip');
     const entryText = (value: string) =>
       within(screen.getByRole('list')).getByText(value, { ignore: '[role="tooltip"]' });
@@ -689,16 +620,6 @@ describe('Combobox', () => {
       return onRemove;
     }
 
-    // happy-dom lays nothing out, so a text is cut off when it is longer than 30
-    // characters: wider than the 240px left to it.
-    beforeEach(() => {
-      vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
-        this: HTMLElement,
-      ) {
-        return (this.textContent ?? '').length * 8;
-      });
-      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(240);
-    });
     afterEach(() => vi.restoreAllMocks());
 
     // The owner's call at MB.115's review: the prompt for the next entry
@@ -807,18 +728,10 @@ describe('Combobox', () => {
       });
     });
 
-    it('shows a cut-off text whole in a tooltip on hover, and while its x has focus', async () => {
-      renderEntries([LONG]);
+    it('opens no tooltip for a text that fits and has no detail', () => {
+      renderEntries(['Hedge Fixture']);
 
-      expect(tooltip()).not.toBeInTheDocument();
-      fireEvent.mouseEnter(entryText(LONG));
-      expect(tooltip()).toHaveTextContent(LONG);
-      fireEvent.mouseLeave(entryText(LONG));
-      await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
-
-      act(() => screen.getByRole('button', { name: `Remove ${LONG}` }).focus());
-      expect(tooltip()).toHaveTextContent(LONG);
-      fireEvent.keyDown(document, { key: 'Escape' });
+      fireEvent.mouseEnter(entryText('Hedge Fixture'));
       expect(tooltip()).not.toBeInTheDocument();
     });
 

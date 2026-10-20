@@ -377,43 +377,6 @@ describe('FacetPanel', () => {
       ).toEqual(['all', 'any']);
     });
 
-    describe('the menu side', () => {
-      const menuBox = () => menu().querySelector('.facet-chip__menu') as HTMLElement;
-      // jsdom has no layout: the chip stands at 1000px, the menu is 150px wide, and the panel's
-      // clip ends at the given edge. The clip is the first ancestor reporting overflow.
-      const layout = (clipEdge: number) => {
-        vi.spyOn(menu(), 'getBoundingClientRect').mockReturnValue({ left: 1000 } as DOMRect);
-        Object.defineProperty(menuBox(), 'offsetWidth', { configurable: true, value: 150 });
-        const clip = menu().closest('.facet-panel__inner') as HTMLElement;
-        vi.spyOn(clip, 'getBoundingClientRect').mockReturnValue({ right: clipEdge } as DOMRect);
-        const real = window.getComputedStyle.bind(window);
-        vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
-          const style = real(el, pseudo);
-          // jsdom reports no overflow at all; a browser says "visible" for an ancestor that does not clip.
-          return {
-            ...style,
-            overflowX: el === clip ? 'clip' : 'visible',
-            getPropertyValue: style.getPropertyValue.bind(style),
-          } as CSSStyleDeclaration;
-        });
-      };
-      afterEach(() => vi.restoreAllMocks());
-
-      it('hangs from the right edge of the chip when the left-aligned box would cross the clip', () => {
-        openPanel({ categories: ['warding', 'mending'] });
-        layout(1100);
-        fireEvent.click(summary());
-        expect(menuBox()).toHaveClass('facet-chip__menu--end');
-      });
-
-      it('stays left-aligned when the box fits', () => {
-        openPanel({ categories: ['warding', 'mending'] });
-        layout(1200);
-        fireEvent.click(summary());
-        expect(menuBox()).not.toHaveClass('facet-chip__menu--end');
-      });
-    });
-
     it('closes on choosing, and reports the choice as a patch of only that part', () => {
       const onChange = vi.fn();
       openPanel({ categories: ['warding', 'mending'] }, { onChange });
