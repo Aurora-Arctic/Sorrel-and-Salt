@@ -576,9 +576,17 @@ $replaces-gap: space(5);
     }
   }
 
+  // The ⓘ centres on the heading's capitals, from cap height to baseline (the owner's call,
+  // 2026-10-20). `middle` centred it on the row's own body text, half its x-height above the
+  // baseline, which left it about 5px below the heading's capitals. Given the heading's face and size,
+  // its `cap` is the heading's cap height. With no text inside, the ⓘ's baseline is its glyph's
+  // bottom edge (the button's one flex item), so standing that edge half a glyph less half a cap
+  // below the heading's baseline puts the glyph's middle on the capitals.
   > .info-tip {
+    @include heading-face;
     margin-inline-start: space(1);
-    vertical-align: middle;
+    font-size: heading-size(3);
+    vertical-align: calc(0.5cap - #{$glyph-size} / 2);
   }
 }
 
