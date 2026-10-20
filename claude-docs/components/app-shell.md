@@ -99,7 +99,8 @@ bar is `position: sticky; top: $top-inset` at `layer('shell')`, exactly
 and its inner column is `$wide-column` wide, centred. The site links fill the
 bar's height, square, and the current one is told by weight and the
 `$rule-heavy` accent rule along the bar's foot, with `aria-current="page"`
-and no fill, so a hover's highlight (`$fill-highlight`, the accent's wash) still shows on it. Controls are
+and no fill, so a hover's grey wash (`$fill-quiet`, kept here when the other navigation
+turned green, the owner's call of 2026-10-20) still shows on it. Controls are
 `$control-height` tall. At or under `$shell-tablet-width` the site nav
 leaves the bar and the account button is an avatar alone; at or under
 `$shell-brand-width` the brand shortens; the theme disc stays at every width.

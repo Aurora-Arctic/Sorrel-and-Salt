@@ -221,7 +221,7 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('a highlighted row’s muted text', tokens['--text-muted'], lit, 4.5);
     row('a quiet button’s label pointed at', tokens['--text-primary'], lit, 4.5);
     // The same highlight on the navigation (the owner's call of 2026-10-20,
-    // M8.17): the top bar's links and the coven switcher, SectionNav's tabs
+    // M8.17): the coven switcher, SectionNav's tabs
     // and its current one, PageNav's links, the public header's links and an
     // outlined facet chip pointed at, each on the page or a card. Their labels
     // (the body ink pointed at, the muted ink a SectionNav tab keeps at rest

@@ -88,8 +88,9 @@
 }
 
 // The links fill the bar's height, square, so the current one's rule sits
-// along the bar's foot and a hover washes a column of it, as the section
-// nav's tabs do in the context row.
+// along the bar's foot and a hover washes a column of it in the grey
+// `$fill-quiet`, not the green highlight the section nav's tabs take in the
+// context row (the owner's call of 2026-10-20).
 .app-shell__nav {
   align-self: stretch;
 
@@ -113,7 +114,7 @@
     @include theme-transition(background-color, color);
 
     &:hover {
-      background-color: $fill-highlight;
+      background-color: $fill-quiet;
     }
 
     // Inside the link, where the bar's edge would clip an outside ring.

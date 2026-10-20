@@ -386,14 +386,15 @@ $text-on-color: var(--surface-page);
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 
 // A quiet fill: the muted ink 18% into the card. A chip's wash at rest, the
-// skeleton's bars and an entry's targeted section each use it; nothing pointed
-// at does, since the highlight below took every hover (M8.17, 2026-10-20); the chip's text holds
+// skeleton's bars and an entry's targeted section each use it, and of the
+// hovers only the top bar's links, the highlight below having taken the rest
+// (M8.17, the owner's calls of 2026-10-20); the chip's text holds
 // 4.5:1 on it (tests/scss/tokens.test.ts).
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
 
 // A highlight: the accent 12% into whatever is behind. A menu's item and a
 // suggestion list's row pointed at, focused or chosen, the same over the
-// field's ground for a quiet button pointed at, and every navigation link,
+// field's ground for a quiet button pointed at, and every navigation link but the top bar's,
 // tab and outlined chip pointed at, and SectionNav's current tab (M8.17, the
 // owner's calls of 2026-10-20). A wash of the accent rather than of the muted ink, so the row
 // in hand reads as the one about to act; the body and muted inks hold 4.5:1
