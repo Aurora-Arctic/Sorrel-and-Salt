@@ -96,6 +96,7 @@ const props = (over: Partial<CovenCardsProps> = {}): CovenCardsProps => ({
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,
   canAdd: true,
+  canEditStock: true,
   ...over,
 });
 
@@ -122,6 +123,19 @@ describe('CovenCards', () => {
   it('draws a jar line for each jar an entry holds', () => {
     render(<Cards {...props()} />);
     expect(screen.getAllByText(/Fixture Herb/)).toHaveLength(1);
+  });
+
+  it('gives each jar line an Edit Stock button, named for the entry by its coven label', () => {
+    render(<Cards {...props()} />);
+    expect(
+      screen.getByRole('button', { name: 'Edit Stock, Testwort, Fixture Herb' }),
+    ).toBeVisible();
+  });
+
+  it('gives a viewer no Edit Stock button, though the jar lines are still there', () => {
+    render(<Cards {...props({ canEditStock: false })} />);
+    expect(screen.getAllByText(/Fixture Herb/)).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /^Edit Stock/ })).toBeNull();
   });
 
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {
@@ -169,7 +183,7 @@ describe('CovenCards', () => {
   });
 
   it('holds no button on a card where the role may do nothing more', () => {
-    render(<Cards {...props()} />);
+    render(<Cards {...props({ canEditStock: false })} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });
     expect(within(list).queryAllByRole('button')).toHaveLength(0);
   });

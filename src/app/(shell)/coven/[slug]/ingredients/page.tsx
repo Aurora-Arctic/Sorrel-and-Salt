@@ -150,6 +150,7 @@ export default async function CovenIngredientsPage({
         position={page.position}
         total={page.totalCount}
         canAdd={rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] })}
+        canEditStock={rolePermits(membership.role, { inventory: ['update'] })}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           covenIngredientsHref(workspace.slug, { ...filter, ...cursor }),
         )}

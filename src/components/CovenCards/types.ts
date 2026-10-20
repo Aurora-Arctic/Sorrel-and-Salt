@@ -74,6 +74,8 @@ export interface CovenCardsProps extends Pick<
   filter: CompendiumListFilterProps['filter'];
   /** The viewer may add to this coven: an empty cupboard then offers the first add (M9.11). */
   canAdd: boolean;
+  /** The viewer may change this coven's stock: each jar line then has an Edit Stock button (M9.9). */
+  canEditStock: boolean;
 }
 
 /** What the list draws with no card to show (M9.11): the filter decides which of its two states. */

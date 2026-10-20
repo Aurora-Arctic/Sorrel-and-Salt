@@ -16,4 +16,14 @@ export interface JarLine {
 
 export interface JarLinesProps {
   jars: readonly JarLine[];
+  /**
+   * Given to a member who may change stock (M9.9): each line then ends in an
+   * Edit button opening that jar's dialog. Left out, the lines are read-only,
+   * which is all a viewer is given.
+   */
+  edit?: {
+    workspaceId: string;
+    /** What the coven calls the ingredient, for the button's and the dialog's name. */
+    ingredient: string;
+  };
 }

@@ -1,7 +1,11 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import JarLines from '@/components/JarLines';
 import type { JarLine } from '@/components/JarLines/types';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
 
 // The jar lines of a card (claude-docs/components/jar-lines.md). Fixture forms are invented.
 const jar = (extra: Partial<JarLine> & Pick<JarLine, 'id' | 'form'>): JarLine => ({
@@ -58,5 +62,39 @@ describe('JarLines', () => {
     render(<JarLines jars={[jar({ id: 'a', form: 'oil' })]} />);
     expect(lines()[0].querySelector('span[aria-hidden="true"]')).toHaveTextContent('·');
     expect(lines()[0]).toHaveTextContent(',');
+  });
+
+  describe('Edit Stock', () => {
+    const jars = [
+      jar({ id: 'a', form: 'oil' }),
+      jar({ id: 'b', form: 'dried leaf', quantity: null, unit: null }),
+    ];
+    const edit = { workspaceId: 'w1', ingredient: 'Rosemary' };
+
+    it('puts an Edit button on each jar line, named for its ingredient and form', () => {
+      render(<JarLines jars={jars} edit={edit} />);
+
+      const [oil, leaf] = lines();
+      expect(within(oil).getByRole('button', { name: 'Edit Stock, Rosemary, Oil' })).toBeVisible();
+      expect(
+        within(leaf).getByRole('button', { name: 'Edit Stock, Rosemary, Dried Leaf' }),
+      ).toBeVisible();
+    });
+
+    it('draws no Edit button where it is not given the means to edit', () => {
+      render(<JarLines jars={jars} />);
+
+      expect(screen.queryByRole('button', { name: /^Edit/ })).toBeNull();
+    });
+
+    it('opens the dialog for the jar of that line only', () => {
+      render(<JarLines jars={jars} edit={edit} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit Stock, Rosemary, Dried Leaf' }));
+
+      const dialog = screen.getByRole('dialog', { name: 'Edit Stock, Rosemary, Dried Leaf' });
+      expect(within(dialog).getByRole('spinbutton', { name: 'Quantity' })).toHaveValue(null);
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    });
   });
 });

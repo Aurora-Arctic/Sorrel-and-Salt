@@ -90,9 +90,13 @@ const BASE: CovenCardsProps = {
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,
   canAdd: true,
+  canEditStock: true,
 };
 
 export const Default: Story = () => <CovenCards {...BASE} />;
+
+// A viewer: the same jar lines, with no Edit Stock beside them.
+export const ForAViewer: Story = () => <CovenCards {...BASE} canAdd={false} canEditStock={false} />;
 
 // A page with a neighbour on each side.
 export const MidList: Story = () => (
