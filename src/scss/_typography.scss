@@ -85,7 +85,7 @@
     }
 
     &:focus-visible {
-      @include focus-ring($accent);
+      @include focus-ring($accent, $focus-ring-link-strength);
     }
   }
 
