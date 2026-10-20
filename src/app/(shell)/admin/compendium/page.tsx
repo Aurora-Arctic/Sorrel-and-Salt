@@ -144,7 +144,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
-      {/* The details a name opens, in their own place beneath the edit modal's,
+      {/* The details a Quick Look opens, in their own place beneath the edit modal's,
           so an Edit pressed in them opens over them (M12.5). */}
       <DetailsDialog
         closeHref={compendiumHref(list)}
