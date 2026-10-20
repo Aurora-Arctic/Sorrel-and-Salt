@@ -113,6 +113,102 @@ test.describe('on the admin Compendium list', () => {
     await expect(detailsDialog(page)).toHaveCount(0);
   });
 
+  /** Seeds a compendium entry with a long description, and opens its details over the admin list. */
+  const openLongEntry = async (page: Page): Promise<Locator> => {
+    const longName = 'Fixture Longwort';
+    const sentence =
+      'Fixture Longwort is a fictional herb of the fixture hedgerows, gathered in the dark of the moon and dried in bundles under the eaves.';
+    await withSql(async (sql) => {
+      const [held] =
+        await sql`select 1 from ingredients where name = ${longName} and workspace_id is null`;
+      const [admin] = await sql`select id from users order by created_at desc limit 1`;
+      if (!held)
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: longName,
+            canonicalName: 'Fixtura longa',
+            description: Array.from({ length: 12 }, () => sentence).join('\n\n'),
+          }),
+          String(admin?.id),
+        );
+    });
+    await page.goto(`/admin/compendium?query=${encodeURIComponent(longName)}`);
+    await quickLook(page, `${longName}, Fixtura longa`).click();
+    return detailsDialog(page, `${longName}, Fixtura longa`);
+  };
+
+  test('a long description is cut behind a full-width Show More bar, which opens it whole and closes it again', async ({
+    page,
+  }) => {
+    const details = await openLongEntry(page);
+    const bar = details.getByRole('button', { name: 'Show More' });
+    const paragraph = details.locator(`#${(await bar.getAttribute('aria-controls')) ?? ''}`);
+
+    // Why it could be cut: the whole text is longer than the three lines it shows.
+    await expect(bar).toHaveAttribute('aria-expanded', 'false');
+    const closed = (await paragraph.evaluate((p) => p.parentElement?.clientHeight)) ?? 0;
+    const whole = await paragraph.evaluate((p) => p.scrollHeight);
+    expect(whole).toBeGreaterThan(closed);
+    // The bar is the full width of the text, so the whole of it is the target.
+    const barBox = await bar.boundingBox();
+    const textBox = await paragraph.boundingBox();
+    expect(Math.round(barBox?.width ?? 0)).toBe(Math.round(textBox?.width ?? -1));
+
+    await bar.click();
+    const less = details.getByRole('button', { name: 'Show Less' });
+    await expect(less).toHaveAttribute('aria-expanded', 'true');
+    await expect(less).toBeFocused();
+    // Open, the whole text is in view: the clip has grown to hold it.
+    await expect
+      .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
+      .toBeGreaterThanOrEqual(whole);
+
+    await less.click();
+    await expect(details.getByRole('button', { name: 'Show More' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    await expect
+      .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
+      .toBeLessThan(whole);
+  });
+
+  test('Open Full Page is a full-width bar fixed to the foot of the window, with the text scrolling under it', async ({
+    page,
+  }) => {
+    const details = await openLongEntry(page);
+    const open = details.getByRole('link', { name: 'Open Full Page' });
+    const body = details.locator('.modal-dialog__body');
+    const bottomOf = async (el: Locator) =>
+      (await el.evaluate((node) => node.getBoundingClientRect().bottom)) ?? 0;
+
+    // Why it could scroll: opened whole, the long text is taller than the window the body shows.
+    await details.getByRole('button', { name: 'Show More' }).click();
+    await expect
+      .poll(() => body.evaluate((b) => b.scrollHeight - b.clientHeight))
+      .toBeGreaterThan(100);
+    const dialogBottom = await bottomOf(details);
+    const barAtTop = await bottomOf(open);
+    expect(barAtTop).toBeLessThanOrEqual(dialogBottom + 1);
+    // The button fills the bar: the body's width less the bar's own padding.
+    const box = await open.boundingBox();
+    const bodyBox = await body.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan((bodyBox?.width ?? 0) - 100);
+
+    // Scrolled to the end, the bar has not moved and the last text stands clear above it.
+    await body.evaluate((b) => b.scrollTo(0, b.scrollHeight));
+    expect(Math.abs((await bottomOf(open)) - barAtTop)).toBeLessThan(2);
+    const lastText = details.locator('.ingredient-summary > *:last-child');
+    const barTop = (await open.boundingBox())?.y ?? 0;
+    expect((await lastText.boundingBox())?.y ?? 0).toBeLessThan(barTop);
+    expect(await bottomOf(lastText)).toBeLessThanOrEqual(barTop);
+
+    // It still goes to the entry's page.
+    await open.click();
+    await expect(page).toHaveURL(/\/compendium\/ingredients\/fixture-longwort/);
+  });
+
   test('Edit opens the edit modal over the details, and closing it goes back to them', async ({
     page,
   }) => {

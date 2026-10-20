@@ -32,38 +32,147 @@
   color: $text-muted;
 }
 
-// The details header's rhythm (the owner's call, 2026-10-20): Open Full Page
-// a full step under the name, and the body a step and a half under the row,
-// where the shared defaults suit the edit modals' Undo and Redo. Scoped by
-// `:has()`, Baseline Widely Available, as the Modal's own header rules are.
+// The details header's rhythm (the owner's call, 2026-10-20): where the
+// header holds the Edit pencil, a full step under the name, and the body a step
+// and a half under that row, where the shared defaults suit the edit modals'
+// Undo and Redo. A header with nothing in its slot (no Edit) keeps the defaults.
+// Scoped by `:has()`, Baseline Widely Available, as the Modal's own header
+// rules are.
 .modal-dialog:has(.ingredient-summary) {
-  .modal-dialog__header {
+  .modal-dialog__header:has(.modal-dialog__header-slot:not(:empty)) {
     padding-bottom: space(5);
   }
 
-  .modal-dialog__header-slot {
+  .modal-dialog__header-slot:not(:empty) {
     margin-top: space(4);
   }
 }
 
-// The description and its Show More, a step apart, the button at its own
-// width rather than the column's.
-.ingredient-summary__description {
-  @include stack(2);
+// The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
+// Full Page, the last child of the scrolling body and fixed to the foot of the
+// window, so the text scrolls under it. It runs to the dialog's edges (the
+// body's own padding taken back), on the modal's surface so the text passes
+// behind it unseen, with only a hairline along its top; sticky rather than a
+// slot of the Modal's own, as no other modal has a foot. Its place in the flow
+// is the end of the text, so the last line scrolls clear of it by the bar's
+// own top padding. The button is the site's green, medium, the bar's width.
+.ingredient-details-foot {
+  position: sticky;
+  // Negative: a sticky box stops at the body's padding, and this one is to
+  // stand at the dialog's edge, over it.
+  bottom: calc(-1 * #{space(5)});
+  z-index: 1;
+  margin: space(5) calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
+  padding: space(3) space(5);
+  border-top: 1px solid $hairline;
+  background: $surface-card;
+  @include theme-transition(background-color, border-color);
+}
 
-  > button {
-    align-self: flex-start;
+.ingredient-details-foot__open {
+  width: 100%;
+}
+
+// The description and its Show More bar (the owner's calls, 2026-10-20). The
+// clip box round the paragraph is cut to three lines by the script, which sets
+// its height in pixels (summary-description.tsx); without the script it has
+// none and the whole text shows. The cut text fades out into the modal's
+// surface, and under it stands the bar: one real button the full width of the
+// text, on the modal's own surface with only a hairline along its top, the
+// label in the primary ink and a chevron after it. Opening moves the height
+// and the fade together over the short motion while the chevron turns over
+// with them; the bar stays where it is, under the text, and reads Show Less.
+// Under reduced motion nothing moves and each is at once.
+.ingredient-summary__description {
+  display: flex;
+  flex-direction: column;
+}
+
+.ingredient-summary__description-clip {
+  position: relative;
+  overflow: hidden;
+  transition: height $motion-short ease-in-out;
+
+  // The fade: the surface the text stands on, in from clear at the top, so the
+  // last lines go into the bar rather than being cut. It lets the pointer through.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 60%;
+    background: linear-gradient(to bottom, transparent, $surface-card);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $motion-short ease-in-out;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::after {
+      transition: none;
+    }
   }
 }
 
-// Its first three lines (the owner's call, 2026-10-20). The prefixed clamp,
-// as it is Baseline Widely Available and the unprefixed `line-clamp` is not;
-// it keeps the paragraph's `pre-line`.
-.ingredient-summary__description-text--cut {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+.ingredient-summary__description--cut .ingredient-summary__description-clip::after {
+  opacity: 1;
+}
+
+// The whole bar is the target. No fill and no corners: the modal's surface and
+// the hairline above it, so the hover cue is the label underlined and the
+// chevron in the accent, and the focus is the ring, drawn inside the bar.
+.ingredient-summary__more {
+  @include button-reset;
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: space(2);
+  width: 100%;
+  margin-top: space(1);
+  padding: space(2) 0;
+  border-top: 1px solid $hairline;
+  background-color: $surface-card;
+  color: $text-primary;
+  font-family: $font-body;
+  font-size: type-size('small');
+  font-weight: 500;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}
+
+// The chevron after the label, down while the text is cut and turned over
+// once it is open, in step with the height.
+.ingredient-summary__more-chevron {
+  flex: none;
+  transition:
+    transform $motion-short ease-in-out,
+    color $motion-short ease-in-out;
+
+  [aria-expanded='true'] > & {
+    transform: rotate(180deg);
+  }
+
+  .ingredient-summary__more:hover > &,
+  .ingredient-summary__more:focus-visible > & {
+    color: $accent;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 // The one line an entry with nothing in any section shows, in the muted ink.

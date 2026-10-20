@@ -83,6 +83,17 @@ It follows WCAG 1.4.13, content on hover or focus, through the same
   it from the control. A focus inside the control's own open menu bubbles
   there too and is ignored: the menu says what the control does (the
   owner's call of 2026-10-20 put the page's Edit menu under a pencil).
+- **It is shut while the control's menu is open** (the owner's call,
+  2026-10-20). Around a control that opens a menu (a `MenuButton` icon: the
+  card's plus, the entry page's pencil), the wrapper asks whether a button in
+  it says `aria-haspopup` and `aria-expanded="true"`. While one does, a
+  hover or a focus opens nothing, and a tip already showing is taken away by a
+  `MutationObserver` on `aria-expanded`, so a menu opened by a press or by
+  ArrowDown with the pointer resting on the control loses it too. It is in the
+  wrapper, not in `MenuButton`, so every caller gets it and `MenuButton`
+  knows nothing of tips. With the menu closed the next hover or focus shows it
+  again; an Escape that closes the menu and hands the focus back does not, the
+  menu still being drawn open at that instant, until the next hover.
 - **It stays while the pointer is over it.** Leaving both closes it after
   150ms, long enough to cross the small gap onto the tip.
 - **It closes on Escape, blur, or the pointer leaving both.** Escape is
