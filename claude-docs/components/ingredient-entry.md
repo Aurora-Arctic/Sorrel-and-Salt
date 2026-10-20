@@ -130,6 +130,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `DetailsLongName`, `DetailsLongWord`, `DetailsNoFormalName`, `DetailsNewAndCautioned`: the head with a name that wraps, a word longer than the line (the one case that breaks a word), no formal name, and a new cautioned entry.
 - `DetailsSparse`, `DetailsNothingRecorded`, `DetailsToxic`: the details modal's body with only what is recorded, with nothing ("Nothing recorded yet."), and a toxic entry's caution naming two cautioned forms.
 - `DetailsPhoneDark`, `DetailsPhoneLight`: the coven's details modal at 375px.
+- `ProposalSourceLabelAsBuilt` and `ProposalSourceLabel`, each with `PhoneDark` and `PhoneLight` at 375px (MB.120, for sign-off): a source's link as built, Open Source, beside what it now reads, Open the Source, with a hidden "(opens in a new tab)" for a screen reader. The as-built stories redraw the old words in CSS over the new, so they are a picture only.
 
 ## Testing
 
