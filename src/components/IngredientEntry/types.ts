@@ -310,6 +310,24 @@ export interface CupboardQuestionProps {
   covens?: CovenChoiceProps;
 }
 
+/**
+ * The dialog Add to Cupboard opens inside the Edit menu where two or more
+ * covens may add (M9.12): which one.
+ */
+export interface AddToCovenDialogProps {
+  /** The page's default coven, chosen first where it lacks the entry. */
+  workspaceId: string;
+  /** The compendium entry's id. */
+  ingredientId: string;
+  /** Every coven that may add, as `{ id, name }`. */
+  covens: readonly { id: string; name: string }[];
+  /** The ids of those that already hold the entry: listed, and not choosable. */
+  heldIn: readonly string[];
+  onClose: () => void;
+  /** The add succeeded and the modal is closing: the page is to be read again. */
+  onAdded: () => void;
+}
+
 /** A dropdown of the viewer's covens, as Add's picker asks (M9.12). */
 export interface CovenChoiceProps {
   options: readonly { id: string; name: string }[];

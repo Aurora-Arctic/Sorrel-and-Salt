@@ -7,28 +7,28 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { SelectField } from '../Field';
-import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
+import { AddCupboardEntryDocument } from './add-cupboard-entry';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import type { AddToCovenDialogProps } from './types';
 
-// The question the plus asks of someone who may write in several covens (M9.12, the owner's
-// call, 2026-10-20): which one. A confirm modal with the covens in a dropdown, the shared
+// The question Add to Cupboard asks inside the public entry page's Edit menu, where two or more
+// of the viewer's covens may add (M9.12): which one. Standing alone, Add to Cupboard is a menu of
+// the covens instead, as the compendium card's plus is (the owner's call, 2026-10-20); inside a
+// menu it cannot hold a second one, so it asks here. A confirm modal with the covens in a dropdown, the shared
 // SelectField (the owner's call, 2026-10-20, over the radio group it first had). A coven that
 // already holds the entry is listed, so the viewer sees where it is, and cannot be chosen. It
 // starts on the coven Add Ingredient would choose, or the first that can still be chosen where
 // that one holds the entry. A refusal is said in the modal, which stays open; a success closes
-// it and hands the page's re-read back to the plus. The public entry page's Add to Cupboard
-// asks the same, under its own button's name (M9.12). claude-docs/components/compendium-cards.md.
+// it and hands the page's re-read back to the menu. claude-docs/components/ingredient-entry.md.
 
-const TITLE = 'Add to My Ingredients';
+const TITLE = 'Add to Cupboard';
 
 const AddToCovenDialog = ({
   ingredientId,
   covens,
   heldIn,
   workspaceId,
-  title = TITLE,
   onClose,
   onAdded,
 }: AddToCovenDialogProps): ReactElement => {
@@ -47,7 +47,7 @@ const AddToCovenDialog = ({
   });
 
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal title={TITLE} onClose={onClose}>
       {(close) => (
         <FormProvider {...methods}>
           {/* The `form` class's stack, as the Invite dialog spaces its one field: a clear gap round the
@@ -67,7 +67,7 @@ const AddToCovenDialog = ({
                 };
               })}
             />
-            {/* In the dialog, where the viewer is looking, and not under the plus behind it. */}
+            {/* In the dialog, where the viewer is looking, and not under the menu behind it. */}
             {failure && <Notice kind="error">{failure}</Notice>}
             <div className="modal__actions">
               <BusyButton

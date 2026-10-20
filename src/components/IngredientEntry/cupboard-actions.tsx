@@ -26,7 +26,7 @@ import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-wr
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
-import AddToCovenDialog from '../CompendiumCards/add-to-coven-dialog';
+import AddToCovenDialog from './add-to-coven-dialog';
 import AnnotatePicker from './annotate-picker';
 import type {
   CupboardActionsProps,
@@ -52,8 +52,9 @@ import type {
 // title; the three share it, since one press at a time can fail.
 //
 // The public entry page offers the same (M9.12), across every coven the viewer
-// may write in: Add while any of them lacks the entry, asking which in Add's
-// picker where two or more may add; and each held choice while one of the
+// may write in: Add while any of them lacks the entry. Standing alone, Add is a
+// menu of the covens lacking it where several do; inside the Edit menu, it
+// asks which in a dialog where two or more may add. And each held choice while one of the
 // covens holding the entry permits it, acting at once where one does and asking
 // which where several do. Make It Ours and Remove ask in their own
 // confirmation, the dropdown above the question; Annotate asks in a picker of
@@ -219,6 +220,19 @@ export default function CupboardActions(
     onSuccess: added,
     onError: (error) => feedback.report(readGraphqlFailure(error).alert),
   });
+  // A refusal keeps the focus on the button it hangs from. Chosen from a
+  // menu, the item that had the focus went with the menu, and the button was
+  // disabled meanwhile, so the focus is handed back to it here.
+  const refused = add.isError;
+  useEffect(() => {
+    if (refused) trigger.current?.focus();
+  }, [refused]);
+  // The covens Add to Cupboard can still add to: those that may and lack it.
+  const lacking = adders.filter(({ held }) => !held);
+  const addTo = (workspaceId: string): void => {
+    feedback.report(undefined);
+    add.mutate(workspaceId);
+  };
   // Make It Ours and Remove, shared with the Annotate dialog's More menu, in the target coven.
   const writes = useCupboardWrites({
     workspaceId: targetPlace.workspaceId,
@@ -247,16 +261,19 @@ export default function CupboardActions(
 
   const items: MenuButtonItem[] = [
     ...(edit ? [{ key: 'edit', label: LABEL.edit, href: edit.href, onClick: openEdit }] : []),
-    ...(adders.some(({ held }) => !held)
+    ...(lacking.length > 0
       ? [
           {
             key: 'add',
             label: LABEL.add,
             constructive: true,
+            // Inside the Edit menu, two or more covens are asked in a dialog;
+            // standing alone, the button below is a menu of them instead.
             onSelect: () => {
-              feedback.report(undefined);
-              if (adders.length > 1) setAsking('add');
-              else add.mutate(adders[0].workspaceId);
+              if (adders.length > 1) {
+                feedback.report(undefined);
+                setAsking('add');
+              } else addTo(lacking[0].workspaceId);
             },
           },
         ]
@@ -301,6 +318,23 @@ export default function CupboardActions(
         />
       ) : only.key === 'edit' && edit ? (
         <EditButton href={edit.href} entry={edit.entry} />
+      ) : only.key === 'add' && lacking.length > 1 ? (
+        // Add to Cupboard alone, with several covens lacking the entry: a menu
+        // of them, adding to the one chosen at once (the owner's call,
+        // 2026-10-20), as the compendium card's plus does. Held covens are
+        // left off, since there is nothing to add there.
+        <MenuButton
+          ref={triggerRef}
+          label={LABEL.add}
+          className="btn btn--solid btn--medium"
+          items={lacking.map(({ workspaceId, name: coven }) => ({
+            key: workspaceId,
+            label: coven,
+            onSelect: () => addTo(workspaceId),
+          }))}
+          busy={add.isPending}
+          busyLabel="Adding"
+        />
       ) : only.key === 'add' ? (
         <BusyButton
           ref={triggerRef}
@@ -308,7 +342,7 @@ export default function CupboardActions(
           busy={add.isPending}
           busyLabel="Adding"
           disabled={add.isPending}
-          onClick={() => only.href === undefined && only.onSelect()}
+          onClick={() => addTo(lacking[0].workspaceId)}
         >
           {only.label}
         </BusyButton>
@@ -331,7 +365,6 @@ export default function CupboardActions(
       {feedback.feedback}
       {asking === 'add' && (
         <AddToCovenDialog
-          title={LABEL.add}
           ingredientId={ingredientId}
           workspaceId={defaultWorkspaceId}
           covens={adders.map(({ workspaceId, name: coven }) => ({ id: workspaceId, name: coven }))}

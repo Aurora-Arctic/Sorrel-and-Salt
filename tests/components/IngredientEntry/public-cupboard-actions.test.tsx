@@ -1,20 +1,24 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { HttpResponse } from 'msw';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardPlace, PublicCupboardActionsProps } from '@/components/IngredientEntry/types';
 import type { AddCupboardEntryMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { expectRefusalUnder } from '../../support/click-feedback';
 import { press } from '../../support/interact';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The cupboard choices on the public entry page (M9.12), across every coven the viewer may
 // write in (claude-docs/components/ingredient-entry.md, "On the public page"): Add while any
-// lacks the entry, asking which where several may add; each held choice while a holding coven
+// lacks the entry, a menu of the covens that lack it where several do, or a dialog asking which
+// where Add is one of the Edit menu's choices; each held choice while a holding coven
 // permits it, acting in that coven alone, or asking which where several do.
 
 const PAGE = '/compendium/ingredients/testwort' as Route;
@@ -130,13 +134,99 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('asks which coven where several may add, and adds to the one chosen', async () => {
+  it('is a menu of the covens where several may add, and adds to the one chosen at once', async () => {
     const calls = mockWrite<AddCupboardEntryMutation>('AddCupboardEntry', {
       addCupboardEntry: { id: 'fixture' },
     });
     show(props([place(1), place(2)]));
 
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Cupboard' }));
+    const menu = screen.getByRole('menu', { name: 'Add to Cupboard' });
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent),
+    ).toEqual([place(1).name, place(2).name]);
+    expect(calls).toEqual([]);
+    fireEvent.click(within(menu).getByRole('menuitem', { name: place(2).name }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+    expect(calls).toEqual([{ workspaceId: place(2).workspaceId, ingredientId: INGREDIENT }]);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('shows the lone menu busy, Adding, while the add is on its way', async () => {
+    let answer: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (answer = resolve));
+    server.use(
+      graphqlLink.mutation('AddCupboardEntry', async () => {
+        await gate;
+        return HttpResponse.json({ data: { addCupboardEntry: { id: 'fixture' } } });
+      }),
+    );
+    show(props([place(1), place(2)]));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Cupboard' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: place(1).name }));
+
+    const busy = await screen.findByRole('button', { name: 'Adding' });
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    await act(async () => answer());
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+  });
+
+  it('adds at once to the one coven left without the entry, with no menu', async () => {
+    const calls = mockWrite<AddCupboardEntryMutation>('AddCupboardEntry', {
+      addCupboardEntry: { id: 'fixture' },
+    });
+    // Why a menu could have shown: both covens may add, and the default one holds the entry,
+    // though it permits nothing else there, so Add to Cupboard is still the lone choice.
+    show(
+      props([
+        place(1, { held: true, canAnnotate: false, canRemove: false, canMakeOurs: false }),
+        place(2),
+      ]),
+    );
+
     press('Add to Cupboard');
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+    expect(calls).toEqual([{ workspaceId: place(2).workspaceId, ingredientId: INGREDIENT }]);
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('says a refusal of the lone menu under it, with the focus on it', async () => {
+    mockGraphQLError('AddCupboardEntry', {
+      code: 'FORBIDDEN',
+      message: 'Viewers cannot add ingredients.',
+    });
+    show(props([place(1), place(2)]));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Cupboard' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: place(1).name }));
+
+    const button = await screen.findByRole('button', { name: 'Add to Cupboard' });
+    expect(await expectRefusalUnder(button, 'Add to Cupboard')).toContain(
+      'Viewers cannot add ingredients.',
+    );
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it("asks which coven in a dialog where Add to Cupboard is one of the Edit menu's choices", async () => {
+    const calls = mockWrite<AddCupboardEntryMutation>('AddCupboardEntry', {
+      addCupboardEntry: { id: 'fixture' },
+    });
+    show(
+      props([place(1), place(2)], {
+        edit: {
+          href: `${PAGE}?edit` as Route,
+          entry: { id: 'fixture', name: 'Testwort', canonicalName: null, nomenclature: 'unknown' },
+        },
+      }),
+    );
+
+    choose('Add to Cupboard');
     const dialog = screen.getByRole('dialog', { name: 'Add to Cupboard' });
     expect(calls).toEqual([]);
     pickCoven(dialog, place(2).name);
@@ -144,6 +234,7 @@ describe('CupboardActions on the public page', () => {
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
     expect(calls).toEqual([{ workspaceId: place(2).workspaceId, ingredientId: INGREDIENT }]);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   it("puts a curator's Edit Compendium Entry first in the menu", () => {
