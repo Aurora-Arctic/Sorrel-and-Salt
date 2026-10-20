@@ -67,21 +67,14 @@ const ConfirmedAction = ({
     },
     [anchorRef],
   );
-  // Set by Cancel and a refusal only, so the first render takes no focus.
-  const returning = useRef(false);
 
-  // Focus follows the step: to the modal's action when asked, back to the
-  // row's on Cancel or a refusal, so the callout is read with the focus on
-  // what it is about.
-  // In a modal, the overlay puts the focus on Cancel, its safe answer, and
-  // gives it back itself.
+  // The focus goes to the modal's action when asked; Modal gives it back to
+  // the row's button as it closes, on Cancel or a refusal alike, so the
+  // callout is read with the focus on what it is about. In a modal, the
+  // overlay puts the focus on Cancel, its safe answer, and gives it back
+  // itself.
   useEffect(() => {
-    if (inModal) return;
-    if (step === 'confirming') confirmRef.current?.focus();
-    if (step === 'idle' && returning.current) {
-      returning.current = false;
-      openRef.current?.focus();
-    }
+    if (!inModal && step === 'confirming') confirmRef.current?.focus();
   }, [step, inModal]);
 
   // Outside a modal, a callout under the control. Inside one, a plain notice
@@ -106,7 +99,6 @@ const ConfirmedAction = ({
       // promotion) is not replaced, so it closes its own modal.
       if (closeOnSent) setStep('idle');
     } catch (error) {
-      returning.current = true;
       setStep('idle');
       // No fields of its own, so the shared reader always answers an alert:
       // the service's refusal verbatim, or the one generic sentence, unless
@@ -116,7 +108,6 @@ const ConfirmedAction = ({
   }
 
   function cancel() {
-    returning.current = true;
     setStep('idle');
   }
 
@@ -182,7 +173,7 @@ const ConfirmedAction = ({
             <Answers {...answerProps} onCancel={cancel} />
           </ConfirmOverlay>
         ) : (
-          <Modal title={title} onClose={cancel}>
+          <Modal title={title} onClose={cancel} returnTo={() => openRef.current}>
             {(close) => (
               <>
                 <p>{question}</p>

@@ -7,7 +7,7 @@ import { NotFound } from '../../../../../lib/errors';
 import { entryJsonLd } from '../../../../../lib/json-ld';
 import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
-import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
+import { entryValues } from '@/app/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
 import type { CompendiumEntryParams } from './types';
 
@@ -72,7 +72,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const own = addressOf(entry.slug);
   const opened =
     canEdit && 'edit' in (await searchParams)
-      ? { id: entry.id, values: await entryValues(entry) }
+      ? { id: entry.id, values: await entryValues(entry, null) }
       : undefined;
 
   return (

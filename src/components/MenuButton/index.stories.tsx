@@ -5,7 +5,8 @@ import type { MenuButtonItem } from './types';
 
 // Render-only; the keys and the closing are asserted in
 // tests/components/MenuButton/index.test.tsx. The entry page's Edit menu, a
-// link first and the destructive choice last; and the button busy.
+// link first and the destructive choice last; the button busy; and the
+// Annotate dialog's More, opening above from a dialog's foot (M8.17).
 export default {
   title: 'Forms / Menu Button',
 };
@@ -44,3 +45,21 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <Row />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// At a dialog's foot, as the Annotate dialog's More is, its items in the
+// button's type: set at the window's foot, where the room is above, so the
+// menu flips over the button. No prop says so; the room decides.
+const Foot = () => (
+  <p
+    style={{
+      display: 'flex',
+      justifyContent: 'flex-end',
+      alignItems: 'flex-end',
+      minHeight: '90vh',
+    }}
+  >
+    <MenuButton label="More" className="btn btn--quiet" items={ITEMS.slice(3)} buttonType />
+  </p>
+);
+
+export const OpensAbove: Story = () => <Foot />;

@@ -3,14 +3,17 @@
 
 // The tab row, a group of pills on the heading's line (MB.7, drawn in its
 // design review; claude-docs/components/tabbed-page.md, "Styling"): one
-// rounded track in the quiet fill edged by a hairline, the open tab a pill
-// inside it, the accent thinned into the card and edged in the accent itself,
+// rounded track in a faint grey wash edged by a hairline, fainter than
+// `$fill-quiet` so the green pill stands apart from it (the owner's call of
+// 2026-10-20, M8.17, after a green track sat too close to the pill), the
+// open tab a pill inside it, the accent thinned into the card and edged in the accent itself,
 // since the fill alone sits under WCAG 1.4.11's 3:1 against the track; the
 // others plain muted text. Smaller than a control, so each pill's hit area is
-// padded back invisibly (below). The mixes are this row's alone, so local
+// padded back invisibly (below). The pill's and the track's mixes are this row's alone, so local
 // rather than tokens, as the skeleton shape's are; `tests/scss/tokens.test.ts`
 // holds the open tab's label and edge to their floors.
 $segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
+$segment-track: color-mix(in srgb, $text-muted 10%, transparent);
 $pill-height: 2.25rem;
 // What the track spends on its edge and its padding, so the pills fill it
 // exactly: the 1px edge and 0.125rem of air, each side. The air is the
@@ -47,7 +50,7 @@ $track-inset: calc(1px + 0.125rem);
   translate: 0 0.125rem;
   border: 1px solid $hairline;
   border-radius: radius('pill');
-  background-color: $fill-quiet;
+  background-color: $segment-track;
 }
 
 // The open tab's action, `.page-header`'s last item. A tab with none leaves

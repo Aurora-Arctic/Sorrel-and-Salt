@@ -3,6 +3,8 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 
@@ -10,8 +12,9 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // visitor through narrowing the list and opening an entry (tests/e2e/stories/02-compendium);
 // this proves what no story walks: the page is whole in the HTML as served, the curators'
 // No Refs filter does nothing here, a filtered view asks to stay out of search results, the
-// pager reaches the last page, the foot of each card follows the visitor's role, and the
-// page holds at a phone's width.
+// pager reaches the last page, the foot of each card follows the visitor's role, a curator's
+// Edit opens the compendium's edit dialog over the search (M8.17), and the page holds at a
+// phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
@@ -409,4 +412,57 @@ test("a click on a card's forms line opens its entry", async ({ page }) => {
   // for ever. The click is still a real mouse press at the line’s centre.
   await forms.click({ force: true });
   await expect(page).toHaveURL(new RegExp(`${href}$`));
+});
+
+// M8.17: a curator edits an entry from the public search, in the compendium's edit dialog over
+// the results, and closes back onto the same search with the focus on the card's Edit. An
+// account that cannot curate gets no Edit, and the same address opens nothing for it.
+test("a curator's Edit opens the compendium's edit dialog over the search, and closes back to it", async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'a-curator@public-compendium-edit.test',
+    ['discord'],
+    'curator',
+  );
+  await withSql((sql) =>
+    insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Editwort',
+        canonicalName: 'Fixtura editata',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      userId,
+    ),
+  );
+  const searched = '/compendium?query=Editwort';
+  const dialog = page.getByRole('dialog', { name: /Edit Compendium Entry/ });
+  const edit = page.getByRole('link', { name: 'Edit Fixture Editwort, Fixtura editata' });
+
+  await page.goto(searched);
+  await edit.click();
+  await expect(dialog.getByRole('button', { name: 'Open All' })).toBeVisible();
+  await expect(page).toHaveURL((url) => url.searchParams.get('edit') !== null);
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.searchParams.get('query') === 'Editwort');
+  await expect(page).toHaveURL((url) => !url.searchParams.has('edit'));
+  await expect(edit).toBeFocused();
+  const editAddress = await edit.getAttribute('href');
+  // Why the refusal below is the guard's: loaded straight, the address opens the dialog here.
+  await page.goto(editAddress!);
+  await expect(dialog.getByRole('button', { name: 'Open All' })).toBeVisible();
+
+  // The same address, for an account that cannot curate: the card, but no Edit and no dialog.
+  const coven = await seedCoven(page, 'Fixture Coven Edit Refused', 'edit-refused.test', {
+    A: 'owner',
+  });
+  await signInAgainAs(page, coven.users.A);
+  await page.goto(editAddress!);
+  await expect(cardsOf(page)).toHaveCount(1);
+  await expect(edit).toHaveCount(0);
+  await expect(dialog).toHaveCount(0);
 });

@@ -14,7 +14,8 @@ import {
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
 import { firstShownField } from './fields';
-import { HeaderSlotContext } from './header-slot';
+import { pageHeading } from './page-heading';
+import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
 
@@ -43,12 +44,31 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
   return clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom;
 }
 
+/**
+ * Back to what opened the modal, if it is still in the page and not hidden
+ * (an item of a menu since closed is), or else to where
+ * the owner says, or else, with the opener gone and the owner naming nowhere,
+ * as after a row's Remove takes the row away, to the page's heading; and only
+ * if nothing has taken the focus meanwhile, as a page a save opens may. The
+ * dialog is already out of the page, so a focus that was in it is on the body.
+ */
+function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
+  const now = document.activeElement;
+  if (now && now !== document.body) return;
+  const target =
+    opener instanceof HTMLElement && opener.isConnected && !opener.closest('[hidden], [inert]')
+      ? opener
+      : (returnTo?.(opener) ?? pageHeading());
+  target?.focus();
+}
+
 const Modal = ({
   title,
   eyebrow,
   destination,
   qualifier,
   onClose,
+  returnTo,
   size,
   loading = false,
   children,
@@ -57,6 +77,17 @@ const Modal = ({
   const titleId = useId();
   const eyebrowId = useId();
   const body = useRef<HTMLDivElement>(null);
+  // What held the focus as it opened, taken once, before showModal() moves
+  // it: the focus goes back there as it closes (APG, "Dialog (Modal)"). The
+  // modal does it, rather than each owner, because the owner closes it by
+  // unmounting it, so the dialog element never closes in place and the
+  // browser's own return never runs.
+  const opener = useRef<Element | null>(null);
+  const taken = useRef(false);
+  const fallback = useRef(returnTo);
+  useEffect(() => {
+    fallback.current = returnTo;
+  });
 
   useEffect(() => {
     const dialog = ref.current;
@@ -64,6 +95,11 @@ const Modal = ({
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
     let cancelled = false;
     if (!dialog.open) {
+      if (!taken.current) {
+        taken.current = true;
+        const active = document.activeElement;
+        opener.current = active === document.body ? null : active;
+      }
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
       // Close, in the header; the person opened the dialog to fill it in, so
@@ -84,6 +120,9 @@ const Modal = ({
     return () => {
       cancelled = true;
       dialog.close();
+      // Strict Mode's rehearsal leaves the dialog in the page; only a real
+      // unmount takes it out, and only that gives the focus back.
+      if (!dialog.isConnected) giveFocusBack(opener.current, fallback.current);
     };
   }, []);
 
@@ -138,6 +177,7 @@ const Modal = ({
   const [guard] = useState(closeGuardSlot);
   // Held in state, so the contents redraw into it once it is in the page.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  const [headerNote, setHeaderNote] = useState<HTMLElement | null>(null);
 
   // A question a form asks over itself (ConfirmOverlay, MB.115) is drawn in
   // the layer over the body, and holds the body and the control beside the
@@ -173,6 +213,10 @@ const Modal = ({
   };
 
   const handleCancel = (event: SyntheticEvent<HTMLDialogElement>): void => {
+    // A dialog's own Escape only: React carries a nested dialog's cancel (a
+    // confirmation opened from inside this one) up its tree to here, and the
+    // browser sends Escape to the topmost dialog alone.
+    if (event.target !== event.currentTarget) return;
     event.preventDefault();
     request();
   };
@@ -245,6 +289,9 @@ const Modal = ({
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>
         </button>
+        {/* Under the heading, for a sentence the contents put there
+            (HeaderNoteContext), above the row of controls. */}
+        <div ref={setHeaderNote} className="modal-dialog__header-note" />
         {/* Under the heading, for a control the contents put there
             (HeaderSlotContext): after the × in Tab order, as on screen. */}
         <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
@@ -255,9 +302,11 @@ const Modal = ({
         <div ref={body} className="modal-dialog__body" aria-busy={loading || undefined}>
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
-              <ConfirmLayerContext.Provider value={layer}>
-                {typeof children === 'function' ? children(close) : children}
-              </ConfirmLayerContext.Provider>
+              <HeaderNoteContext.Provider value={headerNote}>
+                <ConfirmLayerContext.Provider value={layer}>
+                  {typeof children === 'function' ? children(close) : children}
+                </ConfirmLayerContext.Provider>
+              </HeaderNoteContext.Provider>
             </HeaderSlotContext.Provider>
           </CloseGuardContext.Provider>
         </div>

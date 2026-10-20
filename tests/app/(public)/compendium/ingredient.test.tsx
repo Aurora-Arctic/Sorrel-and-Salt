@@ -31,7 +31,7 @@ vi.mock('@/components/IngredientForm', () => ({
 }));
 
 const entryValues = vi.fn();
-vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+vi.mock('@/app/entry-values', () => ({ entryValues }));
 
 const { default: Page, generateMetadata } =
   await import('@/app/(public)/compendium/ingredients/[slug]/page');
@@ -138,7 +138,7 @@ describe('the compendium entry page', () => {
     viewerIfSignedIn.mockResolvedValue(shellOf(true));
     await show({ edit: '' });
 
-    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ slug: SLUG }));
+    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ slug: SLUG }), null);
     expect(dialog()).toBeInTheDocument();
   });
 

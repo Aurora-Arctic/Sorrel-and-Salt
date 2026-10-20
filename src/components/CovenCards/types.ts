@@ -1,7 +1,9 @@
+import type { Route } from 'next';
 import type { CompendiumListFilterProps, CompendiumListProps } from '../CompendiumList/types';
 import type { EntryKind } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { JarLine } from '../JarLines/types';
+import type { ModalHeading } from '../Modal/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
@@ -26,6 +28,37 @@ export interface CovenCardEntry {
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
+  /**
+   * The list's own address with `?edit=<id>`, where the card's Edit opens the
+   * coven's edit dialog over the list (M8.17). Left out, no Edit shows: a
+   * compendium entry, or a role that may not update.
+   */
+  editHref?: Route;
+  /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads (M9.18). */
+  editHeading?: ModalHeading;
+  /**
+   * The list's own address with `?annotate=<id>`, where the card's Annotate
+   * opens the coven's Annotate dialog over the list (M8.17). Left out, no
+   * Annotate shows: the coven's own entry, or a role that may not update.
+   */
+  annotateHref?: Route;
+  /** The coven's own entry, for a role that may delete it: More offers Delete Ingredient. */
+  mayDelete?: boolean;
+  /** A compendium entry the cupboard holds, for a role that may make it the coven's own. */
+  mayMakeOurs?: boolean;
+  /** A compendium entry the cupboard holds, for a role that may remove it. */
+  mayRemove?: boolean;
+}
+
+/** A card's More (`card-more.tsx`): the entry, its coven, and what the role may do to it. */
+export interface CardMoreProps extends Pick<
+  CovenCardEntry,
+  'id' | 'label' | 'mayDelete' | 'mayMakeOurs' | 'mayRemove'
+> {
+  /** The card's name with its formal name, read after each control's verb. */
+  name: string;
+  workspaceId: string;
+  covenSlug: string;
 }
 
 export interface CovenCardsProps extends Pick<

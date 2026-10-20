@@ -59,12 +59,14 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   icon,
   typedIcon,
   offerTyped,
+  note,
+  after,
 }: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
-  const { aria, ...shell } = useField<IngredientFormValues>(name, hint);
+  const { aria, ...shell } = useField<IngredientFormValues>(name, hint, note);
   return (
-    <FieldShell label={label} hint={hint} {...shell}>
+    <FieldShell label={label} hint={hint} note={note} after={after} {...shell}>
       <Combobox
         id={shell.controlId}
         label={label}

@@ -543,6 +543,8 @@ test(
     await confirm.getByRole('button', { name: 'Revoke', exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await expect(pendingRow(page, gone)).toHaveCount(0);
+    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     await page.reload();
     await expectInvitationsTab(page);
     await expect(pendingRow(page, gone)).toHaveCount(0);

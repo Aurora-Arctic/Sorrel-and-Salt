@@ -7,6 +7,7 @@ import type {
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { citationText } from '@/lib/citation';
+import type { Session } from '@/lib/session';
 import {
   type CitedReference,
   type IngredientRow,
@@ -24,13 +25,17 @@ import {
 import { deityTraditionsOf, formChoicesOf, formGroupsOf } from '@/modules/vocabulary';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// A compendium entry as the form edits it: every value and link the form
-// shows, read on the navigation through the services the GraphQL `Ingredient`
-// resolves through, so the page needs no browser read to open the modal
-// (CLAUDE.md rule 1). Each read is a loader's batch of one, with no session:
-// a compendium entry answers anyone (MB.80).
+// An entry as the form edits it: every value and link the form shows, read on
+// the navigation through the services the GraphQL `Ingredient` resolves
+// through, so the page needs no browser read to open the modal (CLAUDE.md
+// rule 1). Each read is a loader's batch of one. A compendium entry answers
+// anyone, so its pages pass no session (MB.80); a coven's own entry answers
+// only its members, each service checking the coven's proof (M8.17).
 
-/** A batch answer for one ref, which a compendium ref is never refused. */
+/**
+ * A batch answer for one ref. A compendium ref is never refused; a coven's is
+ * refused to anyone but its members, and the refusal is thrown.
+ */
 function only<T>([answer]: readonly (T | Error)[]): T {
   if (answer === undefined || answer instanceof Error) throw answer ?? new Error('No answer');
   return answer;
@@ -86,30 +91,33 @@ const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEn
 
 const entries = (values: readonly string[] | null) => (values ?? []).map((value) => ({ value }));
 
-export async function entryValues(entry: IngredientRow): Promise<IngredientFormValues> {
-  const refs = [{ id: entry.id, workspaceId: null }];
+export async function entryValues(
+  entry: IngredientRow,
+  session: Session | null,
+): Promise<IngredientFormValues> {
+  const refs = [{ id: entry.id, workspaceId: entry.workspaceId }];
   const [folkNames, categories, substitutes, deities, references, variants] = await Promise.all([
-    folkNamesOf(null, refs).then(only),
-    categoriesOf(null, refs).then(only),
-    substitutesOf(null, refs).then(only),
-    deitiesOf(null, refs).then(only),
-    referencesOf(null, refs).then(only),
-    variantsOf(null, refs).then(only),
+    folkNamesOf(session, refs).then(only),
+    categoriesOf(session, refs).then(only),
+    substitutesOf(session, refs).then(only),
+    deitiesOf(session, refs).then(only),
+    referencesOf(session, refs).then(only),
+    variantsOf(session, refs).then(only),
   ]);
   // Each form's own children, a batch over the forms (MB.218).
   const variantRefs = variants.map(({ id, ingredientId }) => ({
     id,
     ingredientId,
-    workspaceId: null,
+    workspaceId: entry.workspaceId,
   }));
   const picked = deities.flatMap(({ deity }) => deity ?? []);
   const [traditions, forms, variantCategories, variantSubstitutes, variantReferences] =
     await Promise.all([
       deityTraditionsOf(picked.map((deity) => deity.traditionId)),
       formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
-      categoriesOfVariants(null, variantRefs),
-      substitutesOfVariants(null, variantRefs),
-      referencesOfVariants(null, variantRefs),
+      categoriesOfVariants(session, variantRefs),
+      substitutesOfVariants(session, variantRefs),
+      referencesOfVariants(session, variantRefs),
     ]);
   const live = forms.flatMap((form) => form ?? []);
   // The forms of every ingredient a substitute links, the entry's and its forms'.
@@ -119,7 +127,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
   ].flatMap(({ ingredient }) => ingredient ?? []);
   const [groups, linkedForms] = await Promise.all([
     formGroupsOf(live.map((form) => form.groupId)),
-    variantsOf(null, linked),
+    variantsOf(session, linked),
   ]);
   // Its group only ranks a lookup's rows, so a link read here carries none.
   const formsOfLinked = new Map(

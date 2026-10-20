@@ -205,6 +205,12 @@ export interface FormActionsProps {
   onDelete?: () => void;
   /** Further saves, between Save and Cancel. */
   children?: ReactNode;
+  /**
+   * Something set apart at the row's far end in Delete's place, for a form
+   * whose further choices are not a delete: the Annotate dialog's More menu
+   * (M8.17). A form draws one or the other.
+   */
+  aside?: ReactNode;
 }
 
 /** An admin change's optional Reason, held by the caller in plain state. */

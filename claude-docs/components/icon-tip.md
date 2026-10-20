@@ -46,6 +46,16 @@ follows `href` as before.
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
+- **Annotate on a coven's list** (`CovenCards`), through `AnnotateLink`:
+  `AnnotateIcon`, an open book with a filled pencil,
+  drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
+  (M8.17, 2026-10-19).
+- **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
+  vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
+  "More", where the card holds two or more choices; and, where its one
+  choice is Delete or Remove, `BinIcon` on a button of its own,
+  `.icon-tip__remove`, tipped with its verb (M8.17; the owner's call,
+  2026-10-20).
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),
@@ -147,7 +157,9 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   focused or open (`aria-expanded`), a tint of it 20% into the card.
 - **Sizes**: the ingredient form keeps the 24px box and 1rem icon beside
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
-  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem.
+  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem,
+  and so does a list card's lone bin (`.icon-tip__remove`), in the remove
+  answer's colours.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
   cards and the modal) and on its own tint each clear 3:1, a control's floor
   (`tests/scss/tokens.test.ts`, "an Edit pencil").

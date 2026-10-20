@@ -11,3 +11,14 @@ export const HeaderSlotContext = createContext<HTMLElement | null>(null);
 
 /** The element in the modal's header, or null where there is none. */
 export const useModalHeaderSlot = (): HTMLElement | null => useContext(HeaderSlotContext);
+
+// A line under the title, above that row, where the contents may put a
+// sentence about the whole dialog: the compendium edit's notice, the owner's
+// call of 2026-10-19 (M8.17). A slot of its own rather than the row's first
+// child, since the row is a line of controls that never wraps. Null outside a
+// modal, as the row's is, and the contents then keep the sentence in their
+// flow.
+export const HeaderNoteContext = createContext<HTMLElement | null>(null);
+
+/** The line under the modal's title, or null where there is none. */
+export const useModalHeaderNote = (): HTMLElement | null => useContext(HeaderNoteContext);

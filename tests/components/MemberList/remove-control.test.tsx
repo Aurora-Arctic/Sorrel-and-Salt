@@ -66,3 +66,57 @@ describe('RemoveControl', () => {
     expect(announced()).toBe('');
   });
 });
+
+// The row's own Remove takes its row with it: the members page, the
+// invitations' Revoke and Remove, the account page's Decline and the admin
+// invitations' Revoke all ask through ConfirmedAction's modal, so one row
+// proves the landing for them all (M8.17, after M12.31's follow-up 5).
+describe('RemoveControl, where the focus lands', () => {
+  beforeEach(() => {
+    refresh.mockReset();
+    graphqlRequest.mockReset();
+  });
+
+  /** The roll's heading, and the one row while it is in the page. */
+  function Roll({ present }: { present: boolean }) {
+    return (
+      <main>
+        <h1>Members</h1>
+        {present && <RemoveControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />}
+      </main>
+    );
+  }
+
+  async function confirmFrom(view: ReturnType<typeof render>) {
+    const open = screen.getByRole('button', { name: 'Remove Fixture Member' });
+    open.focus();
+    fireEvent.click(open);
+    const dialog = await screen.findByRole('dialog');
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+    });
+    return view;
+  }
+
+  it("goes to the page's heading once the re-read takes the row away", async () => {
+    graphqlRequest.mockResolvedValue({ removeMember: true });
+    const view = await confirmFrom(render(<Roll present />, { wrapper: StatusRegionProvider }));
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    // Busy until the re-read: the row and its button are still there.
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    view.rerender(<Roll present={false} />);
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Members' })).toHaveFocus();
+  });
+
+  it('stays on the row when the service refuses, since the row stays', async () => {
+    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+    await confirmFrom(render(<Roll present />, { wrapper: StatusRegionProvider }));
+
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Remove Fixture Member' })).toHaveFocus();
+  });
+});

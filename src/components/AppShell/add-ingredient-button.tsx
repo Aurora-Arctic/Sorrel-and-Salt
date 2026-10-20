@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { ingredientLinkTarget } from './site-target';
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { type ReactElement, Suspense, useEffect, useRef, useState } from 'react';
+import { type ReactElement, Suspense, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ShellWorkspace } from '../../lib/types';
@@ -120,8 +120,6 @@ const AddIngredientButton = ({
   const { navigate } = usePendingNavigation();
   const [saved, setSaved] = useState<string | null>(null);
   const main = useRef<HTMLButtonElement>(null);
-  // Set by a close only, so Back and a first render take no focus.
-  const returning = useRef(false);
   // Set by a save that opens the new entry's page: the dialog then closes on
   // that navigation, and the close must not write the address under it.
   const leaving = useRef(false);
@@ -143,13 +141,6 @@ const AddIngredientButton = ({
               d.kind === 'coven' && d.workspace.slug === asked,
           )?.workspace ?? null);
 
-  useEffect(() => {
-    if (!adding && returning.current) {
-      returning.current = false;
-      main.current?.focus();
-    }
-  }, [adding]);
-
   if (!viewer.verified) return null;
   if (!initial) return null;
 
@@ -170,7 +161,6 @@ const AddIngredientButton = ({
   };
 
   const close = () => {
-    returning.current = true;
     // Replacing, so Back does not open it again, as RouteModal closes. A save
     // is on its way to the new entry's page, and a replace here would land
     // under that push and keep the page where it was.
@@ -199,6 +189,9 @@ const AddIngredientButton = ({
           destination={adding.name}
           title={LABEL}
           onClose={close}
+          // Back to the bar's main part when what opened it, the menu's
+          // item, is gone with the menu.
+          returnTo={() => main.current}
         >
           {(done) => (
             <AddIngredientBody

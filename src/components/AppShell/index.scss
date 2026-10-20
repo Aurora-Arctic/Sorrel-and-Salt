@@ -281,7 +281,7 @@
 
   &:hover,
   &:focus-visible {
-    background-color: $fill-quiet;
+    background-color: $fill-highlight;
   }
 
   @include reduced-motion {

@@ -32,7 +32,9 @@ import type {
 } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
+import { cupboardFormValues } from '../CupboardEntryForm/entry-values';
 import EditButton from './edit-button';
+import { editEyebrow } from './edit-heading';
 import {
   BIBLIOGRAPHY_ID,
   DETAILS,
@@ -43,6 +45,7 @@ import {
 } from './references';
 import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
+import OwnEntryActions from './own-actions';
 import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
@@ -531,31 +534,22 @@ const IngredientEntry = ({
           action={
             (edit || cupboard) && (
               <>
-                {edit && !(cupboard && !local) && <EditButton href={edit.href} entry={editable} />}
+                {edit && !(cupboard && !local) && edit.coven ? (
+                  // A coven's own entry: Edit and Delete in one menu (M8.17).
+                  <OwnEntryActions edit={edit} entry={editable} />
+                ) : (
+                  edit &&
+                  !(cupboard && !local) && (
+                    <EditButton href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
+                  )
+                )}
                 {cupboard && !local && (
                   <CupboardActions
                     {...cupboard}
                     edit={edit ? { href: edit.href, entry: editable } : undefined}
                     ingredientId={entry.id}
                     held={held}
-                    compendium={{
-                      name: entry.name,
-                      description: entry.description,
-                      safetyNotes: entry.safetyNotes,
-                      elements: entry.elements ?? [],
-                      celestialBodies: entry.celestialBodies ?? [],
-                      zodiacSigns: entry.zodiacSigns ?? [],
-                      colors: entry.colors ?? [],
-                    }}
-                    overrides={{
-                      label: cupboardEntry?.label ?? null,
-                      description: cupboardEntry?.description ?? null,
-                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
-                      elements: cupboardEntry?.elements ?? null,
-                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
-                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
-                      colors: cupboardEntry?.colors ?? null,
-                    }}
+                    {...cupboardFormValues(entry, cupboardEntry)}
                   />
                 )}
               </>

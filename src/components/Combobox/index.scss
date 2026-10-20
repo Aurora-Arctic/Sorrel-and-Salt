@@ -357,7 +357,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: pointer;
 
   &.is-highlighted {
-    background-color: color-mix(in srgb, $accent 22%, $surface-card);
+    background-color: $fill-highlight;
   }
 
   // A category's row marked in its group's colour on the theme's side, as its
@@ -529,8 +529,9 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 
   // The chip being moved, plain to see once picked up, the owner's call
-  // during MB.170: the accent's wash a highlighted row wears, a 2px accent
-  // edge and the floating shadow, lifted over the chips it passes. The edge
+  // during MB.170: the accent 22% into the card, opaque so it hides what it
+  // passes over, a 2px accent edge and the floating shadow, lifted over the
+  // chips it passes. The edge
   // stands in for an error's while it is held; the error's comes back on the
   // drop, and its handle still reads it meanwhile.
   &.is-dragging,

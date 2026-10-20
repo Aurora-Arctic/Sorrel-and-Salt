@@ -855,6 +855,10 @@
   --accent-solid-hover: #{$sorrel-spring};
   --secondary: #{$wax-warm};
   --secondary-hover: #{$wax-glow};
+  --warning: #{$ochre-bright};
+  // How much of its colour a notice's tint takes: more on dark, where a tint
+  // of the same strength reads fainter.
+  --notice-tint: 8%;
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
   // Between floating and elevated: a card that rises under the pointer.
@@ -880,6 +884,8 @@
   --accent-solid-hover: #{$sorrel-rich};
   --secondary: #{$wax-vivid};
   --secondary-hover: #{$wax-deep};
+  --warning: #{$ochre-deep};
+  --notice-tint: 7%;
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};

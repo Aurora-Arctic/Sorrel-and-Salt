@@ -79,7 +79,7 @@ step in from the row's top and bottom, so each row's reads as its own, with the 
 steps clear of the bar at its widest. The bar widens to 5px on the
 highlighted or hovered row, over 150ms, or at once under reduced motion. It
 is a background image rather than a border, so the widening moves no text
-and the highlight's wash still shows behind it. The colour says which group's chip a
+and the highlight's wash still shows behind it. That wash is `$fill-highlight`, the accent 12% into the card, the one every menu's item wears too (M8.17, the owner's call of 2026-10-20; it was 22%). The dragged chip keeps its own opaque 22%, so it hides the chips it passes over. The colour says which group's chip a
 pick will become; the group's name is still the bucket's heading, so the
 colour is never the only cue.
 
@@ -204,6 +204,11 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   not followed.
 - **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
   clip it.
+- **Shared with MenuButton.** Its menu is placed by the same hook with three
+  options the list leaves at their defaults: `placement: 'bottom-end'`
+  rather than `'bottom-start'`, so it hangs from the button's end edge and
+  flips to `top-end`; `gap: 8` rather than 4; and `matchWidth: false`
+  ([`menu-button.md`](menu-button.md), "Where it opens"; M8.17).
 - **A row never scrolls it sideways**: a word too long for the list, an
   address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
   row, `overflow-x: hidden` on the list).
