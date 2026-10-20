@@ -38,21 +38,32 @@ export function PlusIcon(): ReactElement {
 }
 
 /**
- * An eye: look at this without leaving the list (M12.5's Quick Look). A
- * placeholder outline until the owner picks the mystic eye's drawing.
+ * The mystic eye: look at this without leaving the list (M12.5's Quick
+ * Look). An almond eye whose iris is a tilted waxing crescent, with a small
+ * four-point star in the crescent's open side (the owner's pick, 2026-10-20).
  */
 export function MysticEyeIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      {/* Stroke 1, not the set's 1.5, on purpose: the owner asked for a thinner outline. */}
       <path
-        d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"
+        d="M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M6.1 5.75A2.7 2.7 0 1 0 9.09 10.01A2.7 2.7 0 0 1 6.1 5.75z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <path
+        d="M9.6 5.15L10.1 6.05L11 6.55L10.1 7.05L9.6 7.95L9.1 7.05L8.2 6.55L9.1 6.05z"
+        fill="currentColor"
+        stroke="none"
+      />
     </svg>
   );
 }
