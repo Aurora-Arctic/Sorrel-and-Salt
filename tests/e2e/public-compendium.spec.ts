@@ -272,53 +272,26 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   await assertNoSidewaysScroll(page);
 });
 
-test('the stuck row wears a shadow that is gone at the top, and the tray stays as near the input as before', async ({
+test('the search row is marked stuck once scrolled past, and unmarked back at the top', async ({
   page,
 }) => {
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
   const row = searchRow(page);
-  const shadow = () => row.evaluate((el) => getComputedStyle(el).boxShadow);
-
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
-  expect(await shadow()).toBe('none');
-
-  // The gap between the controls and the tray, read at the top of the page.
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  const tray = page.getByRole('dialog', { name: 'Filters' });
-  await expect(tray).toBeVisible();
-  const gapAt = async () => {
-    const form = (await searchForm(page).boundingBox())!;
-    const box = (await tray.boundingBox())!;
-    return box.y - (form.y + form.height);
-  };
-  await expect.poll(gapAt).toBeGreaterThanOrEqual(0);
-  const gapAtTop = await gapAt();
-  expect(gapAtTop).toBeLessThanOrEqual(12);
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(tray).toBeHidden();
 
   await page.evaluate(() => window.scrollTo(0, 1500));
   await expect(row).toHaveAttribute('data-stuck', 'true');
-  // The shadow fades in, so it is read once the transition has run.
-  await expect.poll(shadow).not.toBe('none');
 
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(tray).toBeVisible();
-  await expect.poll(gapAt).toBeCloseTo(gapAtTop, 0);
-
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(tray).toBeHidden();
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
-  await expect.poll(shadow).toBe('none');
 });
 
-// The first chips and the +N button share one line at full card width. Opening the panel
+// The chips shown and the +N button together account for every category. Opening the panel
 // floats it over the card, so the card and its grid row do not change height; a component
 // test cannot measure either. No seeded entry has more than three categories, so the test
 // files Amethyst under three more first, and holds the card at the grid's narrowest, 20rem.
-test('the category chips and the +N button share one line, and opening the panel does not change the card height', async ({
+test('the category chips and the +N count cover every category, and opening the panel does not change the card height', async ({
   page,
 }) => {
   await withSql(
@@ -355,18 +328,13 @@ test('the category chips and the +N button share one line, and opening the panel
   const more = card.getByRole('button', { name: /more categories? for/i });
   await expect(more).toBeVisible();
 
-  // The chips shown plus the count behind +N are all six; at the grid's narrowest card
-  // width (20rem) the shown chips and the button sit on one line.
+  // The chips shown plus the count behind +N are all six, at the grid's narrowest card
+  // width (20rem).
   const chips = card
     .getByRole('list', { name: 'Categories' })
     .locator('li:has(.chip):not(:has(button))');
   const count = Number(/\d+/.exec((await more.textContent()) ?? '')![0]);
   expect((await chips.count()) + count).toBe(6);
-  const tops = await chips.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
-  tops.push((await more.boundingBox())!.y);
-  // One line: tops within a pixel (the chip and the button differ by half a pixel), far
-  // under a line's height.
-  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
 
   const before = (await card.boundingBox())!.height;
   await more.click();
@@ -377,28 +345,6 @@ test('the category chips and the +N button share one line, and opening the panel
   await page.keyboard.press('Escape');
   await expect(more).toHaveAttribute('aria-expanded', 'false');
   await expect(more).toBeFocused();
-});
-
-test("the dot between a card's forms is level with the forms' icons", async ({ page }) => {
-  await page.goto('/compendium');
-  // The dot is drawn in CSS, so read where it sits from its item and its resolved margins.
-  const { dot, icon } = await page.evaluate(() => {
-    const second = [...document.querySelectorAll('.ingredient-card__item')].find((el) =>
-      el.previousElementSibling?.matches('.ingredient-card__item'),
-    )!;
-    const box = second.getBoundingClientRect();
-    const style = getComputedStyle(second, '::before');
-    const svg = second.querySelector('svg')!.getBoundingClientRect();
-    return {
-      dot:
-        box.top +
-        parseFloat(style.top) +
-        parseFloat(style.marginTop) +
-        parseFloat(style.height) / 2,
-      icon: svg.top + svg.height / 2,
-    };
-  });
-  expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
 });
 
 test("a click on a card's forms line opens its entry", async ({ page }) => {

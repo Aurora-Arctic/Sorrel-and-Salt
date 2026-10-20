@@ -145,10 +145,8 @@ input, so no story holds them.
 
 `tests/components/SectionNav/index.test.tsx`, with `usePathname` mocked: every
 section a link at its address in order; which is current by the `exact` and
-`matches` rules and an address beneath one; More absent when the sections fit;
-More shut, naming its list, opening to the hidden links and shutting again,
+`matches` rules and an address beneath one; More shut, naming its list, opening to the hidden links and shutting again,
 closing on Escape with focus back on the button, on a press outside and not on
-one inside, and after the address changes; More naming the current page when
-it is hidden and not otherwise; and `data-keyboard` set from a stubbed
-`visualViewport`. Which tabs show at which width and the bar's placement are
-presentation, which happy-dom has none of.
+one inside, and after the address changes; and `data-keyboard` set from a stubbed
+`visualViewport`. Which tabs show at which width, More naming the current page
+when it is hidden, and the bar's placement need layout, which happy-dom has none of.

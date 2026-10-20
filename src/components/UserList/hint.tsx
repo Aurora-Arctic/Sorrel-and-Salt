@@ -20,10 +20,10 @@ const Hint = ({
   label: string;
   children: ReactNode;
 }): ReactElement => {
-  const { open, show, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const { open, show, showSoon, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
-    <span ref={anchor} className={className} onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span ref={anchor} className={className} onMouseEnter={showSoon} onMouseLeave={hideSoon}>
       {children}
       <span
         ref={bubble}

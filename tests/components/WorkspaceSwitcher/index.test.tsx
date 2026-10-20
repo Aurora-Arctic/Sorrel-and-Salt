@@ -124,7 +124,7 @@ describe('WorkspaceSwitcher', () => {
 
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
 
-      expect(box()).toHaveTextContent('Select Coven');
+      for (const { name } of WORKSPACES) expect(box()).not.toHaveTextContent(name);
     });
   });
 

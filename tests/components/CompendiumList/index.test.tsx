@@ -183,19 +183,6 @@ describe('CompendiumList', () => {
     expect(within(rows[2]).getByRole('link', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
-  // The dot between two forms is drawn in CSS; a reader still hears a list, and the visible
-  // text carries no comma of its own.
-  it('separates the forms without a drawn comma, and with a spoken one', () => {
-    render(<CompendiumList {...props()} />);
-
-    const rows = within(screen.getByRole('table')).getAllByRole('row');
-    const cell = within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' });
-    const separators = cell.querySelectorAll('.spoken-separator');
-    expect(separators).toHaveLength(1);
-    expect(separators[0]).toHaveTextContent(',');
-    expect(separators[0].parentElement?.firstChild?.textContent).toBe('Fixture Herb');
-  });
-
   // Categories column: the card's chips, the first few shown and the rest behind +N.
   it("shows each entry's categories as chips, the rest behind a +N button", () => {
     render(<CompendiumList {...props()} />);

@@ -525,14 +525,13 @@ function VariantFieldset({
             <TextField<IngredientFormValues>
               name={`${at}.safetyNotes`}
               label="Safety Notes"
-              hint="What to take care over with this form in particular: an oil diluted, a resin burned."
               placeholder="Add safety notes"
               action={<CopyFromIngredient at={at} field="safetyNotes" />}
               multiline
             />
             {/* Its own flag, never copied from the ingredient's: the two are
                 independent, the one exception to the union rule (M11.21). */}
-            <ToggleField name={`${at}.toxic`} label="Toxic" hint="On if this form is poisonous." />
+            <ToggleField name={`${at}.toxic`} label="Toxic" />
           </CollapsibleSection>
           <CollapsibleSection
             title="Correspondences"

@@ -39,10 +39,13 @@ describe('InfoTip', () => {
     expect(field).toHaveAccessibleDescription(TEXT);
   });
 
-  it('opens on hover, stays open while the pointer is over the tip, and closes a moment after it leaves', () => {
+  it('opens on hover only once the pointer has rested 300ms, stays open while the pointer is over the tip, and closes a moment after it leaves', () => {
     const button = renderTip();
 
     fireEvent.mouseEnter(button);
+    act(() => vi.advanceTimersByTime(299));
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1));
     expect(screen.getByRole('tooltip')).toHaveTextContent(TEXT);
 
     // Long enough to cross from the button onto the tip without it closing.
@@ -54,6 +57,17 @@ describe('InfoTip', () => {
 
     fireEvent.mouseLeave(tip);
     act(() => vi.advanceTimersByTime(200));
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('opens nothing for a pointer that passes over without resting', () => {
+    const button = renderTip();
+
+    fireEvent.mouseEnter(button);
+    act(() => vi.advanceTimersByTime(200));
+    fireEvent.mouseLeave(button);
+    act(() => vi.advanceTimersByTime(500));
+
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
@@ -80,6 +94,8 @@ describe('InfoTip', () => {
     const button = renderTip();
 
     fireEvent.mouseEnter(button);
+    act(() => vi.advanceTimersByTime(300));
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();

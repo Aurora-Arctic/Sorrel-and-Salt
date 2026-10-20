@@ -324,7 +324,8 @@
 // size, and faded in and out over 500ms, the owner's pace, rising 2px as it
 // opens. `.is-open` shows it; closed, it takes no pointer once the fade ends.
 // No position or width: InfoTip's and a list entry's tooltip sit differently.
-// `tip-bubble-open` is the open state alone, for a bubble opened another way.
+// `tip-bubble-open` is the open state alone, for a bubble opened another way,
+// fading over `$fade`: IconTip's word passes its quicker `$icon-tip-fade`.
 // claude-docs/components/info-tip.md, "Styling".
 @mixin tip-bubble {
   $fade: $tip-fade;
@@ -356,13 +357,13 @@
 
 // A tip bubble's open state, apart so a bubble opened by something other
 // than `.is-open` — a hover on its mark, say — opens the same way.
-@mixin tip-bubble-open {
+@mixin tip-bubble-open($fade: $tip-fade) {
   opacity: 1;
   visibility: visible;
   transform: none;
   transition:
-    opacity $tip-fade $theme-transition-easing,
-    transform $tip-fade $theme-transition-easing,
+    opacity $fade $theme-transition-easing,
+    transform $fade $theme-transition-easing,
     visibility 0s;
 
   @include reduced-motion {
@@ -492,9 +493,7 @@
 //
 // `$align` (`start`, `end`, `center`, or a left offset) is the old way, a bubble
 // pinned to one edge of its anchor, which runs off the screen wherever the
-// anchor moves. Nothing new takes it; it stays only for EntryMarks and
-// IngredientCard until they adopt `useTip`'s placement, and goes with them
-// (tests/guards/tip-placement.test.ts, `PENDING`).
+// anchor moves. Nothing new takes it.
 @mixin tip-above($layer: 1, $capped: true, $align: null) {
   position: fixed;
   top: 0;

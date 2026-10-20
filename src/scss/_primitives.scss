@@ -1170,19 +1170,26 @@
   }
 
   // A form's Undo and Redo (M12.9): two small quiet buttons joined as one pair
-  // (M12.10): no gap, the second laid over the first's border so the seam is
-  // one line, the inner corners square and the outer ones `.btn`'s. In a
-  // modal the pair sits at the end of the header slot's row, stretched to the
-  // row's height so the icon buttons come out as tall as a text button beside
-  // them; elsewhere, at the start of the form. Each button is wrapped in an
-  // `IconTip`, so the rules reach through it.
+  // (M12.10) with no border round them, only a hairline between the two (the
+  // owner's call, 2026-10-20: the boxed pair read as heavier than the form
+  // it serves). A width of 0 rather than a transparent colour, so neither
+  // the disabled look's dashed edge nor a held modal's can bring one back;
+  // the inner corners square and the outer ones `.btn`'s, for the hover's
+  // fill. In a modal the pair sits at the end of the header slot's row,
+  // stretched to the row's height so the icon buttons come out as tall as a
+  // text button beside them; elsewhere, at the start of the form. Each
+  // button is wrapped in an `IconTip`, so the rules reach through it.
   .form-history {
     display: inline-flex;
     align-self: flex-start;
     margin-inline-start: auto;
 
+    .btn {
+      border-width: 0;
+    }
+
     .icon-tip + .icon-tip {
-      margin-inline-start: -1px;
+      border-inline-start: 1px solid $hairline;
     }
 
     .icon-tip:not(:last-child) .btn {
@@ -1196,7 +1203,7 @@
     }
 
     // A half that is hovered or focused rises over its neighbour, so its
-    // border and focus ring are not cut by the overlap.
+    // focus ring is not painted over by the other half's fill.
     .btn:hover,
     .btn:focus-visible {
       position: relative;

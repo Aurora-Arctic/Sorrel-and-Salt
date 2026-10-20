@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { RadioGroupField } from '@/components/Field';
@@ -51,26 +51,18 @@ describe('RadioGroupField, strip', () => {
     expect(screen.getByRole('group', { name: 'Icon' })).toHaveAccessibleDescription();
   });
 
-  it('prints the chosen name beneath the bar, following the choice', () => {
-    const { container } = render(<Harness />);
-    const chosen = () => container.querySelector('.radio-strip__chosen')?.textContent;
-
-    expect(chosen()).toBe('None');
-    fireEvent.click(screen.getByRole('radio', { name: 'Mineral' }));
-    expect(chosen()).toBe('Mineral');
-  });
-
   // Each segment's name, shown above it on hover and on its radio's focus,
   // for a sighted person who cannot tell the icons apart (the owner's call,
   // 2026-10-16). Decoration: the radio's own name already says it, so the tip
   // is kept out of the accessibility tree, and found with `hidden`.
-  it('opens the name tip of the segment pointed at, and no other', () => {
+  it('opens the name tip of the segment pointed at, and no other', async () => {
     render(<Harness />);
     const tip = () => screen.queryByRole('tooltip', { hidden: true });
     const segment = (name: string) => screen.getByRole('radio', { name }).closest('label')!;
     expect(tip()).toBeNull();
 
     fireEvent.mouseEnter(segment('Mineral'));
+    await waitFor(() => expect(tip()).not.toBeNull());
     expect(segment('Mineral').parentElement).toContainElement(tip());
     expect(segment('None').parentElement).not.toContainElement(tip());
   });
@@ -130,10 +122,9 @@ describe('RadioGroupField, segmented', () => {
     expect(screen.getByRole('radio', { name: 'Toxic 4' })).toHaveAttribute('name', 'toxic');
   });
 
-  it('names a segment by its label alone when it has no count, and prints no chosen caption', () => {
-    const { container } = render(<Segmented counts={false} />);
+  it('names a segment by its label alone when it has no count', () => {
+    render(<Segmented counts={false} />);
 
     expect(screen.getByRole('radio', { name: 'Toxic' })).toBeInTheDocument();
-    expect(container.querySelector('.radio-strip__chosen')).toBeNull();
   });
 });

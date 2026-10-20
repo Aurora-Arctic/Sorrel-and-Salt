@@ -3,6 +3,7 @@
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/react-dom';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { chipColors } from '../../lib/chip-colors';
+import { TIP_OPEN_DELAY_MS } from '../InfoTip/constants';
 import type { CardCategory } from './types';
 
 /** The least width the panel takes when the chip row is narrower. */
@@ -11,10 +12,13 @@ const PANEL_MIN_PX = 192;
 const EDGE_PX = 8;
 
 // The card's +N button and the panel of categories behind it: a toggletip, so the card's
-// height never changes (the panel floats over the chip row). Hover and focus open it; a
-// click pins it, and a second click closes it. Escape closes it and returns focus to the
-// button; a press outside or leaving (after a short grace, so the pointer can cross into
-// the panel) closes it too: WCAG 1.4.13, dismissible, hoverable and persistent. A client
+// height never changes (the panel floats over the chip row). Focus opens it at once, and
+// a hover once the pointer has rested `TIP_OPEN_DELAY_MS`, as every tip does, so a
+// pointer crossing the card opens nothing. A click (a tap) pins it open at once, and a
+// second click closes it. Escape closes it and returns focus to the button; a press
+// outside or leaving (after a short grace, so the pointer can cross into the panel)
+// closes it too: WCAG 1.4.13, dismissible, hoverable and persistent. The hover's wait
+// and the leave's grace share one timer, so a leave cancels a pending open. A client
 // child of its own so `IngredientCard` stays server-compatible.
 // claude-docs/components/ingredient-card.md.
 
@@ -77,6 +81,11 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
     setOpen(true);
   };
 
+  const showSoon = () => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setOpen(true), TIP_OPEN_DELAY_MS);
+  };
+
   const closeSoon = () => {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
@@ -110,7 +119,7 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
     <span
       ref={wrapper}
       className="category-more"
-      onMouseEnter={show}
+      onMouseEnter={showSoon}
       onMouseLeave={() => {
         if (!pinned) closeSoon();
       }}

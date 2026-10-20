@@ -20,6 +20,14 @@ It follows WCAG 1.4.13, content on hover or focus:
 - **It opens on hover, on a tap, and on the ⓘ's focus.** A tap opens rather
   than toggles: on touch the emulated hover has already opened it, and a
   toggle would shut it again at once.
+- **Hover waits 300ms; focus and a tap do not**, the owner's call
+  (2026-10-20). A pointer crossing a form on its way somewhere else used to
+  open every tip it passed; now a tip opens only once the pointer rests on
+  its control, and a pointer that leaves sooner opens nothing. Focus and a
+  tap are asked for on purpose, so they open at once. This holds for every
+  tip built on `useTip`, below, and for CategoryChips' +N panel, which
+  places itself and keeps its own open state but waits the same
+  `TIP_OPEN_DELAY_MS` (`InfoTip/constants.ts`; [`category-chips.md`](category-chips.md)).
 - **Never on the field's own focus**, the owner's call in MB.133, reversing
   M5.9: a tip opening on every field entered cluttered the form for little
   value. The cost is a sighted keyboard user in Safari, or Firefox on
@@ -54,11 +62,35 @@ for reasons of its own through `hide`: Combobox's qualifier closes its tip
 at the first printable key and when its list opens, so it never sits over
 what is being typed.
 
+A caller wires `showSoon` to hover and `show` to focus and a tap. A third
+argument, `{ openDelayMs, closeDelayMs }`, changes the two waits from 300ms
+and 150ms; [`IconTip`](icon-tip.md) sets the close to `0`, since its bubble
+cannot be hovered.
+
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its
 description, and the button reads it as its own. A screen reader user never
 has to open the tip to hear the hint. `role="tooltip"` names what it is when
 it is open.
+
+## When a field gets a tip
+
+The owner's rule (2026-10-20), after forms grew an ⓘ on almost every field:
+
+- **Keep a tip only when it states a rule, a flow, or a format with a
+  trap**, something the label cannot carry: what a classification of None
+  does to the formal name, that the Reason lands in the audit record, that
+  a searched value's suggestions match its description.
+- **Remove a tip that restates its label.** "The signs it answers to" beside
+  Zodiac Signs adds nothing but a stop.
+- **A tip that only gives a format becomes the placeholder**, one or two
+  words of example (`Shelley, Mary`, `2nd ed.`), rather than a tip.
+- **Many tips about one way of writing become one**, at the head of the
+  group: the reference panel's thirteen became its How to Cite tip.
+
+A field with no hint names no hint id in its `aria-describedby`
+(`fieldDescription`, [`field.md`](field.md)), so removing one leaves nothing
+dangling.
 
 ## Placement
 
@@ -86,11 +118,8 @@ out of the page's flow: fixed at the origin, invisible, its text still in the
 page, so reading and the field's `aria-describedby` are as before. It is as
 wide as its text, up to `$tip-width` (18rem) and never more than the viewport
 less 2rem. The tip sits one layer up (`z-index: 1`), above the control that
-precedes it. `tests/guards/tip-placement.test.ts` fails a component that opens
-a tip without the hook's refs and style, or a stylesheet that pins a tip with
-`tip-above($align: ...)`; EntryMarks and IngredientCard are on its `PENDING`
-list until they adopt this. `tests/e2e/tip-placement.spec.ts` measures every
-tip of the Add Ingredient dialog inside a 320px viewport.
+precedes it. `tests/e2e/tip-placement.spec.ts` measures every tip of the Add
+Ingredient dialog inside a 320px viewport.
 
 ## Styling
 

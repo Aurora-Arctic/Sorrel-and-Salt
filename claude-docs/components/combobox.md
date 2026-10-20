@@ -820,8 +820,7 @@ their buckets and the typed row, which echoes what was typed and comes first;
 headed rows grouped under their headings in first-seen order, and two
 same-named rows under different headings told apart and counted; a row's
 accessible name carrying its label and note; picking by keyboard and by
-click, and the typed row as `null`; the list opening above the box with no
-room beneath it; the action row last with no typed row, there with a
+click, and the typed row as `null`; the action row last with no typed row, there with a
 blank box and with no suggestions, calling `onSelect` by click or keyboard
 and never `onPick`; the typed row withheld under `offerTyped={false}`, the
 suggestions still shown, Enter still handed to `onCommit`, and the list shut
@@ -836,7 +835,9 @@ in the text, its detail's tooltip on hover
 and on the box's focus, closed by Escape and blur, and closed by a
 printable key and by the list opening, the detail still the box's
 description; the entry's ×, its
-tooltip on a cut-off text and on a detail, and its error read by its ×;
+tooltip on a detail and none on a text that fits without one, and its error
+read by its ×; a cut-off text's tooltip and where the list opens need layout,
+which happy-dom has none of;
 a linked entry's summary (MB.115), opened by its text alone, a typed
 entry having nothing to press, and shut by a second press, by Escape from
 inside it, cancelled and the focus handed back, by a press outside it and

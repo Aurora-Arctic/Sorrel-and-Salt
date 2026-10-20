@@ -14,12 +14,12 @@ import './index.scss';
 // (claude-docs/components/info-tip.md).
 
 const InfoTip = ({ id, label, children }: InfoTipProps): ReactElement => {
-  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
     // Hover on the wrapper, which holds the tip as well as the button, so the
     // pointer can move onto the tip without closing it.
-    <span ref={anchor} className="info-tip" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span ref={anchor} className="info-tip" onMouseEnter={showSoon} onMouseLeave={hideSoon}>
       {/* A tap opens rather than toggles: on touch the emulated hover has
           already opened it, and a toggle would shut it again at once. */}
       <button

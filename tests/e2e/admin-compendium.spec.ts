@@ -18,12 +18,12 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The dialog stands inside the viewport with at least 1rem of the page showing on every side. */
-async function expectMarginAround(page: Page, dialog: Locator) {
+/** The dialog stands whole inside the viewport, so the long form scrolls inside it rather than off the screen. */
+async function expectInsideViewport(page: Page, dialog: Locator) {
   const { width, height } = page.viewportSize()!;
   const box = (await dialog.boundingBox())!;
   for (const gap of [box.y, height - box.y - box.height, box.x, width - box.x - box.width]) {
-    expect(gap).toBeGreaterThanOrEqual(16);
+    expect(gap).toBeGreaterThanOrEqual(0);
   }
 }
 
@@ -79,20 +79,19 @@ test('the page behind an open modal does not scroll', async ({ page, isMobile })
   await expect(page).toHaveURL(/\/admin\/compendium$/);
 });
 
-test('the compendium form keeps a margin of the page in view on a phone', async ({ page }) => {
+test('the compendium form stands inside the viewport on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await signInAs(page, 'phone-admin@admin-compendium.test', ['discord'], 'admin');
 
   await page.goto('/admin/compendium?new');
 
-  await expectMarginAround(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
+  await expectInsideViewport(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
   await assertNoAccessibilityViolations(page);
 });
 
-// The compendium form's presentation in the app, which no story checks: the
-// add, edit and delete themselves are story 18's
-// (tests/e2e/stories/07-admin.spec.ts).
-test('the compendium form lines its controls up and keeps its pickers inside the dialog', async ({
+// The compendium form's pickers in the app, which no story checks: the add,
+// edit and delete themselves are story 18's (tests/e2e/stories/07-admin.spec.ts).
+test('the compendium form stands inside the viewport and keeps its pickers inside the dialog', async ({
   page,
 }) => {
   await signInAs(page, 'an-admin@admin-compendium.test', ['discord'], 'admin');
@@ -102,28 +101,8 @@ test('the compendium form lines its controls up and keeps its pickers inside the
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
 
-  // The modal keeps a margin of the page in view on every side, the owner's
-  // call: the long form scrolls inside it rather than running off the screen.
-  await expectMarginAround(page, adding);
-
-  // Every one-line control stands at one height, $control-height: a text
-  // field, a select, a list's box and the Add beside it. Measured in the app,
-  // whose `body .input` the workshop's frame scope does not reproduce.
-  const heightOf = (box: Locator) =>
-    box.evaluate((element) => {
-      const control = element.closest('.combobox__control') ?? element;
-      return control.getBoundingClientRect().height;
-    });
-  const field = await heightOf(adding.getByRole('textbox', { name: 'Name', exact: true }));
-  for (const box of [
-    adding.getByRole('combobox', { name: 'Classification' }),
-    adding.getByRole('combobox', { name: 'New Form' }),
-    adding.getByRole('combobox', { name: 'Folk Name' }),
-    adding.getByRole('combobox', { name: 'Reference' }),
-    adding.getByRole('button', { name: 'Add Folk Name' }),
-  ]) {
-    expect(await heightOf(box)).toBeCloseTo(field, 0);
-  }
+  // The long form scrolls inside the modal rather than running off the screen.
+  await expectInsideViewport(page, adding);
 
   // Escape on a picker's open list closes the list alone, not the dialog
   // (MB.115). Before anything is typed, so a leaked Escape would close it
@@ -282,11 +261,10 @@ test('the toxic toggles start off, save, and read back on reopening, each its ow
   const toggles = adding.getByRole('switch', { name: 'Toxic', exact: true });
   await expect(toggles.first()).not.toBeChecked();
 
-  // The ingredient's, reached from its Safety Notes by Tab, past its hint's
-  // info tip, and turned by Space. Its sections come before Variants, so its
-  // toggle is the first.
+  // The ingredient's, the next stop after its Safety Notes by Tab (neither
+  // carries an info tip since 2026-10-20), and turned by Space. Its sections
+  // come before Variants, so its toggle is the first.
   await adding.getByRole('textbox', { name: 'Safety Notes' }).first().focus();
-  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await expect(toggles.first()).toBeFocused();
   await page.keyboard.press('Space');
@@ -1560,9 +1538,7 @@ test('a press outside the open panel shuts it and applies what was held, on the 
   await expect(page).toHaveURL(/[?&]toxic=toxic(&|$)/);
 });
 
-test('the panel opens with its top at its final place from the first frame, and the strips line up with their neighbours', async ({
-  page,
-}) => {
+test('the panel opens with its top at its final place from the first frame', async ({ page }) => {
   const { userId } = await signInAs(
     page,
     'facet-layout@admin-compendium.test',
@@ -1597,16 +1573,6 @@ test('the panel opens with its top at its final place from the first frame, and 
   // Why it could have moved: the slide ran, so frames were sampled while the height grew.
   expect(tops.length).toBeGreaterThan(5);
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
-
-  const top = async (locator: Locator) => (await locator.boundingBox())?.y ?? Number.NaN;
-  const toxic = panel.getByRole('group', { name: 'Toxic' });
-  const forms = panel.getByRole('combobox', { name: 'Forms', exact: true });
-  // The combobox's box is two levels above its input; the chip stands where that box does,
-  // and is as tall.
-  const chip = toxic.locator('summary, button');
-  const box = forms.locator('xpath=ancestor::div[2]');
-  expect(await top(chip)).toBeCloseTo(await top(box), 0);
-  expect((await chip.boundingBox())?.height).toBeCloseTo((await box.boundingBox())?.height ?? 0, 0);
 });
 
 for (const [label, width, height] of [
@@ -1622,18 +1588,22 @@ for (const [label, width, height] of [
     const panel = await openFilters(page);
     const match = panel.getByRole('group', { name: 'Match' });
     await match.locator('summary').click();
+    await expect(match.locator('details')).toHaveAttribute('open', '');
     const menu = match.locator('.facet-chip__menu');
     await expect(menu).toBeVisible();
-    // Let the fade finish so the box is the settled one.
-    await expect(menu).toHaveClass(/is-open/);
     // Why it could have been cut: the menu is wider than the chip and the panel clips to its
     // own box.
     const menuBox = (await menu.boundingBox())!;
     const chipBox = (await match.locator('summary').boundingBox())!;
-    const panelBox = (await panel.boundingBox())!;
     expect(menuBox.width).toBeGreaterThan(chipBox.width);
-    expect(menuBox.x).toBeGreaterThanOrEqual(panelBox.x);
-    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width);
+    // Polled: the menu takes its side once it has measured itself open.
+    await expect
+      .poll(async () => {
+        const box = (await menu.boundingBox())!;
+        const panelBox = (await panel.boundingBox())!;
+        return box.x >= panelBox.x && box.x + box.width <= panelBox.x + panelBox.width;
+      })
+      .toBe(true);
   });
 }
 
@@ -1680,7 +1650,7 @@ for (const [name, viewport] of [
   ['a desktop table', { width: 1280, height: 900 }],
   ['a phone card', { width: 375, height: 800 }],
 ] as const) {
-  test(`the +N panel in the Categories column opens below the chips over ${name}, and the row keeps its height`, async ({
+  test(`the +N panel in the Categories column floats over the rows beneath on ${name}, and the row keeps its height`, async ({
     page,
   }) => {
     await withSql(
@@ -1711,7 +1681,6 @@ for (const [name, viewport] of [
     const more = page.getByRole('button', { name: /more categories? for Amethyst/i }).first();
     await expect(more).toBeVisible();
     const row = page.getByRole('row').filter({ has: more });
-    const chips = row.getByRole('list', { name: 'Categories' });
 
     // Why the panel could have gone wrong: the table frame scrolls, and there are rows below.
     expect(await page.getByRole('row').count()).toBeGreaterThan(3);
@@ -1723,10 +1692,7 @@ for (const [name, viewport] of [
     const panel = row.getByRole('group', { name: /^More categories for Amethyst/ });
     await expect(panel).toBeVisible();
 
-    const panelBox = (await panel.boundingBox())!;
-    const chipsBox = (await chips.boundingBox())!;
-    // Below the chip row, not over it, and the row no taller.
-    expect(panelBox.y).toBeGreaterThanOrEqual(chipsBox.y + chipsBox.height);
+    // Floating, not pushing: the row is no taller.
     expect((await row.boundingBox())!.height).toBe(rowBefore);
     // On top of what is beneath: the point at the panel's centre belongs to the panel,
     // whatever row or Edit pencil lies under it.

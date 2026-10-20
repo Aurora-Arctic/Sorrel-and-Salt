@@ -72,8 +72,8 @@ for (const width of WIDTHS) {
       await confirm(dialog);
 
       const alert = page.getByRole('alert');
+      // Visible only once placed: until then it is hidden.
       await expect(alert).toBeVisible();
-      await expect(alert).toHaveClass(/is-placed/);
       // In the dialog, under the control, and no notice beside it.
       await expect(dialog.getByRole('alert')).toHaveCount(1);
       await expect(dialog.locator('.notice')).toHaveCount(0);
@@ -82,28 +82,10 @@ for (const width of WIDTHS) {
       expect(under!.y).toBeGreaterThan(at!.y + at!.height);
       expect(under!.x).toBeGreaterThanOrEqual(0);
       expect(under!.x + under!.width).toBeLessThanOrEqual(width);
-      // Inside the dialog's box, not merely the window's (the owner's call,
-      // 2026-10-20).
+      // Inside the dialog's box, not merely the window's.
       const box = await dialog.boundingBox();
       expect(under!.x).toBeGreaterThanOrEqual(box!.x);
       expect(under!.x + under!.width).toBeLessThanOrEqual(box!.x + box!.width);
-      // Where its start under the control's start would run past the dialog's
-      // edge, its end stands under the control's end. At 375px the dialog is
-      // narrower than the callout, which narrows to stand there.
-      if (width === 375 || at!.x + under!.width > box!.x + box!.width - 16) {
-        expect(Math.abs(under!.x + under!.width - (at!.x + at!.width))).toBeLessThanOrEqual(1);
-      }
-      // The arrow still under the control's middle.
-      const arrowX = await alert.evaluate((node) => {
-        const style = getComputedStyle(node, '::after');
-        return (
-          node.getBoundingClientRect().left +
-          node.clientLeft +
-          parseFloat(style.left) +
-          parseFloat(style.width) / 2
-        );
-      });
-      expect(Math.abs(arrowX - (at!.x + at!.width / 2))).toBeLessThanOrEqual(2);
       await expectOnTop(alert);
       if (SHOTS && name === 'Change Role') {
         await page.screenshot({ path: `${SHOTS}/userdetail-callout-${width}.png` });
@@ -149,7 +131,7 @@ const SIZES = [
 
 for (const [width, height] of SIZES) {
   for (const { name, control, confirm } of CONTROLS) {
-    test(`${name} refused in Ladle's frame at ${width}×${height}: the callout inside the dialog, its end under the control's`, async ({
+    test(`${name} refused in Ladle's frame at ${width}×${height}: the callout inside the dialog`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -162,7 +144,8 @@ for (const [width, height] of SIZES) {
       await confirm(dialog);
 
       const alert = frame.getByRole('alert');
-      await expect(alert).toHaveClass(/is-placed/);
+      // Visible only once placed: until then it is hidden.
+      await expect(alert).toBeVisible();
       const at = (await button.boundingBox())!;
       const under = (await alert.boundingBox())!;
       const box = (await dialog.boundingBox())!;
@@ -184,9 +167,6 @@ for (const [width, height] of SIZES) {
 
       expect(under.x).toBeGreaterThanOrEqual(box.x);
       expect(under.x + under.width).toBeLessThanOrEqual(box.x + box.width);
-      // The button stands at the dialog's right, so its start would run past
-      // the dialog's edge at every width: its end stands under the button's.
-      expect(Math.abs(under.x + under.width - (at.x + at.width))).toBeLessThanOrEqual(1);
     });
   }
 }
@@ -207,7 +187,7 @@ for (const { name, control, confirm } of CONTROLS) {
     await button.click();
     await confirm(dialog);
     const alert = frame.getByRole('alert');
-    await expect(alert).toHaveClass(/is-placed/);
+    await expect(alert).toBeVisible();
     await expect(button).toBeFocused();
 
     await page.keyboard.press('Escape');

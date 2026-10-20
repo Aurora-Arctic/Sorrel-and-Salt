@@ -75,34 +75,47 @@ follows `href` as before.
 
 ## Behaviour
 
-It follows WCAG 1.4.13, content on hover or focus, through the same
-[`useTip`](info-tip.md) hook as InfoTip:
+It runs on the same [`useTip`](info-tip.md) hook as InfoTip, but comes and
+goes faster:
 
-- **It opens on hover and on the control's focus.** Both are heard on the
-  wrapper, which holds the tip as well as the control; focus bubbles up to
-  it from the control. A focus inside the control's own open menu bubbles
-  there too and is ignored: the menu says what the control does (the
-  owner's call of 2026-10-20 put the page's Edit menu under a pencil).
+- **It opens once the pointer has rested on the control for 300ms, and at
+  once on the control's focus.** A pointer passing over a row of pencils on
+  its way somewhere else opens nothing. Both are heard on the wrapper, which
+  is no larger than the control (the bubble is fixed, outside its box);
+  focus bubbles up to it from the control. The wrapper rather than the
+  control, so any control can sit inside without IconTip taking over its
+  props. A focus inside the control's own open menu bubbles there too and is
+  ignored: the menu says what the control does (the owner's call of
+  2026-10-20 put the page's Edit menu under a pencil).
 - **It is shut while the control's menu is open** (the owner's call,
   2026-10-20). Around a control that opens a menu (a `MenuButton` icon: the
   card's plus, the entry page's pencil), the wrapper asks whether a button in
   it says `aria-haspopup` and `aria-expanded="true"`. While one does, a
-  hover or a focus opens nothing, and a tip already showing is taken away by a
+  hover or a focus opens nothing (a hover's 300ms wait included: `useTip`'s
+  `canOpen` asks as it opens), and a tip already showing is taken away by a
   `MutationObserver` on `aria-expanded`, so a menu opened by a press or by
   ArrowDown with the pointer resting on the control loses it too. It is in the
   wrapper, not in `MenuButton`, so every caller gets it and `MenuButton`
   knows nothing of tips. With the menu closed the next hover or focus shows it
   again; an Escape that closes the menu and hands the focus back does not, the
   menu still being drawn open at that instant, until the next hover.
-- **It stays while the pointer is over it.** Leaving both closes it after
-  150ms, long enough to cross the small gap onto the tip.
-- **It closes on Escape, blur, or the pointer leaving both.** Escape is
+- **It closes the moment the pointer leaves the control**, with no wait,
+  and fades out over `$icon-tip-fade`, 120ms rather than every other tip's
+  500ms.
+- **The bubble cannot be hovered** (`pointer-events: none`): the owner's
+  call, 2026-10-20, against WCAG 1.4.13's clause that hover content be
+  hoverable. The tip repeats one word the control already says to a sighted
+  reader by its shape and to assistive technology by its name, it is
+  `aria-hidden`, and a tip that held on while the pointer crossed onto it
+  covered the row beside the control for no gain. Dismissible (Escape) and
+  persistent (it stays while the pointer rests on the control) still hold.
+- **It closes on Escape, blur, or the pointer leaving.** Escape is
   heard on the document and marked handled while a tip is open, so it
   closes the tip alone: inside a modal, as the ingredient form is, the
   first Escape shuts the tip and the next one reaches the modal.
 - **It is in the page while open and for its fade after**, so an open tip is
   one that exists. It fades in from a starting style and, closed, fades back
-  out over `$tip-fade` (a closing class, and a timer of the same length that
+  out over `$icon-tip-fade` (a closing class, and a timer of the same length that
   then takes it out of the page) rather than vanishing (the owner's call at
   MB.7's review, 2026-10-12).
 
@@ -181,7 +194,9 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
   cards and the modal) and on its own tint each clear 3:1, a control's floor
   (`tests/scss/tokens.test.ts`, "an Edit pencil").
-- **The bubble** is the `tip-bubble` mixin's, InfoTip's look.
+- **The bubble** is the `tip-bubble` mixin's, InfoTip's look, opened by
+  `tip-bubble-open($icon-tip-fade)` so it fades in and out over 120ms, and
+  takes no pointer.
 - **At phone width** a list's Edit cell carries `.data-table__card-action`,
   which stands it at its card's top right ([`../styling.md`](../styling.md),
   "Tables at phone width").
@@ -199,8 +214,9 @@ ingredient form's stories, and every list's in its own.
 
 ## Testing
 
-`tests/components/IconTip/index.test.tsx` covers hover, the pointer crossing
-onto the tip, focus and blur, Escape closing the tip alone (the key marked
+`tests/components/IconTip/index.test.tsx` covers the 300ms hover wait, a
+passing pointer opening nothing, the close the moment the pointer leaves and
+the 120ms fade, focus opening at once and blur closing, Escape closing the tip alone (the key marked
 handled only while it is open), Escape inside a `Modal` closing the tip first
 and the modal second, the tip kept out of the accessibility tree, and
 `EditLink`'s role and name. Each list's test finds its Edit links by their

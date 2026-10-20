@@ -3,11 +3,14 @@
 import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react-dom';
 import type { Placement } from '@floating-ui/react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Tip } from './types';
+import { TIP_OPEN_DELAY_MS } from './constants';
+import type { Tip, TipTiming } from './types';
 
 // A tip's open state as WCAG 1.4.13 asks it to behave: shown on hover, focus
 // or a tap, kept open while the pointer is over it, and closed on Escape,
-// blur, or the pointer leaving. InfoTip's, and every other tip's beside a
+// blur, or the pointer leaving. Hover waits for the pointer to rest, so a
+// pointer crossing the page on its way somewhere else opens nothing; focus and
+// a tap are asked for on purpose and open at once. InfoTip's, and every other tip's beside a
 // control: UserList's, IconTip's beside every Edit pencil, and Combobox's entry
 // and qualifier tooltips
 // (claude-docs/components/info-tip.md, "Behaviour").
@@ -83,13 +86,20 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
  * the control's width, and only matters at the moment someone looks.
  *
  * `placement` is the side the bubble prefers, `top` unless a stylesheet's
- * `--tip-placement` says otherwise. The caller hands `anchor` to the element
+ * `--tip-placement` says otherwise. `timing` sets how long a hover waits to
+ * open (`showSoon`) and a leave to close (`hideSoon`); IconTip's bubble cannot be
+ * hovered, so it closes with no wait. The caller hands `anchor` to the element
  * the bubble belongs to (the wrapper that hears the hover), `bubble` to the
  * bubble, and `bubbleStyle` to the bubble's `style`.
  */
-export function useTip(canOpen: () => boolean = ALWAYS, placement: Placement = 'top'): Tip {
+export function useTip(
+  canOpen: () => boolean = ALWAYS,
+  placement: Placement = 'top',
+  { openDelayMs = TIP_OPEN_DELAY_MS, closeDelayMs = CLOSE_DELAY_MS }: TipTiming = {},
+): Tip {
   const [open, setOpen] = useState(false);
   const [side, setSide] = useState<Placement>(placement);
+  const opening = useRef<ReturnType<typeof setTimeout>>(undefined);
   const closing = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const { refs, elements, floatingStyles, update } = useFloating({
@@ -109,19 +119,30 @@ export function useTip(canOpen: () => boolean = ALWAYS, placement: Placement = '
   }, [open, reference, floating, update]);
 
   const show = useCallback(() => {
+    clearTimeout(opening.current);
     clearTimeout(closing.current);
     if (!canOpen()) return;
     setSide(sideFor(refs.reference.current as Element | null, placement));
     setOpen(true);
   }, [canOpen, placement, refs]);
+  // Already open, or already waiting, a hover changes nothing but a pending
+  // close: the pointer is back.
+  const showSoon = useCallback(() => {
+    clearTimeout(closing.current);
+    clearTimeout(opening.current);
+    opening.current = setTimeout(show, openDelayMs);
+  }, [show, openDelayMs]);
   const hide = useCallback(() => {
+    clearTimeout(opening.current);
     clearTimeout(closing.current);
     setOpen(false);
   }, []);
   const hideSoon = useCallback(() => {
+    clearTimeout(opening.current);
     clearTimeout(closing.current);
-    closing.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
-  }, []);
+    if (closeDelayMs <= 0) setOpen(false);
+    else closing.current = setTimeout(() => setOpen(false), closeDelayMs);
+  }, [closeDelayMs]);
 
   useEffect(() => {
     if (!open) return;
@@ -139,11 +160,18 @@ export function useTip(canOpen: () => boolean = ALWAYS, placement: Placement = '
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, hide]);
 
-  useEffect(() => () => clearTimeout(closing.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(opening.current);
+      clearTimeout(closing.current);
+    },
+    [],
+  );
 
   return {
     open,
     show,
+    showSoon,
     hide,
     hideSoon,
     anchor: refs.setReference,
