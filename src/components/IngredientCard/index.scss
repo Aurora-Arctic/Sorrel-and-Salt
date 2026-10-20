@@ -246,14 +246,4 @@
   @include ingredient-card-compact;
 }
 
-// The card's More (the three dots, M8.17) in the card's own ink, white in dark and the
-// body text in light, at rest and pressed alike, where the pencil and bin beside it keep
-// their green and wax (the owner's call, 2026-10-20). White vanishes on the light card.
-.ingredient-card .specimen__actions .menu-button > .icon-tip__edit {
-  &,
-  &:hover,
-  &:focus-visible,
-  &[aria-expanded='true'] {
-    color: $card-more-ink;
-  }
-}
+// The card's More takes its ink from IconTip's `.icon-tip__more`, as every More does.

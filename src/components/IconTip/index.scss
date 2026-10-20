@@ -104,6 +104,19 @@
   @include icon-button-edit;
 }
 
+// The three dots (a More menu, M8.17) in the ink of the page rather than Edit's green, at rest and
+// pressed alike: white in dark and the body text in light, `$card-more-ink`, wherever it stands
+// (a card's foot, the entry page, the Quick Look window; the owner's call, 2026-10-20), where the
+// pencil and bin beside it keep their green and wax. White vanishes on a light surface.
+.icon-tip__more {
+  &,
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: $card-more-ink;
+  }
+}
+
 // A compendium card's plus (Add to My Ingredients), M9.12: Edit's size and green, since adding
 // is constructive. The spinner a press shows takes the glyph's size, as `svg` does in the mixin.
 .icon-tip__add {

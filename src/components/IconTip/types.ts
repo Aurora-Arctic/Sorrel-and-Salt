@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { ModalHeading } from '../Modal/types';
 
 export interface IconTipProps {
@@ -36,4 +36,6 @@ export interface EditLinkProps {
   name: string;
   /** The head of the modal it opens, shown at once over a skeleton while the form loads (M9.18). */
   heading: ModalHeading;
+  /** The link's element, for a caller that returns the focus to it once a dialog it opened closes. */
+  ref?: Ref<HTMLAnchorElement>;
 }

@@ -1,14 +1,13 @@
 'use client';
 
 import { type ReactElement, useRef, useState } from 'react';
-import IconTip, { BinIcon, DotsIcon } from '../IconTip';
+import { BinButton, MoreMenu } from '../IconTip';
 import {
   MakeItOursDialog,
   RemoveDialog,
   useCupboardWrites,
 } from '../IngredientEntry/cupboard-writes';
 import { DeleteDialog, useDeleteEntry } from '../IngredientEntry/delete-entry';
-import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
 import Notice from '../Notice';
 import type { CardMoreProps } from './types';
@@ -40,6 +39,7 @@ export default function CardMore({
   mayDelete = false,
   mayMakeOurs = false,
   mayRemove = false,
+  leaveHref,
 }: CardMoreProps): ReactElement | null {
   const [asking, setAsking] = useState<Asking>();
   const [alert, setAlert] = useState<string>();
@@ -52,6 +52,7 @@ export default function CardMore({
   const deleting = useDeleteEntry({
     workspaceId,
     id,
+    deletedHref: leaveHref,
     onSettle: settle,
     onRefused: setAlert,
   });
@@ -59,6 +60,7 @@ export default function CardMore({
     workspaceId,
     covenSlug,
     ingredientId: id,
+    removedHref: leaveHref,
     onSettle: settle,
     onRefused: setAlert,
   });
@@ -83,29 +85,14 @@ export default function CardMore({
   const verb = only.key === 'delete' ? 'Delete Ingredient' : 'Remove';
 
   const control = bin ? (
-    <IconTip tip={verb}>
-      <button
-        ref={trigger}
-        type="button"
-        className="icon-tip__remove"
-        onClick={only.href === undefined ? only.onSelect : undefined}
-      >
-        <BinIcon />
-        <span className="visually-hidden">
-          {verb} {name}
-        </span>
-      </button>
-    </IconTip>
+    <BinButton
+      ref={trigger}
+      verb={verb}
+      name={name}
+      onClick={only.href === undefined ? only.onSelect : () => {}}
+    />
   ) : (
-    <IconTip tip="More">
-      <MenuButton
-        ref={trigger}
-        label={`More for ${name}`}
-        className="icon-tip__edit"
-        icon={<DotsIcon />}
-        items={items}
-      />
-    </IconTip>
+    <MoreMenu ref={trigger} name={name} items={items} />
   );
 
   const close = () => setAsking(undefined);

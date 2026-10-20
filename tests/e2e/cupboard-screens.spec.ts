@@ -45,10 +45,18 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   }
   const entryPage = `/coven/${coven.slug}/ingredients/${ingredientId}`;
   const heading = (name: string) => page.getByRole('heading', { level: 1, name });
-  // A choice in the entry's Edit menu, the pencil named for the entry as it is called now.
+  // A choice among the entry's icons: Annotate, the bin's Remove, or a choice in the three dots,
+  // each named for the entry as it is called now.
   const choose = async (name: string, entry = 'Fixture Screens Wort') => {
-    await page.getByRole('button', { name: `Edit ${entry}`, exact: true }).click();
-    await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
+    const main = page.getByRole('main');
+    if (name === 'Annotate')
+      await main.getByRole('link', { name: `Annotate ${entry}`, exact: true }).click();
+    else if (name === 'Remove')
+      await main.getByRole('button', { name: `Remove ${entry}`, exact: true }).click();
+    else {
+      await main.getByRole('button', { name: `More for ${entry}`, exact: true }).click();
+      await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
+    }
   };
 
   // Add is the card's plus beside the pencil, as on the public page (the owner's call, 2026-10-20).
@@ -59,9 +67,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   // delete, and the coven does not hold the entry yet.
   await page.goto(entryPage);
   await expect(heading('Fixture Screens Wort')).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Edit Fixture Screens Wort', exact: true }),
-  ).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Annotate Fixture Screens Wort' })).toHaveCount(0);
 
   // A refusal is a callout under the button, which floats: the heading does
   // not move (M12.31). The write is answered in its place, so nothing is added.
@@ -122,11 +128,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toBeHidden();
-  // Closed with nothing changed, the dialog gives the focus back to the menu
-  // button its item sat behind, where the press began (M8.17).
-  await expect(
-    page.getByRole('button', { name: 'Edit Fixture Screens Wort', exact: true }),
-  ).toBeFocused();
+  // Closed with nothing changed, the dialog gives the focus back to the Annotate icon where
+  // the press began (M8.17).
+  await expect(page.getByRole('link', { name: 'Annotate Fixture Screens Wort' })).toBeFocused();
 
   await choose('Remove');
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();

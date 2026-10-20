@@ -3,6 +3,7 @@ import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
+import { cardName } from '../IngredientCard/card-name';
 import { LinkIconHint } from '../LinkHint';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
@@ -38,8 +39,7 @@ const NONE = '—';
 
 // Named with the formal name too, as two entries can share a label but never
 // a formal name: Edit and Quick Look read it after their verb.
-const nameOf = (entry: CompendiumListEntry): string =>
-  entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name;
+const nameOf = (entry: CompendiumListEntry): string => cardName(entry.name, entry.canonicalName);
 
 /** The columns; Edit's pencil stands at a card's top right on a phone. */
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [

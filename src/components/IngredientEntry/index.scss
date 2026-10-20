@@ -190,35 +190,34 @@ $jump-link-line: 1.25;
   position: relative;
 }
 
-// The Edit menu as the pencil at the end of the formal name's line, above the name (the owner's
-// call, 2026-10-20). Taken out of the name's row rather than moved in the markup, so a screen
-// reader still meets it after the heading, and whether the action is the pencil stays the client
-// part's choice (`cupboard-actions.tsx`): `:has()`, Baseline Widely Available, finds it. Centred on
+// The entry's icons (the plus, the main Edit or Annotate, More, the bin: one to four, the owner's
+// call, 2026-10-20) as one row at the end of the formal name's line, above the name. Taken out of
+// the name's row rather than moved in the markup, so a screen reader still meets them after the
+// heading, and which icons there are stays the client part's choice (`cupboard-actions.tsx`),
+// which says how many in `data-icons`: `:has()`, Baseline Widely Available, finds the row. Centred on
 // the formal line's first line, `$formal-line` tall (the tip button the line centres on), and the
-// formal name wraps short of it. Placed, so the name's row keeps the whole width for the name.
+// formal name wraps short of them. Placed, so the name's row keeps the whole width for the name.
 $formal-line: 1.5rem;
 
-.ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--pencil)
+.ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--icons)
   > .ingredient-entry__formal {
   padding-inline-end: calc(#{$icon-size-large} + #{space(2)});
 }
 
-.ingredient-entry__head .page-header > .ingredient-entry__cupboard--pencil {
+@each $count in 2, 3, 4 {
+  .ingredient-entry__naming:has(
+      > .page-header > .ingredient-entry__cupboard--icons[data-icons='#{$count}']
+    )
+    > .ingredient-entry__formal {
+    padding-inline-end: calc(#{$count} * (#{$icon-size-large} + #{space(2)}));
+  }
+}
+
+.ingredient-entry__head .page-header > .ingredient-entry__cupboard--icons {
   position: absolute;
   inset-inline-end: 0;
   top: calc((#{$formal-line} - #{$icon-size-large}) / 2);
   margin: 0;
-}
-
-// The public page's plus beside the pencil (M9.12, the owner's call, 2026-10-20): one placed pair,
-// the plus then the pencil, kept on one line, and the formal name wraps short of both.
-.ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--pair)
-  > .ingredient-entry__formal {
-  padding-inline-end: calc(2 * #{$icon-size-large} + 2 * #{space(2)});
-}
-
-.ingredient-entry__head .page-header > .ingredient-entry__cupboard--pair {
-  flex-wrap: nowrap;
 }
 
 // In Your Cupboard: the shelf before the name, at the heading's size and in
@@ -675,7 +674,7 @@ $replaces-gap: space(5);
   }
 }
 
-// The cupboard choices beside the title (M12.17): the Edit menu or one plain
+// The cupboard choices beside the title (M12.17): the icons or one plain
 // button, and a refusal's notice, in a row that wraps on a phone.
 .ingredient-entry__cupboard {
   margin-block-end: space(3);
@@ -683,4 +682,9 @@ $replaces-gap: space(5);
   flex-wrap: wrap;
   align-items: center;
   gap: space(2);
+
+  // Icons stay on one line, a row of at most four, wherever it stands.
+  &--icons {
+    flex-wrap: nowrap;
+  }
 }

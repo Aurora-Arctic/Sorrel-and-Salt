@@ -59,6 +59,11 @@ export interface CardMoreProps extends Pick<
   name: string;
   workspaceId: string;
   covenSlug: string;
+  /**
+   * Where a delete or a remove leads once done, replacing the history entry: the Quick Look
+   * window's, which goes back to the list without it. Left out, the list is read again.
+   */
+  leaveHref?: Route;
 }
 
 export interface CovenCardsProps extends Pick<

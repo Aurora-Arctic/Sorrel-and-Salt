@@ -1020,10 +1020,11 @@ describe('IngredientEntry edit', () => {
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     unmount();
 
-    // A curator in no coven: Edit is the head's one choice, the pencil named Edit and the
-    // entry, and no labelled Edit link is left under the name.
+    // A curator in no coven: the compendium's edit is the head's one choice, the pencil named
+    // Edit in Compendium and the entry (the owner's call, 2026-10-20), and no labelled Edit link
+    // is left under the name.
     renderEntry({ edit: edit() });
-    expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit in Compendium Testwort' })).toHaveAttribute(
       'href',
       `${PUBLIC}?edit`,
     );
@@ -1042,7 +1043,7 @@ describe('IngredientEntry edit', () => {
     expect(dialog()).not.toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit Testwort' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Edit in Compendium Testwort' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
@@ -1126,29 +1127,24 @@ describe('IngredientEntry edit', () => {
     const renderOwn = (ui: ReactElement) =>
       render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
-    // The pencil at the end of the name's row (the owner's call, 2026-10-20).
-    it("draws the page's Edit as the pencil beside the name, named for the entry, and no plain Edit", () => {
+    // The icons the list card has (the owner's call, 2026-10-20): the pencil and the bin.
+    it("draws the page's Edit as the pencil beside the name, named for the entry, with the bin and no menu", () => {
       renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
-      const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
-      expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
-      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-      fireEvent.click(pencil);
-      expect(
-        within(screen.getByRole('menu', { name: 'Edit Testwort' }))
-          .getAllByRole('menuitem')
-          .map((item) => item.textContent),
-      ).toEqual(['Edit Ingredient', 'Delete Ingredient']);
-    });
-
-    it("offers Edit in the page's Edit menu, and heads the dialog as an ingredient's, writing to the coven", () => {
-      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
-
-      fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
-      expect(screen.getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
+      expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
         'href',
         `${OWN}?edit`,
       );
+      expect(
+        screen.getByRole('button', { name: 'Delete Ingredient Testwort' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    it("heads the dialog the page's Edit opens as an ingredient's, writing to the coven", () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
       expect(dialog()).not.toBeInTheDocument();
       expect(shows('Written To')).toHaveTextContent(COVEN);
       expect(shows('May Promote')).toHaveTextContent('false');

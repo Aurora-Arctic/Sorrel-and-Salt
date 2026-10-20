@@ -97,7 +97,7 @@ const IconTip = ({
       // Not for a focus inside the control's own menu, which bubbles here
       // too: the open menu says what the control does, and a tip opened
       // there would only close with a fade as the menu goes (the owner's
-      // call, 2026-10-20, putting the page's Edit menu under the pencil).
+      // call, 2026-10-20, putting a menu under the three dots).
       onFocus={(event) => {
         if (!(event.target as Element).closest('[role="menu"]')) show();
       }}

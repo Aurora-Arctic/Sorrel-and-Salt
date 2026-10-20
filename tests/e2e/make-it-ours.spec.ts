@@ -57,9 +57,9 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
   await expect(page.getByRole('heading', { level: 1, name: 'Fixture Our Ownwort' })).toBeVisible();
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
 
-  // By keyboard, as the entry asks: the Edit menu opened by ArrowDown, its
+  // By keyboard, as the entry asks: the three dots opened by ArrowDown, its
   // choice reached by the arrows and taken by Enter, then the dialog's answer.
-  await page.getByRole('button', { name: 'Edit Fixture Our Ownwort', exact: true }).focus();
+  await page.getByRole('button', { name: 'More for Fixture Our Ownwort', exact: true }).focus();
   await page.keyboard.press('ArrowDown');
   const ours = page.getByRole('menuitem', { name: 'Make It Ours' });
   while (!(await ours.evaluate((item) => item === document.activeElement))) {

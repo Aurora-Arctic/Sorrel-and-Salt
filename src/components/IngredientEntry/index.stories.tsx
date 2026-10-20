@@ -330,8 +330,8 @@ export const Annotated: Story = () => (
 
 // The cupboard choices beside the title (M12.17). The workshop has no API, so
 // a press answers with the generic error, which shows in the failure callout
-// under the button (M12.31). A member sees an Edit menu of Annotate, Make It
-// Ours (M12.23) and Remove once the coven holds the entry; a viewer sees none.
+// under the button (M12.31). A member sees the Annotate icon, More (Make It
+// Ours, M12.23) and the Remove bin once the coven holds the entry; a viewer sees none.
 // Adding is the plus's (AddIcon).
 const CUPBOARD = {
   workspaceId: nextId(),
@@ -460,7 +460,7 @@ export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_C
 // public link nor Edit, since the compendium no longer holds it.
 export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
 
-// The same, to a member: the Edit menu offers Annotate, Make It Ours (M12.23) and
+// The same, to a member: the icons offer Annotate, Make It Ours (M12.23) and
 // Remove, and no Add, since the compendium no longer offers the entry (the
 // owner's decision, 2026-10-19).
 export const RetiredOffersMakeItOurs: Story = () => (

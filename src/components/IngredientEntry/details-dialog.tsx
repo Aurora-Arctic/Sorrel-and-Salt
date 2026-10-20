@@ -4,7 +4,6 @@ import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import { EditLink } from '../IconTip';
-import OwnEntryActions from './own-actions';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
@@ -25,17 +24,18 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 /**
  * The head's marks and actions (the owner's calls, 2026-10-20). On the top line beside Close, as the
  * entry page's top bar has them: New or Updated, then the one safety badge, Toxic over Caution.
- * At the end of the formal name's line, over the name, as the entry page has them: the Edit pencil, the cards' with its tip,
- * named for the entry, a press opening the edit modal at once under its head (M9.18); left of
- * it the plus, or the check once every coven the viewer may add in holds the entry. Under the
- * formal name: the other badges. All the entry page's and the card's own components, so the
- * three cannot differ.
+ * At the end of the formal name's line, over the name: the controls of the card the window was
+ * opened from (the owner's call, 2026-10-20), made by the same components, so the two cannot
+ * differ. On a compendium list, the card's Edit pencil (a press opening the edit modal at once
+ * under its head, M9.18) with the plus, or the check once every coven the viewer may add in holds
+ * the entry, left of it; on a coven's list, the coven card's Edit or Annotate and its More or
+ * bin (`actions`). Under the formal name: the other badges.
  */
 function headingOf({
   heading,
   marks,
   editAction,
-  ownActions,
+  actions: controls,
   plus,
   ingredientId,
 }: IngredientDetailsOpened): ModalHeading {
@@ -50,12 +50,11 @@ function headingOf({
       )}
     </>
   );
-  // A coven's own entry has the page's Edit menu, Edit and Delete; any other Edit is a pencil.
-  const edit = ownActions ? (
-    <OwnEntryActions {...ownActions} />
-  ) : (
-    editAction && <EditLink {...editAction} name={heading.title} />
-  );
+  // The coven card's own controls where the page gave them; else the compendium card's Edit,
+  // named as the card names the entry.
+  const edit =
+    controls ??
+    (editAction && <EditLink {...editAction} name={editAction.name ?? heading.title} />);
   // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
   // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
   const add = plus && ingredientId && <PlusMark plus={plus} ingredientId={ingredientId} />;

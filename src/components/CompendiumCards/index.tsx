@@ -4,6 +4,7 @@ import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
 import { EditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
+import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientSearch from '../IngredientSearch';
@@ -26,8 +27,7 @@ import '../CompendiumList/index.scss';
 const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
 
 // Named with the formal name too, as two entries can share a name.
-const nameOf = (entry: CompendiumCardEntry): string =>
-  entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name;
+const nameOf = (entry: CompendiumCardEntry): string => cardName(entry.name, entry.canonicalName);
 
 // The foot's add mark: the plus while some coven the viewer may write in lacks the entry, the
 // check once every one holds it. Both need a default coven.

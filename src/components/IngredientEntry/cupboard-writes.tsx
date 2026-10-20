@@ -14,7 +14,7 @@ import CovenChoice from './coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
 
 // Make It Ours (M12.23) and Remove (M12.17), the two writes a coven's member
-// makes to a compendium entry it holds, shared by the entry page's Edit menu
+// makes to a compendium entry it holds, shared by the entry page's More and bin
 // and the Annotate dialog's More menu (M8.17), so the two ask the same
 // confirmation and land in the same place. The entry page asks in a dialog; the
 // Annotate dialog asks in its form's own confirmation card, as its Delete and Link

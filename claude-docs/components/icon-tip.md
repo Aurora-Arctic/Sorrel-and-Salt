@@ -48,6 +48,7 @@ follows `href` as before.
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
+- **The buttons beside them** (`icon-button.tsx`, the owner's calls, 2026-10-20), shared by the coven cards' foot, the entry page's icons and the Quick Look window, so the places cannot differ: `BinButton` (the bin, tipped with its verb, "Delete Ingredient" or "Remove"), `AnnotateButton` (Annotate as a button, where a press asks which coven first) and `MoreMenu` (the three dots, a [`MenuButton`](menu-button.md) taking items or sections, named "More for <entry>"). `CompendiumEditLink` is the pencil for the compendium's own edit on the entry page, named and tipped "Edit in Compendium". Each is named "<verb> <entry>" in hidden text, with the verb as the tip, and takes the entry's name as the card names it (`cardName`, "Name, Formal").
 - **Annotate on a coven's list** (`CovenCards`), through `AnnotateLink`:
   `AnnotateIcon`, an open book with a filled pencil,
   drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
@@ -86,7 +87,7 @@ goes faster:
   control, so any control can sit inside without IconTip taking over its
   props. A focus inside the control's own open menu bubbles there too and is
   ignored: the menu says what the control does (the owner's call of
-  2026-10-20 put the page's Edit menu under a pencil).
+  2026-10-20 put a menu under the three dots).
 - **A status mark's press opens it too** (`opensOnPress`, the owner's call,
   2026-10-20), as a tap or a click does on InfoTip's ⓘ. The card's In All
   Covens check and the entry page's In Your Cupboard shelf are buttons that do

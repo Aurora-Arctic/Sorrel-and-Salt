@@ -41,19 +41,16 @@ const quickLook = (scope: Locator | Page, entry = ENTRY) =>
 /** The details modal, named by the entry's name alone. */
 const detailsDialog = (page: Page, name = NAME) => page.getByRole('dialog', { name, exact: true });
 
-/** The details' Edit: the cards' pencil, named for the entry it edits. */
+/**
+ * The details' Edit: the card's pencil, a link named as the card names it, "Edit Name, Formal"
+ * (the owner's call, 2026-10-20: the window's icons follow the card's).
+ */
 const editIn = (dialog: Locator, name = NAME) =>
-  dialog.getByRole('link', { name: `Edit ${name}`, exact: true });
+  dialog.getByRole('link', { name: `Edit ${name}, ${FORMAL}`, exact: true });
 
-/** A coven's own entry's menu in the details: the pencil, named for the entry it edits. */
-const ownMenuIn = (dialog: Locator, name = NAME) =>
-  dialog.getByRole('button', { name: `Edit ${name}`, exact: true });
-
-/** Chooses Edit Ingredient from the own-entry menu in the details. */
-const chooseEditIn = async (dialog: Locator, name = NAME) => {
-  await ownMenuIn(dialog, name).click();
-  await dialog.getByRole('menuitem', { name: 'Edit Ingredient' }).click();
-};
+/** A coven's own entry's bin in the details, the card's, named as it names the entry. */
+const binIn = (dialog: Locator, name = NAME) =>
+  dialog.getByRole('button', { name: `Delete Ingredient ${name}, ${FORMAL}`, exact: true });
 
 test.describe('on the admin Compendium list', () => {
   const slug = ingredientSlug(NAME, FORMAL);
@@ -360,7 +357,7 @@ test.describe("on a coven's Ingredients", () => {
       await quickLook(page).click();
       // Why Edit could be there: the details are open, with their other action.
       await expect(details.getByRole('link', { name: 'See in My Ingredients' })).toBeVisible();
-      await expect(ownMenuIn(details)).toHaveCount(0);
+      await expect(editIn(details)).toHaveCount(0);
       // The entry's sections, read for the coven.
       await expect(
         details.getByRole('region', { name: 'Caution' }).getByText('Fixture coven caution.'),
@@ -375,14 +372,14 @@ test.describe("on a coven's Ingredients", () => {
         await signInAgainAs(page, coven.users[key]);
         await page.goto(listPath);
         await quickLook(page).click();
-        await expect(ownMenuIn(details)).toBeVisible();
+        await expect(editIn(details)).toBeVisible();
       });
     }
 
     const RENAMED = 'Fixture Seenwort';
     const renamedDetails = detailsDialog(page, RENAMED);
     await test.step('a save goes back to the details, renamed there and on the list', async () => {
-      await chooseEditIn(details);
+      await editIn(details).click();
       const editing = editIngredientDialog(page, NAME, FORMAL);
       await expect(editing).toBeVisible();
       await editing.getByRole('button', { name: 'Open All' }).click();
@@ -396,7 +393,7 @@ test.describe("on a coven's Ingredients", () => {
     });
 
     await test.step('closing an edit with a change asks before discarding it', async () => {
-      await chooseEditIn(renamedDetails, RENAMED);
+      await editIn(renamedDetails, RENAMED).click();
       const editing = editIngredientDialog(page, RENAMED, FORMAL);
       await expect(editing).toBeVisible();
       await editing.getByRole('button', { name: 'Open All' }).click();
@@ -438,8 +435,7 @@ test.describe("on a coven's Ingredients", () => {
     await expect(details).toBeVisible();
     await expect(page).toHaveURL(/[?&]entry=/);
 
-    await ownMenuIn(details).click();
-    await details.getByRole('menuitem', { name: 'Delete Ingredient' }).click();
+    await binIn(details).click();
     const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
     await expect(question).toContainText(NAME);
     await question.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -467,7 +463,7 @@ test.describe("on a coven's Ingredients", () => {
     await quickLook(page).click();
     const details = detailsDialog(page);
     await expect(details).toBeVisible();
-    await expect(ownMenuIn(details)).toBeVisible();
+    await expect(editIn(details)).toBeVisible();
 
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page);

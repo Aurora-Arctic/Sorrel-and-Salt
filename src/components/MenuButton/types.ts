@@ -45,7 +45,7 @@ export type MenuButtonItem = {
 
 /**
  * A labelled group of a menu's items, drawn under a small muted heading and set apart from the
- * next group by a rule: the compendium's choices and the coven's, in an Edit menu that offers
+ * next group by a rule: the compendium's choices and the coven's, in a More menu that offers
  * both (the owner's call, 2026-10-20). Generic over the item so the bar's Add Ingredient menu,
  * which has its own items, draws its groups the same way (`sections.tsx`).
  */

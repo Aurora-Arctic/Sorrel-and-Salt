@@ -172,7 +172,7 @@ export interface PublicCupboardProps {
 export interface PublicCupboardActionsProps extends PublicCupboardProps {
   ingredientId: string;
   compendium: CompendiumValues;
-  /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
+  /** Edit in Compendium, for a curator: the main icon on the compendium's pages, else in More. */
   edit?: { href: Route; entry: EditableEntry };
 }
 
@@ -210,8 +210,8 @@ export interface CupboardProps {
   removedHref?: Route;
   /**
    * The plus beside the pencil (the owner's call, 2026-10-20): the viewer's covens that may
-   * add, this one among them where it may, and which hold the entry. Given, Add leaves the
-   * Edit menu for it; left out (a coven's own entry, a retired one, no coven that may add),
+   * add, this one among them where it may, and which hold the entry. Given, Add stands apart from
+   * the other choices; left out (a coven's own entry, a retired one, no coven that may add),
    * neither the plus nor its check is drawn. `plusCovensOf` (src/app/plus-covens.ts) reads it.
    */
   plus?: CupboardPlus;
@@ -244,7 +244,7 @@ export interface CupboardActionsProps extends CupboardProps {
 export type DetailsMarks = Omit<EntryMarksProps, 'provenance' | 'safety'>;
 
 /**
- * What a coven's own entry's Edit menu (`OwnEntryActions`) needs: the entry, where Edit
+ * What a coven's own entry's icons (`OwnEntryActions`) need: the entry, where Edit
  * goes, and where a delete leads. The entry page passes its whole `IngredientEntryEdit`.
  */
 export interface OwnEntryActionsProps {
@@ -270,14 +270,17 @@ export interface IngredientDetailsOpened {
    * list, an owner or member on a coven's list for the coven's own entry (not
    * a compendium entry it holds). None for anyone else.
    */
-  editAction?: RouteModalLink;
+  editAction?: RouteModalLink & {
+    /** The card's own name for the entry, name then formal name, which its Edit link is read as. */
+    name?: string;
+  };
   /**
-   * The page's own Edit menu, Edit and Delete, in place of `editAction`'s plain pencil, for a
-   * coven's own entry on a role that may edit it (the owner's call, 2026-10-20). Edit opens the
-   * edit modal over the details as `editAction` does; a delete leads to `edit.deletedHref`, the
-   * list without the details, which closes them.
+   * The coven card's own foot controls for this entry (`covenCardActions`), drawn in place of
+   * `editAction`: Edit or Annotate, and the card's More or bin, so the window's icons are the
+   * card's the window was opened from (the owner's call, 2026-10-20). A delete or a remove leads to
+   * the list without the details, which closes them.
    */
-  ownActions?: OwnEntryActionsProps;
+  actions?: ReactNode;
   /**
    * The plus beside the pencil, for a live compendium entry (M9.12; the owner's call, 2026-10-20):
    * every coven the viewer may add in and which hold it, read per request by `plusCovensOf`

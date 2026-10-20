@@ -133,9 +133,10 @@ and a Modal's owner closes it by unmounting it, so Modal does it instead
    `RouteModal` (a dialog opened by its address, such as `?edit`) looks for
    a link to that address and focuses it. If the link is an item of a closed
    `MenuButton`, it focuses that menu's button instead, where the press
-   began. For example, Edit Ingredient chosen from a coven entry's Edit menu,
-   then Cancel, leaves the focus on Edit; the curator's Edit Compendium Entry
-   item works the same way (M8.17, the owner's call, 2026-10-20).
+   began. For example, Make It Ours chosen from More, then Cancel, leaves the
+   focus on More. Edit and Annotate are icon links now, not menu items, so
+   they are the link the dialog looks for and take the focus back themselves
+   (M8.17, the owner's calls, 2026-10-20).
 4. **If the owner names nowhere**, it focuses the page's `<h1>`, given
    `tabindex="-1"` by script so it can take the focus without becoming a
    Tab stop (`pageHeading()`, in `page-heading.ts`).
@@ -146,14 +147,14 @@ again, and the row goes, taking the button that opened the confirmation with
 it. Without step 4 the focus would fall to the page's body, and a screen
 reader would start again from the top. The rows that do this:
 
-| Row                                          | Removed by                                               |
-| -------------------------------------------- | -------------------------------------------------------- |
-| A member on the members page                 | Remove (`MemberList`)                                    |
-| A pending or declined invitation in a coven  | Revoke, or Remove once declined (`PendingInvitations`)   |
-| An invitation on the account page            | Decline (`ReceivedInvitations`)                          |
-| An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                              |
-| A compendium entry's page, held by the coven | Remove, from the Edit menu or the Annotate dialog's More |
-| A retired entry's page                       | Remove, leading to the Ingredients list                  |
+| Row                                          | Removed by                                                |
+| -------------------------------------------- | --------------------------------------------------------- |
+| A member on the members page                 | Remove (`MemberList`)                                     |
+| A pending or declined invitation in a coven  | Revoke, or Remove once declined (`PendingInvitations`)    |
+| An invitation on the account page            | Decline (`ReceivedInvitations`)                           |
+| An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                               |
+| A compendium entry's page, held by the coven | Remove, the bin on the page or the Annotate dialog's More |
+| A retired entry's page                       | Remove, leading to the Ingredients list                   |
 
 The first four ask through `ConfirmedAction`, whose confirmation stays open
 and busy until the page is read again, so it closes in the same step as the
@@ -446,7 +447,7 @@ the details window passes them; every other dialog is drawn as before (the owner
   the grid. Each is as tall as the pencil, taller than the formal name's line, so their
   margin takes half the difference off each side and their middle stands on the
   line's. With no formal name the title takes the first row and the actions stand beside it.
-  An action wrapped in a node of its own, as a coven's own entry's Edit menu is, has that wrapper's
+  An action wrapped in a node of its own, as a coven's own entry's pair of icons is, has that wrapper's
   margin cleared, since the grid places it. Empty, it takes no room.
 - **`under`** is a wrapping row (`.modal-dialog__under`, `space(3)` apart) under the
   qualifier, for the badges. Empty, it takes no room.

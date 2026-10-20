@@ -1,7 +1,6 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import {
   type ReactElement,
   useCallback,
@@ -12,8 +11,8 @@ import {
 } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
-import IconTip, { EditLink, PencilIcon } from '../IconTip';
-import MenuButton from '../MenuButton';
+import { AnnotateButton, AnnotateLink, BinButton, CompendiumEditLink, MoreMenu } from '../IconTip';
+import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
 import AnnotateDialog from './annotate-dialog';
@@ -30,37 +29,43 @@ import type {
   PublicCupboardActionsProps,
 } from './types';
 
-// What a compendium entry offers a coven's member beside its title (M12.17):
-// Annotate, Make It Ours (M12.23) and Remove once the coven holds it, and a
-// curator's Edit Compendium Entry; adding is the plus's (below). Two or more
-// share one Edit menu, the owner's call of 2026-10-19, so the title keeps its
-// line; one alone is a plain button. The menu's button is the pencil at the end
-// of the name's row, named Edit and the entry (the owner's call, 2026-10-20). Make It Ours leads to the own entry it
-// writes, since the compendium entry's page is no longer the coven's; every
-// other write reads the page again, so the marks and the choices follow the
-// cupboard. Which choices show is the page's, from the member's permissions;
-// each is only the door, and the service is the guard. Every write goes
-// through /api/graphql. Make It Ours and Remove are `cupboard-writes.tsx`'s,
-// shared with the Annotate dialog's More menu, which the page passes on (M8.17).
-// A refusal of Make It Ours or Remove is one callout under the button that
-// keeps the focus, the Edit menu's or the lone button (M12.31's design F,
-// `useClickFeedback`), which floats rather than taking room beside the title;
-// the two share it, since one press at a time can fail.
+// What a compendium entry offers a viewer beside its title (M12.17), drawn as a list card's foot
+// draws its actions (the owner's calls, 2026-10-20): icons, with the three dots only for what is
+// left over. Up to three icons after the plus (below):
 //
-// The public entry page offers the same (M9.12), across every coven the viewer
-// may write in, but for Add, which on both pages is the compendium card's plus
-// (AddIcon) just before the pencil and never one of its choices (the owner's
-// calls, 2026-10-20), so a coven page given no `plus` offers no Add at all.
-// And each held choice while one of the covens holding the entry
-// permits it, acting at once where one does and asking which where several do.
-// Make It Ours and Remove ask in their own confirmation, the dropdown above the
-// question; Annotate asks in a picker of its own, then opens that coven's
-// `?annotate=<covenSlug>`. A coven's page is the one-place case of the same list.
+// 1. The main icon, never folded into the menu, for a viewer who may write there. On a coven's
+//    page it is the card's own: Annotate, a link to the `?annotate` dialog where one coven may
+//    annotate (a button asking which coven where several do, on the public page). On the
+//    compendium's page (the public entry page, the admin page) it is Edit in Compendium, for an
+//    admin or a curator, named and tipped as such so it is not taken for a coven's own. A viewer
+//    with no write right there has none: signed out, a coven viewer, a member who is no curator
+//    on the compendium's page. If the page's own main has no right behind it but the other side's
+//    edit does (a curator in a coven that holds the entry, who may not annotate), the edit takes
+//    the place, so a lone choice is never a menu of one.
+// 2. More, the three dots, only when there is more than that: Make It Ours, and whichever of
+//    Annotate and Edit in Compendium is not the main icon. It holds both kinds only for a curator
+//    who is also a coven's member, and then it is in two sections, the viewer's own side first,
+//    by the page and not by the address (`sectionsFor`, claude-docs/components/menu-button.md).
+// 3. The bin, Remove, for a coven that holds the entry and lets the viewer remove it. Always its
+//    own icon, where the cards put a Remove beside Make It Ours into More (the owner's brief).
+//
+// The plus is the compendium card's (AddIcon), just before them, and never one of the choices.
+// Make It Ours leads to the own entry it writes, since the compendium entry's page is no longer
+// the coven's; every other write reads the page again, so the marks and the choices follow the
+// cupboard. Which choices show is the page's, from the member's permissions; each is only the
+// door, and the service is the guard. Every write goes through /api/graphql. Make It Ours and
+// Remove are `cupboard-writes.tsx`'s, shared with the Annotate dialog's More menu (M8.17). A
+// refusal is one callout under the control that keeps the focus (M12.31's design F,
+// `useClickFeedback`): the bin's for Remove, the More's for Make It Ours; it floats rather than
+// taking room beside the title.
+//
+// The public entry page offers the same (M9.12), across every coven the viewer may write in,
+// acting at once where one coven permits and asking which where several do. Make It Ours and
+// Remove ask in their own confirmation; Annotate asks in a picker of its own, then opens that
+// coven's `?annotate=<covenSlug>`. A coven's page is the one-place case of the same list. A page
+// given no `plus` offers no Add at all; once every coven that may add holds the entry, the card's
+// check stands in the plus's place. claude-docs/components/ingredient-entry.md.
 
-// The plus (the owner's calls, 2026-10-20) stands on the coven's page too, from the page's
-// `plus` (every coven the viewer may add in, and which hold the entry), so Add leaves the Edit
-// menu there as well; and once every one of them holds the entry, the card's check stands in
-// its place, in the same pair, rather than leave the space empty.
 /** The public page's plus, from its covens: those that may add, and which hold the entry. */
 const plusOfPlaces = (
   places: readonly CupboardPlace[],
@@ -75,15 +80,6 @@ const plusOfPlaces = (
       }
     : undefined;
 };
-
-const PLAIN = 'btn btn--quiet btn--medium';
-
-const LABEL = {
-  edit: 'Edit Compendium Entry',
-  annotate: 'Annotate',
-  own: 'Make It Ours',
-  remove: 'Remove',
-} as const;
 
 type Asking = 'remove' | 'own' | 'annotate';
 
@@ -138,28 +134,6 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
   };
 }
 
-/**
- * What the failure badge calls the button that keeps the focus: the pencil's
- * "Edit" and the entry when two or more choices share it, the lone button's own label
- * otherwise. Worked out from the same permissions as the choices, ahead of
- * them, since the hook that draws the badge is called before the choices'
- * handlers exist.
- */
-function feedbackName(places: readonly CupboardPlace[], edit: boolean, name: string): string {
-  const keys = (
-    [
-      edit && 'edit',
-      placesFor.annotate(places).length > 0 && 'annotate',
-      placesFor.own(places).length > 0 && 'own',
-      placesFor.remove(places).length > 0 && 'remove',
-    ] as const
-  ).filter((key): key is keyof typeof LABEL => key !== false);
-  return keys.length === 1 ? LABEL[keys[0]] : editLabel(name);
-}
-
-/** The Edit menu's name, the pencil's: the verb and the entry, as the details modal's pencil has it. */
-const editLabel = (name: string): string => `Edit ${name}`;
-
 /** The coven a confirmation starts on: the default where it may, else the first that may. */
 const startOn = (places: readonly CupboardPlace[], defaultWorkspaceId: string): string =>
   (places.find(({ workspaceId }) => workspaceId === defaultWorkspaceId) ?? places[0]).workspaceId;
@@ -170,6 +144,10 @@ export default function CupboardActions(
   const { ingredientId, compendium, edit } = props;
   const { places, defaultWorkspaceId, closeHref, opened, name, removedHref, plus } =
     normalise(props);
+  // Where the viewer is, which puts a section first in More and decides the main icon: the
+  // public page is the compendium's, the coven's own page the coven's. The page's shape says
+  // so, so nothing here reads an address.
+  const viewing = 'covens' in props ? 'compendium' : 'coven';
   // Which question is open, one at a time. The Annotate dialog is the
   // address's instead (`opened`), as the curator's Edit is.
   const [asking, setAsking] = useState<Asking>();
@@ -178,31 +156,45 @@ export default function CupboardActions(
   const [target, setTarget] = useState(defaultWorkspaceId);
   const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
   const anyHeld = places.some(({ held }) => held);
-  // The menu's button, or the one plain button: where the focus goes back to
-  // once a confirmation or the dialog closes, since the menu item that opened
-  // it is gone with the menu. Modal gives it there itself. Once a remove has
-  // taken the entry away, the button left offers something else (the
-  // plus), so it names nowhere and Modal gives the focus to the page's
-  // heading, as a row's Remove does (M8.17). Read as the dialog closes, after
-  // this render's layout, so the ref is the commit's own.
-  const trigger = useRef<HTMLButtonElement | null>(null);
-  // The callout hangs from the same button, named as the badge says it: the
-  // pencil's Edit and the entry, or the lone button's own label.
-  const feedback = useClickFeedback({ name: feedbackName(places, !!edit, name) });
-  const { anchorRef } = feedback;
-  const triggerRef = useCallback(
+  // The controls a dialog's focus goes back to once it closes, since the menu item that opened
+  // it is gone with the menu: the annotate icon, the three dots and the bin. Once a remove has
+  // taken the entry away they offer something else or nothing, so they name nowhere and Modal
+  // gives the focus to the page's heading, as a row's Remove does (M8.17). Read as the dialog
+  // closes, after this render's layout, so the refs are the commit's own.
+  const annotateControl = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
+  const moreControl = useRef<HTMLButtonElement | null>(null);
+  const binControl = useRef<HTMLButtonElement | null>(null);
+  // A refusal is a callout under the control the write came from: the bin's Remove, or the
+  // three dots' Make It Ours; one press at a time can fail, so `lastAsked` says which.
+  const binFeedback = useClickFeedback({ name: `Remove ${name}` });
+  const moreFeedback = useClickFeedback({ name: `More for ${name}` });
+  const lastAsked = useRef<Asking>(undefined);
+  const binAnchor = binFeedback.anchorRef;
+  const moreAnchor = moreFeedback.anchorRef;
+  const binRef = useCallback(
     (node: HTMLButtonElement | null) => {
-      trigger.current = node;
-      anchorRef(node);
+      binControl.current = node;
+      binAnchor(node);
     },
-    [anchorRef],
+    [binAnchor],
   );
-  const link = useRef<HTMLAnchorElement>(null);
+  const moreRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      moreControl.current = node;
+      moreAnchor(node);
+    },
+    [moreAnchor],
+  );
   const heldNow = useRef(anyHeld);
   useLayoutEffect(() => {
     heldNow.current = anyHeld;
   }, [anyHeld]);
-  const back = () => (heldNow.current ? (trigger.current ?? link.current) : null);
+  const back = (...controls: { current: HTMLElement | null }[]) => {
+    if (!heldNow.current) return null;
+    return controls.map(({ current }) => current).find((node) => node?.isConnected) ?? null;
+  };
+  const reportRefusal = (message: string | undefined): void =>
+    (lastAsked.current === 'remove' ? binFeedback : moreFeedback).report(message);
   // The remove's confirmation stays, busy, until the re-read drops the entry
   // from its coven; it closes in that render (below), and the choice is
   // forgotten here.
@@ -233,11 +225,13 @@ export default function CupboardActions(
     ingredientId,
     removedHref,
     onSettle: settle,
-    onRefused: feedback.report,
+    onRefused: reportRefusal,
   });
 
   const ask = (what: Asking, among: readonly CupboardPlace[], write?: CupboardWrite) => () => {
-    feedback.report(undefined);
+    lastAsked.current = what;
+    binFeedback.report(undefined);
+    moreFeedback.report(undefined);
     write?.reset?.();
     setTarget(startOn(among, defaultWorkspaceId));
     setAsking(what);
@@ -252,91 +246,96 @@ export default function CupboardActions(
         }
       : undefined;
 
-  const items: MenuButtonItem[] = [
-    ...(edit ? [{ key: 'edit', label: LABEL.edit, href: edit.href, onClick: openEdit }] : []),
-    ...(annotators.length === 1
-      ? [{ key: 'annotate', label: LABEL.annotate, href: annotateHref, onClick: openAnnotate }]
-      : annotators.length > 1
-        ? [{ key: 'annotate', label: LABEL.annotate, onSelect: ask('annotate', annotators) }]
-        : []),
-    ...(owners.length > 0
-      ? [{ key: 'own', label: LABEL.own, onSelect: ask('own', owners, writes.makeOurs) }]
-      : []),
-    ...(removers.length > 0
-      ? [
-          {
-            key: 'remove',
-            label: LABEL.remove,
-            destructive: true,
-            onSelect: ask('remove', removers, writes.remove),
-          },
-        ]
-      : []),
-  ];
+  // The main icon: the page's own side first, and the other side's edit when the page's has no
+  // right behind it. Annotate is never main on the compendium's page, which the owner made the
+  // compendium edit's alone.
+  const mayAnnotate = annotators.length > 0;
+  const main: 'edit' | 'annotate' | undefined =
+    viewing === 'compendium'
+      ? edit
+        ? 'edit'
+        : undefined
+      : mayAnnotate
+        ? 'annotate'
+        : edit
+          ? 'edit'
+          : undefined;
+
+  const annotateItem: MenuButtonItem | undefined =
+    main !== 'annotate' && mayAnnotate
+      ? annotators.length === 1
+        ? { key: 'annotate', label: 'Annotate', href: annotateHref, onClick: openAnnotate }
+        : { key: 'annotate', label: 'Annotate', onSelect: ask('annotate', annotators) }
+      : undefined;
+  const editItem: MenuButtonItem | undefined =
+    main !== 'edit' && edit
+      ? { key: 'edit', label: 'Edit in Compendium', href: edit.href, onClick: openEdit }
+      : undefined;
+  const ownItem: MenuButtonItem | undefined =
+    owners.length > 0
+      ? { key: 'own', label: 'Make It Ours', onSelect: ask('own', owners, writes.makeOurs) }
+      : undefined;
+  // Compendium and Coven sections, where More holds both (`choicesFor` leaves a lone kind flat).
+  const moreChoices = choicesFor(
+    {
+      compendium: editItem ? [editItem] : [],
+      coven: [annotateItem, ownItem].filter((item): item is MenuButtonItem => item !== undefined),
+    },
+    viewing,
+  );
+  const more = (moreChoices.items ?? moreChoices.sections).length > 0;
   // The plus while some coven that may add lacks the entry, and the check once all hold it
   // (PlusMark), where Add is not one of the choices.
   const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} /> : null;
-  if (items.length === 0 && !plusMark) return null;
-
-  // One choice is a plain button, as Add Ingredient is with one place to go.
-  const only = items.length === 1 ? items[0] : undefined;
-  // Icons alone, the plus and the pencil, as one pair that sits where the pencil sits.
-  const icons = items.length !== 1 || only?.key === 'edit';
+  const bin = removers.length > 0;
+  const icons = (plusMark ? 1 : 0) + (main ? 1 : 0) + (more ? 1 : 0) + (bin ? 1 : 0);
+  if (icons === 0) return null;
   const openedPlace =
     opened && places.find(({ workspaceId }) => workspaceId === opened.workspaceId);
 
   return (
     <div
-      className={
-        icons
-          ? plusMark && items.length > 0
-            ? 'ingredient-entry__cupboard ingredient-entry__cupboard--pencil ingredient-entry__cupboard--pair'
-            : 'ingredient-entry__cupboard ingredient-entry__cupboard--pencil'
-          : 'ingredient-entry__cupboard'
-      }
+      className="ingredient-entry__cupboard ingredient-entry__cupboard--icons"
+      data-icons={icons}
     >
       {plusMark}
-      {items.length === 0 ? null : only === undefined ? (
-        <IconTip tip="Edit">
-          <MenuButton
-            ref={triggerRef}
-            label={editLabel(name)}
-            className="icon-tip__edit"
-            icon={<PencilIcon />}
-            items={items}
-          />
-        </IconTip>
-      ) : only.key === 'edit' && edit ? (
-        // Edit alone: the pencil still, as a link straight into the edit dialog rather than a
-        // menu of one (the owner's call, 2026-10-20).
-        <EditLink
+      {main === 'edit' && edit && (
+        <CompendiumEditLink
           href={edit.href}
           name={name}
           heading={editHeading(edit.entry, EDIT_ENTRY_EYEBROW)}
         />
-      ) : only.key === 'annotate' && only.href !== undefined ? (
-        <Link ref={link} className={PLAIN} href={only.href} onClick={openAnnotate}>
-          {only.label}
-        </Link>
-      ) : (
-        <button
-          ref={triggerRef}
-          type="button"
-          className={only.destructive ? 'btn btn--destructive btn--medium' : PLAIN}
-          onClick={() => only.href === undefined && only.onSelect()}
-        >
-          {only.label}
-        </button>
       )}
+      {main === 'annotate' &&
+        (annotators.length === 1 ? (
+          <AnnotateLink
+            ref={annotateControl}
+            href={annotateHref}
+            name={name}
+            heading={ANNOTATE_HEADING}
+          />
+        ) : (
+          <AnnotateButton ref={annotateControl} name={name} onClick={ask('annotate', annotators)} />
+        ))}
+      {more && <MoreMenu ref={moreRef} name={name} {...moreChoices} />}
+      {bin && (
+        <BinButton
+          ref={binRef}
+          verb="Remove"
+          name={name}
+          onClick={ask('remove', removers, writes.remove)}
+        />
+      )}
+      {binFeedback.feedback}
+      {moreFeedback.feedback}
       {/* Asked in a dialog over the page, as Leave Coven asks (the owner's
           call, 2026-10-19), rather than in the title's row. */}
-      {feedback.feedback}
       {asking === 'annotate' && (
         <AnnotatePicker
           places={annotators}
           defaultWorkspaceId={defaultWorkspaceId}
           onClose={settle}
-          returnTo={back}
+          returnTo={() => back(annotateControl, moreControl)}
         />
       )}
       {asking === 'own' && targetPlace.held && (
@@ -344,7 +343,7 @@ export default function CupboardActions(
           name={name}
           write={writes.makeOurs}
           onClose={settle}
-          returnTo={back}
+          returnTo={() => back(moreControl)}
           covens={choiceOf(owners)}
         />
       )}
@@ -353,13 +352,13 @@ export default function CupboardActions(
           name={name}
           write={writes.remove}
           onClose={settle}
-          returnTo={back}
+          returnTo={() => back(binControl)}
           covens={choiceOf(removers)}
         />
       )}
       <AnnotateDialog
         closeHref={closeHref}
-        returnTo={back}
+        returnTo={() => back(annotateControl, moreControl)}
         opened={
           openedPlace && opened
             ? {

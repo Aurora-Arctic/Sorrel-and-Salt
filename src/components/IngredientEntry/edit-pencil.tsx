@@ -3,15 +3,15 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
-import { EditLink } from '../IconTip';
+import { CompendiumEditLink } from '../IconTip';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import type { EditableEntry } from './types';
 
 /**
- * Edit as the pencil, where it is the page head's one choice (a curator in no coven, M9.12):
- * the pencil the Edit menu is everywhere else, in the same placed container, but a link straight
- * into the edit dialog rather than a menu of one item. Named "Edit" and the entry's name, as the
- * menu's pencil is.
+ * Edit in Compendium as the one icon, where it is the page head's only action (a curator in no
+ * coven, M9.12): the same pencil as the cards', named for the compendium it changes (the owner's
+ * call, 2026-10-20), a link straight into the edit dialog. It is the page's main icon: on the
+ * compendium's page the compendium edit is always its own button, never folded into a menu.
  */
 export function EditPencil({
   href,
@@ -23,8 +23,8 @@ export function EditPencil({
   eyebrow?: string;
 }): ReactElement {
   return (
-    <div className="ingredient-entry__cupboard ingredient-entry__cupboard--pencil">
-      <EditLink href={href} name={entry.name} heading={editHeading(entry, eyebrow)} />
+    <div className="ingredient-entry__cupboard ingredient-entry__cupboard--icons" data-icons={1}>
+      <CompendiumEditLink href={href} name={entry.name} heading={editHeading(entry, eyebrow)} />
     </div>
   );
 }

@@ -19,6 +19,7 @@ const IconLink = ({
   href,
   name,
   heading,
+  ref,
   verb,
   icon,
   place,
@@ -32,7 +33,7 @@ const IconLink = ({
   const onClick = useOpenModalClick(href, heading, place);
   return (
     <IconTip tip={verb}>
-      <Link className={className} href={href} onClick={onClick}>
+      <Link ref={ref} className={className} href={href} onClick={onClick}>
         {icon}
         <span className="visually-hidden">
           {verb} {name}
@@ -45,6 +46,15 @@ const IconLink = ({
 /** A row's Edit: the pencil. */
 export const EditLink = (props: EditLinkProps): ReactElement => (
   <IconLink {...props} verb="Edit" icon={<PencilIcon />} />
+);
+
+/**
+ * Edit on a compendium entry, for an admin or a curator (the owner's call, 2026-10-20): the same
+ * pencil, but named and tipped for the compendium it changes, "Edit in Compendium", so that on a
+ * page that also offers a coven's own choices it cannot be taken for one of them.
+ */
+export const CompendiumEditLink = (props: EditLinkProps): ReactElement => (
+  <IconLink {...props} verb="Edit in Compendium" icon={<PencilIcon />} />
 );
 
 /**

@@ -6,6 +6,7 @@ import CompendiumList from '../../../../components/CompendiumList';
 import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
+import { cardName } from '../../../../components/IngredientCard/card-name';
 import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
@@ -167,6 +168,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             editAction: {
               href: compendiumHref(here, { edit: detailed.slug }),
+              name: cardName(detailed.name, detailed.canonicalName),
               heading: editHeading(detailed),
             },
           }

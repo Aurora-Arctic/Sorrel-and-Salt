@@ -5,7 +5,7 @@ import { sectionsFor } from './sections';
 import type { MenuButtonItem } from './types';
 
 // Render-only; the keys and the closing are asserted in
-// tests/components/MenuButton/index.test.tsx. The entry page's Edit menu, a
+// tests/components/MenuButton/index.test.tsx. The entry page's More menu, a
 // link first and the destructive choice last; the button busy; and the
 // Annotate dialog's More, opening above from a dialog's foot (M8.17).
 export default {

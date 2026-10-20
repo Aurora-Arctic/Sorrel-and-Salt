@@ -1,5 +1,6 @@
 import type { Metadata, Route } from 'next';
 import CovenCards from '../../../../../components/CovenCards';
+import { covenCardActions } from '../../../../../components/CovenCards/actions';
 import type { CovenCardEntry } from '../../../../../components/CovenCards/types';
 import { covenFacetCounts } from '../../../../../components/CompendiumList/facets';
 import { editHeading } from '../../../../../components/CompendiumList/heading';
@@ -90,6 +91,19 @@ export default async function CovenIngredientsPage({
   // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
+  // What a card's foot may do to an entry, for the role: Edit on the coven's own, Annotate on a
+  // compendium entry the cupboard holds, and More's writes. The Quick Look window draws the very
+  // same through `covenCardActions` (the owner's call, 2026-10-20); only its Edit opens over the
+  // details, `editHref`, where the card's opens over the list.
+  const footOf = (
+    own: boolean,
+    shown: Parameters<typeof editHeading>[0] & { id: string },
+    editHref: Route,
+  ) => ({
+    ...(own && mayEdit && { editHref, editHeading: editHeading(shown) }),
+    ...(!own && mayEdit && { annotateHref: placed({ annotate: shown.id }) }),
+    ...(own ? { mayDelete } : { mayMakeOurs, mayRemove: mayDelete }),
+  });
 
   // The address names categories and deities by slug; the service filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
@@ -127,16 +141,7 @@ export default async function CovenIngredientsPage({
       toxic: shown.toxic,
       safetyNotes: shown.safetyNotes,
       kind: own ? 'own' : 'cupboard',
-      ...(own &&
-        mayEdit && {
-          editHref: placed({ edit: node.id }),
-          editHeading: editHeading(shown),
-        }),
-      ...(!own &&
-        mayEdit && {
-          annotateHref: placed({ annotate: node.id }),
-        }),
-      ...(own ? { mayDelete } : { mayMakeOurs, mayRemove: mayDelete }),
+      ...footOf(own, { ...shown, id: node.id }, placed({ edit: node.id })),
       retired: isRetired(node),
       jars: page.jars[i].flatMap((jar): JarLine[] => {
         const form = page.formOf.get(jar.variantId);
@@ -185,30 +190,25 @@ export default async function CovenIngredientsPage({
               heading: detailsHeading(viewed.shown),
               marks: detailsMarks(viewed.detail, true),
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
-              ...(viewed.plus && { plus: viewed.plus, ingredientId: viewed.shown.id }),
               children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
-              // The page's own Edit menu, Edit and Delete (the owner's call, 2026-10-20): Edit
-              // opens over the details; a delete goes back to the list, which closes them.
-              ...(viewed.own &&
-                mayEdit && {
-                  ownActions: {
-                    edit: {
-                      href: covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
-                      deletedHref: listHref,
-                      coven: {
-                        workspaceId: workspace.id,
-                        ingredientsHref: covenIngredientsPath(workspace.slug),
-                        mayPromote: mayEdit,
-                      },
-                    },
-                    entry: {
-                      id: viewed.shown.id,
-                      name: viewed.shown.name,
-                      canonicalName: viewed.shown.canonicalName,
-                      nomenclature: viewed.shown.nomenclature,
-                    },
-                  },
-                }),
+              // The card's own controls for this entry (the owner's call, 2026-10-20): Edit over the
+              // details or Annotate, and More or the bin, whose delete or remove goes back to the
+              // list, which closes them.
+              actions: covenCardActions(
+                {
+                  id: viewed.shown.id,
+                  label: viewed.shown.name,
+                  canonicalName: viewed.shown.canonicalName,
+                  ...footOf(
+                    viewed.own,
+                    viewed.shown,
+                    covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
+                  ),
+                },
+                workspace.id,
+                workspace.slug,
+                listHref,
+              ),
             }
           }
         />

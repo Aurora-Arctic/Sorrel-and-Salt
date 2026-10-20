@@ -7,6 +7,7 @@ import { compendiumFacetCounts } from '../../../components/CompendiumList/facets
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
+import { cardName } from '../../../components/IngredientCard/card-name';
 import { detailsHeading, detailsMarks } from '../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
@@ -239,6 +240,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             ...(canEdit && {
               editAction: {
                 href: hereWith(detailed.slug),
+                name: cardName(detailed.name, detailed.canonicalName),
                 heading: editHeading(detailed, EDIT_ENTRY_EYEBROW),
               },
             }),

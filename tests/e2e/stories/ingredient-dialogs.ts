@@ -45,7 +45,7 @@ function entryName(name: string, formalName?: string): string {
 
 /**
  * An entry's Edit in `scope`: a row of the coven's list (M9.6); the entry's
- * page has a menu instead (`openEditIngredientFromMenu`). Named as the admin Compendium's Edit is, "Edit Testwort,
+ * page has its own icon instead (`openEditIngredientFromMenu`). Named as the admin Compendium's Edit is, "Edit Testwort,
  * Fixtura testalis"; a link, if M8.17 opens the dialog by its address as
  * that list's EditLink does, or a button: both are matched, since the role is
  * M8.17's to choose. The name is this file's choice.
@@ -88,9 +88,8 @@ export async function openEditIngredient(
 }
 
 /**
- * Opens the edit from the entry's page (M8.19), where Edit is a menu of Edit
- * Ingredient and Delete Ingredient (M8.17), and its
- * sections, as `openEditIngredient` does from a row.
+ * Opens the edit from the entry's page (M8.19), where Edit is an icon of its own beside the bin
+ * (M8.17), and its sections, as `openEditIngredient` does from a row.
  */
 export async function openEditIngredientFromMenu(
   page: Page,
@@ -99,11 +98,7 @@ export async function openEditIngredientFromMenu(
 ): Promise<Locator> {
   await page
     .getByRole('main')
-    .getByRole('button', { name: `Edit ${name}`, exact: true })
-    .click();
-  await page
-    .getByRole('menu', { name: `Edit ${name}` })
-    .getByRole('menuitem', { name: 'Edit Ingredient', exact: true })
+    .getByRole('link', { name: `Edit ${name}`, exact: true })
     .click();
   const dialog = editIngredientDialog(page, name, formalName);
   await expect(dialog).toBeVisible();

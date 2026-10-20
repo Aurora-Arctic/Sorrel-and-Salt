@@ -690,9 +690,9 @@ test(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toHaveCount(0);
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
-      // The page's Edit is a menu (M8.17), which a viewer is not drawn.
+      // The page's Edit is an icon of its own (M8.17), which a viewer is not drawn.
       await expect(
-        page.getByRole('main').getByRole('button', { name: 'Edit Testwort', exact: true }),
+        page.getByRole('main').getByRole('link', { name: 'Edit Testwort', exact: true }),
       ).toHaveCount(0);
 
       const answer = await graphqlFromPage(page, UPDATE, {

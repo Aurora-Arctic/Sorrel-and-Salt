@@ -18,6 +18,7 @@ const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsDialog } = await import('@/components/IngredientEntry/details-dialog');
 const { detailsHeading } = await import('@/components/IngredientEntry/details');
 const { editHeading } = await import('@/components/CompendiumList/heading');
+const { covenCardActions } = await import('@/components/CovenCards/actions');
 
 // The details modal over a list (M12.5): a summary of the entry, a way through
 // to its full page, and, for whoever may edit it, an Edit that opens the edit
@@ -391,21 +392,18 @@ describe('DetailsDialog plus', () => {
   });
 });
 
-// A coven's own entry has the entry page's Edit menu, Edit and Delete, in its Quick Look window
-// (the owner's call, 2026-10-20); every other entry keeps the plain pencil or none.
-describe('DetailsDialog own entry', () => {
+// The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards
+// use (the owner's call, 2026-10-20), so what the card shows for this entry and role is what the
+// window shows: Edit and the bin on the coven's own entry, Annotate and More on a compendium
+// entry the cupboard holds.
+describe('DetailsDialog coven card controls', () => {
   const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
   const ID = '00000000-0000-4000-8000-0000000000bb';
   const COVEN_LIST = '/coven/fixture-coven/ingredients' as Route;
   const OWN_EDIT = `${COVEN_LIST}?entry=${ID}&edit=${ID}` as Route;
-  const OWN = {
-    edit: {
-      href: OWN_EDIT,
-      deletedHref: COVEN_LIST,
-      coven: { workspaceId: WORKSPACE_ID, ingredientsHref: COVEN_LIST, mayPromote: true },
-    },
-    entry: { id: ID, ...ENTRY },
-  };
+  const ANNOTATE = `${COVEN_LIST}?annotate=${ID}` as Route;
+  const CARD_NAME = 'Testwort, Fixtura testalis';
+  const entry = { id: ID, label: ENTRY.name, canonicalName: ENTRY.canonicalName };
 
   const view = (opened: boolean, extra: object) => (
     <QueryClientProvider client={makeQueryClient()}>
@@ -421,28 +419,64 @@ describe('DetailsDialog own entry', () => {
       </Navigating>
     </QueryClientProvider>
   );
+  const actions = (fields: object) =>
+    covenCardActions({ ...entry, ...fields }, WORKSPACE_ID, 'fixture-coven', COVEN_LIST);
 
-  it("offers Edit and Delete in a menu on the pencil for a coven's own entry", () => {
-    render(view(true, { ownActions: OWN }));
-
-    const pencil = within(dialog()).getByRole('button', { name: 'Edit Testwort' });
-    expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
-    fireEvent.click(pencil);
-    const items = within(screen.getByRole('menu', { name: 'Edit Testwort' })).getAllByRole(
-      'menuitem',
+  it("draws Edit at its address and the Delete Ingredient bin for a coven's own entry, and no menu", () => {
+    render(
+      view(true, {
+        actions: actions({
+          editHref: OWN_EDIT,
+          editHeading: editHeading(ENTRY),
+          mayDelete: true,
+        }),
+      }),
     );
-    expect(items.map((item) => item.textContent)).toEqual(['Edit Ingredient', 'Delete Ingredient']);
-    // Edit opens the edit modal over the details, at the address the page gave.
-    expect(items[0]).toHaveAttribute('href', OWN_EDIT);
+
+    expect(within(dialog()).getByRole('link', { name: `Edit ${CARD_NAME}` })).toHaveAttribute(
+      'href',
+      OWN_EDIT,
+    );
+    expect(
+      within(dialog()).getByRole('button', { name: `Delete Ingredient ${CARD_NAME}` }),
+    ).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: /^More/ })).toBeNull();
   });
 
-  it('keeps a plain Edit link for any other entry, and offers no menu or Delete', () => {
-    render(view(true, { editAction: { href: EDIT, heading: editHeading(ENTRY) } }));
+  it('draws Annotate and More, holding Make It Ours and Remove, for a held compendium entry', () => {
+    render(
+      view(true, {
+        actions: actions({ annotateHref: ANNOTATE, mayMakeOurs: true, mayRemove: true }),
+      }),
+    );
 
-    // Why a menu could show: the entry has an Edit, as an own entry's does.
-    expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
-    expect(within(dialog()).queryByRole('button', { name: 'Edit Testwort' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Delete Ingredient' })).toBeNull();
+    expect(within(dialog()).getByRole('link', { name: `Annotate ${CARD_NAME}` })).toHaveAttribute(
+      'href',
+      ANNOTATE,
+    );
+    expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).toBeNull();
+    fireEvent.click(within(dialog()).getByRole('button', { name: `More for ${CARD_NAME}` }));
+    const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Make It Ours', 'Remove']);
+  });
+
+  it('draws nothing for a role that may do nothing to the entry', () => {
+    render(view(true, { actions: actions({}) }));
+
+    // Why something could show: the entry is the coven's, with its card's name.
+    expect(within(dialog()).getByRole('heading', { name: /^Testwort/ })).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('link', { name: /^(Edit|Annotate)/ })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /^(Delete|Remove|More)/ })).toBeNull();
+  });
+
+  it("names a compendium list's Edit as its card does, with the formal name", () => {
+    render(
+      view(true, {
+        editAction: { href: EDIT, name: CARD_NAME, heading: editHeading(ENTRY) },
+      }),
+    );
+
+    expect(within(dialog()).getByRole('link', { name: `Edit ${CARD_NAME}` })).toBeInTheDocument();
   });
 
   it('offers no Edit at all where the page gave neither', () => {
@@ -461,10 +495,13 @@ describe('DetailsDialog own entry', () => {
         return { deleteIngredient: String(variables.id) };
       },
     );
-    const { rerender } = render(view(true, { ownActions: OWN }));
+    const { rerender } = render(
+      view(true, {
+        actions: actions({ editHref: OWN_EDIT, editHeading: editHeading(ENTRY), mayDelete: true }),
+      }),
+    );
 
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Edit Testwort' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Ingredient' }));
+    press(within(dialog()).getByRole('button', { name: `Delete Ingredient ${CARD_NAME}` }));
     const ask = screen.getByRole('dialog', { name: 'Delete Ingredient' });
     // Asked first: nothing is deleted until it is confirmed.
     expect(calls).toEqual([]);
