@@ -389,15 +389,16 @@ function PanelHead({
  * so it is read on entering the panel. A title inside a title, the one
  * format a placeholder cannot show, is here (MB.151). One rule to a line,
  * as a list of spans given the list roles: the bubble is a `span`, which
- * may not hold a `ul`.
+ * may not hold a `ul`. Each rule is a sentence with its full stop; an
+ * example sits in brackets before it, since the typed value has no stop.
  */
 const CITE_RULES = [
-  'Names as printed, the first author inverted: Shelley, Mary',
-  'Edition and volume as printed: 2nd ed., Vol. 2',
-  'Contributors as a sentence: Translated by Angela Hall',
-  'A date as precise as the source gives it',
-  'Underscores round a title inside a title italicise it: _Hamlet_',
-  'A note prints after the citation, in brackets',
+  'Names as printed, the first author inverted (Shelley, Mary).',
+  'Edition and volume as printed (2nd ed., Vol. 2).',
+  'Contributors as a sentence (Translated by Angela Hall).',
+  'A date as precise as the source gives it.',
+  'Underscores round a title inside a title italicise it (_Hamlet_).',
+  'A note prints after the citation, in brackets.',
 ];
 
 function HowToCite({ id }: { id: string }): ReactElement {

@@ -637,7 +637,7 @@ provides them, and its errors render through `FieldError`.
   2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
   sits at the end of the panel's head, just before its ×, in New Reference
   and Edit Source alike (the owner's call, 2026-10-20), and says
-  the rules once, each on a line of its own: the first author inverted,
+  the rules once, each on a line of its own and each a sentence ending in a full stop, any example in round brackets before it so the stop is never read as part of what to type (the stored values carry none): the first author inverted,
   edition and volume as printed, contributors as a sentence, a date as
   precise as the source gives it, underscores round a title inside a title
   to italicise it (MB.151), and a note printing after the citation in
@@ -678,13 +678,21 @@ provides them, and its errors render through `FieldError`.
 - **A × at its top closes it too** (MB.258), so a panel taller than the
   dialog can be left without scrolling to its foot. It does exactly what
   Cancel does, saving nothing and asking nothing, and is held with Cancel
-  while a save is in flight. The panel's head is one line (the owner's
-  call, 2026-10-20): the note, if there is one, at the start, and at the
-  end the panel's Undo and Redo, the How to Cite ⓘ and the ×, the ⓘ and ×
-  abutting and the group standing into the panel's padding so the × sits
-  near the edge. Where the note would be squeezed under 14rem, as on a
-  phone, the group drops to a line of its own beneath it, still at the
-  right. The × is named for the panel, "Close New Reference" or "Close Edit Source",
+  while a save is in flight. The panel's Undo and Redo, the How to Cite ⓘ
+  and the ×, the ⓘ and × abutting, stand at the right end of the panel's
+  top border, level with the legend and on the dialog's surface colour so
+  the line stops short of them (the owner's call, 2026-10-20); the note,
+  if there is one, is the panel's first line. The legend's words and the
+  group's marks stop the border the same distance short,
+  `$panel-head-gap` (one step), so the two cannot drift apart (the
+  owner's call, 2026-10-20). The group goes onto the border only where the
+  panel's content is at least 18rem wide, a container query, since the
+  panel's width, not the viewport's, decides whether it clears the
+  longer legend. In a narrower panel, as on a phone, the head is one
+  line: the note at the start and the group at the end, and where the
+  note would be squeezed under 14rem the group drops to a line of its own
+  directly beneath it, still at the right. The owner approved that split:
+  "I like it splitting the line" (2026-10-20). The × is named for the panel, "Close New Reference" or "Close Edit Source",
   since the modal's own × is "Close". It comes before Kind in Tab order, as
   it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
