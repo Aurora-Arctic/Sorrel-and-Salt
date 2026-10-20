@@ -131,9 +131,10 @@
   }
 }
 
-// Defaults to the body ink, so the ring re-colours with the theme.
-@mixin focus-ring($color: $text-primary) {
-  outline: 2px solid $color;
+// Defaults to the body ink, so the ring re-colours with the theme, at the
+// shared strength, mixed towards transparent so it softens over any ground.
+@mixin focus-ring($color: $text-primary, $strength: $focus-ring-strength) {
+  outline: 2px solid color-mix(in srgb, $color $strength, transparent);
   outline-offset: 2px;
 }
 
@@ -858,6 +859,7 @@
   // How much of its colour a notice's tint takes: more on dark, where a tint
   // of the same strength reads fainter.
   --notice-tint: 8%;
+  --focus-ring-link-strength: #{$focus-ring-strength};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
   // Between floating and elevated: a card that rises under the pointer.
@@ -893,6 +895,7 @@
   --secondary-hover: #{$wax-deep};
   --warning: #{$ochre-deep};
   --notice-tint: 7%;
+  --focus-ring-link-strength: #{$focus-ring-link-strength-light};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};

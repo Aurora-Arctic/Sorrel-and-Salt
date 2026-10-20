@@ -175,8 +175,10 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   Transition: Next's (`node_modules/next/dist/docs/01-app/02-guides/view-transitions.md`)
   rides on an experimental flag and animates whole-page snapshots, and a
   tab press should move one pill.
-- **Keyboard focus** is the accent ring, drawn 2px inside the pill rather
-  than round it, where the track would clip it.
+- **Keyboard focus** is the accent ring at full strength, drawn 2px inside
+  the pill rather than round it, where the track would clip it. It does not
+  take the shared ring's fade, under which it falls below 3:1 on the light
+  track ([`styling.md`](../styling.md), "The focus ring").
 - **Pressed**, for as long as a pointer is down on a pill, the pill's fill
   comes under its label at once and the pill sinks a pixel, so a press
   answers before the pill slides over. A tap marks it too, through

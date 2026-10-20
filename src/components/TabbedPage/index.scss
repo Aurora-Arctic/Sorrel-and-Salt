@@ -269,7 +269,10 @@ $track-inset: calc(1px + 0.125rem);
 
   // Inside the pill rather than round it, where the track would clip it.
   &:focus-visible {
-    @include focus-ring($accent);
+    // The accent at full strength, not the shared fade: faded, it falls under
+    // 3:1 on the light theme's track and pill (claude-docs/styling.md, "The
+    // focus ring").
+    @include focus-ring($accent, 100%);
 
     outline-offset: -2px;
   }
