@@ -48,8 +48,9 @@ export interface ProviderRowProps {
   pending: boolean;
   /** This row's own action is in flight: its button shows the spinner and `aria-busy`. */
   busy: boolean;
-  /** This provider's own failure, shown in its row. */
+  /** A failed link's callback error for this provider, from the server, shown in its row. */
   error?: string;
-  onAdd: () => void;
-  onRemove: () => void;
+  /** Each answers the failure to say under its control, or nothing on success. */
+  onAdd: () => Promise<string | undefined>;
+  onRemove: () => Promise<string | undefined>;
 }

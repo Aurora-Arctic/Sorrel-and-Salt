@@ -8,3 +8,15 @@ export interface SignInPanelProps {
   /** Providers this environment has credentials for; the rest render greyed out. */
   configured: readonly ProviderId[];
 }
+
+export interface ProviderButtonProps {
+  provider: { id: ProviderId; label: string };
+  /** Whether this environment has credentials for the provider. */
+  available: boolean;
+  /** Whether this browser last signed in with it. */
+  lastUsed: boolean;
+  /** The provider whose sign-in is under way, if any. */
+  signingIn: ProviderId | null;
+  /** Starts the sign-in; resolves to the failure's sentence, or nothing once the redirect starts. */
+  onSignIn: (providerId: ProviderId) => Promise<string | undefined>;
+}

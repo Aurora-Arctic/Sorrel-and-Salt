@@ -228,7 +228,7 @@ $account-menu-avatar: 2rem;
 
 // Sign Out's button keeps the shared `.btn` edge, height, radius and colours
 // (and so its contrast); only the width is set, to the panel row's. A failure
-// stacks beneath it.
+// floats beneath it in a callout, and its badge sits on its corner.
 .account-menu__signout-action .btn {
   width: 100%;
 }
