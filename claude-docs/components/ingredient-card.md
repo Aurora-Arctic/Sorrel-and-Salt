@@ -139,7 +139,7 @@ The computed styles were checked identical to the pixel values the tokens replac
 
 **On a phone** the card has no rule of its own: the list gives it the full width, one card across ([`ingredient-card-list.md`](ingredient-card-list.md)), and a long name wraps (see "A long name"). Under reduced motion the face does not slide and the drawer's shading does not transition; the colour and shadow change stay.
 
-**Forced colours.** The card's edge is `modal-surface`'s shadow, which forced colours drops, so the card has no drawn edge there; its badges and chips keep their 1px borders, and its icons are drawn in `currentColor`. The forced-colours pass over the compendium section, a Wave 14 task still to be minted, takes this up (MB.120).
+**Forced colours.** The card's edge is `modal-surface`'s shadow, which forced colours drops, so the card has no drawn edge there; its badges and chips keep their 1px borders, and its icons are drawn in `currentColor`. The forced-colours pass over the compendium section, M14.3, a Wave 14 task, takes this up (minted from MB.120).
 
 ## Stories
 

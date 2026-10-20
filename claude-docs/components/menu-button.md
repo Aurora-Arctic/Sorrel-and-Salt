@@ -52,7 +52,7 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 
 **On a phone** the panel has no rule of its own: Floating UI hangs it below the button or above, whichever has room, and the button fills its box when a narrow form's stacked foot stretches it (M8.17). Under reduced motion the panel appears and goes without fading.
 
-**Forced colours.** The panel keeps its 1px border, so its edge survives where the shadow is dropped, and the check mark is drawn in `currentColor`. An item's hover and chosen fill is a background colour, which forced colours repaints; its focus also draws the inset `focus-ring` outline, which survives. The forced-colours pass over the compendium section, a Wave 14 task still to be minted, checks it (MB.120).
+**Forced colours.** The panel keeps its 1px border, so its edge survives where the shadow is dropped, and the check mark is drawn in `currentColor`. An item's hover and chosen fill is a background colour, which forced colours repaints; its focus also draws the inset `focus-ring` outline, which survives. The forced-colours pass over the compendium section, M14.3, a Wave 14 task, checks it (minted from MB.120).
 
 ## Where it is tested
 

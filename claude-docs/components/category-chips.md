@@ -29,7 +29,7 @@ primitive.
 
 **On a phone** the chips wrap with their row. The `+N` panel is fixed and placed by Floating UI, so a narrow card or table frame never clips it; it flips above near the window's foot. The compact size grows the `+N` button's hit area to 24px (WCAG 2.5.8). Under reduced motion the panel appears without fading.
 
-**Forced colours.** No rule of its own: a chip keeps its 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is a Wave 14 task, still to be minted (MB.120).
+**Forced colours.** No rule of its own: a chip keeps its 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
 
 ## Testing
 

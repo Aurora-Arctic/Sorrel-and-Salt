@@ -1641,7 +1641,7 @@ bar (`.ingredient-form .switch`; the owner's call, 2026-10-16).
 The region holds block content (a sentence, a list, a button), which a Notice
 cannot go inside, so `duplicates.tsx` writes `notice notice--warn` or
 `notice notice--error` itself, picked in the one function `noticeClasses`.
-The block Notice that would replace them is a follow-on to MB.120; when it
+The block Notice that would replace them is M12.48, minted from MB.120; when it
 lands it swaps that function alone. Colour must not be the only sign of a held
 save, so the sentence changes with the state too: "Did you mean one of these?"
 while the name is typed against, "Your save is on hold, as these entries have a

@@ -99,7 +99,7 @@ exported from `index.tsx`, and a test guards it against the Sass `$shell-tablet-
 
 **On a phone**, below `$shell-tablet-width`, the panel is a modal sheet (`showModal()`) that slides in from the right edge over a fading backdrop, full height, with its foot stuck to the bottom and room kept above the foot so a focused control is never hidden behind it (WCAG 2.4.11). Each row's controls stack in source order, and the chips and switches wrap. From the tablet width up, the panel is an overlay that slides down under the search row with no scrim: its title and Close are hidden (the title stays for assistive technology), and once open it scrolls inside itself, under the sticky row. The Filters button's label never wraps. Under reduced motion neither the slide nor the chip menu's fade runs.
 
-**Forced colours.** No rule of its own. The switches and the chip menu's radios take the `.switch` and `.radio` primitives' forced-colours rules ([`styling.md`](../styling.md)), and the chips keep their 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is a Wave 14 task, still to be minted (MB.120).
+**Forced colours.** No rule of its own. The switches and the chip menu's radios take the `.switch` and `.radio` primitives' forced-colours rules ([`styling.md`](../styling.md)), and the chips keep their 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
 
 ## Stories
 

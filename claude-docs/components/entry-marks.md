@@ -91,7 +91,7 @@ Updated's ink is New's in the dark theme and darker in the light one (`#274b0c`)
 
 **On a phone** the marks have no rule of their own: they wrap with the line they sit in.
 
-**Forced colours.** No rule of its own. A badge keeps its 1px border (a solid badge's is transparent, but forced colours repaints every border in the system's ink), so its shape survives as well as its word; the recency mark is text and a `currentColor` sparkle. The forced-colours pass over the compendium section is a Wave 14 task, still to be minted (MB.120).
+**Forced colours.** No rule of its own. A badge keeps its 1px border (a solid badge's is transparent, but forced colours repaints every border in the system's ink), so its shape survives as well as its word; the recency mark is text and a `currentColor` sparkle. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
 
 ## Stories
 

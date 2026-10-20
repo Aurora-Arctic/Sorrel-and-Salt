@@ -154,4 +154,4 @@ The owner, 2026-10-20, one call per item:
 10. **Plus and check names**: the entry name goes in both the accessible name and the visible tip.
 11. **Forced colours**: the current-page border mark now; the full forced-colours pass over the section is minted into Wave 14.
 
-Tasks 51–55 to be minted (ids pending): the public loading skeleton, the forced-colours pass over the section, the block Notice, generic form fields (recommend against), and CardDensitySwitch on the public page.
+Tasks 51–55 are minted as M12.47 (51, the public loading placeholder), M14.3 (52, the forced-colours pass over the section), M12.48 (53, the block Notice), M12.49 (54, generic form fields, recommended against) and M12.50 (55, the Compact switch on the public compendium).
