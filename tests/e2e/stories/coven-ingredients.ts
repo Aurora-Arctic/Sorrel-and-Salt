@@ -402,20 +402,29 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 }
 
 /**
- * M9.9's inline edit of a stock row. "Edit Stock, <name>" follows the admin
- * lists' "Edit Ingredient, <name>" (tests/e2e/admin-compendium.spec.ts), so
- * two rows' buttons never share a name; the fields carry the entry's three
- * words, Quantity, Unit and threshold, the last as "Low-Stock Threshold", and
- * Save and Cancel close it. Every name here is this file's choice.
+ * M9.9's edit of a jar, from its line on the row. The button is named
+ * "Edit Stock, <name>, <Form>" (the form is the jar's, so two jars of one
+ * ingredient never share a name, and it follows the admin lists' "Edit
+ * Ingredient, <name>"), and opens a dialog of the same name. The dialog holds
+ * Quantity, Unit and "Low-Stock Threshold", and Save Stock and Cancel close it.
+ * `unit` is the Unit box, which is a combobox, so a unit is picked with
+ * `pickUnit`, by its label as the dialog shows it.
  */
-export function stockEditor(row: Locator, name: string) {
+export function stockEditor(row: Locator, name: string, form: string) {
+  const title = `Edit Stock, ${name}, ${form}`;
+  const dialog = row.page().getByRole('dialog', { name: title });
   return {
-    open: row.getByRole('button', { name: `Edit Stock, ${name}` }),
-    quantity: row.getByRole('spinbutton', { name: 'Quantity' }),
-    unit: row.getByRole('combobox', { name: 'Unit' }),
-    threshold: row.getByRole('spinbutton', { name: 'Low-Stock Threshold' }),
-    save: row.getByRole('button', { name: 'Save' }),
-    cancel: row.getByRole('button', { name: 'Cancel' }),
+    open: row.getByRole('button', { name: title }),
+    dialog,
+    quantity: dialog.getByRole('spinbutton', { name: 'Quantity' }),
+    unit: dialog.getByRole('combobox', { name: 'Unit' }),
+    threshold: dialog.getByRole('spinbutton', { name: 'Low-Stock Threshold' }),
+    save: dialog.getByRole('button', { name: 'Save Stock' }),
+    cancel: dialog.getByRole('button', { name: 'Cancel' }),
+    async pickUnit(label: string) {
+      await dialog.getByRole('combobox', { name: 'Unit' }).click();
+      await row.page().getByRole('option', { name: label, exact: true }).click();
+    },
   };
 }
 

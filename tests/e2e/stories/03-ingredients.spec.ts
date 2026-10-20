@@ -262,16 +262,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'low and out-of-stock rows are badged apart, by a threshold the row shows and edits, which zero turns off',
-  {
-    tag: '@story-23',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M9.8 builds the stock badges, the threshold on the row and the low-stock filter',
-    },
-  },
+  { tag: '@story-23' },
   async ({ page }) => {
     const coven = await ownCoven(page, 23);
     const [, , seleniteId] = await withSql(async (sql) => {
@@ -317,7 +310,9 @@ test.fixme(
     await test.step('the low-stock filter keeps the low rows, in the address', async () => {
       // M9.8's `lowStockOnly`, a switch as the admin's Without References is
       // (claude-docs/components/compendium-list.md); "Low Stock Only" is this spec's choice.
-      await filterOf(page).getByRole('switch', { name: 'Low Stock Only' }).click();
+      const panel = await openFilters(page);
+      await panel.getByRole('switch', { name: 'Low Stock Only' }).click();
+      await applyFilters(page, panel);
       await expect(rowOf(list, 'Testwort')).toBeVisible();
       await expect(rowOf(list, 'Sea Salt')).toBeVisible();
       await expect(rowOf(list, 'Selenite')).toHaveCount(0);
@@ -331,7 +326,7 @@ test.fixme(
     await test.step('the threshold shows on the row, and raising it makes the row low', async () => {
       await page.goto(listPath(coven));
       const row = rowOf(list, 'Selenite');
-      const editor = stockEditor(row, 'Selenite');
+      const editor = stockEditor(row, 'Selenite', 'Crystal');
       await editor.open.click();
       await expect(editor.threshold).toHaveValue('3');
       await editor.threshold.fill('5');
@@ -357,12 +352,9 @@ async function stockOf(id: string) {
   return row;
 }
 
-test.fixme(
+test(
   'quantity, unit and threshold are edited on the row, by mouse or keyboard, and a failed save rolls back and says so',
-  {
-    tag: '@story-24',
-    annotation: { type: 'fixme', description: 'M9.9 builds the inline row edit' },
-  },
+  { tag: '@story-24' },
   async ({ page }) => {
     const coven = await ownCoven(page, 24);
     const { testwortStock, rosemaryStock } = await withSql(async (sql) => {
@@ -386,11 +378,11 @@ test.fixme(
     await markDocument(page);
 
     await test.step('all three are changed and saved without leaving the page', async () => {
-      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary', 'Herb');
       await editor.open.click();
       await editor.quantity.fill('0.5');
       // Within the dimension: weight to weight (CLAUDE.md, unit conversion).
-      await editor.unit.selectOption('kg');
+      await editor.pickUnit('kg');
       await editor.threshold.fill('0.1');
       await editor.save.click();
 
@@ -403,7 +395,7 @@ test.fixme(
     });
 
     await test.step('the keyboard alone opens, edits, saves and cancels', async () => {
-      const editor = stockEditor(rowOf(list, 'Testwort'), 'Testwort');
+      const editor = stockEditor(rowOf(list, 'Testwort'), 'Testwort', 'Root');
       await editor.open.focus();
       await page.keyboard.press('Enter');
       // Opening moves the focus into the first field, Quantity.
@@ -421,7 +413,13 @@ test.fixme(
       await expect(editor.quantity).toBeFocused();
       await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type('9');
+      // An edit not yet saved is asked about first: the question opens on
+      // Keep Editing, and Shift+Tab reaches Discard Changes before it.
       await page.keyboard.press('Escape');
+      await expect(page.getByRole('button', { name: 'Keep Editing' })).toBeFocused();
+      await page.keyboard.press('Shift+Tab');
+      await expect(page.getByRole('button', { name: 'Discard Changes' })).toBeFocused();
+      await page.keyboard.press('Enter');
       await expect(editor.quantity).toHaveCount(0);
       await expect(editor.open).toBeFocused();
       expect(await stockOf(testwortStock)).toEqual({ quantity: 6, unit: 'piece', threshold: 3 });
@@ -434,12 +432,12 @@ test.fixme(
         route.request().postData()?.includes('mutation') ? route.abort('failed') : route.continue(),
       );
       const row = rowOf(list, 'Rosemary');
-      const editor = stockEditor(row, 'Rosemary');
+      const editor = stockEditor(row, 'Rosemary', 'Herb');
       await editor.open.click();
       await editor.quantity.fill('99');
       await editor.save.click();
 
-      await expect(page.getByRole('alert')).toBeVisible();
+      await expect(editor.dialog.getByRole('alert')).toBeVisible();
       await expect(row).not.toContainText('99');
       expect(await stockOf(rosemaryStock)).toEqual({ quantity: 0.5, unit: 'kg', threshold: 0.1 });
       expect(await stillSameDocument(page)).toBe(true);

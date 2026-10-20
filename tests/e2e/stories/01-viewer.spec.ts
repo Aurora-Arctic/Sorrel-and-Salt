@@ -273,7 +273,7 @@ test.fixme(
     });
 
     await test.step('B changes the quantity in place, and the row names B and the moment', async () => {
-      const editor = stockEditor(row, 'Testwort');
+      const editor = stockEditor(row, 'Testwort', 'Root');
       await editor.open.click();
       await editor.quantity.fill('2');
       await editor.save.click();

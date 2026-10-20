@@ -289,10 +289,10 @@ test.fixme(
       const row = rowOf(ingredientList(page), 'Comfrey');
       await expect(row).toBeVisible();
       await expect(localBadge(row)).toHaveCount(0);
-      const editor = stockEditor(row, 'Comfrey');
+      const editor = stockEditor(row, 'Comfrey', 'Leaf');
       await editor.open.click();
       await expect(editor.quantity).toHaveValue('50');
-      await expect(editor.unit).toHaveValue('g');
+      await expect(editor.unit).toHaveText('g');
       await expect(editor.threshold).toHaveValue('10');
     });
 
