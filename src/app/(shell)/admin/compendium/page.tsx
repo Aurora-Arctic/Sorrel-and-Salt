@@ -8,6 +8,7 @@ import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
 import { detailsHeading } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
+import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import { single } from '../../../../lib/search-params';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
@@ -19,7 +20,7 @@ import type {
 import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
-import { resolveCompendiumSlug } from '@/modules/ingredients';
+import { ingredientDetailOf, resolveCompendiumSlug } from '@/modules/ingredients';
 import { requireCuratorSession } from '../../../../lib/request-session';
 import {
   readCategories,
@@ -99,6 +100,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     redirect(compendiumHref({ ...list, entry: shown.slug }, dialog));
   }
   const detailed = shown?.kind === 'entry' ? shown.entry : undefined;
+  // The open details' sections (M12.5), read uncached as the entry's page reads
+  // them, and only while the details are open; none for an entry gone since.
+  const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const stamps = await editorStamps(
@@ -144,7 +148,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
-      {/* The details a name opens, in their own place beneath the edit modal's,
+      {/* The details a Quick Look opens, in their own place beneath the edit modal's,
           so an Edit pressed in them opens over them (M12.5). */}
       <DetailsDialog
         closeHref={compendiumHref(list)}
@@ -152,6 +156,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           detailed && {
             heading: detailsHeading(detailed),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            children: summary && <IngredientSummary detail={summary} />,
             editAction: {
               href: compendiumHref(here, { edit: detailed.slug }),
               heading: editHeading(detailed),

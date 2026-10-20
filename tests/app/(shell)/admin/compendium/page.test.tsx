@@ -12,6 +12,7 @@ import { mockGraphQLMutation, mockGraphQLQuery } from '../../../../support/msw/g
 import { offerCategories } from '../../../../support/msw/ingredient-lookups';
 import { openSections } from '../../../../support/ingredient-sections';
 import { sent } from '../../../../support/filter-form';
+import { entryDetail } from '../../../../support/entry-detail';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
 // under the address's filter, and the modal its address opens — `?new` empty,
@@ -48,6 +49,8 @@ const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
 const variantsOf = vi.fn();
+// The details modal's sections (M12.5), read uncached with the curator's session.
+const ingredientDetailOf = vi.fn();
 // How many entries each filter's choices would list (M12.4), which also
 // names the forms the Form box offers.
 const compendiumFacets = vi.fn();
@@ -57,6 +60,7 @@ vi.mock('@/modules/ingredients', () => ({
   compendiumFacets,
   resolveCompendiumSlug,
   variantsOf,
+  ingredientDetailOf,
 }));
 
 // The curated forms, read through the vocabulary module, and the two batches
@@ -204,6 +208,11 @@ beforeEach(() => {
   countCompendium.mockResolvedValue({ totalCount: 1, countBefore: 0 });
   resolveCompendiumSlug.mockReset();
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: TESTWORT, movedAway: null });
+  ingredientDetailOf.mockReset();
+  ingredientDetailOf.mockResolvedValue({
+    ...entryDetail({ safetyNotes: 'Fixture admin caution.' }),
+    folkNames: ['Fixture Adminbane'],
+  });
   // Every entry listed comes in one form, Herb.
   variantsOf.mockReset();
   variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
@@ -701,6 +710,30 @@ describe('the /admin/compendium details modal', () => {
     );
     // The details read no form values: only an edit does.
     expect(entryValues).not.toHaveBeenCalled();
+  });
+
+  it("shows the entry's sections in the details, read with the curator's session", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(ingredientDetailOf).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT);
+    expect(
+      within(within(details()).getByRole('region', { name: 'Caution' })).getByText(
+        'Fixture admin caution.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(within(details()).getByRole('list', { name: 'Folk Names' })).getByText(
+        'Fixture Adminbane',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("reads no entry's sections when no details are open", async () => {
+    await renderPage(FILTERED);
+
+    // Why it could read: the list holds the entry.
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+    expect(ingredientDetailOf).not.toHaveBeenCalled();
   });
 
   it("links each name to its details, keeping the filter, and each row's Edit to no details", async () => {

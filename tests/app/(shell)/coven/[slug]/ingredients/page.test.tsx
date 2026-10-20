@@ -6,6 +6,7 @@ import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { Navigating } from '../../../../../support/navigating';
+import { entryDetail } from '../../../../../support/entry-detail';
 
 // A coven's Ingredients page (M9.6). The guard and the services are mocked, since what they
 // decide is their own tests'; the page's own reads run for real over them. Here: the guard on
@@ -44,6 +45,7 @@ const variantsOf = vi.fn();
 const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
 const heldCompendiumEntry = vi.fn();
+const ingredientDetailOf = vi.fn();
 vi.mock('@/modules/ingredients', async (importActual) => ({
   ...(await importActual<typeof import('@/modules/ingredients')>()),
   listWorkspaceIngredients,
@@ -53,6 +55,7 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
   workspaceIngredientFacets,
   getIngredient,
   heldCompendiumEntry,
+  ingredientDetailOf,
 }));
 
 // The form is its own tests'; here only which ways out of it lead where.
@@ -159,6 +162,11 @@ beforeEach(() => {
     id === 'a1' ? row('a1', 'Testwort', COVEN.id) : row(id, 'Fixture Salt', null),
   );
   entryValues.mockResolvedValue(EMPTY_VALUES);
+  // The open details' sections, each entry's own caution and folk name.
+  ingredientDetailOf.mockImplementation(async (_session: unknown, entry: { id: string }) => ({
+    ...entryDetail({ id: entry.id, safetyNotes: `Fixture caution of ${entry.id}.` }),
+    folkNames: [`Fixture Bane of ${entry.id}`],
+  }));
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: query.includes('min-width'),
     media: query,
@@ -302,6 +310,7 @@ describe("the coven Ingredients page's edit dialog", () => {
     await renderPage({ edit: 'a1' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(getIngredient).not.toHaveBeenCalled();
+    expect(ingredientDetailOf).not.toHaveBeenCalled();
     expect(entryValues).not.toHaveBeenCalled();
   });
 
@@ -344,7 +353,12 @@ describe("the coven Ingredients page's details modal", () => {
       id === 'b2'
         ? {
             entry: SALT,
-            cupboardEntry: { ingredientId: 'b2', label: 'House Salt', description: null },
+            cupboardEntry: {
+              ingredientId: 'b2',
+              label: 'House Salt',
+              description: null,
+              safetyNotes: 'Fixture house caution.',
+            },
           }
         : undefined,
     );
@@ -429,6 +443,42 @@ describe("the coven Ingredients page's details modal", () => {
       '/coven/fixture-coven/ingredients/b2',
     );
     expect(within(dialog).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+  });
+
+  it("shows the coven's own entry's sections in the details, read as the member", async () => {
+    await renderPage({ entry: 'a1' });
+    // Not retired, so read with no coven named, as the entry's own page reads it.
+    expect(ingredientDetailOf).toHaveBeenCalledWith(
+      session,
+      expect.objectContaining({ id: 'a1' }),
+      undefined,
+    );
+    const dialog = details('Testwort')!;
+    expect(
+      within(within(dialog).getByRole('region', { name: 'Caution' })).getByText(
+        'Fixture caution of a1.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(within(dialog).getByRole('list', { name: 'Folk Names' })).getByText(
+        'Fixture Bane of a1',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a held compendium entry's sections with the coven's annotations laid over them", async () => {
+    await renderPage({ entry: 'b2' });
+    const dialog = details('House Salt')!;
+    const caution = within(dialog).getByRole('region', { name: 'Caution' });
+    // Why the compendium's could show: the read returned it, and the cupboard's replaces it.
+    expect(ingredientDetailOf).toHaveBeenCalledWith(
+      session,
+      expect.objectContaining({ id: 'b2' }),
+      undefined,
+    );
+    expect(within(caution).getByText('Fixture house caution.')).toBeInTheDocument();
+    expect(within(caution).queryByText('Fixture caution of b2.')).not.toBeInTheDocument();
+    expect(within(dialog).getByText('Fixture Bane of b2')).toBeInTheDocument();
   });
 
   it('opens nothing for a compendium entry the cupboard does not hold', async () => {

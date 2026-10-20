@@ -141,6 +141,27 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: 'Revoke Admin' })).toHaveFocus();
   });
 
+  // axe's scrollable-region-focusable: a body with no field must be reachable
+  // by Tab, or a keyboard cannot scroll it. A form's body is reached by its fields.
+  it("gives a body only to read a Tab stop of its own, and a form's body none", async () => {
+    const { unmount } = render(
+      <Modal title="Testwort" onClose={vi.fn()} readingBody>
+        <p>Fixture reading.</p>
+      </Modal>,
+    );
+    await settle();
+    const reading = screen.getByText('Fixture reading.').parentElement!;
+    expect(reading.tabIndex).toBe(0);
+    // The dialog still takes the focus as it opens, not the body.
+    expect(screen.getByRole('dialog', { name: 'Testwort' })).toHaveFocus();
+    unmount();
+
+    renderModal();
+    expect(
+      screen.getByRole('textbox', { name: 'Name' }).closest('[tabindex]:not(dialog)'),
+    ).toBeNull();
+  });
+
   it('asks its owner to close it from the Close button', () => {
     const onClose = renderModal();
 

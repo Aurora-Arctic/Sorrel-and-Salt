@@ -172,8 +172,9 @@ export interface IngredientDetailsOpened {
   pageHref: Route;
   /**
    * An Edit that opens the edit modal over the details, for whoever may edit
-   * the entry: the admin list's `?edit=`. None for anyone else, and none on a
-   * coven's list until its edit modal (M8.17) gives it one.
+   * the entry, at the list's own `?edit=`: an admin or curator on the admin
+   * list, an owner or member on a coven's list for the coven's own entry (not
+   * a compendium entry it holds). None for anyone else.
    */
   editAction?: RouteModalLink;
   /** The summary, drawn by the server page from the entry page's own sections. */

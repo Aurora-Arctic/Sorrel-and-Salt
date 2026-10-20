@@ -70,6 +70,7 @@ const Modal = ({
   onClose,
   returnTo,
   size,
+  readingBody = false,
   loading = false,
   children,
 }: ModalProps): ReactElement => {
@@ -299,7 +300,13 @@ const Modal = ({
       {/* The body scrolls beneath the header, rather than the whole dialog,
           so a question's layer can lie over exactly the part in view. */}
       <div className="modal-dialog__main">
-        <div ref={body} className="modal-dialog__body" aria-busy={loading || undefined}>
+        <div
+          ref={body}
+          className="modal-dialog__body"
+          aria-busy={loading || undefined}
+          // A body only to read takes a Tab stop, so a keyboard can scroll it.
+          tabIndex={readingBody ? 0 : undefined}
+        >
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
               <HeaderNoteContext.Provider value={headerNote}>

@@ -48,6 +48,7 @@ function linkTo(href: string): HTMLElement | undefined {
 export default function RouteModal({
   closeHref,
   size,
+  readingBody,
   content,
   place,
   returnTo,
@@ -76,7 +77,14 @@ export default function RouteModal({
     return (href && linkTo(href)) || returnTo?.() || null;
   };
   return (
-    <Modal {...heading} size={size} loading={!content} onClose={close} returnTo={backTo}>
+    <Modal
+      {...heading}
+      size={size}
+      readingBody={readingBody}
+      loading={!content}
+      onClose={close}
+      returnTo={backTo}
+    >
       {(done) => (content ? content.body(done) : <ModalLoading />)}
     </Modal>
   );

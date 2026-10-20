@@ -48,6 +48,7 @@ export default function DetailsDialog({
     <RouteModal
       place={DETAILS_PLACE}
       closeHref={closeHref}
+      readingBody
       content={
         opened && {
           heading: opened.heading,

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
@@ -11,7 +11,10 @@ import {
 } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
+import { detailsHeading } from '../../../components/IngredientEntry/details';
+import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
+import IngredientSummary from '../../../components/IngredientEntry/summary';
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
 import PageHeader from '../../../components/PageHeader';
 import { Forbidden } from '../../../lib/errors';
@@ -33,6 +36,7 @@ import {
   readCardCategories,
   readCategories,
   readCompendium,
+  readCompendiumDetails,
   readDeities,
   readFacets,
   readFormIcons,
@@ -53,6 +57,13 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // The address carries the admin list's filters, bar two: No Refs and No Form are the curators'
 // to-do lists, so `?withoutReferences=1` and `?withoutForms=1` are dropped before the table
 // reads them, and list what the unfiltered page lists.
+//
+// Each card's Quick Look, for anyone, opens the entry's details over the results from
+// `?entry=<id>` (M12.5), read by id with no session through the public entry page's cached read,
+// so the compendium as the compendium has it, with no coven's label, annotations or held
+// state. An id that names no compendium entry, a coven's own included, opens nothing and says
+// nothing: the page is the page without it. A curator's Edit in the details opens the edit
+// dialog over them, and closes back to them.
 
 /** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
@@ -112,19 +123,27 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     deities: new Map(deities.map(({ slug, id }) => [slug, id])),
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
-  const [page, counts, formIcons, viewer] = await Promise.all([
+  const entryId = single(params.entry);
+  const [page, counts, formIcons, viewer, shown] = await Promise.all([
     readCompendium(variables, after, before, CARD_PAGE_SIZE),
     readFacets(variables),
     readFormIcons(),
     viewerIfSignedIn(),
+    entryId ? readCompendiumDetails(entryId) : undefined,
   ]);
   // After the viewer, so an address with `?edit=` reads nothing for anyone who cannot curate.
   const canEdit = viewer?.viewer.canCurate === true;
   const { edited, missing } = canEdit
     ? await readEditPlace({ adding: false, editSlug: single(params.edit) }, readCompendiumEntry)
     : { edited: undefined, missing: false };
-  const here = { ...filter, after, before };
+  // The search as it stands, no modal over it: where the details close to, and what each
+  // card's Edit and Quick Look open over.
+  const list = { ...filter, after, before };
+  // The search with the details open, which an edit dialog opens over and closes back to.
+  const here = { ...list, entry: shown ? entryId : undefined };
   const hereWith = (edit: string) => compendiumHref(here, { edit }, PUBLIC_COMPENDIUM_PATH);
+  const listWith = (edit: string) => compendiumHref(list, { edit }, PUBLIC_COMPENDIUM_PATH);
+  const detailed = shown?.entry;
   // An old address opens the entry at its new one, keeping the search (MB.82).
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
@@ -165,13 +184,17 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       toxic: node.toxic,
       safetyNotes: node.safetyNotes,
       recency: entryRecency(node.createdAt, node.updatedAt),
+      details: {
+        href: compendiumHref({ ...list, entry: node.id }, undefined, PUBLIC_COMPENDIUM_PATH),
+        heading: detailsHeading(node),
+      },
       ...(holder && {
         held: heldIn.length === writable.length,
         heldIn,
         heldHref: covenIngredientsHref(holder.slug, { query: node.name }),
       }),
       ...(canEdit && {
-        editHref: hereWith(node.slug),
+        editHref: listWith(node.slug),
         editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),
       }),
     };
@@ -205,6 +228,25 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         {...pagerHrefs(page.pageInfo, (cursor) =>
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}
+      />
+      {/* The details a Quick Look opens, in their own place beneath the edit dialog's, so a
+          curator's Edit in them opens over them (M12.5). */}
+      <DetailsDialog
+        closeHref={compendiumHref(list, undefined, PUBLIC_COMPENDIUM_PATH)}
+        opened={
+          shown &&
+          detailed && {
+            heading: detailsHeading(detailed),
+            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            ...(canEdit && {
+              editAction: {
+                href: hereWith(detailed.slug),
+                heading: editHeading(detailed, EDIT_ENTRY_EYEBROW),
+              },
+            }),
+            children: <IngredientSummary detail={shown} />,
+          }
+        }
       />
       {canEdit && (
         // Rendered for a curator whatever the address opens, so Edit opens it at once (M9.18).

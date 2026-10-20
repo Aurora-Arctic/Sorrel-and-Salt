@@ -14,22 +14,14 @@ import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
 import LinkHint, { LinkIconHint } from '../LinkHint';
 import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
-import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
-import { capitalise } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import {
   isBinomial,
   NAMELESS_KIND,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
-import type {
-  IngredientRow,
-  CategoryDetail,
-  DeityDetail,
-  SubstituteDetail,
-  VariantDetail,
-} from '@/modules/ingredients';
+import type { IngredientRow, SubstituteDetail, VariantDetail } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
 import { cupboardFormValues } from '../CupboardEntryForm/entry-values';
@@ -47,6 +39,14 @@ import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
 import OwnEntryActions from './own-actions';
 import type { IngredientEntryProps } from './types';
+import {
+  blockOf,
+  categoryItems,
+  CorrespondenceBlock,
+  correspondences,
+  ListBlock,
+  said,
+} from './blocks';
 import './index.scss';
 
 // An ingredient's page body, the same on the public compendium route and a
@@ -56,12 +56,6 @@ import './index.scss';
 // page holds one entry. Edit is the exception in kind only: it is two small
 // client parts, a link and the modal it opens, which this server component
 // renders. claude-docs/components/ingredient-entry.md.
-
-/** Blank counts as nothing said, as `SafetyNote` counts it. */
-const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
-
-const listed = (values: readonly string[] | null | undefined): string[] =>
-  (values ?? []).filter(said);
 
 /** Each settled nomenclature's formal name, as its label says it. */
 const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
@@ -86,33 +80,6 @@ const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
 };
 const FORMAL_NAME_TIP = 'Its formal name; which naming system it belongs to is not yet settled.';
 const NO_FORMAL_NAME_TIP = 'No naming system names it.';
-
-/** One correspondence row: its label and what it lists, possibly nothing. */
-interface Row {
-  label: string;
-  values: string[];
-}
-
-type Correspondences = Pick<
-  IngredientRow,
-  'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
->;
-
-function correspondences(source: Correspondences, deities?: readonly DeityDetail[]): Row[] {
-  const rows: Row[] = [
-    { label: 'Elements', values: listed(source.elements).map(capitalise) },
-    { label: 'Planets', values: listed(source.celestialBodies) },
-    { label: 'Zodiac Signs', values: listed(source.zodiacSigns) },
-    { label: 'Colours', values: listed(source.colors).map(capitalise) },
-  ];
-  if (deities) {
-    rows.push({
-      label: 'Deities',
-      values: deities.map(({ name, tradition }) => (tradition ? `${name} (${tradition})` : name)),
-    });
-  }
-  return rows;
-}
 
 /**
  * The formal name beside the label, never blank (MB.161): italics only for a
@@ -163,94 +130,6 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
 
 const substituteLabel = ({ name, form }: SubstituteDetail): string =>
   form ? `${name} (${formLabel(form)})` : name;
-
-/** The ids one block of a section takes: its heading's, and what names its content. */
-interface Block {
-  /** The block's own heading id. */
-  id: string;
-  /** What names the list: the heading alone, or the form's name before it. */
-  labelledBy: string;
-}
-
-function blockOf(prefix: string, key: string, nameId?: string): Block {
-  const id = `${prefix}-${key}`;
-  return { id, labelledBy: nameId ? `${nameId} ${id}` : id };
-}
-
-/** A block's heading level: below Details' h2, or below a form's h3. */
-type BlockLevel = 3 | 4;
-
-function ListBlock({
-  block,
-  title,
-  level,
-  empty,
-  className,
-  children,
-}: {
-  block: Block;
-  title: string;
-  level: BlockLevel;
-  /** Said in place of the list when it holds nothing, so the heading never stands over nothing. */
-  empty?: string;
-  className?: string;
-  children: ReactNode[];
-}): ReactElement {
-  const Heading = `h${level}` as const;
-  return (
-    <div className="ingredient-entry__block">
-      <Heading id={block.id}>{title}</Heading>
-      {children.length > 0 ? (
-        <ul
-          className={className ? `ingredient-entry__list ${className}` : 'ingredient-entry__list'}
-          aria-labelledby={block.labelledBy}
-        >
-          {children}
-        </ul>
-      ) : (
-        empty && <p className="ingredient-entry__empty">{empty}</p>
-      )}
-    </div>
-  );
-}
-
-function CorrespondenceBlock({
-  block,
-  rows,
-  level,
-}: {
-  block: Block;
-  rows: Row[];
-  level: BlockLevel;
-}): ReactElement {
-  const Heading = `h${level}` as const;
-  return (
-    <div className="ingredient-entry__block">
-      <Heading id={block.id}>Correspondences</Heading>
-      <dl className="ingredient-entry__correspondences" aria-labelledby={block.labelledBy}>
-        {rows.map((row) => (
-          <div key={row.label}>
-            <dt>{row.label}</dt>
-            {row.values.length > 0 ? (
-              <dd>{row.values.join(', ')}</dd>
-            ) : (
-              <dd className="ingredient-entry__empty">None recorded</dd>
-            )}
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
-const categoryItems = (categories: readonly CategoryDetail[]): ReactNode[] =>
-  categories.map(({ category, group }) => (
-    <li key={category.id}>
-      <span className="chip" style={chipColors(group)}>
-        {category.name}
-      </span>
-    </li>
-  ));
 
 function substituteItems(
   substitutes: readonly SubstituteDetail[],

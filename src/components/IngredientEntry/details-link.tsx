@@ -4,9 +4,9 @@ import type { RouteModalLink } from '../Modal/types';
 import { DETAILS_PLACE } from './details';
 
 /**
- * An entry's Quick Look in a list (M12.5): the eye beside its name, opening
- * its details modal over the list, `opens`, in the details place, so the
- * press shows there and not in the list's edit modal. The name itself stays a
+ * An entry's Quick Look in a list (M12.5): the eye at a card's foot, or left
+ * of a row's name, opening its details modal over the list, `opens`, in the
+ * details place, so the press shows there and not in the list's edit modal. The name itself stays a
  * plain link to the entry's page (the owner's call, 2026-10-20).
  */
 export default function DetailsLink({

@@ -14,6 +14,8 @@ import {
   countWorkspaceIngredients,
   getIngredient,
   heldCompendiumEntry,
+  ingredientDetailOf,
+  isRetired,
   listWorkspaceIngredients,
   stockOf,
   variantsOf,
@@ -125,7 +127,9 @@ export async function readEditedEntry(workspaceId: string, id: string) {
  * the coven's label, a retired one included, as the list shows it. Nothing for an id the
  * coven cannot reach, or a compendium entry the cupboard does not hold, which the list
  * never shows: the list then opens no modal, as `readEditedEntry`'s does. Any other failure
- * of the read is let through rather than called no entry.
+ * of the read is let through rather than called no entry. With it, `detail`: the sections
+ * the details show, read as the entry's page in the coven reads them, the held entry's
+ * cupboard entry laid in.
  */
 export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
   const session = await requireSession();
@@ -136,8 +140,18 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     throw error;
   }
-  if (entry.workspaceId === membership.workspaceId) return { shown: entry, own: true };
+  // A retired entry is read in the coven, whose cupboard entry is its proof (M12.24).
+  const detailOf = () =>
+    ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
+  if (entry.workspaceId === membership.workspaceId) {
+    return { shown: entry, own: true, detail: await detailOf() };
+  }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
-  return { shown: applyCupboardEntry(held.entry, held.cupboardEntry), own: false };
+  const read = await detailOf();
+  return {
+    shown: applyCupboardEntry(held.entry, held.cupboardEntry),
+    own: false,
+    detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },
+  };
 }

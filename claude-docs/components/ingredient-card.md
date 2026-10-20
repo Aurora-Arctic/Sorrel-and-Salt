@@ -27,6 +27,7 @@ nothing from the data.
 | `children`     | The jar-line slot, last (see the slot’s contract)                                                                                                                                                                                                                                                         |
 | `startActions` | Controls for the left end of the same foot row, level with `actions` on the right (the Quick Look eye, M12.5; the compendium's add and held icons are in `actions`); they sit above the stretched link too                                                                                                |
 | `actions`      | Buttons for the card's foot, right-aligned beneath the jar lines; they sit above the stretched link, so they press on their own                                                                                                                                                                           |
+| `startActions` | Controls for the foot's start, at its bottom left, apart from `actions` at the right: the coven's Quick Look eye (M12.5). They sit above the stretched link too                                                                                                                                           |
 
 ## What it is made of
 
@@ -65,6 +66,10 @@ cuts no focus ring.
 ### Sizes and padding (changed 2026-10-19)
 
 The owner asked for smaller type, about half way to the compact look, with the spacing scaled to match but not compacted. Site tokens only. The name is `heading-size(3)` (1.8rem, was the `h2` default 2.15rem); the forms line is `type-size('small')` (0.875rem, was 1rem; its icons are in `em` and follow). Chip and badge text (the marks, Caution, Toxic, Low and Out of Stock) is `type-size('overline')` (0.75rem, was caption 0.8125rem), ; the badges take the `medium` badge size ([`styling.md`](../styling.md), "Badge sizes"), which holds them at 24px. Their padding and gaps stay. The formal name and jar lines keep their sizes. Card padding is `space(4)` (16px, was 24px); the forms line's air `space(1)` (4px, was 8px); the badge group's air below it `space(1)` (4px, was 8px). The card's own 12px gap, the 24px dot gap in the forms line and the 24px badges are unchanged.
+
+### The badges beside the name (changed 2026-10-20)
+
+The specimen tops the name and the badges flush (`align-items: flex-start`), so the 24px badges sat above the middle of the taller line of name: 1.5px high in the compact card and 4.5px in the regular one. On the card, the badge group now has a top margin of half the name's line box less the badge's height. The name's line box is its size times 1.15, so that is `heading-size(3)` in the regular card and `heading-size(4)` in compact. The margin centres the first row of badges on the name's first line, the way the forms line's icons are centred on their line. Measured in Chromium, the same in both themes and at 1280px and 375px, the badge sits 0.3px below the text's middle in compact and 0.05px below it in regular. When the badges wrap beneath the name, the margin adds to the row gap (about 2px in compact and 5px in regular).
 
 ### Compact
 
@@ -107,7 +112,7 @@ leaves) takes `z-index: 1`, so its tips paint over the cards before and after it
 Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
 
-The foot (`.specimen__foot`) holds the jar lines and then the actions, and sits at the card's bottom, so cards of one grid row share a bottom line. The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
+The foot (`.specimen__foot`) holds the jar lines and then the actions, and sits at the card's bottom, so cards of one grid row share a bottom line. The foot shows when there are jars, actions or start actions. `startActions` render first in the actions row, in `.specimen__actions-start`, whose `margin-inline-end: auto` keeps them at the left and pushes `actions` to the right: the coven's Quick Look eye sits there, with More and a pencil at the right (the owner's call, 2026-10-20; it sat after the name at first, where it wrapped the badges and sat low on the name's line). The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
 
 ## Order
 

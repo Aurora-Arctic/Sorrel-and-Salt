@@ -1,6 +1,5 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
-import type { RouteModalLink } from '../Modal/types';
 import type { CardCategory } from '../CategoryChips/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { EntryKind, EntryRecency } from '../EntryMarks/types';
@@ -11,13 +10,6 @@ export type { CardCategory };
 export interface IngredientCardProps {
   /** The entry's page (M8.19); the name links to it, and it is the card's one link. */
   href: Route;
-  /**
-   * The entry's details modal over the list (M12.5), which the Quick Look
-   * eye beside the name opens; the name itself still links to `href`. The
-   * coven's Ingredients page gives it; the public compendium does not, so its
-   * cards draw no eye.
-   */
-  opens?: RouteModalLink;
   /**
    * The label to show, already merged by the caller: a cupboard entry's own
    * label where it set one, the compendium's name where not
@@ -58,9 +50,8 @@ export interface IngredientCardProps {
    */
   actions?: ReactNode;
   /**
-   * Controls for the foot's left end, level with `actions` on the right (M9.12's add and
-   * held icons). Its own slot rather than a second use of `actions`, which is one
-   * right-aligned group; sits above the card's link the same way.
+   * Controls for the foot's start, at its bottom left, apart from `actions` at the
+   * right: the coven's Quick Look eye (M12.5). Above the card's link, as `actions` are.
    */
   startActions?: ReactNode;
   /**

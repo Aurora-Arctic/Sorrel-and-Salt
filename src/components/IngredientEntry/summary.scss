@@ -1,0 +1,53 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The details modal's body (M12.5): the caution, then the page's side column
+// of blocks, stacked at every width (the owner's call, 2026-10-20), as the
+// 32rem modal has no room for the page's two columns. One rhythm: the caution
+// stands off the first block by the side column's own gap between blocks.
+.ingredient-summary {
+  @include stack(6);
+}
+
+// A bare `section` carries the document rhythm's margin (_layout.scss), which
+// would add 16px above the caution and below it on top of the stack's gap.
+.ingredient-summary .safety-note {
+  margin: 0;
+}
+
+// The side column's own top margin and grid column are the page's, set
+// against the viewport, which would put 16px under the caution on a phone and
+// none on a desktop; the stack above spaces it instead.
+.ingredient-summary .ingredient-entry__side {
+  grid-column: auto;
+  margin-block-start: 0;
+}
+
+// The line naming the forms with their own cautions, inside the caution so the
+// two read as one warning, in the muted ink. The section's own gap spaces it
+// from the notes, as it spaces the notes from each other.
+.ingredient-summary__forms-caution {
+  margin: 0;
+  max-width: $measure;
+  color: $text-muted;
+}
+
+// The details header's rhythm (the owner's call, 2026-10-20): Open Full Page
+// a full step under the name, and the body a step and a half under the row,
+// where the shared defaults suit the edit modals' Undo and Redo. Scoped by
+// `:has()`, Baseline Widely Available, as the Modal's own header rules are.
+.modal-dialog:has(.ingredient-summary) {
+  .modal-dialog__header {
+    padding-bottom: space(5);
+  }
+
+  .modal-dialog__header-slot {
+    margin-top: space(4);
+  }
+}
+
+// The one line an entry with nothing in any section shows, in the muted ink.
+.ingredient-summary__nothing {
+  margin: 0;
+  color: $text-muted;
+}

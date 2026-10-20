@@ -51,6 +51,8 @@ describe('DetailsDialog', () => {
     );
     // Edit is offered only when the page gives one.
     expect(within(dialog()).queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    // Only to read, with its links in the header: the body takes its own Tab stop.
+    expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
   it('closes back to the list it opened over', async () => {

@@ -45,11 +45,13 @@ const nameOf = (entry: CompendiumListEntry): string =>
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   {
     heading: 'Name',
-    // The entry's own public page, by its stored slug (M8.19), which offers a
-    // curator Edit; then the Quick Look eye, opening its details over the list
-    // (M12.5). The pencil still opens the edit modal from here.
+    // The Quick Look eye, opening the entry's details over the list (M12.5), to
+    // the left of the name (the owner's call, 2026-10-20); then the entry's own
+    // public page, by its stored slug (M8.19), which offers a curator Edit. The
+    // pencil still opens the edit modal from here.
     cell: (entry) => (
       <>
+        <DetailsLink opens={entry.details} name={nameOf(entry)} />{' '}
         <PendingLink
           className="compendium-list__name"
           href={`/compendium/ingredients/${entry.slug}` as Route}
@@ -57,8 +59,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
         >
           {entry.name}
           <LinkIconHint />
-        </PendingLink>{' '}
-        <DetailsLink opens={entry.details} name={nameOf(entry)} />
+        </PendingLink>
       </>
     ),
   },

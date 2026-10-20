@@ -5,6 +5,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
+import { entryDetail } from '../../../support/entry-detail';
 
 // The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
 // they decide is their own tests' (the admin page's test runs the reads). Here: what the
@@ -22,9 +23,13 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 
 const readCompendium = vi.fn();
 const readFacets = vi.fn();
+// The details a Quick Look opens (M12.5), by id with no session: what it admits is its own
+// test's (tests/app/compendium-reads.test.ts); here, what the page does with its answer.
+const readCompendiumDetails = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
   readCompendium,
   readFacets,
+  readCompendiumDetails,
   readFormIcons: async () => new Map(),
   readDeities: async () => [],
   readCategories: async () => [],
@@ -107,13 +112,15 @@ beforeEach(() => {
   entryValues.mockReset();
   entryValues.mockResolvedValue({ ...EMPTY_VALUES, name: 'Testwort' });
   redirect.mockClear();
+  readCompendiumDetails.mockReset();
+  readCompendiumDetails.mockResolvedValue(undefined);
 });
 
 describe('the public compendium page', () => {
   it('lists the entry as a link to its own page for a visitor with no account', async () => {
     await renderPage();
     const list = screen.getByRole('list', { name: 'Compendium' });
-    expect(within(list).getByRole('link', { name: /Testwort/ })).toHaveAttribute(
+    expect(within(list).getByRole('link', { name: /^Testwort$/ })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${NODE.slug}`,
     );
@@ -258,6 +265,95 @@ describe('the public compendium page, for a curator', () => {
     await renderPage({ ...SEARCH, edit: NODE.slug });
     expect(readCompendium.mock.lastCall).toEqual(visitor);
   });
+});
+
+// M12.5: each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
+// anyone, a visitor included: the compendium as the compendium has it, read with no session.
+describe("the public compendium page, with an entry's details open", () => {
+  const SEARCH = { query: 'Test' };
+  const DETAIL = {
+    ...entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name }),
+    folkNames: ['Fixture Bane'],
+  };
+  const details = () =>
+    screen.queryByRole('dialog', { name: 'Ingredient, Testwort, Fixtura testalis' });
+  const curator = () => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate: true } });
+  const paramsOf = (link: HTMLElement) =>
+    Object.fromEntries(new URL(link.getAttribute('href')!, 'https://fixture.test').searchParams);
+  /** Every link on the cards, by name and address: what the list offers. */
+  const cardLinks = () =>
+    within(screen.getByRole('list', { name: 'Compendium' }))
+      .getAllByRole('link')
+      .map((link) => [link.textContent, link.getAttribute('href')]);
+
+  it('gives each card a Quick Look to the search with ?entry=<id>, reading no details until asked', async () => {
+    await renderPage(SEARCH);
+
+    const eye = screen.getByRole('link', { name: 'Quick Look Testwort, Fixtura testalis' });
+    expect(new URL(eye.getAttribute('href')!, 'https://fixture.test').pathname).toBe('/compendium');
+    expect(paramsOf(eye)).toEqual({ ...SEARCH, entry: NODE.id });
+    expect(details()).toBeNull();
+    expect(readCompendiumDetails).not.toHaveBeenCalled();
+  });
+
+  it('opens a visitor the details over the search on ?entry=<id>, read by the id alone, with Open Full Page and no Edit', async () => {
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    await renderPage({ ...SEARCH, entry: NODE.id });
+
+    // No session reaches the read: the id is all it is given.
+    expect(readCompendiumDetails.mock.lastCall).toEqual([NODE.id]);
+    const dialog = details()!;
+    expect(
+      within(within(dialog).getByRole('list', { name: 'Folk Names' })).getByText('Fixture Bane'),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${NODE.slug}`,
+    );
+    expect(within(dialog).queryByRole('link', { name: 'Edit' })).toBeNull();
+    expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
+  });
+
+  it('gives a curator Edit in the details, opening the edit dialog over them', async () => {
+    viewerIfSignedIn.mockResolvedValue(curator());
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    await renderPage({ ...SEARCH, entry: NODE.id });
+
+    const edit = within(details()!).getByRole('link', { name: 'Edit' });
+    expect(paramsOf(edit)).toEqual({ ...SEARCH, entry: NODE.id, edit: NODE.slug });
+    // The card's own Edit opens over the search alone, as without the details.
+    const [cardEdit] = screen.getAllByRole('link', { name: /^Edit Testwort/ });
+    expect(paramsOf(cardEdit)).toEqual({ ...SEARCH, edit: NODE.slug });
+  });
+
+  // An unknown id and a coven's own entry's id both answer nothing from the read, since a
+  // coven entry's existence is private: the page is then the page with no ?entry= at all.
+  it.each([
+    ['a visitor', null],
+    ['a curator', 'curator'],
+  ] as const)(
+    'opens nothing for %s when ?entry= names no compendium entry, as if the address had none',
+    async (_who, who) => {
+      viewerIfSignedIn.mockResolvedValue(who ? curator() : null);
+      await renderPage(SEARCH);
+      const bare = cardLinks();
+      document.body.innerHTML = '';
+      // Why it could open: the same address opens the details when the read finds the entry.
+      readCompendiumDetails.mockResolvedValue(DETAIL);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+      expect(details()).not.toBeNull();
+      document.body.innerHTML = '';
+
+      readCompendiumDetails.mockResolvedValue(undefined);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+
+      expect(readCompendiumDetails.mock.lastCall).toEqual([NODE.id]);
+      expect(details()).toBeNull();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(cardLinks()).toEqual(bare);
+    },
+  );
 });
 
 describe('the public compendium page structured data', () => {

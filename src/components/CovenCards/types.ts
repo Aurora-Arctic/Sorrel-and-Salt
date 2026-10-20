@@ -28,7 +28,7 @@ export interface CovenCardEntry {
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
-  /** Its details modal over the list, `?entry=<id>`, which a plain press of its name opens (M12.5). */
+  /** Its details modal over the list, `?entry=<id>`, which the Quick Look eye at the card's bottom left opens (M12.5). */
   details: RouteModalLink;
   /**
    * The list's own address with `?edit=<id>`, where the card's Edit opens the

@@ -378,6 +378,23 @@ describe('IngredientEntry', () => {
     ).toHaveLength(3);
   });
 
+  it('says each empty block and correspondence is empty, where the details modal hides them', () => {
+    renderEntry({
+      detail: detail({
+        entry: entryRow({ elements: null, celestialBodies: null, zodiacSigns: null, colors: null }),
+        folkNames: [],
+        categories: [],
+        deities: [],
+      }),
+    });
+    const details = screen.getByRole('region', { name: 'Details' });
+
+    expect(within(details).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
+    expect(within(details).getAllByText('None recorded')).toHaveLength(5);
+    expect(within(details).getByText('No folk names recorded.')).toBeInTheDocument();
+    expect(within(details).getByText('No categories recorded.')).toBeInTheDocument();
+  });
+
   it('sets the correspondences and the three lists in a column of their own, after the text', () => {
     renderEntry({ detail: detail({ entry: entryRow({ safetyNotes: 'A fixture caution.' }) }) });
     const details = screen.getByRole('region', { name: 'Details' });

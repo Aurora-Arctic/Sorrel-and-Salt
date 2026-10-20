@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ModalHeading } from '../Modal/types';
+import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
 import type { EntryRecency } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
@@ -22,6 +22,11 @@ export interface CompendiumCardEntry {
   safetyNotes: string | null;
   /** New or Updated, from the entry's stamps; none once 30 days have passed. */
   recency: EntryRecency | null;
+  /**
+   * The search's own address with `?entry=<id>`, where the card's Quick Look opens the
+   * entry's details over the results (M12.5), for anyone; left out, no Quick Look shows.
+   */
+  details?: RouteModalLink;
   /**
    * The search's own address with `?edit=<slug>`, where the card's Edit opens the
    * compendium's edit dialog over the results (M8.17). Given for a curator alone; left out,

@@ -104,6 +104,22 @@ describe('SafetyNote', () => {
     expect(within(region).getByRole('definition')).toHaveTextContent(OIL.safetyNotes);
   });
 
+  it("holds its consumer's footnote after the notes, and shows for a footnote alone", () => {
+    const { unmount } = render(
+      <SafetyNote safetyNotes={INGREDIENT_NOTES} footnote={<p>Fixture footnote.</p>} />,
+    );
+    const region = screen.getByRole('region', { name: 'Caution' });
+    const own = within(region).getByText(INGREDIENT_NOTES);
+    const footnote = within(region).getByText('Fixture footnote.');
+    expect(own.compareDocumentPosition(footnote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    unmount();
+
+    render(<SafetyNote safetyNotes="" footnote={<p>Fixture footnote.</p>} />);
+    expect(
+      within(screen.getByRole('region', { name: 'Caution' })).getByText('Fixture footnote.'),
+    ).toBeInTheDocument();
+  });
+
   it('is never focusable', () => {
     render(<SafetyNote safetyNotes={INGREDIENT_NOTES} variants={[LEAF]} />);
 

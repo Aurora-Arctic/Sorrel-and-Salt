@@ -33,7 +33,7 @@ export interface CompendiumListEntry extends UpdatedStamp {
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;
-  /** Its details modal over the list, `?entry=<slug>`, which a plain press of its name opens (M12.5). */
+  /** Its details modal over the list, `?entry=<slug>`, which the Quick Look eye left of its name opens (M12.5). */
   details: RouteModalLink;
 }
 

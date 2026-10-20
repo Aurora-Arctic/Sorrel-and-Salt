@@ -56,6 +56,12 @@ export interface ModalProps extends ModalHeading {
    */
   size?: 'wide';
   /**
+   * A body that holds nothing to fill in, only to read (M12.5's details): Tab
+   * stops on the body itself, so a keyboard can scroll it. Off by default,
+   * since a form's fields already let a keyboard reach every part of it.
+   */
+  readingBody?: boolean;
+  /**
    * Its contents are on their way (M9.18): the body is marked busy, and when
    * they arrive the focus moves from the dialog to their first field.
    */
@@ -107,6 +113,7 @@ export interface RouteModalProps {
   /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
   closeHref: Route;
   size?: ModalProps['size'];
+  readingBody?: ModalProps['readingBody'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
   /**
