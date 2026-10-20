@@ -15,7 +15,8 @@ import type { AnnotateMoreProps } from './types';
 // The Annotate dialog's Make It Ours and Remove (M8.17), set apart at the
 // form's foot in Delete's place, each offered on the member's permission. With
 // both, a More menu (the owner's call of 2026-10-19), drawn as every menu is,
-// with Remove in its destructive item style, opening upward so it stays
+// with Remove in its destructive item style and both items in the button's
+// own type (the owner's call of 2026-10-20), opening upward so it stays
 // inside the dialog; with one, that one as a button of its own, Remove
 // destructive, so a menu never holds a single choice. Either asks in the same
 // confirmation dialog the entry page opens, here over this one. A write
@@ -81,6 +82,7 @@ export default function AnnotateMore({
           className="btn btn--quiet"
           items={items}
           opens="above"
+          buttonType
         />
       ) : (
         <button

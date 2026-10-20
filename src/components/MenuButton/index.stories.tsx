@@ -46,7 +46,8 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <Row />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// At a dialog's foot, as the Annotate dialog's More is: the menu opens above.
+// At a dialog's foot, as the Annotate dialog's More is: the menu opens above,
+// its items in the button's type.
 const Foot = () => (
   <p
     style={{
@@ -56,7 +57,13 @@ const Foot = () => (
       minHeight: '10rem',
     }}
   >
-    <MenuButton label="More" className="btn btn--quiet" items={ITEMS.slice(3)} opens="above" />
+    <MenuButton
+      label="More"
+      className="btn btn--quiet"
+      items={ITEMS.slice(3)}
+      opens="above"
+      buttonType
+    />
   </p>
 );
 

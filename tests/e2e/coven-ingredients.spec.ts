@@ -581,6 +581,16 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
   await expectMenuInsideDialog();
+  // Its items in More's own type, face, size and weight (the owner's call of
+  // 2026-10-20), where every other menu keeps the lighter item.
+  const typeOf = (element: Element) => {
+    const style = getComputedStyle(element);
+    return `${style.fontFamily} ${style.fontSize} ${style.fontWeight}`;
+  };
+  const moreType = await moreButton.evaluate(typeOf);
+  for (const item of await menu.getByRole('menuitem').all()) {
+    expect(await item.evaluate(typeOf)).toBe(moreType);
+  }
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);

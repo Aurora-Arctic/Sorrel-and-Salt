@@ -62,6 +62,7 @@ export default function MenuButton({
   busy = false,
   busyLabel,
   opens = 'below',
+  buttonType = false,
   ref,
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
@@ -161,6 +162,7 @@ export default function MenuButton({
           className={[
             'menu-button__menu',
             opens === 'above' && 'menu-button__menu--above',
+            buttonType && 'menu-button__menu--button-type',
             !open && 'is-closing',
           ]
             .filter(Boolean)

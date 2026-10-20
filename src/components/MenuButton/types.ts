@@ -37,6 +37,12 @@ export interface MenuButtonProps {
    * Either way it lines up with the button's end edge.
    */
   opens?: 'below' | 'above';
+  /**
+   * The items take the button's type, its face, size and weight, rather than
+   * the lighter menu item's: the Annotate dialog's More, whose two items are
+   * actions of the dialog's foot (the owner's call of 2026-10-20). Off by default.
+   */
+  buttonType?: boolean;
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
 }
