@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import IngredientSummary from '@/components/IngredientEntry/summary';
 import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/ingredients';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -294,5 +294,50 @@ describe('IngredientSummary', () => {
     }
     expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
+  });
+
+  describe('a long description', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    /** The paragraph's measured overflow: jsdom lays nothing out, so each height is the test's. */
+    function measures(scrollHeight: number, clientHeight: number): void {
+      vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
+      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(clientHeight);
+    }
+
+    it('is cut to its first lines, Show More opening the rest and Show Less closing it', () => {
+      measures(200, 72);
+      const before = window.location.href;
+      render(<IngredientSummary detail={full()} />);
+
+      const more = screen.getByRole('button', { name: 'Show More' });
+      const description = screen.getByText('A fixture description.');
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+      expect(more).toHaveAttribute('aria-controls', description.id);
+      expect(description.id).not.toBe('');
+
+      fireEvent.click(more);
+      const less = screen.getByRole('button', { name: 'Show Less' });
+      expect(less).toHaveAttribute('aria-expanded', 'true');
+      // Opening it stays in the modal: the address is unchanged.
+      expect(window.location.href).toBe(before);
+
+      fireEvent.click(less);
+      expect(screen.getByRole('button', { name: 'Show More' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    it('shows a description that fits whole, with no toggle', () => {
+      measures(48, 48);
+      render(<IngredientSummary detail={full()} />);
+
+      // Why it could show: the description is drawn.
+      expect(screen.getByText('A fixture description.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Show More' })).not.toBeInTheDocument();
+    });
   });
 });

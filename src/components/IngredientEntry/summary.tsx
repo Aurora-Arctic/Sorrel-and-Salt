@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import SafetyNote from '../SafetyNote';
+import SummaryDescription from './summary-description';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
 import type { IngredientDetail } from '@/modules/ingredients';
@@ -58,11 +59,9 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
     <div className="ingredient-summary">
       {/* No Details heading: the dialog's title names the entry, and its h2
           over a second h2 read as two titles. The blocks keep the page's h3s. */}
-      {/* The page's own description: a `<p>`, so at the measure, keeping its
-          typed line breaks. Left out when empty, where the page says so. */}
-      {said(shown.description) && (
-        <p className="ingredient-entry__description">{shown.description}</p>
-      )}
+      {/* The page's own description, cut to its first lines here. Left out
+          when empty, where the page says so. */}
+      {said(shown.description) && <SummaryDescription text={shown.description!} />}
       <SafetyNote
         safetyNotes={shown.safetyNotes}
         level={3}

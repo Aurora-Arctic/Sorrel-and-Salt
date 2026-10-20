@@ -554,6 +554,26 @@ export const DetailsFromCompendium: Story = () => (
 );
 DetailsFromCompendium.meta = { iframed: true };
 
+// A long description, cut to its first three lines, Show More opening the
+// rest in place; the sparse story's short one stands whole with no button.
+export const DetailsLongDescription: Story = () => (
+  <Details
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        ...FULL.entry,
+        description:
+          'A low, grey-leaved fixture herb of dry banks and old walls, gathered at midsummer when its small yellow flowers first open.\n' +
+          'Its leaves are dried in bundles under the eaves and kept through the winter, and its seed heads are left standing for the birds.\n' +
+          'In the fixture covens it is laid under the threshold stone of a new house, burned with the year’s last fire, and steeped for the wash that clears a room after a quarrel.',
+      }),
+    }}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+  />
+);
+DetailsLongDescription.meta = { iframed: true };
+
 // The same, to a curator: Edit opens the compendium's edit modal over the details.
 export const DetailsFromCompendiumForCurator: Story = () => (
   <Details
