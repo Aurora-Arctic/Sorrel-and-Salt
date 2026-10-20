@@ -12,7 +12,6 @@ import BusyButton from '../BusyButton';
 import Combobox from '../Combobox';
 import { FieldShell, fieldDescription } from '../Field';
 import IconTip, { InfoIcon } from '../IconTip';
-import InfoTip from '../InfoTip';
 import { RemoveIcon } from '../IngredientForm/icons';
 import { SubstituteSummary } from '../IngredientForm/substitute-summary';
 import { useCompendiumSubstitutes } from '../IngredientForm/suggestions';
@@ -256,16 +255,12 @@ export default function LinkForm({
                       ) : row.holds ? (
                         <span className="link-form__unchosen">No picked entry has this form</span>
                       ) : (
-                        // A dash rather than words, the reason in the tip
-                        // beside it and in the dash's own name (the owner's
-                        // call, 2026-10-20).
+                        // A dash rather than words, with no tip beside it;
+                        // a screen reader hears the reason in its place, as
+                        // hidden text (the owner's call, 2026-10-20).
                         <span className="link-form__dropped">
-                          <span role="img" aria-label={NOTHING_MOVES}>
-                            —
-                          </span>{' '}
-                          <InfoTip id={`${id}-${row.formId}-moves`} label={label}>
-                            {NOTHING_MOVES}
-                          </InfoTip>
+                          <span aria-hidden="true">—</span>
+                          <span className="visually-hidden">{NOTHING_MOVES}</span>
                         </span>
                       )}
                     </td>

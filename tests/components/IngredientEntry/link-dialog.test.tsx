@@ -106,13 +106,14 @@ describe('LinkForm', () => {
     expect(await within(picks()!).findByRole('alert')).toHaveTextContent('No such ingredient');
   });
 
-  it('marks a form that holds nothing and no pick has as moving nothing, with a tip saying why', async () => {
+  it('marks a form that holds nothing and no pick has as moving nothing, the reason told to a screen reader', async () => {
     show([BARK]);
     await pick('Splitwort');
 
     const cell = goesTo('Barkform');
-    expect(within(cell).getByRole('img', { name: /nothing moves/i })).toBeInTheDocument();
-    expect(within(cell).getByRole('button', { name: 'About Barkform' })).toBeInTheDocument();
+    // The dash is read as its reason, and no tip stands beside it.
+    expect(within(cell).getByText(/nothing moves/i)).toBeInTheDocument();
+    expect(within(cell).queryByRole('button')).not.toBeInTheDocument();
     // Nothing to place, so Link is not held for it.
     expect(link()).toBeEnabled();
   });
