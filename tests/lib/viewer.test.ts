@@ -18,7 +18,7 @@ vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 const byCovenName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
-const { viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
+const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
@@ -153,5 +153,42 @@ describe('viewerIfSignedIn', () => {
 
     expect(shell).toEqual(await viewerOf());
     expect(shell?.workspaces).toHaveLength(1);
+  });
+});
+
+// The public entry page's read (M9.12): which role the viewer holds in each of their covens, for
+// the cupboard choices each coven permits there. The shell carries a coven's permissions as
+// flags, not its role, so the page reads the role here, from the same memberships.
+describe('covenRolesIfSignedIn', () => {
+  it('is null for a signed-out visitor, asking for no memberships', async () => {
+    getSession.mockResolvedValue(null);
+
+    expect(await covenRolesIfSignedIn()).toBeNull();
+    expect(membershipsOf).not.toHaveBeenCalled();
+  });
+
+  it('names the viewer’s role in each of their own covens, asking for their own memberships only', async () => {
+    membershipsOf.mockResolvedValue([
+      [
+        membership('fixture-coven', 'Fixture Coven', 'owner'),
+        membership('testwort-circle', 'Testwort Circle', 'viewer'),
+      ],
+    ]);
+
+    const roles = await covenRolesIfSignedIn();
+
+    expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(SESSION, ['u1']);
+    expect(roles).toEqual(
+      new Map([
+        ['id-fixture-coven', 'owner'],
+        ['id-testwort-circle', 'viewer'],
+      ]),
+    );
+  });
+
+  it('refuses to answer from a refused lookup', async () => {
+    membershipsOf.mockResolvedValue([new Forbidden()]);
+
+    await expect(covenRolesIfSignedIn()).rejects.toThrow();
   });
 });
