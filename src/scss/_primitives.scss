@@ -1023,9 +1023,7 @@
       inset-inline-start: space(4);
       inline-size: 1.0125rem;
       block-size: 1.0125rem;
-      background-color: currentColor;
-      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+      @include warning-mark;
     }
   }
 

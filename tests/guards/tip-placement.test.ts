@@ -28,6 +28,15 @@ const files = walk('src/components');
 const tsx = files.filter((f) => f.endsWith('.tsx') && !f.endsWith('.stories.tsx'));
 const scss = files.filter((f) => f.endsWith('.scss'));
 
+// Everything else Floating UI places: the combobox list, the category chips'
+// More list and the click-feedback callout and badge (M12.31).
+const floating = files.filter(
+  (f) =>
+    /\.tsx?$/.test(f) &&
+    !f.endsWith('.stories.tsx') &&
+    /from '@floating-ui\/react-dom'/.test(readFileSync(fromRoot(f), 'utf8')),
+);
+
 const OPENS_A_TIP = /useTip\(|role="tooltip"/;
 const FIXED_ALIGN = /tip-above\(([^)]*\$align|\s*[^)$]*,[^)]*,)/;
 
@@ -70,5 +79,22 @@ describe('tip placement', () => {
       const text = readFileSync(fromRoot(f), 'utf8');
       expect(OPENS_A_TIP.test(text) || FIXED_ALIGN.test(text)).toBe(true);
     }
+  });
+});
+
+describe('floating placement', () => {
+  it('finds the files that place something with Floating UI, the callout among them', () => {
+    expect(floating).toContain('src/components/ClickFeedback/position.ts');
+    expect(floating).toContain('src/components/InfoTip/use-tip.ts');
+  });
+
+  // Without autoUpdate the box stays where it opened as the page scrolls or
+  // its control moves; without floatingStyles it is never placed at all.
+  it('follows its control with autoUpdate and applies the computed style', () => {
+    const loose = floating.filter((f) => {
+      const text = readFileSync(fromRoot(f), 'utf8');
+      return !(/\bautoUpdate\(/.test(text) && /\bfloatingStyles\b/.test(text));
+    });
+    expect(loose).toEqual([]);
   });
 });
