@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
     // reloads the server's modules from disk after an edit instead
     // (claude-docs/debugging.md).
     turbopackServerFastRefresh: false,
+    // Off, so a restart of `next dev` compiles from the files on disk: the
+    // dev cache kept on disk since Next 16.1 went on serving an old Sass
+    // partial behind `@use` until it was deleted. Builds keep their own cache
+    // (claude-docs/debugging.md, "A restart compiles from the files").
+    turbopackFileSystemCacheForDev: false,
     // `forbidden()` and `src/app/(shell)/forbidden.tsx`: the `/admin` guard's 403
     // (claude-docs/auth/admin-guard.md, "The admin guard").
     authInterrupts: true,
