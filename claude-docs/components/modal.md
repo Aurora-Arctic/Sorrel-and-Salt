@@ -433,7 +433,11 @@ the details window passes them; every other dialog is drawn as before (the owner
   call, 2026-10-20), level with the × at its far end. Its presence, even empty, gives the
   head that line (`.modal-dialog__top`, a flex row as tall as the ×, which stands over
   its end), so the × has a band of its own and what stands at the end of the lines under
-  it clears it. The × comes after the marks in the
+  it clears it. The line stands 16px above the formal name's line (the owner's call, 2026-10-20): the head's
+  own 8px gap and a `space(2)` margin more, from 8px. The margin is written on
+  `.modal-dialog__heading > .modal-dialog__top`, since the layout's `.header > *` zeroes a
+  child's margin at the weight of one class. A 12px gap (`space(1)` of margin) was the other
+  option shown. The × comes after the marks in the
   markup too, as on screen. Without `topEnd` the × stands in the corner beside the head's
   first line, as before, after the head in the markup.
 - **`formalActions`** is a node for the end of the formal name's line: the details

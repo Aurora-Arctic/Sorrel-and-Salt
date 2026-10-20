@@ -198,15 +198,18 @@ $close-reserve: calc(#{$close-target} + #{space(3)});
 
 // The top line (the owner's call, 2026-10-20): the entry page's top bar, its marks at the start
 // and the × level with them at the far end, as tall as the × is, so each mark is centred on the
-// × 's own middle. A little apart from the line under it, so the pencil there clears the ×.
-// Stopped short of the × by its width, which stands over its end.
-.modal-dialog__top {
+// × 's own middle. Apart from the line under it (the owner's call, 2026-10-20) by the head's own
+// 8px gap and `space(2)` more, 16px, so the pencil there clears the × and the line reads as a
+// bar of its own. The margin is set through the heading's own class, as `.header > *` (layout)
+// zeroes a child's margin at the same weight as a single class, and a margin set on the top line
+// alone is lost to it. Stopped short of the × by its width, which stands over its end.
+.modal-dialog__heading > .modal-dialog__top {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: space(2);
   min-block-size: $close-target;
-  margin-block-end: space(1);
+  margin-block-end: space(2);
   padding-inline-end: $close-reserve;
 }
 
