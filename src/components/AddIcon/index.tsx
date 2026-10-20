@@ -11,17 +11,22 @@ import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
-import type { AddIconProps } from './types';
+import type { NamedAddIconProps } from './types';
 
 // The plus: Add to My Ingredients as an icon (M9.12, the owner's calls, 2026-10-20), at a
 // compendium card's bottom right and beside the public entry page's pencil, so both are one
-// control. Named by its tip and an accessible name (`visually-hidden`), as the pencil beside
-// it is. A client component of its own, because the card stays a server component and a press
+// control. Its tip is the short ADD; its accessible name is the tip and then the entry's name
+// (`visually-hidden`), as the pencil beside it is named, so a list of buttons tells one card's
+// plus from the next (MB.120). A client component of its own, because the card stays a server component and a press
 // needs the browser. claude-docs/components/compendium-cards.md, "The plus".
 
 const ADD = 'Add to My Ingredients';
-/** What a held coven's check in the plus's menu stands for, joined to the coven's name. */
-const HELD_MARK = 'in My Ingredients';
+/**
+ * What a held coven's check in the plus's menu stands for, joined to the coven's name: "Hedge
+ * Coven, already added". It answers the menu's own verb, Add, for one coven, where the card's
+ * In Your Covens speaks for them all (MB.120).
+ */
+const HELD_MARK = 'already added';
 /**
  * How long the check holds after a success before it fades back to the plus (the owner's call,
  * 2026-10-20: "about 1s"). Long enough to be seen, short enough that the plus is soon back.
@@ -71,16 +76,25 @@ const Glyph = ({
  * the check in its place. With two or more it is always a menu of every one of them by name (the
  * owner’s calls of 2026-10-20: over the modal picker it first opened, and never adding at once
  * because one coven alone lacks the entry), and choosing one adds there at once. A coven that
- * holds the entry is shown disabled, with a green check after its name, and is named "<coven>, in
- * My Ingredients" (the owner’s call, 2026-10-20); the plus's own check says when every one holds
+ * holds the entry is shown disabled, with a green check after its name, and is named "<coven>,
+ * already added" (the owner’s call, 2026-10-20; the words MB.120's); the plus's own check says when every one holds
  * it. A refusal is said in a callout under the plus (M12.31), and the focus is given back to the
  * plus for it, since the chosen item went with the menu. The plus is `aria-disabled` and not
  * `disabled` while it works, the lone plus here and the menu's button in MenuButton, so the focus
  * stays on it (MB.120).
  */
-const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): ReactElement => {
+const AddIcon = ({
+  name: entry,
+  workspaceId,
+  ingredientId,
+  covens,
+  heldIn,
+}: NamedAddIconProps): ReactElement => {
+  // "Add to My Ingredients: Testwort, Formalis testis": the tip first, so the words on screen
+  // begin the name (WCAG 2.5.3), and a colon, since a formal name holds a comma of its own.
+  const label = `${ADD}: ${entry}`;
   const { pending, refresh } = usePendingNavigation();
-  const feedback = useClickFeedback({ name: ADD });
+  const feedback = useClickFeedback({ name: label });
   const { anchorRef } = feedback;
   const plus = useRef<HTMLButtonElement | null>(null);
   const plusRef = useCallback(
@@ -143,7 +157,7 @@ const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): R
         <IconTip tip={ADD}>
           <MenuButton
             ref={plusRef}
-            label={ADD}
+            label={label}
             className="icon-tip__add"
             icon={glyph}
             state={state}
@@ -179,7 +193,7 @@ const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): R
           }}
         >
           {glyph}
-          <span className="visually-hidden">{ADD}</span>
+          <span className="visually-hidden">{label}</span>
         </button>
       </IconTip>
       {feedback.feedback}

@@ -24,9 +24,11 @@ test.beforeAll(async () => {
 const ADD = 'Add to My Ingredients';
 const SHELF = 'In Your Cupboard';
 // What a held coven's check in the plus's menu stands for, joined to its name.
-const HELD_MARK = 'in My Ingredients';
+const HELD_MARK = 'already added';
 const NAME = 'Fixture Shelfwort';
-const HELD = 'In All Covens';
+// The plus and the check are named by their tips and then the entry (MB.120); a role name
+// matches in part, so ADD and HELD find them.
+const HELD = 'In Your Covens';
 
 test('a member adds the entry from its public page, and the three dots then offer its removal', async ({
   page,

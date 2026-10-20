@@ -493,8 +493,8 @@ describe("the coven Ingredients page's details modal", () => {
     // and the other coven, where the member may add, lacks the entry.
     const dialog = details('House Salt')!;
     expect(within(dialog).getByRole('button', { name: 'More for House Salt' })).toBeInTheDocument();
-    expect(within(dialog).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-    expect(within(dialog).queryByRole('button', { name: 'In All Covens' })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^In Your Covens: / })).toBeNull();
 
     // Nor the check, once every coven holds it.
     cleanup();
@@ -508,10 +508,10 @@ describe("the coven Ingredients page's details modal", () => {
       within(details('House Salt')!).getByRole('button', { name: 'More for House Salt' }),
     ).toBeInTheDocument();
     expect(
-      within(details('House Salt')!).queryByRole('button', { name: 'In All Covens' }),
+      within(details('House Salt')!).queryByRole('button', { name: /^In Your Covens: / }),
     ).toBeNull();
     expect(
-      within(details('House Salt')!).queryByRole('button', { name: 'Add to My Ingredients' }),
+      within(details('House Salt')!).queryByRole('button', { name: /^Add to My Ingredients: / }),
     ).toBeNull();
   });
 

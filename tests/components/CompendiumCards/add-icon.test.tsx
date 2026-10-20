@@ -89,7 +89,8 @@ const props = (
   ...over,
 });
 
-const PLUS = { name: 'Add to My Ingredients' };
+/** The plus on the fixture card, named by its tip and then its entry (MB.120). */
+const PLUS = { name: 'Add to My Ingredients: Fixture Salt' };
 
 /** Opens the plus's menu and returns it. */
 function openMenu(): HTMLElement {
@@ -106,7 +107,7 @@ const items = (menu: HTMLElement): string[] =>
 /** Every coven by name, the order the menu lists them in. */
 const BY_NAME = [FIRST, THIRD, SECOND];
 /** A held coven's item: its name, then the mark its check stands for. */
-const held = (name: string) => `${name}, in My Ingredients`;
+const held = (name: string) => `${name}, already added`;
 
 function mockAdd() {
   const calls: AddCupboardEntryMutationVariables[] = [];
@@ -264,9 +265,14 @@ describe('the add icon among several covens', () => {
       />,
     );
 
-    expect(screen.getAllByRole('button', PLUS)).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'In All Covens' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'In All Covens' })).toBeNull();
+    // Each card's control names its own entry, so the two are told apart by name alone.
+    expect(screen.getAllByRole('button', { name: /^Add to My Ingredients/ })).toEqual([
+      screen.getByRole('button', { name: 'Add to My Ingredients: Fixture Heldone' }),
+    ]);
+    expect(screen.getAllByRole('button', { name: /^In Your Covens/ })).toEqual([
+      screen.getByRole('button', { name: 'In Your Covens: Fixture Heldall' }),
+    ]);
+    expect(screen.queryByRole('link', { name: /^In Your Covens/ })).toBeNull();
   });
 });
 

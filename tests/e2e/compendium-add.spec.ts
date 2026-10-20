@@ -21,8 +21,10 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
+// Each is named by its tip and then the entry (MB.120); a role name matches in part, so these
+// find a card's plus and check, and the full names are asserted once where the add lands.
 const ADD = 'Add to My Ingredients';
-const HELD = 'In All Covens';
+const HELD = 'In Your Covens';
 const NAME = 'Fixture Holdwort';
 
 test('a member adds a compendium entry with the plus, the check shows, and the coven’s list shows it', async ({
@@ -82,8 +84,13 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
     await signInAgainAs(page, coven.users.B);
     await open(page);
     await expect(card(page).getByRole('button', { name: HELD })).toHaveCount(0);
+    await expect(card(page).getByRole('button', { name: ADD })).toHaveAccessibleName(
+      `${ADD}: ${NAME}`,
+    );
     await card(page).getByRole('button', { name: ADD }).click();
-    await expect(card(page).getByRole('button', { name: HELD })).toBeVisible();
+    await expect(card(page).getByRole('button', { name: HELD })).toHaveAccessibleName(
+      `${HELD}: ${NAME}`,
+    );
     await expect(card(page).getByRole('button', { name: ADD })).toHaveCount(0);
     expect(await heldRows(coven.id)).toHaveLength(1);
     await assertNoAccessibilityViolations(page);
@@ -193,7 +200,7 @@ test('a member of two covens chooses from the plus which one it adds to, and the
     await expect(menu).toBeVisible();
     const held = menu.getByRole('menuitem', { name: SECOND });
     await expect(held).toHaveAttribute('aria-disabled', 'true');
-    await expect(held).toHaveAccessibleName(`${SECOND}, in My Ingredients`);
+    await expect(held).toHaveAccessibleName(`${SECOND}, already added`);
     await assertNoAccessibilityViolations(page);
     // Choosing the held coven does nothing: the menu stays open and no second row is written.
     // Forced, since Playwright waits on an aria-disabled element as it would on a disabled one.
