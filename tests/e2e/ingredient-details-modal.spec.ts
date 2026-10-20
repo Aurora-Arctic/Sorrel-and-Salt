@@ -86,7 +86,7 @@ test.describe('on the admin Compendium list', () => {
     await expect(
       details.getByRole('region', { name: 'Caution' }).getByText('Fixture admin caution.'),
     ).toBeVisible();
-    await expect(details.getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+    await expect(details.getByRole('link', { name: 'View Page' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${slug}`,
     );
@@ -145,7 +145,7 @@ test.describe('on the admin Compendium list', () => {
     const bar = details.getByRole('button', { name: 'Show More' });
     const paragraph = details.locator(`#${(await bar.getAttribute('aria-controls')) ?? ''}`);
 
-    // Why it could be cut: the whole text is longer than the three lines it shows.
+    // Why it could be cut: the whole text is longer than the four lines it shows.
     await expect(bar).toHaveAttribute('aria-expanded', 'false');
     const closed = (await paragraph.evaluate((p) => p.parentElement?.clientHeight)) ?? 0;
     const whole = await paragraph.evaluate((p) => p.scrollHeight);
@@ -155,6 +155,24 @@ test.describe('on the admin Compendium list', () => {
     const textBox = await paragraph.boundingBox();
     expect(Math.round(barBox?.width ?? 0)).toBe(Math.round(textBox?.width ?? -1));
 
+    // Four lines are showing, not three: the clip is four line heights tall.
+    const lineHeight = await paragraph.evaluate((p) => parseFloat(getComputedStyle(p).lineHeight));
+    expect(Math.round(closed / lineHeight)).toBe(4);
+    const gapClosed =
+      (barBox?.y ?? 0) -
+      (await details
+        .locator('.ingredient-summary__description-clip')
+        .evaluate((c) => c.getBoundingClientRect().bottom));
+
+    // Pointed at, the label is not underlined and the chevron grows in the label's own colour.
+    await bar.hover();
+    const chevron = bar.locator('svg');
+    await expect.poll(() => chevron.evaluate((c) => getComputedStyle(c).scale)).toBe('1.25');
+    expect(await bar.evaluate((b) => getComputedStyle(b).textDecorationLine)).toBe('none');
+    expect(await chevron.evaluate((c) => getComputedStyle(c).color)).toBe(
+      await bar.evaluate((b) => getComputedStyle(b).color),
+    );
+
     await bar.click();
     const less = details.getByRole('button', { name: 'Show Less' });
     await expect(less).toHaveAttribute('aria-expanded', 'true');
@@ -163,6 +181,15 @@ test.describe('on the admin Compendium list', () => {
     await expect
       .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
       .toBeGreaterThanOrEqual(whole);
+
+    // Open, the bar stands further from the text than it did under the fade.
+    await expect
+      .poll(
+        async () =>
+          ((await less.boundingBox())?.y ?? 0) -
+          (await paragraph.evaluate((p) => p.getBoundingClientRect().bottom)),
+      )
+      .toBeGreaterThan(gapClosed + 4);
 
     await less.click();
     await expect(details.getByRole('button', { name: 'Show More' })).toHaveAttribute(
@@ -174,11 +201,35 @@ test.describe('on the admin Compendium list', () => {
       .toBeLessThan(whole);
   });
 
-  test('Open Full Page is a full-width bar fixed to the foot of the window, with the text scrolling under it', async ({
+  test('a short entry fits its window: the body overflows on neither axis, and the bar still runs edge to edge', async ({
+    page,
+  }) => {
+    await page.goto(`${listPath}&entry=${slug}`);
+    const details = detailsDialog(page);
+    const body = details.locator('.modal-dialog__body');
+    // Why it could overflow: the foot bar is in the body, with the margins that take it to the edges.
+    const bar = details.locator('.ingredient-details-foot');
+    await expect(bar).toBeVisible();
+    // Why it is short: the one caution, nothing near the window's height.
+    const room = await body.evaluate((b) => b.clientHeight);
+    expect(room).toBeLessThan((page.viewportSize()?.height ?? 0) / 2);
+    const overflow = () =>
+      body.evaluate((b) => ({
+        y: b.scrollHeight - b.clientHeight,
+        x: b.scrollWidth - b.clientWidth,
+      }));
+    await expect.poll(overflow).toEqual({ y: 0, x: 0 });
+    // Edge to edge: the bar is as wide as the dialog.
+    const dialogBox = await details.boundingBox();
+    const barBox = await bar.boundingBox();
+    expect(Math.abs((barBox?.width ?? 0) - (dialogBox?.width ?? 1))).toBeLessThan(2);
+  });
+
+  test('View Page is a centred button in a bar fixed to the foot of the window, with the text scrolling under it', async ({
     page,
   }) => {
     const details = await openLongEntry(page);
-    const open = details.getByRole('link', { name: 'Open Full Page' });
+    const open = details.getByRole('link', { name: 'View Page' });
     const body = details.locator('.modal-dialog__body');
     const bottomOf = async (el: Locator) =>
       (await el.evaluate((node) => node.getBoundingClientRect().bottom)) ?? 0;
@@ -191,10 +242,12 @@ test.describe('on the admin Compendium list', () => {
     const dialogBottom = await bottomOf(details);
     const barAtTop = await bottomOf(open);
     expect(barAtTop).toBeLessThanOrEqual(dialogBottom + 1);
-    // The button fills the bar: the body's width less the bar's own padding.
+    // The button is not the bar's width, and it stands in the middle of the dialog.
     const box = await open.boundingBox();
     const bodyBox = await body.boundingBox();
-    expect(box?.width ?? 0).toBeGreaterThan((bodyBox?.width ?? 0) - 100);
+    expect(box?.width ?? 0).toBeLessThan((bodyBox?.width ?? 0) / 2);
+    const centre = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+    expect(Math.abs(centre - ((bodyBox?.x ?? 0) + (bodyBox?.width ?? 0) / 2))).toBeLessThan(2);
 
     // Scrolled to the end, the bar has not moved and the last text stands clear above it.
     await body.evaluate((b) => b.scrollTo(0, b.scrollHeight));
@@ -254,7 +307,7 @@ test.describe("on a coven's Ingredients", () => {
       await page.goto(listPath);
       await quickLook(page).click();
       // Why Edit could be there: the details are open, with their other action.
-      await expect(details.getByRole('link', { name: 'Open Full Page' })).toBeVisible();
+      await expect(details.getByRole('link', { name: 'View Page' })).toBeVisible();
       await expect(editIn(details)).toHaveCount(0);
       // The entry's sections, read for the coven.
       await expect(
@@ -379,7 +432,7 @@ test.describe('on the public compendium', () => {
     // An empty block or row is left out here, where the page says "None recorded".
     await expect(details.getByRole('heading', { name: 'Categories' })).toHaveCount(0);
     await expect(details.getByText('None recorded')).toHaveCount(0);
-    await expect(details.getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+    await expect(details.getByRole('link', { name: 'View Page' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,
     );

@@ -67,6 +67,9 @@ const Modal = ({
   eyebrow,
   destination,
   qualifier,
+  qualifierBelow = false,
+  titleEnd,
+  under,
   onClose,
   returnTo,
   size,
@@ -77,7 +80,10 @@ const Modal = ({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const eyebrowId = useId();
+  const qualifierId = useId();
   const body = useRef<HTMLDivElement>(null);
+  // The qualifier on its own line, which only a title with something to say after it has.
+  const below = qualifierBelow && qualifier != null && qualifier !== false;
   // What held the focus as it opened, taken once, before showModal() moves
   // it: the focus goes back there as it closes (APG, "Dialog (Modal)"). The
   // modal does it, rather than each owner, because the owner closes it by
@@ -236,6 +242,30 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
+  // Beside a `titleEnd` the title's first word is set apart: the end drops below the
+  // title only once that word would have to break to fit (index.scss). Spans leave
+  // the heading's text, and so the dialog's name, as it was.
+  const [, first = title, rest = ''] = /^(\S+)(.*)$/s.exec(title) ?? [];
+  const titleHeading = (
+    <h2 id={titleId} className="modal-dialog__title">
+      {titleEnd === undefined ? (
+        title
+      ) : (
+        <>
+          <span className="modal-dialog__first-word">{first}</span>
+          {rest}
+        </>
+      )}
+      {qualifier && !below && (
+        <>
+          <span className="spoken-separator">,</span>{' '}
+          <span className="modal-dialog__qualifier">{qualifier}</span>
+        </>
+      )}
+      {below && <span className="spoken-separator">,</span>}
+    </h2>
+  );
+
   // The backdrop's click is the pointer's alone; Escape is its keyboard
   // equivalent, handled above.
   // oxlint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
@@ -250,9 +280,10 @@ const Modal = ({
       // Named by the eyebrow and the heading together, "Edit Ingredient,
       // Mugwort", or by the heading then where it lands, "Add Ingredient to
       // Whitethorn Coven".
-      aria-labelledby={
-        eyebrow ? `${eyebrowId} ${titleId}` : destination ? `${titleId} ${eyebrowId}` : titleId
-      }
+      aria-labelledby={[
+        ...(eyebrow ? [eyebrowId, titleId] : destination ? [titleId, eyebrowId] : [titleId]),
+        ...(below ? [qualifierId] : []),
+      ].join(' ')}
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -277,15 +308,20 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
-          <h2 id={titleId} className="modal-dialog__title">
-            {title}
-            {qualifier && (
-              <>
-                <span className="spoken-separator">,</span>{' '}
-                <span className="modal-dialog__qualifier">{qualifier}</span>
-              </>
-            )}
-          </h2>
+          {titleEnd === undefined ? (
+            titleHeading
+          ) : (
+            <div className="modal-dialog__title-row">
+              {titleHeading}
+              <div className="modal-dialog__title-end">{titleEnd}</div>
+            </div>
+          )}
+          {below && (
+            <p id={qualifierId} className="modal-dialog__qualifier modal-dialog__qualifier--below">
+              {qualifier}
+            </p>
+          )}
+          {under !== undefined && <div className="modal-dialog__under">{under}</div>}
         </div>
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>

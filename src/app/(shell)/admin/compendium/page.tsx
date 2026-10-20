@@ -6,7 +6,7 @@ import CompendiumList from '../../../../components/CompendiumList';
 import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
-import { detailsHeading } from '../../../../components/IngredientEntry/details';
+import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import { single } from '../../../../lib/search-params';
@@ -161,6 +161,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         opened={
           detailed && {
             heading: detailsHeading(detailed),
+            marks: summary && detailsMarks(summary),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             editAction: {

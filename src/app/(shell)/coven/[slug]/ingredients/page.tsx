@@ -16,7 +16,7 @@ import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-d
 import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
-import { detailsHeading } from '../../../../../components/IngredientEntry/details';
+import { detailsHeading, detailsMarks } from '../../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../../components/IngredientEntry/details-dialog';
 import IngredientSummary from '../../../../../components/IngredientEntry/summary';
 // From its own client file: the Modal index re-exports modules a server
@@ -183,6 +183,7 @@ export default async function CovenIngredientsPage({
           opened={
             viewed && {
               heading: detailsHeading(viewed.shown),
+              marks: detailsMarks(viewed.detail, true),
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
               children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
               ...(viewed.own &&

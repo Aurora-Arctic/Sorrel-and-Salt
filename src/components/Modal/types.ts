@@ -32,6 +32,21 @@ export interface ModalHeading {
    * nomenclature.
    */
   qualifier?: ReactNode;
+  /**
+   * Draws the qualifier on a line of its own below the title instead of after
+   * it (the owner's call, 2026-10-20: the Quick Look's formal name). It is still
+   * in the dialog's accessible name, after the title.
+   */
+  qualifierBelow?: boolean;
+  /**
+   * Beside the title, at the end of its first line, centred on that line: a
+   * badge and a pencil. The title wraps before it, and it drops below the title
+   * only when the title's first word would otherwise have to break. Not in the
+   * dialog's name.
+   */
+  titleEnd?: ReactNode;
+  /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
+  under?: ReactNode;
 }
 
 export interface ModalProps extends ModalHeading {

@@ -638,6 +638,12 @@ $switch-width: 2.75rem;
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
 
+// A movement the eye should follow, not just register: the details window's
+// description opening and closing under its Show More bar (the owner's call,
+// 2026-10-20). Twice `$motion-short`, since a block of text
+// changing height needs longer than a thumb sliding to read as one move.
+$motion-medium: 300ms;
+
 // The loading standard (M12.33; claude-docs/design-decisions/m12.33-plan.md).
 // How long a wait must last before an indicator shows (the spinner, the link
 // dot and the page bar), so an answer that is quick never flashes one;

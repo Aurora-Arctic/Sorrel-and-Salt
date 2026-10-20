@@ -32,56 +32,52 @@
   color: $text-muted;
 }
 
-// The details header's rhythm (the owner's call, 2026-10-20): where the
-// header holds the Edit pencil, a full step under the name, and the body a step
-// and a half under that row, where the shared defaults suit the edit modals'
-// Undo and Redo. A header with nothing in its slot (no Edit) keeps the defaults.
-// Scoped by `:has()`, Baseline Widely Available, as the Modal's own header
-// rules are.
-.modal-dialog:has(.ingredient-summary) {
-  .modal-dialog__header:has(.modal-dialog__header-slot:not(:empty)) {
-    padding-bottom: space(5);
-  }
+// The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
+// Full Page, the last child of the scrolling body and fixed to the foot of the
+// window, so the text scrolls under it. It runs to the dialog's edges, on the
+// modal's surface so the text passes behind it unseen, with only a hairline
+// along its top; sticky rather than a slot of the Modal's own, as no other modal
+// has a foot. Its place in the flow is the end of the text, so the last line
+// scrolls clear of it by the bar's own top margin. The button is the site's
+// green, the large (full) size, centred in the bar and as wide as its label.
+//
+// The edges are reached by taking the body's own side and bottom padding off and
+// giving the text its side margin instead, not by pulling the bar out over that
+// padding with negative margins and a negative `bottom` (the first version,
+// 632ca318): a box stuck or margined past its scroller's padding is the kind that
+// can overflow it by a pixel in some engines, and a window whose text fits
+// showed a scrollbar. Here nothing is wider or lower than the body's own box.
+.modal-dialog__body:has(> .ingredient-details-foot) {
+  padding-inline: 0;
+  padding-block-end: 0;
 
-  .modal-dialog__header-slot:not(:empty) {
-    margin-top: space(4);
+  > :not(.ingredient-details-foot) {
+    margin-inline: space(5);
   }
 }
 
-// The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
-// Full Page, the last child of the scrolling body and fixed to the foot of the
-// window, so the text scrolls under it. It runs to the dialog's edges (the
-// body's own padding taken back), on the modal's surface so the text passes
-// behind it unseen, with only a hairline along its top; sticky rather than a
-// slot of the Modal's own, as no other modal has a foot. Its place in the flow
-// is the end of the text, so the last line scrolls clear of it by the bar's
-// own top padding. The button is the site's green, medium, the bar's width.
 .ingredient-details-foot {
   position: sticky;
-  // Negative: a sticky box stops at the body's padding, and this one is to
-  // stand at the dialog's edge, over it.
-  bottom: calc(-1 * #{space(5)});
+  bottom: 0;
   z-index: 1;
-  margin: space(5) calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
+  margin-block-start: space(5);
+  display: flex;
+  justify-content: center;
   padding: space(3) space(5);
   border-top: 1px solid $hairline;
   background: $surface-card;
   @include theme-transition(background-color, border-color);
 }
 
-.ingredient-details-foot__open {
-  width: 100%;
-}
-
 // The description and its Show More bar (the owner's calls, 2026-10-20). The
-// clip box round the paragraph is cut to three lines by the script, which sets
+// clip box round the paragraph is cut to four lines by the script, which sets
 // its height in pixels (summary-description.tsx); without the script it has
 // none and the whole text shows. The cut text fades out into the modal's
 // surface, and under it stands the bar: one real button the full width of the
 // text, on the modal's own surface with only a hairline along its top, the
 // label in the primary ink and a chevron after it. Opening moves the height
-// and the fade together over the short motion while the chevron turns over
-// with them; the bar stays where it is, under the text, and reads Show Less.
+// and the fade together over the medium motion (300ms, the owner's call) while
+// the chevron turns over with them; the bar stays where it is, under the text, and reads Show Less.
 // Under reduced motion nothing moves and each is at once.
 .ingredient-summary__description {
   display: flex;
@@ -91,7 +87,7 @@
 .ingredient-summary__description-clip {
   position: relative;
   overflow: hidden;
-  transition: height $motion-short ease-in-out;
+  transition: height $motion-medium ease-in-out;
 
   // The fade: the surface the text stands on, in from clear at the top, so the
   // last lines go into the bar rather than being cut. It lets the pointer through.
@@ -103,7 +99,7 @@
     background: linear-gradient(to bottom, transparent, $surface-card);
     opacity: 0;
     pointer-events: none;
-    transition: opacity $motion-short ease-in-out;
+    transition: opacity $motion-medium ease-in-out;
   }
 
   @include reduced-motion {
@@ -120,8 +116,11 @@
 }
 
 // The whole bar is the target. No fill and no corners: the modal's surface and
-// the hairline above it, so the hover cue is the label underlined and the
-// chevron in the accent, and the focus is the ring, drawn inside the bar.
+// the hairline above it. Hover and focus leave the label as it is and grow the
+// chevron (below), and the focus is also the ring, drawn inside the bar. Open,
+// the bar stands further from the text it follows, since the fade that ran
+// under it is gone and the last line would otherwise touch it; collapsed it
+// stays close, so the fade runs under it.
 .ingredient-summary__more {
   @include button-reset;
 
@@ -140,10 +139,10 @@
   font-size: type-size('small');
   font-weight: 500;
 
-  &:hover,
-  &:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
+  transition: margin-top $motion-medium ease-in-out;
+
+  &[aria-expanded='true'] {
+    margin-top: space(3);
   }
 
   &:focus-visible {
@@ -151,15 +150,22 @@
 
     outline-offset: -2px;
   }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 // The chevron after the label, down while the text is cut and turned over
-// once it is open, in step with the height.
+// once it is open, in step with the height. Pointed at or focused it grows a
+// quarter in the label's own colour, as the ingredient form's fold chevrons do
+// (`scale: 1.25`, IngredientForm/index.scss); `scale` composes with the
+// turn's `transform`.
 .ingredient-summary__more-chevron {
   flex: none;
   transition:
-    transform $motion-short ease-in-out,
-    color $motion-short ease-in-out;
+    transform $motion-medium ease-in-out,
+    scale $motion-short ease-in-out;
 
   [aria-expanded='true'] > & {
     transform: rotate(180deg);
@@ -167,7 +173,7 @@
 
   .ingredient-summary__more:hover > &,
   .ingredient-summary__more:focus-visible > & {
-    color: $accent;
+    scale: 1.25;
   }
 
   @include reduced-motion {

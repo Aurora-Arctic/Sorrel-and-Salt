@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Reopenable } from '../../../.ladle/reopenable';
 import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
-import { detailsHeading } from './details';
+import { detailsHeading, detailsMarks } from './details';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import IngredientSummary from './summary';
 import type { IngredientDetailsOpened, IngredientEntryProps } from './types';
@@ -539,7 +539,7 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // in DetailsDialog, over the list. The workshop's router goes nowhere, so Close,
 // Escape and the links leave Open Again (`Reopenable`), as Modal's stories do.
 
-/** The modal opened over a list, as the page builds it: the entry's head, Open Full Page, the summary. */
+/** The modal opened over a list, as the page builds it: the entry's head, View Page, the summary. */
 const Details = ({
   detail,
   listHref,
@@ -556,6 +556,7 @@ const Details = ({
         closeHref={listHref}
         opened={{
           heading: detailsHeading(detail.entry),
+          marks: detailsMarks(detail),
           children: <IngredientSummary detail={detail} covens={covens} />,
           ...opened,
         }}
@@ -575,7 +576,7 @@ const OWN: IngredientDetail = {
   }),
 };
 
-// From the coven's list, its own entry: Open Full Page and Edit in the header,
+// From the coven's list, its own entry: View Page and Edit in the header,
 // then the safety note with the line naming the form that carries its own, the
 // correspondences, folk names and categories.
 export const DetailsFromCovenList: Story = () => (
@@ -592,7 +593,7 @@ export const DetailsFromCovenList: Story = () => (
 DetailsFromCovenList.meta = { iframed: true };
 
 // From the public compendium, to anyone but a curator: the same summary, and
-// only Open Full Page.
+// only View Page.
 export const DetailsFromCompendium: Story = () => (
   <Details
     detail={FULL}
@@ -621,7 +622,7 @@ export const DetailsInYourCovens: Story = () => (
 );
 DetailsInYourCovens.meta = { iframed: true };
 
-// A long description, cut to its first three lines, Show More opening the
+// A long description, cut to its first four lines, Show More opening the
 // rest in place; the sparse story's short one stands whole with no button.
 export const DetailsLongDescription: Story = () => (
   <Details
@@ -740,6 +741,98 @@ export const DetailsToxic: Story = () => (
   />
 );
 DetailsToxic.meta = { iframed: true };
+
+// The head's two ends with a name that wraps (the owner's calls, 2026-10-20): the safety
+// badge and the Edit pencil end the name's first line, the formal name stands on its
+// own line below, and the provenance badges in a row of their own, New first.
+export const DetailsLongName: Story = () => (
+  <Details
+    detail={{
+      ...OWN,
+      entry: entryRow({
+        ...OWN.entry,
+        name: 'Fixture Grey-Leaved Testwort of the Dry Banks and Old Walls',
+        toxic: true,
+        safetyNotes: 'Poisonous in every part.',
+      }),
+    }}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    editAction={{
+      href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
+      heading: { eyebrow: 'Edit Ingredient', title: 'Fixture Grey-Leaved Testwort' },
+    }}
+  />
+);
+DetailsLongName.meta = { iframed: true, width: 375 };
+
+// A compendium entry added today and cautioned: New first in the badge row, and the
+// safety badge beside the name.
+export const DetailsNewAndCautioned: Story = () => (
+  <Details
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        ...FULL.entry,
+        safetyNotes: 'Keep from children and animals.',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    }}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    editAction={{
+      href: `/compendium?edit=${FULL.entry.slug}` as Route,
+      heading: { eyebrow: EDIT_ENTRY_EYEBROW, title: 'Testwort' },
+    }}
+  />
+);
+DetailsNewAndCautioned.meta = { iframed: true };
+
+// One word longer than the line: the badge and the pencil go under it rather than
+// breaking its first word.
+export const DetailsLongWord: Story = () => (
+  <Details
+    detail={{
+      ...OWN,
+      entry: entryRow({
+        ...OWN.entry,
+        name: 'Pseudotestworticulumfixturaceae',
+        toxic: true,
+        safetyNotes: 'Poisonous in every part.',
+      }),
+    }}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    editAction={{
+      href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
+      heading: { eyebrow: 'Edit Ingredient', title: 'Pseudotestworticulumfixturaceae' },
+    }}
+  />
+);
+DetailsLongWord.meta = { iframed: true, width: 375 };
+
+// No formal name: the pencil still ends the name's line, after the safety badge.
+export const DetailsNoFormalName: Story = () => (
+  <Details
+    detail={{
+      ...OWN,
+      entry: entryRow({
+        ...OWN.entry,
+        canonicalName: null,
+        toxic: true,
+        safetyNotes: 'Poisonous.',
+      }),
+    }}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    editAction={{
+      href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
+      heading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+    }}
+  />
+);
+DetailsNoFormalName.meta = { iframed: true };
 
 export const DetailsPhoneDark: Story = () => <DetailsFromCovenList />;
 DetailsPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
