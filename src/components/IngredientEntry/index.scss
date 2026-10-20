@@ -85,9 +85,22 @@ $jump-link-line: 1.25;
   margin-block-end: space(3);
 }
 
-.ingredient-entry__bar > .recency-mark {
-  // Right end even with no back link beside it.
+// New or Updated, then the safety badge, at the row's right end, each as far right as it can go:
+// `auto` on the first of them, whichever is there.
+.ingredient-entry__bar > .recency-mark,
+.ingredient-entry__bar > .badge:first-child,
+.ingredient-entry__back + .badge {
   margin-inline-start: auto;
+}
+
+// With New or Updated there, the safety badge stands just right of it and New keeps its place at
+// the text column's right end, the badge past it (the owner's call, 2026-10-20): placed, so it
+// takes no room from the row. Centred on the row's line, as New is.
+.ingredient-entry__bar > .recency-mark + .badge {
+  position: absolute;
+  inset-inline-start: calc(100% + #{space(2)});
+  top: 50%;
+  translate: 0 -50%;
 }
 
 .ingredient-entry__back {
@@ -162,28 +175,31 @@ $jump-link-line: 1.25;
   }
 }
 
-// The Edit menu as the pencil at the end of the name's row (the owner's call, 2026-10-20): it
-// stays on the name's first line at every width, the name wrapping before it, where a labelled
-// action drops under a long name or a narrow header. Centred on that first line: the h1's line
-// box (`heading-size(1)` at the 1.1 line height _typography.scss gives it) less the pencil's box.
-// `:has()` is Baseline Widely Available, so the header needs no class of its own for it.
-.ingredient-entry__head .page-header:has(> .ingredient-entry__cupboard--pencil) {
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  column-gap: space(2);
+// The formal name and the name, one stack, positioned so the pencil can be placed against it.
+.ingredient-entry__naming {
+  @include stack(3);
 
-  // Also undoes the narrow header's `flex-basis: 100%`, which would push the pencil under.
-  > h1,
-  > .page-header__title {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
+  position: relative;
+}
 
-  > .ingredient-entry__cupboard--pencil {
-    flex: none;
-    margin-block-end: 0;
-    top: calc((#{heading-size(1)} * 1.1 - #{$icon-size-large}) / 2);
-  }
+// The Edit menu as the pencil at the end of the formal name's line, above the name (the owner's
+// call, 2026-10-20). Taken out of the name's row rather than moved in the markup, so a screen
+// reader still meets it after the heading, and whether the action is the pencil stays the client
+// part's choice (`cupboard-actions.tsx`): `:has()`, Baseline Widely Available, finds it. Centred on
+// the formal line's first line, `$formal-line` tall (the tip button the line centres on), and the
+// formal name wraps short of it. Placed, so the name's row keeps the whole width for the name.
+$formal-line: 1.5rem;
+
+.ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--pencil)
+  > .ingredient-entry__formal {
+  padding-inline-end: calc(#{$icon-size-large} + #{space(2)});
+}
+
+.ingredient-entry__head .page-header > .ingredient-entry__cupboard--pencil {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc((#{$formal-line} - #{$icon-size-large}) / 2);
+  margin: 0;
 }
 
 // In Your Cupboard: the shelf before the name, at the heading's size and in

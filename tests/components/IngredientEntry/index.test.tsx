@@ -357,9 +357,48 @@ describe('IngredientEntry', () => {
     expect(headCaution()).toBeNull();
     unmount();
 
-    // Why it can show: the oil form has notes, and the entry has none of its own.
-    renderEntry();
+    // Why it can show: the oil form has notes, and the entry has none of its own. Not
+    // flagged Toxic, which would stand in Caution's place (SafetyMark).
+    renderEntry({
+      detail: detail({
+        variants: [
+          variantRow('testroot'),
+          variantRow('testoil', { safetyNotes: 'Fixture oil caution.' }),
+        ],
+      }),
+    });
     expect(headCaution()).not.toBeNull();
+  });
+
+  // The head's one safety badge rides the back row, after New or Updated, and the name's
+  // row holds the name alone (the owner's call, 2026-10-20).
+  it('draws one safety badge in its head, Toxic over Caution, read after New and before the name', () => {
+    renderEntry({
+      detail: detail({
+        entry: entryRow({ createdAt: new Date(), safetyNotes: 'A fixture caution.' }),
+      }),
+    });
+    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    const toxic = within(head).getAllByText('Toxic', { exact: true });
+    expect(toxic).toHaveLength(1);
+    expect(headCaution()).toBeNull();
+    const recency = within(head).getByText('New', { exact: true });
+    const follows = (a: Element, b: Element) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(recency, toxic[0]!)).toBe(true);
+    expect(follows(toxic[0]!, screen.getByRole('heading', { level: 1 }))).toBe(true);
+  });
+
+  it('draws the safety badge with no back link or recency mark to share its row', () => {
+    renderEntry();
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByRole('link', { name: /^Back to/ })).toBeNull();
+    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    const toxic = within(head).getByText('Toxic', { exact: true });
+    expect(
+      toxic.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
   });
 
   it('names its folk names, categories and substitutes lists, one item each', () => {

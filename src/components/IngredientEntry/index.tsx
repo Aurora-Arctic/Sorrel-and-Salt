@@ -3,6 +3,7 @@ import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import type { ReactElement, ReactNode } from 'react';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
+import { SafetyMark } from '../SafetyNote';
 import FormIcon from '../FormIcon';
 import HeldMark from './held-mark';
 // From its own client file: the Modal index re-exports modules a server
@@ -357,9 +358,11 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
-        {(back || recency) && (
-          // One row for the way back (left, first for a screen reader) and the New / Updated
-          // marker (right: the top right of the text column).
+        {(back || recency || toxic || caution) && (
+          // One row for the way back (left, first for a screen reader), the New / Updated
+          // marker (right: the top right of the text column) and the one safety badge, just
+          // right of the marker or in its place without one (the owner's call, 2026-10-20).
+          // The row stands for the badge alone where there is no way back and no marker.
           <div className="ingredient-entry__bar">
             {back && (
               <PendingLink
@@ -387,57 +390,64 @@ const IngredientEntry = ({
               </PendingLink>
             )}
             <RecencyMark recency={recency} />
+            <SafetyMark
+              toxic={entry.toxic}
+              safetyNotes={shown.safetyNotes}
+              variants={variants.map(({ variant }) => variant)}
+            />
           </div>
         )}
-        <FormalName entry={entry} />
-        <PageHeader
-          title={shown.name}
-          lead={(local || held) && <HeldMark />}
-          action={
-            (edit || cupboard || covens) && (
-              <>
-                {edit && !(choices && !local) && edit.coven ? (
-                  // A coven's own entry: Edit and Delete in one menu (M8.17).
-                  <OwnEntryActions edit={edit} entry={editable} />
-                ) : (
-                  edit &&
-                  !(choices && !local) && (
-                    <EditButton href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
-                  )
-                )}
-                {cupboard && !local && (
-                  <CupboardActions
-                    {...cupboard}
-                    edit={edit ? { href: edit.href, entry: editable } : undefined}
-                    ingredientId={entry.id}
-                    held={held}
-                    {...cupboardFormValues(entry, cupboardEntry)}
-                  />
-                )}
-                {/* The public page's (M9.12): the same buttons across the viewer's
+        {/* The formal name and the name together, so the Edit pencil, read after the
+            heading, can stand at the end of the formal name's line (index.scss). */}
+        <div className="ingredient-entry__naming">
+          <FormalName entry={entry} />
+          <PageHeader
+            title={shown.name}
+            lead={(local || held) && <HeldMark />}
+            action={
+              (edit || cupboard || covens) && (
+                <>
+                  {edit && !(choices && !local) && edit.coven ? (
+                    // A coven's own entry: Edit and Delete in one menu (M8.17).
+                    <OwnEntryActions edit={edit} entry={editable} />
+                  ) : (
+                    edit &&
+                    !(choices && !local) && (
+                      <EditButton href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
+                    )
+                  )}
+                  {cupboard && !local && (
+                    <CupboardActions
+                      {...cupboard}
+                      edit={edit ? { href: edit.href, entry: editable } : undefined}
+                      ingredientId={entry.id}
+                      held={held}
+                      {...cupboardFormValues(entry, cupboardEntry)}
+                    />
+                  )}
+                  {/* The public page's (M9.12): the same buttons across the viewer's
                     covens, the curator's Edit among them, and none of the marks. */}
-                {covens && !cupboard && !local && (
-                  <CupboardActions
-                    {...covens}
-                    edit={edit ? { href: edit.href, entry: editable } : undefined}
-                    ingredientId={entry.id}
-                    compendium={cupboardFormValues(entry, null).compendium}
-                  />
-                )}
-              </>
-            )
-          }
-        />
-        {(local || held || cupboard || caution || toxic || retired) && (
+                  {covens && !cupboard && !local && (
+                    <CupboardActions
+                      {...covens}
+                      edit={edit ? { href: edit.href, entry: editable } : undefined}
+                      ingredientId={entry.id}
+                      compendium={cupboardFormValues(entry, null).compendium}
+                    />
+                  )}
+                </>
+              )
+            }
+          />
+        </div>
+        {(local || held || cupboard || retired) && (
           <div className="badges">
             <EntryMarks
               kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
               inCoven={cupboard !== undefined}
               annotated={held && isAnnotated(cupboardEntry)}
               retired={retired}
-              toxic={entry.toxic}
-              safetyNotes={shown.safetyNotes}
-              variants={variants.map(({ variant }) => variant)}
+              safety={false}
             />
           </div>
         )}
