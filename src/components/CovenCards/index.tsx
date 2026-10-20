@@ -14,7 +14,7 @@ import '../CompendiumList/index.scss';
 // A coven's Ingredients list (M9.6), the twin of CompendiumCards: the filter row in its coven
 // mode, one compact card per entry of the cupboard, and the pager. Render-only: the page reads
 // one page and hands it here. Each card links to the entry's page inside the coven, shows the
-// coven's own label, and holds its jars beneath the forms. The foot of a card holds Edit where
+// coven's own label, and holds its jars where the forms line would be: a coven card draws no forms line (M9.9). The foot of a card holds Edit where
 // the page gives the entry an edit address (M8.17): the coven's own entries, for a role that
 // may update them; and Annotate where it gives an annotate address: the compendium entries the
 // cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Delete on
@@ -66,6 +66,7 @@ const CovenCards = ({
             nomenclature={entry.nomenclature}
             categories={entry.categories}
             variants={entry.variants}
+            forms={false}
             toxic={entry.toxic}
             safetyNotes={entry.safetyNotes}
             kind={entry.kind}

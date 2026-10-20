@@ -1,4 +1,4 @@
-import type { StockOfForm, StockState, WorstStock } from './types';
+import type { StockState } from './types';
 
 // The one place the badge table is written (M9.8). The server's `lowStockOnly`
 // filter says the same thing in SQL (`holdsJarLowOrOut` in the ingredients
@@ -17,22 +17,4 @@ export function stockState(
   // A threshold of 0 or none switches the Low Stock warning off; it never means always low.
   if (threshold === null || threshold === undefined || threshold <= 0) return 'ok';
   return quantity > 0 && quantity <= threshold ? 'low' : 'ok';
-}
-
-/**
- * The one state a coven card shows for all its jars (M9.9): Out of Stock beats
- * Low Stock, and `forms` lists only the forms in that worst state, in the order
- * given, so the tip reads "Out of Stock: Oil, Tea" and leaves a low Flower to
- * the Quick Look window's own lines. `null` when no jar is low or out, an
- * unmeasured one included. The owner may yet want every affected form named;
- * claude-docs/components/stock-badge.md, "One badge per card".
- */
-export function worstStock(jars: readonly StockOfForm[]): WorstStock | null {
-  for (const state of ['out', 'low'] as const) {
-    const forms = jars
-      .filter((jar) => stockState(jar.quantity, jar.threshold) === state)
-      .map((jar) => jar.form);
-    if (forms.length > 0) return { state, forms };
-  }
-  return null;
 }

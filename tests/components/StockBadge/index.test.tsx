@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { CardStockBadge, StockBadge, stockState, worstStock } from '@/components/StockBadge';
+import { StockBadge, stockState } from '@/components/StockBadge';
 import { JAR_STATES } from '../../support/jar-states';
 
 // M9.8, story 23 (claude-docs/components/stock-badge.md): the shared jar
@@ -123,73 +123,5 @@ describe('StockBadge', () => {
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
     rerender(<StockBadge quantity={6} threshold={10} unit="g" />);
     expect(container.querySelector('svg')!.innerHTML).not.toBe(outDrawing);
-  });
-});
-
-describe('worstStock: the one state a card shows for all its jars', () => {
-  const jar = (form: string, quantity: number | null, threshold: number | null) => ({
-    form,
-    quantity,
-    threshold,
-  });
-
-  it('is nothing for no jars, and nothing while every jar is healthy', () => {
-    expect(worstStock([])).toBeNull();
-    expect(worstStock([jar('flower', 40, 10), jar('oil', 5, 0)])).toBeNull();
-  });
-
-  it('never badges an unmeasured jar, whatever its threshold', () => {
-    expect(worstStock([jar('flower', null, 10)])).toBeNull();
-  });
-
-  it('names every form that is low when none is out', () => {
-    expect(worstStock([jar('flower', 6, 10), jar('oil', 40, 10), jar('tea', 2, 5)])).toEqual({
-      state: 'low',
-      forms: ['flower', 'tea'],
-    });
-  });
-
-  it('puts Out of Stock above Low Stock, naming only the forms that are out', () => {
-    expect(worstStock([jar('flower', 6, 10), jar('oil', 0, 10), jar('tea', 0, null)])).toEqual({
-      state: 'out',
-      forms: ['oil', 'tea'],
-    });
-  });
-});
-
-describe('CardStockBadge', () => {
-  it('draws one badge for the card, the worst state, its description naming the forms in it', () => {
-    render(
-      <CardStockBadge
-        jars={[
-          { form: 'flower', quantity: 6, threshold: 10 },
-          { form: 'oil', quantity: 0, threshold: 10 },
-          { form: 'dried leaf', quantity: 0, threshold: 10 },
-        ]}
-      />,
-    );
-    expect(screen.getAllByRole('button')).toHaveLength(1);
-    expect(out()).toHaveAccessibleDescription('Out of Stock: Oil, Dried Leaf');
-    expect(low()).toBeNull();
-  });
-
-  it('names the low forms when nothing is out, and opens the same words as its tip', () => {
-    render(<CardStockBadge jars={[{ form: 'flower', quantity: 6, threshold: 10 }]} />);
-    const badge = screen.getByRole('button', { name: 'Low Stock' });
-    expect(badge).toHaveAccessibleDescription('Low Stock: Flower');
-    act(() => badge.focus());
-    expect(tipEl()).toHaveTextContent(/^Low Stock: Flower$/);
-  });
-
-  it('draws nothing while every jar is healthy or unmeasured', () => {
-    const { container } = render(
-      <CardStockBadge
-        jars={[
-          { form: 'flower', quantity: 40, threshold: 10 },
-          { form: 'oil', quantity: null, threshold: 10 },
-        ]}
-      />,
-    );
-    expect(container).toBeEmptyDOMElement();
   });
 });

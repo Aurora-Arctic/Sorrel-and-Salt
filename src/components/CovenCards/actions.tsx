@@ -3,14 +3,16 @@ import type { ReactElement } from 'react';
 import { AnnotateLink, EditLink } from '../IconTip';
 import { cardName } from '../IngredientCard/card-name';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
+import StockDialog from '../StockDialog';
 import CardMore from './card-more';
 import type { CovenCardEntry } from './types';
 
 // A coven card's foot controls, in one place so the list's cards and the Quick Look window
 // opened from them draw the very same ones (the owner's call, 2026-10-20: the window's icons
 // follow the card's). The dialog link first, Edit on the coven's own entry or Annotate on a
-// compendium entry the cupboard holds, each only where the page gave its address; then the
-// card's More (`card-more.tsx`) with whatever else the role may do, which draws nothing when it
+// compendium entry the cupboard holds, each only where the page gave its address; then the Edit
+// Stock pencil where the page gave the stock, a role that may update it (M9.9); then the card's
+// More (`card-more.tsx`) with whatever else the role may do, which draws nothing when it
 // may do nothing more. Not a client file: it only composes the client controls, so a server
 // page can call it and hand the result down. claude-docs/components/coven-cards.md.
 
@@ -26,6 +28,7 @@ export type CovenCardActionsEntry = Pick<
   | 'mayDelete'
   | 'mayMakeOurs'
   | 'mayRemove'
+  | 'stock'
 >;
 
 /** Named with the formal name too, as two entries can share a label. */
@@ -61,10 +64,19 @@ export function covenCardActions(
 ): ReactElement | undefined {
   const opens = opensOf(entry);
   const more = entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
-  if (!opens && !more) return undefined;
+  if (!opens && !entry.stock && !more) return undefined;
   return (
     <>
       {opens}
+      {entry.stock && (
+        <StockDialog
+          workspaceId={workspaceId}
+          ingredientId={entry.id}
+          ingredientName={covenCardName(entry)}
+          forms={entry.stock.forms}
+          jars={entry.stock.jars}
+        />
+      )}
       {more && (
         <CardMore
           id={entry.id}

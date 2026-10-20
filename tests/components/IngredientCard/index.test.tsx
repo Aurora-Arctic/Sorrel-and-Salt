@@ -134,6 +134,23 @@ describe('IngredientCard', () => {
     expect(follows(form, jars)).toBe(true);
   });
 
+  it("leaves the forms line out when asked, keeping the formal name and the forms' cautions", () => {
+    render(
+      <IngredientCard
+        {...BASE}
+        formalName="Fixtura testalis"
+        variants={[LEAF, OIL]}
+        forms={false}
+      />,
+    );
+
+    expect(screen.getByText('Fixtura testalis')).toBeInTheDocument();
+    expect(screen.queryByText('Testleaf')).toBeNull();
+    expect(screen.queryByText('Testoil')).toBeNull();
+    // A form's notes still mark the card: only the line of names went.
+    expect(cautionMark()).toBeInTheDocument();
+  });
+
   it('shows no formal name and no forms for an entry with neither', () => {
     render(<IngredientCard {...BASE} formalName={null} variants={[]} />);
 

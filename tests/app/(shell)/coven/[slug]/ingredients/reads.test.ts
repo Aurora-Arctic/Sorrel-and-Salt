@@ -96,6 +96,12 @@ describe('readCovenIngredients', () => {
     expect(Object.fromEntries(page.formOf)).toEqual({ v1: 'Fixture Herb', v2: 'Fixture Oil' });
   });
 
+  it("keeps each entry's variant ids beside its forms, for the stock dialog", async () => {
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
+
+    expect(page.variantIds).toEqual([['v1'], ['v2']]);
+  });
+
   it('passes the address variables to the list as the filter', async () => {
     await readCovenIngredients(
       COVEN,
