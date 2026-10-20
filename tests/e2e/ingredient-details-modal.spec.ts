@@ -225,6 +225,64 @@ test.describe('on the admin Compendium list', () => {
     expect(Math.abs((barBox?.width ?? 0) - (dialogBox?.width ?? 1))).toBeLessThan(2);
   });
 
+  test('a description that fits the window once opened leaves the body with nothing to scroll, during the opening and after, with the scrollbars drawn', async ({
+    page,
+  }) => {
+    // Chromium's headless mode hides scrollbars; draw them, so one would take its width from the text.
+    const session = await page.context().newCDPSession(page);
+    await session.send('Emulation.setScrollbarsHidden', { hidden: false });
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const midName = 'Fixture Midwort';
+    const midFormal = 'Fixtura media';
+    const sentence =
+      'Fixture Midwort is a fictional herb of the fixture hedgerows, gathered in the dark of the moon and dried in bundles under the eaves.';
+    await withSql(async (sql) => {
+      const [held] =
+        await sql`select 1 from ingredients where name = ${midName} and workspace_id is null`;
+      const [admin] = await sql`select id from users order by created_at desc limit 1`;
+      if (!held)
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: midName,
+            canonicalName: midFormal,
+            description: Array.from({ length: 3 }, () => sentence).join(' '),
+          }),
+          String(admin?.id),
+        );
+    });
+    await page.goto(`/admin/compendium?query=${encodeURIComponent(midName)}`);
+    await quickLook(page, `${midName}, ${midFormal}`).click();
+    const details = detailsDialog(page, `${midName}, ${midFormal}`);
+    const body = details.locator('.modal-dialog__body');
+    const overflow = () =>
+      body.evaluate((b) => ({
+        y: b.scrollHeight - b.clientHeight,
+        x: b.scrollWidth - b.clientWidth,
+        gutter: b.getBoundingClientRect().width - b.clientWidth,
+      }));
+
+    // Why it could scroll: the description is cut, and opening it adds height to the body.
+    const bar = details.getByRole('button', { name: 'Show More' });
+    await expect(bar).toBeVisible();
+    const closedHeight = await body.evaluate((b) => b.clientHeight);
+    // Why it should not: opened, the whole window is still taller than the body asks for.
+    await bar.click();
+    const samples: { y: number; x: number; gutter: number }[] = [];
+    for (let i = 0; i < 16; i++) {
+      samples.push(await overflow());
+      await page.waitForTimeout(50);
+    }
+    await expect
+      .poll(() => body.evaluate((b) => b.clientHeight))
+      .toBeGreaterThan(closedHeight + 20);
+    expect(await body.evaluate((b) => b.clientHeight)).toBeLessThan(
+      (page.viewportSize()?.height ?? 0) - 120,
+    );
+    samples.push(await overflow());
+    expect(samples.every((s) => s.y === 0 && s.x === 0 && s.gutter === 0)).toBe(true);
+  });
+
   test('View Page is a centred button in a bar fixed to the foot of the window, with the text scrolling under it', async ({
     page,
   }) => {
