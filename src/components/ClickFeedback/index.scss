@@ -186,11 +186,12 @@ $arrow-rise: 7px;
 // Floating UI's place leaves as it is (position.ts places it touching). The
 // physical side, as its place (`right`) is.
 .click-feedback__badge--beside {
-  margin-left: space(1);
+  margin-left: space(2);
 }
 
-// Its press target: grown back over the gap and the control, and half the rest
-// above and below.
+// Its press target: grown back into the gap, and half the rest
+// above and below. It reaches 4.8px back, so it touches neither the control nor
+// a neighbour beyond the 1.75rem an adopter leaves.
 .click-feedback__badge--beside::after {
   top: calc(-0.5 * #{$badge-reach});
   bottom: calc(-0.5 * #{$badge-reach});

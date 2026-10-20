@@ -145,7 +145,7 @@ test.describe('the callout’s place', () => {
 
       // Why it could go wrong: the story reports before the control's first
       // render is over, and the side is read from the control as it reports.
-      expect((await box(mark)).left - (await box(control)).right).toBeGreaterThanOrEqual(4 - 0.5);
+      expect((await box(mark)).left - (await box(control)).right).toBeGreaterThanOrEqual(8 - 0.5);
     });
   }
 
@@ -212,10 +212,12 @@ for (const width of WIDTHS) {
             expect(overlaps(target, neighbour), `${name}'s badge over ${other}`).toBe(false);
           }
         }
-        // The borderless button's badge stands beside it, not on its corner;
+        // The borderless button’s badge stands beside it, 8px clear, not on its corner;
         // a bordered one's overlaps its corner.
         const plain = await box(page.getByRole('button', { name: 'Annotate', exact: true }));
-        expect((await box(badge(page, 'Annotate'))).left).toBeGreaterThanOrEqual(plain.right);
+        expect((await box(badge(page, 'Annotate'))).left - plain.right).toBeGreaterThanOrEqual(
+          8 - 0.5,
+        );
         const quiet = await box(page.getByRole('button', { name: 'Edit', exact: true }));
         expect((await box(badge(page, 'Edit'))).left).toBeLessThan(quiet.right);
       });
