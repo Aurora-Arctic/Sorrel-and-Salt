@@ -35,11 +35,16 @@
 // stands at the top of the link, level with the name's first line, so a wrapped
 // name runs on under itself; the link sits at the top of its line box
 // (`vertical-align`), where an inline-flex box would otherwise sit on its first
-// item's synthesised baseline. The shelf is the line's height, 1.25em at
-// `line-height: normal`, and centres on the capitals rather than the line box by
-// an optical drop, as a badge's label does: Lexend's capitals sit 0.03em below
-// the line box's centre (measured 2026-10-20). Moved, not margined, so the row's
-// height holds. claude-docs/components/ingredient-entry.md, "The details modal".
+// item's synthesised baseline. The shelf is `$icon-size` (24px; the owner's
+// call, 2026-10-20, that 20px was too small): its drawing is 18.4px tall and
+// its bottles about 15px, a little over Lexend's 11.25px cap height at 16px.
+// It centres on the first line's capitals rather than the line box: 0.648em is
+// the capitals' middle measured from the line's top, and 0.5929 is where the
+// drawing's middle sits in its 32-unit box (y 6.7 to 31.24). Negative margins
+// rather than a move: the top one lifts the shelf, the bottom one stops what
+// hangs below from counting, so the row stays one line (20px) high; the ink
+// still ends inside it. Measured 2026-10-20.
+// claude-docs/components/ingredient-entry.md, "The details modal".
 .ingredient-summary__covens a {
   display: inline-flex;
   align-items: flex-start;
@@ -49,10 +54,9 @@
 
   > svg {
     flex: none;
-    width: 1.25em;
-    height: 1.25em;
-    position: relative;
-    inset-block-start: 0.03em;
+    width: $icon-size;
+    height: $icon-size;
+    margin-block: calc(0.648em - #{$icon-size} * 0.5929) (-$icon-size);
   }
 }
 
