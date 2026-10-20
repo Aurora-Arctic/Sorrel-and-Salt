@@ -1,0 +1,38 @@
+@use '../../scss/variables' as *;
+
+// The empty cupboard (M9.11): the sentence and the first add centred in the list's place,
+// larger than body copy and set down from the filter row, so an empty page reads as a start
+// rather than a list that failed to load (the owner's call). Tokens only, before the
+// section's design review.
+.coven-cards__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: space(5);
+  margin-block-start: space(7);
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: heading-size(4);
+    color: $text-muted;
+  }
+
+  .btn {
+    padding: space(3) space(6);
+    font-size: type-size('body');
+  }
+}
+
+// A filter matching nothing: what to do, then the hand-off to the Compendium beneath it.
+.coven-cards__no-match {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(4);
+
+  p {
+    margin: 0;
+    color: $text-muted;
+  }
+}

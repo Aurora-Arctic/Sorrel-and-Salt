@@ -532,31 +532,33 @@ test.fixme(
   },
 );
 
-test.fixme(
-  'an empty list prompts the first add, and a filter matching nothing offers to clear it instead',
-  {
-    tag: '@story-26',
-    annotation: { type: 'fixme', description: 'M9.11 builds the empty and no-results states' },
-  },
+test(
+  'an empty list prompts the first add, and a filter matching nothing points to clearing it instead',
+  { tag: '@story-26' },
   async ({ page }) => {
     const coven = await ownCoven(page, 26);
     const main = page.getByRole('main');
-    // The empty state's own add, in the page rather than the shell's bar, and
-    // the no-results state's Clear Filters: this spec's names, after M9.11's
-    // "offers an add action" and "offers to clear filters".
+    // The two states are two named status regions, told apart by which is there
+    // (claude-docs/components/coven-cards.md, "The empty and no-match states").
+    const empty = main.getByRole('status', { name: 'No Ingredients' });
+    const noMatch = main.getByRole('status', { name: 'No Matches' });
+    // The empty state's own add, in the page rather than the shell's bar.
     const firstAdd = main.getByRole('button', { name: 'Add Ingredient' });
-    const clearFilters = main.getByRole('link', { name: 'Clear Filters' });
 
-    await test.step('with nothing held, the page offers the first add and no clearing', async () => {
+    await test.step('with nothing held, the page offers the first add', async () => {
       const response = await page.goto(listPath(coven));
       expect(response?.status()).toBe(200);
-      await expect(firstAdd).toBeVisible();
-      await expect(clearFilters).toHaveCount(0);
+      await expect(empty).toBeVisible();
+      await expect(noMatch).toHaveCount(0);
       await expect(cardsIn(ingredientList(page))).toHaveCount(0);
-      await expect(firstAdd).toBeVisible();
+      await expect(empty.getByRole('button', { name: 'Add Ingredient' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
+      // The button only acts once the page has hydrated, and the Filters
+      // button exists only then (claude-docs/components/facet-panel.md).
+      await expect(page.getByRole('button', { name: /^Filters/ })).toBeVisible();
       await firstAdd.click();
+      // The shell's own dialog, for this coven.
       await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -568,18 +570,26 @@ test.fixme(
       ]),
     );
 
-    await test.step('with a filter matching nothing, the page offers to clear it and no first add', async () => {
+    await test.step('with a search matching nothing, the page says so and offers the Compendium, and no first add', async () => {
       await page.goto(listPath(coven));
       await expect(rowOf(ingredientList(page), 'Selenite')).toBeVisible();
+      await expect(empty).toHaveCount(0);
       // Knitbone is Comfrey's folk name; the coven holds no Comfrey.
       await searchCovenList(page, 'Knitbone');
-      await expect(clearFilters).toBeVisible();
+      await expect(noMatch).toBeVisible();
+      await expect(empty).toHaveCount(0);
       await expect(firstAdd).toHaveCount(0);
-      await expect(clearFilters).toBeVisible();
+      // It draws no clear of its own: the filter row's clears do that.
+      await expect(noMatch.getByRole('button')).toHaveCount(0);
+      await expect(noMatch.getByRole('link', { name: 'Search the Compendium' })).toHaveAttribute(
+        'href',
+        '/compendium?query=Knitbone',
+      );
       await assertNoAccessibilityViolations(page);
 
-      await clearFilters.click();
+      await filterOf(page).getByRole('button', { name: 'Clear Name' }).click();
       await expect(rowOf(ingredientList(page), 'Selenite')).toBeVisible();
+      await expect(noMatch).toHaveCount(0);
       expect(new URL(page.url()).search).toBe('');
     });
   },

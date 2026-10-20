@@ -13,6 +13,7 @@ import { requireCovenMembership } from '../../../../../lib/request-session';
 import { readCategories, readDeities, readFormIcons } from '../../../../compendium-reads';
 import { readCovenFacets, readCovenIngredients } from './reads';
 import type { CovenIngredientsParams } from './types';
+import { rolePermits } from '@/modules/coven';
 import { applyCupboardEntry, isAnnotated, isRetired } from '@/modules/ingredients';
 
 // A coven's Ingredients (M9.6): what the coven has, as compact cards with their jars. The coven
@@ -20,7 +21,8 @@ import { applyCupboardEntry, isAnnotated, isRetired } from '@/modules/ingredient
 // non-member gets the 404). Read per request and never cached, since a cupboard is the coven's
 // alone (CLAUDE.md rule 6). The shell draws no `<main>`, so the page does. The address carries
 // the compendium list's filters plus Source, In Stock and Low Stock Only (`COVEN_PARAMS`), and
-// the page reads one page of 24 under them. claude-docs/components/coven-cards.md.
+// the page reads one page of 24 under them. A
+// member who may add is offered the first add on an empty cupboard (M9.11). claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
 
@@ -98,6 +100,7 @@ export default async function CovenIngredientsPage({
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}
+        canAdd={rolePermits(membership.role, { ingredient: ['create'], inventory: ['update'] })}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           covenIngredientsHref(workspace.slug, { ...filter, ...cursor }),
         )}

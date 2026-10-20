@@ -95,6 +95,7 @@ const props = (over: Partial<CovenCardsProps> = {}): CovenCardsProps => ({
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,
+  canAdd: true,
   ...over,
 });
 
@@ -138,9 +139,55 @@ describe('CovenCards', () => {
     expect(screen.getAllByRole('switch', { name: 'Compact' })).toHaveLength(1);
   });
 
-  it('shows plain text, and no list, for an empty cupboard', () => {
-    render(<Cards {...props({ entries: [], total: 0 })} />);
+  // M9.11: an empty cupboard and a filter that matches nothing are two named status regions,
+  // told apart by which one is drawn.
+  const empty = { entries: [], total: 0 };
+  const emptyState = () => screen.queryByRole('status', { name: 'No Ingredients' });
+  const noMatchState = () => screen.queryByRole('status', { name: 'No Matches' });
+
+  it('offers the first add for an empty cupboard, opening the shell dialog by the address', () => {
+    window.history.replaceState(null, '', '/coven/fixture-coven/ingredients');
+    render(<Cards {...props(empty)} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
+    expect(noMatchState()).toBeNull();
+    const state = emptyState();
+    expect(state).not.toBeNull();
+    fireEvent.click(within(state!).getByRole('button', { name: 'Add Ingredient' }));
+    expect(new URLSearchParams(window.location.search).get('new')).toBe('fixture-coven');
+    expect(within(state!).queryByRole('link')).toBeNull();
+  });
+
+  it("draws a viewer's empty cupboard with no add", () => {
+    render(<Cards {...props({ ...empty, canAdd: false })} />);
+    expect(emptyState()).not.toBeNull();
+    expect(within(emptyState()!).queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
+  });
+
+  it('draws a search matching nothing as the no-match state, handing the search to the Compendium', () => {
+    render(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
+    expect(emptyState()).toBeNull();
+    const state = noMatchState();
+    expect(state).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
+    // The search sentence above already names the search and says nothing matched; the state
+    // does not say it again.
+    expect(state).not.toHaveTextContent('Knitbone');
+    // The filter form keeps the one clear; the state adds no control but the hand-off.
+    expect(within(state!).queryByRole('button')).toBeNull();
+    expect(within(state!).getAllByRole('link')).toHaveLength(1);
+    expect(within(state!).getByRole('link', { name: 'Search the Compendium' })).toHaveAttribute(
+      'href',
+      '/compendium?query=Knitbone',
+    );
+  });
+
+  it('treats a coven-only filter matching nothing as no match, with nothing to hand on', () => {
+    render(<Cards {...props({ ...empty, filter: { ...FILTER, inStock: true } })} />);
+    expect(emptyState()).toBeNull();
+    expect(noMatchState()).not.toBeNull();
+    expect(within(noMatchState()!).queryByRole('link')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
   });
 
   it('offers Source, In Stock and Low Stock Only, and submits to the coven page', () => {

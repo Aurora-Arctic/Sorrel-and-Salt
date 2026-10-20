@@ -165,6 +165,32 @@ describe('the coven Ingredients page', () => {
     expect(workspaceIngredientFacets.mock.calls[0]![2]).toEqual({ source: 'local', inStock: true });
   });
 
+  describe('with an empty cupboard', () => {
+    beforeEach(() => {
+      listWorkspaceIngredients.mockResolvedValue([]);
+      countWorkspaceIngredients.mockResolvedValue({ totalCount: 0, countBefore: null });
+      variantsOf.mockResolvedValue([]);
+      stockOf.mockResolvedValue([]);
+    });
+    const emptyState = () => screen.getByRole('status', { name: 'No Ingredients' });
+
+    it('offers a member the first add', async () => {
+      await renderPage();
+      expect(
+        within(emptyState()).getByRole('button', { name: 'Add Ingredient' }),
+      ).toBeInTheDocument();
+    });
+
+    it('offers a viewer, who may not add, no button', async () => {
+      requireCovenMembership.mockResolvedValue({
+        workspace: COVEN,
+        membership: { workspaceId: COVEN.id, userId: 'fixture-user', role: 'viewer' },
+      });
+      await renderPage();
+      expect(within(emptyState()).queryByRole('button')).toBeNull();
+    });
+  });
+
   it('titles the tab Ingredients', () => {
     expect(metadata.title).toBe('Ingredients');
   });
