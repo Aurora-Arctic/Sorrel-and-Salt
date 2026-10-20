@@ -33,7 +33,12 @@ vi.mock('@/app/compendium-reads', () => ({
 
 // What a curator's ?edit=<slug> reads (M8.17): the entry at the slug, then its form's values.
 const resolveCompendiumSlug = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ resolveCompendiumSlug }));
+// The held read is `held.test.tsx`'s; here the coven holds nothing.
+vi.mock('@/lib/request-session', () => ({ getSession: async () => ({ userId: 'user-fixture' }) }));
+vi.mock('@/modules/ingredients', () => ({
+  resolveCompendiumSlug,
+  heldCompendiumEntryIds: async () => new Set<string>(),
+}));
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 // The form is its own tests'; here only that the dialog holds one.
@@ -156,7 +161,6 @@ describe('the public compendium page', () => {
       await renderPage();
       const add = screen.queryAllByRole('button', { name: 'Add to My Ingredients' });
       expect(add).toHaveLength(buttons);
-      for (const button of add) expect(button).toBeDisabled();
       expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
     },
   );

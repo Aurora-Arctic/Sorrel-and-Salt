@@ -4,12 +4,17 @@ import CompendiumCards from '../../../components/CompendiumCards';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { editHeading } from '../../../components/CompendiumList/heading';
 import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
-import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
+import {
+  PUBLIC_COMPENDIUM_PATH,
+  compendiumHref,
+  covenIngredientsHref,
+} from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
 import PageHeader from '../../../components/PageHeader';
+import { Forbidden } from '../../../lib/errors';
 import { listJsonLd } from '../../../lib/json-ld';
 import { publicPageMetadata } from '../../../lib/page-metadata';
 import { entryRecency } from '../../../lib/entry-recency';
@@ -17,7 +22,9 @@ import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
+import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
+import { heldCompendiumEntryIds } from '../../../modules/ingredients';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
 import { readEditPlace } from '../../(shell)/admin/list-page';
@@ -77,6 +84,22 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Which of these entries the coven already holds. Per viewer, so read here and never inside the
+ * cached compendium read (rule 6). A refusal reads as nothing held: the plus is then offered,
+ * and the add itself says no.
+ */
+async function heldEntryIds(workspaceId: string, ids: readonly string[]) {
+  const session = await getSession();
+  if (!session) return new Set<string>();
+  try {
+    return await heldCompendiumEntryIds(session, workspaceId, ids);
+  } catch (error) {
+    if (error instanceof Forbidden) return new Set<string>();
+    throw error;
+  }
+}
+
 export default async function CompendiumPage({ searchParams }: PublicCompendiumPageProps) {
   const params = publicParams(await searchParams);
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
@@ -111,6 +134,18 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
     categories: new Map(categories.map((category) => [category.id, category])),
   });
+  // Who may add, and to which coven: a role that may create an ingredient and stock it
+  // (`canWrite`, set in `viewerFor` from the per-role statement). The compendium names no coven
+  // in its address, so the coven is M8.16's choice for a page without one: the first the viewer
+  // may write in. A viewer-only account has none, and neither has a visitor with no account, who
+  // signs in through the header.
+  const writable = viewer?.workspaces.find(({ canWrite }) => canWrite);
+  const held = writable
+    ? await heldEntryIds(
+        writable.id,
+        page.edges.map(({ node }) => node.id),
+      )
+    : undefined;
   const entries = page.edges.map(({ node }, i): CompendiumCardEntry => ({
     id: node.id,
     name: node.name,
@@ -122,16 +157,17 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     toxic: node.toxic,
     safetyNotes: node.safetyNotes,
     recency: entryRecency(node.createdAt, node.updatedAt),
+    ...(writable && {
+      held: held?.has(node.id) === true,
+      heldHref: covenIngredientsHref(writable.slug, { query: node.name }),
+    }),
     ...(canEdit && {
       editHref: hereWith(node.slug),
       editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),
     }),
   }));
 
-  // Who may add: a role that may create an ingredient and stock it (`canWrite`, set in
-  // `viewerFor` from the per-role statement), in at least one coven. A viewer-only account has
-  // none, and neither has a visitor with no account, who signs in through the header.
-  const action = viewer?.workspaces.some(({ canWrite }) => canWrite) ? 'add' : 'none';
+  const action = writable ? 'add' : 'none';
 
   return (
     // Holds a pressed Edit's opening, as the admin layout does; a plain wrapper for anyone else.
@@ -154,6 +190,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         position={page.position}
         total={page.totalCount}
         action={action}
+        workspaceId={writable?.id}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}

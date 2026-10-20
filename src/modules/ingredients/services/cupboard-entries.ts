@@ -933,3 +933,22 @@ export async function convertCompendiumEntryToLocal(
     return refuseCollision(error, membership, fields, columns.slug, undefined);
   }
 }
+
+/**
+ * Which of these compendium entries the coven's cupboard holds, as a set of
+ * their ids: the compendium page's question for the check icon (M9.12). Read
+ * for the viewer's own coven and never cached, so it sits beside the cached
+ * compendium read rather than inside it (CLAUDE.md rule 6). Any member,
+ * viewers included; whether to offer them an icon is the page's call.
+ *
+ * @throws {Forbidden} the caller may not read this coven's ingredients.
+ */
+export async function heldCompendiumEntryIds(
+  session: Session,
+  workspaceId: string,
+  ingredientIds: readonly string[],
+): Promise<ReadonlySet<string>> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  const rows = await findCupboardEntriesOf(membership, ingredientIds);
+  return new Set(rows.map(({ ingredientId }) => ingredientId));
+}
