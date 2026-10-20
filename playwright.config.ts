@@ -19,6 +19,11 @@ const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 // `testDir` lists this itself; `npm run e2e` never runs a story.
 const STORIES_SPECS = /[\\/]stories[\\/]/;
 
+// The workshop specs measure a component in its Ladle story, against the
+// workshop server alone: playwright.workshop.config.ts runs them, `npm run
+// e2e` never does.
+const WORKSHOP_SPECS = /[\\/]workshop[\\/]/;
+
 // The audit (M10.25): the suite in WebKit, Firefox and as a phone, on demand
 // and never on CI, which stays Chromium alone. The three projects exist only
 // under `E2E_AUDIT=1` (`npm run e2e:audit`), so `npm run e2e` is unchanged
@@ -110,7 +115,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS],
+      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS, WORKSHOP_SPECS],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -129,6 +134,11 @@ export default defineConfig({
         baseURL: browserUrl(COMPENDIUM_CACHE_PORT),
       },
     },
-    ...auditProjects([CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS]),
+    ...auditProjects([
+      CONFIGURED_PROVIDERS_SPEC,
+      COMPENDIUM_CACHE_SPEC,
+      STORIES_SPECS,
+      WORKSHOP_SPECS,
+    ]),
   ],
 });

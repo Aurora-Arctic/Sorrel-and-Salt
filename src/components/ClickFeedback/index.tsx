@@ -22,8 +22,24 @@ import './index.scss';
  */
 const OPENED = 'click-feedback:opened';
 
-/** The class a quiet button wears, whose badge goes beside it rather than on its corner. */
-const QUIET = 'btn--quiet';
+const SIDES = ['Top', 'Right', 'Bottom', 'Left'] as const;
+
+/**
+ * Whether the control shows no border, as a text button or a menu item: its
+ * badge then goes beside it, having no corner to sit on. Read from the drawn
+ * style rather than a class, since every `.btn` has a border, `.btn--quiet`
+ * included.
+ */
+function borderless(node: HTMLElement): boolean {
+  const style = getComputedStyle(node);
+  return SIDES.every(
+    (side) =>
+      parseFloat(style[`border${side}Width`]) === 0 ||
+      style[`border${side}Style`] === 'none' ||
+      style[`border${side}Color`] === 'transparent' ||
+      style[`border${side}Color`] === 'rgba(0, 0, 0, 0)',
+  );
+}
 
 const PREFIX = 'Last try failed: ';
 
@@ -103,7 +119,7 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
       }
       setMessage(next);
       setSaid(next);
-      setBeside(anchor?.classList.contains(QUIET) ?? false);
+      setBeside(anchor ? borderless(anchor) : false);
       openFrom(anchor);
     },
     [anchor, ours, openFrom],

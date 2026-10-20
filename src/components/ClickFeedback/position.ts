@@ -111,7 +111,7 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
 /**
  * The badge's place. On a bordered control, over its top right corner, its
  * centre 0.375 of its size in from each edge (the design's 0.45rem on 1.2rem).
- * `beside`, for a quiet control whose corner is no edge: to its right, a
+ * `beside`, for a borderless control, which has no corner: to its right, a
  * twelfth of its size clear (0.1rem), centred on the control's height.
  */
 export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside: boolean): Placed {
@@ -122,9 +122,12 @@ export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside
     strategy: 'absolute',
     transform: false,
     middleware: [
-      offset(({ rects }) => {
+      // Read from the placement, not from `beside`: Floating UI keeps the
+      // middleware it has while a new one prints the same source, so a
+      // closure over `beside` would keep the first value it saw.
+      offset(({ rects, placement }) => {
         const size = rects.floating.height;
-        return beside
+        return placement === 'right'
           ? { mainAxis: size / 12 }
           : { mainAxis: -size * 0.625, crossAxis: size * 0.375 };
       }),

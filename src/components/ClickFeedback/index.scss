@@ -160,7 +160,7 @@ $arrow-rise: 7px;
   }
 }
 
-// Beside a quiet control: grown back over the control, and half the rest above
+// Beside a borderless control: grown back over the control, and half the rest above
 // and below.
 .click-feedback__badge--beside::after {
   top: calc(-0.5 * #{$badge-reach});
