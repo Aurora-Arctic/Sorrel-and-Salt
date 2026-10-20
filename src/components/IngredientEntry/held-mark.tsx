@@ -5,9 +5,10 @@ import IconTip from '../IconTip';
 // cupboard holds it: every coven's own entry, and a compendium entry the
 // cupboard names (the owner's calls, 2026-10-19). Compendium says where an
 // entry is from, held or not, so this mark is what tells the two apart. Not
-// a jar: a jar is stock. A
-// button only to carry its tip, as Retired and Annotated are, and outside the
-// `h1` so the heading reads as the name alone.
+// a jar: a jar is stock. A button to carry its tip, as Retired and Annotated
+// are, and outside the `h1` so the heading reads as the name alone. The tip
+// opens on hover, on focus, and on a press, as InfoTip's ⓘ does, so a tap shows
+// it on touch (the owner's call, 2026-10-20); the press does nothing else.
 // claude-docs/components/ingredient-entry.md, "In Your Cupboard".
 
 export const HELD_TIP = 'In Your Cupboard';
@@ -43,7 +44,7 @@ export const ShelfIcon = (): ReactElement => (
 );
 
 const HeldMark = (): ReactElement => (
-  <IconTip tip={HELD_TIP} placement="above">
+  <IconTip tip={HELD_TIP} placement="above" opensOnPress>
     <button type="button" className="ingredient-entry__held" aria-label={HELD_TIP}>
       <ShelfIcon />
     </button>

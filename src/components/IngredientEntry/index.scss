@@ -223,7 +223,8 @@ $formal-line: 1.5rem;
 
 // In Your Cupboard: the shelf before the name, at the heading's size and in
 // the muted ink, so it reads as a mark on the name and not part of it (the
-// owner's mock-up, 2026-10-19). A button only to carry its tip (held-mark.tsx).
+// owner's mock-up, 2026-10-19). A button to carry its tip, which a press opens
+// too (held-mark.tsx).
 .ingredient-entry__held {
   display: inline-flex;
   flex: none;
@@ -641,21 +642,16 @@ $replaces-gap: space(5);
 // the darker link colour, `$accent-hover` (the owner's call; `$accent` is 3.96:1
 // on the `:target` highlight, `$accent-hover` is above 6:1), as the admin
 // compendium's name links do. The underline stays, since it is what marks
-// them as links without the colour, but faded: 55% of the link's own colour at
-// rest and 65% pointed at or focused, so it follows the colour to a faded green.
-// Those are the lowest mixes that hold 3:1 against the page and the `:target`
-// fill in both themes. No token holds a faded underline, so it is a `color-mix`,
-// as `$fill-quiet` is.
+// them as links without the colour, but faded (`faded-underline`, _mixins.scss).
 .ingredient-entry__marks a,
 .ingredient-entry__references a {
   color: $text-primary;
-  text-decoration-color: color-mix(in srgb, currentcolor 55%, transparent);
+  @include faded-underline;
   @include theme-transition(color);
 
   &:hover,
   &:focus-visible {
     color: $accent-hover;
-    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
   }
 
   &:focus-visible {
@@ -669,7 +665,6 @@ $replaces-gap: space(5);
   &:hover:where(:visited),
   &:focus-visible:where(:visited) {
     color: $accent-hover;
-    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
   }
 
   @include reduced-motion {

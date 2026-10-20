@@ -1285,6 +1285,20 @@ describe('IngredientEntry on the public page, held in a coven', () => {
     expect(mark.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
+  // so it shows on touch. A click here focuses nothing, so the press alone opens it.
+  it('opens the In Your Cupboard tip when the shelf is pressed', () => {
+    renderEntry({ heldInCovens: true });
+    const mark = shelf()!;
+    const tips = () =>
+      screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
+    expect(tips()).not.toContain('In Your Cupboard');
+
+    fireEvent.click(mark);
+    expect(mark).not.toHaveFocus();
+    expect(tips()).toContain('In Your Cupboard');
+  });
+
   it('puts no shelf on a compendium entry no coven of the viewer’s holds', () => {
     renderEntry({ heldInCovens: false });
 

@@ -131,6 +131,30 @@
   }
 }
 
+// A link's underline faded into what is behind it, so it marks the link
+// without the colour (WCAG 1.4.1) yet reads quieter than the text: the
+// link's own colour at `$rest`, and at `$pointed` when pointed at or
+// focused, so it follows the colour as it changes. 55% and 65% are the
+// lowest mixes that hold 3:1 against the page, the card and the `:target`
+// fill in both themes for a link resting in the body ink and pointed at in
+// `$accent-hover`: the entry page's References and marks, IngredientForm's
+// title links. The mixes are worked out for those body-ink links: a link
+// resting in `$accent` falls under 3:1 at them in the light theme (2.27:1 on
+// the card for In Your Covens), which the owner accepted, 2026-10-20.
+// No token holds a faded underline, so it is a `color-mix`, as `$fill-quiet` is.
+// Chromium draws no underline under 1px, and `auto` is already 1px for the
+// body text, so a fade is what makes an underline lighter, not a thickness.
+@mixin faded-underline($rest: 55%, $pointed: 65%) {
+  text-decoration-color: color-mix(in srgb, currentcolor #{$rest}, transparent);
+
+  &:hover,
+  &:focus-visible,
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    text-decoration-color: color-mix(in srgb, currentcolor #{$pointed}, transparent);
+  }
+}
+
 // Defaults to the body ink, so the ring re-colours with the theme.
 @mixin focus-ring($color: $text-primary) {
   outline: 2px solid $color;

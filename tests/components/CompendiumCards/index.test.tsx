@@ -167,6 +167,22 @@ describe('CompendiumCards', () => {
       expect(tips()).toContain('In All Covens');
     });
 
+    // The owner's call, 2026-10-20: a press opens the check's tip, as a tap does on InfoTip's ⓘ,
+    // so it shows on touch, where there is no hover. A click here focuses nothing, so the
+    // press alone opens it.
+    it('opens the In All Covens tip when the check is pressed', () => {
+      const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
+      render(<Cards {...props({ entries: held, action: 'add' })} />);
+      const mark = screen.getByRole('button', { name: 'In All Covens' });
+      const tips = () =>
+        screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
+      expect(tips()).not.toContain('In All Covens');
+
+      fireEvent.click(mark);
+      expect(mark).not.toHaveFocus();
+      expect(tips()).toContain('In All Covens');
+    });
+
     it('draws neither without a coven to add to', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add', workspaceId: undefined })} />);
