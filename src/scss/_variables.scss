@@ -599,6 +599,14 @@ $tip-fade: 500ms;
 // (claude-docs/components/icon-tip.md, "Behaviour").
 $icon-tip-fade: 120ms;
 
+// How far IconTip's bubble travels as it fades in and out: a hair, towards its control, so
+// it reads as arriving from it rather than appearing (`IconTip/index.scss`).
+$icon-tip-travel: 2px;
+
+// A MenuButton panel's narrowest: wide enough that a short menu of one or two words is not a
+// sliver under its button (`MenuButton/index.scss`).
+$menu-min-width: 11rem;
+
 // The forms' column: the sign-in panel, the account page's sections, the
 // email form and the invitation. One number where each page restated 28rem;
 // narrower than the measure, since a form's line is a field, not prose.

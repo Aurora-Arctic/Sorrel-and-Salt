@@ -50,14 +50,14 @@
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
-    transform: translateX(2px);
+    transform: translateX($icon-tip-travel);
   }
 
   // Closed: faded back out the way it came, over `$icon-tip-fade`, before the
   // component takes it out of the page.
   &--closing {
     opacity: 0;
-    transform: translateX(2px);
+    transform: translateX($icon-tip-travel);
   }
 }
 
@@ -70,12 +70,12 @@
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateY($icon-tip-travel);
   }
 
   &.icon-tip__bubble--closing {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateY($icon-tip-travel);
   }
 }
 
@@ -87,12 +87,12 @@
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
-    transform: translateY(-2px);
+    transform: translateY(-$icon-tip-travel);
   }
 
   &.icon-tip__bubble--closing {
     opacity: 0;
-    transform: translateY(-2px);
+    transform: translateY(-$icon-tip-travel);
   }
 }
 
