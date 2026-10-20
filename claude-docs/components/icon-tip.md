@@ -52,9 +52,7 @@ follows `href` as before.
   (M8.17, 2026-10-19).
 - **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
   vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
-  "More"; and, where the card's one further choice is Delete or Remove,
-  `BinIcon` on a button of its own, `.icon-tip__remove`, tipped with its
-  verb (M8.17). `InfoIcon` is the ⓘ beside each pick in the Link dialog.
+  "More", even where the card holds one choice (M8.17). `InfoIcon` is the ⓘ beside each pick in the Link dialog.
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),
@@ -149,16 +147,14 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   `$text-primary` when pointed at or focused. `$icon-size` around
   `$glyph-size` (1.5rem around 1rem, WCAG 2.2's 24px target) by default; a
   round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown.
-- **`icon-button-remove`**: the × and the bin's answer, the wax and a tint
+- **`icon-button-remove`**: the ×'s answer, the wax and a tint
   of it 20% into the card, as the combobox's chip-remove and the form's
   remove icons wear.
 - **`icon-button-edit`**: the pencil's ink, `$accent`, and, pointed at,
   focused or open (`aria-expanded`), a tint of it 20% into the card.
 - **Sizes**: the ingredient form keeps the 24px box and 1rem icon beside
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
-  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem, and
-  so does a list card's lone bin (`.icon-tip__remove`), in the remove
-  answer's colours.
+  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
   cards and the modal) and on its own tint each clear 3:1, a control's floor
   (`tests/scss/tokens.test.ts`, "an Edit pencil").

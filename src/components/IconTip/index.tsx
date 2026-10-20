@@ -3,7 +3,6 @@
 export { default } from './icon-tip';
 export { AnnotateLink, EditLink } from './edit-link';
 export {
-  BinIcon,
   CopyIcon,
   DotsIcon,
   InfoIcon,

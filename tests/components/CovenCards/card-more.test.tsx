@@ -16,7 +16,7 @@ const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // A coven card's More (M8.17): Link and Delete on the coven's own entry, Make It Ours and
-// Remove on a compendium entry, a lone choice as its own icon; Delete, Make It Ours and Remove
+// Remove on a compendium entry, a lone choice in a menu of one; Delete, Make It Ours and Remove
 // ask in place (option A), and a write that takes the card away leaves the focus on the page's
 // heading, a refusal on More (claude-docs/components/coven-cards.md).
 
@@ -101,13 +101,6 @@ describe('CardMore', () => {
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
     renderOnPage(HELD);
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
-  });
-
-  it('draws a lone Delete as its own button, which asks in a dialog, and no menu', async () => {
-    renderOnPage({ ...OWN, linkHref: undefined });
-    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
-    press(screen.getByRole('button', { name: 'Delete Testwort' }));
-    expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
   });
 
   it('keeps a lone Link in a menu of one, as no role reaches it alone today', () => {

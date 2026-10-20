@@ -161,11 +161,3 @@ export const WithMore: Story = () => (
     )}
   />
 );
-
-// A role that may delete but not link: the coven's own entry's More of one is its bin.
-export const WithLoneBin: Story = () => (
-  <CovenCards
-    {...BASE}
-    entries={ENTRIES.map((shown) => (shown.kind === 'own' ? { ...shown, mayDelete: true } : shown))}
-  />
-);

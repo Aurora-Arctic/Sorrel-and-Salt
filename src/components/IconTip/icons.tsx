@@ -164,19 +164,3 @@ export function DotsIcon(): ReactElement {
     </svg>
   );
 }
-
-/** A bin: delete or remove this. A list card's lone Delete or Remove (M8.17). */
-export function BinIcon(): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path
-        d="M2.75 4.25h10.5M6.25 4.25V2.75h3.5v1.5M4 4.25l.75 9h6.5l.75-9M6.75 6.75v4M9.25 6.75v4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
