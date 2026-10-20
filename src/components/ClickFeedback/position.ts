@@ -23,14 +23,53 @@ const EDGE_PX = 16;
  */
 const ARROW_INSET_PX = 14;
 
+/** The callout's widest, as its stylesheet's `max-inline-size` keeps: 20rem. */
+const MAX_REM = 20;
+
 /**
  * The box the callout keeps inside: the nearest ancestor marked
- * `data-tip-boundary`, as a tip's is, else the screen.
+ * `data-tip-boundary`, as a tip's is, or the `<dialog>` the control sits in,
+ * else the screen. A dialog, since a callout running past its edge reads as
+ * loose from it (the owner's call, 2026-10-20); the callout is fixed, so the
+ * dialog clips nothing of it, and the box is a measure only.
  */
+const boxOf = (reference: unknown): Element | null =>
+  reference instanceof Element ? reference.closest('[data-tip-boundary], dialog') : null;
+
 const edges = ({ elements }: { elements: { reference: unknown } }) => {
-  const reference = elements.reference;
-  const marked = reference instanceof Element ? reference.closest('[data-tip-boundary]') : null;
-  return marked ? { padding: EDGE_PX, boundary: marked } : { padding: EDGE_PX };
+  const box = boxOf(elements.reference);
+  return box ? { padding: EDGE_PX, boundary: box } : { padding: EDGE_PX };
+};
+
+/**
+ * In a box narrower than the callout at its widest (a dialog on a phone), the
+ * callout narrows to the larger of the rooms either alignment leaves it, so it
+ * still stands start or end under the control rather than pinned across the
+ * box. A box that holds it at its widest leaves it as it is: there, room for
+ * neither alignment pins it. Set on the element, as Floating UI's `size`
+ * does, so the rects can be measured again at the new width.
+ */
+const narrow: Middleware = {
+  name: 'narrow',
+  fn: ({ elements }) => {
+    const node = elements.floating;
+    const box = boxOf(elements.reference);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const viewport = document.documentElement.clientWidth;
+    const { left, right } = box ? box.getBoundingClientRect() : { left: 0, right: viewport };
+    const widest = Math.min(MAX_REM * rem, viewport - 2 * EDGE_PX);
+    // From the page, not `rects`: a fixed callout's rects are measured from
+    // its containing block, which a dialog's containment can make the dialog.
+    const control = (elements.reference as Element).getBoundingClientRect();
+    const room =
+      right - left - 2 * EDGE_PX < widest
+        ? `${Math.max(right - EDGE_PX - control.x, control.x + control.width - (left + EDGE_PX))}px`
+        : '';
+    if (node.style.getPropertyValue('--click-feedback-room') === room) return {};
+    if (room) node.style.setProperty('--click-feedback-room', room);
+    else node.style.removeProperty('--click-feedback-room');
+    return { reset: { rects: true } };
+  },
 };
 
 /**
@@ -81,6 +120,7 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
     // Left and top rather than a transform, so the fade owns nothing it shares.
     transform: false,
     middleware: [
+      narrow,
       offset(GAP_PX),
       // The alignment alone is checked: the side stays the bottom.
       flip((state) => ({

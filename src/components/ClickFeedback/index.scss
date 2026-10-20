@@ -70,7 +70,8 @@ $arrow-rise: 7px;
   z-index: layer('callout');
   box-sizing: border-box;
   inline-size: max-content;
-  max-inline-size: min(20rem, calc(100vw - 2rem));
+  // `--click-feedback-room`: narrower, in a box narrower than this (position.ts).
+  max-inline-size: min(20rem, calc(100vw - 2rem), var(--click-feedback-room, 20rem));
   margin: 0;
   padding: space(3) calc(#{space(1)} + #{$dismiss-size} + #{space(2)}) space(3)
     calc(#{space(4)} + #{$callout-mark} + #{space(2)});

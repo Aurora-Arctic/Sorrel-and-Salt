@@ -89,7 +89,19 @@ and sits 20px below the control, its arrow under the control's middle (held
    still under the control.
 
 Its box is the nearest ancestor marked `data-tip-boundary`, as a tip's is, or
-else the screen. It is hidden until the script has placed it (`is-placed`), and
+the `<dialog>` the control sits in, or else the screen. A dialog, so a callout
+in one does not run past its edge (the owner's call, 2026-10-20): in the
+admin's user modal at a desktop's width, its start under Change Role's would
+leave the dialog, so its end stands under the button's end. The dialog is a
+measure only, and clips nothing of the fixed callout.
+
+In a box narrower than the callout at its widest (20rem, or the screen less
+2rem), as that modal is on a phone, the callout narrows to the larger of the
+rooms the two alignments leave it, so it still stands under the control's
+start or end rather than pinned across the box (`--click-feedback-room`, set
+by the `narrow` middleware, which Floating UI then measures again). A box that
+holds the callout at its widest leaves it as it is, and there room for neither
+alignment still pins it. It is hidden until the script has placed it (`is-placed`), and
 follows the control with `autoUpdate`. Its layer is `callout` (25), above the
 tips.
 

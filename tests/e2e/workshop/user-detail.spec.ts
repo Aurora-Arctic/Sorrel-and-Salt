@@ -82,6 +82,28 @@ for (const width of WIDTHS) {
       expect(under!.y).toBeGreaterThan(at!.y + at!.height);
       expect(under!.x).toBeGreaterThanOrEqual(0);
       expect(under!.x + under!.width).toBeLessThanOrEqual(width);
+      // Inside the dialog's box, not merely the window's (the owner's call,
+      // 2026-10-20).
+      const box = await dialog.boundingBox();
+      expect(under!.x).toBeGreaterThanOrEqual(box!.x);
+      expect(under!.x + under!.width).toBeLessThanOrEqual(box!.x + box!.width);
+      // Where its start under the control's start would run past the dialog's
+      // edge, its end stands under the control's end. At 375px the dialog is
+      // narrower than the callout, which narrows to stand there.
+      if (width === 375 || at!.x + under!.width > box!.x + box!.width - 16) {
+        expect(Math.abs(under!.x + under!.width - (at!.x + at!.width))).toBeLessThanOrEqual(1);
+      }
+      // The arrow still under the control's middle.
+      const arrowX = await alert.evaluate((node) => {
+        const style = getComputedStyle(node, '::after');
+        return (
+          node.getBoundingClientRect().left +
+          node.clientLeft +
+          parseFloat(style.left) +
+          parseFloat(style.width) / 2
+        );
+      });
+      expect(Math.abs(arrowX - (at!.x + at!.width / 2))).toBeLessThanOrEqual(2);
       await expectOnTop(alert);
       if (SHOTS && name === 'Change Role') {
         await page.screenshot({ path: `${SHOTS}/userdetail-callout-${width}.png` });
