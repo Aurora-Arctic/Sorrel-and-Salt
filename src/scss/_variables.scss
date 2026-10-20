@@ -510,6 +510,11 @@ $theme-transition-easing: ease-in-out;
 // (claude-docs/components/info-tip.md, "Styling").
 $tip-fade: 500ms;
 
+// IconTip's one word fades in 120ms instead: it repeats what the control
+// already shows, so it should come and go as quickly as the pointer does
+// (claude-docs/components/icon-tip.md, "Behaviour").
+$icon-tip-fade: 120ms;
+
 // The forms' column: the sign-in panel, the account page's sections, the
 // email form and the invitation. One number where each page restated 28rem;
 // narrower than the measure, since a form's line is a field, not prose.

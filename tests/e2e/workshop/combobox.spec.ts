@@ -146,9 +146,9 @@ test.describe('an entry’s tooltip', () => {
 
     await text.hover();
     await page.getByRole('button', { name: 'Remove Hedge Fixture' }).focus();
-    // Why the wait could pass too soon: the long entry's tooltip opens in
-    // this time, in the test above.
-    await page.waitForTimeout(300);
+    // Why the wait could pass too soon: past the hover's 300ms rest, the
+    // long entry's tooltip has opened by now, in the test above.
+    await page.waitForTimeout(500);
     await expect(tooltip(page)).toHaveCount(0);
   });
 });

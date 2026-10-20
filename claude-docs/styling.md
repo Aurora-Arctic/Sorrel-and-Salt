@@ -70,7 +70,8 @@ to.
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of). A duration with a role of its own is one too: `$motion-short`
   (150ms), a control answering a press with a movement of its own, as the
-  switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
+  switch's thumb slides, `$tip-fade` (500ms), a tip bubble's fade, and `$icon-tip-fade`
+  (120ms), IconTip's quicker one.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
   skeleton's bars, an entry's targeted section, MenuButton's plain item

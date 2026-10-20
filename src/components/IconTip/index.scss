@@ -35,11 +35,16 @@
 // A short word, placed by `useTip` on that side and flipped where there is no
 // room, so a table frame's sideways scroll clips nothing: the bubble is fixed.
 // One layer up, over the text it covers. Mounted only while open, so it fades
-// in from its starting style and goes at once.
+// in from its starting style, over `$icon-tip-fade` rather than every other
+// tip's `$tip-fade`. It takes no pointer: the tip is heard on its control
+// alone and closes the moment the pointer leaves, so a bubble that caught the
+// pointer would only cover what is beneath it (the owner's call, 2026-10-20).
 // claude-docs/components/icon-tip.md, "Placement".
 .icon-tip__bubble {
   @include tip-above;
-  @include tip-bubble-open;
+  @include tip-bubble-open($icon-tip-fade);
+
+  pointer-events: none;
 
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
@@ -47,7 +52,7 @@
     transform: translateX(2px);
   }
 
-  // Closed: faded back out the way it came, over `$tip-fade`, before the
+  // Closed: faded back out the way it came, over `$icon-tip-fade`, before the
   // component takes it out of the page.
   &--closing {
     opacity: 0;
