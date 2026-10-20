@@ -5,13 +5,11 @@ import type {
   CupboardPlace,
   PublicCupboardProps,
 } from '../../../../../components/IngredientEntry/types';
-import { Forbidden } from '../../../../../lib/errors';
 import { getSession } from '../../../../../lib/request-session';
 import { single } from '../../../../../lib/search-params';
 import { covenRolesIfSignedIn, viewerIfSignedIn } from '../../../../../lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import {
-  covensHoldingEntry,
   getCupboardEntry,
   MAKE_IT_OURS_PERMISSION,
   type HoldingCoven,
@@ -25,22 +23,6 @@ import {
 // viewer's own memberships, never the address: `?annotate=<covenSlug>` only picks among them,
 // and a slug naming none of them, or one that may not annotate there, is ignored before any
 // read is made. claude-docs/components/ingredient-entry.md, "On the public page".
-
-/**
- * The viewer's covens that hold the entry, viewers' included: none for a visitor. The one held
- * read the page makes, feeding the shelf mark before the name and the cupboard choices both. A
- * refusal reads as none, and the write says no.
- */
-export async function covensHolding(id: string): Promise<readonly HoldingCoven[]> {
-  const session = await getSession();
-  if (!session) return [];
-  try {
-    return await covensHoldingEntry(session, id);
-  } catch (error) {
-    if (error instanceof Forbidden) return [];
-    throw error;
-  }
-}
 
 export async function publicCupboardOf(
   entry: Pick<

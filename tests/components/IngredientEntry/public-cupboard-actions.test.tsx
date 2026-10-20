@@ -228,19 +228,20 @@ describe('CupboardActions on the public page', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
-    it('is not drawn once every coven holds the entry, nor a check in its place', () => {
-      // Why it could have shown: both covens may add.
+    it("gives way to the card's check once every coven holds the entry (the owner's call, 2026-10-20)", () => {
+      // Why the plus could have shown: both covens may add.
       show(props([place(1, { held: true }), place(2, { held: true })], { edit: EDIT }));
 
       expect(screen.getByRole('button', { name: 'Edit Testwort' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
     });
 
-    it('is not drawn for covens that may not add', () => {
-      show(props([place(1, { canAdd: false }), place(2, { held: true })]));
+    it('is not drawn, nor the check, for covens that may not add', () => {
+      show(props([place(1, { canAdd: false }), place(2, { held: true, canAdd: false })]));
 
       expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
     });
   });
 

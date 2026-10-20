@@ -33,6 +33,7 @@ import AnnotatePicker from './annotate-picker';
 import type {
   CupboardActionsProps,
   CupboardPlace,
+  CupboardPlus,
   CupboardWrite,
   PublicCupboardActionsProps,
 } from './types';
@@ -55,26 +56,35 @@ import type {
 // title; the three share it, since one press at a time can fail.
 //
 // The public entry page offers the same (M9.12), across every coven the viewer
-// may write in, but for Add: while any of them lacks the entry, Add is the
-// compendium card's plus (AddIcon), just before the pencil and never one of its
-// choices (the owner's calls, 2026-10-20). Without the plus (PUBLIC_ADD_AS_PLUS),
-// Add standing alone is a menu of every coven that may add where two or more may,
-// a coven holding the entry disabled, and inside the Edit menu it asks which in a
-// dialog. And each held choice while one of the covens holding the entry permits it, acting at once where one does and asking
-// which where several do. Make It Ours and Remove ask in their own
-// confirmation, the dropdown above the question; Annotate asks in a picker of
-// its own, then opens that coven's `?annotate=<covenSlug>`. A coven's page is
-// the one-place case of the same list.
+// may write in, but for Add, which on both pages is the compendium card's plus
+// (AddIcon) just before the pencil and never one of its choices (the owner's
+// calls, 2026-10-20). Without a plus (a coven page given no `plus`), Add is the
+// old Add to Cupboard: alone, a menu of every coven that may add where two or
+// more may, a coven holding the entry disabled; inside the Edit menu, a dialog
+// asking which. And each held choice while one of the covens holding the entry
+// permits it, acting at once where one does and asking which where several do.
+// Make It Ours and Remove ask in their own confirmation, the dropdown above the
+// question; Annotate asks in a picker of its own, then opens that coven's
+// `?annotate=<covenSlug>`. A coven's page is the one-place case of the same list.
 
-// The public page's plus (the owner's calls, 2026-10-20), each a default the coordinator chose
-// and flagged to the owner, so each is one line to change:
-/** Add to Cupboard leaves the pencil's menu there, for the card's plus just before the pencil. */
-const PUBLIC_ADD_AS_PLUS = true;
-/**
- * Once every coven that may add holds the entry: 'none' draws nothing in the plus's place, as the
- * shelf before the name already says it; 'check' would draw the card's check there instead.
- */
-const PLUS_ONCE_ALL_HOLD: 'none' | 'check' = 'none';
+// The plus (the owner's calls, 2026-10-20) stands on the coven's page too, from the page's
+// `plus` (every coven the viewer may add in, and which hold the entry), so Add leaves the Edit
+// menu there as well; and once every one of them holds the entry, the card's check stands in
+// its place, in the same pair, rather than leave the space empty.
+/** The public page's plus, from its covens: those that may add, and which hold the entry. */
+const plusOfPlaces = (
+  places: readonly CupboardPlace[],
+  defaultWorkspaceId: string,
+): CupboardPlus | undefined => {
+  const adders = placesFor.add(places);
+  return adders.length > 0
+    ? {
+        workspaceId: startOn(adders, defaultWorkspaceId),
+        covens: adders.map(({ workspaceId, name }) => ({ id: workspaceId, name })),
+        heldIn: adders.filter(({ held }) => held).map(({ workspaceId }) => workspaceId),
+      }
+    : undefined;
+};
 
 // A held coven's note in the lone Add menu, as AddToCovenDialog and the card's plus word it.
 const HELD_NOTE = 'Already in My Ingredients';
@@ -114,7 +124,7 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
       // No coven's label: the public page is the compendium's.
       name: props.compendium.name,
       removedHref: undefined,
-      plus: PUBLIC_ADD_AS_PLUS,
+      plus: plusOfPlaces(props.covens, props.defaultWorkspaceId),
     };
   }
   const { workspaceId, covenSlug, held, canAdd, canAnnotate, canRemove, canMakeOurs } = props;
@@ -138,7 +148,7 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
     // The entry as the coven calls it, for the two confirmations.
     name: props.overrides.label ?? props.compendium.name,
     removedHref: props.removedHref,
-    plus: false,
+    plus: props.plus,
   };
 }
 
@@ -153,7 +163,7 @@ function feedbackName(
   places: readonly CupboardPlace[],
   edit: boolean,
   name: string,
-  plus: boolean,
+  plus: CupboardPlus | undefined,
 ): string {
   const keys = (
     [
@@ -327,19 +337,14 @@ export default function CupboardActions(
       : []),
   ];
   // The plus, where Add is not one of the choices: while some coven that may add lacks the entry.
-  const plusMark =
-    plus && adders.length > 0 ? (
-      lacking.length > 0 ? (
-        <AddIcon
-          workspaceId={startOn(adders, defaultWorkspaceId)}
-          ingredientId={ingredientId}
-          covens={adders.map(({ workspaceId, name: coven }) => ({ id: workspaceId, name: coven }))}
-          heldIn={adders.filter(({ held }) => held).map(({ workspaceId }) => workspaceId)}
-        />
-      ) : PLUS_ONCE_ALL_HOLD === 'check' ? (
-        <CardHeldMark />
-      ) : null
-    ) : null;
+  // The plus while some coven that may add lacks the entry, and the check once all hold it.
+  const plusMark = plus ? (
+    plus.covens.some(({ id }) => !plus.heldIn.includes(id)) ? (
+      <AddIcon {...plus} ingredientId={ingredientId} />
+    ) : (
+      <CardHeldMark />
+    )
+  ) : null;
   if (items.length === 0 && !plusMark) return null;
 
   // One choice is a plain button, as Add Ingredient is with one place to go.
