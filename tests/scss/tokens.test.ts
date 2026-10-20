@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { compileString } from 'sass';
+import { compile as compileFile, compileString } from 'sass';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
@@ -281,6 +281,68 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
         accentText,
         mixed(accent, under, tint),
         4.5,
+      );
+    }
+
+    // The focus ring (M12.45, the owner's call of 2026-10-20), which marks a
+    // control's state, so 3:1 (WCAG 1.4.11). Its colour is mixed towards
+    // transparent, so what shows is that colour laid over the ground behind
+    // it. The shared ring, in the body ink, against the page, a card, a card
+    // pointed at, and the three parts of the ingredient card's drawer that
+    // the ring round a card crosses; a link's ring, in the accent at its own
+    // per-theme strength, against the page and the cards a link sits on. The
+    // strengths are read from the compiled mixin and the link's rule, so it
+    // is the stylesheet that is checked.
+    const ring = (css: string, selector: string) => {
+      const found =
+        /color-mix\(in srgb, var\((--[\w-]+)\) (?:var\((--[\w-]+)\)|(\d+(?:\.\d+)?%)), transparent\)/.exec(
+          declarations(css, selector).outline ?? '',
+        );
+      if (!found) throw new Error(`No faded ring in ${selector}`);
+      const [, color, strengthToken, strength] = found;
+      const weight = strengthToken ? tokens[strengthToken] : strength;
+      expect(weight, `${strengthToken} in the ${theme} theme`).toMatch(/^\d+(\.\d+)?%$/);
+      return { ink: toHex(tokens[color], theme), weight: parseFloat(weight) / 100 };
+    };
+    const shared = ring(compile(`@use 'mixins' as m; .probe { @include m.focus-ring; }`), '.probe');
+    const link = ring(
+      compile(`@use 'typography' as t; .probe { @include t.typography-base; }`),
+      '.probe a:focus-visible',
+    );
+    const grounds = {
+      page,
+      card,
+      'card pointed at': toHex(tokens['--surface-card-hover'], theme),
+      "drawer's slot": toHex(tokens['--drawer-slot'], theme),
+      "drawer's side": toHex(tokens['--drawer-side'], theme),
+      "drawer's back": toHex(tokens['--drawer-back'], theme),
+    };
+    for (const [ground, under] of Object.entries(grounds)) {
+      row(`the focus ring on the ${ground}`, mixed(shared.ink, under, shared.weight), under, 3);
+    }
+    for (const ground of ['page', 'card', 'card pointed at'] as const) {
+      const under = grounds[ground];
+      row(`a link's focus ring on the ${ground}`, mixed(link.ink, under, link.weight), under, 3);
+    }
+    // The tab row's ring, the accent at its own per-theme strength, drawn
+    // inside the pill, so on the open pill or on the track behind the others,
+    // over the page or a card.
+    const tab = ring(
+      compileFile(fromRoot('src/components/TabbedPage/index.scss')).css,
+      '.tabbed-page__row a:focus-visible',
+    );
+    const pill = mixed(accent, card, 0.18);
+    row("a tab's focus ring on the open pill", mixed(tab.ink, pill, tab.weight), pill, 3);
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      const track = mixed(toHex(tokens['--text-muted'], theme), under, trackWeight);
+      row(
+        `a tab's focus ring on the track on the ${ground}`,
+        mixed(tab.ink, track, tab.weight),
+        track,
+        3,
       );
     }
 

@@ -61,4 +61,6 @@ Hence the order M8.10, M8.13, M8.11, M8.12, M12.3, M12.4, M8.13a, M9.7, M9.8, M8
 
 **M12.34 moved to Wave 14 on 2026-10-20**, the owner's call; [wave-14.md](wave-14.md) says why and what it needs.
 
-**M12.44 follows M12.43**, minted 2026-10-20 on the owner's call after a hover mock: an ingredient card slides open like an apothecary drawer, its face moving down out of its slot to show the box behind it. It restyles `IngredientCard`, which M8.14 built and every list already uses, and needs nothing still open, so it sits after the wave's done work and ahead of the stock tasks.
+**M12.44 follows M12.43**, minted 2026-10-20 on the owner's call after a hover mock: an ingredient card slides open like an apothecary drawer, its face moving down out of its slot to show the box behind it. It restyles `IngredientCard`, which M8.14 built and every list already uses, and needs nothing still open, so it sits after the wave's done work and ahead of M12.34.
+
+**M12.45 follows M12.44**, minted 2026-10-20 on the owner's call after comparing the focus ring at five strengths: the ring fades to 66.6% of its colour, still clearing 3:1 on every surface in both themes, with a link's accent ring at 75% and the tab row's at full strength in the light theme, where 66.6% would not. It changes the shared `focus-ring` mixin and needs nothing still open, so it sits after the wave's done work and ahead of its open tasks.
