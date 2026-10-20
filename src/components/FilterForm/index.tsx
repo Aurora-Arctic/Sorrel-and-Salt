@@ -85,6 +85,7 @@ const FilterForm = ({
   searchHref,
   shown,
   clear: withClear = true,
+  sorrel = false,
   className,
   children,
 }: FilterFormProps): ReactElement => {
@@ -158,6 +159,7 @@ const FilterForm = ({
 
   return (
     <search>
+      {sorrel && <div className="filter-sorrel" aria-hidden="true" />}
       <form
         className={className ? `filter-row ${className}` : 'filter-row'}
         ref={form}

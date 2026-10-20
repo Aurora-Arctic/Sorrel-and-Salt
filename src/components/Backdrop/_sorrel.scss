@@ -1,0 +1,66 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The sorrel's shape and place, written once for the two things that draw it:
+// the real corner ornament (`.backdrop--sorrel`, index.scss) and the copy the
+// sticky search row draws inside itself so the sorrel shows through the row's
+// page-coloured fill (IngredientSearch/index.scss). Both are `position: fixed`
+// at the same offset, so the copy lines up with the real one and the row's
+// clip decides what is seen. The `sorrel-follow-bar` keyframes stay in
+// index.scss, which every page loads; the name is all this reads
+// (claude-docs/components/backdrop.md, "The copy in the search row").
+
+// Size, photograph and place.
+@mixin sorrel-shape {
+  position: fixed;
+  top: $top-inset;
+  left: 0;
+  --backdrop-scale: 0.75;
+  width: calc(var(--backdrop-width, clamp(8.75rem, 17.5vw, 13.75rem)) * var(--backdrop-scale, 1));
+  aspect-ratio: 4 / 3;
+  pointer-events: none;
+  background-image: url('./sorrel-plate.webp');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+
+  // Inside the shell the sorrel starts below its bars rather than behind them:
+  // the top inset, the bar (its hairline is inside its height), and where a
+  // context row follows, its height (a control with the lead's air above and below) and its own 1px
+  // hairline. Pages without the shell keep `$top-inset` above.
+  body:has(.app-shell) & {
+    top: calc(#{$top-inset} + #{$shell-bar-height});
+  }
+
+  body:has(.context-row) & {
+    --sorrel-row: calc(#{$context-row-height} + 1px);
+
+    top: calc(#{$top-inset} + #{$shell-bar-height} + var(--sorrel-row));
+
+    @media (max-width: #{$shell-phone-width}) {
+      --sorrel-row: calc(#{$context-row-height-phone} + 1px);
+    }
+
+    // The context row scrolls away but the bar stays, so a fixed offset would
+    // leave a gap between them once the page moves. Over the row's own height
+    // of scroll the sorrel climbs to the bar's foot and stays there. A browser
+    // with no scroll-driven animations keeps the fixed offset.
+    @supports (animation-timeline: scroll()) {
+      animation: sorrel-follow-bar linear both;
+      animation-timeline: scroll(root block);
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above, a browser without scroll-driven animations never reads it, not yet Baseline
+      animation-range: 0 var(--sorrel-row);
+    }
+  }
+}
+
+// How the grey meets the page: one layer per blend, faded by the theme's
+// opacity tokens (see index.scss for why they are two).
+@mixin sorrel-blend($blend, $opacity) {
+  mix-blend-mode: $blend;
+  opacity: $opacity;
+  @include theme-transition(opacity);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}

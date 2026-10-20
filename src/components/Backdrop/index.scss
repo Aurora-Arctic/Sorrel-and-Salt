@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use './sorrel' as *;
 
 // Each photograph is tone and shape, not a picture: a grey image whose alpha
 // is the subject, with the ground it was shot on transparent. The theme
@@ -45,42 +46,10 @@
 // new URL, and no cache can keep showing the old one. Each keeps its
 // photograph's own proportions; `background-size: 100% 100%` relies on the
 // box matching them. The sorrel runs at three quarters of the
-// shared width: its subject fills more of its frame than the salt does.
+// shared width: its subject fills more of its frame than the salt does. Its
+// shape and place are in _sorrel.scss, shared with the copy the search row draws.
 .backdrop--sorrel {
-  top: $top-inset;
-  left: 0;
-  --backdrop-scale: 0.75;
-  aspect-ratio: 4 / 3;
-  background-image: url('./sorrel-plate.webp');
-}
-
-// Inside the shell the sorrel starts below its bars rather than behind them:
-// the top inset, the bar (its hairline is inside its height), and where a
-// context row follows, its height (a control with the lead's air above and below) and its own 1px
-// hairline. Pages without the shell keep `$top-inset` above.
-body:has(.app-shell) .backdrop--sorrel {
-  top: calc(#{$top-inset} + #{$shell-bar-height});
-}
-
-body:has(.context-row) .backdrop--sorrel {
-  --sorrel-row: calc(#{$context-row-height} + 1px);
-
-  top: calc(#{$top-inset} + #{$shell-bar-height} + var(--sorrel-row));
-
-  @media (max-width: #{$shell-phone-width}) {
-    --sorrel-row: calc(#{$context-row-height-phone} + 1px);
-  }
-
-  // The context row scrolls away but the bar stays, so a fixed offset would
-  // leave a gap between them once the page moves. Over the row's own height
-  // of scroll the sorrel climbs to the bar's foot and stays there. A browser
-  // with no scroll-driven animations keeps the fixed offset.
-  @supports (animation-timeline: scroll()) {
-    animation: sorrel-follow-bar linear both;
-    animation-timeline: scroll(root block);
-    // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above, a browser without scroll-driven animations never reads it, not yet Baseline
-    animation-range: 0 var(--sorrel-row);
-  }
+  @include sorrel-shape;
 }
 
 @keyframes sorrel-follow-bar {
