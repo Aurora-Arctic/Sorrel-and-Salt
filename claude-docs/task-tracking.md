@@ -193,7 +193,8 @@ hour.
 ## Sync
 
 **An issue mirrors its entry, and stays mirrored.** Its title is the entry's
-heading, `<ID> — <title>`; its body is the entry's text, from the line after
+heading, `<ID> — <title>`, a retired one's struck-through title written
+`<ID> — [RETIRED] <title>` as the title rule has it; its body is the entry's text, from the line after
 the heading to the next task or section heading; its `Estimate` is the
 heading's hours. Minting writes all three, and an entry corrected afterwards —
 a task re-scoped by the one before it, an estimate revised, a criterion
