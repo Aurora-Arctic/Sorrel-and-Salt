@@ -44,17 +44,17 @@ describe('StockBadge', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent('Out of Stock');
   });
 
-  it('shows Low Stock with the quantity in its name, and the level as its description', () => {
+  it('shows Low Stock, named without the amount, with the level as its description', () => {
     render(<StockBadge quantity={6} threshold={10} unit="g" />);
-    const badge = screen.getByRole('button', { name: 'Low Stock, 6 g' });
-    expect(badge).toHaveAccessibleDescription('Low at 10 g or less');
+    const badge = screen.getByRole('button', { name: 'Low Stock' });
+    expect(badge).toHaveAccessibleDescription('Low Stock at 10 g or less');
     expect(out()).toBeNull();
   });
 
   it('writes a quantity with no unit as a plain number', () => {
     render(<StockBadge quantity={6} threshold={10} unit={null} />);
-    expect(screen.getByRole('button', { name: 'Low Stock, 6' })).toHaveAccessibleDescription(
-      'Low at 10 or less',
+    expect(screen.getByRole('button', { name: 'Low Stock' })).toHaveAccessibleDescription(
+      'Low Stock at 10 or less',
     );
   });
 
@@ -68,7 +68,7 @@ describe('StockBadge', () => {
   });
 
   it.each([
-    ['Low', 6, 'Low Stock, 6 g', /Low Stock · 6 g.*Low at 10 g or less/],
+    ['Low', 6, 'Low Stock', /^Low Stock at 10 g or less$/],
     ['Out of Stock', 0, 'Out of Stock', /^Out of Stock$/],
   ])(
     'opens the %s tip on focus, on hover and on a tap, and closes it on Escape',

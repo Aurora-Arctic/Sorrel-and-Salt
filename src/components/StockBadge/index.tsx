@@ -17,10 +17,11 @@ import './index.scss';
 // safety stays the only alarming badge (styling.md). The words moved to a button
 // name and a tip. Both states are buttons whose only job is to open that tip,
 // InfoTip's, through `useTip` (hover, tap and focus open it, Escape closes it,
-// the pointer may rest on it: WCAG 1.4.13). Low's tip reads "Low Stock · 6 g" and
-// then the level, "Low at 10 g or less"; Out of Stock's is its name. The name is
-// an `aria-label` ("Low Stock, 6 g" / "Out of Stock") so a screen reader has the
-// full words without opening the tip, and Low's level line is its description.
+// the pointer may rest on it: WCAG 1.4.13). Low's tip is one statement of the
+// level, "Low Stock at 10 g or less", without the jar's amount, which the jar line
+// already shows (the owner's call, 2026-10-20); Out of Stock's is its name. The
+// name is an `aria-label` ("Low Stock" / "Out of Stock") so a screen reader has the
+// words without opening the tip, and Low's tip is its description.
 // claude-docs/components/stock-badge.md.
 
 const Drawing = ({ out }: { out: boolean }): ReactElement => (
@@ -51,15 +52,15 @@ const withUnit = (amount: number, unit: string | null | undefined): string =>
   unit ? `${amount} ${unit}` : `${amount}`;
 
 export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
-  const levelId = useId();
+  const tipId = useId();
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
   const state = stockState(quantity, threshold);
   if (state === 'ok') return null;
 
   const out = state === 'out';
   // `low` means a quantity and a threshold above 0 both exist.
-  const heading = out ? 'Out of Stock' : `Low Stock · ${withUnit(quantity as number, unit)}`;
-  const name = out ? 'Out of Stock' : `Low Stock, ${withUnit(quantity as number, unit)}`;
+  const tip = out ? 'Out of Stock' : `Low Stock at ${withUnit(threshold as number, unit)} or less`;
+  const name = out ? 'Out of Stock' : 'Low Stock';
 
   return (
     // Hover on the wrapper, which holds the tip as well as the button, so the
@@ -71,7 +72,7 @@ export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): Reac
         type="button"
         className={`badge stock-badge ${out ? 'badge--out-of-stock stock-badge--out' : 'badge--low-stock stock-badge--low'}`}
         aria-label={name}
-        aria-describedby={out ? undefined : levelId}
+        aria-describedby={out ? undefined : tipId}
         onFocus={show}
         onBlur={hide}
         onClick={show}
@@ -80,17 +81,13 @@ export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): Reac
       </button>
       <span
         ref={bubble}
+        id={tipId}
         role="tooltip"
         className={open ? 'stock-badge__tip is-open' : 'stock-badge__tip'}
         aria-hidden={!open}
         style={bubbleStyle}
       >
-        {heading}
-        {!out && (
-          <span id={levelId} className="stock-badge__level">
-            {`Low at ${withUnit(threshold as number, unit)} or less`}
-          </span>
-        )}
+        {tip}
       </span>
     </span>
   );

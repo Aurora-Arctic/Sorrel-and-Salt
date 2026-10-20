@@ -309,8 +309,7 @@ test(
       await page.keyboard.press('Escape');
       await expect(page.getByRole('tooltip')).toHaveCount(0);
       await lowBadge(rowOf(list, 'Sea Salt')).focus();
-      await expect(page.getByRole('tooltip')).toContainText('Low Stock · 10 g');
-      await expect(page.getByRole('tooltip')).toContainText('Low at 10 g or less');
+      await expect(page.getByRole('tooltip')).toHaveText('Low Stock at 10 g or less');
       await page.keyboard.press('Escape');
       await assertNoAccessibilityViolations(page);
     });

@@ -46,14 +46,16 @@ jar states that both are tested against, so a change to one copy alone fails.
   (`src/components/InfoTip/use-tip.ts`, which also places the bubble on screen) and
   the InfoTip markup: it opens on hover, tap and focus, closes on Escape, and stays
   open while the pointer is over it (WCAG 1.4.13).
-- **Low's tip has two lines:** "Low Stock · 6 g", the quantity and unit as a plain
-  number, then the level, "Low at 10 g or less". **Out of Stock's tip is "Out of
-  Stock".**
+- **Low's tip is one statement,** "Low Stock at 10 g or less", the threshold and unit
+  as a plain number, and **without the current amount**, which the jar line already
+  shows (the owner's call, 2026-10-20; the tip first read "Low Stock · 6 g" over the
+  level). With no unit it reads "Low Stock at 10 or less". **Out of Stock's tip is
+  "Out of Stock".**
 - **The words are in the name, not on the badge.** The button's `aria-label` is "Low
-  Stock, 6 g" or "Out of Stock", so a screen reader has the full words without
-  opening the tip. Low's level line is its `aria-describedby`, so it is the
-  description and not part of the name; Out of Stock has no description, since its
-  tip would only repeat the name.
+  Stock" or "Out of Stock", so a screen reader has the words without opening the tip.
+  Low's tip is its `aria-describedby`, so it hears the level too, as the description
+  and not part of the name; Out of Stock has no description, since its tip would only
+  repeat the name.
 - **A threshold of 0 or none shows no Low badge.** It never means "always low". A
   jar at 0 still reads Out of Stock.
 - **The meaning never rests on colour.** Each state has its own drawing (a double

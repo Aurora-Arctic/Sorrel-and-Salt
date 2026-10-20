@@ -45,8 +45,3 @@
 .stock-badge__tip {
   @include tip-above;
 }
-
-// Low's second line, the level, under its heading.
-.stock-badge__level {
-  display: block;
-}

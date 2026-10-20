@@ -304,7 +304,7 @@ export function localBadge(row: Locator): Locator {
 
 /**
  * M9.8's two badges. Each is a button, drawn as an icon alone (the owner's call,
- * 2026-10-20), named "Low Stock, 6 g" or "Out of Stock"; its tip opens from it.
+ * 2026-10-20), named "Low Stock" or "Out of Stock"; its tip opens from it.
  * "Low Stock" and "Out of Stock" are this file's choice, after the entry's "low
  * and out-of-stock badges", in title case as every label is.
  */
