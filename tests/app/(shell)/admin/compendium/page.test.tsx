@@ -18,7 +18,7 @@ import { sent } from '../../../../support/filter-form';
 // `?edit=` an entry by slug, an old slug sent on to the new one. The guard,
 // the services and the entry's values are mocked: what they decide is
 // tests/lib/request-session.test.ts's, the compendium services' tests', and
-// tests/db/admin-compendium-entry-values.test.ts's.
+// tests/db/entry-values.test.ts's.
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
@@ -83,7 +83,7 @@ vi.mock('@/modules/vocabulary', () => ({
 }));
 
 const entryValues = vi.fn();
-vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+vi.mock('@/app/entry-values', () => ({ entryValues }));
 
 // `redirect` throws in Next, ending the render; so does this one, recognisably.
 const REDIRECTED = 'NEXT_REDIRECT';
@@ -616,7 +616,7 @@ describe('the /admin/compendium modal', () => {
     await renderPage({ edit: TESTWORT.slug });
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
-    expect(entryValues).toHaveBeenCalledWith(TESTWORT);
+    expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     // An edit opens with its sections closed (MB.115).
     openSections('Identity', 'Variants');

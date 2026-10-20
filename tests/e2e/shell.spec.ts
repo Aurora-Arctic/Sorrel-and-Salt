@@ -131,19 +131,30 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   // Sign Out, refused: the refusal is routed rather than awaited from Better
   // Auth, as tests/e2e/account.spec.ts once did beside the page's heading,
   // since whether it refuses depends on the origin the browser reaches the
-  // server on. The panel stays open and says so beside the button.
+  // server on. The panel stays open and says so in a callout under the
+  // button, the focus left on it (claude-docs/components/click-feedback.md).
   await page.route('**/api/auth/sign-out', (route) =>
     route.fulfill({ status: 403, json: { code: 'INVALID_ORIGIN', message: 'Invalid origin' } }),
   );
   const signOut = banner.getByRole('button', { name: 'Sign Out', exact: true });
   await expect(signOut).toBeEnabled();
-  await signOut.click();
-  await expect(banner.getByRole('alert')).toBeVisible();
+  await signOut.focus();
+  await page.keyboard.press('Enter');
+  const failure = banner.getByRole('alert');
+  await expect(failure).toBeVisible();
   await expect(signOut).toBeEnabled();
+  await expect(signOut).toBeFocused();
+  await expect(banner.getByRole('button', { name: 'Show the error for Sign Out' })).toBeVisible();
   await settleTransitions(page);
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 
+  // The callout takes the first Escape and the menu stays open; the next
+  // closes the menu.
+  await page.keyboard.press('Escape');
+  await expect(failure).toHaveCount(0);
+  await expect(account).toHaveAttribute('aria-expanded', 'true');
+  await expect(signOut).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(account).toHaveAttribute('aria-expanded', 'false');
   await expect(banner.getByRole('link', { name: 'Your Account' })).toHaveCount(0);

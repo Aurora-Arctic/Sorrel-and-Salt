@@ -62,7 +62,9 @@ and decides in `onEnd` from `test.outcome()` (`expected`, `unexpected`,
 `tests/support/story-checklist.ts`, prints the checklist, and returns
 `{ status: 'failed' }` when a test has no tag. With `STORIES_JSON=<path>` it
 also writes the checklist as JSON, which is how CI gets it. The config shares
-the gate config's `baseConfig` and `slotServers`, so a story runs against the
+the gate config's `baseConfig` (`tests/e2e/base-config.ts`, which the workshop
+config also reads, so that one loads with no database setting) and
+`slotServers` (`tests/e2e/servers.ts`), so a story runs against the
 same per-worker database and production server as a gate spec, on ports 8001
 and up. It takes the same lock, `/tmp/sorrel-e2e.lock`, so the two suites
 never run at once on one machine. Under Claude Code (`CLAUDECODE` set, `CI` not) the

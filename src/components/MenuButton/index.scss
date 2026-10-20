@@ -2,12 +2,18 @@
 @use '../../scss/mixins' as *;
 
 // The menu as the bar's Add Ingredient menu draws it (app-shell's
-// `.app-shell__menu`), hung from the button's end edge.
+// `.app-shell__menu`). Where it sits is the script's, on Floating UI: hung
+// from the button's end edge, below it or above, fixed (index.tsx).
 // claude-docs/components/menu-button.md.
 
 .menu-button {
-  position: relative;
   display: inline-flex;
+}
+
+// The button fills the box when a layout stretches it, as a narrow form's
+// stacked foot does (M8.17); otherwise the box is the button's own width.
+.menu-button > [aria-haspopup] {
+  flex-grow: 1;
 }
 
 // The chevron after the label, turned over while the menu is open.
@@ -16,9 +22,6 @@
 }
 
 .menu-button__menu {
-  position: absolute;
-  top: calc(100% + #{space(2)});
-  right: 0;
   z-index: layer('floating');
   min-width: 11rem;
   // Clips a hovered first or last item to the rounded corners.
@@ -70,6 +73,9 @@
   white-space: nowrap;
   @include theme-transition(background-color);
 
+  // Grey, the quiet fill: green marks a menu's one primary action alone
+  // (`--primary`, below), so every other plain item is pointed at, focused
+  // and chosen in the grey (the owner's call, 2026-10-20).
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
@@ -111,9 +117,22 @@
   }
 }
 
-// What adds something, in the accent green and filled on hover and focus as
-// the destructive item is, so the two read as a pair (the owner's call,
-// 2026-10-19).
+// A menu's one primary action, Edit Ingredient on the ingredient page:
+// the green highlight pointed at, focused and chosen, where every other item
+// takes the grey (the owner's call, 2026-10-20).
+.menu-button__item--primary {
+  &:hover,
+  &:focus-visible,
+  .is-closing &.is-chosen {
+    background-color: $fill-highlight;
+  }
+}
+
+// What adds something, Add to Cupboard: the entry page's primary action, in
+// the accent green, and pointed at, focused and chosen the green highlight
+// with its text in the accent's hover shade, which holds 4.5:1 on the tint
+// where the plain accent does not (tests/scss/tokens.test.ts). Not filled
+// solid as the destructive item is (the owner's call, 2026-10-20).
 .menu-button__item--constructive {
   color: $accent;
   @include theme-transition(background-color, color);
@@ -125,7 +144,23 @@
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
-    background-color: $accent;
-    color: $text-on-color;
+    background-color: $fill-highlight;
+    color: $accent-hover;
   }
+}
+
+// The items in the button's own type, top and bottom padding and height, as
+// `.btn` sets them (`buttonType`): the Annotate dialog's More, whose items
+// are the actions of the dialog's foot (the owner's calls of 2026-10-20). The
+// sides take one step less than the button's space(5), not so wide in a list.
+// The label is centred by the flex box, as `.btn` centres its own. Every
+// other menu keeps the lighter, shorter item.
+.menu-button__menu--button-type .menu-button__item {
+  display: flex;
+  align-items: center;
+  min-height: $control-height;
+  padding: space(2) space(4);
+  font-family: $font-body;
+  font-size: type-size('small');
+  font-weight: 500;
 }

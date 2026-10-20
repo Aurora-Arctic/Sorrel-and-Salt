@@ -51,6 +51,13 @@ $wax-glow: color.adjust(
 $wax-vivid: color.adjust($wax, $saturation: 30%, $lightness: 4%); // light secondary
 $wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 
+// The warning ochre: a notice that cautions without blocking, its bar, tint and
+// triangle. Picked rather than derived, the owner's call (2026-10-19), so it
+// reads apart from both the sorrel and the wax. A mark, held to 3:1 on both of
+// its theme's surfaces: 4.89:1 and 5.44:1 light, 8.32:1 and 7.55:1 dark.
+$ochre-deep: #8a5a00; // light warning
+$ochre-bright: #d9a441; // dark warning
+
 // Body ink at lower strength rather than a separate grey, so it still clears
 // 4.5:1. Dark mixes the ink into the ground, which lowers its chroma with its
 // strength; darkening it in HSL kept the saturation and turned it gold.
@@ -77,6 +84,10 @@ $parchment-lifted: color.adjust($parchment-raised, $lightness: 2.5%);
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
+
+// The click-feedback callout's Dismiss cross in the dark theme, pure white
+// over the card where the body text is chalk, as design F has it (M12.31).
+$dismiss-ink-dark: #fff;
 
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
@@ -352,10 +363,12 @@ $accent-hover: var(--accent-hover);
 $accent-solid-hover: var(--accent-solid-hover);
 $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
+$warning: var(--warning);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
 $surface-card-hover: var(--surface-card-hover);
+$dismiss-ink: var(--dismiss-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks
@@ -378,14 +391,28 @@ $text-on-color: var(--surface-page);
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 
 // A quiet fill: the muted ink 18% into the card. A chip's wash, the skeleton's
-// bars and the open nav summary each wrote this mix; the chip's text holds
+// bars, an entry's targeted section, MenuButton's plain item pointed at, and
+// the hover of every navigation link, tab and outlined chip; the chip's text holds
 // 4.5:1 on it (tests/scss/tokens.test.ts).
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
+
+// A highlight: the accent 12% into whatever is behind. MenuButton's one
+// primary or constructive item, and the account menu's, the shell's menu's
+// and a suggestion list's row, pointed at, focused or chosen, and the same over the
+// field's ground for a quiet button pointed at (M8.17, the owner's call of
+// 2026-10-20). A wash of the accent rather than of the muted ink, so the row
+// in hand reads as the one about to act; the body and muted inks hold 4.5:1
+// on it (tests/scss/tokens.test.ts).
+$fill-highlight: color-mix(in srgb, $accent 12%, transparent);
+$fill-highlight-field: color-mix(in srgb, $accent 12%, $surface-card);
 
 // A hairline: the muted ink 45% into whatever is behind, so one line reads on
 // the page and on a card alike. The ingredient form's section rules and the
 // tab strip's shade each wrote this mix.
 $hairline: color-mix(in srgb, $text-muted 45%, transparent);
+
+// A quiet button's hairline pointed at: partway from the line to the accent.
+$edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
 
 // How much of a control remains when it is busy or cannot be used: the
 // switch, the pending tab panel and the busy list frame each wrote 0.55.
@@ -669,12 +696,15 @@ $add-below-width: 21.875rem;
 // or list opened from the shell, over the bars; `dialog` is a non-native
 // overlay, since a <dialog> sits in the browser's top layer above every one. `sticky-row` is a
 // page's own row stuck under the bar: above the cards, below the bar and everything opened from it.
+// `callout` is a click's failure under its control (ClickFeedback): over a
+// popover it may sit beside, under a non-native overlay that covers the page.
 $layers: (
   'sticky-row': 5,
   'shell': 10,
   'banner': 11,
   'toggle': 12,
   'floating': 20,
+  'callout': 25,
   'dialog': 30,
 );
 

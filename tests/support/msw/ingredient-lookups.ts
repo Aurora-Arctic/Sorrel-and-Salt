@@ -27,6 +27,8 @@ import type {
   UpdateCompendiumIngredientMutationVariables,
   UpdateReferenceMutation,
   UpdateReferenceMutationVariables,
+  UpdateWorkspaceIngredientMutation,
+  UpdateWorkspaceIngredientMutationVariables,
 } from '@/gql/graphql';
 import type {
   CategoryNode,
@@ -339,8 +341,8 @@ export function acceptCompendiumCreate() {
 }
 
 /**
- * Answers `UpdateCompendiumIngredient`, the one update the form's tests save,
- * with the entry it was sent, recording each ask.
+ * Answers `UpdateCompendiumIngredient`, the compendium's update, with the
+ * entry it was sent, recording each ask.
  */
 export function acceptUpdate() {
   const calls: UpdateCompendiumIngredientMutationVariables[] = [];
@@ -351,6 +353,28 @@ export function acceptUpdate() {
     calls.push(variables);
     return {
       updateCompendiumIngredient: {
+        id: String(variables.id),
+        name: variables.input.name,
+        slug: 'mockwort-fixtura-testalis',
+      },
+    };
+  });
+  return calls;
+}
+
+/**
+ * Answers `UpdateWorkspaceIngredient`, a coven's own entry saved over
+ * (M8.17), with the entry it was sent, recording each ask.
+ */
+export function acceptCovenUpdate() {
+  const calls: UpdateWorkspaceIngredientMutationVariables[] = [];
+  mockGraphQLMutation<
+    UpdateWorkspaceIngredientMutation,
+    UpdateWorkspaceIngredientMutationVariables
+  >('UpdateWorkspaceIngredient', (variables) => {
+    calls.push(variables);
+    return {
+      updateIngredient: {
         id: String(variables.id),
         name: variables.input.name,
         slug: 'mockwort-fixtura-testalis',

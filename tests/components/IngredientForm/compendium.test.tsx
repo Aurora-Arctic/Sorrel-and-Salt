@@ -1,7 +1,8 @@
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
+import { COMPENDIUM_EDIT_NOTICE } from '@/components/IngredientForm/compendium-notice';
 import {
   FormField,
   LookupListField,
@@ -442,6 +443,20 @@ describe('IngredientForm on the compendium', () => {
   });
 
   describe('an entry given to it', () => {
+    // M8.17: an edit of the compendium says so at its head, as an add, which
+    // writes nothing yet anyone reads, does not.
+    it('says above the form that it edits the compendium, as a new entry does not', () => {
+      renderForm();
+      expect(screen.queryByText(COMPENDIUM_EDIT_NOTICE)).not.toBeInTheDocument();
+      cleanup();
+
+      renderEntry();
+      const notice = screen.getByText(COMPENDIUM_EDIT_NOTICE);
+      expect(
+        notice.compareDocumentPosition(textbox('Name')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
     it('shows its values, offers one save, off until something changes, and saves over it, carrying its categories through untouched', async () => {
       const calls = acceptUpdate();
       const { onSaved } = renderEntry();

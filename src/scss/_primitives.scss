@@ -114,6 +114,23 @@
     margin-top: space(4);
   }
 
+  // A confirmed action's refusal inside a dialog (M12.31's rule 6) is a plain
+  // notice rendered after its button, so in a row of buttons it takes its own
+  // full-width line above them rather than a place between them, where it
+  // squeezed the button and pushed the next past the dialog's edge (the
+  // owner's call, 2026-10-20). `order` rather than moving it in the document:
+  // the same notice stands beside a control outside a button row too.
+  .modal__actions:has(> .notice) {
+    flex-wrap: wrap;
+    row-gap: space(4);
+  }
+
+  .modal__actions > .notice {
+    order: -1;
+    flex-basis: 100%;
+    margin: 0;
+  }
+
   // Shape shared by every button in the app, `SignInPanel`'s included
   // (claude-docs/components/sign-in-panel.md, "Provider branding") — that
   // component's brand buttons carry their own colour and mark instead of
@@ -237,17 +254,24 @@
     }
   }
 
-  // Cancel, dismiss, go back: an action that changes nothing, in the body
-  // ink, so it neither competes with the primary nor reads as destructive —
-  // and, unlike the muted ink, not as disabled either.
+  // Cancel, dismiss, go back: an action that changes nothing, its label in the
+  // body ink, so it neither competes with the primary nor reads as
+  // destructive — and, unlike the muted ink, not as disabled either. Set in a
+  // field's ground inside a hairline rather than an ink outline, so it sits
+  // back beside the primary (M8.17, the owner's call of 2026-10-20); pointed
+  // at, the ground takes the highlight and the edge goes partway to the
+  // accent, rather than filling with ink.
   .btn--quiet {
-    border-color: $text-primary;
+    border-color: $hairline;
+    background-color: $surface-card;
     color: $text-primary;
     box-shadow: none;
 
     &:hover,
     &:focus-visible {
-      background-color: $text-primary;
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+      color: $text-primary;
     }
   }
 
@@ -982,63 +1006,99 @@
   // A sentence about the whole view rather than one field: a form's root
   // error, a sent confirmation. The role (`alert`, or `<output>`'s status)
   // is the markup's, since only it knows whether the text arrived late.
+  //
+  // No box: a 3px bar down the start edge and a tint of the bar's colour,
+  // `--notice-tint` of it over whatever holds the notice (7% light, 8% dark,
+  // _mixins.scss), so it sits on the page and on a card alike. The owner's
+  // look and tint, 2026-10-19. Each kind sets only `--notice-bar`, the bar and tint,
+  // and `--notice-icon`, the triangle's colour, plus its text colour where
+  // the text takes the kind's colour; another kind is a few lines.
+  // claude-docs/components/notice.md.
   .notice {
+    --notice-bar: #{$accent};
+    --notice-icon: currentColor;
+
     display: block;
     max-width: $measure;
     margin: 0;
-    padding: space(3) space(4);
-    border: 1px solid $text-muted;
-    border-radius: radius('control');
+    padding: space(2) space(3);
+    border-inline-start: 3px solid var(--notice-bar);
+    background-color: color-mix(in srgb, var(--notice-bar) var(--notice-tint), transparent);
     color: $text-primary;
     font-size: type-size('small');
     // A step over the 300 body weight: coloured text at this size thins out.
     font-weight: 400;
-    @include theme-transition(border-color, color);
+    @include theme-transition(border-color, background-color, color);
 
     @include reduced-motion {
       transition: none;
     }
+
+    // A link takes the notice's own text colour, which each kind has checked
+    // on its tint, and an underline so it does not rely on colour: the plain
+    // sorrel link falls short of 4.5:1 on the success tint in light.
+    a,
+    a:hover {
+      color: inherit;
+      text-decoration: underline;
+    }
   }
 
+  // Plain: the sorrel bar, the body ink. The default above.
+
+  // Error: bar and tint in the wax, with the triangle; the text in the
+  // wax's hover shade, the darker in light and the brighter in dark, since
+  // the plain wax falls short of 4.5:1 on the tint (the owner's pick,
+  // 2026-10-19).
   .notice--error {
+    --notice-bar: #{$secondary};
+
     margin-bottom: 1rem;
-    border-color: $secondary;
-    color: $secondary;
+    color: $secondary-hover;
   }
 
-  // The warning triangle before an error or a warning, the owner's call: in
-  // the notice's padding rather than in a flex row, so a link in the
-  // notice's text stays inline. Drawn by mask, so it takes the notice's ink,
-  // or the error red on a warning.
-  .notice--error,
+  // Warning: bar, tint and triangle in the ochre, the text in the body ink,
+  // for what deserves attention but does not block, such as a colour too near
+  // another group's. The ochre is the owner's pick (2026-10-19).
   .notice--warn {
+    --notice-bar: #{$warning};
+    --notice-icon: #{$warning};
+  }
+
+  // Caution: a quieter warning, for what is worth knowing but asks nothing
+  // of the reader. The bar and tint in the muted ink, the triangle still the
+  // ochre, the text in the body ink (the owner's call, 2026-10-19).
+  .notice--caution {
+    --notice-bar: #{$text-muted};
+    --notice-icon: #{$warning};
+  }
+
+  // Success: bar and tint in the accent, the text in its hover shade, as
+  // the error's is.
+  .notice--success {
+    color: $accent-hover;
+  }
+
+  // The warning triangle before an error, a warning or a caution, the owner's call: in
+  // the notice's padding rather than in a flex row, so a link in the
+  // notice's text stays inline. Drawn by mask in `--notice-icon`.
+  .notice--error,
+  .notice--warn,
+  .notice--caution {
     position: relative;
-    padding-inline-start: calc(#{space(4)} + 1.0125rem + #{space(2)});
+    padding-inline-start: calc(#{space(3)} + 1.0125rem + #{space(2)});
 
     &::before {
       content: '';
       position: absolute;
-      // On the first line of text (the owner's call).
-      inset-block-start: 0.8rem;
-      inset-inline-start: space(4);
+      // On the first line of text (the owner's call): the top padding and
+      // half the line's room over the triangle.
+      inset-block-start: calc(#{space(2)} + 0.05rem);
+      inset-inline-start: space(3);
       inline-size: 1.0125rem;
       block-size: 1.0125rem;
-      background-color: currentColor;
-      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+      @include warning-mark(var(--notice-icon));
     }
-  }
-
-  // A warning: the plain notice's box and ink, its triangle in the error red,
-  // for what deserves attention but does not block, such as a colour too near
-  // another group's (the owner's call).
-  .notice--warn::before {
-    background-color: $secondary;
-  }
-
-  .notice--success {
-    border-color: $accent;
-    color: $accent;
   }
 
   // ---------------------------------------------------------------------------
@@ -1072,6 +1132,13 @@
     .form .form__actions > *,
     .form .modal__actions > * {
       margin-inline: 0;
+    }
+
+    // What the aside holds stretches too, a menu's button or a lone button
+    // alike (M8.17), as wide as Save and Cancel above it.
+    .form .form__aside {
+      display: flex;
+      flex-direction: column;
     }
   }
 

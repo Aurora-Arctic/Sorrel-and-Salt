@@ -1,4 +1,8 @@
-import type { CompendiumValues, CupboardOverrides } from '../CupboardEntryForm/types';
+import type {
+  CompendiumValues,
+  CupboardEntryFormProps,
+  CupboardOverrides,
+} from '../CupboardEntryForm/types';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
@@ -30,6 +34,18 @@ export interface IngredientEntryEdit {
    * `?edit` arrives (M9.18).
    */
   opened?: EditedIngredient;
+  /**
+   * A coven's own entry (M8.17): the form writes to this coven, and its
+   * near matches open in it. `mayPromote` is the role's answer, which the
+   * page works out, to making a folk name the display name. Left out, the
+   * entry is the compendium's.
+   */
+  coven?: {
+    workspaceId: string;
+    /** The coven's ingredient list; an entry's page in the coven is beneath it, by id. */
+    ingredientsHref: Route;
+    mayPromote: boolean;
+  };
 }
 
 /** What a substitute names when it links an ingredient, which is what its page is found by. */
@@ -171,4 +187,78 @@ export interface IngredientDetailsDialogProps {
   closeHref: Route;
   /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: IngredientDetailsOpened;
+}
+
+/**
+ * The coven's Annotate dialog (`annotate-dialog.tsx`): where closing goes, where the
+ * focus goes back to when RouteModal's own fallbacks do not fit, and the form's values
+ * once the address asks for the dialog. Left out, it shows only while a press loads it.
+ */
+export interface AnnotateDialogProps {
+  closeHref: Route;
+  returnTo?: () => HTMLElement | null | undefined;
+  opened?: Omit<CupboardEntryFormProps, 'onDone' | 'aside'>;
+  /** Make It Ours and Remove in a More menu at the form's foot; left out, no menu. */
+  more?: AnnotateMoreProps;
+}
+
+/** What `useCupboardWrites` needs: the entry, where a remove leads, and how the caller's confirmation closes and shows a refusal. */
+export interface CupboardWritesOptions {
+  workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
+  ingredientId: string;
+  /** Where a remove leads, replacing the address; left out, the page reads again. */
+  removedHref?: Route;
+  /** Closes the caller's confirmation on a refusal; a remove's closes with the page it changed. */
+  onSettle: () => void;
+  /** Shows a refusal's sentence in the caller's alert. */
+  onRefused: (message: string) => void;
+}
+
+/** One cupboard write: start it, and whether it is in flight. */
+/** What `useDeleteEntry` deletes, and what follows it (M8.17). */
+export interface DeleteEntryOptions {
+  workspaceId: string;
+  /** The coven's own entry. */
+  id: string;
+  /** Where a delete leads, replacing the address; left out, the page reads again. */
+  deletedHref?: Route;
+  /** Closes the caller's confirmation on a refusal; a delete's closes with the page it changed. */
+  onSettle: () => void;
+  /** Shows a refusal's sentence in the caller's alert. */
+  onRefused: (message: string) => void;
+}
+
+export interface CupboardWrite {
+  run: () => void;
+  pending: boolean;
+}
+
+export interface CupboardWrites {
+  remove: CupboardWrite;
+  makeOurs: CupboardWrite;
+}
+
+/** One of the two confirmation dialogs, as the entry page and the Annotate dialog open it. */
+export interface CupboardQuestionProps {
+  /** The entry as the coven calls it. */
+  name: string;
+  write: CupboardWrite;
+  /** Asked to close it: Cancel, the Close button, Escape or a click outside. */
+  onClose: () => void;
+  /** Where the focus goes back to, the menu item that opened it having gone with the menu. */
+  returnTo: () => HTMLElement | null | undefined;
+}
+
+/**
+ * The Annotate dialog's Make It Ours and Remove (M8.17): the coven's address segment, which
+ * of Make It Ours and Remove the member may use, from the same permissions the
+ * entry page reads, and where a remove leads, `closeHref` when left out.
+ */
+export interface AnnotateMoreProps {
+  covenSlug: string;
+  canMakeOurs: boolean;
+  canRemove: boolean;
+  removedHref?: Route;
 }

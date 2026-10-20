@@ -3,6 +3,8 @@ import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
+import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { NotFound } from '@/lib/errors';
 
 // The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
 // they decide is their own tests' (the admin page's test runs the reads). Here: what the
@@ -10,7 +12,10 @@ import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 // to be kept out of search results.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+const redirect = vi.fn((_to: string) => {
+  throw new Error('redirected');
+});
+vi.mock('next/navigation', () => ({ redirect, useRouter: () => router }));
 
 const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
@@ -24,6 +29,16 @@ vi.mock('@/app/compendium-reads', () => ({
   readDeities: async () => [],
   readCategories: async () => [],
   readCardCategories: async (ids: readonly string[]) => ids.map(() => []),
+}));
+
+// What a curator's ?edit=<slug> reads (M8.17): the entry at the slug, then its form's values.
+const resolveCompendiumSlug = vi.fn();
+vi.mock('@/modules/ingredients', () => ({ resolveCompendiumSlug }));
+const entryValues = vi.fn();
+vi.mock('@/app/entry-values', () => ({ entryValues }));
+// The form is its own tests'; here only that the dialog holds one.
+vi.mock('@/components/IngredientForm', () => ({
+  default: () => <form aria-label="Fixture Form" />,
 }));
 
 const { default: Page, generateMetadata } = await import('@/app/(public)/compendium/page');
@@ -82,6 +97,11 @@ beforeEach(() => {
   readFacets.mockResolvedValue(NO_FACETS);
   viewerIfSignedIn.mockReset();
   viewerIfSignedIn.mockResolvedValue(null);
+  resolveCompendiumSlug.mockReset();
+  resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: { ...NODE }, movedAway: null });
+  entryValues.mockReset();
+  entryValues.mockResolvedValue({ ...EMPTY_VALUES, name: 'Testwort' });
+  redirect.mockClear();
 });
 
 describe('the public compendium page', () => {
@@ -140,6 +160,100 @@ describe('the public compendium page', () => {
       expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
     },
   );
+});
+
+// M8.17: a curator edits an entry from the search, in the compendium's edit dialog over the
+// results, as the admin Compendium does; anyone else reads the page as ever.
+describe('the public compendium page, for a curator', () => {
+  const curator = (canCurate = true) => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate } });
+  const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
+  const editLinks = () => screen.queryAllByRole('link', { name: /^Edit / });
+  const SEARCH = { query: 'Test', after: encodeCursor({ key: ['Mockwort'], id: NODE.id }) };
+
+  it('offers Edit on each card at the search with ?edit=<slug>, reading nothing more until asked', async () => {
+    viewerIfSignedIn.mockResolvedValue(curator());
+    await renderPage(SEARCH);
+
+    const [edit] = editLinks();
+    const href = new URL(edit.getAttribute('href')!, 'https://fixture.test');
+    expect(href.pathname).toBe('/compendium');
+    expect(Object.fromEntries(href.searchParams)).toEqual({ ...SEARCH, edit: NODE.slug });
+    expect(dialog()).toBeNull();
+    expect(resolveCompendiumSlug).not.toHaveBeenCalled();
+  });
+
+  it("opens the edit dialog over the search on a curator's ?edit=<slug>, its form on the entry's values", async () => {
+    viewerIfSignedIn.mockResolvedValue(curator());
+    await renderPage({ ...SEARCH, edit: NODE.slug });
+
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(NODE.slug);
+    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: NODE.id }), null);
+    expect(within(dialog()!).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
+    // The search beneath is the one asked for.
+    expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
+  });
+
+  it('opens an old slug at its new one, keeping the search', async () => {
+    viewerIfSignedIn.mockResolvedValue(curator());
+    resolveCompendiumSlug.mockResolvedValue({ kind: 'moved', slug: 'mockwort-fixtura-testalis' });
+
+    await expect(renderPage({ ...SEARCH, edit: 'old-slug' })).rejects.toThrow('redirected');
+    const to = new URL(redirect.mock.lastCall![0], 'https://fixture.test');
+    expect(to.pathname).toBe('/compendium');
+    expect(Object.fromEntries(to.searchParams)).toEqual({
+      ...SEARCH,
+      edit: 'mockwort-fixtura-testalis',
+    });
+  });
+
+  it('says so over the search when ?edit= names no entry, and opens nothing', async () => {
+    viewerIfSignedIn.mockResolvedValue(curator());
+    resolveCompendiumSlug.mockRejectedValue(new NotFound('IngredientNotFound'));
+
+    await renderPage({ ...SEARCH, edit: 'gone' });
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(dialog()).toBeNull();
+  });
+
+  // The authorization test: the same address that opens the dialog for a curator (asserted
+  // first, so the refusal below is the guard's and not a fixture that could never open)
+  // opens nothing and reads nothing for anyone else, and offers them no Edit.
+  it.each([
+    ['a visitor with no account', null],
+    ['a signed-in account that cannot curate', curator(false)],
+  ] as const)(
+    'refuses %s an Edit and ignores their ?edit=, which opens for a curator',
+    async (_who, shell) => {
+      const address = { ...SEARCH, edit: NODE.slug };
+      viewerIfSignedIn.mockResolvedValue(curator());
+      await renderPage(address);
+      expect(dialog()).not.toBeNull();
+      expect(editLinks()).toHaveLength(1);
+      document.body.innerHTML = '';
+      resolveCompendiumSlug.mockClear();
+      entryValues.mockClear();
+
+      viewerIfSignedIn.mockResolvedValue(shell);
+      await renderPage(address);
+
+      expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
+      expect(dialog()).toBeNull();
+      expect(editLinks()).toHaveLength(0);
+      expect(resolveCompendiumSlug).not.toHaveBeenCalled();
+      expect(entryValues).not.toHaveBeenCalled();
+    },
+  );
+
+  // Rule 6: the list is the one cached read whoever asks, keyed by the address alone.
+  it('reads the list with the same arguments for a curator as for a visitor', async () => {
+    await renderPage(SEARCH);
+    const visitor = readCompendium.mock.lastCall;
+    document.body.innerHTML = '';
+    viewerIfSignedIn.mockResolvedValue(curator());
+    await renderPage({ ...SEARCH, edit: NODE.slug });
+    expect(readCompendium.mock.lastCall).toEqual(visitor);
+  });
 });
 
 describe('the public compendium page structured data', () => {

@@ -32,20 +32,23 @@ compendium page wrap it rather than containing their own form.
 ## The props contract
 
 The props are a union on `workspaceId` (`IngredientFormProps`, `types.ts`):
-a coven's id writes that coven's new ingredient, and `null` writes the
-compendium — a new entry, or the `entry` given. A coven's edit is M8.17's,
-so the union cannot say one yet.
+a coven's id writes to that coven — a new ingredient, or the coven's own
+`entry` given, saved over itself through `updateIngredient` (M8.17) — and
+`null` writes the compendium — a new entry, or the `entry` given. Either
+tier's edit offers Delete Ingredient (the coven's since M8.17, moved from
+M9.10 on the owner's call, 2026-10-19). The coven's edit draws it in its
+foot, as the compendium's does ([`ingredient-entry.md`](ingredient-entry.md), "Edit").
 
 | Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                                                                                                                                                                                                                                 |
-| `entry`         | With a null `workspaceId` only: the compendium entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`. Left out, the form creates.                                                                                                                                                                                                                                                                                                                    |
+| `entry`         | The entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`: a compendium entry with a null `workspaceId`, or the coven's own with a coven's id (M8.17). Left out, the form creates.                                                                                                                                                                                                                                                                   |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
-| `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                                        |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
-| `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true. It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                                                                                           |
+| `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true, and a coven's edit when the member's role may promote (M8.17). It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                            |
 
 ## The fields
 
@@ -918,9 +921,9 @@ server, so it has no arrow.
 - **A refusal** (a name already taken, say) shows in the form's alert and the
   question closes.
 - **Both tiers.** `usePromoteFolkName(workspaceId, ingredientId)` and the
-  question take a null `workspaceId` for the compendium, or a coven's id. A
-  coven's form does not edit yet (M8.17), so only the compendium reaches the
-  control; the coven tier is tested on the question and hook alone.
+  question take a null `workspaceId` for the compendium, or a coven's id.
+  Both edits reach the control: the compendium's in `promote.test.tsx`, a
+  coven's in `coven-edit.test.tsx` (M8.17).
 
 ### Copying from the ingredient
 
@@ -1024,6 +1027,17 @@ description (MB.169, M12.7).
   `['variants', i, 'formId']`, and that issue is that variant's Form field's. `fieldNameOf` maps the server's, and the
   resolver moves the schema's, so it lands beside the box that made the pick
   rather than above the form.
+- **A pick an admin has since renamed asks the member** (M8.17). A coven's
+  variant keeps the text it was saved with, so after an admin renames the
+  curated form (M5.6a; "Wax" to "Beeswax", say) the text no longer matches the pick's name, which
+  `renamedTo` in `values.ts` notices. Beneath the box the form says "This
+  form is now called "Beeswax"." and offers two buttons: Use "Beeswax", which
+  takes the new name and keeps the link, and Keep "Wax", which keeps the
+  text and drops the link. The save is held, with the error "Use "Beeswax" or
+  keep "Wax" before saving" on the Form field, until one is pressed, since
+  the service would refuse the mismatched pair anyway (MB.167). Only a
+  coven's variant can hold one: a rename rewrites the compendium's own
+  (MB.162).
 - **Save & Add Another clears it** with the rest, since `EMPTY_VALUES` holds
   no variants.
 
@@ -1052,8 +1066,8 @@ below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
-The warning sits beneath the field, a `.notice--warn`, the plain box with
-the red triangle: "Did you mean one of these?" and a list beneath it, one
+The warning sits beneath the field, a `.notice--warn`, the ochre bar and
+tint with the ochre triangle: "Did you mean one of these?" and a list beneath it, one
 match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
 2026-10-18, which took it off MB.115's quiet style). The rows' title links
@@ -1370,6 +1384,22 @@ With a null `workspaceId` the form writes a compendium entry (M5.5), the
 site admin's, through the compendium mutations
 ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
 
+- **An edit says so under the dialog's title** (M8.17). Editing a compendium
+  entry, wherever the form opens (the admin Compendium, an entry's page, the
+  public search for a curator), the form draws a plain `Notice`: "Changes are
+  made to the Compendium, for everyone." An add carries none, and nor does a
+  coven's edit. The wording is the owner's (2026-10-19), and
+  `COMPENDIUM_EDIT_NOTICE` in
+  `src/components/IngredientForm/compendium-notice.ts` is the one place it
+  lives. In a modal it goes in the header, under the title and above the row
+  holding Open All and Undo and Redo (the owner's call, 2026-10-19): the form
+  portals it into the modal's note line (`useModalHeaderNote`,
+  [`modal.md`](modal.md), "A control in the header"). It stands `space(2)`
+  below the title, the gap the row has there in a dialog with no notice, and
+  the row `space(2)` below it; the row keeps its own spacing to the form.
+  Outside a modal it sits above the form. Being in the header, it stays in
+  view as the form scrolls beneath it.
+
 - **The classification is required.** `compendiumResolver` validates with
   `CompendiumIngredientInput`, whose `nomenclature` has no default, since
   every compendium entry declares one (DESIGN.md §5), and the select is
@@ -1403,14 +1433,17 @@ site admin's, through the compendium mutations
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
   `.btn--destructive`. Pressed, it asks `Delete
-"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, with
+"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, or
+  on a coven's own entry `Delete "Testwort"? It leaves the coven, but any spell
+that uses it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
   centred in the part in view however far the long form is scrolled, the
   form dimmed and held until it is answered, the focus on Keep It, its safe
   answer, and back on Delete Ingredient once Keep It puts it away (MB.115,
   the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
-  `deleteCompendiumIngredient`, busy until the answer, and calls
+  `deleteCompendiumIngredient`, or for a coven `deleteIngredient(id,
+workspaceId)`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
   as an alert above the fields. On a compendium entry the question also shows
   how many covens use the entry (M12.25): `DeleteUsers` reads
@@ -1441,7 +1474,7 @@ empty form, `?edit=<slug>` the entry at that slug, through
 `resolveCompendiumSlug`. An edit's head is the eyebrow "Edit Ingredient" over the entry's saved name and its formal name, in italics for a binomial (`editHeading` in `page.tsx`; [`modal.md`](modal.md), "An edit dialog's head"), so it follows a rename once Save Ingredient re-reads the entry. An old address redirects to the entry's current
 `?edit=`, and one naming nothing opens nothing and says so in an alert above
 the list. The edit's values are built on the navigation by
-`src/app/(shell)/admin/compendium/entry-values.ts`, `server-only`, from the services
+`entryValues(entry, session)` in `src/app/entry-values.ts`, `server-only`, from the services
 `Ingredient`'s fields resolve through — folk names, categories, substitutes,
 deities with their traditions, references with their citations, and its
 variants, each with its pick and group and its own categories, substitutes
@@ -2027,7 +2060,8 @@ Role and label queries only. It runs in the `dom` (happy-dom) Vitest project —
 **Accessibility is asserted in Playwright** (CLAUDE.md, Testing), once a page
 holds the form: `tests/e2e/admin-compendium.spec.ts` scans M5.5's admin page
 with the list, the empty form in its modal, a lookup open inside it, and an
-edit just saved, and M8.16's modal will carry its own.
+edit just saved. The coven's add and edit modals (M8.16, M8.17) carry no
+scan of their own yet.
 MB.154's References field was driven in a browser — Ladle's story through
 the `playwright-server` service, at 375px in both themes — and scanned
 with `@axe-core/playwright` at each state: the suggestions open, three

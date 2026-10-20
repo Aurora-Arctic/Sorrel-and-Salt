@@ -49,8 +49,9 @@ interface IngredientFormCallbacks {
   entryHref?: EntryHref;
   /**
    * Whether a saved folk name may be made the display name (M12.1): the
-   * compendium's edit passes true. The control still shows only on an edit of
-   * a saved entry and a name that has a saved row.
+   * compendium's edit passes true, and a coven's edit when the member's role
+   * may promote (M8.17). The control still shows only on an edit of a saved
+   * entry and a name that has a saved row.
    */
   mayPromote?: boolean;
 }
@@ -59,13 +60,16 @@ interface IngredientFormCallbacks {
 export type EntryHref = (ingredient: { slug: string; isGlobal: boolean }) => string | undefined;
 
 /**
- * Where the form writes. A coven's new ingredient, to the coven named; or,
- * with a null `workspaceId`, a compendium entry (M5.5) — a new one, or the
- * `entry` given, which it saves over and can delete. A coven's edit is
- * M8.16's, so the props cannot say one yet.
+ * Where the form writes. With a `workspaceId`, the coven named: a new
+ * ingredient, or the coven's own `entry` given, which it saves over and
+ * can delete from the coven (M8.17). With a null one, the compendium (M5.5):
+ * a new entry, or the `entry` given, which it saves over and can delete.
  */
 export type IngredientFormProps = IngredientFormCallbacks &
-  ({ workspaceId: string; entry?: never } | { workspaceId: null; entry?: EditedIngredient });
+  (
+    | { workspaceId: string; entry?: EditedIngredient }
+    | { workspaceId: null; entry?: EditedIngredient }
+  );
 
 /** The ingredient an edit opens: its id, which the writes name, and its values as the form shows them. */
 export interface EditedIngredient {
@@ -204,6 +208,9 @@ export interface ListOption extends ComboboxOption {
  * was picked as, which the text must stay for the pick to hold, and the group
  * and description the box shows beside the text.
  */
+/** What `renamedTo` reads of a variant: its text, and the pick beside it. */
+export type RenamedFormHolder = Pick<VariantFormValues, 'form' | 'formLink'>;
+
 export interface FormLink {
   id: string;
   name: string;
@@ -375,6 +382,8 @@ export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> ex
   offerTyped?: boolean;
   /** The mark on the typed row: a form's is the generic. */
   typedIcon?: ReactNode;
+  /** Drawn beneath the field's error: a renamed form's two answers. */
+  after?: ReactNode;
 }
 
 export interface ListFieldProps {

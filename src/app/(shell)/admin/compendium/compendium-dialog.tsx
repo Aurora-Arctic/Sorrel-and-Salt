@@ -16,12 +16,18 @@ import type { CompendiumDialogProps } from './types';
 // (claude-docs/design-decisions/m5.5-admin-compendium.md). Rendered whatever
 // the address opens, so a press's skeleton and the form that replaces it are
 // one dialog (M9.18).
-export default function CompendiumDialog({ place, opened }: CompendiumDialogProps): ReactElement {
+export default function CompendiumDialog({
+  place,
+  opened,
+  path,
+}: CompendiumDialogProps): ReactElement {
   const { navigate, refresh } = usePendingNavigation();
   const entry = opened?.entry;
+  // The list it opened over: the admin's, or the public search's (M8.17).
+  const href = (dialog?: { edit: string }) => compendiumHref(place, dialog, path);
   return (
     <RouteModal
-      closeHref={compendiumHref(place)}
+      closeHref={href()}
       content={
         opened && {
           heading: opened.heading,
@@ -38,8 +44,7 @@ export default function CompendiumDialog({ place, opened }: CompendiumDialogProp
               // now spells; Save & Add Another stays on the new form, which clears
               // itself, and the list beneath gains the entry.
               onSaved={(saved, next) => {
-                if (next === 'open')
-                  navigate(compendiumHref(place, { edit: saved.slug }), { replace: true });
+                if (next === 'open') navigate(href({ edit: saved.slug }), { replace: true });
                 refresh();
               }}
               // The modal's own close, so a delete or Cancel fades it out as Close
@@ -56,10 +61,10 @@ export default function CompendiumDialog({ place, opened }: CompendiumDialogProp
               }
               onCancel={done}
               // A near match opens its own modal here, over the same list.
-              duplicateHref={(match) => compendiumHref(place, { edit: match.slug })}
+              duplicateHref={(match) => href({ edit: match.slug })}
               // A linked substitute's summary opens its entry's modal in a new
               // tab, every substitute here being a compendium entry (MB.115).
-              entryHref={({ slug }) => compendiumHref(place, { edit: slug })}
+              entryHref={({ slug }) => href({ edit: slug })}
             />
           ),
         }

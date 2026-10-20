@@ -10,7 +10,7 @@ is the wrapper every admin page opens it through (below).
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
 | `modal.tsx`                | `Modal`, the default export                                                                     |
 | `route-modal.tsx`          | `RouteModal`                                                                                    |
-| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes              |
+| `modal-button.tsx`         | `ModalButton`: a button that opens a modal, named as where the focus goes back when it closes   |
 | `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once")  |
 | `loading.tsx`              | `ModalLoading`, a thin user of the shared `Skeleton` (`form` shape) a modal shows while loading |
 | `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                      |
@@ -36,6 +36,7 @@ is the wrapper every admin page opens it through (below).
 | `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
 | `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
 | `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
+| `returnTo`    | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
 
 ## Contracts
 
@@ -47,6 +48,15 @@ is the wrapper every admin page opens it through (below).
   shuts itself. A URL-driven modal closes by navigating away from its address.
   If the element closed itself first, the address would still say the modal
   was open.
+- **A dialog opened from inside another closes alone on Escape** (M8.17).
+  A `Modal` rendered inside another's contents is a second dialog over the
+  first. The browser sends Escape's `cancel` event to the topmost dialog
+  only, but React passes it up its own tree to the outer dialog's handler
+  too, which closed both. Each dialog now answers only a `cancel` aimed at
+  itself. Nothing in the app opens one inside another now: the Annotate
+  dialog's More, which did, asks for its confirmation over its form instead
+  (the owner's call, 2026-10-20). The fix stays all the same, for the next
+  dialog that opens one (the owner's call, 2026-10-20).
 - **It fades in and out** (M5.5, the owner's call), dialog and backdrop
   together over 150ms. In is CSS alone, `@starting-style` as `showModal()`
   shows it. Out is the component's, since the owner's unmount would take it
@@ -89,13 +99,96 @@ is the wrapper every admin page opens it through (below).
   and let go over the backdrop keeps the form. A stray click outside a
   half-filled form, the cost M5.6 weighed, now asks before throwing it away
   (["Unsaved changes"](#unsaved-changes)).
-- **Modal does not give the focus back itself.** Its owner closes it by
-  unmounting it, so the `<dialog>` is never closed in place and the
-  browser's own return to the opener never runs. A modal a button opens is
-  drawn with `ModalButton` ([below](#modalbutton)), which sends the focus
-  back to that button however the modal closes (MB.119). A modal opened by
-  its address is `RouteModal`'s: its trigger is a link the navigation
-  re-renders.
+- **Modal gives the focus back itself**, however it closes: Close, Escape,
+  a click outside, Cancel, a save, or its owner unmounting it (M8.17;
+  ["Giving the focus back"](#giving-the-focus-back)).
+
+## Giving the focus back
+
+When a modal closes, the focus goes back to what opened it, so a keyboard
+user carries on from where they were rather than from the top of the page.
+The browser does this by itself only when a `<dialog>` is closed in place,
+and a Modal's owner closes it by unmounting it, so Modal does it instead
+(M8.17; the owner's call of 2026-10-19, option B,
+[`m8.17-plan.md`](../design-decisions/m8.17-plan.md#giving-the-focus-back-owner-2026-10-19)).
+
+1. **Before it opens**, Modal notes the focused element, the opener.
+2. **As it unmounts**, if the focus is on nothing (the page's body), it
+   focuses the opener again, if the opener is still on the page and not
+   hidden. An item of a menu that has since closed is still on the page but
+   hidden, so it counts as gone.
+3. **If the opener is gone**, it asks its owner's `returnTo` for a place.
+   An owner whose opener sits in a menu that closed, or is drawn afresh,
+   names its trigger there: `ModalButton` its button, Add Ingredient the
+   page's main area, `CupboardActions` its menu's button.
+   `RouteModal` (a dialog opened by its address, such as `?edit`) looks for
+   a link to that address and focuses it. If the link is an item of a closed
+   `MenuButton`, it focuses that menu's button instead, where the press
+   began. For example, Edit Ingredient chosen from a coven entry's Edit menu,
+   then Cancel, leaves the focus on Edit; the curator's Edit Compendium Entry
+   item works the same way (M8.17, the owner's call, 2026-10-20).
+4. **If the owner names nowhere**, it focuses the page's `<h1>`, given
+   `tabindex="-1"` by script so it can take the focus without becoming a
+   Tab stop (`pageHeading()`, in `page-heading.ts`).
+
+Step 4 is for a row whose own control removes the row (M8.17, after
+M12.31's follow-up 5). The confirmation's Remove succeeds, the list is read
+again, and the row goes, taking the button that opened the confirmation with
+it. Without step 4 the focus would fall to the page's body, and a screen
+reader would start again from the top. The rows that do this:
+
+| Row                                          | Removed by                                               |
+| -------------------------------------------- | -------------------------------------------------------- |
+| A member on the members page                 | Remove (`MemberList`)                                    |
+| A pending or declined invitation in a coven  | Revoke, or Remove once declined (`PendingInvitations`)   |
+| An invitation on the account page            | Decline (`ReceivedInvitations`)                          |
+| An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                              |
+| A compendium entry's page, held by the coven | Remove, from the Edit menu or the Annotate dialog's More |
+| A retired entry's page                       | Remove, leading to the Ingredients list                  |
+
+The first four ask through `ConfirmedAction`, whose confirmation stays open
+and busy until the page is read again, so it closes in the same step as the
+row goes. Its `returnTo` names the row's button, which is gone by then, so
+step 4 answers. `CupboardActions` keeps its Remove confirmation busy the
+same way, and its `returnTo` names nowhere once the coven no longer holds
+the entry: the button left there offers Add to Cupboard instead, which is
+not where the person was. A retired entry's Remove leads to the coven's
+Ingredients list instead (the owner's call, 2026-10-20): its confirmation
+stays busy until the list arrives and goes with the entry page in the same
+step, so the opener and `returnTo` are both gone and step 4 finds the list's
+heading. A refusal closes the confirmation with the row
+still there, so the focus goes back to the row's button as usual.
+
+A confirmation asked over a modal's form (`ConfirmOverlay`, as in the M9.19
+user modal) never reaches step 4: the modal stays open, and the overlay
+gives the focus back inside it.
+
+A modal that left the focus somewhere else, on a page it navigated to, say,
+is left alone: the return never steals the focus. An owner never calls
+`.focus()` to bring the focus back itself.
+`tests/guards/focus-return.test.ts` fails a file that draws a dialog and
+does, bar three named exceptions: the Filters panel (`FacetPanel`), a
+dialog of its own; the confirmation asked over a modal's form
+(`ConfirmOverlay`), which gives the focus back inside the modal that stays
+open; and the confirm a `ConfirmedAction` confirmation focuses as it opens,
+the focus going in rather than back.
+
+`RouteModal` adds what a modal opened by the page's address needs, since
+its close is a navigation that may draw the page afresh. When the opener is
+gone it tries, in order:
+
+1. **A link to the address the modal opened**, outside any dialog: the same
+   Edit link, drawn again. The address comes from the gone link, or from
+   the provider, which notes it on a press (so it is known in WebKit too,
+   where a click focuses no link).
+2. **Its owner's `returnTo`**, if one is given.
+3. **Modal's own last step, the page's `<h1>`.** This is where a modal
+   reached by a pasted address or a reload lands, since nothing on the page
+   opened it.
+
+Back closes a route modal too, and the focus goes to the link the same way.
+`tests/e2e/route-modal-focus.spec.ts` walks both of those closes in a
+browser.
 
 ## Unsaved changes
 
@@ -161,8 +254,9 @@ each form.
 A form asks before it acts, "Delete this?" or "Discard them?", on a card
 drawn over the form rather than where its buttons were (MB.115, the owner's
 call): one way of asking across the admin forms. `ConfirmOverlay`, in
-`confirm-overlay.tsx`, is that card; the unsaved-changes question and every
-form's Delete question are drawn through it.
+`confirm-overlay.tsx`, is that card; the unsaved-changes confirmation, every
+form's Delete confirmation, and the Annotate dialog's Make It Ours and Remove (M8.17, the
+owner's call of 2026-10-20) are drawn through it, never a second dialog.
 
 | Prop         | What it is                                                                   |
 | ------------ | ---------------------------------------------------------------------------- |
@@ -172,6 +266,7 @@ form's Delete question are drawn through it.
 | `flashes`    | The discard guard's count of ways out tried again, each a flash of the card  |
 | `children`   | What follows the question: a field, a live region, the `.modal__actions` row |
 
+- **A warning among the details.** A `warn` [`Notice`](notice.md) given the class `confirm-overlay__warning` stands well apart from its neighbours: `space(5)`, 1.5rem, above, where the paragraph before it leaves `space(2)`, and 1.75rem below, where the answers stand `space(4)` off. 1.75rem sits off the spacing scale, the owner's value rather than a new step. Make It Ours's "Changes you have not saved are lost." takes it (M8.17, the owner's calls of 2026-10-20); any other Notice in a card keeps its zero margin.
 - **Where it is drawn.** The form renders it after its own buttons, which
   stay where they are, and the card portals into the modal's layer,
   `ConfirmLayerContext`, a slot as the header's control place is, since the
@@ -337,6 +432,20 @@ asked over the form, the row is held with it
 scrim, the owner's call at M8.16; the ingredient form's Close All is
 `disabled` then too, as a form's Undo and Redo already are.
 
+A sentence about the whole dialog goes on a line of its own between the
+title and the row (M8.17, the owner's call of 2026-10-19): the compendium
+edit's notice, "Changes are made to the Compendium, for everyone." The modal
+hands that line down too (`HeaderNoteContext`), and the contents portal into
+it through `useModalHeaderNote()`. It is a line apart rather than the row's
+first item because the row is a line of controls that never wraps. It stands
+`space(2)` below the title, the gap the row has there without it. With a
+sentence and a row both present, the row stands `space(4)` below the sentence
+(it was `space(2)`) and the body `space(3)` below the row (it was the
+header's `space(4)`), so the row reads with the form it works rather than
+with the sentence (the owner's call of 2026-10-20). Empty, it takes no line, so a dialog with no
+sentence is unchanged. It is not held while a confirmation is asked, as it holds
+no control.
+
 ## ModalButton
 
 A button that opens a modal, and the focus back on the button however the
@@ -354,8 +463,9 @@ Coven. `ModalButtonProps` (`types.ts`):
 | `size`      | As `Modal`'s                                                             |
 | `children`  | A function of the modal's close, so a form can close it once it has sent |
 
-The focus moves only after a close, never on the first render, so the page
-loads with the focus where the browser puts it.
+It gives the focus back through Modal's own return
+([above](#giving-the-focus-back)), naming its button as `returnTo` for
+WebKit, where a click focuses no button.
 
 ### Add Ingredient
 
@@ -424,6 +534,7 @@ skipped the fade.
 | `closeHref` | The page it opened over, its modal parameter dropped                                                                                                                                                           |
 | `size`      | As `Modal`'s                                                                                                                                                                                                   |
 | `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+| `returnTo`  | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
   `done` all fade the modal out, then `navigate(closeHref, { replace: true })`,

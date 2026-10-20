@@ -122,7 +122,7 @@ scoped off `.sign-in-panel__button[aria-disabled='true']` directly, since
 removes an element from the tab order entirely, and "reachable by keyboard"
 covers every provider in the roster, not only the configured ones — an
 unavailable button still needs to be _found_, even though clicking it does
-nothing. The click handler checks `configured.includes(providerId)` itself
+nothing. The press handler checks that the provider is available itself
 rather than relying on the DOM attribute to stop it.
 
 ## Last used
@@ -165,29 +165,43 @@ compare by value, so a real provider id is stable too.
 
 ## Busy
 
-Each provider button is a `BusyButton`. The one pressed goes busy ("Signing In",
-with the spinner and `aria-busy`) and the others are `disabled` while it is. Once
+Each provider button is a `BusyButton` in its own `ProviderButton`
+(`provider-button.tsx`). The one pressed goes busy ("Signing In", with the
+spinner and `aria-busy`) and `aria-disabled`, not `disabled`, so the focus
+stays on it for a failure's callout; its handler refuses a second press. The
+others are `disabled` while it is, since a page being left has no use for
+their tab stops. Once
 `signIn.social` answers without an error the redirect has started, and the panel
 calls `reportLeaving()` so the page bar stays up until the browser leaves; a
 back-forward cache return (`pageshow` with `persisted`) clears the busy button.
-A failure before the redirect frees every button and shows the error.
+A failure before the redirect frees every button and says so under the one
+pressed ("Error state").
 
 ## Error state
 
-One `message` field covers both sources: the server-rendered callback error
-(seeded from `props.error`) and a pre-redirect failure from `signIn.social`'s
-own `{ error }` result (a bad request, a network error, before any redirect
-happens) — the two never show at once, so there is no reason for two fields.
-A pre-redirect failure always shows `GENERIC_SIGN_IN_ERROR`
+Two sources, shown in two places:
+
+- **The callback error**, rendered by the server from `?error=` and passed in
+  as `error`, belongs to the page: it is the shared `Notice` as an error
+  ([`notice.md`](notice.md)) above the buttons, with the `.notice--error`
+  look every other page's error wears, its warning triangle, and
+  `role="alert"`. It does not exist in the DOM absent a message, rather than
+  sitting there as an empty live region, since a screen reader announces an
+  alert only when it appears. A press starts a new attempt, so it clears the
+  notice.
+- **A failure before the redirect** — `signIn.social`'s own `{ error }`
+  result, or a throw for a dropped connection — belongs to the button pressed:
+  each `ProviderButton` has its own click feedback
+  ([`click-feedback.md`](click-feedback.md)), so the sentence opens in a
+  callout under that button with the focus kept on it, a badge on the button
+  brings it back, and the button's description carries it. The badge is named
+  "Show the error for Continue with <Provider>", without the last-used mark the
+  button's own name may carry. The next press clears it.
+
+A failure before the redirect always says `GENERIC_SIGN_IN_ERROR`
 (`src/lib/sign-in.ts`), never `result.error.message` — that string is
 provider- or Better-Auth-internal and unreviewed, the same reasoning
 `signInErrorMessage()` applies to `error_description`.
-
-The message is the shared `Notice` as an error ([`notice.md`](notice.md)):
-the `.notice--error` look every other page's error wears, with its warning
-triangle, and `role="alert"`. It does not exist in the DOM absent a message,
-rather than sitting there as an empty live region, since a screen reader
-announces an alert only when it appears.
 
 ## Styling
 
@@ -245,11 +259,15 @@ workshop shows what the page shows:
   `WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
   one pair in `.env.local`, the rest greyed out);
 - `PhoneDark` and `PhoneLight`, at 375px with the error and the mark both
-  showing, the badge nearest the screen's edge.
+  showing, the badge nearest the screen's edge;
+- `LoadingSignIn` and `FailedSignIn`, each pressing Continue with Google as a
+  person would: the first with the request held open by the workshop's server
+  (`.ladle/vite.config.ts`), the second answered by the workshop's 404, so the
+  failure's callout opens under the button.
 
 The mark is read from the workshop's own cookie, which outlives the story that
-wrote it, so every story sets or clears it before rendering. Render-only, no
-test ids, no snapshots.
+wrote it, so every story sets or clears it before rendering. No test ids, no
+snapshots.
 
 ## Testing
 
@@ -263,8 +281,13 @@ provider offered by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
 with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
 explicit `/coven`;
-no alert exists without an error and one appears with a passed-in error or a
-failing `signIn.social` result; an unavailable provider is `aria-disabled`,
+no alert exists without an error and one appears with a passed-in error;
+the pressed button goes busy and `aria-disabled` with the focus kept, the
+others `disabled`, and a second press is refused; a failing or throwing
+`signIn.social` opens one alert under the pressed button, keeps the focus
+there, frees every button, describes the button, and Dismiss and the badge
+close and reopen it; the badge is named without the last-used mark; the next
+press clears the failure, and a press clears a passed-in error; an unavailable provider is `aria-disabled`,
 described by its note, still lacks `disabled`, and its click never reaches
 `signIn.social`; the cookie's provider, and only that one, is marked in its
 accessible name, and no cookie or an unknown provider marks none; and

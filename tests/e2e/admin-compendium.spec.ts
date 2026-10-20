@@ -9,6 +9,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { withSql } from './stories/coven-ingredients';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
+import { COMPENDIUM_EDIT_NOTICE } from '@/components/IngredientForm/compendium-notice';
 
 // M5.5: the admin's compendium form's presentation — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
@@ -142,6 +143,57 @@ test('the compendium form lines its controls up and keeps its pickers inside the
   await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
   await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
+});
+
+// M8.17: the compendium edit's notice sits under the dialog's title, above
+// the row holding Open All and Undo and Redo (the owner's call, 2026-10-19),
+// spaced as that row is from the title in a dialog with no notice, and the row
+// keeps its own distance to the form. An add has no notice, so it is the
+// measure of the spacing the row had before.
+test("the compendium edit's notice sits between the title and the Open All row, at the row's gap", async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'notice-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  const fixture = makeIngredient({ name: 'Fixture Noticewort' });
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    await insertIngredient(sql, fixture, userId);
+  } finally {
+    await sql.end();
+  }
+  const top = async (dialog: Locator) => {
+    const box = async (locator: Locator) => (await locator.boundingBox())!;
+    const title = await box(dialog.getByRole('heading', { level: 2 }));
+    const row = await box(dialog.getByRole('button', { name: 'Open All' }));
+    const form = await box(dialog.getByRole('button', { name: 'Identity' }));
+    return { title, row, form };
+  };
+
+  await page.goto('/admin/compendium?new');
+  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  await adding.getByRole('button', { name: 'Close All' }).click();
+  const before = await top(adding);
+  const rowGap = before.row.y - (before.title.y + before.title.height);
+  const formGap = before.form.y - (before.row.y + before.row.height);
+
+  await page.goto(`/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
+  const editing = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Noticewort/ });
+  await expect(editing).toBeVisible();
+  const after = await top(editing);
+  const notice = (await editing
+    .getByText(COMPENDIUM_EDIT_NOTICE)
+    .evaluate((element) => element.closest('.notice')!.getBoundingClientRect().toJSON())) as {
+    y: number;
+    height: number;
+  };
+  expect(notice.y - (after.title.y + after.title.height)).toBeCloseTo(rowGap, 0);
+  expect(after.row.y - (notice.y + notice.height)).toBeCloseTo(rowGap, 0);
+  expect(after.form.y - (after.row.y + after.row.height)).toBeCloseTo(formGap, 0);
 });
 
 // MB.261: a keyboard user turns the No Refs switch with Enter, as a click

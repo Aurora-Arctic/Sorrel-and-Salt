@@ -27,8 +27,9 @@ among them, and two more.
   label, "Saving Name", and the busy state.
 - **`disabled` stays the caller's.** Most callers turn it on while busy, and
   for the reason they had before ("nothing to save", a cool-down). A button
-  whose focus must stay while it works, such as the banner's Stop Impersonating,
-  passes `aria-disabled` instead, which looks the same (`styling.md`,
+  whose focus must stay while it works, such as one whose failure shows in a
+  click-feedback callout (the banner's Stop Impersonating, Sign Out, the
+  sign-in buttons; [`click-feedback.md`](click-feedback.md)), passes `aria-disabled` instead, which looks the same (`styling.md`,
   "Buttons", "Disabled is dashed and faded") but keeps the button focusable.
 - **`type` defaults to `button`.** A bare `<button>` submits its form, so a
   form's non-submit action would submit it by accident.

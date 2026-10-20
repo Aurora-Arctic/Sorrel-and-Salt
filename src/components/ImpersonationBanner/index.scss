@@ -41,12 +41,6 @@ $impersonation-banner-reach: space(4);
   margin: 0;
 }
 
-// The failed-Stop notice drops the error notice's bottom margin, which is for a form's
-// flow: in this row it would sit off the centre line and add room above the rule.
-.impersonation-banner .notice {
-  margin: 0;
-}
-
 // Tucked away where a pointer can hover to bring it back: fixed over the top
 // of the page, so it adds nothing to the page's height.
 @media (hover: hover) {

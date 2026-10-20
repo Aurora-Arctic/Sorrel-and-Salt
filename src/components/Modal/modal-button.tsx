@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import Modal from './modal';
 import type { ModalButtonProps } from './types';
 
@@ -21,15 +21,6 @@ export default function ModalButton({
 }: ModalButtonProps): ReactElement {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
-  // Set by a close only, so the first render takes no focus.
-  const returning = useRef(false);
-
-  useEffect(() => {
-    if (!open && returning.current) {
-      returning.current = false;
-      button.current?.focus();
-    }
-  }, [open]);
 
   return (
     <>
@@ -40,10 +31,10 @@ export default function ModalButton({
         <Modal
           title={title}
           size={size}
-          onClose={() => {
-            returning.current = true;
-            setOpen(false);
-          }}
+          onClose={() => setOpen(false)}
+          // Modal gives the focus back to the button; named too, as a click
+          // in WebKit leaves the focus on nothing.
+          returnTo={() => button.current}
         >
           {children}
         </Modal>

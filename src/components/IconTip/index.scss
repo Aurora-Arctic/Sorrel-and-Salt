@@ -97,3 +97,10 @@
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-edit;
 }
+
+// A list row's lone bin (a coven card's Delete or Remove, M8.17): the same
+// size as the pencil beside it, in the wax a remove control wears.
+.icon-tip__remove {
+  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-remove;
+}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { useListPosition } from '../Combobox/position';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps } from './types';
 import './index.scss';
@@ -13,8 +14,13 @@ import './index.scss';
 // hands the focus back; Tab and a press outside close. An item is a link or
 // an action, and choosing either closes the menu first. It fades in and out
 // over the short motion (the owner's call, 2026-10-19): a closing menu stays
-// drawn, inert and hidden from assistive technology, until its fade ends.
-// claude-docs/components/menu-button.md.
+// drawn, inert and hidden from assistive technology, until its fade ends. It
+// is placed as a Combobox's list is (MB.154), on Floating UI: hung from the
+// button's end edge, below it, or above it when there is more room there, as
+// at the foot of a dialog or the window, and shifted to stay on the screen,
+// clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip
+// it, and following a scroll or a resize while open. Not a placement the
+// caller states: the room decides (M8.17). claude-docs/components/menu-button.md.
 
 const Chevron = (): ReactElement => (
   <svg
@@ -36,6 +42,9 @@ const Chevron = (): ReactElement => (
   </svg>
 );
 
+/** The gap between button and menu, space(2), as the stylesheet kept it before Floating UI. */
+const MENU_GAP_PX = 8;
+
 /** Past the fade's own length (index.scss), for a browser that never reports its end. */
 const FADE_LIMIT_MS = 400;
 
@@ -48,6 +57,7 @@ const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
   [
     'menu-button__item',
     item.destructive && 'menu-button__item--destructive',
+    item.primary && 'menu-button__item--primary',
     item.constructive && 'menu-button__item--constructive',
     chosen && 'is-chosen',
   ]
@@ -60,6 +70,8 @@ export default function MenuButton({
   items,
   busy = false,
   busyLabel,
+  buttonType = false,
+  icon,
   ref,
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
@@ -72,6 +84,11 @@ export default function MenuButton({
   const root = useRef<HTMLSpanElement>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const menuId = useId();
+  const { setControl, setList, listStyle } = useListPosition(open, undefined, {
+    matchWidth: false,
+    placement: 'bottom-end',
+    gap: MENU_GAP_PX,
+  });
 
   const setOpen = (next: boolean | ((was: boolean) => boolean)): void => {
     setOpenState((was) => {
@@ -127,6 +144,7 @@ export default function MenuButton({
       <button
         ref={(node) => {
           toggle.current = node;
+          setControl(node);
           if (typeof ref === 'function') ref(node);
           else if (ref) ref.current = node;
         }}
@@ -146,57 +164,78 @@ export default function MenuButton({
         }}
       >
         {busy && <Spinner />}
-        {busy ? (busyLabel ?? label) : label}
-        {!busy && <Chevron />}
+        {icon ? (
+          // An icon alone (a list card's More, M8.17): the words still name the
+          // button, hidden, and no chevron, as the row's other icons have none.
+          <>
+            {!busy && icon}
+            <span className="visually-hidden">{busy ? (busyLabel ?? label) : label}</span>
+          </>
+        ) : (
+          <>
+            {busy ? (busyLabel ?? label) : label}
+            {!busy && <Chevron />}
+          </>
+        )}
       </button>
-      {drawn && (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label={label}
-          aria-hidden={!open || undefined}
-          inert={!open}
-          className={open ? 'menu-button__menu' : 'menu-button__menu is-closing'}
-          onKeyDown={onMenuKey}
-          onAnimationEnd={(event) => {
-            if (!open && event.target === event.currentTarget) setDrawn(false);
-          }}
-        >
-          {items.map((item) =>
-            item.href !== undefined ? (
-              <Link
-                key={item.key}
-                href={item.href}
-                role="menuitem"
-                tabIndex={-1}
-                className={itemClass(item, chosen === item.key)}
-                onClick={(event) => {
-                  setChosen(item.key);
-                  setOpen(false);
-                  item.onClick?.(event);
-                }}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <button
-                key={item.key}
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                className={itemClass(item, chosen === item.key)}
-                onClick={() => {
-                  setChosen(item.key);
-                  setOpen(false);
-                  item.onSelect();
-                }}
-              >
-                {item.label}
-              </button>
-            ),
-          )}
-        </div>
-      )}
+      {/* Kept in the page once closed, hidden, so a dialog an item's link opened
+          can find that link when it closes and give the focus to this button
+          (RouteModal's linkTo). */}
+      <div
+        ref={setList}
+        id={menuId}
+        role="menu"
+        aria-label={label}
+        aria-hidden={!open || undefined}
+        inert={!open}
+        hidden={!drawn}
+        style={listStyle}
+        className={[
+          'menu-button__menu',
+          buttonType && 'menu-button__menu--button-type',
+          !open && 'is-closing',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        onKeyDown={onMenuKey}
+        onAnimationEnd={(event) => {
+          if (!open && event.target === event.currentTarget) setDrawn(false);
+        }}
+      >
+        {items.map((item) =>
+          item.href !== undefined ? (
+            <Link
+              key={item.key}
+              href={item.href}
+              role="menuitem"
+              tabIndex={-1}
+              className={itemClass(item, chosen === item.key)}
+              onClick={(event) => {
+                setChosen(item.key);
+                setOpen(false);
+                item.onClick?.(event);
+              }}
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <button
+              key={item.key}
+              type="button"
+              role="menuitem"
+              tabIndex={-1}
+              className={itemClass(item, chosen === item.key)}
+              onClick={() => {
+                setChosen(item.key);
+                setOpen(false);
+                item.onSelect();
+              }}
+            >
+              {item.label}
+            </button>
+          ),
+        )}
+      </div>
     </span>
   );
 }

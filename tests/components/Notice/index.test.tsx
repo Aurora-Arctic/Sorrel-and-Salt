@@ -4,8 +4,8 @@ import Notice from '@/components/Notice';
 import type { NoticeKind } from '@/components/Notice/types';
 
 // The role is what makes a late-arriving notice announced, and the kind is
-// what picks it (claude-docs/components/notice.md): an error or a warning is
-// an alert, success a status, and a plain remark neither.
+// what picks it (claude-docs/components/notice.md): an error, a warning or a
+// caution is an alert, success a status, and a plain remark neither.
 
 // The children are the test's own, not product copy: finding them proves the
 // notice rendered, so a plain notice's missing roles are not an empty render.
@@ -15,6 +15,7 @@ describe('Notice', () => {
   it.each([
     ['error', 'alert'],
     ['warn', 'alert'],
+    ['caution', 'alert'],
     ['success', 'status'],
     ['plain', null],
   ] as const satisfies readonly (readonly [NoticeKind, 'alert' | 'status' | null])[])(
@@ -36,9 +37,9 @@ describe('Notice', () => {
 
   // A notice on the page from the start is a status, not an alert, so it is
   // found by its role without being announced over what the reader is doing.
-  it('renders a quiet warning as a status', () => {
+  it.each(['warn', 'caution'] as const)('renders a quiet %s as a status', (kind) => {
     render(
-      <Notice kind="warn" quiet>
+      <Notice kind={kind} quiet>
         {SENTENCE}
       </Notice>,
     );

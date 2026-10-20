@@ -163,6 +163,9 @@ export type CovenListFilter = SearchFilter<typeof COVEN_PARAMS.entries>;
  */
 export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor & { entry?: string };
 
+/** The dialog a coven list address opens over it (M8.17): an own entry's Edit, or a held compendium entry's Annotate. */
+export type CovenListDialog = { edit: string } | { annotate: string };
+
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,

@@ -11,6 +11,8 @@ import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
 import { stubLocationAssign } from '../../support/location';
+import { announced, expectRefusalUnder } from '../../support/click-feedback';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -257,8 +259,10 @@ describe('UserList impersonation', () => {
     openFor(BO.name);
     fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
 
-    const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
-    expect(await within(bo).findByRole('alert')).toBeVisible();
+    await expectRefusalUnder(
+      screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }),
+      'Impersonate Bo Fixturewort',
+    );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(assignMock).not.toHaveBeenCalled();
   });
@@ -548,13 +552,14 @@ describe('UserList approval', () => {
     expect(calls).toEqual([{ userId: BO.id, note: 'Runs the Tuesday circle' }, { userId: BO.id }]);
   });
 
-  it('approves the row’s user from the modal, busy until the list is read again', async () => {
+  it('approves the row’s user from the modal, busy until the list is read again, and says so', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
       calls.push(variables);
       return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
     });
-    render(<UserList {...props()} />);
+    render(<UserList {...props()} />, { wrapper: StatusRegionProvider });
+    expect(announced()).toBe('');
 
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
     const busy = within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' });
@@ -564,6 +569,7 @@ describe('UserList approval', () => {
     expect(busy).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ userId: BO.id }]);
+    expect(announced()).toContain(BO.name);
   });
 
   it('says why in the row when the service refuses, and offers Approve again', async () => {
@@ -578,19 +584,22 @@ describe('UserList approval', () => {
       within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' }),
     );
 
-    expect(await within(boRow()).findByRole('alert')).toBeVisible();
-    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
+    const approve = within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' });
+    await expectRefusalUnder(approve, 'Approve Bo Fixturewort');
+    expect(approve).toBeEnabled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('revokes from a modal naming the user, busy until the list is read again', async () => {
+  it('revokes from a modal naming the user, busy until the list is read again, and says so', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
       calls.push(variables);
       return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
     });
-    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />, {
+      wrapper: StatusRegionProvider,
+    });
 
     fireEvent.click(
       within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
@@ -606,6 +615,7 @@ describe('UserList approval', () => {
     expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ userId: BO.id }]);
+    expect(announced()).toContain(BO.name);
   });
 });
 
@@ -668,9 +678,11 @@ describe('UserList site role', () => {
     expect(within(dialog()).getAllByRole('radio', { checked: true })).toHaveLength(1);
   });
 
-  it('promotes from the modal, sending the role picked and the reason, busy until the list is read again', async () => {
+  it('promotes from the modal, sending the role picked and the reason, busy until the list is read again, and says so', async () => {
     const calls = sent();
-    render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
+    render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />, {
+      wrapper: StatusRegionProvider,
+    });
 
     fireEvent.click(changeRole('Bo Fixturewort'));
     fireEvent.click(within(dialog()).getByRole('radio', { name: /^Admin/ }));
@@ -685,6 +697,7 @@ describe('UserList site role', () => {
     expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ userId: BO.id, role: 'admin', note: 'Curates the celestial bodies' }]);
+    expect(announced()).toContain(BO.name);
   });
 
   it('makes a user a curator', async () => {
@@ -764,7 +777,7 @@ describe('UserList site role', () => {
     fireEvent.click(changeRole('Ada Fixturewort'));
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Demote' }));
 
-    expect(await within(row('Ada Fixturewort')).findByRole('alert')).toBeVisible();
+    await expectRefusalUnder(changeRole('Ada Fixturewort'), 'Change Role for Ada Fixturewort');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.refresh).not.toHaveBeenCalled();
     expect(changeRole('Ada Fixturewort')).toBeEnabled();
@@ -820,13 +833,13 @@ describe('UserList admin changes switch', () => {
   // MB.115, on the owner's call, reversing MB.63's: Pause asks first.
   const confirming = () => screen.getByRole('dialog', { name: 'Pause Admin Changes' });
 
-  it('lets the primary admin pause once confirmed, stating that changes are on, busy until the page is read again', async () => {
+  it('lets the primary admin pause once confirmed, stating that changes are on, busy until the page is read again, and says so', async () => {
     let calls = 0;
     mockGraphQLMutation('PauseAdminRoleChanges', () => {
       calls += 1;
       return { pauseAdminRoleChanges: true };
     });
-    render(<PauseControl paused={false} canToggle={true} />);
+    render(<PauseControl paused={false} canToggle={true} />, { wrapper: StatusRegionProvider });
 
     // No sentence while changes are on, on the owner's call: only the button.
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
@@ -841,6 +854,7 @@ describe('UserList admin changes switch', () => {
     expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toBe(1);
+    expect(announced()).not.toBe('');
   });
 
   it('sends nothing when the pause is cancelled', () => {
@@ -859,13 +873,13 @@ describe('UserList admin changes switch', () => {
     expect(calls).toBe(0);
   });
 
-  it('lets the primary admin resume, stating that changes are paused', async () => {
+  it('lets the primary admin resume, stating that changes are paused, and says so', async () => {
     let calls = 0;
     mockGraphQLMutation('ResumeAdminRoleChanges', () => {
       calls += 1;
       return { resumeAdminRoleChanges: false };
     });
-    render(<PauseControl paused={true} canToggle={true} />);
+    render(<PauseControl paused={true} canToggle={true} />, { wrapper: StatusRegionProvider });
 
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
     expect(resume.previousElementSibling).toHaveTextContent(/\S/);
@@ -873,6 +887,7 @@ describe('UserList admin changes switch', () => {
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toBe(1);
+    expect(announced()).not.toBe('');
   });
 
   it('says why beside the switch when the service refuses, and offers it again', async () => {
@@ -885,9 +900,28 @@ describe('UserList admin changes switch', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
     fireEvent.click(within(confirming()).getByRole('button', { name: 'Pause Admin Changes' }));
 
-    expect(await screen.findByRole('alert')).toBeVisible();
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    await expectRefusalUnder(pause, 'Pause Admin Changes');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+    expect(pause).toBeEnabled();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  // Resume asks nothing, so it says its refusal under itself, with the focus
+  // never having left it.
+  it('says why under Resume when the service refuses, the focus still on it', async () => {
+    mockGraphQLError('ResumeAdminRoleChanges', {
+      code: 'FORBIDDEN',
+      message: 'Only the primary admin may pause or resume admin changes',
+    });
+    render(<PauseControl paused={true} canToggle={true} />);
+    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+
+    act(() => resume.focus());
+    fireEvent.click(resume);
+
+    await expectRefusalUnder(resume, 'Resume Admin Changes');
+    expect(resume).not.toHaveAttribute('aria-disabled');
     expect(router.refresh).not.toHaveBeenCalled();
   });
 

@@ -85,6 +85,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
       }
       busy="Revoking"
       confirmClass="btn btn--destructive"
+      announcement={`The invitation to ${invitation.email} is revoked.`}
       send={() => graphqlRequest(RevokeAdminInvitationDocument, { id: invitation.id })}
     />
   );

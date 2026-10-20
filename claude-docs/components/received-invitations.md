@@ -28,14 +28,15 @@ of invitations keeps the reader at the section rather than the top of the accoun
   sends it to the email page), and the service reads nothing for one in any case.
 - **No token or hash** is a prop, and none can be: the service never reads one for this list.
 - **The answer column.** Its heading is "Answer", and the cell is `.received-invitations__answer`, a
-  flex row holding Accept and Decline side by side, wrapping if the card is narrow. A refusal's
-  `Notice` takes a line of its own above the buttons (`flex-basis: 100%`).
+  flex row holding Accept and Decline side by side, wrapping if the card is narrow. A refusal
+  floats under its button, out of the flow, so the row holds nothing else.
 - **Accept** (`accept-control.tsx`) is the client island. It sends `acceptInvitationById` with the
   row's id, stays busy until the router has opened `/coven/<slug>`, and on a refusal says the
-  service's words and enables Accept again. The words go through `useActionFailure()`
-  (`ActionFailure`, MB.119): the account page wraps the list in one, so a refusal is one alert above
-  the list, not squeezed under a button in a phone's card. The `Notice` beside the button is only the fallback for a list
-  drawn outside an `ActionFailure`. Each button is named
+  service's words and is usable again. While it sends it is `aria-disabled`, not `disabled`, so
+  the focus stays on it and a second press sends nothing. A refusal is said in a callout under
+  Accept, which keeps the focus, with a badge on it to bring the callout back
+  ([`click-feedback.md`](click-feedback.md), M12.31). A success announces nothing, since it
+  opens the coven. Each button is named
   "Accept the invitation to <coven>", so the rows are told apart by name. After `router.push` it
   calls `router.refresh()`: a navigation keeps the shell's layout, so without the refresh the
   account menu's count would stay at its old figure.
@@ -44,8 +45,9 @@ of invitations keeps the reader at the section rather than the top of the accoun
   invitation to <coven>". It opens a "Decline Invitation" dialog that names the coven and says the
   owner will see that the invitation was declined and its link will stop working; confirming sends
   `declineInvitationById` with the row's id. On success the page and the shell are read again
-  (`router.refresh()`), so the row and the account menu's count go. On a refusal the service's words
-  appear in a `Notice` beside the button (Decline is a `ConfirmedAction`, which MB.124 moves, so it does not report to an `ActionFailure` yet). Nothing is granted or seated: the person
+  (`router.refresh()`), so the row and the account menu's count go, and the status region says "The
+  invitation to <coven> is declined.". On a refusal the service's words appear in a callout under
+  Decline, which has the focus back, as `ConfirmedAction`'s refusals do. Nothing is granted or seated: the person
   is not a member, and the invitation cannot be accepted afterwards by link or by id. Declining
   is final; to join, they ask the owner to invite them again.
 - **The inviter** is shown as "from <name>" only when known; a deleted account shows nothing.
@@ -77,19 +79,20 @@ explain it. Here, in a stacked table:
   line at a phone's width. Each cell is placed by its column's class
   (`received-invitations__coven`, `__role`, `__expires`).
 
-These are the owner's calls at M10.32. MB.119 reviewed the rest and added nothing: the
-refusal's alert is `ActionFailure`'s, which has no styling of its own.
+These are the owner's calls at M10.32. MB.119 reviewed the rest and added nothing. A
+refusal's callout is `ClickFeedback`'s, styled there.
 
 ## Stories
 
 `Account / Received Invitations` (`index.stories.tsx`), each inside the account page's section as the
-page draws it (a panel in the narrow frame, under its head and an `ActionFailure`), since the
+page draws it (a panel in the narrow frame, under its head), since the
 stacked rows depend on the panel's width: `OneInvitation`, `SeveralInvitations`,
 `NoInvitations` (the empty line), `SecondPage` (the pager), and `OnePhoneDark`, `OnePhoneLight`,
 `SeveralPhoneDark` and `SeveralPhoneLight` at 375px, where the rows stack.
 
 ## Tests
 
-`tests/components/ReceivedInvitations/index.test.tsx` (a refused Accept is said above the list inside
-an `ActionFailure`, and beside the row outside one); the account page's section is in
+`tests/components/ReceivedInvitations/index.test.tsx` (a refused Accept or Decline is said under its button,
+which keeps the focus, with the badge bringing it back; Accept sends once while in flight and
+announces nothing; a Decline is said in the status region); the account page's section is in
 `tests/app/(shell)/account/page.test.tsx` and the landing's notice in `tests/app/(shell)/coven/landing.test.tsx`.

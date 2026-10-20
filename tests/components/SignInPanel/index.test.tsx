@@ -1,9 +1,13 @@
-import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { act, render, screen, fireEvent, within } from '@testing-library/react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
-import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '@/lib/sign-in';
+import {
+  GENERIC_SIGN_IN_ERROR,
+  LAST_USED_PROVIDER_COOKIE,
+  signInErrorMessage,
+} from '@/lib/sign-in';
 
 // Better Auth's client performs the OAuth hop by assigning
 // `window.location.href` (tests/lib/auth-client.test.ts) — happy-dom can't
@@ -15,6 +19,13 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   signIn: { social: (...args: unknown[]) => socialMock(...args) },
 }));
+
+// Each press awaited inside act: the refusal lands in a promise, and the
+// callout is placed in another (claude-docs/components/click-feedback.md).
+const press = (element: Element) =>
+  act(async () => {
+    fireEvent.click(element);
+  });
 
 function setLastUsed(value: string): void {
   document.cookie = `${LAST_USED_PROVIDER_COOKIE}=${value}; path=/`;
@@ -30,7 +41,7 @@ describe('SignInPanel', () => {
     clearLastUsed();
   });
 
-  it('offers every roster provider, and calls signIn.social with the provider, the destination and an error callback carrying it', () => {
+  it('offers every roster provider, and calls signIn.social with the provider, the destination and an error callback carrying it', async () => {
     render(
       <SignInPanel
         next="/coven/hearth"
@@ -41,7 +52,7 @@ describe('SignInPanel', () => {
     for (const name of ['Discord', 'Facebook', 'Microsoft']) {
       expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeEnabled();
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+    await press(screen.getByRole('button', { name: 'Continue with Google' }));
 
     expect(socialMock).toHaveBeenCalledWith({
       provider: 'google',
@@ -52,10 +63,10 @@ describe('SignInPanel', () => {
 
   // With no return path the callback lands the account by role, so the
   // sign-in says it asked for none rather than naming the /coven landing.
-  it('flags a sign-in with no return path, keeping a failed one without one, and sends an explicit /coven unflagged', () => {
+  it('flags a sign-in with no return path, keeping a failed one without one, and sends an explicit /coven unflagged', async () => {
     const { unmount } = render(<SignInPanel configured={['google']} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+    await press(screen.getByRole('button', { name: 'Continue with Google' }));
 
     expect(socialMock).toHaveBeenLastCalledWith({
       provider: 'google',
@@ -66,7 +77,7 @@ describe('SignInPanel', () => {
     unmount();
 
     render(<SignInPanel next="/coven" configured={['google']} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+    await press(screen.getByRole('button', { name: 'Continue with Google' }));
 
     expect(socialMock).toHaveBeenLastCalledWith({
       provider: 'google',
@@ -75,32 +86,81 @@ describe('SignInPanel', () => {
     });
   });
 
-  it('marks the pressed provider busy and disables the others while the hop is under way', async () => {
+  it('marks the pressed provider busy, keeping the focus on it, and disables the others while the hop is under way', async () => {
     socialMock.mockReturnValue(new Promise(() => {}));
     render(<SignInPanel configured={['google', 'discord']} />);
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    google.focus();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+    await press(google);
 
-    expect(await screen.findByRole('button', { name: 'Signing In' })).toHaveAttribute(
-      'aria-busy',
-      'true',
-    );
+    expect(google).toHaveAccessibleName('Signing In');
+    expect(google).toHaveAttribute('aria-busy', 'true');
+    // `aria-disabled`, not `disabled`, which would drop the focus it holds.
+    expect(google).toHaveAttribute('aria-disabled', 'true');
+    expect(google).toHaveFocus();
     expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Signing In' }));
+    await press(google);
     expect(socialMock).toHaveBeenCalledTimes(1);
   });
 
-  it('frees every provider again when the sign-in fails before the redirect', async () => {
+  it.each([
+    ['answers an error', () => Promise.resolve({ error: { message: 'network down' } })],
+    ['cannot be reached', () => Promise.reject(new Error('offline'))],
+  ])(
+    'says so in an alert under the pressed provider when the sign-in %s, keeps the focus there, frees every provider, and its badge brings the alert back',
+    async (_how, answer) => {
+      socialMock.mockImplementation(answer);
+      render(<SignInPanel next="/" configured={['google', 'discord']} />);
+      const google = screen.getByRole('button', { name: 'Continue with Google' });
+      expect(google).not.toHaveAccessibleDescription();
+      google.focus();
+
+      await press(google);
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_SIGN_IN_ERROR);
+      expect(screen.getAllByRole('alert')).toHaveLength(1);
+      expect(google).toHaveFocus();
+      expect(google).toHaveAccessibleName('Continue with Google');
+      expect(google).not.toHaveAttribute('aria-busy');
+      expect(google).not.toHaveAttribute('aria-disabled');
+      expect(google).toHaveAccessibleDescription(expect.stringContaining(GENERIC_SIGN_IN_ERROR));
+      expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeEnabled();
+
+      await press(screen.getByRole('button', { name: 'Dismiss' }));
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(google).toHaveFocus();
+      await press(screen.getByRole('button', { name: 'Show the error for Continue with Google' }));
+      expect(screen.getByRole('alert')).toHaveTextContent(GENERIC_SIGN_IN_ERROR);
+    },
+  );
+
+  it('names the badge without the last-used mark, which the button’s name carries', async () => {
+    setLastUsed('google');
     socialMock.mockResolvedValue({ error: { message: 'x' } });
-    render(<SignInPanel configured={['google', 'discord']} />);
+    render(<SignInPanel next="/" configured={['google']} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+    await press(screen.getByRole('button', { name: 'Continue with Google, last used' }));
 
-    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: 'Continue with Google' })).not.toHaveAttribute(
-      'aria-busy',
-    );
-    expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeEnabled();
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Show the error for Continue with Google' }),
+    ).toBeInTheDocument();
+  });
+
+  it('clears a failure at the next press, and signs in on it', async () => {
+    socialMock.mockRejectedValueOnce(new Error('offline'));
+    socialMock.mockReturnValueOnce(new Promise(() => {}));
+    render(<SignInPanel next="/" configured={['google']} />);
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    await press(google);
+    expect(await screen.findByRole('alert')).toBeVisible();
+
+    await press(google);
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
+    expect(socialMock).toHaveBeenCalledTimes(2);
   });
 
   it('shows a passed-in error as an alert, and none without one', () => {
@@ -114,28 +174,23 @@ describe('SignInPanel', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(error);
   });
 
-  it('surfaces a failing signIn.social result in the same alert region', async () => {
-    socialMock.mockResolvedValue({ error: { message: 'network down' } });
-    render(<SignInPanel next="/" configured={['google']} />);
+  // The callback's error is the page's, from the server; a press is a new
+  // attempt, so it goes, and a failure of that press is said under its button.
+  it('clears a passed-in error at a press, and says that press’s failure under its button alone', async () => {
+    socialMock.mockResolvedValue({ error: { message: 'x' } });
+    const error = signInErrorMessage('access_denied')!;
+    render(<SignInPanel next="/" error={error} configured={['google']} />);
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+    await press(google);
 
-    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(GENERIC_SIGN_IN_ERROR);
+    expect(alert).not.toHaveTextContent(error);
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 
-  it('surfaces a rejected signIn.social the same way and frees the buttons', async () => {
-    socialMock.mockRejectedValue(new Error('offline'));
-    render(<SignInPanel next="/" configured={['google']} />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
-
-    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: 'Continue with Google' })).not.toHaveAttribute(
-      'aria-busy',
-    );
-  });
-
-  it('marks an unconfigured provider unavailable, described, reachable by keyboard, and inert', () => {
+  it('marks an unconfigured provider unavailable, described, reachable by keyboard, and inert', async () => {
     render(<SignInPanel next="/" configured={['google']} />);
 
     const discordButton = screen.getByRole('button', { name: 'Continue with Discord' });
@@ -145,13 +200,13 @@ describe('SignInPanel', () => {
     // Still in the tab order — `disabled` would remove it, `aria-disabled` doesn't.
     expect(discordButton).not.toHaveAttribute('disabled');
 
-    fireEvent.click(discordButton);
+    await press(discordButton);
     expect(socialMock).not.toHaveBeenCalled();
   });
 
   // The cookie is readable, so anything can write it; a value naming no
   // provider in the roster must not mark a button or break the page.
-  it("marks the last-used provider in its button's accessible name, only that one, and only one the roster names", () => {
+  it("marks the last-used provider in its button's accessible name, only that one, and only one the roster names", async () => {
     setLastUsed('discord');
     const roster = ['google', 'discord', 'facebook', 'microsoft'] as const;
     const { unmount } = render(<SignInPanel next="/coven" configured={[...roster]} />);
@@ -160,7 +215,7 @@ describe('SignInPanel', () => {
     for (const name of ['Google', 'Facebook', 'Microsoft']) {
       expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeInTheDocument();
     }
-    fireEvent.click(marked);
+    await press(marked);
     expect(socialMock).toHaveBeenCalledWith(expect.objectContaining({ provider: 'discord' }));
     unmount();
 

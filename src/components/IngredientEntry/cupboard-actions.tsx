@@ -1,22 +1,21 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import CupboardEntryForm from '../CupboardEntryForm';
 import { editHeading } from '../CompendiumList/heading';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
-import Modal, { RouteModal, useOpenModalClick } from '../Modal';
-import { useRouteModalOpener } from '../Modal/route-modal-provider';
+import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
+import AnnotateDialog from './annotate-dialog';
+import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-writes';
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
@@ -31,28 +30,13 @@ import type { CupboardActionsProps } from './types';
 // other write reads the page again, so the marks and the choices follow the
 // cupboard. Which choices show is the page's, from the member's permissions;
 // each is only the door, and the service is the guard. Every write goes
-// through /api/graphql.
+// through /api/graphql. Make It Ours and Remove are `cupboard-writes.tsx`'s,
+// shared with the Annotate dialog's More menu, which the page passes on (M8.17).
 
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
     addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {
       id
-    }
-  }
-`);
-
-const RemoveCupboardEntryDocument = graphql(`
-  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
-    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)
-  }
-`);
-
-const MakeItOursDocument = graphql(`
-  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {
-    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {
-      entry {
-        id
-      }
     }
   }
 `);
@@ -74,16 +58,30 @@ export default function CupboardActions({
   removedHref,
   edit,
 }: CupboardActionsProps): ReactElement | null {
-  const { navigate, refresh } = usePendingNavigation();
+  const { refresh } = usePendingNavigation();
   const [alert, setAlert] = useState<string>();
-  // Which of the two questions is open, one at a time. The Annotate dialog is
-  // the address's instead (`annotate.opened`), as the curator's Edit is.
+  // Which of the two confirmations is open, one at a time. The Annotate dialog
+  // is the address's instead (`annotate.opened`), as the curator's Edit is.
   const [asking, setAsking] = useState<'remove' | 'own'>();
   // The menu's button, or the one plain button: where the focus goes back to
-  // once a question is cancelled or the dialog closes, since what took it is gone.
+  // once a confirmation or the dialog closes, since the menu item that opened
+  // it is gone with the menu. Modal gives it there itself. Once a remove has
+  // taken the entry away, the button left offers something else (Add to
+  // Cupboard), so it names nowhere and Modal gives the focus to the page's
+  // heading, as a row's Remove does (M8.17). Read as the dialog closes, after
+  // this render's layout, so the ref is the commit's own.
   const trigger = useRef<HTMLButtonElement>(null);
   const link = useRef<HTMLAnchorElement>(null);
-  const returning = useRef(false);
+  const heldNow = useRef(held);
+  useLayoutEffect(() => {
+    heldNow.current = held;
+  }, [held]);
+  const back = () => (heldNow.current ? (trigger.current ?? link.current) : null);
+  // The remove's confirmation stays, busy, until the re-read drops the entry;
+  // it closes in that render (below), and the choice is forgotten here.
+  useEffect(() => {
+    if (!held) setAsking(undefined);
+  }, [held]);
   const openEdit = useOpenModalClick(
     edit?.href ?? ('' as Route),
     editHeading(
@@ -94,67 +92,24 @@ export default function CupboardActions({
 
   const openAnnotate = useOpenModalClick(annotate.href, ANNOTATE_HEADING);
 
-  useEffect(() => {
-    if (asking === undefined && returning.current) {
-      returning.current = false;
-      (trigger.current ?? link.current)?.focus();
-    }
-  }, [asking]);
-
-  // The Annotate dialog closes by the address dropping `?annotate`, so the
-  // focus goes back once `opened` turns off, not when a question clears.
-  const wasOpened = useRef(annotate.opened);
-  useEffect(() => {
-    if (wasOpened.current && !annotate.opened) (trigger.current ?? link.current)?.focus();
-    wasOpened.current = annotate.opened;
-  }, [annotate.opened]);
-
-  // Edit's press shows its skeleton here too; this place leaves that one to it.
-  const loading = useRouteModalOpener()?.loading;
-  const annotating = annotate.opened || loading?.title === ANNOTATE_HEADING.title;
-
-  const settle = (): void => {
-    returning.current = true;
-    setAsking(undefined);
-  };
+  const settle = (): void => setAsking(undefined);
 
   const add = useMutation({
     mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
     onSuccess: () => refresh(),
     onError: (error) => setAlert(readGraphqlFailure(error).alert),
   });
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),
-    onSuccess: () => {
-      // The page stays mounted as it reads again, so the question has to close.
-      settle();
-      // A retired entry's page reads nothing once its row is gone, so a
-      // remove leads off it rather than reading it again, replacing the history
-      // entry the way every other delete-then-leave flow does, so Back does
-      // not return to a page that is gone.
-      if (removedHref) navigate(removedHref, { replace: true });
-      else refresh();
-    },
-    onError: (error) => {
-      // The jar refusal names its remedy, so it is shown as the service wrote it.
-      settle();
-      setAlert(readGraphqlFailure(error).alert);
-    },
-  });
-  const makeOurs = useMutation({
-    mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
-    onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) =>
-      navigate(`/coven/${covenSlug}/ingredients/${entry.id}` as Route, {
-        target: ingredientLinkTarget(`/coven/${covenSlug}/ingredients/${entry.id}`),
-      }),
-    onError: (error) => {
-      // A refusal names the own entry in the way, so it is shown as the service wrote it.
-      settle();
-      setAlert(readGraphqlFailure(error).alert);
-    },
+  // Make It Ours and Remove, shared with the Annotate dialog's More menu.
+  const writes = useCupboardWrites({
+    workspaceId,
+    covenSlug,
+    ingredientId,
+    removedHref,
+    onSettle: settle,
+    onRefused: setAlert,
   });
 
-  // The entry as the coven calls it, for the two questions.
+  // The entry as the coven calls it, for the two confirmations.
   const name = overrides.label ?? compendium.name;
   const ask = (what: 'remove' | 'own') => () => {
     setAlert(undefined);
@@ -228,93 +183,20 @@ export default function CupboardActions({
           {only.label}
         </button>
       )}
+      {/* Asked in a dialog over the page, as Leave Coven asks (the owner's
+          call, 2026-10-19), rather than in the title's row. */}
       {asking === 'own' && (
-        // Asked in a modal over the page, as Leave Coven asks (the owner's
-        // call, 2026-10-19), rather than in the title's row.
-        <Modal title="Make It Ours" onClose={settle}>
-          {(close) => (
-            <>
-              <p>
-                Make <strong>{name}</strong> your coven's own?
-              </p>
-              <p>
-                You get a copy with your annotations. Your jars and spells move to the copy. Updates
-                in the Compendium won't affect it.
-              </p>
-              <div className="modal__actions">
-                <BusyButton
-                  className="btn btn--solid"
-                  busy={makeOurs.isPending}
-                  busyLabel="Making It Ours"
-                  disabled={makeOurs.isPending}
-                  onClick={() => makeOurs.mutate()}
-                >
-                  Make It Ours
-                </BusyButton>
-                <button
-                  type="button"
-                  className="btn btn--quiet"
-                  disabled={makeOurs.isPending}
-                  onClick={close}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </Modal>
+        <MakeItOursDialog name={name} write={writes.makeOurs} onClose={settle} returnTo={back} />
       )}
-      {asking === 'remove' && (
-        <Modal title="Remove from Cupboard" onClose={settle}>
-          {(close) => (
-            <>
-              <p>
-                Remove <strong>{name}</strong> from your cupboard? Your annotations get deleted too.
-              </p>
-              <div className="modal__actions">
-                <BusyButton
-                  className="btn btn--destructive"
-                  busy={remove.isPending}
-                  busyLabel="Removing"
-                  disabled={remove.isPending}
-                  onClick={() => remove.mutate()}
-                >
-                  Remove
-                </BusyButton>
-                <button
-                  type="button"
-                  className="btn btn--quiet"
-                  disabled={remove.isPending}
-                  onClick={close}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </Modal>
+      {asking === 'remove' && held && (
+        <RemoveDialog name={name} write={writes.remove} onClose={settle} returnTo={back} />
       )}
-      {annotating && (
-        <RouteModal
-          closeHref={annotate.closeHref}
-          content={
-            annotate.opened
-              ? {
-                  heading: ANNOTATE_HEADING,
-                  body: (done) => (
-                    <CupboardEntryForm
-                      workspaceId={workspaceId}
-                      ingredientId={ingredientId}
-                      compendium={compendium}
-                      overrides={overrides}
-                      onDone={done}
-                    />
-                  ),
-                }
-              : undefined
-          }
-        />
-      )}
+      <AnnotateDialog
+        closeHref={annotate.closeHref}
+        returnTo={back}
+        opened={annotate.opened ? { workspaceId, ingredientId, compendium, overrides } : undefined}
+        more={{ covenSlug, canMakeOurs, canRemove, removedHref }}
+      />
       {alert && <Notice kind="error">{alert}</Notice>}
     </div>
   );

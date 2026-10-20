@@ -111,4 +111,31 @@ describe('MenuButton', () => {
     expect(busy).toHaveAttribute('aria-busy', 'true');
     expect(busy).toBeDisabled();
   });
+
+  // An icon in place of the words (M8.17's card More): the label still names
+  // the button and its menu, read by a screen reader though not shown.
+  it("keeps its label as its name and its menu's with an icon in place of the words", () => {
+    const { rerender } = render(
+      <MenuButton
+        label="Edit"
+        className="btn"
+        items={actions()}
+        icon={<svg aria-hidden="true" />}
+      />,
+    );
+    fireEvent.click(toggle());
+    expect(within(menu()).getAllByRole('menuitem')).toHaveLength(2);
+
+    rerender(
+      <MenuButton
+        label="Edit"
+        className="btn"
+        items={actions()}
+        icon={<svg aria-hidden="true" />}
+        busy
+        busyLabel="Adding"
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Adding' })).toBeDisabled();
+  });
 });

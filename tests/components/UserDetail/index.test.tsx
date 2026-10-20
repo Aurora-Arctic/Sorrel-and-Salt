@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import UserDetail from '@/components/UserDetail';
 import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { stubLocationAssign } from '../../support/location';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
@@ -288,4 +288,127 @@ describe('UserDetail', () => {
     expect(assignMock).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Impersonate' })).not.toBeInTheDocument();
   });
+});
+
+// A refusal of the role or creation control is design F inside this dialog too
+// (M12.31's rule 6, the owner's exception of 2026-10-20): a callout under the
+// control, which Escape or a press elsewhere closes without closing the modal.
+describe('UserDetail, when the service refuses a change', () => {
+  const settle = (step: () => unknown) =>
+    act(async () => {
+      step();
+    });
+
+  const REFUSALS = [
+    {
+      control: 'Change Role for Bo Fixturewort',
+      operation: 'SetUserRole',
+      message: 'Fixture refusal of the role.',
+      user: BO,
+      confirm: () => {
+        fireEvent.click(screen.getByRole('radio', { name: /^Curator/ }));
+        fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
+      },
+    },
+    {
+      control: 'Approve Bo Fixturewort',
+      operation: 'GrantWorkspaceCreation',
+      message: 'Fixture refusal of the approval.',
+      user: BO,
+      confirm: () => fireEvent.click(screen.getByRole('button', { name: 'Approve' })),
+    },
+    {
+      control: 'Revoke approval for Bo Fixturewort',
+      operation: 'RevokeWorkspaceCreation',
+      message: 'Fixture refusal of the revocation.',
+      user: { ...BO, canCreateWorkspace: true },
+      confirm: () => fireEvent.click(screen.getByRole('button', { name: 'Revoke' })),
+    },
+  ];
+
+  for (const refusal of REFUSALS) {
+    describe(refusal.control, () => {
+      const onClose = vi.fn();
+      const control = () => screen.getByRole('button', { name: refusal.control });
+      const badge = () =>
+        screen.queryByRole('button', { name: `Show the error for ${refusal.control}` });
+
+      /** The modal open on the user, the control pressed and its question confirmed, refused. */
+      async function refuse() {
+        onClose.mockReset();
+        mockGraphQLError(refusal.operation, { code: 'FORBIDDEN', message: refusal.message });
+        render(
+          <Modal title="Bo Fixturewort" onClose={onClose}>
+            <UserDetail {...props({ user: refusal.user })} />
+          </Modal>,
+        );
+        // Focused first, as a press leaves it: the question gives the focus back to
+        // what held it.
+        await settle(() => control().focus());
+        await settle(() => fireEvent.click(control()));
+        // Why it reaches a refusal at all: the question opens, and is confirmed.
+        expect(screen.getAllByRole('dialog')).toHaveLength(1);
+        await settle(refusal.confirm);
+        return screen.findByRole('alert');
+      }
+
+      it('says why in a callout under the control, in the dialog, and draws no notice', async () => {
+        const alert = await refuse();
+
+        expect(alert).toHaveTextContent(refusal.message);
+        // The callout, which a notice is not: it carries Dismiss.
+        expect(within(alert).getByRole('button', { name: 'Dismiss' })).toBeInTheDocument();
+        expect(screen.getAllByRole('alert')).toHaveLength(1);
+        expect(screen.getByRole('dialog')).toContainElement(alert);
+        expect(
+          control().compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(control()).toHaveAccessibleDescription(`Last try failed: ${refusal.message}`);
+        await waitFor(() => expect(control()).toHaveFocus());
+        expect(badge()).toBeInTheDocument();
+        expect(router.refresh).not.toHaveBeenCalled();
+      });
+
+      it('closes the callout on Escape and leaves the dialog open, the focus back on the control', async () => {
+        await refuse();
+        await settle(() => screen.getByRole('button', { name: 'Dismiss' }).focus());
+
+        let escape = true;
+        await settle(() => {
+          escape = fireEvent.keyDown(document.activeElement!, { key: 'Escape', cancelable: true });
+        });
+
+        expect(screen.queryByRole('alert')).toBeNull();
+        // Taken, so the dialog's own Escape does not follow it.
+        expect(escape).toBe(false);
+        expect(onClose).not.toHaveBeenCalled();
+        expect(screen.getByRole('dialog')).toContainElement(control());
+        expect(control()).toHaveFocus();
+        expect(badge()).toBeInTheDocument();
+      });
+
+      it('closes the callout on a press elsewhere in the dialog, the dialog left open', async () => {
+        await refuse();
+
+        await settle(() =>
+          fireEvent.pointerDown(screen.getByRole('heading', { name: 'Bo Fixturewort' })),
+        );
+
+        expect(screen.queryByRole('alert')).toBeNull();
+        expect(onClose).not.toHaveBeenCalled();
+        expect(badge()).toBeInTheDocument();
+      });
+
+      it('clears the callout and the badge on the next press', async () => {
+        await refuse();
+        expect(badge()).toBeInTheDocument();
+
+        await settle(() => fireEvent.click(control()));
+
+        expect(screen.queryByRole('alert')).toBeNull();
+        expect(badge()).toBeNull();
+        expect(control()).not.toHaveAccessibleDescription(`Last try failed: ${refusal.message}`);
+      });
+    });
+  }
 });

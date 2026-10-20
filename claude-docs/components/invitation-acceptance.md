@@ -25,8 +25,14 @@ and sends the accept. The rules it shows are
   `/coven/[slug]` for a coven's, the slug coming from the standing; the
   sentence names the coven, `covenName`, which only this state carries: the
   standing reaches it after the address checks, so no refusal can say it). A
-  refusal is said in an alert in the service's words, and Accept is offered
-  again.
+  refusal is said in the service's words by `useClickFeedback`'s callout
+  ([`click-feedback.md`](click-feedback.md), M12.31): an alert floating under
+  Accept, which keeps the focus and is described by "Last try failed: …"; a
+  dismissed callout comes back from the badge beside it, and the next press
+  clears it. Accept is `aria-disabled` while it sends, not `disabled`, so the
+  browser does not take the focus off it, and `accept()` ignores a second
+  press itself. A success says nothing of its own: the landing is the answer,
+  so the hook's `announce` is not called.
 
 The page uses `getSession()`, not `requireSession()`: an unverified account
 would otherwise be redirected to the email page without being told why, and
@@ -56,10 +62,12 @@ its `main` is the page frame, `.page-frame.page-frame--narrow`
 holds it clear of the top inset and caps it at the forms' column,
 `$narrow-column` (28rem), so the panel sets no width of its own.
 `.invitation-acceptance` only stacks the header, the alert and the button a
-`space(3)` apart. Both notices, the refusal and a failed accept, are
-`Notice` ([`notice.md`](notice.md)) as errors, so each is an alert; a
-failed accept is read by `readGraphqlFailure` (`src/lib/graphql-failure.ts`),
-whose `GENERIC_FAILURE` is the sentence when the server sent none. The
+`space(3)` apart. A refused link's reason is a `Notice`
+([`notice.md`](notice.md)) as an error, so it is an alert the server renders;
+a failed accept is the click-feedback callout instead, read by
+`readGraphqlFailure` (`src/lib/graphql-failure.ts`), whose `GENERIC_FAILURE`
+is the sentence when the server sent none. Accept's wrapper is a `div`, not
+the other states' `p`, because the callout is a `div`. The
 buttons and the spinner are the primitives', Accept drawn through
 `BusyButton` ([`busy-button.md`](busy-button.md)). Tokens used: `space()`.
 
@@ -67,7 +75,8 @@ buttons and the spinner are the primitives', Accept drawn through
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
 `Pages / Invitation Acceptance`, each inside the page's own
-`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only.
+`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only, bar
+the failed accept.
 
 - **The states:** `SignedOut`, `Acceptable`, `AcceptableCurator`, `AcceptableCoven`, `Unverified`, and one for each other
   refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
@@ -76,13 +85,21 @@ buttons and the spinner are the primitives', Accept drawn through
 - **Phone and both themes:** `SignedOut`, `AcceptableCoven`, `Unverified` and `DeletedCoven` each
   have `PhoneDark` and `PhoneLight` (375px), covering a sentence and a button, an alert and a
   button, and an alert alone.
+- **A failed accept:** `AcceptRefused`, with `PhoneDark` and `PhoneLight`, presses Accept on mount
+  (`usePressOnMount`); the workshop has no API, so the request fails and the callout says
+  `GENERIC_FAILURE` under the button.
 
 ## Tests
 
 `tests/components/InvitationAcceptance/index.test.tsx` renders each state,
 sends the accept against MSW with the token as its variable and checks the
-landing, names the role a site invitation grants, and shows a refusal. `tests/e2e/invite.spec.ts` follows a mailed
-link signed out and signed in against the built server, with axe.
+landing, names the role a site invitation grants, and checks a failed accept: the callout says the
+service's sentence, the focus stays on Accept with its "Last try failed" description, the badge
+brings a dismissed callout back, a second press is not sent while busy, and the next press clears
+the callout and lands. `tests/e2e/stories/01-invitations.spec.ts` walks the page for stories 4–7;
+story 7's test presses Accept on a page left open after its link expired, and checks in the
+browser that the callout appears, the focus stays on Accept, Escape closes it, the badge reopens
+it, axe passes and the page does not scroll sideways at 375px.
 `tests/e2e/workspace-invitation.spec.ts` walks a coven's invitation (M7.7):
 the owner invites by mail, the invited account accepts and lands in the
 coven, and a used link and a revoked one are each refused with a different

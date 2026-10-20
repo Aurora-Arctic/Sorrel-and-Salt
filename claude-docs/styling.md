@@ -73,9 +73,16 @@ to.
   switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
-  skeleton's bars, the pressed admin menu), `$hairline` (the muted ink 45%
+  skeleton's bars, an entry's targeted section, MenuButton's plain item
+  pointed at, focused or chosen, and the hover of every
+  navigation link, tab and outlined chip), `$fill-highlight` (the accent 12%
+  into whatever is behind: MenuButton's one primary or constructive item, and
+  a menu's item and a suggestion list's row in the account menu, the shell's
+  menu and Combobox, pointed at, focused or chosen), `$fill-highlight-field` (the same 12% over the field's
+  ground: a quiet button pointed at), `$hairline` (the muted ink 45%
   into whatever is behind: the ingredient form's section rules, the tab
-  strip's shade) and `$opacity-disabled` (0.55: what is left of a control
+  strip's shade, a quiet button's edge, the tab row's track), `$edge-highlight` (the accent 45%
+  into the hairline: a quiet button's edge pointed at) and `$opacity-disabled` (0.55: what is left of a control
   that is busy or cannot be used).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
@@ -176,8 +183,18 @@ Three variants exist for one use each:
   button barely shows under the pointer; these are larger and more saturated,
   rather than only further from the ground. The label on them measures 13.13:1
   and 6.80:1.
-  Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
-  punched in parchment, so light mode gets a much softer one.
+
+**The warning ochre is the one hue picked for a role**, the owner's pick on
+2026-10-19 for a warning that should not read as an error: `$ochre-deep`
+(`#8a5a00`) on light and `$ochre-bright` (`#d9a441`) on dark, the
+`--warning` token and its `$warning` alias. It draws a warning notice's bar,
+tint and triangle, never text, so it needs 3:1 as a graphic (WCAG 1.4.11),
+and clears more: 4.89 on the light page, 5.44 on the light card, 8.32 and 7.55
+on the dark ones, and over its own tint 4.47 and 4.95 light, 7.35 and 6.57
+dark. `tests/scss/tokens.test.ts` holds those floors.
+
+Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
+punched in parchment, so light mode gets a much softer one.
 
 ## Category-group colours
 
@@ -610,8 +627,14 @@ Four variants:
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
 - **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
-  The body ink on an edge, so it neither competes with the primary nor reads as
-  destructive — and, unlike the muted ink, not as disabled either.
+  The label in the body ink, so it neither competes with the primary nor reads as
+  destructive — and, unlike the muted ink, not as disabled either. It sits in a
+  field's ground (`$surface-card`, what an input fills with) inside a
+  `$hairline` edge rather than an ink outline, so it stands back beside the
+  primary; pointed at or focused, the ground takes `$fill-highlight-field` and
+  the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
+  call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
+  (`tests/scss/tokens.test.ts`).
 - **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
@@ -699,17 +722,17 @@ scrolls sideways inside its frame rather than widening the page.
 
 The class layer every form is built from, in `_primitives.scss`:
 
-| Class                                            | What it is                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same                                                                                                            |
-| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                                                                                                                                     |
-| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                                                                                                                             |
-| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                                                                                                                                       |
-| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                            |
-| `.switch`, `.switch__control`                    | An on-or-off choice as a slide toggle, a `.field` block: its label above, the toggle beneath at `$control-height`. `SwitchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                 |
-| `.search-field`, `__input`, `__submit`           | A list filter's search box, an `.input` box on a flex row holding a borderless text input and, at its end, a magnifier submit named Search, muted until pointed at or focused, then the accent. The box draws the input's focus ring. `SearchField` draws it ([`components/field.md`](components/field.md))                              |
-| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                    |
-| `.notice`, `--error`, `--warn`, `--success`      | A sentence about the whole view rather than one field `--error` and `--warn` lead with a warning triangle, drawn by mask in the box's padding so a link in the text stays inline: in the error's red on an error, and in the error red on a warning's plain box and ink, for what needs attention but does not block (the owner's call). |
+| Class                                                    | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.form`, `.form__actions`                                | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same                                                                                                                                                                                                                                        |
+| `.field`                                                 | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `.field__label`, `.field__hint`, `.field__error`         | The parts around the control                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `.input`, `.textarea`, `.select`                         | The control, one box for all three                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `.checkbox`                                              | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `.switch`, `.switch__control`                            | An on-or-off choice as a slide toggle, a `.field` block: its label above, the toggle beneath at `$control-height`. `SwitchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                                                                                                                                             |
+| `.search-field`, `__input`, `__submit`                   | A list filter's search box, an `.input` box on a flex row holding a borderless text input and, at its end, a magnifier submit named Search, muted until pointed at or focused, then the accent. The box draws the input's focus ring. `SearchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                          |
+| `.fieldset`, `.fieldset__legend`                         | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `.notice`, `--error`, `--warn`, `--caution`, `--success` | A sentence about the whole view rather than one field. No box: a 3px bar down the start edge and a tint of the bar's colour behind the text (`--notice-tint`, 7% light, 8% dark). `--error`, `--warn` and `--caution` lead with a warning triangle, drawn by mask in the padding so a link in the text stays inline. Each kind sets `--notice-bar` and `--notice-icon`; [`components/notice.md`](components/notice.md) has the table (the owner's look, 2026-10-19). |
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
@@ -1076,11 +1099,10 @@ What each section review (MB.115 to MB.124) designs to:
   ([`components/modal.md`](components/modal.md)). A button that opens a
   dialog from its own page is a `ModalButton`, which takes the focus back to
   it however the dialog closes, since `Modal` restores nothing itself. A
-  refusal from an action on the page is said once, above the controls, by an
-  `ActionFailure` wrapped around them
-  ([`components/action-failure.md`](components/action-failure.md)), not
-  beside the button pressed, where a narrow cell or a phone's card would wrap
-  it. A page's own menu of jump links is a `PageNav`
+  refusal from a click outside a form is said by `useClickFeedback`
+  ([`components/click-feedback.md`](components/click-feedback.md)), in a
+  callout floating under the button pressed, out of the flow so that a
+  narrow cell or a phone's card does not wrap it. A page's own menu of jump links is a `PageNav`
   ([`components/page-nav.md`](components/page-nav.md)), laid out by
   `.page-with-nav`. Each is in `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,

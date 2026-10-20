@@ -1,4 +1,7 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { makeQueryClient } from '@/lib/graphql-client';
+import type { ReactElement } from 'react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
@@ -21,14 +24,27 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // The form is its own tests': a stand-in that reports what the dialog hands
 // it, with a button for each way out it can take.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({ entry, onSaved, onDeleted, duplicateHref, entryHref }: IngredientFormProps) => (
+  default: ({
+    entry,
+    workspaceId,
+    mayPromote,
+    onSaved,
+    onDeleted,
+    duplicateHref,
+    entryHref,
+  }: IngredientFormProps) => (
     <form aria-label="Fixture Form">
       <output aria-label="Edited">{entry?.id}</output>
+      <output aria-label="Written To">{workspaceId ?? 'compendium'}</output>
+      <output aria-label="May Promote">{String(Boolean(mayPromote))}</output>
       <output aria-label="Duplicate Address">
-        {duplicateHref({ slug: 'testwort-other' } as never)}
+        {duplicateHref({ id: 'fixture-other-id', slug: 'testwort-other' } as never)}
       </output>
       <output aria-label="Linked Address">
         {entryHref?.({ slug: 'testwort-linked', isGlobal: true })}
+      </output>
+      <output aria-label="Own Linked Address">
+        {entryHref?.({ slug: 'testwort-own', isGlobal: false }) ?? 'none'}
       </output>
       <button
         type="button"
@@ -956,12 +972,15 @@ describe('IngredientEntry edit', () => {
 
   it('offers Edit only when given where it goes, and never Delete', () => {
     const { unmount } = renderEntry();
-    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     unmount();
 
     renderEntry({ edit: edit() });
-    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', `${PUBLIC}?edit`);
+    expect(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' })).toHaveAttribute(
+      'href',
+      `${PUBLIC}?edit`,
+    );
     expect(screen.queryByRole('link', { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
   });
@@ -975,7 +994,7 @@ describe('IngredientEntry edit', () => {
     expect(dialog()).not.toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
@@ -1031,6 +1050,73 @@ describe('IngredientEntry edit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Delete' }));
 
     expect(router.replace).toHaveBeenCalledWith('/compendium');
+  });
+
+  // A coven's own entry (M8.17): the same dialog, writing to the coven.
+  describe("on a coven's own entry", () => {
+    const OWN = '/coven/fixture-coven/ingredients/00000000-0000-4000-8000-000000000001';
+    const own = () => detail({ entry: entryRow({ workspaceId: COVEN }) });
+    const covenEdit = (
+      coven: Partial<NonNullable<NonNullable<IngredientEntryProps['edit']>['coven']>> = {},
+    ) =>
+      edit({
+        href: `${OWN}?edit` as Route,
+        closeHref: OWN as Route,
+        savedHref: OWN as Route,
+        opened,
+        coven: {
+          workspaceId: COVEN,
+          ingredientsHref: '/coven/fixture-coven/ingredients' as Route,
+          mayPromote: false,
+
+          ...coven,
+        },
+      });
+    const covenDialog = () => screen.getByRole('dialog', { name: /^Edit Ingredient, Testwort/ });
+    const shows = (label: string) => within(covenDialog()).getByRole('status', { name: label });
+    // The page's Edit menu writes through the query client (`own-actions.tsx`).
+    const renderOwn = (ui: ReactElement) =>
+      render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+
+    it("offers Edit in the page's Edit menu, and heads the dialog as an ingredient's, writing to the coven", () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+      expect(screen.getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
+        'href',
+        `${OWN}?edit`,
+      );
+      expect(dialog()).not.toBeInTheDocument();
+      expect(shows('Written To')).toHaveTextContent(COVEN);
+      expect(shows('May Promote')).toHaveTextContent('false');
+    });
+
+    it('lets a member promote a folk name when the page says the role may', () => {
+      renderOwn(
+        <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ mayPromote: true })} />,
+      );
+
+      expect(shows('May Promote')).toHaveTextContent('true');
+    });
+
+    it('links a near match to its page in the coven, and only a compendium substitute to a page', () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      expect(shows('Duplicate Address')).toHaveTextContent(
+        '/coven/fixture-coven/ingredients/fixture-other-id',
+      );
+      expect(shows('Linked Address')).toHaveTextContent('/compendium/ingredients/testwort-linked');
+      expect(shows('Own Linked Address')).toHaveTextContent('none');
+    });
+
+    it('closes on a save, going back to the page and fetching it again', () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      fireEvent.click(within(covenDialog()).getByRole('button', { name: 'Fixture Save' }));
+
+      expect(router.replace).toHaveBeenCalledWith(OWN);
+      expect(router.refresh).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

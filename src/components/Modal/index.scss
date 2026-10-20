@@ -186,6 +186,32 @@ $modal-padding: space(5) * 2;
   color: $text-muted;
 }
 
+// A sentence about the whole dialog under the heading, above the toolbar row
+// (M8.17, the compendium edit's notice, the owner's call of 2026-10-19): as
+// far below the title as the row stands from it without one. The row then
+// sits a step further from the sentence and a step closer to the body than
+// it would without one, so it reads with the form it works rather than with
+// the sentence (the owner's call of 2026-10-20). Hidden while nothing is in
+// it, so a dialog with no sentence is as it was.
+.modal-dialog__header-note {
+  grid-column: 1 / -1;
+  margin-top: space(2);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.modal-dialog__header:has(> .modal-dialog__header-note:not(:empty)):has(
+    > .modal-dialog__header-slot:not(:empty)
+  ) {
+  padding-bottom: space(3);
+
+  > .modal-dialog__header-slot {
+    margin-top: space(4);
+  }
+}
+
 // A toolbar row under the heading at every width, for the controls the
 // contents put in the header (the owner's call at M12.10, replacing the
 // under-the-× place MB.115 gave them): the first control at its start, a
@@ -292,6 +318,19 @@ $modal-padding: space(5) * 2;
   margin: 0;
 }
 
+// A warning among a question's details, Make It Ours's that unsaved changes
+// are lost (M8.17): set well apart from its
+// neighbours, space(5) (1.5rem) above, where the paragraph before it leaves
+// space(2), and 1.75rem below, where the answers stand space(4) off, margins
+// that collapse with theirs (the owner's values, 2026-10-20). 1.75rem sits
+// off the spacing scale, between space(5) and space(6), and is the owner's
+// call rather than a new step. A class the caller gives the Notice, so no
+// other Notice in a card moves. Both classes, to outrank `.notice`'s zero
+// margin.
+.notice.confirm-overlay__warning {
+  margin-block: space(5) 1.75rem;
+}
+
 // The safe answer takes the focus by script as the card comes, and a browser
 // draws a scripted focus's ring only when the focus it replaced had one: after
 // a pointer press on Close, Cancel or the backdrop it held the focus unseen.
@@ -300,8 +339,8 @@ $modal-padding: space(5) * 2;
 // the ring never lingers under the pointer (claude-docs/components/modal.md,
 // "Unsaved changes").
 .confirm-overlay__card .btn--quiet:focus {
-  background-color: $text-primary;
-  color: $text-on-color;
+  border-color: $edge-highlight;
+  background-color: $fill-highlight-field;
   @include focus-ring;
 }
 

@@ -440,6 +440,16 @@
   @include modal-surface($shadow-floating);
 }
 
+// The warning triangle, drawn by mask in the element's background colour (by
+// default its ink), at whatever size the caller gives it: an error notice's
+// mark (_primitives.scss), and the click-feedback callout's and badge's
+// (ClickFeedback/index.scss). One drawing, so the three never drift apart.
+@mixin warning-mark($color: currentColor) {
+  background-color: $color;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
 // A field's box: the edge, ground, ink, padding and height a text field, a
 // select and the admin menu's closed summary share, so the menu reads as a
 // select does. Width, margin and font are the caller's.
@@ -845,11 +855,16 @@
   --accent-solid-hover: #{$sorrel-spring};
   --secondary: #{$wax-warm};
   --secondary-hover: #{$wax-glow};
+  --warning: #{$ochre-bright};
+  // How much of its colour a notice's tint takes: more on dark, where a tint
+  // of the same strength reads fainter.
+  --notice-tint: 8%;
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
   // Between floating and elevated: a card that rises under the pointer.
   --shadow-lifted: 0 8px 20px #{$shadow-dark};
   --surface-card-hover: #{$soot-lifted};
+  --dismiss-ink: #{$dismiss-ink-dark};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -869,10 +884,13 @@
   --accent-solid-hover: #{$sorrel-rich};
   --secondary: #{$wax-vivid};
   --secondary-hover: #{$wax-deep};
+  --warning: #{$ochre-deep};
+  --notice-tint: 7%;
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};
   --surface-card-hover: #{$parchment-lifted};
+  --dismiss-ink: var(--text-primary);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 

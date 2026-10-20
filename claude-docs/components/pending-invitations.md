@@ -24,13 +24,17 @@ for the pager's "Page X of Y".
   Remove on a declined one.
 - **Revoke** (`revoke-control.tsx`) is a `ConfirmedAction`, as admin's invitation Revoke and the
   roll's Remove are: it names the address, sends `revokeInvitation` with the coven and the id, and
-  refreshes the page; a refusal is said beside the control. It is `btn btn--small btn--destructive`.
+  refreshes the page, and the status region says "The invitation to <address> is revoked.". A
+  refusal is said in a callout under the control, which keeps the focus
+  ([`click-feedback.md`](click-feedback.md)). It is `btn btn--small btn--destructive`.
 - **Remove** (`remove-control.tsx`, M10.34) is a `ConfirmedAction` too, titled "Remove Invitation":
   it asks to remove the declined invitation to the address from the list, then sends the same
   `revokeInvitation` mutation with the coven and the id, and refreshes the page, so the row leaves
   the list. Nothing is withdrawn, because the invitee already said no; the stamp only clears the
   row, which stays in the table for the audit. The coven's revoke accepts a declined row, expired
-  or not. The declined link keeps saying it was declined, not withdrawn.
+  or not. The declined link keeps saying it was declined, not withdrawn. Once removed, the
+  status region says "The declined invitation to <address> is removed."; a refusal is said under
+  Remove as Revoke's is.
 - **It lives in a `ListFrame`**, since the soft pager ends navigate through it.
 - **No region of its own.** The table is named "Pending Invitations" and nothing wraps it in a
   `<section>` repeating that name, so a screen reader hears it once; the page's heading and open
@@ -53,4 +57,6 @@ them with Remove in place of Revoke; `Empty`; and `WithDeclinedPhoneDark` and
 
 ## Tests
 
-`tests/components/PendingInvitations/index.test.tsx`.
+`tests/components/PendingInvitations/index.test.tsx`: among the rest, Revoke and Remove each said in
+the status region once done, and each refusal said under its button, with the focus on it and the
+badge bringing it back.

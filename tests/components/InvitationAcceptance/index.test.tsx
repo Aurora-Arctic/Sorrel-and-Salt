@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationAcceptance from '@/components/InvitationAcceptance';
 import type { AcceptInvitationMutation, AcceptInvitationMutationVariables } from '@/gql/graphql';
@@ -82,8 +82,11 @@ describe('InvitationAcceptance', () => {
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/admin'));
     expect(calls).toEqual([{ token: 'abc' }]);
-    expect(button).toBeDisabled();
+    // Off with `aria-disabled` rather than `disabled`, so the focus stays on it.
+    expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button).toHaveAttribute('aria-busy', 'true');
+    fireEvent.click(button);
+    expect(calls).toHaveLength(1);
   });
 
   it('lands a coven’s invitation in the coven', async () => {
@@ -122,10 +125,53 @@ describe('InvitationAcceptance', () => {
     expect(screen.getByText(/curator/i)).toBeVisible();
   });
 
-  it('says the service’s refusal and offers Accept again', async () => {
+  // Design F (claude-docs/components/click-feedback.md): a refused accept
+  // says the service's sentence in a callout from Accept, which keeps the
+  // focus, and leaves a badge that brings it back.
+  it('says the service’s refusal from Accept, which keeps the focus, and its badge brings it back', async () => {
+    const REFUSED = 'This invitation was withdrawn. Ask whoever sent it for a new one.';
+    mockGraphQLError('AcceptInvitation', { code: 'FORBIDDEN', message: REFUSED });
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="site"
+        siteRole="admin"
+        landing="/admin"
+      />,
+    );
+    const button = accept();
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    // Pressed as a pointer or a key leaves it: focused, then clicked.
+    await act(async () => {
+      button.focus();
+      fireEvent.click(button);
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(REFUSED);
+    expect(button).toHaveFocus();
+    expect(button).toHaveAccessibleDescription(`Last try failed: ${REFUSED}`);
+    expect(button).not.toHaveAttribute('aria-disabled');
+    expect(router.push).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Show the error for Accept Invitation' }));
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent(REFUSED);
+  });
+
+  it('clears the last refusal when Accept is pressed again, and lands once it is accepted', async () => {
     mockGraphQLError('AcceptInvitation', {
       code: 'FORBIDDEN',
-      message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
+      message:
+        "Admin changes are paused, so this invitation can't be accepted until they are resumed.",
     });
     render(
       <InvitationAcceptance
@@ -136,11 +182,28 @@ describe('InvitationAcceptance', () => {
         landing="/admin"
       />,
     );
+    const button = accept();
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await screen.findByRole('alert');
 
-    fireEvent.click(accept());
+    mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(
+      'AcceptInvitation',
+      () => ({ acceptInvitation: { id: 'i1' } }),
+    );
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
-    expect(await screen.findByRole('alert')).toBeVisible();
-    expect(accept()).toBeEnabled();
-    expect(router.push).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alert')).toBeNull();
+    // The badge fades out, so it goes a moment later.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: 'Show the error for Accept Invitation' }),
+      ).toBeNull(),
+    );
+    expect(button).not.toHaveAccessibleDescription();
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/admin'));
   });
 });
