@@ -19,7 +19,8 @@ const panel = () => screen.queryByRole('group', { name: /more categories/i });
 const chips = () =>
   within(screen.getByRole('list', { name: 'Categories' }))
     .getAllByRole('listitem')
-    .filter((item) => item.querySelector('.chip') && !item.querySelector('button'));
+    // The More item holds a button, and the chips it opens sit in its panel.
+    .filter((item) => !within(item).queryByRole('button') && !panel()?.contains(item));
 
 describe('CategoryChips', () => {
   it('lists each category as plain text, not a link or a button', () => {

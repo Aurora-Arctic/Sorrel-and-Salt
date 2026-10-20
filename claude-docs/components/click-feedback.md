@@ -163,9 +163,6 @@ going back) never waits for the fade.
   fallbacks, nothing moving as the callout and badge come and go, the badge's
   24px target covering no neighbour, the borderless badge beside its control,
   the fades and reduced motion, and axe, at 1280px and 375px in both themes.
-- `tests/guards/tip-placement.test.ts` — every file placing something with
-  Floating UI follows its control with `autoUpdate` and applies
-  `floatingStyles`.
 
 The workshop specs run in their own Playwright config against Ladle, with no
 database: `npm run e2e:workshop`. Its server takes the slot block's next port

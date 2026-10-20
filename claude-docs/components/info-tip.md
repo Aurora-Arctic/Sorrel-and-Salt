@@ -86,11 +86,8 @@ out of the page's flow: fixed at the origin, invisible, its text still in the
 page, so reading and the field's `aria-describedby` are as before. It is as
 wide as its text, up to `$tip-width` (18rem) and never more than the viewport
 less 2rem. The tip sits one layer up (`z-index: 1`), above the control that
-precedes it. `tests/guards/tip-placement.test.ts` fails a component that opens
-a tip without the hook's refs and style, or a stylesheet that pins a tip with
-`tip-above($align: ...)`; EntryMarks and IngredientCard are on its `PENDING`
-list until they adopt this. `tests/e2e/tip-placement.spec.ts` measures every
-tip of the Add Ingredient dialog inside a 320px viewport.
+precedes it. `tests/e2e/tip-placement.spec.ts` measures every tip of the Add
+Ingredient dialog inside a 320px viewport.
 
 ## Styling
 
