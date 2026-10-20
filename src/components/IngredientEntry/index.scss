@@ -173,6 +173,16 @@ $jump-link-line: 1.25;
   }
 }
 
+// A name wraps inside the column at every width (the owner's call, 2026-10-20). The title row
+// sizes the heading to its longest word, so a word wider than a phone's column (the LongNames
+// stories' at 390) ran past the right edge; capped at the column, the heading breaks that word
+// at the edge, and `break-word` rather than `anywhere` or hyphens breaks it only when it cannot
+// fit a line of its own.
+.ingredient-entry__head h1 {
+  max-inline-size: 100%;
+  overflow-wrap: break-word;
+}
+
 // The formal name and the name, one stack, positioned so the pencil can be placed against it.
 .ingredient-entry__naming {
   @include stack(3);

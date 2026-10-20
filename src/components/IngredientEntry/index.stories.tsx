@@ -382,6 +382,24 @@ export const LongNames: Story = () => (
   />
 );
 
+// The same long names on the public page, for a curator: the pencil and no shelf.
+export const LongNamesPublic: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        name: 'Testwort Longer Nameicanicusmus',
+        canonicalName: 'Fixtura testalis longissimanicusmus var. fixturissima subsp. testarum',
+      }),
+    }}
+    edit={{
+      href: '/compendium/ingredients/testwort-fixtura-testalis?edit' as Route,
+      closeHref: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+      deletedHref: '/compendium' as Route,
+    }}
+  />
+);
+
 // No formal name: the line still stands, saying None, and the pencil keeps to it.
 export const NoFormalNameWithEdit: Story = () => (
   <Entry
