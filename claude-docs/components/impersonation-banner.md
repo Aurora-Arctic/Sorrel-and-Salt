@@ -25,8 +25,12 @@ carries Stop Impersonating
   `aria-busy`, the spinner and "Stopping", and `aria-disabled` rather than
   `disabled`, so the focus stays on it rather than falling to the page; a
   second press sends nothing (MB.115, a sub-hour fix the owner asked for).
-  On failure it says "Impersonation didn't stop. Please try again, or sign
-  out to end it.", and the button works again.
+  On failure, a refusal or a request that never arrives, it says
+  "Impersonation didn't stop. Please try again, or sign out to end it." in a
+  click-feedback callout under the button, with the focus left on it and a
+  badge on its corner that brings the sentence back once dismissed
+  ([`click-feedback.md`](click-feedback.md); M12.31). The banner stays open
+  while the failure stands, and the next press clears it.
 - **The root layout mounts it through a slot,**
   `src/app/impersonation-banner.tsx`, which reads the session with
   `useSession` and renders the banner only while `session.impersonatedBy` is
@@ -42,8 +46,8 @@ padded with `space()`, on `$surface-card` over a `$rule-heavy` (3px)
 `$secondary` rule, heavy enough to read by its weight as well as its colour.
 The touch layout below is signed off at MB.115 from touch-emulated
 screenshots. The button is
-`.btn--quiet .btn--small`, and a failure is a `Notice` of the `error` kind
-([`notice.md`](notice.md)).
+`.btn--quiet .btn--small`, and a failure is the click-feedback callout and
+badge ([`click-feedback.md`](click-feedback.md)).
 
 - **Full width, and never adding to a page's height.**
 - **On a touch screen it sits in the page's flow at the very top**, shown in

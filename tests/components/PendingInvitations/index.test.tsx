@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PendingInvitations from '@/components/PendingInvitations';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
 const { refresh, graphqlRequest } = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -36,7 +38,10 @@ const INVITATIONS = [
 ] as const;
 const PENDING = INVITATIONS.filter(({ declinedAt }) => declinedAt === null);
 
-const show = () => render(<PendingInvitations workspaceId={WORKSPACE} invitations={INVITATIONS} />);
+const show = () =>
+  render(<PendingInvitations workspaceId={WORKSPACE} invitations={INVITATIONS} />, {
+    wrapper: StatusRegionProvider,
+  });
 
 describe('PendingInvitations', () => {
   beforeEach(() => {
@@ -85,7 +90,7 @@ describe('PendingInvitations', () => {
     );
   });
 
-  it('asks before removing, then sends the declined invitation’s id in this coven and reads the page again', async () => {
+  it('asks before removing, then sends the declined invitation’s id in this coven, reads the page again and says so', async () => {
     graphqlRequest.mockResolvedValue({ revokeInvitation: { id: 'i-3' } });
     show();
     fireEvent.click(
@@ -102,9 +107,10 @@ describe('PendingInvitations', () => {
       workspaceId: WORKSPACE,
       id: 'i-3',
     });
+    expect(announced()).toContain('sage@fixture.test');
   });
 
-  it('sends nothing until confirmed, then revokes that invitation in this coven and reads the page again', async () => {
+  it('sends nothing until confirmed, then revokes that invitation in this coven, reads the page again and says so', async () => {
     graphqlRequest.mockResolvedValue({ revokeInvitation: { id: 'i-2' } });
     show();
     fireEvent.click(
@@ -120,6 +126,7 @@ describe('PendingInvitations', () => {
       workspaceId: WORKSPACE,
       id: 'i-2',
     });
+    expect(announced()).toContain('moss@fixture.test');
   });
 
   it('says why when the service refuses, and does not read the page again', async () => {
@@ -131,7 +138,21 @@ describe('PendingInvitations', () => {
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Revoke' }));
 
-    expect(await screen.findByRole('alert')).toBeVisible();
+    const name = 'Revoke the invitation to fern@fixture.test';
+    await expectRefusalUnder(screen.getByRole('button', { name }), name);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('says why under Remove when the service refuses', async () => {
+    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+    show();
+    const name = 'Remove the declined invitation to sage@fixture.test';
+    fireEvent.click(screen.getByRole('button', { name }));
+    fireEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Remove' }),
+    );
+
+    await expectRefusalUnder(screen.getByRole('button', { name }), name);
     expect(refresh).not.toHaveBeenCalled();
   });
 });

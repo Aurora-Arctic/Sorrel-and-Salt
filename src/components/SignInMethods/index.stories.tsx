@@ -2,7 +2,6 @@ import type { Story } from '@ladle/react';
 import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
 import { usePressOnMount } from '../../../.ladle/press';
-import ActionFailure from '../ActionFailure';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
 import PageNav from '../PageNav';
@@ -13,7 +12,8 @@ import type { SignInMethodsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/SignInMethods. Adding
 // or removing here reaches for /api/auth, which the workshop does not serve,
-// so a click fails into the alert region — a state worth seeing in itself.
+// so a click fails into a callout under the control pressed — a state worth
+// seeing in itself.
 export default {
   title: 'Account / Sign-In Methods',
 };
@@ -132,9 +132,7 @@ const WholeAccountPage = ({
         <h2 id="account-invitations-heading">Invitations</h2>
         <p className="lede">Covens that have invited this email address to join them.</p>
       </div>
-      <ActionFailure>
-        <ReceivedInvitations invitations={[]} />
-      </ActionFailure>
+      <ReceivedInvitations invitations={[]} />
     </section>
   </main>
 );
@@ -165,4 +163,12 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 export const LoadingAdd: Story = () => {
   usePressOnMount('Add Google');
   return <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
+};
+
+// Remove pressed on Microsoft, as a person would: the workshop serves no
+// /api/auth, so the removal fails into its callout under Remove Microsoft,
+// with the badge on the button (claude-docs/components/click-feedback.md).
+export const FailedRemove: Story = () => {
+  usePressOnMount('Remove Microsoft');
+  return <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
 };

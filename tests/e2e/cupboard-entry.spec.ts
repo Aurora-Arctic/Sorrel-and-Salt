@@ -83,6 +83,8 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(
     page.getByRole('heading', { level: 1, name: 'Fixture Reference Wort' }),
   ).toBeVisible();
-  await expect(page.getByRole('status')).toHaveCount(0);
+  // Every page holds an empty status region for click feedback (M12.31); it is
+  // the marks, a status with words in it, that the public page lacks.
+  await expect(page.getByRole('status').filter({ hasText: /\S/ })).toHaveCount(0);
   await expect(page.getByText('Fixture Our Hedgewort')).toHaveCount(0);
 });

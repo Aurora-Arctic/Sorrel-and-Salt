@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
 import { stubLocationAssign } from '../../support/location';
@@ -13,6 +13,15 @@ vi.mock('@/lib/auth-client', () => ({
   stopImpersonating: (...args: unknown[]) => stopImpersonatingMock(...args),
 }));
 const assignMock = vi.fn();
+
+const STOP_FAILED = "Impersonation didn't stop. Please try again, or sign out to end it.";
+
+// Each press awaited inside act: the refusal lands in a promise, and the
+// callout is placed in another (claude-docs/components/click-feedback.md).
+const press = (element: Element) =>
+  act(async () => {
+    fireEvent.click(element);
+  });
 
 const BO = { name: 'Bo Fixturewort', email: 'bo@users.test' };
 
@@ -59,15 +68,54 @@ describe('ImpersonationBanner', () => {
     expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
   });
 
-  it('says so when stopping fails, and stays', async () => {
+  it('says so in an alert under Stop when stopping fails, keeps the focus and the banner, and its badge brings the alert back', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: null, error: { status: 500 } });
     stubLocationAssign(assignMock);
     render(<ImpersonationBanner {...BO} />);
+    const stop = screen.getByRole('button', { name: 'Stop Impersonating' });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Stop Impersonating' }));
+    stop.focus();
+    await press(stop);
 
-    expect(await screen.findByRole('alert')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Stop Impersonating' })).toBeEnabled();
+    expect(await screen.findByRole('alert')).toHaveTextContent(STOP_FAILED);
+    expect(stop).toHaveFocus();
+    expect(stop).not.toHaveAttribute('aria-disabled');
+    expect(stop).toHaveAccessibleDescription(new RegExp(STOP_FAILED));
     expect(assignMock).not.toHaveBeenCalled();
+
+    await press(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(stop).toHaveFocus();
+    await press(screen.getByRole('button', { name: 'Show the error for Stop Impersonating' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(STOP_FAILED);
+  });
+
+  it('says the same when the endpoint cannot be reached', async () => {
+    stopImpersonatingMock.mockRejectedValue(new Error('offline'));
+    render(<ImpersonationBanner {...BO} />);
+    const stop = screen.getByRole('button', { name: 'Stop Impersonating' });
+    stop.focus();
+
+    await press(stop);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(STOP_FAILED);
+    expect(stop).toHaveFocus();
+    expect(stop).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('clears a failure at the next press', async () => {
+    stopImpersonatingMock.mockResolvedValueOnce({ data: null, error: { status: 500 } });
+    stopImpersonatingMock.mockReturnValueOnce(new Promise(() => {}));
+    render(<ImpersonationBanner {...BO} />);
+    const stop = screen.getByRole('button', { name: 'Stop Impersonating' });
+    stop.focus();
+    await press(stop);
+    expect(await screen.findByRole('alert')).toBeVisible();
+
+    await press(stop);
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
+    expect(stopImpersonatingMock).toHaveBeenCalledTimes(2);
   });
 });

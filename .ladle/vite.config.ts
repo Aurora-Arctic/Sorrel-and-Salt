@@ -39,6 +39,10 @@ export default defineConfig({
       },
     },
   ],
+  // The remote browser of tests/e2e (playwright.workshop.config.ts) reaches the
+  // workshop as `devcontainer`, the compose service name, which Vite refuses
+  // by default as a host it does not know (tests/e2e/slots.ts, `browserUrl`).
+  server: { allowedHosts: ['devcontainer'] },
   resolve: {
     alias: {
       // The components import `@/modules/...` at runtime, as `tsconfig.json`'s paths say.
