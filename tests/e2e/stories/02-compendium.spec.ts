@@ -230,7 +230,7 @@ test.fixme(
     annotation: {
       type: 'fixme',
       description:
-        'M9.12 wires /compendium’s Add to My Ingredients, on M8.18’s page and M9.6’s list',
+        'M9.12’s second PR: the card’s plus adds with no stock (its first PR); the quantity dialog that writes the stock row is still owed',
     },
   },
   async ({ page }) => {

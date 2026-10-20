@@ -26,17 +26,20 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                              |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`       | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
-| `eyebrow`     | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
-| `destination` | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
-| `qualifier`   | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
-| `onClose`     | Asked for by the Close button, Escape and a click outside                                                                               |
-| `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
-| `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
-| `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
-| `returnTo`    | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
+| Prop                                             | What it is                                                                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                                          | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
+| `eyebrow`                                        | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
+| `destination`                                    | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
+| `qualifier`                                      | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
+| `formalName`, `topEnd`, `formalActions`, `under` | The quick-look head's extras ("A title with its own end"); absent on every other dialog                                                 |
+| `onClose`                                        | Asked for by the Close button, Escape and a click outside                                                                               |
+| `size`                                           | `'wide'` for a long form; absent, the default width                                                                                     |
+| `readingBody`                                    | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
+| `loading`                                        | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
+| `children`                                       | The body: a form, a confirmation, whatever the owner puts here                                                                          |
+| `foot`                                           | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                         |
+| `returnTo`                                       | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
 
 ## Contracts
 
@@ -88,9 +91,25 @@ is the wrapper every admin page opens it through (below).
   `<h2>`, so `getByRole('dialog', { name })` finds it
   (["An edit dialog's head"](#an-edit-dialogs-head)). The Close button is `×`, hidden
   from assistive technology, inside a button named "Close". It is a 2rem ×
-  in a 2.5rem square (`$close-target`), the owner's call during M5.5, and it sits at the
-  head's top: level with a one-line title, which is its height, and with an
-  edit's eyebrow, rather than adrift beside a name wrapped over lines (MB.115).
+  in a 2rem square (`$close-target`, a 2.5rem one from M5.5 until the owner's call of
+  2026-10-20, still past WCAG 2.5.8's 24px), taken out of the header's flow and set
+  `$close-inset` (`space(5)`, 24px, the dialog's padding) in from the dialog's top and
+  right edges (the owner's call, 2026-10-20: it was 8px in until then, and 40px before
+  that), so on every dialog its right edge is the right edge of the head's lines beneath
+  it, the formal name's pencil among them, and it is level with the head's first line. The
+  header, being taller than the × reaches, keeps it clear of the body's scrollbar beneath
+  it. The head stops short of it (`$close-reserve`), so a long name wraps rather than runs
+  under it, and the × is level with the head's first line, as in MB.115, rather than
+  adrift beside a name wrapped over lines.
+  A head with an eyebrow first and no top line (an edit dialog's "Edit Ingredient", an
+  add's destination) has the eyebrow for its first line, so the × is raised to put its
+  middle on the eyebrow text's middle (the owner's call, 2026-10-20): the inset less half
+  of what the 32px target is taller than the eyebrow's line (`$eyebrow-line`, the
+  overline size at the 1.65 a paragraph is given, 19.8px), 17.9px from the top, a middle at
+  33.9px in place of 40px, written with `:has()` so a browser without it keeps the inset.
+  A head with a top line keeps the inset, level with that line, and a dialog with no
+  eyebrow (Add Category) keeps it too, the title being its first line, 40px to the × and
+  about 55px to the title's middle.
 - **A click outside asks the owner to close it** (M5.5, the owner's call,
   reversing M5.6's "no close on a backdrop click"), through `onClose` as
   Close and Escape do. The backdrop is the dialog's own box to an event, so
@@ -124,9 +143,10 @@ and a Modal's owner closes it by unmounting it, so Modal does it instead
    `RouteModal` (a dialog opened by its address, such as `?edit`) looks for
    a link to that address and focuses it. If the link is an item of a closed
    `MenuButton`, it focuses that menu's button instead, where the press
-   began. For example, Edit Ingredient chosen from a coven entry's Edit menu,
-   then Cancel, leaves the focus on Edit; the curator's Edit Compendium Entry
-   item works the same way (M8.17, the owner's call, 2026-10-20).
+   began. For example, Make It Ours chosen from More, then Cancel, leaves the
+   focus on More. Edit and Annotate are icon links now, not menu items, so
+   they are the link the dialog looks for and take the focus back themselves
+   (M8.17, the owner's calls, 2026-10-20).
 4. **If the owner names nowhere**, it focuses the page's `<h1>`, given
    `tabindex="-1"` by script so it can take the focus without becoming a
    Tab stop (`pageHeading()`, in `page-heading.ts`).
@@ -137,21 +157,21 @@ again, and the row goes, taking the button that opened the confirmation with
 it. Without step 4 the focus would fall to the page's body, and a screen
 reader would start again from the top. The rows that do this:
 
-| Row                                          | Removed by                                               |
-| -------------------------------------------- | -------------------------------------------------------- |
-| A member on the members page                 | Remove (`MemberList`)                                    |
-| A pending or declined invitation in a coven  | Revoke, or Remove once declined (`PendingInvitations`)   |
-| An invitation on the account page            | Decline (`ReceivedInvitations`)                          |
-| An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                              |
-| A compendium entry's page, held by the coven | Remove, from the Edit menu or the Annotate dialog's More |
-| A retired entry's page                       | Remove, leading to the Ingredients list                  |
+| Row                                          | Removed by                                                |
+| -------------------------------------------- | --------------------------------------------------------- |
+| A member on the members page                 | Remove (`MemberList`)                                     |
+| A pending or declined invitation in a coven  | Revoke, or Remove once declined (`PendingInvitations`)    |
+| An invitation on the account page            | Decline (`ReceivedInvitations`)                           |
+| An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                               |
+| A compendium entry's page, held by the coven | Remove, the bin on the page or the Annotate dialog's More |
+| A retired entry's page                       | Remove, leading to the Ingredients list                   |
 
 The first four ask through `ConfirmedAction`, whose confirmation stays open
 and busy until the page is read again, so it closes in the same step as the
 row goes. Its `returnTo` names the row's button, which is gone by then, so
 step 4 answers. `CupboardActions` keeps its Remove confirmation busy the
 same way, and its `returnTo` names nowhere once the coven no longer holds
-the entry: the button left there offers Add to Cupboard instead, which is
+the entry: the menu is gone and the plus stands in its place, which is
 not where the person was. A retired entry's Remove leads to the coven's
 Ingredients list instead (the owner's call, 2026-10-20): its confirmation
 stays busy until the list arrives and goes with the entry page in the same
@@ -402,6 +422,52 @@ a name with no break in it breaks anywhere.
 | `/admin/category-groups`, `form-groups`    | Edit Category Group, Edit Form Group  | —           |
 | `/admin/deity-traditions`                  | Edit Tradition                        | —           |
 
+## A title with its own end
+
+Four optional `ModalHeading` fields shape a head the quick look (M12.5) uses, and only
+the details window passes them; every other dialog is drawn as before (the owner's calls,
+2026-10-20).
+
+- **`formalName`** is the entry's formal name over the title, in the eyebrow's place and
+  never with one: the entry page's own `FormalName` (`IngredientEntry/formal-name.tsx`),
+  with its ⓘ tip and its states (None, Not yet looked up, unconfirmed), built by the caller
+  (`detailsHeading`). Its term ("Botanical Name") is read, not seen, as on the page. The
+  dialog is named by the title alone, "Testwort", with the formal name read first in the
+  body; it replaces `qualifierBelow` and the "Ingredient" kicker (the owner's call,
+  2026-10-20). Its tip opens to the right of the ⓘ from tablet width up and below it on a
+  phone, as on the page, and a test in `tests/e2e/tip-placement.spec.ts` holds it inside
+  the viewport within the scrolling dialog.
+- **`topEnd`** is the head's top line, over the formal name and the title, with Close
+  on it (the owner's call, 2026-10-20): the details window puts the entry page's top-bar
+  marks there, New or Updated then the safety badge, at the start of the line (the owner's
+  call, 2026-10-20), level with the × at its far end. Its presence, even empty, gives the
+  head that line (`.modal-dialog__top`, a flex row as tall as the ×, which stands over
+  its end), so the × has a band of its own and what stands at the end of the lines under
+  it clears it. The line stands 16px above the formal name's line (the owner's call, 2026-10-20): the head's
+  own 8px gap and a `space(2)` margin more, from 8px. The margin is written on
+  `.modal-dialog__heading > .modal-dialog__top`, since the layout's `.header > *` zeroes a
+  child's margin at the weight of one class. A 12px gap (`space(1)` of margin) was the other
+  option shown. The × comes after the marks in the
+  markup too, as on screen. Without `topEnd` the × stands in the corner beside the head's
+  first line, as before, after the head in the markup.
+- **`formalActions`** is a node for the end of the formal name's line: the details
+  window's Edit pencil (with the plus beside it where a coven can add the entry), as the
+  entry page puts its own (the owner's call, 2026-10-20; it replaced `titleActions`, which
+  ended the title's first line and dropped under it as the line ran out). With it the
+  heading's formal name, title and actions are one grid (`.modal-dialog__naming`): the
+  formal name and the actions share the first row, the actions at its end, and the title
+  takes the whole width of the second, so a long name wraps under the pencil, not short
+  of it. The actions follow the title in the markup, as the page's do, and are placed by
+  the grid. Each is as tall as the pencil, taller than the formal name's line, so their
+  margin takes half the difference off each side and their middle stands on the
+  line's. With no formal name the title takes the first row and the actions stand beside it.
+  An action wrapped in a node of its own, as a coven's own entry's pair of icons is, has that wrapper's
+  margin cleared, since the grid places it. Empty, it takes no room.
+- **`under`** is a wrapping row (`.modal-dialog__under`, `space(3)` apart) under the
+  qualifier, for the badges. Empty, it takes no room.
+
+Their nodes are the components the card and the entry page draw, not copies.
+
 ## A control in the header
 
 The header holds the title, with its eyebrow over it on an edit, then the ×,
@@ -529,12 +595,14 @@ skipped the fade.
 
 `RouteModalProps` (`types.ts`):
 
-| Prop        | What it is                                                                                                                                                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `closeHref` | The page it opened over, its modal parameter dropped                                                                                                                                                           |
-| `size`      | As `Modal`'s                                                                                                                                                                                                   |
-| `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
-| `returnTo`  | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
+| Prop          | What it is                                                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `closeHref`   | The page it opened over, its modal parameter dropped                                                                                                                                                           |
+| `size`        | As `Modal`'s                                                                                                                                                                                                   |
+| `readingBody` | As `Modal`'s                                                                                                                                                                                                   |
+| `place`       | Which of the page's modal places this is, where it has two ([Two places on one page](#opening-at-once)); absent on a page with one                                                                             |
+| `content`     | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+| `returnTo`    | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
   `done` all fade the modal out, then `navigate(closeHref, { replace: true })`,
@@ -561,16 +629,16 @@ The form arrives in the same dialog.
 
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
   mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
-  is given `edit` (M8.19; the two entry routes have no layout one). It keeps the heading of the
+  is given `edit` (M8.19; the two entry routes have no layout one), and by the two pages whose lists open a details modal outside `/admin`, `/compendium` and a coven's Ingredients (M8.17, M12.5). It keeps the heading of the
   modal just pressed and navigates through `usePendingNavigation`
   (`src/lib/navigation/`), which runs `router.push(href)` inside a React
   transition (a call that marks a change as in progress until it finishes);
   the page bar shows as well ([`../loading.md`](../loading.md)). It
   offers `loading` (that heading while the push is pending, otherwise
-  nothing), `open(href, heading)` and `cancel()`. The workshop, whose
+  nothing) with `loadingPlace`, the place it shows in, `open(href, heading, place?)` and `cancel()`. The workshop, whose
   router goes nowhere, supplies its own value through the exported
   `RouteModalContext`; a provider already above is kept, not shadowed.
-- **`useOpenModalClick(href, heading)`** returns the `onClick` for a link.
+- **`useOpenModalClick(href, heading, place?)`** returns the `onClick` for a link.
   For a plain press of the main button it stops the browser following the
   link and calls `open`. A press with Ctrl, Cmd, Shift or Alt, or any other
   button, is the browser's (a new tab or window), and so is a press before
@@ -598,6 +666,12 @@ The form arrives in the same dialog.
 - **Focus.** When `loading` turns false, the focus moves to the form's first
   field, but only if it is still on the dialog itself. A person who has
   already moved it, to Close say, keeps it.
+- **Two places on one page.** A list whose names open a details modal and
+  whose Edit opens the edit modal over it (M12.5) renders two `RouteModal`s.
+  Each takes a `place`, and a press shows only in the place it names
+  (`useOpenModalClick(href, heading, place)`), so a press of a name does not
+  draw a skeleton in the edit modal's place too. A page with one place leaves
+  it unnamed.
 - **A direct request** to `?edit=` or `?new` (a bookmark, a new tab) still
   renders the modal on the server, with no skeleton.
 - **A row deleted since the list was drawn.** The navigation lands with no
@@ -622,6 +696,10 @@ not cut off. So the header stays at the top as a long form scrolls beneath
 it, the owner's call at MB.115, without being `position: sticky`, and a
 question's layer can lie over exactly the part of the body in view. The body
 is isolated, so nothing in it raised by a `z-index` rises over the layer.
+
+**The foot** (`foot`, the owner's call, 2026-10-20). A bar under the body that stays in view while the body scrolls, for the details modal's link to the entry's page (See in Compendium or See in My Ingredients). It is a sibling of the body in `.modal-dialog__main`, which is a two-row grid, the body in the first row and the foot in the second, and not a `position: sticky` child of the body: a sticky child lies inside the scroller, so the scrollbar's track ran its whole height, down past the bar, and drew over it. In its own row the body is the only thing that scrolls and its scrollbar starts under the head and ends above the foot. With no `foot` there is no second row. The scrim of a question (`.modal-dialog__layer`) covers the body's row alone, so `hold()` marks the foot `inert` with the body and the header slot while a question is asked, and live again once answered (`tests/components/Modal/index.test.tsx`). `RouteModal`'s `content` takes it too (`RouteModalContent.foot`). The foot brings its own surface and hairline; the Modal draws neither.
+
+**A body only to read takes a Tab stop** (`readingBody`, M12.5). A scrolling body with no field in it cannot be scrolled from the keyboard, and axe's `scrollable-region-focusable` rule fails it: the details modal holds only links in its header, so its long summary was out of reach. The body gets `tabIndex={0}` and an inset focus ring, as the header and the dialog's edge would clip an outer one. A form leaves it off, since its fields already reach every part of it.
 
 **The dialog clips, so nothing can scroll it** (MB.258). Its overflow is
 `clip`, not `hidden`. A `hidden` box is still a scroll container that a
@@ -649,10 +727,31 @@ back, so a column keeps the content width it had.
 **The page behind does not scroll while it is open** (M5.5, the owner's
 call). `showModal()` makes the page inert, but a wheel over the backdrop
 still scrolled it. `:root:has(.modal-dialog:modal)` sets `overflow: hidden`,
-in CSS so no listener can leave the page locked, with `scrollbar-gutter:
-stable` so nothing shifts sideways as the scrollbar goes; the body's own
-scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
-out of reach.
+in CSS so no listener can leave the page locked.
+
+**Nothing behind it moves sideways as the scrollbar goes** (the owner's call,
+2026-10-20). Hiding the page's scroll takes its scrollbar away, which on a
+system whose scrollbars take room (Windows, most Linux desktops, a Mac set to
+show them always) would widen the page by about 15px and move centred content
+by half of that. So as the first modal opens, `holdPage` (`page-hold.ts`)
+measures the scrollbar, `window.innerWidth - document.documentElement.clientWidth`,
+and only where that is more than 0 sets the width on the root as
+`--scrollbar-width`. The root's padding takes the scrollbar's place for as long
+as a modal holds the page, and the fixed elements anchored to the right edge
+(the theme toggle's corner, the impersonation banner, the page bar and the salt
+corner of the backdrop) read the same property, so they stay put too. A modal
+opened over another does not measure again, the scrollbar being gone by then,
+and the room is given back only when the last one closes. A page with no
+scrollbar, or one whose scrollbars float over it, sets nothing.
+
+This JavaScript measurement replaces a CSS-only one, `scrollbar-gutter: stable`,
+which reserves the scrollbar's room. Set only while a modal was open, a page
+with no scrollbar gained the room as one opened and moved by half of it. Set on
+every page, it left a blank strip beside the header on a page that fits the
+window, so the header and its menu stopped short of the right edge (the
+owner turned it down: the owner's call, 2026-10-20). The body's own scroll is
+`overscroll-behavior: contain`, and it keeps it, so nothing in it is out of
+reach.
 
 **The skeleton** (M9.18) is the shared `Skeleton` of the `form` shape
 ([`skeleton.md`](skeleton.md)); `ModalLoading` only renders it.

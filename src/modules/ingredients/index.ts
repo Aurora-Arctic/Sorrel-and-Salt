@@ -47,6 +47,7 @@ export type {
   CupboardEntryRow,
   DeityDetail,
   FacetCount,
+  HoldingCoven,
   IngredientDeityRow,
   IngredientDetail,
   IngredientFacets,

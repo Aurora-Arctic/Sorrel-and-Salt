@@ -1,13 +1,12 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
-import { AnnotateLink, EditLink } from '../IconTip';
-import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
+import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
-import CardMore from './card-more';
+import { covenCardActions, covenCardName } from './actions';
 import EmptyCupboard from './empty';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
@@ -21,51 +20,6 @@ import '../CompendiumList/index.scss';
 // cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Delete on
 // an own entry, Make It Ours and Remove on a compendium one. An empty list is
 // EmptyCupboard's (M9.11). claude-docs/components/coven-cards.md.
-
-// Named with the formal name too, as two entries can share a label.
-const nameOf = (entry: CovenCardEntry): string =>
-  entry.canonicalName ? `${entry.label}, ${entry.canonicalName}` : entry.label;
-
-// The foot's dialog link: Edit on the coven's own entry, Annotate on a compendium entry the
-// cupboard holds, each only where the page gave its address.
-const opensOf = (entry: CovenCardEntry): ReactElement | null => {
-  if (entry.editHref && entry.editHeading)
-    return <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />;
-  if (entry.annotateHref)
-    return (
-      <AnnotateLink href={entry.annotateHref} heading={ANNOTATE_HEADING} name={nameOf(entry)} />
-    );
-  return null;
-};
-
-// The foot's controls: the dialog link, then More with whatever else the role may do, which
-// draws nothing when it may do nothing more.
-const actionsOf = (
-  entry: CovenCardEntry,
-  workspaceId: string,
-  covenSlug: string,
-): ReactElement | undefined => {
-  const opens = opensOf(entry);
-  const more = entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
-  if (!opens && !more) return undefined;
-  return (
-    <>
-      {opens}
-      {more && (
-        <CardMore
-          id={entry.id}
-          label={entry.label}
-          name={nameOf(entry)}
-          workspaceId={workspaceId}
-          covenSlug={covenSlug}
-          mayDelete={entry.mayDelete}
-          mayMakeOurs={entry.mayMakeOurs}
-          mayRemove={entry.mayRemove}
-        />
-      )}
-    </>
-  );
-};
 
 const CovenCards = ({
   covenSlug,
@@ -115,9 +69,9 @@ const CovenCards = ({
             toxic={entry.toxic}
             safetyNotes={entry.safetyNotes}
             kind={entry.kind}
-            annotated={entry.annotated}
             retired={entry.retired}
-            actions={actionsOf(entry, workspaceId, covenSlug)}
+            actions={covenCardActions(entry, workspaceId, covenSlug)}
+            startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
           >
             {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
           </IngredientCard>

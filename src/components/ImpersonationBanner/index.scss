@@ -47,7 +47,8 @@ $impersonation-banner-reach: space(4);
   .impersonation-banner {
     position: fixed;
     top: 0;
-    right: 0;
+    // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
+    right: var(--scrollbar-width, 0);
     left: 0;
     // Under the corner toggle (`layer('toggle')`), so aiming at the toggle
     // reaches the toggle and never opens the banner, and over the shell's bar.

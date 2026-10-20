@@ -155,7 +155,8 @@ describe('UserList', () => {
 
       fireEvent.click(screen.getByRole('link', { name: BO.name }));
 
-      expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading);
+      // No place named: a row opens the page's one unnamed route modal (M12.5).
+      expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading, undefined);
     });
   });
 

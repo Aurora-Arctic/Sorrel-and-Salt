@@ -6,6 +6,7 @@ import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
+import { sectionsFor } from '../MenuButton/sections';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
@@ -92,7 +93,12 @@ function destinationsOf(
   viewer: AddIngredientButtonProps['viewer'],
   workspaces: AddIngredientButtonProps['workspaces'],
   pathname: string,
-): { all: AddDestination[]; initial: AddDestination | undefined } {
+): {
+  all: AddDestination[];
+  compendium: AddDestination[];
+  covens: AddDestination[];
+  initial: AddDestination | undefined;
+} {
   const covens: AddDestination[] = workspaces
     .filter(({ canWrite }) => canWrite)
     .map((workspace) => ({
@@ -108,7 +114,12 @@ function destinationsOf(
   const slug = covenSlugOf(pathname);
   const named = covens.find((d) => d.kind === 'coven' && d.workspace.slug === slug);
   const onAdmin = pathname.startsWith('/admin') && compendium.length > 0;
-  return { all, initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]) };
+  return {
+    all,
+    compendium,
+    covens,
+    initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]),
+  };
 }
 
 const AddIngredientButton = ({
@@ -124,7 +135,13 @@ const AddIngredientButton = ({
   // that navigation, and the close must not write the address under it.
   const leaving = useRef(false);
 
-  const { all, initial } = destinationsOf(viewer, workspaces, pathname);
+  const { all, compendium, covens, initial } = destinationsOf(viewer, workspaces, pathname);
+  // The menu's groups, the side the viewer is on first: a coven's page the covens, any
+  // other page the compendium, as the bar has always led with it.
+  const sections = sectionsFor(
+    { compendium, coven: covens },
+    covenSlugOf(pathname) ? 'coven' : 'compendium',
+  );
   const onAdmin = pathname.startsWith('/admin');
   // The coven whose dialog the address opens: `?new` the default coven,
   // `?new=<slug>` that coven, and nothing for a slug the viewer cannot write
@@ -177,7 +194,7 @@ const AddIngredientButton = ({
           {LABEL}
         </button>
         {all.length > 1 && (
-          <AddIngredientMenu destinations={all} className={MORE_CLASSES} onChoose={go} />
+          <AddIngredientMenu sections={sections} className={MORE_CLASSES} onChoose={go} />
         )}
       </span>
       {adding && (

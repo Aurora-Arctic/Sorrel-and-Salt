@@ -111,7 +111,7 @@ A stylesheet can ask for another with the custom property `--tip-placement`
 every tip inside and may be set by a media or container query: the filter
 panel sets `bottom`, and a stacked table sets `left` for its Edit pencils. It
 is read as the tip opens. An ancestor marked `data-tip-boundary` (the filter
-panel) is the edge the bubble keeps inside, in place of the screen.
+panel) is the edge the bubble keeps inside, in place of the screen. A stylesheet never positions a bubble itself (no inset, margin or translate on it, only the fade's `transform`), since `useTip` places it and anything added moves it off its control; a rule that did is how the formal name's tip stood 18px off its ⓘ (the owner's call, 2026-10-20, in place of a guard).
 
 Before the script has run, the `tip-above` mixin's rest state keeps the bubble
 out of the page's flow: fixed at the origin, invisible, its text still in the
@@ -119,7 +119,8 @@ page, so reading and the field's `aria-describedby` are as before. It is as
 wide as its text, up to `$tip-width` (18rem) and never more than the viewport
 less 2rem. The tip sits one layer up (`z-index: 1`), above the control that
 precedes it. `tests/e2e/tip-placement.spec.ts` measures every tip of the Add
-Ingredient dialog inside a 320px viewport.
+Ingredient dialog inside a 320px viewport, and the formal name's on both
+entry pages inside a 390px one.
 
 ## Styling
 

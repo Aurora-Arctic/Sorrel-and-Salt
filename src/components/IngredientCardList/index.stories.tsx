@@ -45,7 +45,6 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
         toxic={e.toxic}
         safetyNotes={e.safetyNotes}
         kind={e.kind}
-        annotated={e.annotated}
         retired={e.retired}
         actions={
           <>

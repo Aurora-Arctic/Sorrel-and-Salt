@@ -1,6 +1,6 @@
 # CupboardEntryForm
 
-`src/components/CupboardEntryForm/` is the form a coven's member annotates a compendium entry with (M12.17). The entry page opens it from **Annotate** in its Edit menu ([`ingredient-entry.md`](ingredient-entry.md), "Cupboard buttons"), in a modal. It is a react-hook-form form, so the lists can be the shared ones; null against an empty list is told apart in `changes.ts` and `form-values.ts` (list entries as `{ value }`), not by the library. It edits the seven overrides of a coven's cupboard entry, saving through `annotateCupboardEntry` (`src/modules/ingredients/graphql/cupboard-entries.ts`).
+`src/components/CupboardEntryForm/` is the form a coven's member annotates a compendium entry with (M12.17). The entry page opens it from the **Annotate** icon (or More, where it is not the main icon) ([`ingredient-entry.md`](ingredient-entry.md), "Cupboard buttons"), in a modal. It is a react-hook-form form, so the lists can be the shared ones; null against an empty list is told apart in `changes.ts` and `form-values.ts` (list entries as `{ value }`), not by the library. It edits the seven overrides of a coven's cupboard entry, saving through `annotateCupboardEntry` (`src/modules/ingredients/graphql/cupboard-entries.ts`).
 
 An override is either the coven's own value or nothing, in which case the page shows the compendium's. The form keeps that difference: `null` means "use the compendium's", and an empty list is the coven clearing the field on purpose (M12.16; `applyCupboardEntry` in `validation/cupboard-merge.ts`).
 

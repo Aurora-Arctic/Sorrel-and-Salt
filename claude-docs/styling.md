@@ -64,20 +64,21 @@ to.
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
-  button, 2.5rem), `$table-stack-width` (the frame width under which a table
+  button, 2rem), `$table-stack-width` (the frame width under which a table
   stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of). A duration with a role of its own is one too: `$motion-short`
   (150ms), a control answering a press with a movement of its own, as the
-  switch's thumb slides, `$tip-fade` (500ms), a tip bubble's fade, and `$icon-tip-fade`
+  switch's thumb slides, `$motion-medium` (300ms), a movement the eye follows,
+  as the details window's description opens under its Show More bar, `$tip-fade` (500ms), a tip bubble's fade, and `$icon-tip-fade`
   (120ms), IconTip's quicker one.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
   skeleton's bars, an entry's targeted section, MenuButton's plain item
   pointed at, focused or chosen, and the hover of every
   navigation link, tab and outlined chip), `$fill-highlight` (the accent 12%
-  into whatever is behind: MenuButton's one primary or constructive item, and
+  into whatever is behind: MenuButton's one primary item, and
   a menu's item and a suggestion list's row in the account menu, the shell's
   menu and Combobox, pointed at, focused or chosen), `$fill-highlight-field` (the same 12% over the field's
   ground: a quiet button pointed at), `$hairline` (the muted ink 45%
@@ -448,6 +449,8 @@ decides, from its own selector, so one badge reads the same wherever it is rende
 | `small`   | overline (12px) | 2px, 5px                | 24px         | the compact card        |
 
 The 24px floor is the least a badge with a tip may be as a target.
+
+Each size also lowers its label by an **optical drop**, taken from the top padding and given to the bottom so the height holds (the owner's call, 2026-10-20). Without it every badge's capitals sat above the box's centre: measured in Chromium, the space under the baseline was 1.26px more than the space above the capitals on the card, and up to 1.33px more on the entry page. Chrome rounds a font's ascent and descent to whole pixels, so 12px and 13px Lexend sit differently and each size has its own drop: `default` 0.0125em, `medium` and `small` 0.05em. The card's badges now centre within 0.04px; a `default` badge lands within half a pixel either way, since its baseline snaps to the pixel grid wherever the badge happens to sit. `text-box-trim` would do this from the font's own metrics, but it is past the browser floor. `badge-padding()` and `badge-padding-block()` in `_mixins.scss` apply it; a rule that sets a badge's block padding itself, as Out of Stock's heavier border does, goes through them.
 
 ## Brand colours
 

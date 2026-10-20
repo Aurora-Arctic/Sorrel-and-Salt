@@ -1,7 +1,7 @@
-# SafetyNote, ToxicMark and CautionMark
+# SafetyNote, ToxicMark, CautionMark and SafetyMark
 
 `src/components/SafetyNote/` — how the project shows that an ingredient needs
-care (M8.13a, story 53). Three components share the directory:
+care (M8.13a, story 53). Four components share the directory:
 
 - **`SafetyNote`** (the default export) sets an ingredient's safety notes apart
   from its description, so a warning is noticed rather than skimmed past.
@@ -9,25 +9,29 @@ care (M8.13a, story 53). Three components share the directory:
   show is flagged toxic. M11.21 added the flags and left the badge to Wave 12.
 - **`CautionMark`** is the Caution badge (M8.14), a summary for a reader who has
   not reached the notes yet: the word "Caution", no tip, nothing focusable, shown when the
-  ingredient or a form on show has non-blank notes. It is independent of Toxic, so
-  both can show. It wears the tinted `caution` palette, quieter than Toxic's
+  ingredient or a form on show has non-blank notes. On its own it is independent of
+  Toxic; in a badge row `SafetyMark` keeps only one. It wears the tinted `caution` palette, quieter than Toxic's
   solid fill. The card uses it, and so does the entry page's head (the owner's call,
   2026-10-19), so a note on one form shows before the reader scrolls to that form;
   the page also keeps `SafetyNote` for the notes themselves.
+- **`SafetyMark`** is a badge row's one safety badge (the owner's call, 2026-10-20):
+  `ToxicMark` when the ingredient or a shown form is flagged, else `CautionMark`, else
+  nothing. Toxic says more, so the two never share a row. It takes both marks' props.
 
 This directory owns safety presentation for the whole project. The card (M8.14),
 the entry page (M8.19) and the spell builder's toxic-ingredient warning (M10.18)
-each use these two as they are, and none of them draws a warning of its own.
+each use these two as they are, and none of them draws a warning of its own. In a badge row, the card's and the entry page's head, they are drawn through `SafetyMark`: on the card by a second `EntryMarks` in its top-right corner, and on the entry page by `IngredientEntry` itself on the back row, after New or Updated and ending flush with the pencil, its `EntryMarks` row taking `safety={false}` ([`ingredient-entry.md`](ingredient-entry.md), "Structure") ([`entry-marks.md`](entry-marks.md), "The order").
 
 ## Props
 
 `SafetyNoteProps` (`types.ts`):
 
-| Prop          | What it is                                                                         |
-| ------------- | ---------------------------------------------------------------------------------- |
-| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none     |
-| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name |
-| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset  |
+| Prop          | What it is                                                                                                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none                                                                                                                |
+| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name                                                                                                            |
+| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset                                                                                                             |
+| `footnote`    | A line after the notes, inside the caution, for a consumer that shows no forms: the details modal names the forms that carry their own (M12.5). With it, the caution shows even with no notes |
 
 `CautionMarkProps`: `safetyNotes` (the ingredient's own) and `variants`; notes on
 either show the mark, and blank counts as none.
@@ -47,7 +51,7 @@ rather than naming a GraphQL type, so a card's or the entry page's
 
 - **Nothing to say, nothing rendered.** `SafetyNote` returns `null` when
   neither the ingredient nor any form it was given has notes that are more than
-  whitespace. `ToxicMark` returns `null` unless something is flagged. A
+  whitespace, and it was given no `footnote`. `ToxicMark` returns `null` unless something is flagged. A
   consumer renders them both every time and does no checking of its own.
 - **The consumer chooses which forms are shown** (MB.215). A card passes the
   ingredient together with the forms it lists. The entry page uses the note

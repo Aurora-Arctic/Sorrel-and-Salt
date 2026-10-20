@@ -11,7 +11,7 @@ import Modal from '../Modal';
 import type { CupboardQuestionProps, CupboardWrite, DeleteEntryOptions } from './types';
 
 // Delete Ingredient asked in a dialog (M8.17), for a coven's own entry: from
-// the entry page's Edit menu and from a list card's More, so the two ask the
+// the entry page's bin and from a list card's More, so the two ask the
 // same confirmation and land the same way, as Make It Ours and Remove share
 // `cupboard-writes.tsx`. The edit dialog asks in its form's own confirmation
 // card instead, rather than a dialog inside a dialog. The wording is the

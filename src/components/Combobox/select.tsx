@@ -41,6 +41,9 @@ export function ComboboxSelect({
       labelId,
       menuId: `${id}-list`,
       getItemId: (index) => `${id}-row-${index}`,
+      // Shown and read, but stepped over by the arrows and refused a press (a coven that
+      // already holds the entry, in M9.12's picker).
+      isItemDisabled: (choice) => Boolean(choice?.disabled),
       onSelectedItemChange: ({ selectedItem }) => {
         if (selectedItem) onChange(selectedItem.value);
       },
@@ -115,6 +118,7 @@ export function ComboboxSelect({
                 'combobox__option',
                 choice.create && 'combobox__option--create',
                 index === highlightedIndex && 'is-highlighted',
+                choice.disabled && 'is-disabled',
               ]
                 .filter(Boolean)
                 .join(' ')}
@@ -129,6 +133,7 @@ export function ComboboxSelect({
                 )}
                 {choice.label}
               </span>
+              {choice.note && <div className="combobox__note">{choice.note}</div>}
             </li>
           ))}
       </ul>

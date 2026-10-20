@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import type { Route } from 'next';
 import CovenCards from '.';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
@@ -54,9 +55,12 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   toxic: false,
   safetyNotes: null,
   kind: 'cupboard',
-  annotated: false,
   retired: false,
   jars: [],
+  details: {
+    href: `/coven/fixture-coven/ingredients?entry=${id}` as Route,
+    heading: { eyebrow: 'Ingredient', title: label },
+  },
   ...over,
 });
 
@@ -76,7 +80,7 @@ const ENTRIES = [
       { id: 'j2', form: 'Oil', icon: 'botanical', quantity: 0.5, unit: 'oz', threshold: 1 },
     ],
   }),
-  entry('named-1', 'House Salt', { annotated: true }),
+  entry('named-1', 'House Salt'),
   entry('named-2', 'Fixture Salt'),
 ];
 

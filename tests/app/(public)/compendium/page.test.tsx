@@ -1,10 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
+import { entryDetail } from '../../../support/entry-detail';
 
 // The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
 // they decide is their own tests' (the admin page's test runs the reads). Here: what the
@@ -18,13 +19,19 @@ const redirect = vi.fn((_to: string) => {
 vi.mock('next/navigation', () => ({ redirect, useRouter: () => router }));
 
 const viewerIfSignedIn = vi.fn();
-vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
+// A role in each coven, which the three dots read; the roles' own abilities are the coven module's.
+const covenRolesIfSignedIn = vi.fn();
+vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 
 const readCompendium = vi.fn();
 const readFacets = vi.fn();
+// The details a Quick Look opens (M12.5), by id with no session: what it admits is its own
+// test's (tests/app/compendium-reads.test.ts); here, what the page does with its answer.
+const readCompendiumDetails = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
   readCompendium,
   readFacets,
+  readCompendiumDetails,
   readFormIcons: async () => new Map(),
   readDeities: async () => [],
   readCategories: async () => [],
@@ -33,7 +40,19 @@ vi.mock('@/app/compendium-reads', () => ({
 
 // What a curator's ?edit=<slug> reads (M8.17): the entry at the slug, then its form's values.
 const resolveCompendiumSlug = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ resolveCompendiumSlug }));
+// The held read is `held.test.tsx`'s; here the coven holds nothing.
+const SESSION = { userId: 'user-fixture' };
+const getSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ getSession }));
+// The viewer's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
+const covensHoldingEntry = vi.fn();
+vi.mock('@/modules/ingredients', () => ({
+  resolveCompendiumSlug,
+  covensHoldingEntry,
+  heldCompendiumEntryIdsIn: async () => new Map<string, ReadonlySet<string>>(),
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
+}));
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 // The form is its own tests'; here only that the dialog holds one.
@@ -97,18 +116,24 @@ beforeEach(() => {
   readFacets.mockResolvedValue(NO_FACETS);
   viewerIfSignedIn.mockReset();
   viewerIfSignedIn.mockResolvedValue(null);
+  covenRolesIfSignedIn.mockReset();
+  covenRolesIfSignedIn.mockResolvedValue(null);
   resolveCompendiumSlug.mockReset();
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: { ...NODE }, movedAway: null });
   entryValues.mockReset();
   entryValues.mockResolvedValue({ ...EMPTY_VALUES, name: 'Testwort' });
   redirect.mockClear();
+  readCompendiumDetails.mockReset();
+  readCompendiumDetails.mockResolvedValue(undefined);
+  getSession.mockResolvedValue(SESSION);
+  covensHoldingEntry.mockResolvedValue([]);
 });
 
 describe('the public compendium page', () => {
   it('lists the entry as a link to its own page for a visitor with no account', async () => {
     await renderPage();
     const list = screen.getByRole('list', { name: 'Compendium' });
-    expect(within(list).getByRole('link', { name: /Testwort/ })).toHaveAttribute(
+    expect(within(list).getByRole('link', { name: /^Testwort$/ })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${NODE.slug}`,
     );
@@ -156,7 +181,6 @@ describe('the public compendium page', () => {
       await renderPage();
       const add = screen.queryAllByRole('button', { name: 'Add to My Ingredients' });
       expect(add).toHaveLength(buttons);
-      for (const button of add) expect(button).toBeDisabled();
       expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
     },
   );
@@ -254,6 +278,165 @@ describe('the public compendium page, for a curator', () => {
     await renderPage({ ...SEARCH, edit: NODE.slug });
     expect(readCompendium.mock.lastCall).toEqual(visitor);
   });
+});
+
+// M12.5: each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
+// anyone, a visitor included: the compendium as the compendium has it, read with no session.
+describe("the public compendium page, with an entry's details open", () => {
+  const SEARCH = { query: 'Test' };
+  const DETAIL = {
+    ...entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name }),
+    folkNames: ['Fixture Bane'],
+  };
+  const details = () => screen.queryByRole('dialog', { name: 'Testwort' });
+  const curator = () => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate: true } });
+  const paramsOf = (link: HTMLElement) =>
+    Object.fromEntries(new URL(link.getAttribute('href')!, 'https://fixture.test').searchParams);
+  /** Every link on the cards, by name and address: what the list offers. */
+  const cardLinks = () =>
+    within(screen.getByRole('list', { name: 'Compendium' }))
+      .getAllByRole('link')
+      .map((link) => [link.textContent, link.getAttribute('href')]);
+
+  it('gives each card a Quick Look to the search with ?entry=<id>, reading no details until asked', async () => {
+    await renderPage(SEARCH);
+
+    const eye = screen.getByRole('link', { name: 'Quick Look Testwort, Fixtura testalis' });
+    expect(new URL(eye.getAttribute('href')!, 'https://fixture.test').pathname).toBe('/compendium');
+    expect(paramsOf(eye)).toEqual({ ...SEARCH, entry: NODE.id });
+    expect(details()).toBeNull();
+    expect(readCompendiumDetails).not.toHaveBeenCalled();
+  });
+
+  it('opens a visitor the details over the search on ?entry=<id>, read by the id alone, with See in Compendium and no Edit', async () => {
+    getSession.mockResolvedValue(null);
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    await renderPage({ ...SEARCH, entry: NODE.id });
+
+    // No session reaches the read: the id is all it is given.
+    expect(readCompendiumDetails.mock.lastCall).toEqual([NODE.id]);
+    const dialog = details()!;
+    expect(
+      within(within(dialog).getByRole('list', { name: 'Folk Names' })).getByText('Fixture Bane'),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${NODE.slug}`,
+    );
+    expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).toBeNull();
+    expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
+    // A visitor has no covens, so the page asks for none.
+    expect(covensHoldingEntry).not.toHaveBeenCalled();
+    expect(within(dialog).queryByRole('list', { name: 'In Your Covens' })).toBeNull();
+  });
+
+  it("lists a signed-in viewer's own covens that hold the entry in the details, read with their session", async () => {
+    covensHoldingEntry.mockResolvedValue([
+      { id: 'w-fixture', slug: 'fixture-coven', name: 'Fixture Coven' },
+    ]);
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    await renderPage({ ...SEARCH, entry: NODE.id });
+
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
+    const covens = within(details()!).getByRole('list', { name: 'In Your Covens' });
+    expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
+      'href',
+      `/coven/fixture-coven/ingredients/${NODE.id}`,
+    );
+  });
+
+  // The window mirrors the card it was opened from (the owner's call, 2026-10-20): the three dots
+  // for a member of a coven that holds the entry, and none for anyone else.
+  describe('the three dots in the details', () => {
+    const member = () => ({
+      ...shellOf(true),
+      workspaces: [
+        {
+          id: 'w-1',
+          slug: 'fixture-coven',
+          name: 'Fixture Coven',
+          canReadMembers: true,
+          canWrite: true,
+        },
+      ],
+    });
+
+    it('gives a member of a holding coven More, holding Annotate, Make It Ours and Remove', async () => {
+      viewerIfSignedIn.mockResolvedValue(member());
+      covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'member']]));
+      covensHoldingEntry.mockResolvedValue([
+        { id: 'w-1', slug: 'fixture-coven', name: 'Fixture Coven' },
+      ]);
+      readCompendiumDetails.mockResolvedValue(DETAIL);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+
+      const more = within(details()!).getByRole('button', {
+        name: 'More for Testwort, Fixtura testalis',
+      });
+      fireEvent.click(more);
+      const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
+      expect(items.map((item) => item.textContent)).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    });
+
+    it.each([
+      ['a visitor', null, null, []],
+      ['a member of a coven that does not hold it', 'member', 'w-1', []],
+      ['a viewer of a coven that holds it', 'viewer', 'w-1', ['w-1']],
+    ] as const)('gives %s no More', async (_who, role, id, holds) => {
+      viewerIfSignedIn.mockResolvedValue(role ? member() : null);
+      covenRolesIfSignedIn.mockResolvedValue(role && id ? new Map([[id, role]]) : null);
+      covensHoldingEntry.mockResolvedValue(
+        holds.map((one) => ({ id: one, slug: 'fixture-coven', name: 'Fixture Coven' })),
+      );
+      readCompendiumDetails.mockResolvedValue(DETAIL);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+
+      // Why it could show: the same window is open, with the entry read.
+      expect(details()).not.toBeNull();
+      expect(within(details()!).queryByRole('button', { name: /^More for / })).toBeNull();
+    });
+  });
+
+  it('gives a curator Edit in the details, opening the edit dialog over them', async () => {
+    viewerIfSignedIn.mockResolvedValue(curator());
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    await renderPage({ ...SEARCH, entry: NODE.id });
+
+    const edit = within(details()!).getByRole('link', { name: /^Edit\b/ });
+    expect(paramsOf(edit)).toEqual({ ...SEARCH, entry: NODE.id, edit: NODE.slug });
+    // The card's own Edit opens over the search alone, as without the details.
+    const [cardEdit] = screen.getAllByRole('link', { name: /^Edit in Compendium Testwort/ });
+    expect(paramsOf(cardEdit)).toEqual({ ...SEARCH, edit: NODE.slug });
+  });
+
+  // An unknown id and a coven's own entry's id both answer nothing from the read, since a
+  // coven entry's existence is private: the page is then the page with no ?entry= at all.
+  it.each([
+    ['a visitor', null],
+    ['a curator', 'curator'],
+  ] as const)(
+    'opens nothing for %s when ?entry= names no compendium entry, as if the address had none',
+    async (_who, who) => {
+      viewerIfSignedIn.mockResolvedValue(who ? curator() : null);
+      await renderPage(SEARCH);
+      const bare = cardLinks();
+      document.body.innerHTML = '';
+      // Why it could open: the same address opens the details when the read finds the entry.
+      readCompendiumDetails.mockResolvedValue(DETAIL);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+      expect(details()).not.toBeNull();
+      document.body.innerHTML = '';
+
+      readCompendiumDetails.mockResolvedValue(undefined);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+
+      expect(readCompendiumDetails.mock.lastCall).toEqual([NODE.id]);
+      expect(details()).toBeNull();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(cardLinks()).toEqual(bare);
+    },
+  );
 });
 
 describe('the public compendium page structured data', () => {

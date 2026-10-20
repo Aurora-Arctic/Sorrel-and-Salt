@@ -93,6 +93,11 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     renderDialog();
 
     expect(choices()).toEqual(['Make It Ours', 'Remove']);
+    // In the one Coven section every More draws (the owner's call, 2026-10-20).
+    const menu = within(dialog()).getByRole('menu', { name: CUPBOARD_MENU_LABEL });
+    expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
+      within(menu).getByRole('menuitem', { name: 'Remove' }),
+    );
   });
 
   it('offers the one permitted as a button of its own, with no menu, and neither with neither', () => {

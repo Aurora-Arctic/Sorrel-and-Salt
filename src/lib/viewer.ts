@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { byCovenName, membershipsOf, rolePermits } from '@/modules/coven';
+import { byCovenName, membershipsOf, rolePermits, type WorkspaceRole } from '@/modules/coven';
 import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { getSession, requireSignedIn } from './request-session';
 import type { Session } from './session';
@@ -16,19 +16,25 @@ import type { ShellContext, ShellViewer, ShellWorkspace } from './types';
 // page too, and the page beneath is what sends that account to the email page
 // (MB.256).
 
+/**
+ * The viewer's own memberships, read once per request whoever asks: the shell, and the public
+ * entry page's roles below. Keyed by the session, which `getSession` hands out once per request.
+ */
+const ownMemberships = cache(async (session: Session) => {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  // A viewer asking for their own id is never refused, so a Forbidden here
+  // is a bug in the service, not a state to draw.
+  if (!memberships || memberships instanceof Error) throw new Error('Own memberships refused');
+  return memberships;
+});
+
 async function viewerFor(session: Session): Promise<ShellContext> {
-  const [me, [memberships]] = await Promise.all([
-    getMe(session),
-    membershipsOf(session, [session.userId]),
-  ]);
+  const [me, memberships] = await Promise.all([getMe(session), ownMemberships(session)]);
   // Only a verified address has invitations it may read, so an unverified
   // account costs no count; one statement otherwise, on every shell page.
   const pendingInvitations = me.emailVerified
     ? (await countReceivedInvitations(session, undefined)).totalCount
     : 0;
-  // A viewer asking for their own id is never refused, so a Forbidden here
-  // is a bug in the service, not a state to draw.
-  if (!memberships || memberships instanceof Error) throw new Error('Own memberships refused');
   return {
     viewer: {
       name: me.name,
@@ -63,3 +69,17 @@ export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => 
   const session = await getSession();
   return session ? viewerFor(session) : null;
 });
+
+/**
+ * The signed-in viewer's role in each of their covens, by coven id, or `null` signed out: for
+ * the public entry page's cupboard choices (M9.12), each of which a different statement permits.
+ * The shell carries a coven's permissions as flags rather than its role, and this shares its read.
+ */
+export const covenRolesIfSignedIn = cache(
+  async (): Promise<ReadonlyMap<string, WorkspaceRole> | null> => {
+    const session = await getSession();
+    if (!session) return null;
+    const memberships = await ownMemberships(session);
+    return new Map(memberships.map(({ role, workspace }) => [workspace.id, role]));
+  },
+);

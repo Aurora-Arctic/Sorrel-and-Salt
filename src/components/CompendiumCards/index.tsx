@@ -2,49 +2,92 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
-import { EditLink } from '../IconTip';
+import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
+import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
+import DetailsLink from '../IngredientEntry/details-link';
 import IngredientSearch from '../IngredientSearch';
+import AddIcon from '../AddIcon';
+import CompendiumCardMore from './card-more';
+import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
 // The public compendium's list (M8.18): the filter row, one card per entry in a grid, and
 // the pager. Render-only, like the admin's table (CompendiumList): the page reads one page
 // under the address's filter and hands it here. Each card is a plain link to the entry's
-// page. The foot of a card holds Add to My Ingredients for someone who can add,
-// which stays disabled until M9.12 builds its dialog (the owner's call, 2026-10-19), and, for
-// a curator, Edit, which opens the compendium's edit dialog over the results (M8.17). A visitor
-// with no account sees no action on the cards and signs in through the header. claude-docs/components/compendium-cards.md.
+// page. A card's foot is one row at its bottom right: for someone who can add, the plus (Add
+// to My Ingredients) or, once every coven they may write in holds the entry, the check (In My
+// Ingredients); then, for a curator, Edit in Compendium, which opens the compendium's edit dialog
+// over the results (M8.17); then the three dots, for a member of a coven that holds the entry
+// (Annotate, Make It Ours, Remove; `card-more.tsx`). The plus adds at once where the viewer has one coven and is a menu of the
+// covens where they have several (M9.12, the owner's calls, 2026-10-20). The foot's left end is the Quick Look eye's (M12.5). A visitor with
+// no account sees nothing on the cards and signs in through the header.
+// claude-docs/components/compendium-cards.md.
 
 const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
 
 // Named with the formal name too, as two entries can share a name.
-const nameOf = (entry: CompendiumCardEntry): string =>
-  entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name;
+const nameOf = (entry: CompendiumCardEntry): string => cardName(entry.name, entry.canonicalName);
 
-// The foot: Add to My Ingredients for someone who can add, and a curator's Edit where the
-// page gave the entry an edit address (M8.17).
-const actionsOf = (
+// The foot's add mark: the plus while some coven the viewer may write in lacks the entry, the
+// check once every one holds it. Both need a default coven.
+const markOf = (
   entry: CompendiumCardEntry,
   action: CompendiumCardsProps['action'],
+  workspaceId: string | undefined,
+  covens: CompendiumCardsProps['covens'],
 ): ReactElement | undefined => {
-  const add = action === 'add' && (
-    // Disabled until M9.12 builds the dialog it opens.
-    <button type="button" className="btn btn--small" disabled>
-      Add to My Ingredients
-    </button>
-  );
-  const edit = entry.editHref && entry.editHeading && (
-    <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
-  );
-  if (!add && !edit) return undefined;
-  return (
+  if (action !== 'add' || !workspaceId) return undefined;
+  if (!entry.held)
+    return (
+      <AddIcon
+        workspaceId={workspaceId}
+        ingredientId={entry.id}
+        covens={covens ?? []}
+        heldIn={entry.heldIn ?? []}
+      />
+    );
+  return <HeldMark />;
+};
+
+// A curator's Edit in Compendium, where the page gave the entry an edit address (M8.17). Named
+// for the compendium it changes, as on the entry page, so it is not taken for a coven's own.
+const editOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
+  entry.editHref && entry.editHeading ? (
+    <CompendiumEditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
+  ) : undefined;
+
+// The three dots, where a coven that holds the entry lets the viewer do something about it.
+const moreOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
+  entry.places && entry.places.length > 0 ? (
+    <CompendiumCardMore
+      id={entry.id}
+      label={entry.name}
+      name={nameOf(entry)}
+      places={entry.places}
+    />
+  ) : undefined;
+
+// The foot, up to three icons in this order (the owner's call, 2026-10-20): the add mark, Edit in
+// Compendium, then the three dots. Nothing for someone with none of them.
+const footOf = (
+  entry: CompendiumCardEntry,
+  action: CompendiumCardsProps['action'],
+  workspaceId: string | undefined,
+  covens: CompendiumCardsProps['covens'],
+): ReactElement | undefined => {
+  const mark = markOf(entry, action, workspaceId, covens);
+  const edit = editOf(entry);
+  const more = moreOf(entry);
+  return mark || edit || more ? (
     <>
-      {add}
+      {mark}
       {edit}
+      {more}
     </>
-  );
+  ) : undefined;
 };
 
 const CompendiumCards = ({
@@ -58,6 +101,8 @@ const CompendiumCards = ({
   position,
   total,
   action,
+  workspaceId,
+  covens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -92,7 +137,11 @@ const CompendiumCards = ({
             safetyNotes={entry.safetyNotes}
             kind="compendium"
             recency={entry.recency}
-            actions={actionsOf(entry, action)}
+            actions={footOf(entry, action, workspaceId, covens)}
+            startActions={
+              // The Quick Look eye at the card's bottom left (M12.5), for everyone.
+              entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
+            }
           />
         ))}
       </IngredientCardList>

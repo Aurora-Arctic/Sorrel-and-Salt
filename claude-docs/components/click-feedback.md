@@ -11,6 +11,8 @@ It replaced `ActionFailure`, which M12.31 removed. `ConfirmedAction`
 outside a dialog says its refusal this way and its success through
 `announcement`; inside one, only the user modal's Change Role and Approve or
 Revoke do (`refusalInModal`), the others keeping a notice in the dialog.
+`CupboardActions` ([`ingredient-entry.md`](ingredient-entry.md), "One failure callout") is the other
+adopter: Make It Ours and Remove share one callout on the button that keeps the focus.
 
 | File                | What it holds                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |

@@ -4,8 +4,12 @@ import type {
   CupboardOverrides,
 } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
+import type { ReactNode } from 'react';
+import type { AddIconProps } from '../AddIcon/types';
+import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
+import type { EntryMarksProps } from '../EntryMarks/types';
 
 /** The part of an entry its edit modal names itself by and edits. */
 export type EditableEntry = Pick<IngredientRow, 'id' | 'name' | 'canonicalName' | 'nomenclature'>;
@@ -110,11 +114,66 @@ export interface IngredientEntryProps {
   };
   /**
    * The cupboard buttons (M12.17), for a compendium entry seen from a coven:
-   * Add to Cupboard, or Annotate This Entry and Remove from Cupboard once the
-   * coven holds it, each only for a member whose role permits it. Left out on
+   * the plus (`plus`) while some coven may still add it, and Annotate, Make It
+   * Ours and Remove once the coven holds it, each only for a member whose role permits it. Left out on
    * the public page and for a coven's own entry.
    */
   cupboard?: CupboardProps;
+  /**
+   * The same buttons on the public page (M9.12), for a signed-in person with a
+   * coven they may write in: each of those covens, with whether it holds the
+   * entry and what the person's role there permits. Left out for a visitor, for
+   * someone with no such coven, and where no coven offers a choice. Unlike
+   * `cupboard`, it changes none of the page's marks: the public page is the
+   * compendium's, and says nothing of any coven's.
+   */
+  covens?: PublicCupboardProps;
+  /**
+   * The public page's (M9.12): one of the viewer's covens, of any role, holds this entry, read
+   * by `covensHoldingEntry` as the details modal's In Your Covens is. Draws the shelf before the
+   * name and nothing else; false for a visitor.
+   */
+  heldInCovens?: boolean;
+}
+
+/** One of the viewer's writable covens, as the public page's cupboard choices name it (M9.12). */
+export interface CupboardPlace {
+  workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
+  /** What a choice of coven lists it as. */
+  name: string;
+  /** This coven holds the entry now. */
+  held: boolean;
+  /** The role's answers in this coven, read as `CupboardProps` reads them. */
+  canAdd: boolean;
+  canAnnotate: boolean;
+  canRemove: boolean;
+  canMakeOurs: boolean;
+  /** The public page with `?annotate=<covenSlug>`: opens this coven's Annotate dialog over it. */
+  annotateHref: Route;
+}
+
+/** The public page's cupboard choices (M9.12): the viewer's writable covens, and the dialog the address opens. */
+export interface PublicCupboardProps {
+  /** The writable covens, the default first. */
+  covens: CupboardPlace[];
+  /** The coven Add Ingredient would choose: the confirmations start on it where it may. */
+  defaultWorkspaceId: string;
+  /**
+   * Where the Annotate dialog closes to, the page's own address; and, when the
+   * address names a holding coven the viewer may annotate in, that coven and
+   * its annotations. The page ignores any other `?annotate`.
+   */
+  annotate: { closeHref: Route; opened?: { workspaceId: string; overrides: CupboardOverrides } };
+}
+
+/** What the client buttons need on the public page: the covens, and the compendium's side of the form. */
+export interface PublicCupboardActionsProps extends PublicCupboardProps {
+  ingredientId: string;
+  compendium: CompendiumValues;
+  /** Edit in Compendium, for a curator: the main icon on the compendium's pages, else in More. */
+  edit?: { href: Route; entry: EditableEntry };
 }
 
 /**
@@ -149,7 +208,21 @@ export interface CupboardProps {
    * reaches. Left out, a remove reads the page again, which offers Add.
    */
   removedHref?: Route;
+  /**
+   * The plus beside the pencil (the owner's call, 2026-10-20): the viewer's covens that may
+   * add, this one among them where it may, and which hold the entry. Given, Add stands apart from
+   * the other choices; left out (a coven's own entry, a retired one, no coven that may add),
+   * neither the plus nor its check is drawn. `plusCovensOf` (src/app/plus-covens.ts) reads it.
+   */
+  plus?: CupboardPlus;
 }
+
+/**
+ * The plus's covens, on the coven's entry page (and the details modal after it): AddIcon's
+ * props but the entry, which the page already has. The check stands in its place once every
+ * one of `covens` is in `heldIn`.
+ */
+export type CupboardPlus = Omit<AddIconProps, 'ingredientId'>;
 
 /** What the client buttons need to draw: the props above, and the entry's two sides for the form. */
 export interface CupboardActionsProps extends CupboardProps {
@@ -160,6 +233,84 @@ export interface CupboardActionsProps extends CupboardProps {
   overrides: CupboardOverrides;
   /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
   edit?: { href: Route; entry: EditableEntry };
+}
+
+/**
+ * The marks the details head draws, as `EntryMarks` takes them: plain values, so the
+ * server page can hand them to the client dialog. The safety badge goes beside the
+ * name and the rest in a row under the formal name, so `provenance` and `safety` are
+ * the dialog's to set.
+ */
+export type DetailsMarks = Omit<EntryMarksProps, 'provenance' | 'safety'>;
+
+/**
+ * What a coven's own entry's icons (`OwnEntryActions`) need: the entry, where Edit
+ * goes, and where a delete leads. The entry page passes its whole `IngredientEntryEdit`.
+ */
+export interface OwnEntryActionsProps {
+  edit: Pick<IngredientEntryEdit, 'href' | 'deletedHref' | 'coven'>;
+  entry: EditableEntry;
+}
+
+/** What a details modal's address opens over a list (M12.5). */
+export interface IngredientDetailsOpened {
+  /** The entry's name and formal name, under the eyebrow "Ingredient" (`detailsHeading`). */
+  heading: ModalHeading;
+  /**
+   * What the head's badges say, worked out by the page from the entry
+   * (`detailsMarks`): the same marks the entry page and the card draw. Left out,
+   * no badge shows.
+   */
+  marks?: DetailsMarks;
+  /** The entry's own page, which the foot's link (See in Compendium or See in My Ingredients) reaches. */
+  pageHref: Route;
+  /**
+   * An Edit that opens the edit modal over the details, for whoever may edit
+   * the entry, at the list's own `?edit=`: an admin or curator on the admin
+   * list, an owner or member on a coven's list for the coven's own entry (not
+   * a compendium entry it holds). None for anyone else.
+   */
+  editAction?: RouteModalLink & {
+    /** The card's own name for the entry, name then formal name, which its Edit link is read as. */
+    name?: string;
+    /**
+     * Named and tipped Edit in Compendium, as the public compendium's card has it, where the
+     * plain Edit is the admin table's (the owner's call, 2026-10-20).
+     */
+    inCompendium?: boolean;
+  };
+  /**
+   * The compendium card's three dots for this entry (`CompendiumCardMore`), after the plus and
+   * Edit: what the viewer may do in the covens that hold it. Made by the page from the same
+   * component the card uses, so the window mirrors the card it was opened from.
+   */
+  more?: ReactNode;
+  /**
+   * The coven card's own foot controls for this entry (`covenCardActions`), drawn in place of
+   * `editAction`: Edit or Annotate, and the card's More or bin, so the window's icons are the
+   * card's the window was opened from (the owner's call, 2026-10-20). A delete or a remove leads to
+   * the list without the details, which closes them.
+   */
+  actions?: ReactNode;
+  /**
+   * The plus beside the pencil, for a live compendium entry (M9.12; the owner's call, 2026-10-20):
+   * every coven the viewer may add in and which hold it, read per request by `plusCovensOf`
+   * (src/app/plus-covens.ts). The check stands in its place once every one holds the entry. Left
+   * out (a coven's own entry, a retired one, a viewer in no coven that may add, a visitor),
+   * neither is drawn. Needs `ingredientId`.
+   */
+  plus?: CupboardPlus;
+  /** The compendium entry's id, which the plus adds. */
+  ingredientId?: string;
+  /** The summary, drawn by the server page from the entry page's own sections. */
+  children?: ReactNode;
+}
+
+export interface IngredientDetailsDialogProps {
+  /** The list the modal opened over, its `?entry=` dropped: closing goes back there. */
+  closeHref: Route;
+  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
+  opened?: IngredientDetailsOpened;
 }
 
 /**
@@ -206,6 +357,11 @@ export interface DeleteEntryOptions {
 export interface CupboardWrite {
   run: () => void;
   pending: boolean;
+  /**
+   * Forgets the last write's outcome before it is asked again: a remove stays
+   * busy past its success, so a second confirmation would open busy without it.
+   */
+  reset?: () => void;
 }
 
 export interface CupboardWrites {
@@ -222,6 +378,19 @@ export interface CupboardQuestionProps {
   onClose: () => void;
   /** Where the focus goes back to, the menu item that opened it having gone with the menu. */
   returnTo: () => HTMLElement | null | undefined;
+  /**
+   * Which coven, asked above the question where two or more of the viewer's
+   * covens hold the entry and permit the write (M9.12, the public page): the
+   * covens that do, the one chosen, and the choice changing it.
+   */
+  covens?: CovenChoiceProps;
+}
+
+/** A dropdown of the viewer's covens, as Make It Ours and Remove ask above their question (M9.12). */
+export interface CovenChoiceProps {
+  options: readonly { id: string; name: string }[];
+  chosen: string;
+  onChoose: (workspaceId: string) => void;
 }
 
 /**
