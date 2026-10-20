@@ -182,8 +182,15 @@ $arrow-rise: 7px;
   }
 }
 
-// Beside a borderless control: grown back over the control, and half the rest above
-// and below.
+// Beside a borderless control, held clear of its text by a margin, which
+// Floating UI's place leaves as it is (position.ts places it touching). The
+// physical side, as its place (`right`) is.
+.click-feedback__badge--beside {
+  margin-left: space(1);
+}
+
+// Its press target: grown back over the gap and the control, and half the rest
+// above and below.
 .click-feedback__badge--beside::after {
   top: calc(-0.5 * #{$badge-reach});
   bottom: calc(-0.5 * #{$badge-reach});

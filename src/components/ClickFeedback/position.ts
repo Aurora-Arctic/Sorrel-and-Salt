@@ -111,8 +111,10 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
 /**
  * The badge's place. On a bordered control, over its top right corner, its
  * centre 0.375 of its size in from each edge (the design's 0.45rem on 1.2rem).
- * `beside`, for a borderless control, which has no corner: to its right, a
- * twelfth of its size clear (0.1rem), centred on the control's height.
+ * `beside`, for a borderless control, which has no corner: to its right,
+ * centred on the control's height, and touching it here; its stylesheet's
+ * margin holds it clear (index.scss, `.click-feedback__badge--beside`), so the
+ * gap is a spacing token rather than a number in script.
  */
 export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside: boolean): Placed {
   const { refs, elements, floatingStyles, update, isPositioned } = useFloating({
@@ -128,7 +130,7 @@ export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside
       offset(({ rects, placement }) => {
         const size = rects.floating.height;
         return placement === 'right'
-          ? { mainAxis: size / 12 }
+          ? { mainAxis: 0 }
           : { mainAxis: -size * 0.625, crossAxis: size * 0.375 };
       }),
     ],

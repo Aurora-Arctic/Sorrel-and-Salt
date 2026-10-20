@@ -96,8 +96,10 @@ The badge is `position: absolute`, so it scrolls and clips with its control:
 
 - **On a bordered control**, on its top-right corner.
 - **On a borderless control** (a text button, a menu item), just right of it,
-  centred on it vertically, a twelfth of its height clear. An adopter leaves
-  about 1.4rem clear to the right of such a control.
+  centred on it vertically, `space(1)` (4px) clear. Floating UI places it
+  touching the control and the stylesheet's margin holds it off, so the gap
+  is a spacing token. An adopter leaves about 1.5rem clear to the right of
+  such a control.
 
 "Borderless" is read from the drawn style when the failure is reported: every
 side with no width, no style, or a transparent colour. It is not read from a
