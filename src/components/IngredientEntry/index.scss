@@ -290,8 +290,12 @@ $formal-line: 1.5rem;
 // The formal name over the heading as an eyebrow, its tip beside it; the
 // term ("Botanical Name") is read, not seen (the owner's call).
 .ingredient-entry__formal {
-  // The tip is placed against the nearest positioned ancestor: this.
-  position: relative;
+  // The side its tip opens, read by `useTip` as it opens (`--tip-placement`):
+  // below the mark rather than above it, where the shell's sticky bar would
+  // cover it at the top of the page; it covers the heading while open. The
+  // hook places it, so nothing here moves the bubble itself: a rule that did
+  // would shift it off the hook's 4px gap.
+  --tip-placement: bottom-start;
 
   dt {
     @include visually-hidden;
@@ -303,26 +307,11 @@ $formal-line: 1.5rem;
     align-items: center;
   }
 
-  // Below the name rather than above it, where the shell's sticky bar would
-  // cover it at the top of the page; it covers the heading while open.
-  .info-tip__bubble {
-    inset: 100% auto auto 0;
-    margin: space(1) 0 0;
-  }
-
-  // Beside the mark where there is room, so it covers nothing: anchored on
-  // the mark itself, level with its middle. A phone keeps it below, where
-  // 18rem to the right of the mark would run off the screen.
+  // Beside the mark where there is room, so it covers nothing, level with its
+  // middle. A phone keeps it below, where 18rem to the right of the mark would
+  // run off the screen.
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-    .info-tip {
-      position: relative;
-    }
-
-    .info-tip__bubble {
-      inset: 50% auto auto calc(100% + #{space(2)});
-      margin: 0;
-      translate: 0 -50%;
-    }
+    --tip-placement: right;
   }
 }
 
