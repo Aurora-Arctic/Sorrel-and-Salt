@@ -1,11 +1,11 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { usePendingNavigation } from '../../lib/navigation';
+import { PendingLink, usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useClickFeedback } from '../ClickFeedback';
 import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
@@ -81,12 +81,21 @@ export const AddIcon = ({
   );
 };
 
-/** The check: the coven holds this entry, and the link leads to it there. */
+/**
+ * The check: the coven holds this entry, and the link leads to it there, the coven's list
+ * filtered to it. A `PendingLink`, as the loading standard has every navigating link
+ * (claude-docs/loading.md): busy while the list is on its way, which draws its cards in the
+ * public frame's main region, since the coven's frame is not on this page.
+ */
 export const HeldLink = ({ href }: HeldLinkProps): ReactElement => (
   <IconTip tip="In My Ingredients">
-    <Link className="icon-tip__held" href={href}>
+    <PendingLink
+      className="icon-tip__held"
+      href={href}
+      navigationTarget={ingredientLinkTarget(href, false)}
+    >
       <CheckIcon />
       <span className="visually-hidden">In My Ingredients</span>
-    </Link>
+    </PendingLink>
   </IconTip>
 );

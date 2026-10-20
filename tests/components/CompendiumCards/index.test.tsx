@@ -13,6 +13,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from '@/gql/graphql';
 import { expectRefusalUnder } from '../../support/click-feedback';
 import { sent } from '../../support/filter-form';
+import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -161,6 +162,30 @@ describe('CompendiumCards', () => {
         'href',
         '/coven/fixture-coven/ingredients/a',
       );
+    });
+
+    // The loading standard (claude-docs/loading.md): a link that navigates says so while the
+    // coven's list is on its way, rather than looking dead until it arrives.
+    it('says the check is busy while the coven’s list it leads to is on its way', async () => {
+      const held = ENTRIES.map((one, index) =>
+        index === 0
+          ? { ...one, held: true, heldHref: '/coven/fixture-coven/ingredients?query=a' as Route }
+          : one,
+      );
+      render(
+        <Navigating push={router.push}>
+          <Cards {...props({ entries: held, action: 'add' })} />
+        </Navigating>,
+      );
+      const check = screen.getByRole('link', { name: 'In My Ingredients' });
+      expect(check).not.toHaveAttribute('aria-busy');
+
+      await act(async () => {
+        fireEvent.click(check);
+      });
+
+      expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven/ingredients?query=a');
+      expect(check).toHaveAttribute('aria-busy', 'true');
     });
 
     it('draws neither where the entry is held but has no address to link', () => {
