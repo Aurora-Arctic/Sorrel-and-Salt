@@ -9,12 +9,20 @@ import { Forbidden } from '@/lib/errors';
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
 const viewerIfSignedIn = vi.fn();
-vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
+// The viewer's role in each coven, which decides what the three dots hold.
+const covenRolesIfSignedIn = vi.fn();
+vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
 
 const heldCompendiumEntryIdsIn = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ heldCompendiumEntryIdsIn }));
+vi.mock('@/modules/ingredients', () => ({
+  heldCompendiumEntryIdsIn,
+  MAKE_IT_OURS_PERMISSION: {
+    ingredient: ['create', 'delete'],
+    inventory: ['update'],
+  },
+}));
 
 vi.mock('@/app/compendium-reads', () => ({
   readCompendium: async () => ({
@@ -94,6 +102,14 @@ const propsGiven = () => cards.mock.calls[0]![0];
 
 beforeEach(() => {
   viewerIfSignedIn.mockReset();
+  covenRolesIfSignedIn.mockReset();
+  covenRolesIfSignedIn.mockResolvedValue(
+    new Map([
+      ['w-view', 'viewer'],
+      ['w-1', 'owner'],
+      ['w-2', 'member'],
+    ]),
+  );
   getSession.mockReset();
   heldCompendiumEntryIdsIn.mockReset();
   getSession.mockResolvedValue({ userId: 'user-b', role: 'user' });
@@ -177,6 +193,61 @@ describe('the public compendium page, for the cards’ held state', () => {
 
       expect(held).toMatchObject({ held: true, heldIn: ['w-1', 'w-2'] });
       expect(free).toMatchObject({ held: false, heldIn: ['w-2'] });
+    });
+  });
+
+  // The three dots (the owner's call, 2026-10-20): the covens that hold the entry, where the
+  // viewer's role lets them annotate, make it theirs or remove it.
+  describe('the places the three dots act in', () => {
+    const placesOf = (each: Record<string, unknown>) =>
+      each.places as { workspaceId: string; canAnnotate: boolean; canRemove: boolean }[];
+
+    it('names the writable coven that holds the entry, with what the role permits, and none for one that does not', async () => {
+      viewerIfSignedIn.mockResolvedValue(
+        shell(coven('w-view', 'aaa', false), coven('w-1', 'bbb', true)),
+      );
+
+      const [held, free] = await entriesGiven();
+
+      expect(placesOf(held)).toEqual([
+        expect.objectContaining({
+          workspaceId: 'w-1',
+          covenSlug: 'bbb',
+          canAnnotate: true,
+          canMakeOurs: true,
+          canRemove: true,
+          annotateHref: '/compendium/ingredients/heldwort?annotate=bbb',
+        }),
+      ]);
+      expect(placesOf(free)).toEqual([]);
+    });
+
+    it('names both covens where both hold the entry', async () => {
+      viewerIfSignedIn.mockResolvedValue(
+        shell(coven('w-1', 'bbb', true), coven('w-2', 'ccc', true)),
+      );
+      heldCompendiumEntryIdsIn.mockResolvedValue(
+        new Map([
+          ['w-1', new Set(['id-held'])],
+          ['w-2', new Set(['id-held'])],
+        ]),
+      );
+
+      const [held] = await entriesGiven();
+
+      expect(placesOf(held).map(({ workspaceId }) => workspaceId)).toEqual(['w-1', 'w-2']);
+    });
+
+    it('names no coven where the role permits nothing, and none for a visitor', async () => {
+      covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'viewer']]));
+      viewerIfSignedIn.mockResolvedValue(shell(coven('w-1', 'bbb', true)));
+      const [held] = await entriesGiven();
+      expect(placesOf(held)).toEqual([]);
+
+      viewerIfSignedIn.mockResolvedValue(null);
+      covenRolesIfSignedIn.mockResolvedValue(null);
+      const [visited] = await entriesGiven();
+      expect(placesOf(visited)).toEqual([]);
     });
   });
 

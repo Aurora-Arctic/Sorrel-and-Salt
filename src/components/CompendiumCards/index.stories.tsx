@@ -126,6 +126,39 @@ export const CanAddAndEdit: Story = () => (
   />
 );
 
+// A curator who is also a member of a coven that holds the entries: the foot's three icons, the
+// plus (a check where every coven holds it), Edit in Compendium, and the three dots, which hold
+// Annotate, Make It Ours and Remove (the owner's call, 2026-10-20).
+export const CanAddEditAndMore: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry, at) => ({
+      ...entry,
+      held: at === 0,
+      heldIn: at === 0 ? [WORKSPACE_ID] : [],
+      editHref: `/compendium?edit=${entry.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
+      places:
+        at === 0
+          ? [
+              {
+                workspaceId: WORKSPACE_ID,
+                covenSlug: 'fixture-coven',
+                name: 'Fixture Coven',
+                canAnnotate: true,
+                canMakeOurs: true,
+                canRemove: true,
+                annotateHref:
+                  `/compendium/ingredients/${entry.slug}?annotate=fixture-coven` as Route,
+              },
+            ]
+          : undefined,
+    }))}
+  />
+);
+
 // An account that only views, or a visitor with no account (who signs in through the header):
 // nothing beneath the card.
 /** A curator's cards, each with Edit, which opens the compendium's edit dialog (M8.17). */

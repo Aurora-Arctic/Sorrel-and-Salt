@@ -4,8 +4,38 @@ import type { CompendiumCoven } from '../AddIcon/types';
 import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
 import type { EntryRecency } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
+import type { CupboardPlace } from '../IngredientEntry/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+
+/**
+ * A coven that holds the entry and lets the viewer do something about it from the card's More:
+ * the coven (its name, its address segment, for the own entry Make It Ours leads to), what the
+ * role there permits, and the entry page's address with this coven's `?annotate`.
+ */
+export type CompendiumCardPlace = Pick<
+  CupboardPlace,
+  | 'workspaceId'
+  | 'covenSlug'
+  | 'name'
+  | 'canAnnotate'
+  | 'canMakeOurs'
+  | 'canRemove'
+  | 'annotateHref'
+>;
+
+/** What a card's More, and the Quick Look window's made from it, needs of one entry. */
+export interface CompendiumCardMoreProps {
+  id: string;
+  /** The entry's name as the compendium calls it, which the confirmations say. */
+  label: string;
+  /** The entry's name and formal name, read after the control's name: "More for Name, Formal". */
+  name: string;
+  /** The viewer's covens that hold the entry and permit at least one choice, the default first. */
+  places: readonly CompendiumCardPlace[];
+  /** Where a remove leads once done, for the Quick Look window: the list without it. */
+  leaveHref?: Route;
+}
 
 /** One compendium entry as its card shows it. */
 export interface CompendiumCardEntry {
@@ -46,6 +76,11 @@ export interface CompendiumCardEntry {
    * shows those disabled. Left out, none does.
    */
   heldIn?: readonly string[];
+  /**
+   * The covens that hold this entry and let the viewer annotate it, make it their own or remove
+   * it, for the card's More. Left out, or empty, no More shows. Given to a signed-in member alone.
+   */
+  places?: readonly CompendiumCardPlace[];
 }
 
 /**

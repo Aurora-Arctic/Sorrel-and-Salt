@@ -395,7 +395,9 @@ test("a curator's Edit opens the compendium's edit dialog over the search, and c
   );
   const searched = '/compendium?query=Editwort';
   const dialog = page.getByRole('dialog', { name: /Edit Compendium Entry/ });
-  const edit = page.getByRole('link', { name: 'Edit Fixture Editwort, Fixtura editata' });
+  const edit = page.getByRole('link', {
+    name: 'Edit in Compendium Fixture Editwort, Fixtura editata',
+  });
 
   await page.goto(searched);
   await edit.click();

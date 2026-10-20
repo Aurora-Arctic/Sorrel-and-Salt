@@ -233,8 +233,8 @@ describe('CompendiumCards', () => {
     });
   });
 
-  // M8.17: a curator's Edit, named for the entry, beside Add where the account can add too.
-  it('draws Edit, named for the entry, on each card the page gives an edit address', () => {
+  // M8.17: a curator's Edit in Compendium, named for the entry, beside Add where the account can add too.
+  it('draws Edit in Compendium, named for the entry, on each card the page gives an edit address', () => {
     const editable = ENTRIES.map((one) => ({
       ...one,
       editHref: `/compendium?edit=${one.slug}` as Route,
@@ -242,19 +242,93 @@ describe('CompendiumCards', () => {
     }));
     render(<Cards {...props({ entries: editable, action: 'add' })} />);
     const hrefs = screen
-      .getAllByRole('link', { name: /^Edit / })
+      .getAllByRole('link', { name: /^Edit in Compendium / })
       .map((link) => link.getAttribute('href'));
     expect(hrefs).toEqual(editable.map(({ editHref }) => editHref));
     expect(
-      screen.getByRole('link', { name: 'Edit Testwort, Fixtura alteralis' }),
+      screen.getByRole('link', { name: 'Edit in Compendium Testwort, Fixtura alteralis' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Edit Fixture Salt' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Edit in Compendium Fixture Salt' }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Add to My Ingredients' })).toHaveLength(3);
   });
 
   it('draws no Edit where the page gives none', () => {
     render(<Cards {...props()} />);
     expect(screen.queryAllByRole('link', { name: /^Edit / })).toHaveLength(0);
+  });
+
+  // The owner's call, 2026-10-20: up to three icons, the plus, Edit in Compendium and the three
+  // dots, each only where the viewer may use it.
+  describe('the foot, by viewer', () => {
+    const PLACE = {
+      workspaceId: WORKSPACE_ID,
+      covenSlug: 'fixture-coven',
+      name: 'Fixture Coven',
+      canAnnotate: true,
+      canMakeOurs: true,
+      canRemove: true,
+      annotateHref: '/compendium/ingredients/fixture-salt?annotate=fixture-coven' as Route,
+    };
+    const saltCard = () =>
+      screen.getAllByRole('listitem').find((one) =>
+        within(one)
+          .queryAllByRole('link')
+          .some((link) => link.getAttribute('href') === '/compendium/ingredients/fixture-salt'),
+      ) as HTMLElement;
+
+    it('gives a signed-out visitor no plus, no Edit and no dots', () => {
+      render(<Cards {...props({ action: 'none' })} />);
+      expect(screen.queryByRole('button', { name: /^Add to / })).toBeNull();
+      expect(screen.queryByRole('link', { name: /^Edit / })).toBeNull();
+      expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
+    });
+
+    it('gives a member of a coven that holds the entry the dots, and no Edit', () => {
+      const entries = ENTRIES.map((one) =>
+        one.slug === 'fixture-salt' ? { ...one, places: [PLACE] } : one,
+      );
+      render(<Cards {...props({ entries, action: 'add' })} />);
+      expect(
+        within(saltCard()).getByRole('button', { name: 'More for Fixture Salt' }),
+      ).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /^More for / })).toHaveLength(1);
+      expect(screen.queryByRole('link', { name: /^Edit / })).toBeNull();
+    });
+
+    it('gives a curator Edit in Compendium and no dots unless a coven holds the entry', () => {
+      const entries = ENTRIES.map((one) => ({
+        ...one,
+        editHref: `/compendium?edit=${one.slug}` as Route,
+        editHeading: { eyebrow: 'Edit Compendium Entry', title: one.name },
+      }));
+      render(<Cards {...props({ entries, action: 'add' })} />);
+      expect(screen.getAllByRole('link', { name: /^Edit in Compendium / })).toHaveLength(3);
+      expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
+    });
+
+    it('gives a curator who is also a member all three, with Edit before the dots', () => {
+      const entries = ENTRIES.map((one) =>
+        one.slug === 'fixture-salt'
+          ? {
+              ...one,
+              places: [PLACE],
+              editHref: '/compendium?edit=fixture-salt' as Route,
+              editHeading: { eyebrow: 'Edit Compendium Entry', title: one.name },
+            }
+          : one,
+      );
+      render(<Cards {...props({ entries, action: 'add' })} />);
+      const foot = within(saltCard());
+      const add = foot.getByRole('button', { name: /^Add to / });
+      const edit = foot.getByRole('link', { name: 'Edit in Compendium Fixture Salt' });
+      const dots = foot.getByRole('button', { name: 'More for Fixture Salt' });
+      const follows = (first: Element, second: Element) =>
+        Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(add, edit)).toBe(true);
+      expect(follows(edit, dots)).toBe(true);
+    });
   });
 
   // M12.5: the Quick Look eye, at each card's foot, for everyone, a visitor included.

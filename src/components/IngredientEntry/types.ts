@@ -273,7 +273,18 @@ export interface IngredientDetailsOpened {
   editAction?: RouteModalLink & {
     /** The card's own name for the entry, name then formal name, which its Edit link is read as. */
     name?: string;
+    /**
+     * Named and tipped Edit in Compendium, as the public compendium's card has it, where the
+     * plain Edit is the admin table's (the owner's call, 2026-10-20).
+     */
+    inCompendium?: boolean;
   };
+  /**
+   * The compendium card's three dots for this entry (`CompendiumCardMore`), after the plus and
+   * Edit: what the viewer may do in the covens that hold it. Made by the page from the same
+   * component the card uses, so the window mirrors the card it was opened from.
+   */
+  more?: ReactNode;
   /**
    * The coven card's own foot controls for this entry (`covenCardActions`), drawn in place of
    * `editAction`: Edit or Annotate, and the card's More or bin, so the window's icons are the

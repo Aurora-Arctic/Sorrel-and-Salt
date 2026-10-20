@@ -21,7 +21,7 @@ export default function AnnotatePicker({
   returnTo,
 }: {
   /** The holding covens that permit annotating, with their addresses. */
-  places: readonly CupboardPlace[];
+  places: readonly Pick<CupboardPlace, 'workspaceId' | 'name' | 'annotateHref'>[];
   defaultWorkspaceId: string;
   onClose: () => void;
   returnTo: () => HTMLElement | null | undefined;

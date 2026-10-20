@@ -1,6 +1,7 @@
 import type { Metadata, Route } from 'next';
 import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
+import CompendiumCardMore from '../../../components/CompendiumCards/card-more';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { editHeading } from '../../../components/CompendiumList/heading';
 import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
@@ -27,6 +28,7 @@ import { viewerIfSignedIn } from '../../../lib/viewer';
 import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
+import { cardPlacesOf, readCardCovens } from './card-places';
 import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
 import { readEditPlace } from '../../(shell)/admin/list-page';
 import MissingNotice from '../../(shell)/admin/missing-notice';
@@ -164,6 +166,16 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
+  // What the role in each of those covens permits, for the three dots on the cards and in the
+  // window: one read, per request, for both, and none for a visitor or a viewer.
+  const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
+  const detailsPlaces = detailed
+    ? cardPlacesOf(
+        cardCovens,
+        (id) => holding.some((coven) => coven.id === id),
+        `/compendium/ingredients/${detailed.slug}`,
+      )
+    : [];
   const held = defaultCoven
     ? await heldEntryIds(
         covens.map(({ id }) => id),
@@ -190,6 +202,13 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       // The check shows only where every coven holds it (a mark, not a link: the owner’s call,
       // 2026-10-20).
       ...(defaultCoven && { held: heldIn.length === writable.length, heldIn }),
+      // The three dots: the covens that hold it and let the viewer annotate, make it theirs or
+      // remove it. None for a visitor, a viewer and a coven without the entry.
+      places: cardPlacesOf(
+        cardCovens,
+        (id) => held?.get(id)?.has(node.id) === true,
+        `/compendium/ingredients/${node.slug}`,
+      ),
       ...(canEdit && {
         editHref: listWith(node.slug),
         editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),
@@ -242,7 +261,20 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
                 href: hereWith(detailed.slug),
                 name: cardName(detailed.name, detailed.canonicalName),
                 heading: editHeading(detailed, EDIT_ENTRY_EYEBROW),
+                inCompendium: true,
               },
+            }),
+            // The card's three dots, from the same component, so the window mirrors the card.
+            ...(detailsPlaces.length > 0 && {
+              more: (
+                <CompendiumCardMore
+                  id={detailed.id}
+                  label={detailed.name}
+                  name={cardName(detailed.name, detailed.canonicalName)}
+                  places={detailsPlaces}
+                  leaveHref={compendiumHref(list, undefined, PUBLIC_COMPENDIUM_PATH)}
+                />
+              ),
             }),
             children: <IngredientSummary detail={shown} covens={holding} />,
           }

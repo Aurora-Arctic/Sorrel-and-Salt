@@ -392,6 +392,44 @@ describe('DetailsDialog plus', () => {
   });
 });
 
+// The window opened from a compendium card follows it (the owner's call, 2026-10-20): the pencil
+// is Edit in Compendium, and the page's three dots come last, after the plus and the pencil.
+describe('DetailsDialog from a compendium card', () => {
+  const show = (inCompendium: boolean) =>
+    render(
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <DetailsDialog
+            closeHref={LIST}
+            opened={{
+              heading: detailsHeading(ENTRY),
+              pageHref: PAGE,
+              editAction: { href: EDIT, heading: editHeading(ENTRY), inCompendium },
+              more: <button type="button">More for Testwort</button>,
+            }}
+          />
+        </RouteModalProvider>
+      </Navigating>,
+    );
+
+  it('names the pencil Edit in Compendium and puts the dots after it', () => {
+    show(true);
+    const edit = within(dialog()).getByRole('link', { name: 'Edit in Compendium Testwort' });
+    const more = within(dialog()).getByRole('button', { name: 'More for Testwort' });
+    expect(Boolean(edit.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
+      true,
+    );
+    // Why the name is the compendium's: the same props without the flag name a plain Edit.
+    expect(within(dialog()).queryByRole('link', { name: 'Edit Testwort' })).toBeNull();
+  });
+
+  it('names the pencil a plain Edit where the window is not the compendium card', () => {
+    show(false);
+    expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('link', { name: /^Edit in Compendium/ })).toBeNull();
+  });
+});
+
 // The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards
 // use (the owner's call, 2026-10-20), so what the card shows for this entry and role is what the
 // window shows: Edit and the bin on the coven's own entry, Annotate and More on a compendium

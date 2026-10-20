@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
-import { EditLink } from '../IconTip';
+import { CompendiumEditLink, EditLink } from '../IconTip';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
@@ -36,6 +36,7 @@ function headingOf({
   marks,
   editAction,
   actions: controls,
+  more,
   plus,
   ingredientId,
 }: IngredientDetailsOpened): ModalHeading {
@@ -54,14 +55,16 @@ function headingOf({
   // named as the card names the entry.
   const edit =
     controls ??
-    (editAction && <EditLink {...editAction} name={editAction.name ?? heading.title} />);
+    (editAction && <EditAction {...editAction} name={editAction.name ?? heading.title} />);
   // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
   // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
   const add = plus && ingredientId && <PlusMark plus={plus} ingredientId={ingredientId} />;
-  const actions = (add || edit) && (
+  // The compendium card's order: the plus, Edit in Compendium, then the three dots.
+  const actions = (add || edit || more) && (
     <>
       {add}
       {edit}
+      {more}
     </>
   );
   return {
@@ -71,6 +74,13 @@ function headingOf({
     ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
   };
 }
+
+/** The compendium card's Edit: Edit in Compendium on the public list, plain Edit on the admin's. */
+const EditAction = ({
+  inCompendium,
+  ...link
+}: NonNullable<IngredientDetailsOpened['editAction']> & { name: string }): ReactElement =>
+  inCompendium ? <CompendiumEditLink {...link} /> : <EditLink {...link} />;
 
 /**
  * The link to the entry's page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body

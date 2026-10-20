@@ -525,7 +525,7 @@ test.describe('on the public compendium', () => {
       'href',
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,
     );
-    await expect(editIn(details)).toHaveCount(0);
+    await expect(details.getByRole('link', { name: /^Edit/ })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
 
     await page.keyboard.press('Escape');
