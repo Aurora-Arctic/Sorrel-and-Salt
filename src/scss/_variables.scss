@@ -572,6 +572,29 @@ $brand-size: 1.375rem;
 // (proposed for MB.120, consumed by IngredientEntry).
 $inline-mark-size: 0.72em;
 
+// Small optical corrections, each in `em` of the text it sits in so it follows
+// that text's size (MB.120, where each was a raw value in its component).
+// - `$optical-nudge`: the shift that sets a mark level with the text beside it,
+//   by eye: the entry page's held shelf's gap before the name, and the recency
+//   mark's sparkle and label, each about half a pixel off (measured 2026-10-19).
+// - `$back-chevron-pull`: how far the entry page's back link pulls its chevron
+//   back, as the drawing starts inside its 1em box and read as an indent.
+// - `$link-hint-drop`: the drop that sets a 1rem chain icon level with a
+//   link's first line, which is taller than the icon.
+// - `$cap-middle`: the middle of Lexend's capitals measured from the top of a
+//   body line, what the details modal centres the coven shelf on.
+// - `$recency-icon-size`: the recency mark's sparkle, larger than its small
+//   bold label so the drawing's thin rays read.
+$optical-nudge: 0.04em;
+$back-chevron-pull: 0.5em;
+$link-hint-drop: 0.125em;
+$cap-middle: 0.648em;
+$recency-icon-size: 1.375em;
+
+// A top-level link in a grouped jump menu (PageNav), a step above body copy where
+// the scale has none; the entry page centres its Details link with it.
+$nav-link-size: 1.125rem;
+
 // The reading measure: the longest comfortable line of body copy. `ch` is the
 // width of "0" in the element's own font, so the measure follows the text it
 // caps. typography-base caps every paragraph at it, so a page wider than it — a

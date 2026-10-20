@@ -62,7 +62,7 @@ export default function IngredientSummary({
   const holding = detail.entry.workspaceId === null ? covens : [];
   // Where the viewer holds the entry, last (the owner's call, 2026-10-20). Not
   // something recorded of the entry, so it never stands in for the line below.
-  // Each coven's link leads with the In Your Cupboard shelf, as the coven's page
+  // Each coven's link leads with the In Your Covens shelf, as the coven's page
   // of the entry heads its name with it (the owner's call, 2026-10-20).
   const inYourCovens = holding.length > 0 && (
     <ListBlock

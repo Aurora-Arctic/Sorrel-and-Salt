@@ -107,6 +107,29 @@ function brands(): Record<string, Record<string, string>> {
   return byBrand;
 }
 
+// MB.120 item 16: the recency mark is small bold text in a badge's colour with
+// no ground of its own, so it must clear the text floor on whatever it stands
+// on: the entry page, a card, and a card pointed at (claude-docs/components/entry-marks.md, "Styling").
+describe('MB.120: the recency mark clears the text floor on the page, the card and a card pointed at', () => {
+  it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
+    const tokens = surfaces(theme);
+    const css = compileFile(fromRoot('src/components/EntryMarks/index.scss')).css;
+    const ink = (selector: string) => {
+      const found = /^var\((--[\w-]+)\)$/.exec(declarations(css, selector).color);
+      if (!found) throw new Error(`${selector} is not drawn in a token`);
+      return toHex(tokens[found[1]], theme);
+    };
+    const table = ['.recency-mark', '.recency-mark.recency-mark--updated'].flatMap((selector) =>
+      ['--surface-page', '--surface-card', '--surface-card-hover'].map((ground) => ({
+        pair: `${selector} on ${ground}`,
+        ratio: contrastRatio(ink(selector), toHex(tokens[ground], theme)),
+      })),
+    );
+
+    expect(table.filter((entry) => entry.ratio < 4.5)).toEqual([]);
+  });
+});
+
 describe('MB.116, MB.115: the brand and text colours clear their floors on the page and the card', () => {
   it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
     const tokens = surfaces(theme);

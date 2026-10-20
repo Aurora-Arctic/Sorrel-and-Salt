@@ -428,7 +428,7 @@ describe('the coven ingredient page’s Annotate', () => {
 // name for one the cupboard holds (the owner's call, 2026-10-19).
 describe('the coven ingredient page’s marks', () => {
   const compendiumMark = () => screen.queryByRole('status');
-  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Covens' });
 
   it('marks a compendium entry the coven does not hold as from the Compendium, with no shelf', async () => {
     await open(compendiumRow());

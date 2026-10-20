@@ -395,7 +395,7 @@ const IngredientEntry = ({
 
       {variants.length > 0 && (
         <PageNav
-          label="On this page"
+          label="On This Page"
           entries={[
             { href: '#details', label: 'Details' },
             ...variants.map(({ variant }, at) => ({

@@ -9,9 +9,9 @@ import IconTip from '../IconTip';
 // are, and outside the `h1` so the heading reads as the name alone. The tip
 // opens on hover, on focus, and on a press, as InfoTip's ⓘ does, so a tap shows
 // it on touch (the owner's call, 2026-10-20); the press does nothing else.
-// claude-docs/components/ingredient-entry.md, "In Your Cupboard".
+// claude-docs/components/ingredient-entry.md, "In Your Covens".
 
-export const HELD_TIP = 'In Your Cupboard';
+export const HELD_TIP = 'In Your Covens';
 
 // Exported for the details modal's In Your Covens links, which each lead with it.
 export const ShelfIcon = (): ReactElement => (

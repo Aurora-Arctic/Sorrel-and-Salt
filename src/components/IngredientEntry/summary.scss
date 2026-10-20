@@ -30,7 +30,7 @@
   gap: space(3);
 }
 
-// In Your Covens: each coven's link led by the In Your Cupboard shelf, the name
+// In Your Covens: each coven's link led by the In Your Covens shelf, the name
 // one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
 // stands at the top of the link, level with the name's first line, so a wrapped
 // name runs on under itself; the link sits at the top of its line box
@@ -38,7 +38,7 @@
 // item's synthesised baseline. The shelf is `$icon-size` (24px; the owner's
 // call, 2026-10-20, that 20px was too small): its drawing is 18.4px tall and
 // its bottles about 15px, a little over Lexend's 11.25px cap height at 16px.
-// It centres on the first line's capitals rather than the line box: 0.648em is
+// It centres on the first line's capitals rather than the line box: `$cap-middle` is
 // the capitals' middle measured from the line's top, and 0.5929 is where the
 // drawing's middle sits in its 32-unit box (y 6.7 to 31.24). Negative margins
 // rather than a move: the top one lifts the shelf, the bottom one stops what
@@ -58,7 +58,7 @@
     flex: none;
     width: $icon-size;
     height: $icon-size;
-    margin-block: calc(0.648em - #{$icon-size} * 0.5929) (-$icon-size);
+    margin-block: calc(#{$cap-middle} - #{$icon-size} * 0.5929) (-$icon-size);
   }
 }
 
@@ -171,9 +171,7 @@
   }
 
   &:focus-visible {
-    @include focus-ring;
-
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 
   @include reduced-motion {
