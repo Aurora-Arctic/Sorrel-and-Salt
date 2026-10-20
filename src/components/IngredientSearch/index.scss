@@ -18,9 +18,13 @@
 // inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
 // Opaque so the cards do not show through: the fill is the sorrel layer below, not this box. The padding above is the row's own air when stuck;
 // the negative margin of the same size cancels it at rest, so the page lays out as without it.
-// The padding below, `space(2)`, is real space between the row and the cards, as it always was. The tray is anchored to the form inside, not to this box, so the padding
-// never moves it from the input. While stuck (`data-stuck`, set by StuckMark) the row wears
-// the floating shadow, faded in and out.
+// Below the controls the row's box ends at the controls while the tray is shut, and the
+// `space(2)` between the row and the cards is a margin outside it. Opening the tray rolls that
+// space into the box as padding (the margin shrinks by as much, so the page does not move), under
+// the tray's own slide, and closing rolls it back; the stuck row thus never shows an empty strip
+// under its controls. The tray is anchored to the form inside, not to this box, so none of it
+// moves the tray from the input. While stuck (`data-stuck`, set by StuckMark) the row wears the
+// floating shadow, faded in and out.
 $stuck-pad: space(4);
 
 // The page's side gutter, the same from a phone up and in the shell and the public frame: the
@@ -39,11 +43,25 @@ $page-gutter: space(4);
   top: var(--sticky-top, 0px);
   z-index: layer('sticky-row');
   margin-block-start: calc(-1 * #{$stuck-pad});
-  padding-block: $stuck-pad space(2);
-  transition: box-shadow $modal-fade;
+  margin-block-end: space(2);
+  padding-block: $stuck-pad 0;
+  // The tray's own length and curve (FacetPanel's `.facet-panel__clip`, `--slide-ms`, set on the
+  // clip inside and so unreadable here: the same 350ms).
+  transition:
+    box-shadow $modal-fade,
+    padding-block-end var(--slide-ms, 350ms) ease,
+    margin-block-end var(--slide-ms, 350ms) ease;
 
   @include reduced-motion {
     transition: none;
+  }
+
+  // `--open` is on the clip from just after the tray starts to open until it starts to close,
+  // the same two moments its rows grow and shrink in (useSlide). Before the script the tray is
+  // in the flow with the class, so the space is already inside the box.
+  &:has(.facet-panel__clip--open) {
+    margin-block-end: 0;
+    padding-block-end: space(2);
   }
 
   &[data-stuck] {
@@ -92,7 +110,7 @@ $page-gutter: space(4);
   }
 }
 
-// The search sentence under the row: the row's padding below is already part of the air, so
+// The search sentence under the row: the row's margin below is already part of the air, so
 // the sentence takes back the same amount from the stack's gap, and sits a gap from the
 // input as the cards sit a gap from it.
 .ingredient-search > search + .search-sentence {
@@ -111,7 +129,9 @@ $page-gutter: space(4);
 
 // A focus or a jump that scrolls a control into view lands it below the stuck row, not
 // under it: the bar (the shell's alone), the row's own height, and a step of air. The root
-// is the scroll container, which cannot read the frames' `--sticky-top`, set below it.
+// is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The
+// first `space(2)` is the gap under the row, a margin when the tray is shut and padding when
+// it is open, so a jump lands in the same place either way.
 html:has(.app-shell .ingredient-search) {
   scroll-padding-top: calc(
     #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} +

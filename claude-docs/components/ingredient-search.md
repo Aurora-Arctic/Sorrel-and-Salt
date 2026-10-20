@@ -75,11 +75,14 @@ in the filter slot to carry.
   `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
   PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
   above, cancelled at rest by an equal negative margin so the page lays out as
-  before, and `space(2)` below, real space between the row and the cards with no
-  cancelling margin (changed 2026-10-19, back to what it was). The search sentence
-  under the row takes that `space(2)` back from the frame's gap, so it sits a gap
-  from the input as the cards sit a gap from it. The tray hangs from the form
-  inside, so the padding never moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  before. Below, `space(2)` separates the row from the cards: while the tray is
+  shut it is a margin outside the box, so a stuck row ends at the bottom of its
+  controls with no empty strip under them; as the tray opens it rolls into the box as
+  padding and the margin shrinks by as much (so nothing on the page moves), and as the
+  tray closes it rolls back, on the tray's own slide (`350ms ease`, none under reduced
+  motion). The search sentence under the row takes that `space(2)` back from the
+  frame's gap, so it sits a gap from the input as the cards sit a gap from it. The
+  tray hangs from the form inside, so none of this moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
   IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
@@ -91,7 +94,7 @@ in the filter slot to carry.
   sorrel shows through the stuck row while the cards under it stay hidden
   (M12.46; [`backdrop.md`](backdrop.md), "The copy in the search row"). It is
   hidden with the sorrel under `prefers-contrast: more`, and the row stays opaque. The
-  root's `scroll-padding-top` leaves room for the stuck row, padding included,
+  root's `scroll-padding-top` leaves room for the stuck row and the gap under it,
   when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
 - **Nothing is asked until the box is focused**, nor while the text is under
