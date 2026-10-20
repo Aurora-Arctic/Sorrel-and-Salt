@@ -199,8 +199,8 @@ describe('the coven Ingredients page', () => {
       within(list)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href'))
-        // A member's Edit and Annotate are the dialogs' tests'.
-        .filter((href) => !href?.includes('edit=') && !href?.includes('annotate=')),
+        // A member's Edit and Annotate are the dialogs' tests', Quick Look the details'.
+        .filter((href) => !/[?&](edit|annotate|entry)=/.test(href ?? '')),
     ).toEqual(['/coven/fixture-coven/ingredients/a1', '/coven/fixture-coven/ingredients/b2']);
     expect(within(list).getByRole('link', { name: /^House Salt/ })).toBeInTheDocument();
   });

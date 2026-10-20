@@ -13,7 +13,8 @@ import type { IngredientCardProps } from './types';
 import './index.scss';
 
 // One ingredient in a list, for the public compendium (M8.18) and the coven's
-// Ingredients page (M9.6) alike: its name as the card's one link, the formal
+// Ingredients page (M9.6) alike: its name as the card's link (with a Quick Look
+// eye beside it on the coven's list, M12.5), the formal
 // name and the forms beneath it (two entries can share a label, and these tell
 // them apart), the marks, and a slot for jar lines. Presentational:
 // it takes props only and works out nothing from the data, so the marks and the
@@ -60,19 +61,18 @@ const IngredientCard = ({
       <div className="specimen__top">
         <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
-            {/* The entry page draws its own frame while it loads, so the link names it (M12.33).
-                Given `opens`, a plain press opens the details modal over the list
-                instead, the name still a link to the page (M12.5). */}
-            {opens ? (
-              <DetailsLink href={href} opens={opens}>
-                {label} <LinkHint />
-              </DetailsLink>
-            ) : (
-              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-                {label} <LinkHint />
-              </PendingLink>
-            )}
+            {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
+            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+              {label} <LinkHint />
+            </PendingLink>
           </Heading>
+          {/* Outside the heading, so its name stays the entry's alone; in its line. */}
+          {opens && (
+            <>
+              {' '}
+              <DetailsLink opens={opens} name={formal ? `${label}, ${formal}` : label} />
+            </>
+          )}
           {formal !== '' && (
             <p className="meta ingredient-card__formal">
               {/* `i` rather than `em`: a taxonomic name is set apart, not stressed.

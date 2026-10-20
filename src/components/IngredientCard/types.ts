@@ -12,10 +12,10 @@ export interface IngredientCardProps {
   /** The entry's page (M8.19); the name links to it, and it is the card's one link. */
   href: Route;
   /**
-   * The entry's details modal over the list (M12.5), which a plain press of
-   * the name opens instead of the page; the name still links to `href`. The
+   * The entry's details modal over the list (M12.5), which the Quick Look
+   * eye beside the name opens; the name itself still links to `href`. The
    * coven's Ingredients page gives it; the public compendium does not, so its
-   * names go to the page.
+   * cards draw no eye.
    */
   opens?: RouteModalLink;
   /**

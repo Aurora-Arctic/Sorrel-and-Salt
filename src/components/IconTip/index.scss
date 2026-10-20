@@ -104,3 +104,10 @@
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-remove;
 }
+
+// An entry's Quick Look beside its name in a list (M12.5): Edit's pencil's
+// size and green, round the eye, sitting in the name's line.
+.icon-tip__look {
+  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-edit;
+}

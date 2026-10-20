@@ -175,12 +175,12 @@ describe('CompendiumList', () => {
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(rows).toHaveLength(3);
-    expect(within(rows[1]).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
+    expect(within(rows[1]).getByRole('link', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(
       within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' }),
     ).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
+    expect(within(rows[2]).getByRole('link', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
   // The dot between two forms is drawn in CSS; a reader still hears a list, and the visible
@@ -281,7 +281,7 @@ describe('CompendiumList', () => {
     );
   });
 
-  it("opens a name's details modal over the list on a plain press, its href still the entry's page", async () => {
+  it("opens an entry's details modal over the list from its Quick Look, the name a plain link to its page", async () => {
     render(
       <Navigating push={router.push}>
         <RouteModalProvider>
@@ -292,11 +292,22 @@ describe('CompendiumList', () => {
     );
 
     const name = screen.getByRole('link', { name: 'Fixture Salt' });
+    expect(name).toHaveAttribute('href', '/compendium/ingredients/fixture-salt');
     await act(async () => {
       fireEvent.click(name);
     });
+    expect(router.push.mock.lastCall?.[0]).toBe('/compendium/ingredients/fixture-salt');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    expect(name).toHaveAttribute('href', '/compendium/ingredients/fixture-salt');
+    const look = screen.getByRole('link', { name: 'Quick Look Fixture Salt' });
+    expect(look).toHaveAttribute('href', '/admin/compendium?entry=fixture-salt');
+    expect(fireEvent.click(look, { metaKey: true })).toBe(true);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(look);
+    });
+
     expect(router.push.mock.lastCall?.[0]).toBe('/admin/compendium?entry=fixture-salt');
     expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });

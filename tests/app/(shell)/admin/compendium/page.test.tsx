@@ -264,7 +264,7 @@ describe('the /admin/compendium page', () => {
     expect(readCardCategories).toHaveBeenCalledExactlyOnceWith([TESTWORT.id]);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
     expect(within(row).getByRole('list', { name: 'Categories' })).toBeInTheDocument();
-    expect(within(row).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
+    expect(within(row).getByRole('link', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Herb' })).toBeInTheDocument();
     expect(

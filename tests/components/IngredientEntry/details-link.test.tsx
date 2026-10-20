@@ -10,13 +10,12 @@ const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsLink } = await import('@/components/IngredientEntry/details-link');
 const { DETAILS_PLACE, detailsHeading } = await import('@/components/IngredientEntry/details');
 
-// An ingredient's name in a list (M12.5): a link to the entry's page, which
-// a plain press turns into its details modal over the list, `?entry=`, while
-// a new tab, a press before the script loads, or a page with no modal
-// provider still reaches the page (claude-docs/components/ingredient-entry.md,
+// An entry's Quick Look in a list (M12.5): the icon beside its name, a link to
+// the list's own address with `?entry=`, which a plain press opens at once as
+// the details modal over the list, while a new tab or a press before the
+// script loads opens that address (claude-docs/components/ingredient-entry.md,
 // "The details modal").
 
-const PAGE = '/compendium/ingredients/testwort' as Route;
 const DETAILS: Route = '/admin/compendium?entry=testwort';
 const heading = detailsHeading({
   name: 'Testwort',
@@ -24,7 +23,7 @@ const heading = detailsHeading({
   nomenclature: 'binomial',
 });
 
-const link = () => screen.getByRole('link', { name: 'Testwort' });
+const link = () => screen.getByRole('link', { name: 'Quick Look Testwort, Fixtura testalis' });
 
 beforeEach(() => {
   router.push.mockReset();
@@ -35,19 +34,17 @@ describe('DetailsLink', () => {
     render(
       <Navigating push={router.push}>
         <RouteModalProvider>
-          <DetailsLink href={PAGE} opens={{ href: DETAILS, heading }}>
-            Testwort
-          </DetailsLink>
+          <DetailsLink opens={{ href: DETAILS, heading }} name="Testwort, Fixtura testalis" />
           <RouteModal place={DETAILS_PLACE} closeHref="/admin/compendium" />
           <RouteModal closeHref="/admin/compendium" />
         </RouteModalProvider>
       </Navigating>,
     );
 
-  it('links to the entry page, so a new tab or no script still reaches it', () => {
+  it("is named Quick Look and the entry's name, and links to the list with the details open", () => {
     renderList();
 
-    expect(link()).toHaveAttribute('href', PAGE);
+    expect(link()).toHaveAttribute('href', DETAILS);
   });
 
   it('opens the details modal at once on a plain press, in its own place', async () => {
@@ -60,7 +57,6 @@ describe('DetailsLink', () => {
 
     expect(handled).toBe(false);
     expect(router.push).toHaveBeenCalledWith(DETAILS);
-    expect(router.push).not.toHaveBeenCalledWith(PAGE);
     // One dialog: the press shows in the details place, not the edit modal's too.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(
@@ -75,21 +71,5 @@ describe('DetailsLink', () => {
 
     expect(router.push).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('goes to the entry page outside a modal provider', async () => {
-    render(
-      <Navigating push={router.push}>
-        <DetailsLink href={PAGE} opens={{ href: DETAILS, heading }}>
-          Testwort
-        </DetailsLink>
-      </Navigating>,
-    );
-
-    await act(async () => {
-      fireEvent.click(link());
-    });
-
-    expect(router.push).toHaveBeenCalledWith(PAGE);
   });
 });

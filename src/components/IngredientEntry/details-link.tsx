@@ -1,40 +1,23 @@
-'use client';
-
-import type { Route } from 'next';
-import type { ReactElement, ReactNode } from 'react';
-import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
-import { useOpenModalClick } from '../Modal';
+import type { ReactElement } from 'react';
+import { QuickLookLink } from '../IconTip';
 import type { RouteModalLink } from '../Modal/types';
 import { DETAILS_PLACE } from './details';
 
 /**
- * An ingredient's name in a list, opening its details modal over the list
- * (M12.5). Its `href` is the entry's page, so a new tab, a press before the
- * script loads, or a list with no modal provider reaches the page; a plain
- * press under a provider opens `opens` at once in the details place instead.
- * A client file of its own so the card and the table stay server components.
+ * An entry's Quick Look in a list (M12.5): the eye beside its name, opening
+ * its details modal over the list, `opens`, in the details place, so the
+ * press shows there and not in the list's edit modal. The name itself stays a
+ * plain link to the entry's page (the owner's call, 2026-10-20).
  */
 export default function DetailsLink({
-  href,
   opens,
-  className,
-  children,
+  name,
 }: {
-  href: Route;
   opens: RouteModalLink;
-  className?: string;
-  children: ReactNode;
+  /** The entry's label and formal name, read after "Quick Look". */
+  name: string;
 }): ReactElement {
-  const onClick = useOpenModalClick(opens.href, opens.heading, DETAILS_PLACE);
   return (
-    <PendingLink
-      className={className}
-      href={href}
-      navigationTarget={ingredientLinkTarget(href)}
-      onClick={onClick}
-    >
-      {children}
-    </PendingLink>
+    <QuickLookLink href={opens.href} heading={opens.heading} name={name} place={DETAILS_PLACE} />
   );
 }

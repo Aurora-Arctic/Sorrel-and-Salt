@@ -179,3 +179,16 @@
 [data-density='compact']:not(:root[data-card-density='regular'] *) {
   @include ingredient-card-compact;
 }
+
+// The name and its Quick Look eye in one line (M12.5): the heading runs
+// inline, so the eye follows its last word, and the formal name beneath stays
+// a block of its own. The eye is above the stretched link, as the actions are,
+// so a press on it opens the details rather than the page.
+.ingredient-card__name {
+  display: inline;
+}
+
+.ingredient-card .ingredient-card__heading > .icon-tip {
+  position: relative;
+  z-index: 1;
+}

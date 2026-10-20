@@ -120,13 +120,13 @@ describe('CovenCards', () => {
   it('links each entry to its page inside the coven', () => {
     render(<Cards {...props()} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });
-    const hrefs = within(list)
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'));
+    const hrefs = ENTRIES.map(({ label }) =>
+      within(list).getByRole('link', { name: label }).getAttribute('href'),
+    );
     expect(hrefs).toEqual(ENTRIES.map(({ id }) => `/coven/fixture-coven/ingredients/${id}`));
   });
 
-  it("opens an entry's details modal over the list on a plain press of its name", async () => {
+  it("opens an entry's details modal over the list from its Quick Look, the name a plain link to its page", async () => {
     render(
       <Navigating push={router.push}>
         <RouteModalProvider>
@@ -139,8 +139,21 @@ describe('CovenCards', () => {
       </Navigating>,
     );
 
+    // The name goes to the entry's page, opening no modal.
     await act(async () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Salt' }));
+    });
+    expect(router.push.mock.lastCall?.[0]).toBe('/coven/fixture-coven/ingredients/e2');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    const look = screen.getByRole('link', { name: 'Quick Look Fixture Salt' });
+    expect(look).toHaveAttribute('href', '/coven/fixture-coven/ingredients?entry=e2');
+    // A press with a modifier is the browser's: a new tab at that address.
+    expect(fireEvent.click(look, { ctrlKey: true })).toBe(true);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(look);
     });
 
     expect(router.push.mock.lastCall?.[0]).toBe('/coven/fixture-coven/ingredients?entry=e2');
