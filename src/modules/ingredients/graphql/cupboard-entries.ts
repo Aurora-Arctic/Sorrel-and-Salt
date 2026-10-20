@@ -281,11 +281,15 @@ builder.mutationField('splitLocalIntoCompendiumEntries', (t) =>
       localId: t.arg.id({ required: true }),
       picks: t.arg.idList({ required: true }),
       assignments: t.arg({ type: [FormAssignmentInput] }),
+      labelOn: t.arg.id({
+        description:
+          "The pick that keeps the own entry's name as its label: the first pick when left out, and no pick when null.",
+      }),
     },
     authScopes: { signedIn: true },
     resolve: async (
       _root,
-      { workspaceId, localId, picks, assignments },
+      { workspaceId, localId, picks, assignments, labelOn },
       { loaders, ...context },
     ) => {
       const { entries, dropped } = await splitLocalIntoCompendiumEntries(
@@ -294,6 +298,7 @@ builder.mutationField('splitLocalIntoCompendiumEntries', (t) =>
         localId,
         picks,
         assignments ?? [],
+        labelOn,
       );
       return {
         entries: await Promise.all(entries.map((entry) => nodeOf(entry, loaders))),

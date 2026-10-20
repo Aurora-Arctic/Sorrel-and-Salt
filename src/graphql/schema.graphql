@@ -897,7 +897,17 @@ type Mutation {
   """
   Turns one of the coven's own entries into one compendium entry or several (M8.17): each form's jars and spell layers move to the pick with a form of its name, or, where two picks have it, the one its assignment names; a cupboard entry per pick carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no home, or a jar or a layer would meet one of a pick's.
   """
-  splitLocalIntoCompendiumEntries(assignments: [FormAssignmentInput!], localId: ID!, picks: [ID!]!, workspaceId: ID!): SplitLocal!
+  splitLocalIntoCompendiumEntries(
+    assignments: [FormAssignmentInput!]
+
+    """
+    The pick that keeps the own entry's name as its label: the first pick when left out, and no pick when null.
+    """
+    labelOn: ID
+    localId: ID!
+    picks: [ID!]!
+    workspaceId: ID!
+  ): SplitLocal!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!

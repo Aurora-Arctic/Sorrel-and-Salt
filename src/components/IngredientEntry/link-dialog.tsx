@@ -34,6 +34,7 @@ export default function LinkDialog({
               key={opened.localId}
               workspaceId={opened.workspaceId}
               localId={opened.localId}
+              name={opened.name}
               ingredientsHref={opened.ingredientsHref}
               holdings={opened.holdings}
               onCancel={done}

@@ -556,7 +556,8 @@ export async function localHoldings(
 /**
  * Turns this coven's own ingredient `localId` into the compendium entry
  * `compendiumId`: the one-pick case of `splitLocalIntoCompendiumEntries`,
- * whose rules and refusals it keeps.
+ * whose rules and refusals it keeps. The own entry's name stays on the new
+ * cupboard row as its label unless `keepLabel` is false.
  *
  * @throws {Forbidden} the caller may not create and delete this coven's
  * ingredients and update its stock.
@@ -569,12 +570,15 @@ export async function convertLocalToCompendiumEntry(
   workspaceId: string,
   localId: string,
   compendiumId: string,
+  keepLabel = true,
 ): Promise<ConvertedLocal> {
   const { entries, dropped } = await splitLocalIntoCompendiumEntries(
     session,
     workspaceId,
     localId,
     [compendiumId],
+    [],
+    keepLabel ? compendiumId : null,
   );
   return { entry: entries[0], dropped };
 }
@@ -590,8 +594,10 @@ export async function convertLocalToCompendiumEntry(
  * matches nothing and holds nothing is dropped, and so is one two picks
  * share that holds nothing and has no assignment. Each pick gets a cupboard
  * row carrying the notes and lists the own entry had that the pick's differ
- * from — and the own entry's name as its label only when there is one pick,
- * since two rows of one coven cannot share a label. The own entry is
+ * from, and the own entry's name as its label on the one pick `labelOn`
+ * names: the first pick when it is left out, and no pick when it is null,
+ * since two rows of one coven cannot share a label (the owner's call of
+ * 2026-10-20). The own entry is
  * soft-deleted, its forms, folk names, substitutes, categories, references
  * and deities left on it as they were, which is how a spell layer laid
  * before the convert on a form already deleted still reads it. Nothing is
@@ -604,7 +610,7 @@ export async function convertLocalToCompendiumEntry(
  * pick not a live compendium entry.
  * @throws {ValidationError} no pick, beside `picks`; the coven already holds
  * a pick, beside `ingredientId`; another entry of the coven already uses the
- * label, beside `label`; an assignment names a form the own entry does not
+ * label, beside `label`; `labelOn` is not a pick, beside `labelOn`; an assignment names a form the own entry does not
  * have live or a pick without that form, beside `assignments`; a form that
  * holds a jar or a spell layer matches no pick's form, or two picks' with no
  * assignment, beside `forms`; the coven holds a jar of a matched form
@@ -617,6 +623,7 @@ export async function splitLocalIntoCompendiumEntries(
   localId: string,
   picks: readonly string[],
   assignments: readonly FormAssignment[] = [],
+  labelOn?: string | null,
 ): Promise<SplitLocal> {
   const membership = await assertMembership(session, workspaceId, CONVERT_PERMISSION);
   if (!RowId.safeParse(localId).success) throw new NotFound(NO_LOCAL);
@@ -627,6 +634,12 @@ export async function splitLocalIntoCompendiumEntries(
     ]);
   }
   if (pickIds.some((id) => !RowId.safeParse(id).success)) throw new NotFound(NO_ENTRY);
+  const labelled = labelOn === undefined ? pickIds[0] : labelOn;
+  if (labelled !== null && !pickIds.includes(labelled)) {
+    throw new ValidationError([
+      { path: ['labelOn'], message: 'Keep your name only on an entry you chose' },
+    ]);
+  }
   const own = await findOneByIdInWorkspace(membership, ingredients, localId);
   if (!own) throw new NotFound(NO_LOCAL);
   const single = pickIds.length === 1;
@@ -643,11 +656,11 @@ export async function splitLocalIntoCompendiumEntries(
   const columnsOf = new Map<string, Partial<CupboardEntryInput>>(
     entries.map((entry) => {
       const { label, ...rest } = differingColumns(own, entry);
-      return [entry.id, single && label ? { label, ...rest } : rest];
+      return [entry.id, entry.id === labelled && label ? { label, ...rest } : rest];
     }),
   );
-  if (single)
-    await refuseLabelTaken(membership, columnsOf.get(pickIds[0])!.label, undefined, own.id);
+  if (labelled !== null)
+    await refuseLabelTaken(membership, columnsOf.get(labelled)!.label, undefined, own.id);
   const nameOf = new Map(entries.map((entry) => [entry.id, entry.name]));
 
   const ownForms = await findManyOfIngredients([membership], ingredientVariants, [localId]);

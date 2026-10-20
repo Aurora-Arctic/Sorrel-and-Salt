@@ -79,7 +79,12 @@ const splitInto = (
   session = asUser(B),
   picks = [split, twin],
   localId = local,
-) => splitLocalIntoCompendiumEntries(session, WORKSPACE_W_ID, localId, picks, assignments);
+  labelOn?: string | null,
+) => splitLocalIntoCompendiumEntries(session, WORKSPACE_W_ID, localId, picks, assignments, labelOn);
+
+/** Each pick's cupboard label, by pick. */
+const labelsByPick = async () =>
+  Object.fromEntries((await cupboardRows()).map((row) => [row.ingredient_id, row.label]));
 
 const jarOf = (variantId: string) =>
   insertStock(
@@ -156,10 +161,35 @@ describe('splitLocalIntoCompendiumEntries', () => {
     expect((await localRow()).deleted_at).not.toBeNull();
     const rows = await cupboardRows();
     expect(rows.map((row) => row.ingredient_id).sort()).toEqual([split, twin].sort());
-    // Two entries cannot both take the own entry's name, which labels are unique by.
-    expect(rows.map((row) => row.label)).toEqual([null, null]);
+    // Left unsaid, the own entry's name stays on the first pick alone, since
+    // two entries of one coven cannot share a label.
+    expect(await labelsByPick()).toEqual({ [split]: 'Our Mixwort', [twin]: null });
     expect(result.entries.map((row) => row.ingredientId).sort()).toEqual([split, twin].sort());
     expect(result.dropped.forms).toEqual([]);
+  });
+
+  it("keeps the own entry's name on the pick chosen for it, not the first", async () => {
+    const result = await splitInto([], asUser(B), [split, twin], local, twin);
+
+    expect(await labelsByPick()).toEqual({ [split]: null, [twin]: 'Our Mixwort' });
+    expect(result.entries.find((row) => row.ingredientId === twin)?.label).toBe('Our Mixwort');
+  });
+
+  it("keeps the own entry's name on no pick when none is chosen", async () => {
+    await splitInto([], asUser(B), [split], local, null);
+    // Why it could have kept it: the own entry's name differs from the pick's.
+    expect((await localRow()).name).not.toBe('Splitwort');
+
+    expect(await labelsByPick()).toEqual({ [split]: null });
+  });
+
+  it('refuses to keep the name on an entry that is not a pick, and moves nothing', async () => {
+    const rootJar = await jarOf(root);
+
+    const error = await refusal(splitInto([], asUser(B), [split], local, twin));
+
+    expect(error.issues.map((issue) => issue.path[0])).toEqual(['labelOn']);
+    await expectNothingMoved(rootJar);
   });
 
   it('drops a shared form that holds nothing and has no assignment', async () => {

@@ -980,9 +980,11 @@ refusal that moves nothing is `VALIDATION` beside `ingredientId`, `label`,
 "Converting an own entry").
 
 **The split** (M8.17), `splitLocalIntoCompendiumEntries(workspaceId, localId,
-picks, assignments)`, does the same across one compendium entry or several:
+picks, assignments, labelOn)`, does the same across one compendium entry or several:
 `picks` lists the entries, and `assignments`, a list of `FormAssignmentInput`
-(`formId`, `compendiumId`), says where a form two picks both have goes. It
+(`formId`, `compendiumId`), says where a form two picks both have goes. `labelOn` is the pick that keeps
+the own entry's name as its label: the first pick when left out, no pick when
+`null`, and a refusal beside `labelOn` for an id that is not a pick. It
 answers a `SplitLocal`: `entries`, a `CupboardEntry` per pick in the order
 picked, and the same `dropped`. The refusals are the convert's, with no picks
 `VALIDATION` beside `picks` and a bad assignment beside `assignments`; the

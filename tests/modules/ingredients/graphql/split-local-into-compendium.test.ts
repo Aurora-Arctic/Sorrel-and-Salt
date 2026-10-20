@@ -64,8 +64,8 @@ beforeEach(async () => {
   );
 });
 
-const SPLIT = `mutation ($workspaceId: ID!, $localId: ID!, $picks: [ID!]!, $assignments: [FormAssignmentInput!]) {
-  splitLocalIntoCompendiumEntries(workspaceId: $workspaceId, localId: $localId, picks: $picks, assignments: $assignments) {
+const SPLIT = `mutation ($workspaceId: ID!, $localId: ID!, $picks: [ID!]!, $assignments: [FormAssignmentInput!], $labelOn: ID) {
+  splitLocalIntoCompendiumEntries(workspaceId: $workspaceId, localId: $localId, picks: $picks, assignments: $assignments, labelOn: $labelOn) {
     entries { id label compendiumName }
     dropped { forms }
   }
@@ -78,13 +78,17 @@ interface Split {
   };
 }
 
-const splitAs = (session: Session) =>
+const splitAs = (session: Session, labelOn?: string | null) =>
   run<Split>(session, SPLIT, {
     workspaceId: WORKSPACE_W_ID,
     localId: local,
     picks: [split, twin],
     assignments: [{ formId: leaf, compendiumId: twin }],
+    ...(labelOn !== undefined && { labelOn }),
   });
+
+const labels = (result: Awaited<ReturnType<typeof splitAs>>) =>
+  result.data?.splitLocalIntoCompendiumEntries.entries.map((entry) => entry.label);
 
 const jarIngredient = async () =>
   (await sql`select ingredient_id from inventory_items where id = ${jar}`)[0].ingredient_id;
@@ -98,6 +102,18 @@ describe('splitLocalIntoCompendiumEntries', () => {
       result.data?.splitLocalIntoCompendiumEntries.entries.map((entry) => entry.compendiumName),
     ).toEqual(['Splitwort', 'Twinwort']);
     expect(await jarIngredient()).toBe(twin);
+  });
+
+  it('keeps the own name on the pick labelOn names', async () => {
+    const onTwin = await splitAs(asUser(B), twin);
+    expect(onTwin.errors).toBeUndefined();
+    expect(labels(onTwin)).toEqual([null, 'Our Mixwort']);
+  });
+
+  it('keeps the own name on no pick when labelOn is null', async () => {
+    const onNone = await splitAs(asUser(B), null);
+    expect(onNone.errors).toBeUndefined();
+    expect(labels(onNone)).toEqual([null, null]);
   });
 
   it('is FORBIDDEN for a viewer, who is a member, moving nothing', async () => {

@@ -46,6 +46,7 @@ function show(holdings: FormHolding[]) {
     <LinkForm
       workspaceId="w-1"
       localId="l-1"
+      name="Our Mixwort"
       ingredientsHref={'/coven/fixture-coven/ingredients' as Route}
       holdings={holdings}
       onCancel={vi.fn()}
@@ -139,8 +140,48 @@ describe('LinkForm', () => {
         localId: 'l-1',
         picks: [SPLIT, TWIN],
         assignments: [{ formId: 'f-leaf', compendiumId: TWIN }],
+        labelOn: SPLIT,
       },
     ]);
+  });
+
+  it("keeps the coven's name on the pick chosen for it, or on none", async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SplitLocalIntoCompendiumEntries', (variables) => {
+      calls.push(variables);
+      return { splitLocalIntoCompendiumEntries: { entries: [{ id: 'cupboard-1' }] } };
+    });
+    show([ROOT]);
+    await pick('Splitwort');
+    const keep = () => screen.getByRole('combobox', { name: 'Keep Our Name “Our Mixwort” On' });
+    // One pick still asks, and offers it or none.
+    expect(keep()).toHaveValue(SPLIT);
+    await pick('Twinwort');
+    fireEvent.change(keep(), { target: { value: TWIN } });
+    // The chosen pick taken out, the name falls back to the first.
+    press(screen.getByRole('button', { name: 'Remove Twinwort' }));
+    expect(keep()).toHaveValue(SPLIT);
+    await pick('Twinwort');
+    fireEvent.change(keep(), { target: { value: TWIN } });
+    press(link());
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({ picks: [SPLIT, TWIN], labelOn: TWIN });
+  });
+
+  it('sends no pick for the name when None is chosen', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SplitLocalIntoCompendiumEntries', (variables) => {
+      calls.push(variables);
+      return { splitLocalIntoCompendiumEntries: { entries: [{ id: 'cupboard-1' }] } };
+    });
+    show([ROOT]);
+    await pick('Splitwort');
+    fireEvent.change(screen.getByRole('combobox', { name: /^Keep Our Name/ }), {
+      target: { value: '' },
+    });
+    press(link());
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({ picks: [SPLIT], labelOn: null });
   });
 
   it('holds Link while a form holding something has no pick with its form', async () => {

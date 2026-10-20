@@ -253,6 +253,8 @@ export interface AnnotateMoreProps {
 export interface LinkFormProps {
   workspaceId: string;
   localId: string;
+  /** The entry as the coven calls it: the dialog's eyebrow, and the name a pick may keep. */
+  name: string;
   ingredientsHref: Route;
   holdings: FormHolding[];
   onCancel: () => void;
@@ -266,10 +268,7 @@ export interface LinkFormProps {
 export interface LinkDialogProps {
   closeHref: Route;
   returnTo?: () => HTMLElement | null | undefined;
-  opened?: Omit<LinkFormProps, 'onCancel'> & {
-    /** The entry as the coven calls it: the dialog's eyebrow. */
-    name: string;
-  };
+  opened?: Omit<LinkFormProps, 'onCancel'>;
 }
 
 /** One compendium entry picked in the Link dialog, as its row and the form map read it. */

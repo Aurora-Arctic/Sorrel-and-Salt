@@ -25,7 +25,10 @@ import type { LinkFormProps, LinkPick } from './types';
 // (trimmed, lower-cased); where two picks have it the member chooses, and a
 // form no pick has is dropped. Link waits until every form holding a jar or a
 // spell has a home, so the service's refusals are what the page could not
-// know: a jar or a layer that would meet one of a pick's own. One pick is the
+// know: a jar or a layer that would meet one of a pick's own. Beneath the map,
+// a select says which pick keeps the coven's name for the entry as its label:
+// the first pick until another is chosen, or none, and asked with one pick
+// too, since the coven may want the compendium's name. One pick is the
 // old Link; several split the entry (the owner's call, 2026-10-20). A
 // success goes to the first pick's page in the coven, since the own entry is
 // gone; a refusal shows here and nothing has moved.
@@ -36,12 +39,14 @@ const SplitLocalDocument = graphql(`
     $localId: ID!
     $picks: [ID!]!
     $assignments: [FormAssignmentInput!]
+    $labelOn: ID
   ) {
     splitLocalIntoCompendiumEntries(
       workspaceId: $workspaceId
       localId: $localId
       picks: $picks
       assignments: $assignments
+      labelOn: $labelOn
     ) {
       entries {
         id
@@ -67,6 +72,7 @@ function holdsText(jars: number, spells: number): string {
 export default function LinkForm({
   workspaceId,
   localId,
+  name,
   ingredientsHref,
   holdings,
   onCancel,
@@ -79,6 +85,8 @@ export default function LinkForm({
   const [about, setAbout] = useState<string>();
   /** Where each form two picks share goes, by form id, as chosen. */
   const [chosen, setChosen] = useState<Record<string, string>>({});
+  /** The pick chosen to keep the name; `undefined` is the first pick, `null` none. */
+  const [keepOn, setKeepOn] = useState<string | null>();
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string>();
   const suggestions = useCompendiumSubstitutes(null, text, active);
@@ -92,6 +100,8 @@ export default function LinkForm({
       homes.length === 1 ? homes[0].id : homes.find(({ id }) => id === chosen[holding.formId])?.id;
     return { ...holding, homes, choice, holds: holding.jars + holding.spells > 0 };
   });
+  const labelOn = keepOn === undefined ? picks[0]?.id : keepOn;
+  const { aria: keepAria, ...keep } = fieldDescription({ id: `${id}-keep` });
   const ready = picks.length > 0 && rows.every((row) => !row.holds || row.choice !== undefined);
 
   async function link() {
@@ -105,6 +115,7 @@ export default function LinkForm({
         assignments: rows.flatMap(({ formId, homes, choice }) =>
           homes.length > 1 && choice !== undefined ? [{ formId, compendiumId: choice }] : [],
         ),
+        labelOn: labelOn ?? null,
       });
       // Busy until the page is left; the own entry no longer exists.
       const thenHref = `${ingredientsHref}/${picks[0].id}` as Route;
@@ -179,7 +190,11 @@ export default function LinkForm({
                   type="button"
                   className="link-form__icon-button link-form__remove"
                   aria-label={`Remove ${pick.name}`}
-                  onClick={() => setPicks(picks.filter(({ id }) => id !== pick.id))}
+                  onClick={() => {
+                    setPicks(picks.filter(({ id }) => id !== pick.id));
+                    // The name goes back to the first pick, not to none.
+                    if (keepOn === pick.id) setKeepOn(undefined);
+                  }}
                 >
                   <RemoveIcon />
                 </button>
@@ -244,6 +259,24 @@ export default function LinkForm({
             </tbody>
           </table>
         </div>
+      )}
+      {picks.length > 0 && (
+        <FieldShell label={`Keep Our Name “${name}” On`} {...keep}>
+          <select
+            id={keep.controlId}
+            {...keepAria}
+            className="select"
+            value={labelOn ?? ''}
+            onChange={(event) => setKeepOn(event.target.value || null)}
+          >
+            {picks.map((pick) => (
+              <option key={pick.id} value={pick.id}>
+                {pick.name}
+              </option>
+            ))}
+            <option value="">None</option>
+          </select>
+        </FieldShell>
       )}
       {failure && <Notice kind="error">{failure}</Notice>}
       <div className="modal__actions">
