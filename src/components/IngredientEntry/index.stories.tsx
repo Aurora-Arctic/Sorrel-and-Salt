@@ -631,7 +631,7 @@ DetailsFromCompendium.meta = { iframed: true };
 
 // From the public compendium, to a member of four covens that hold the entry: a
 // last block, In Your Covens, links the entry in each by the coven's name, each
-// link led by the In Your Cupboard shelf (the owner's call, 2026-10-20). The
+// link led by the In Your Covens shelf (the owner's call, 2026-10-20). The
 // long name wraps, its shelf level with its first line.
 const HOLDING = [
   { id: '00000000-0000-4000-8000-0000000000c1', slug: 'fixture-coven', name: 'Fixture Coven' },

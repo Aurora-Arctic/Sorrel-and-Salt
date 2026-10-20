@@ -356,7 +356,7 @@ test.describe("on a coven's Ingredients", () => {
       await page.goto(listPath);
       await quickLook(page).click();
       // Why Edit could be there: the details are open, with their other action.
-      await expect(details.getByRole('link', { name: 'See in My Ingredients' })).toBeVisible();
+      await expect(details.getByRole('link', { name: 'See in Your Coven' })).toBeVisible();
       await expect(editIn(details)).toHaveCount(0);
       // The entry's sections, read for the coven.
       await expect(

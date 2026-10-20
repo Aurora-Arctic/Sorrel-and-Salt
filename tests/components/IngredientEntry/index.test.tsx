@@ -539,7 +539,7 @@ describe('IngredientEntry', () => {
   it('jumps to the details, each form and the references from the page nav', () => {
     renderEntry();
 
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     expect(
       within(nav)
         .getAllByRole('link')
@@ -901,7 +901,7 @@ describe('IngredientEntry references', () => {
     }
   });
 
-  it('links a url to its source, opened with rel noopener', () => {
+  it('links a url to its source, opened with rel noopener and named as opening a new tab', () => {
     renderEntry({
       detail: detail({
         references: [cited('Linked Fixtures', null, 'https://fixtures.example/testwort')],
@@ -909,7 +909,10 @@ describe('IngredientEntry references', () => {
       }),
     });
 
-    const link = within(bibliography()).getByRole('link', { name: /source/i });
+    // jsdom drops the space before the hidden hint that a browser keeps.
+    const link = within(bibliography()).getByRole('link', {
+      name: /^Open the Source ?\(opens in a new tab\)$/,
+    });
     expect(link).toHaveAttribute('href', 'https://fixtures.example/testwort');
     expect(link.getAttribute('rel')?.split(' ')).toContain('noopener');
   });
@@ -963,7 +966,7 @@ describe('IngredientEntry references', () => {
 
   it('lists Notes and Bibliography under a References group in the jump menu, after Details and the forms', () => {
     sample();
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
     const group = within(nav).getByRole('list', { name: 'References' });
 
@@ -986,7 +989,7 @@ describe('IngredientEntry references', () => {
 
   it('keeps References a single link when no source is recorded, as there is nothing under it', () => {
     renderEntry({ detail: detail({ references: [], variants: [variantRow('testoil')] }) });
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
 
     expect(links[links.length - 1]).toHaveAttribute('href', '#references');
@@ -1269,9 +1272,9 @@ describe('IngredientEntry on a coven page', () => {
 });
 
 // The public page's shelf (M9.12): a compendium entry any of the viewer's covens holds carries
-// In Your Cupboard before its name, as it does on the coven's own page.
+// In Your Covens before its name, as it does on the coven's own page.
 describe('IngredientEntry on the public page, held in a coven', () => {
-  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Covens' });
 
   it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
     renderEntry({ heldInCovens: true });
@@ -1283,16 +1286,16 @@ describe('IngredientEntry on the public page, held in a coven', () => {
 
   // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
   // so it shows on touch. A click here focuses nothing, so the press alone opens it.
-  it('opens the In Your Cupboard tip when the shelf is pressed', () => {
+  it('opens the In Your Covens tip when the shelf is pressed', () => {
     renderEntry({ heldInCovens: true });
     const mark = shelf()!;
     const tips = () =>
       screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-    expect(tips()).not.toContain('In Your Cupboard');
+    expect(tips()).not.toContain('In Your Covens');
 
     fireEvent.click(mark);
     expect(mark).not.toHaveFocus();
-    expect(tips()).toContain('In Your Cupboard');
+    expect(tips()).toContain('In Your Covens');
   });
 
   it('puts no shelf on a compendium entry no coven of the viewer’s holds', () => {

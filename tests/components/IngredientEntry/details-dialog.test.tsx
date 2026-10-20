@@ -112,7 +112,7 @@ describe('DetailsDialog', () => {
       />,
     );
 
-    const link = within(dialog()).getByRole('link', { name: 'See in My Ingredients' });
+    const link = within(dialog()).getByRole('link', { name: 'See in Your Coven' });
     expect(link).toHaveAttribute('href', COVEN_PAGE);
     expect(
       within(dialog()).queryByRole('link', { name: 'See in Compendium' }),

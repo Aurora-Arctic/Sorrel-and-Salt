@@ -92,7 +92,7 @@ function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
   // Named by where it goes, not by who is looking (the owner's call, 2026-10-20): the
   // public compendium's page, or a coven's own page for an entry the coven holds, whether
   // it made the entry or annotated the compendium's.
-  const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in My Ingredients';
+  const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Coven';
   return (
     <div className="ingredient-details-foot">
       <PendingLink
