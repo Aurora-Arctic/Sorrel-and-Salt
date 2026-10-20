@@ -15,8 +15,8 @@ const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // A coven card's More (M8.17): Delete on the coven's own entry, Make It Ours and
-// Remove on a compendium entry, a lone choice in a menu of one; Delete, Make It Ours and Remove
-// ask in place (option A), and a write that takes the card away leaves the focus on the page's
+// Remove on a compendium entry, a lone Delete or Remove its own bin and two choices a menu;
+// Delete, Make It Ours and Remove ask in place (option A), and a write that takes the card away leaves the focus on the page's
 // heading, a refusal on More (claude-docs/components/coven-cards.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
@@ -84,9 +84,19 @@ describe('CardMore', () => {
     router.refresh.mockClear();
   });
 
-  it("offers Delete alone on the coven's own entry, in a menu of one", () => {
+  it("draws a lone Delete on the coven's own entry as a button of its own, and no menu", async () => {
     renderOnPage(OWN);
-    expect(choices('Testwort')).toEqual(['Delete Ingredient']);
+    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    press(screen.getByRole('button', { name: 'Delete Ingredient Testwort' }));
+    expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
+  });
+
+  it('draws a lone Remove as a button of its own, which asks in a dialog', async () => {
+    renderOnPage({ ...HELD, mayMakeOurs: false });
+    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
+    press(screen.getByRole('button', { name: 'Remove House Salt' }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
@@ -94,7 +104,7 @@ describe('CardMore', () => {
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
   });
 
-  it('keeps a lone Make It Ours in a menu of one', () => {
+  it('keeps a lone Make It Ours in the menu', () => {
     renderOnPage({ ...HELD, mayRemove: false });
     expect(choices('House Salt')).toEqual(['Make It Ours']);
   });
@@ -109,7 +119,7 @@ describe('CardMore', () => {
     const calls = acceptDelete();
     const view = renderOnPage(OWN);
 
-    choose('Testwort', 'Delete Ingredient');
+    press(screen.getByRole('button', { name: 'Delete Ingredient Testwort' }));
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
@@ -121,6 +131,20 @@ describe('CardMore', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 1, name: 'Ingredients' })).toHaveFocus(),
     );
+  });
+
+  it("shows the service's refusal of a lone Delete and gives its bin the focus back", async () => {
+    mockGraphQLError('DeleteOwnIngredient', { code: 'FORBIDDEN', message: 'Not allowed' });
+    renderOnPage(OWN);
+
+    const bin = screen.getByRole('button', { name: 'Delete Ingredient Testwort' });
+    press(bin);
+    press(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(bin).toHaveFocus();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 
   it("shows the service's refusal of a Remove and gives More the focus back", async () => {

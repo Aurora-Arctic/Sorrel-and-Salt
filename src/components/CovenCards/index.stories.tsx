@@ -160,3 +160,11 @@ export const WithMore: Story = () => (
     )}
   />
 );
+
+// A role that may delete and nothing more: the coven's own entry's only choice is its bin.
+export const WithLoneBin: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) => (shown.kind === 'own' ? { ...shown, mayDelete: true } : shown))}
+  />
+);
