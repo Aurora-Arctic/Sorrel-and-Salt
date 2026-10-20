@@ -20,7 +20,11 @@ import type {
 import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
-import { ingredientDetailOf, resolveCompendiumSlug } from '@/modules/ingredients';
+import {
+  covensHoldingEntry,
+  ingredientDetailOf,
+  resolveCompendiumSlug,
+} from '@/modules/ingredients';
 import { requireCuratorSession } from '../../../../lib/request-session';
 import {
   readCategories,
@@ -103,6 +107,8 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // The open details' sections (M12.5), read uncached as the entry's page reads
   // them, and only while the details are open; none for an entry gone since.
   const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
+  // The admin's or curator's own covens that hold it, and only those (M6.6; M12.5).
+  const covens = summary ? await covensHoldingEntry(session, detailed.id) : [];
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const stamps = await editorStamps(
@@ -156,7 +162,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           detailed && {
             heading: detailsHeading(detailed),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
-            children: summary && <IngredientSummary detail={summary} />,
+            children: summary && <IngredientSummary detail={summary} covens={covens} />,
             editAction: {
               href: compendiumHref(here, { edit: detailed.slug }),
               heading: editHeading(detailed),

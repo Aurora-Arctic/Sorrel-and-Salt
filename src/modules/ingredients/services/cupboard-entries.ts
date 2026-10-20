@@ -32,6 +32,7 @@ import type {
   CitedReference,
   ConvertedCompendium,
   CupboardEntryKey,
+  HoldingCoven,
   IngredientValues,
   VariantKey,
 } from '../types';
@@ -52,7 +53,7 @@ import {
   splitChildren,
   writeChildren,
 } from './ingredient-rows';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership, byCovenName, membershipsOf } from '@/modules/coven';
 import { curatedNames } from '@/modules/vocabulary';
 
 // A compendium entry in a coven's cupboard (M12.14): the coven's row naming
@@ -710,4 +711,28 @@ export async function heldCompendiumEntryIdsIn(
   for (const workspaceId of workspaceIds)
     held.set(workspaceId, await heldCompendiumEntryIds(session, workspaceId, ingredientIds));
   return held;
+}
+
+/**
+ * The viewer's own covens that hold this compendium entry, by name: the details modal's In
+ * Your Covens links (M12.5, the owner's call of 2026-10-20). The covens come from the viewer's
+ * own memberships, never from who holds the entry, so a coven they are not in never appears,
+ * and an admin or curator gets only the covens they belong to (M6.6). Each is read under its own
+ * `Membership` proof, filtered in SQL; viewers count. Per viewer, so never cached (rule 6).
+ */
+export async function covensHoldingEntry(
+  session: Session,
+  ingredientId: string,
+): Promise<readonly HoldingCoven[]> {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  if (!memberships || memberships instanceof Error) return [];
+  const held = await heldCompendiumEntryIdsIn(
+    session,
+    memberships.map(({ workspace }) => workspace.id),
+    [ingredientId],
+  );
+  return memberships
+    .filter(({ workspace }) => held.get(workspace.id)?.has(ingredientId))
+    .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }))
+    .sort(byCovenName);
 }

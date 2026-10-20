@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import type { ReactElement } from 'react';
 import SafetyNote from '../SafetyNote';
 import SummaryDescription from './summary-description';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
-import type { IngredientDetail } from '@/modules/ingredients';
+import type { HoldingCoven, IngredientDetail } from '@/modules/ingredients';
 import {
   blockOf,
   categoryItems,
@@ -38,7 +39,18 @@ function formsCarrying(labels: readonly string[]): string {
     : `The ${named} forms carry their own cautions; Open Full Page shows them.`;
 }
 
-export default function IngredientSummary({ detail }: { detail: IngredientDetail }): ReactElement {
+export default function IngredientSummary({
+  detail,
+  covens = [],
+}: {
+  detail: IngredientDetail;
+  /**
+   * The viewer's own covens that hold this entry, read per viewer by the page
+   * (`covensHoldingEntry`); none for a visitor. Drawn for a compendium entry only:
+   * a coven's own entry is held by its coven alone, which the list already is.
+   */
+  covens?: readonly HoldingCoven[];
+}): ReactElement {
   const { cupboardEntry, folkNames, categories, deities, variants } = detail;
   const shown = applyCupboardEntry(detail.entry, cupboardEntry);
   const cautioned = variants
@@ -46,12 +58,25 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
     .map(({ variant }) => formLabel(variant.form));
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
+  const holding = detail.entry.workspaceId === null ? covens : [];
+  // Where the viewer holds the entry, last (the owner's call, 2026-10-20). Not
+  // something recorded of the entry, so it never stands in for the line below.
+  const inYourCovens = holding.length > 0 && (
+    <ListBlock block={blockOf('summary', 'covens')} title="In Your Covens" level={3}>
+      {holding.map(({ id, slug, name }) => (
+        <li key={id}>
+          <Link href={`/coven/${slug}/ingredients/${detail.entry.id}`}>{name}</Link>
+        </li>
+      ))}
+    </ListBlock>
+  );
   // With every section hidden, one line says so rather than leave the body blank
   // (the owner's call, 2026-10-20).
   if (!listed && !said(shown.description) && !said(shown.safetyNotes) && cautioned.length === 0) {
     return (
       <div className="ingredient-summary">
         <p className="ingredient-summary__nothing">Nothing recorded yet.</p>
+        {inYourCovens && <div className="ingredient-entry__side">{inYourCovens}</div>}
       </div>
     );
   }
@@ -72,7 +97,7 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
         }
       />
       {/* Not drawn when every block is empty, so it adds no gap of its own. */}
-      {listed && (
+      {(listed || inYourCovens) && (
         <div className="ingredient-entry__side">
           {rows.length > 0 && (
             <CorrespondenceBlock
@@ -98,6 +123,7 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
               {categoryItems(categories)}
             </ListBlock>
           )}
+          {inYourCovens}
         </div>
       )}
     </div>

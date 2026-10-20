@@ -27,7 +27,7 @@ import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
+import { covensHoldingEntry, heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
 import { readEditPlace } from '../../(shell)/admin/list-page';
@@ -111,6 +111,15 @@ async function heldEntryIds(workspaceIds: readonly string[], ids: readonly strin
   }
 }
 
+/**
+ * The viewer's own covens that hold the open entry, for the details' links (M12.5): none for a
+ * visitor. Per viewer, so read here and never inside the cached details read (rule 6).
+ */
+async function covensHolding(entryId: string) {
+  const session = await getSession();
+  return session ? covensHoldingEntry(session, entryId) : [];
+}
+
 export default async function CompendiumPage({ searchParams }: PublicCompendiumPageProps) {
   const params = publicParams(await searchParams);
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
@@ -144,6 +153,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const hereWith = (edit: string) => compendiumHref(here, { edit }, PUBLIC_COMPENDIUM_PATH);
   const listWith = (edit: string) => compendiumHref(list, { edit }, PUBLIC_COMPENDIUM_PATH);
   const detailed = shown?.entry;
+  const holding = detailed ? await covensHolding(detailed.id) : [];
   // An old address opens the entry at its new one, keeping the search (MB.82).
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
@@ -244,7 +254,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
                 heading: editHeading(detailed, EDIT_ENTRY_EYEBROW),
               },
             }),
-            children: <IngredientSummary detail={shown} />,
+            children: <IngredientSummary detail={shown} covens={holding} />,
           }
         }
       />

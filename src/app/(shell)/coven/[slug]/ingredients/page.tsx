@@ -186,7 +186,7 @@ export default async function CovenIngredientsPage({
             viewed && {
               heading: detailsHeading(viewed.shown),
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
-              children: <IngredientSummary detail={viewed.detail} />,
+              children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
               ...(viewed.own &&
                 mayEdit && {
                   editAction: {

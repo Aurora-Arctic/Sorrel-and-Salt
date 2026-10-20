@@ -340,4 +340,72 @@ describe('IngredientSummary', () => {
       expect(screen.queryByRole('button', { name: 'Show More' })).not.toBeInTheDocument();
     });
   });
+
+  describe("in the viewer's covens", () => {
+    const covens = [
+      { id: 'w1', slug: 'fixture-coven', name: 'Fixture Coven' },
+      { id: 'w2', slug: 'second-fixture', name: 'Second Fixture' },
+    ];
+    const ENTRY = entryDetail().entry.id;
+
+    it("links the entry in each coven that holds it, by the coven's name, after the categories", () => {
+      render(<IngredientSummary detail={full()} covens={covens} />);
+
+      const list = screen.getByRole('list', { name: 'In Your Covens' });
+      expect(within(list).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
+        'href',
+        `/coven/fixture-coven/ingredients/${ENTRY}`,
+      );
+      expect(within(list).getByRole('link', { name: 'Second Fixture' })).toHaveAttribute(
+        'href',
+        `/coven/second-fixture/ingredients/${ENTRY}`,
+      );
+      // The last block: the categories come before it in the document.
+      const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+      expect(headings[headings.length - 1]).toBe('In Your Covens');
+      expect(headings).toContain('Categories');
+    });
+
+    it("draws no block when none of the viewer's covens holds it, or for a visitor", () => {
+      const { unmount } = render(<IngredientSummary detail={full()} covens={[]} />);
+      // Why it could show: the body still draws its other blocks.
+      expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+      unmount();
+
+      render(<IngredientSummary detail={full()} />);
+      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+    });
+
+    it("draws no block for a coven's own entry, which only its coven holds", () => {
+      render(
+        <IngredientSummary
+          detail={full({ entry: entryDetail({ workspaceId: 'w1' }).entry })}
+          covens={covens}
+        />,
+      );
+      expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+    });
+
+    it('still says nothing is recorded of an empty entry, with the covens that hold it beneath', () => {
+      render(
+        <IngredientSummary
+          detail={full({
+            entry: entryDetail({ description: null, elements: null, celestialBodies: null }).entry,
+            folkNames: [],
+            categories: [],
+            deities: [],
+            variants: [],
+          })}
+          covens={covens}
+        />,
+      );
+      // The links are where the entry is held, not something recorded of it.
+      expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('list', { name: 'In Your Covens' })).getAllByRole('link'),
+      ).toHaveLength(2);
+    });
+  });
 });
