@@ -86,7 +86,7 @@ export default function IngredientSummary({
   if (!listed && !said(shown.description) && !said(shown.safetyNotes) && cautioned.length === 0) {
     return (
       <div className="ingredient-summary">
-        <p className="ingredient-summary__nothing">Nothing recorded yet.</p>
+        <p className="ingredient-entry__empty">Nothing recorded yet.</p>
         {inYourCovens && <div className="ingredient-entry__side">{inYourCovens}</div>}
       </div>
     );
