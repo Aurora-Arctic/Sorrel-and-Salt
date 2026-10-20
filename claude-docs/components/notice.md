@@ -5,7 +5,7 @@ field, on the `.notice` primitive ([`styling.md`](../styling.md), "Form
 fields"): a form's root error, a warning, a sent confirmation. Added by
 MB.116, once the same markup had been written by hand in twenty-two files.
 
-_See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md): the owner's open question on how a click outside a form says its result and its failure, and on when an alert may be mounted with its text.
+_See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md): how a click outside a form says its result and its failure, decided on 2026-10-20 as a floating callout (Design F), and the open question on when an alert may be mounted with its text.
 
 ## Props
 
