@@ -1,3 +1,4 @@
+@use 'sass:math';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
@@ -120,8 +121,12 @@
 }
 
 // An entry's Quick Look beside its name in a list (M12.5): Edit's pencil's
-// size and green, round the eye, sitting in the name's line.
+// box and green, round the eye, sitting in the name's line. The eye itself is
+// a third as big again as the pencil, `$glyph-size-large` * 4 / 3, in the same
+// 2rem box, so the foot's height and the eye's line with the pencil stay put
+// (the owner's call, 2026-10-20). `math.div` is that sum, since Sass has
+// dropped `/` for division.
 .icon-tip__look {
-  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button($icon-size-large, math.div($glyph-size-large * 4, 3));
   @include icon-button-edit;
 }

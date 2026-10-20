@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import MenuButton from '@/components/MenuButton';
 import type { MenuButtonItem } from '@/components/MenuButton/types';
 
@@ -137,5 +137,102 @@ describe('MenuButton', () => {
       />,
     );
     expect(screen.getByRole('button', { name: 'Adding' })).toBeDisabled();
+  });
+});
+
+// Where the menu hangs from (claude-docs/components/menu-button.md, "Where it
+// opens"): the button's end edge by default, and with `placement="auto"` its
+// start edge when the button sits in the start half of the window, so the
+// ingredient page's Edit, dropped to the left of a wrapped header, does not
+// open leftwards off the screen's edge. Floating UI turns the placement into
+// the menu's `translate(x, y)`; the rects are stated, since happy-dom lays
+// nothing out.
+describe('MenuButton placement', () => {
+  const WINDOW_WIDTH = 1000;
+  const BUTTON_WIDTH = 80;
+  const MENU_WIDTH = 120;
+  const rectOf = (left: number, width: number, top = 100, height = 32): DOMRect =>
+    ({
+      x: left,
+      y: top,
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height,
+      toJSON: () => ({}),
+    }) as DOMRect;
+
+  // Floating UI measures the button and the menu, and nothing else here.
+  function layOut(buttonLeft: number): void {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(WINDOW_WIDTH);
+    // What Floating UI keeps the menu inside of.
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(WINDOW_WIDTH);
+    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(800);
+    // The menu's own size, which Floating UI reads from the element, not its rect.
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return this.getAttribute('role') === 'menu' ? MENU_WIDTH : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return this.getAttribute('role') === 'menu' ? 60 : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.getAttribute('role') === 'menu') return rectOf(0, MENU_WIDTH, 0, 60);
+      if (this.getAttribute('aria-haspopup') === 'menu') return rectOf(buttonLeft, BUTTON_WIDTH);
+      return rectOf(0, 0, 0, 0);
+    });
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  // The menu's left edge, from the translate Floating UI sets on it.
+  const menuLeft = async (): Promise<number> => {
+    fireEvent.click(toggle());
+    await waitFor(() => expect(menu().style.transform).toMatch(/^translate\(/));
+    return Number.parseFloat(/translate\((-?[\d.]+)px/.exec(menu().style.transform)![1]!);
+  };
+
+  const drawn = (placement?: 'auto' | 'end') =>
+    render(<MenuButton label="Edit" className="btn" items={actions()} placement={placement} />);
+
+  it("auto: hangs from the button's start edge when the button is in the start half", async () => {
+    layOut(100);
+    drawn('auto');
+
+    expect(await menuLeft()).toBe(100);
+  });
+
+  it("auto: hangs from the button's end edge when the button is in the end half", async () => {
+    layOut(700);
+    drawn('auto');
+
+    // The button's right edge less the menu's width.
+    expect(await menuLeft()).toBe(700 + BUTTON_WIDTH - MENU_WIDTH);
+  });
+
+  it('auto: chooses again at every opening, from where the button is then', async () => {
+    layOut(100);
+    drawn('auto');
+    expect(await menuLeft()).toBe(100);
+    fireEvent.keyDown(within(menu()).getAllByRole('menuitem')[0]!, { key: 'Escape' });
+
+    vi.restoreAllMocks();
+    layOut(700);
+
+    expect(await menuLeft()).toBe(700 + BUTTON_WIDTH - MENU_WIDTH);
+  });
+
+  it("the default stays the button's end edge, even in the start half", async () => {
+    layOut(100);
+    drawn();
+
+    expect(await menuLeft()).toBe(100 + BUTTON_WIDTH - MENU_WIDTH);
   });
 });

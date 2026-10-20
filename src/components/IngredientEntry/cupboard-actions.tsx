@@ -293,6 +293,7 @@ export default function CupboardActions(
         <MenuButton
           ref={triggerRef}
           label="Edit"
+          placement="auto"
           className={PLAIN}
           items={items}
           busy={add.isPending}
