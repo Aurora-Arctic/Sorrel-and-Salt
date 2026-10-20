@@ -185,6 +185,12 @@ type CorrespondenceSuggestion {
   value: String!
 }
 
+"""A jar to start, on a form the coven does not hold."""
+input CreateJarInput {
+  input: StockInput!
+  variantId: ID!
+}
+
 """
 A coven's own say over one compendium entry it holds. A null field is the compendium's value; an empty list is one the coven cleared.
 """
@@ -862,6 +868,11 @@ type Mutation {
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
   """
   revokeWorkspaceCreation(note: String, userId: ID!): User!
+
+  """
+  Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
+  """
+  saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
 
@@ -1600,6 +1611,15 @@ input ReferenceLinkInput {
   referenceId: ID!
 }
 
+"""
+One ingredient's stock edited together: jars to start, change and delete.
+"""
+input SaveStockInput {
+  create: [CreateJarInput!]!
+  delete: [ID!]!
+  update: [UpdateJarInput!]!
+}
+
 """A source, local or compendium, and how many entries it would list."""
 type SourceFacetCount {
   """
@@ -1692,6 +1712,12 @@ enum UnitDimension {
   count
   volume
   weight
+}
+
+"""A change to a jar the coven holds; a field left out keeps its value."""
+input UpdateJarInput {
+  id: ID!
+  input: StockInput!
 }
 
 type User {

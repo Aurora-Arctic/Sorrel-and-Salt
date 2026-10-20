@@ -862,7 +862,7 @@ its argument, the No Refs count with the switch on and off, and the refusal of a
 signed-out answers are `tests/db/graphql-query-scopes.test.ts`'s, and a
 malformed `workspaceId` is `tests/db/graphql-workspace-ids.test.ts`'s.
 
-### Stock: `InventoryItem`, `Ingredient.stock` and the three stock writes
+### Stock: `InventoryItem`, `Ingredient.stock` and the stock writes
 
 Story 14's jars (M9.4), registered by `ingredients` in `graphql/stock.ts` over
 the stock service ([`db/stock.md`](../db/stock.md), "The stock service").
@@ -892,10 +892,34 @@ the stock service ([`db/stock.md`](../db/stock.md), "The stock service").
   is the page's job (M9.6); the API always takes a form.
 - **`updateStock(workspaceId, id, input)`** answers the changed jar, and
   **`deleteStock(workspaceId, id)`** soft-deletes it and answers its id.
+- **`saveStock(workspaceId, ingredientId, input: SaveStockInput!): [InventoryItem!]!`**
+  (M9.9) is the stock dialog's one Save, over the three writes' rules in one
+  transaction. `SaveStockInput` is three lists, so a delete cannot carry a
+  quantity and `StockInput`'s omit-keeps, null-clears reading holds in each
+  row:
 
-All three writes carry the `signedIn` scope, and the service asks the proof for
-`inventory: update`, which viewers do not hold. The add and the update clear
-the changed jar's `stockByIngredient` key, so a second write in one request
+  ```graphql
+  input SaveStockInput {
+    create: [CreateJarInput!]! # { variantId: ID!, input: StockInput! }
+    update: [UpdateJarInput!]! # { id: ID!, input: StockInput! }
+    delete: [ID!]!
+  }
+  ```
+
+  `ingredientId` scopes the batch: a jar or form of another ingredient or coven,
+  a deleted one, or an id that is not one is `NOT_FOUND` and nothing is
+  written. The answer is the ingredient's live jars after the write. A bad row
+  is one `VALIDATION` error carrying every bad row's `fieldErrors`, each
+  `path` in the shape of the input: `create.<i>.input.<field>` and
+  `update.<i>.input.<field>` for `StockInput`'s rules, and
+  `create.<i>.variantId` for a form the coven already holds. A jar named twice
+  is `VALIDATION` at `update.<i>.id` or `delete.<i>`. An empty save writes
+  nothing and answers the current jars. The single-jar mutations stay: the
+  entry page and anything saving one jar still use them.
+
+All four writes carry the `signedIn` scope, and the service asks the proof for
+`inventory: update`, which viewers do not hold. The add, the update and `saveStock`
+clear the changed jar's (or the ingredient's) `stockByIngredient` key, so a second write in one request
 answers its own stock; the delete answers no row to key by, so it clears the
 loader whole.
 
