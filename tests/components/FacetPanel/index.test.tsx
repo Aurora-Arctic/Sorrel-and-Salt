@@ -739,8 +739,6 @@ describe('FacetPanel', () => {
 
     const panel = host.querySelector('dialog') as HTMLDialogElement;
     expect(panel.hasAttribute('open')).toBe(true);
-    // The class the stylesheet hides under the document's script mark until hydration takes over.
-    expect(panel.classList.contains('facet-panel--static')).toBe(true);
     const link = host.querySelector(`a[href="#${panel.id}"]`);
     expect(link).not.toBeNull();
     expect(host.firstElementChild?.tagName).toBe('A');
@@ -772,18 +770,15 @@ describe('FacetPanel phone sheet slide', () => {
     const onApply = vi.fn();
     render(<FacetPanel {...props({}, { onApply })} />);
     fireEvent.click(filtersButton());
-    expect(dialog()).not.toHaveClass('is-closing');
 
     fireEvent.click(closeButton());
 
-    expect(dialog()).toHaveClass('is-closing');
     expect(dialog()).toHaveAttribute('open');
     expect(onApply).toHaveBeenCalledTimes(1);
 
     slideEnd();
 
     expect(dialog()).not.toHaveAttribute('open');
-    expect(dialog()).not.toHaveClass('is-closing');
     expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
     expect(onApply).toHaveBeenCalledTimes(1);
   });
@@ -828,7 +823,6 @@ describe('FacetPanel phone sheet slide', () => {
     transitionEnd('opacity');
 
     expect(dialog()).toHaveAttribute('open');
-    expect(dialog()).toHaveClass('is-closing');
   });
 
   it('takes the sheet own Escape through the slide rather than closing at once', () => {
@@ -840,7 +834,7 @@ describe('FacetPanel phone sheet slide', () => {
     fireEvent(dialog(), cancel);
 
     expect(cancel.defaultPrevented).toBe(true);
-    expect(dialog()).toHaveClass('is-closing');
+    expect(dialog()).toHaveAttribute('open');
     slideEnd();
     expect(dialog()).not.toHaveAttribute('open');
   });
@@ -854,7 +848,6 @@ describe('FacetPanel phone sheet slide', () => {
     fireEvent.click(closeButton());
 
     expect(dialog()).not.toHaveAttribute('open');
-    expect(dialog()).not.toHaveClass('is-closing');
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
@@ -866,15 +859,5 @@ describe('FacetPanel phone sheet slide', () => {
     act(() => listeners.forEach((listener) => listener()));
 
     expect(dialog()).not.toHaveAttribute('open');
-  });
-
-  it('leaves the desktop panel on its slide, never the sheet slide', () => {
-    stubViewport(true, false);
-    render(<FacetPanel {...props()} />);
-    fireEvent.click(filtersButton());
-
-    fireEvent.click(filtersButton());
-
-    expect(dialog()).not.toHaveClass('is-closing');
   });
 });

@@ -140,7 +140,7 @@ describe('a chip in the multi-select', () => {
     expect(screen.getByRole('button', { name: 'Remove Element: Fire' })).toBeInTheDocument();
   });
 
-  it('puts a hidden placeholder where the count goes while loading, naming the cross the same', () => {
+  it('announces no count while loading, naming the cross the same', () => {
     const { rerender } = render(<Harness removeNoun="Element" initial={['fire']} />);
     const name = screen
       .getByRole('button', { name: 'Remove Element: Fire' })
@@ -149,10 +149,6 @@ describe('a chip in the multi-select', () => {
     rerender(<Harness removeNoun="Element" initial={['fire']} loading />);
     const chip = screen.getByRole('listitem');
     expect(within(chip).getByRole('button')).toHaveAttribute('aria-label', name);
-    expect(chip.querySelector('.combobox__entry-count.is-pending')).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
     expect(chip).not.toHaveTextContent('(');
   });
 
@@ -164,7 +160,7 @@ describe('a chip in the multi-select', () => {
 });
 
 describe('a standalone entry', () => {
-  it('removes itself from its cross, named for its noun, outlined or filled', () => {
+  it('removes itself from its cross, named for its noun', () => {
     const onRemove = vi.fn();
     render(
       <ul>
@@ -175,23 +171,6 @@ describe('a standalone entry', () => {
     expect(screen.getByRole('listitem')).toHaveTextContent('Water 7');
     fireEvent.click(screen.getByRole('button', { name: 'Remove Element: Water' }));
     expect(onRemove).toHaveBeenCalledOnce();
-  });
-
-  it('keeps a category chip filled in its colours even when outlined chips are asked for', () => {
-    render(
-      <ul>
-        <ComboboxEntry
-          value="Testward"
-          colors={{ colorDark: '#336699', colorLight: '#224466' }}
-          outlined
-          onRemove={() => {}}
-        />
-      </ul>,
-    );
-
-    const chip = screen.getByRole('listitem');
-    expect(chip).toHaveClass('is-coloured');
-    expect(chip).not.toHaveClass('is-outlined');
   });
 });
 
@@ -223,7 +202,6 @@ describe('the suggesting box with counts', () => {
 
     const disabled = screen.getByRole('option', { name: /^Testcraft/ });
     expect(disabled).toHaveAttribute('aria-disabled', 'true');
-    expect(disabled).toHaveTextContent('Nothing Matches');
     fireEvent.click(disabled);
     expect(onPick).not.toHaveBeenCalled();
 

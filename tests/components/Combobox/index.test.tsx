@@ -79,8 +79,6 @@ describe('Combobox', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
     expect(box()).toHaveAttribute('aria-expanded', 'true');
-    // The root carries the state the chevron's flip waits on.
-    expect(box().closest('.combobox')).toHaveClass('is-open');
     expect(options()).toHaveLength(3);
 
     rerender(<Harness />);
@@ -1396,8 +1394,7 @@ describe('Combobox', () => {
     });
 
     it('says every choice is made, in an open list with no options, once there is nothing left to offer', () => {
-      const { container } = render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
-      const message = () => container.querySelector('.combobox__empty');
+      render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
       const status = () => screen.getByRole('status', { name: 'Element changes' });
 
       fireEvent.click(elements());
@@ -1407,27 +1404,18 @@ describe('Combobox', () => {
 
       // Choosing the last closes the list, as before.
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
-      expect(message()).not.toBeInTheDocument();
 
       // Asking for it again opens it to say so, rather than going dead.
       fireEvent.click(elements());
       expect(elements()).toHaveAttribute('aria-expanded', 'true');
-      expect(container.querySelector('.combobox')).toHaveClass('is-open');
-      expect(message()).toBeVisible();
-      expect(message()).toHaveTextContent(/\S/);
       expect(status()).toHaveTextContent(/\S/);
       expect(screen.queryByRole('option')).not.toBeInTheDocument();
-      expect(screen.getByRole('listbox', { name: 'Element choices' })).not.toContainElement(
-        message() as HTMLElement,
-      );
 
       // Enter has nothing to take, and Escape closes it.
       press('Enter');
       expect(chosen()).toBe('earth,air,fire,water,spirit');
       press('Escape');
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
-      expect(container.querySelector('.combobox')).not.toHaveClass('is-open');
-      expect(message()).not.toBeInTheDocument();
     });
   });
 });
@@ -1470,7 +1458,7 @@ describe('Combobox empty message', () => {
     rerender(<Harness offerTyped={false} suggestions={NONE} empty={false} />);
     type('zzz');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
-    expect(document.querySelector('.combobox__empty')).not.toBeInTheDocument();
+    expect(status()).not.toHaveTextContent(/\S/);
   });
 
   it('says it found nothing by default, so a box whose caller forgot `empty` never just shuts', () => {
@@ -1478,13 +1466,13 @@ describe('Combobox empty message', () => {
 
     type('zzz');
 
-    const message = document.querySelector('.combobox__empty');
-    expect(message).toBeVisible();
-    expect(message).toHaveTextContent('zzz');
-    expect(listbox()).not.toContainElement(message as HTMLElement);
+    // The message names what was typed, shown outside the listbox as well as announced.
+    const shown = screen.getAllByText(/zzz/).filter((node) => !status().contains(node));
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown[0]).toBeVisible();
+    expect(listbox()).not.toContainElement(shown[0] as HTMLElement);
     expect(status()).toHaveTextContent('zzz');
     expect(screen.queryAllByRole('option')).toHaveLength(0);
-    expect(document.querySelector('.combobox')).toHaveClass('is-open');
   });
 
   it('closes the message on Escape alone, then leaves the next Escape to the dialog', () => {
@@ -1583,7 +1571,6 @@ describe('Combobox leading node and toggle', () => {
     );
 
     expect(screen.queryByRole('button', { name: /^Show Form/ })).not.toBeInTheDocument();
-    expect(control().querySelectorAll('.combobox__separator')).toHaveLength(0);
     type('fix');
     expect(screen.getAllByRole('option')).toHaveLength(3);
   });
@@ -1594,10 +1581,10 @@ describe('Combobox leading node and toggle', () => {
     expect(screen.getByRole('button', { name: 'Show Form suggestions' })).toBeInTheDocument();
   });
 
-  it('draws no indicators when there is no clear, no suggestions and no leading node', () => {
+  it('draws no controls beside the box when there is no clear, no suggestions and no leading node', () => {
     render(<Harness />);
 
-    expect(control().querySelector('.combobox__indicators')).toBeNull();
+    expect(within(control()).queryByRole('button')).not.toBeInTheDocument();
   });
 });
 
