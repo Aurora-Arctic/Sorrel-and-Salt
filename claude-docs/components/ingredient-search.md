@@ -100,8 +100,7 @@ in the filter slot to carry.
   (`space(3)`) under the same width, as the row is two controls tall there. A design that
   made only the box stick (`display: contents` on the `<search>` and the form, so the
   box's sticky range ran to the end of the results) was weighed and dropped, as were
-  nothing sticking and one nowrap line. The row as built, at 375 in each theme, is the
-  `ProposalStickyPhoneTwoLines*` pair in `.ladle/compendium-search-row.stories.tsx`.
+  nothing sticking and one nowrap line (MB.120).
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file

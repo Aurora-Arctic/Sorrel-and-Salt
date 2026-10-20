@@ -47,11 +47,9 @@ same mark from the same mixin.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PublicFrame/index.stories.tsx) —
-`Default`, `PhoneDark`, `PhoneLight` and `NotOnTheCompendium`, then MB.120's
-`ProposalCurrentPageBare` and `ProposalCurrentPage` (with phone variants): the
-bar without and with the current-page mark, the second being what is built. The
-compendium page's head (`ProposalCompendiumHead`) is in
-`.ladle/compendium-head.stories.tsx`. Render-only.
+`Default`, `PhoneDark` and `PhoneLight`, on the compendium so its link carries
+the current-page mark, and `NotOnTheCompendium`, on a page the nav does not
+name, so the link rests unmarked. Render-only.
 
 ## Testing
 

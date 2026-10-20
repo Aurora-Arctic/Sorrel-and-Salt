@@ -1647,9 +1647,8 @@ save, so the sentence changes with the state too: "Did you mean one of these?"
 while the name is typed against, "Your save is on hold, as these entries have a
 similar name. Check them, or create this one anyway." once Save has been pressed
 and held, and the exact-name question's own sentence, which was already
-different (MB.120). `ProposalDuplicatesNotice` and its two phone stories show
-the warning and the held state one above the other, until the section's
-sign-off settles them.
+different (MB.120). `DuplicatesNotice` and its two phone stories show the
+warning and the held state one above the other.
 
 The component's own stylesheet holds what is the form's alone. Its column
 is at most `$dialog-column` (32rem), narrower than the measure as the other
@@ -1737,9 +1736,8 @@ request, and answers a request to `/api/graphql` naming one of the eight
 lookups, the categories, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a
 fixture that drifts from the schema stops compiling. A name holding "cat"
-shows the duplicate warning. `ProposalDuplicatesNotice` (MB.120), with a phone
-dark and a phone light, draws the warning and the held state in one column
-from fixed state, ahead of the section's sign-off. A save is answered after two seconds
+shows the duplicate warning. `DuplicatesNotice`, with a phone dark and a phone
+light, draws the warning and the held state in one column from fixed state. A save is answered after two seconds
 (`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
 name holding "taken" is refused as a `VALIDATION` error on the name, one
 holding "refuse" as a `FORBIDDEN` above the fields, one holding "retired"

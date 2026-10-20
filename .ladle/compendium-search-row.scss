@@ -1,6 +1,0 @@
-// The compendium's phone search row story (MB.120, review item 6). A sticky row sticks to the
-// nearest ancestor that scrolls, and the workshop frame clips with `overflow: hidden`, which
-// counts as one, so the row would never stick. `clip` clips the same and scrolls nothing.
-.ladle-story-frame:has(.proposal-sticky-page) {
-  overflow: clip;
-}

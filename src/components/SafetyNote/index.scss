@@ -5,8 +5,7 @@
 // fill down its edge and a heading in the same fill: a whole block of it was
 // far too loud (the owner, 2026-10-17). One red with the Toxic badge, not
 // `$secondary`, which reads lighter on dark. The bar is `$safety-bar-width`, the
-// heavy rule, where it was a raw 4px (MB.120, proposed; the as-built bar is the
-// `ProposalSafetyBarAsBuilt` story).
+// heavy rule, so it is one of the site's rule weights (MB.120).
 .safety-note {
   padding: space(1) 0 space(1) space(4);
   border-inline-start: $safety-bar-width solid badge-token('safety', 'fill');

@@ -885,38 +885,3 @@ DetailsPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 
 export const DetailsPhoneLight: Story = () => <DetailsFromCovenList />;
 DetailsPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
-
-// MB.120 item 4, for the owner's sign-off: the source link's label as built,
-// "Open Source", beside the proposal, "Open the Source" with a hidden hint
-// that the link opens a new tab. The as-built pair redraws the old words in
-// CSS over the new ones (`medium` is the body size, type-size('body')), so it
-// is a picture only: its accessible name is the proposal's. The proposal is
-// what the component now renders.
-const AS_BUILT_SOURCE = `
-.proposal-source-as-built .ingredient-entry__reference a { font-size: 0; }
-.proposal-source-as-built .ingredient-entry__reference a::before {
-  content: 'Open Source';
-  font-size: medium;
-}`;
-
-const SourceAsBuilt = () => (
-  <div className="proposal-source-as-built">
-    <style>{AS_BUILT_SOURCE}</style>
-    <Entry />
-  </div>
-);
-
-export const ProposalSourceLabelAsBuilt: Story = () => <SourceAsBuilt />;
-export const ProposalSourceLabel: Story = () => <Entry />;
-
-export const ProposalSourceLabelAsBuiltPhoneDark: Story = () => <SourceAsBuilt />;
-ProposalSourceLabelAsBuiltPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalSourceLabelPhoneDark: Story = () => <Entry />;
-ProposalSourceLabelPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalSourceLabelAsBuiltPhoneLight: Story = () => <SourceAsBuilt />;
-ProposalSourceLabelAsBuiltPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const ProposalSourceLabelPhoneLight: Story = () => <Entry />;
-ProposalSourceLabelPhoneLight.meta = { theme: 'light', width: 375 };

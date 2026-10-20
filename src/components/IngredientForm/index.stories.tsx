@@ -1480,11 +1480,10 @@ export const LoadingSubstituteSummary: Story = () => {
   );
 };
 
-// The duplicates notice as MB.120 proposes it (the MB.120 plan): the warning
-// while a name is typed against, and the same notice once a save is held on
-// it. Colour told the two apart alone; the words now do too. Built from fixed
-// state rather than the lookup, so both show at once. The block Notice that
-// replaces the hand-written classes is a follow-on task, not this story.
+// The duplicates notice in its two states: the warning while a name is typed
+// against, and the same notice once a save is held on it, told apart by their
+// words as well as their colour. Built from fixed state rather than the
+// lookup, so both show at once.
 const NEAR_MATCHES = CATS_CLAW.map((match) => ({
   ...match,
   isGlobal: true,
@@ -1493,7 +1492,7 @@ const NEAR_MATCHES = CATS_CLAW.map((match) => ({
 
 const noop = async () => false;
 
-function ProposalNameField({ blocking }: { blocking: boolean }) {
+function HeldNameField({ blocking }: { blocking: boolean }) {
   const methods = useForm<IngredientFormValues>({
     defaultValues: { ...EMPTY_VALUES, name: "Cat's Claws" },
   });
@@ -1518,21 +1517,21 @@ function ProposalNameField({ blocking }: { blocking: boolean }) {
   );
 }
 
-function ProposalDuplicates() {
+function Duplicates() {
   return (
     <div className="page-column">
       <h2>Typing: A Question</h2>
-      <ProposalNameField blocking={false} />
+      <HeldNameField blocking={false} />
       <h2>Save Pressed: On Hold</h2>
-      <ProposalNameField blocking />
+      <HeldNameField blocking />
     </div>
   );
 }
 
-export const ProposalDuplicatesNotice: Story = () => <ProposalDuplicates />;
+export const DuplicatesNotice: Story = () => <Duplicates />;
 
-export const ProposalDuplicatesNoticePhoneDark: Story = () => <ProposalDuplicates />;
-ProposalDuplicatesNoticePhoneDark.meta = { theme: 'dark', width: 375 };
+export const DuplicatesNoticePhoneDark: Story = () => <Duplicates />;
+DuplicatesNoticePhoneDark.meta = { theme: 'dark', width: 375 };
 
-export const ProposalDuplicatesNoticePhoneLight: Story = () => <ProposalDuplicates />;
-ProposalDuplicatesNoticePhoneLight.meta = { theme: 'light', width: 375 };
+export const DuplicatesNoticePhoneLight: Story = () => <Duplicates />;
+DuplicatesNoticePhoneLight.meta = { theme: 'light', width: 375 };

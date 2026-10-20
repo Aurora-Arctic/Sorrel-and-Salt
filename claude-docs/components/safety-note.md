@@ -86,12 +86,10 @@ because 700 still read too light (the owner, 2026-10-17). MB.120 proposed
 dropping the stroke and the owner kept it (2026-10-20): it is the design, not a
 workaround.
 
-**MB.120's proposal, built in and awaiting the owner's sign-off.** As built,
-the bar was a raw 4px. The proposal takes it to `$safety-bar-width`, so the
-note's rule is one of the site's rule weights. The contrast below does not
-change, since it rests on the size and weight. The stories
-`ProposalSafetyBarAsBuilt` and `ProposalSafetyBar` set the two side by side;
-the losing one is deleted at sign-off.
+The bar is `$safety-bar-width`, the heavy rule, so the note's rule is one of
+the site's rule weights; it was a raw 4px until MB.120 (signed off by the
+owner, 2026-10-20). The contrast below does not change, since it rests on the
+size and weight.
 
 **The heading must stay large text.** As text, the safety fill measures 4.71:1
 on the dark page and 4.28:1 on the dark card (6.02:1 and 6.69:1 on light). That
@@ -112,9 +110,6 @@ under `Surfaces / Safety Note`:
 - `Toxic` shows the mark.
 - `PhoneDark` and `PhoneLight` show the mark above the note at 375px, in each
   theme.
-- `ProposalSafetyBarAsBuilt` and `ProposalSafetyBar` (MB.120): the note as
-  built, with the 4px bar, and as proposed; each also
-  at 375px in both themes (`…PhoneDark`, `…PhoneLight`).
 
 ## Testing
 

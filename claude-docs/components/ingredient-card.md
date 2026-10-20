@@ -135,8 +135,7 @@ list's `data-density` ([`ingredient-card-list.md`](ingredient-card-list.md)).
 The drawer's measurements are tokens, not pixel literals: its inset from the slot
 (`$drawer-inset`), its side walls (`$drawer-wall`), its travel (`$drawer-travel`) and its slot shadow
 (`$drawer-slot-shadow`), with the shade colours as theme tokens (lighter in the light theme).
-The `ProposalDrawerTokens` stories in `.ladle/ingredient-card-drawer.stories.tsx` draw the drawer in
-both themes; the computed styles were checked identical to the pixel values the tokens replaced.
+The computed styles were checked identical to the pixel values the tokens replaced (MB.120).
 
 ## Stories
 
