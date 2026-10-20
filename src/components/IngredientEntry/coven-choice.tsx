@@ -12,9 +12,9 @@ import type { CovenChoiceProps } from './types';
 
 export default function CovenChoice({ options, chosen, onChoose }: CovenChoiceProps): ReactElement {
   // A form only because SelectField is react-hook-form's; nothing is submitted through it.
-  const form = useForm<{ coven: string }>({ defaultValues: { coven: chosen } });
+  const methods = useForm<{ coven: string }>({ defaultValues: { coven: chosen } });
   return (
-    <FormProvider {...form}>
+    <FormProvider {...methods}>
       <SelectField<{ coven: string }>
         name="coven"
         label="Coven"

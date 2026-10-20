@@ -34,12 +34,12 @@ const AddToCovenDialog = ({
 }: AddToCovenDialogProps): ReactElement => {
   const choosable = covens.filter(({ id }) => !heldIn.includes(id));
   // A form only because SelectField is react-hook-form's; nothing is submitted through it.
-  const form = useForm<{ coven: string }>({
+  const methods = useForm<{ coven: string }>({
     defaultValues: {
       coven: (choosable.find(({ id }) => id === workspaceId) ?? choosable[0])?.id ?? '',
     },
   });
-  const chosen = form.watch('coven');
+  const chosen = methods.watch('coven');
   const [failure, setFailure] = useState<string>();
   const add = useMutation({
     mutationFn: (to: string) =>
@@ -49,8 +49,8 @@ const AddToCovenDialog = ({
   return (
     <Modal title={title} onClose={onClose}>
       {(close) => (
-        <FormProvider {...form}>
-          {/* The .form stack, as the Invite dialog spaces its one field: a clear gap round the
+        <FormProvider {...methods}>
+          {/* The `form` class's stack, as the Invite dialog spaces its one field: a clear gap round the
               field, and the buttons a step further off (the owner's call, 2026-10-20). */}
           <div className="form">
             <SelectField<{ coven: string }>
