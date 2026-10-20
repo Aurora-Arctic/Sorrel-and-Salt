@@ -319,14 +319,16 @@ $modal-padding: space(5) * 2;
 }
 
 // A warning among a question's details, Link to the Compendium's and Make It
-// Ours's that unsaved changes are lost (M8.17): a step more room than a
-// paragraph gets on each side, space(3) above where the paragraph before it
-// leaves space(2), and space(5) below where the answers stand space(4) off,
-// margins that collapse with theirs (the owner's call, 2026-10-20). A class
-// the caller gives the Notice, so no other Notice in a card moves. Both
-// classes, to outrank `.notice`'s zero margin.
+// Ours's that unsaved changes are lost (M8.17): set well apart from its
+// neighbours, space(5) (1.5rem) above, where the paragraph before it leaves
+// space(2), and 1.75rem below, where the answers stand space(4) off, margins
+// that collapse with theirs (the owner's values, 2026-10-20). 1.75rem sits
+// off the spacing scale, between space(5) and space(6), and is the owner's
+// call rather than a new step. A class the caller gives the Notice, so no
+// other Notice in a card moves. Both classes, to outrank `.notice`'s zero
+// margin.
 .notice.confirm-overlay__warning {
-  margin-block: space(3) space(5);
+  margin-block: space(5) 1.75rem;
 }
 
 // The safe answer takes the focus by script as the card comes, and a browser
