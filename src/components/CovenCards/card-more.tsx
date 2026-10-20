@@ -1,6 +1,5 @@
 'use client';
 
-import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
 import IconTip, { DotsIcon } from '../IconTip';
 import {
@@ -9,23 +8,19 @@ import {
   useCupboardWrites,
 } from '../IngredientEntry/cupboard-writes';
 import { DeleteDialog, useDeleteEntry } from '../IngredientEntry/delete-entry';
-import { linkHeading } from '../IngredientEntry/link-heading';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
-import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import type { CardMoreProps } from './types';
 
 // A coven card's More (M8.17): the vertical dots beside Edit or Annotate,
 // opening a menu downward of the card's further writes. On the coven's own
-// entry, Link to the Compendium and Delete Ingredient; on a compendium entry
-// the cupboard holds, Make It Ours and Remove. Link opens its dialog from the
-// list's `?link=<id>`, as Edit does; the other three ask in place, in the
-// dialogs the entry page shares (option A, the owner's call, 2026-10-20),
-// since a confirmation has nothing to share as an address. A lone choice
-// stays a menu of one rather than an icon of its own: owners and members
-// reach two choices and viewers none, so no role reaches one alone today (the
-// owner's call, 2026-10-20, which removed the lone bin). A write that takes
+// entry, Delete Ingredient; on a compendium entry the cupboard holds, Make It
+// Ours and Remove. Each asks in place, in the dialogs the entry page shares
+// (option A, the owner's call, 2026-10-20), since a confirmation has nothing
+// to share as an address. A lone choice stays a menu of one rather than an
+// icon of its own: the coven's own entry reaches Delete alone (the owner's
+// call, 2026-10-20, which removed the lone bin). A write that takes
 // the card away reads the list again, and the focus then goes to the page's
 // heading, the card's More having gone with it; a refusal gives More the
 // focus back. claude-docs/components/coven-cards.md.
@@ -38,7 +33,6 @@ export default function CardMore({
   name,
   workspaceId,
   covenSlug,
-  linkHref,
   mayDelete = false,
   mayMakeOurs = false,
   mayRemove = false,
@@ -50,7 +44,6 @@ export default function CardMore({
   // is gone, and Modal gives the focus to the page's heading.
   const trigger = useRef<HTMLButtonElement>(null);
   const back = () => (trigger.current?.isConnected ? trigger.current : null);
-  const openLink = useOpenModalClick(linkHref ?? ('' as Route), linkHeading(label));
   const settle = () => setAsking(undefined);
   const deleting = useDeleteEntry({
     workspaceId,
@@ -71,9 +64,6 @@ export default function CardMore({
   };
 
   const items: MenuButtonItem[] = [
-    ...(linkHref
-      ? [{ key: 'link', label: 'Link to the Compendium', href: linkHref, onClick: openLink }]
-      : []),
     ...(mayDelete
       ? [{ key: 'delete', label: 'Delete Ingredient', destructive: true, onSelect: ask('delete') }]
       : []),

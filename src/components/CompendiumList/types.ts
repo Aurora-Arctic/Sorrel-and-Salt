@@ -154,8 +154,8 @@ export type CompendiumListFilter = SearchFilter<typeof COMPENDIUM_PARAMS.entries
  */
 export type CovenListFilter = SearchFilter<typeof COVEN_PARAMS.entries>;
 
-/** The dialog a coven list address opens over it (M8.17): an own entry's Edit or Link, or a held compendium entry's Annotate. */
-export type CovenListDialog = { edit: string } | { link: string } | { annotate: string };
+/** The dialog a coven list address opens over it (M8.17): an own entry's Edit, or a held compendium entry's Annotate. */
+export type CovenListDialog = { edit: string } | { annotate: string };
 
 /** Where the list stands: its filter, and the cursor of the page a modal opens over. */
 export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;

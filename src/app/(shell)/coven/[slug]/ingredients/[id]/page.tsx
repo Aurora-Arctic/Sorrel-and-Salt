@@ -15,7 +15,6 @@ import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   compendiumMatchesOf,
-  CONVERT_PERMISSION,
   getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
@@ -23,7 +22,6 @@ import {
   isRetired,
   MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
-import { readLinkedEntry } from '../reads';
 import type { CovenIngredientParams } from './types';
 
 // One ingredient inside a coven (M8.19): the coven's own, or a compendium
@@ -141,15 +139,6 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       ? { id: entry.id, values: await entryValues(entry, isOwn ? session : null) }
       : undefined;
 
-  // Link to the Compendium (M8.17) opens its dialog from a bare `?link` the
-  // same way, for a member whose role may link the coven's own entry; what
-  // each form holds is read only then.
-  const mayLink = canEdit && isOwn && rolePermits(role, CONVERT_PERMISSION);
-  const linked =
-    mayLink && 'link' in (await searchParams)
-      ? await readLinkedEntry(workspace.id, entry.id, entry.name)
-      : undefined;
-
   // Annotate opens its dialog from the address the same way, but only for a
   // member who may annotate in a coven that holds the entry; any other asking
   // for `?annotate` is ignored.
@@ -184,14 +173,6 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                   workspaceId: workspace.id,
                   ingredientsHref,
                   mayPromote: rolePermits(role, { ingredient: ['update'] }),
-                  // Link to the Compendium, on the permission the split asserts.
-                  linkHref: mayLink ? (`${own}?link` as Route) : undefined,
-                  linkOpened: linked && {
-                    workspaceId: workspace.id,
-                    localId: entry.id,
-                    ingredientsHref,
-                    ...linked,
-                  },
                 },
               }
             : canEdit

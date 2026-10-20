@@ -18,8 +18,8 @@ import '../CompendiumList/index.scss';
 // coven's own label, and holds its jars beneath the forms. The foot of a card holds Edit where
 // the page gives the entry an edit address (M8.17): the coven's own entries, for a role that
 // may update them; and Annotate where it gives an annotate address: the compendium entries the
-// cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Link and
-// Delete on an own entry, Make It Ours and Remove on a compendium one. An empty list is plain
+// cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Delete on
+// an own entry, Make It Ours and Remove on a compendium one. An empty list is plain
 // text until M9.11 builds its empty state. claude-docs/components/coven-cards.md.
 
 // Named with the formal name too, as two entries can share a label.
@@ -46,7 +46,7 @@ const actionsOf = (
   covenSlug: string,
 ): ReactElement | undefined => {
   const opens = opensOf(entry);
-  const more = entry.linkHref || entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
+  const more = entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
   if (!opens && !more) return undefined;
   return (
     <>
@@ -58,7 +58,6 @@ const actionsOf = (
           name={nameOf(entry)}
           workspaceId={workspaceId}
           covenSlug={covenSlug}
-          linkHref={entry.linkHref}
           mayDelete={entry.mayDelete}
           mayMakeOurs={entry.mayMakeOurs}
           mayRemove={entry.mayRemove}

@@ -45,7 +45,6 @@ import {
 } from './references';
 import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
-import LinkDialog from './link-dialog';
 import OwnEntryActions from './own-actions';
 import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
@@ -536,7 +535,7 @@ const IngredientEntry = ({
             (edit || cupboard) && (
               <>
                 {edit && !(cupboard && !local) && edit.coven ? (
-                  // A coven's own entry: Edit, Link and Delete in one menu (M8.17).
+                  // A coven's own entry: Edit and Delete in one menu (M8.17).
                   <OwnEntryActions edit={edit} entry={editable} />
                 ) : (
                   edit &&
@@ -708,9 +707,6 @@ const IngredientEntry = ({
     <RouteModalProvider>
       {page}
       {edit && <EntryDialog entry={editable} edit={edit} />}
-      {edit?.coven?.linkHref && (
-        <LinkDialog closeHref={edit.closeHref} opened={edit.coven.linkOpened} />
-      )}
     </RouteModalProvider>
   ) : (
     page

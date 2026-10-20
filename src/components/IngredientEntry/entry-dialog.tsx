@@ -9,8 +9,6 @@ import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import { editEyebrow } from './edit-heading';
 import { ANNOTATE_HEADING } from './annotate-heading';
-import EditMore from './edit-more';
-import { LINK_HEADING_TITLE } from './link-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
 
 // The compendium edit modal over an entry's own page (M8.19), the shape the
@@ -22,11 +20,9 @@ import type { EditableEntry, IngredientEntryEdit } from './types';
 //
 // A coven's own entry (M8.17) takes the same dialog with the coven's form: a
 // save closes it, back on the page fetched again; Delete leaves for
-// `deletedHref` (M8.17); near matches open in the coven; and Delete shares a
-// More menu at the foot with Link to the Compendium, when the role may link,
-// which opens the Link dialog in this one's place (edit-more.tsx). The coven's
-// list renders the same dialog over its rows, with no entry until
-// `?edit=<id>` names one.
+// `deletedHref` (M8.17); near matches open in the coven; and Delete is the
+// form's own, apart at the foot. The coven's list renders the same dialog over
+// its rows, with no entry until `?edit=<id>` names one.
 
 /** A compendium entry's public page: also where a near match or a linked substitute is opened. */
 const publicAddress = (slug: string): Route => `/compendium/ingredients/${slug}` as Route;
@@ -41,9 +37,9 @@ export default function EntryDialog({
 }): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const { opened, closeHref, deletedHref, savedHref, coven } = edit;
-  // Annotate's and Link's presses share this page's skeleton; those belong to them.
+  // Annotate's press shares this page's skeleton; that belongs to it.
   const loading = useRouteModalOpener()?.loading?.title;
-  if ((loading === ANNOTATE_HEADING.title || loading === LINK_HEADING_TITLE) && !opened) {
+  if (loading === ANNOTATE_HEADING.title && !opened) {
     return null;
   }
   return (
@@ -78,9 +74,6 @@ export default function EntryDialog({
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
                 // Only a compendium entry has a page by its slug.
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
-                aside={(state) => (
-                  <EditMore name={entry.name} linkHref={coven.linkHref} {...state} />
-                )}
               />
             ) : (
               <IngredientForm

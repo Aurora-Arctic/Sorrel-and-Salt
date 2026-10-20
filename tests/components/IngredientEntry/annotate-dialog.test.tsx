@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
 import { CUPBOARD_MENU_LABEL } from '@/components/IngredientEntry/cupboard-writes';
-import { UNSAVED_CHANGES_LOST } from '@/components/IngredientEntry/link-confirm';
+import { UNSAVED_CHANGES_LOST } from '@/components/Modal';
 import type { AnnotateDialogProps } from '@/components/IngredientEntry/types';
 import type { MakeItOursMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // The Annotate dialog's foot (M8.17; claude-docs/components/ingredient-entry.md):
 // Make It Ours and Remove, each offered only on the member's permission, in a
 // More menu when both are and as a button of its own when one is, and each
-// asked in the form's own question card over it, as Delete and Link ask, not
+// asked in the form's own question card over it, as Delete asks, not
 // in a second dialog (the owner's call, 2026-10-20).
 // A remove leaves for where the dialog closes to; Make It Ours for the own
 // entry it writes, warning first when the form holds unsaved changes.
@@ -211,7 +211,7 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
   });
 
   // Make It Ours copies the saved annotations, so the form's unsaved ones are
-  // lost with the dialog: the question says so, as Link to the Compendium's does.
+  // lost with the dialog: the question says so.
   it('warns that unsaved changes are lost only while the form holds some', () => {
     renderDialog();
 

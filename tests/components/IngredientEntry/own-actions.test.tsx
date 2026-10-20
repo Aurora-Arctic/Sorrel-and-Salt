@@ -15,9 +15,8 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Edit menu on a coven's own entry's page (M8.17): Edit, Link to the
-// Compendium where the role may link, and Delete, asked in a dialog shared
-// with the list card's More (claude-docs/components/ingredient-entry.md).
+// The Edit menu on a coven's own entry's page (M8.17): Edit and Delete, asked
+// in a dialog shared with the list card's More (claude-docs/components/ingredient-entry.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
@@ -31,7 +30,6 @@ const EDIT: IngredientEntryEdit = {
     workspaceId: WORKSPACE_ID,
     ingredientsHref: '/coven/fixture-coven/ingredients' as Route,
     mayPromote: true,
-    linkHref: `${PAGE}?link` as Route,
   },
 };
 
@@ -83,24 +81,14 @@ describe('OwnEntryActions', () => {
     router.push.mockClear();
   });
 
-  it('offers Edit, Link to the Compendium and Delete in one Edit menu, Edit and Link at their addresses', () => {
+  it('offers Edit and Delete in one Edit menu, Edit at its address', () => {
     renderOnPage();
 
-    expect(choices()).toEqual(['Edit Ingredient', 'Link to the Compendium', 'Delete Ingredient']);
+    expect(choices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
     expect(screen.getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
       'href',
       EDIT.href,
     );
-    expect(screen.getByRole('menuitem', { name: 'Link to the Compendium' })).toHaveAttribute(
-      'href',
-      EDIT.coven!.linkHref,
-    );
-  });
-
-  it('offers no Link where the role may not link', () => {
-    renderOnPage({ ...EDIT, coven: { ...EDIT.coven!, linkHref: undefined } });
-
-    expect(choices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
   });
 
   it('asks before deleting, in a dialog, deletes nothing on Cancel, and gives Edit the focus back', async () => {

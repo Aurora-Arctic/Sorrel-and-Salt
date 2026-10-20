@@ -306,17 +306,6 @@ type FolkName {
   name: String!
 }
 
-"""
-Where one form of an own entry goes in a split: needed only for a form two picks both have.
-"""
-input FormAssignmentInput {
-  """The pick it goes to, which has a form of its name."""
-  compendiumId: ID!
-
-  """The own entry's form."""
-  formId: ID!
-}
-
 enum FormGroupIcon {
   animal
   botanical
@@ -893,21 +882,6 @@ type Mutation {
   Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
-
-  """
-  Turns one of the coven's own entries into one compendium entry or several (M8.17): each form's jars and spell layers move to the pick with a form of its name, or, where two picks have it, the one its assignment names; a cupboard entry per pick carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no home, or a jar or a layer would meet one of a pick's.
-  """
-  splitLocalIntoCompendiumEntries(
-    assignments: [FormAssignmentInput!]
-
-    """
-    The pick that keeps the own entry's name as its label: the first pick when left out, and no pick when null.
-    """
-    labelOn: ID
-    localId: ID!
-    picks: [ID!]!
-    workspaceId: ID!
-  ): SplitLocal!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -1648,14 +1622,6 @@ type SourceFacetCount {
 
   """local or compendium, as source takes it."""
   value: IngredientSource!
-}
-
-"""
-An own entry turned into one compendium entry or several: a cupboard entry per pick, in the order picked, and what was lost.
-"""
-type SplitLocal {
-  dropped: DroppedOnConvert!
-  entries: [CupboardEntry!]!
 }
 
 input StockInput {

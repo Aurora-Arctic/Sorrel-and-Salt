@@ -11,7 +11,6 @@ import type {
   IngredientRow,
   IngredientScoped,
   NotSpellScoped,
-  SpellLayerRow,
   SpellScoped,
   Unscoped,
   WriterContext,
@@ -127,29 +126,6 @@ export async function findManyOfSpellIngredientsIncludingSoftDeleted<
         table.ingredientId,
         held.map((row) => row.id),
       ),
-    ),
-  );
-}
-
-/**
- * The live layers that lay any of these forms, in the spells this member may
- * read: the coven's shared ones and their own private ones. Read unlocked so
- * the Link dialog can say what each form holds before anything is chosen
- * (M8.17). Another member's private spell is left out even from a count,
- * since a count would tell the reader it exists (rule 7); the split itself
- * moves those layers through `lockLayersOfVariants`.
- */
-export function findLayersOfVariants(
-  membership: Membership,
-  variantIds: readonly string[],
-): Promise<SpellLayerRow[]> {
-  if (variantIds.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    spellIngredients,
-    and(
-      notSoftDeleted(spellIngredients),
-      inArray(spellIngredients.variantId, [...variantIds]),
-      existsIn(spells, and(eq(spells.id, spellIngredients.spellId), readableSpells(membership))),
     ),
   );
 }

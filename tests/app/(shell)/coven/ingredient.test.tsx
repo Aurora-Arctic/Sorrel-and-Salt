@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
@@ -32,52 +32,22 @@ const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
-const localHoldings = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
   compendiumMatchesOf,
   getCupboardEntry,
   isRetired,
-  localHoldings,
   // The permission Make It Ours is offered on, as the service asserts it (M12.23).
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
-  // The permission Link to the Compendium is offered on, as the service asserts it (M12.21).
-  CONVERT_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
   isAnnotated: () => false,
 }));
 
-// The form is its own tests'; here only that the dialog holds one, and its foot's aside.
+// The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({
-    aside,
-  }: {
-    aside?: (form: {
-      dirty: boolean;
-      discardAsking: boolean;
-      requestDelete: () => void;
-    }) => ReactNode;
-  }) => (
-    <form aria-label="Fixture Form">
-      {aside?.({ dirty: false, discardAsking: false, requestDelete: () => undefined })}
-    </form>
-  ),
-}));
-
-// The edit dialog's foot and the Link dialog's body are their own tests'
-// (edit-more.test.tsx, link-dialog.test.tsx); here only the address Link opens
-// at, and that the page opens it on the entry it names with what it holds.
-vi.mock('@/components/IngredientEntry/edit-more', () => ({
-  default: ({ linkHref }: { linkHref?: string }) => (
-    <output aria-label="Edit More">{linkHref ?? 'no link'}</output>
-  ),
-}));
-vi.mock('@/components/IngredientEntry/link-form', () => ({
-  default: ({ localId, holdings }: { localId: string; holdings: { form: string }[] }) => (
-    <section aria-label={`Link ${localId}, ${holdings.map(({ form }) => form).join(', ')}`} />
-  ),
+  default: () => <form aria-label="Fixture Form" />,
 }));
 
 const entryValues = vi.fn();
@@ -322,37 +292,6 @@ describe('the coven ingredient page', () => {
     expect(ownDialog()).toBeInTheDocument();
     expect(dialog()).not.toBeInTheDocument();
     expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: ID }), SESSION);
-  });
-
-  it('offers Link to the Compendium at the foot of the form to a member whose role may convert, on this very page', async () => {
-    await open(covenRow(), false, { edit: '' });
-
-    expect(within(ownDialog()!).getByRole('status', { name: 'Edit More' })).toHaveTextContent(
-      `/coven/fixture-coven/ingredients/${ID}?link`,
-    );
-    expect(localHoldings).not.toHaveBeenCalled();
-  });
-
-  it('opens the Link dialog under ?link, what its forms hold read as the member', async () => {
-    localHoldings.mockResolvedValue([{ formId: 'f1', form: 'Fixture Herb', jars: 1, spells: 0 }]);
-    await open(covenRow(), false, { link: '' });
-
-    expect(localHoldings).toHaveBeenCalledWith(SESSION, WORKSPACE.id, ID);
-    const linkDialog = screen.getByRole('dialog', { name: /Link to the Compendium/ });
-    expect(
-      within(linkDialog).getByRole('region', { name: `Link ${ID}, Fixture Herb` }),
-    ).toBeInTheDocument();
-  });
-
-  it('opens no Link dialog, and reads nothing for it, for a viewer who asks with ?link', async () => {
-    // Why it could have opened: the same ask from a member opens it (above).
-    asRole('viewer');
-    await open(covenRow(), false, { link: '' });
-
-    expect(
-      screen.queryByRole('dialog', { name: /Link to the Compendium/ }),
-    ).not.toBeInTheDocument();
-    expect(localHoldings).not.toHaveBeenCalled();
   });
 
   it("opens no dialog on the coven's own entry, and reads nothing for it, for a viewer who asks for one", async () => {

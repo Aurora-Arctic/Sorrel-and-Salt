@@ -86,3 +86,10 @@ export function ConfirmQuestion({
     </ConfirmOverlay>
   );
 }
+
+/**
+ * Said, as a warning notice, in a confirmation shown over a form whose page
+ * goes with the answer: Make It Ours's over the Annotate dialog (M8.17; the
+ * owner's words, 2026-10-20).
+ */
+export const UNSAVED_CHANGES_LOST = 'Changes you have not saved are lost.';

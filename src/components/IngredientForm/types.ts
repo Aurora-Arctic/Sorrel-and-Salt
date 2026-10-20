@@ -39,18 +39,6 @@ interface IngredientFormCallbacks {
   onDeleted?: () => void;
   /** Cancel, offered beside the saves when given: the page the form sits in closes it. */
   onCancel?: () => void;
-  /**
-   * What an edit sets apart at the foot in Delete's place (M8.17): the coven's
-   * More menu of Link to the Compendium and Delete Ingredient. Handed whether
-   * the form holds unsaved changes, whether its unsaved-changes confirmation is
-   * asking (which a confirmation of the aside's steps aside for, both being
-   * drawn in one place), and a way to ask Delete's own confirmation.
-   */
-  aside?: (state: {
-    dirty: boolean;
-    discardAsking: boolean;
-    requestDelete: () => void;
-  }) => ReactNode;
   /** Where a near match the duplicate warning names links: a coven's ingredient page, or the admin's compendium modal. */
   duplicateHref: (match: Duplicate) => string;
   /**

@@ -138,8 +138,8 @@ export const WithAnnotate: Story = () => (
   />
 );
 
-// A member's full foot (M8.17): Edit or Annotate, then More, the vertical dots, with Link and
-// Delete on the coven's own entry and Make It Ours and Remove on a compendium entry.
+// A member's full foot (M8.17): Edit or Annotate, then More, the vertical dots, with Delete
+// on the coven's own entry and Make It Ours and Remove on a compendium entry.
 export const WithMore: Story = () => (
   <CovenCards
     {...BASE}
@@ -149,7 +149,6 @@ export const WithMore: Story = () => (
             ...shown,
             editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
             editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-            linkHref: `/coven/fixture-coven/ingredients?link=${shown.id}`,
             mayDelete: true,
           }
         : {

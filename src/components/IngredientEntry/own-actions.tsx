@@ -1,6 +1,5 @@
 'use client';
 
-import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
 import { editHeading } from '../CompendiumList/heading';
 import MenuButton from '../MenuButton';
@@ -9,17 +8,14 @@ import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import { DeleteDialog, useDeleteEntry } from './delete-entry';
 import { editEyebrow } from './edit-heading';
-import { linkHeading } from './link-heading';
 import type { EditableEntry, IngredientEntryEdit } from './types';
 
 // The Edit menu beside a coven's own entry's title (M8.17), the twin of a
-// compendium entry's CupboardActions: Edit Ingredient, Link to the Compendium
-// where the role may link, and Delete Ingredient. Edit and Link are links to
-// the page's own `?edit` and `?link`, which open their dialogs over it; Delete
-// asks in a dialog in place, shared with the list card's More
+// compendium entry's CupboardActions: Edit Ingredient and Delete Ingredient.
+// Edit is a link to the page's own `?edit`, which opens its dialog over it;
+// Delete asks in a dialog in place, shared with the list card's More
 // (`delete-entry.tsx`), since a confirmation has nothing to share as an
-// address (option A, the owner's call, 2026-10-20). The menu always holds two
-// choices or more, Edit and Delete at least. claude-docs/components/ingredient-entry.md.
+// address (option A, the owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md.
 
 export default function OwnEntryActions({
   edit,
@@ -36,9 +32,7 @@ export default function OwnEntryActions({
   // has led away, it is gone too, and Modal gives the focus to the heading.
   const trigger = useRef<HTMLButtonElement>(null);
   const back = () => (trigger.current?.isConnected ? trigger.current : null);
-  const linkHref = edit.coven?.linkHref;
   const openEdit = useOpenModalClick(edit.href, editHeading(entry, editEyebrow(edit)));
-  const openLink = useOpenModalClick(linkHref ?? ('' as Route), linkHeading(entry.name));
   const remove = useDeleteEntry({
     workspaceId: edit.coven?.workspaceId ?? '',
     id: entry.id,
@@ -49,9 +43,6 @@ export default function OwnEntryActions({
 
   const items: MenuButtonItem[] = [
     { key: 'edit', label: 'Edit Ingredient', primary: true, href: edit.href, onClick: openEdit },
-    ...(linkHref
-      ? [{ key: 'link', label: 'Link to the Compendium', href: linkHref, onClick: openLink }]
-      : []),
     {
       key: 'delete',
       label: 'Delete Ingredient',

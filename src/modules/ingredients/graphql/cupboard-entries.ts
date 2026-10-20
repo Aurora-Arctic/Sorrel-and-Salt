@@ -11,7 +11,6 @@ import {
   convertCompendiumEntryToLocal,
   convertLocalToCompendiumEntry,
   removeCupboardEntry,
-  splitLocalIntoCompendiumEntries,
 } from '../services/cupboard-entries';
 import { getIngredient } from '../services/compendium';
 import type {
@@ -244,66 +243,6 @@ builder.mutationField('convertLocalToCompendiumEntry', (t) =>
         compendiumId,
       );
       return { entry: await nodeOf(entry, loaders), dropped };
-    },
-  }),
-);
-
-const SplitLocalRef = builder
-  .objectRef<{ entries: CupboardEntryNode[]; dropped: DroppedOnConvert }>('SplitLocal')
-  .implement({
-    description:
-      'An own entry turned into one compendium entry or several: a cupboard entry per pick, in the order picked, and what was lost.',
-    fields: (t) => ({
-      entries: t.field({ type: [CupboardEntryRef], resolve: (split) => split.entries }),
-      dropped: t.field({ type: DroppedOnConvertRef, resolve: (split) => split.dropped }),
-    }),
-  });
-
-const FormAssignmentInput = builder.inputType('FormAssignmentInput', {
-  description:
-    'Where one form of an own entry goes in a split: needed only for a form two picks both have.',
-  fields: (t) => ({
-    formId: t.id({ required: true, description: "The own entry's form." }),
-    compendiumId: t.id({
-      required: true,
-      description: 'The pick it goes to, which has a form of its name.',
-    }),
-  }),
-});
-
-builder.mutationField('splitLocalIntoCompendiumEntries', (t) =>
-  t.field({
-    type: SplitLocalRef,
-    description:
-      "Turns one of the coven's own entries into one compendium entry or several (M8.17): each form's jars and spell layers move to the pick with a form of its name, or, where two picks have it, the one its assignment names; a cupboard entry per pick carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no home, or a jar or a layer would meet one of a pick's.",
-    args: {
-      workspaceId: t.arg.id({ required: true }),
-      localId: t.arg.id({ required: true }),
-      picks: t.arg.idList({ required: true }),
-      assignments: t.arg({ type: [FormAssignmentInput] }),
-      labelOn: t.arg.id({
-        description:
-          "The pick that keeps the own entry's name as its label: the first pick when left out, and no pick when null.",
-      }),
-    },
-    authScopes: { signedIn: true },
-    resolve: async (
-      _root,
-      { workspaceId, localId, picks, assignments, labelOn },
-      { loaders, ...context },
-    ) => {
-      const { entries, dropped } = await splitLocalIntoCompendiumEntries(
-        sessionOf(context),
-        workspaceId,
-        localId,
-        picks,
-        assignments ?? [],
-        labelOn,
-      );
-      return {
-        entries: await Promise.all(entries.map((entry) => nodeOf(entry, loaders))),
-        dropped,
-      };
     },
   }),
 );

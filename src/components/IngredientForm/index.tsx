@@ -189,7 +189,6 @@ const IngredientForm = ({
   onSaved,
   onDeleted,
   onCancel,
-  aside,
   duplicateHref,
   entryHref,
   mayPromote = false,
@@ -322,10 +321,6 @@ const IngredientForm = ({
   // they are in a form of their own, which `isDirty` never sees.
   const panels = usePanelChanges();
   const discard = useDiscardGuard(isDirty || panels.changed);
-  const requestDelete = () => {
-    setRefusal(undefined);
-    setDeleting(true);
-  };
 
   // Open All / Close All: Close All while any section is open, so a press
   // from any mix folds the form to its summary lines, the view the sections
@@ -845,14 +840,13 @@ const IngredientForm = ({
                     busy={busy('open')}
                     saveValue="open"
                     onCancel={onCancel && (() => discard.request(onCancel))}
-                    onDelete={editing && !aside ? requestDelete : undefined}
-                    aside={
-                      editing &&
-                      aside?.({
-                        dirty: isDirty || panels.changed,
-                        discardAsking: discard.asking,
-                        requestDelete,
-                      })
+                    onDelete={
+                      editing
+                        ? () => {
+                            setRefusal(undefined);
+                            setDeleting(true);
+                          }
+                        : undefined
                     }
                   >
                     {!editing && (

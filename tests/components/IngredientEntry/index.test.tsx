@@ -32,7 +32,6 @@ vi.mock('@/components/IngredientForm', () => ({
     onDeleted,
     duplicateHref,
     entryHref,
-    aside,
   }: IngredientFormProps) => (
     <form aria-label="Fixture Form">
       <output aria-label="Edited">{entry?.id}</output>
@@ -56,16 +55,7 @@ vi.mock('@/components/IngredientForm', () => ({
       <button type="button" onClick={() => onDeleted?.()}>
         Fixture Delete
       </button>
-      {aside?.({ dirty: false, discardAsking: false, requestDelete: () => {} })}
     </form>
-  ),
-}));
-
-// The edit dialog's More is its own tests' (edit-more.test.tsx): a stand-in
-// naming the Link address it was handed.
-vi.mock('@/components/IngredientEntry/edit-more', () => ({
-  default: ({ linkHref }: { linkHref?: string }) => (
-    <output aria-label="Edit More">{linkHref ?? 'no link'}</output>
   ),
 }));
 
@@ -1084,7 +1074,6 @@ describe('IngredientEntry edit', () => {
       });
     const covenDialog = () => screen.getByRole('dialog', { name: /^Edit Ingredient, Testwort/ });
     const shows = (label: string) => within(covenDialog()).getByRole('status', { name: label });
-    const form = () => within(covenDialog()).getByRole('form', { name: 'Fixture Form' });
     // The page's Edit menu writes through the query client (`own-actions.tsx`).
     const renderOwn = (ui: ReactElement) =>
       render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
@@ -1127,23 +1116,6 @@ describe('IngredientEntry edit', () => {
 
       expect(router.replace).toHaveBeenCalledWith(OWN);
       expect(router.refresh).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets the form's More at its foot, with Link's address only when the role may link", () => {
-      const { unmount } = renderOwn(
-        <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />,
-      );
-      expect(within(form()).getByRole('status', { name: 'Edit More' })).toHaveTextContent(
-        'no link',
-      );
-      unmount();
-
-      const LINK = `/coven/fixture-coven/ingredients?link=${opened.id}` as Route;
-      renderOwn(
-        <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ linkHref: LINK })} />,
-      );
-
-      expect(within(form()).getByRole('status', { name: 'Edit More' })).toHaveTextContent(LINK);
     });
   });
 });

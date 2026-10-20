@@ -8,7 +8,6 @@ import {
   findCompendiumMatchPage,
   findCupboardEntryByLabel,
   findCupboardEntryIncludingSoftDeleted,
-  findLayersOfVariants,
   findManyOfIngredients,
   findOneByIdInWorkspace,
   findOneIngredient,
@@ -38,10 +37,7 @@ import type {
   ConvertedLocal,
   CupboardEntryKey,
   DroppedOnConvert,
-  FormAssignment,
-  FormHolding,
   IngredientValues,
-  SplitLocal,
   VariantKey,
   VariantRecord,
 } from '../types';
@@ -516,192 +512,67 @@ async function childrenLost(
 }
 
 /**
- * What each live form of this coven's own ingredient `localId` holds: the
- * coven's jars of it, and the live spells laying it that the caller may
- * read, the coven's shared ones and their own private ones (M8.17). Another
- * member's private spell is not counted, since the count would tell the
- * caller it exists; the split still moves its layers. The Link dialog's form
- * map reads it to say which forms need a home. Ordered by form.
- *
- * @throws {Forbidden} the caller may not convert this coven's ingredients.
- * @throws {NotFound} `localId` is not a live ingredient of this coven.
- */
-export async function localHoldings(
-  session: Session,
-  workspaceId: string,
-  localId: string,
-): Promise<FormHolding[]> {
-  const membership = await assertMembership(session, workspaceId, CONVERT_PERMISSION);
-  if (!RowId.safeParse(localId).success) throw new NotFound(NO_LOCAL);
-  const own = await findOneByIdInWorkspace(membership, ingredients, localId);
-  if (!own) throw new NotFound(NO_LOCAL);
-  const forms = await findManyOfIngredients([membership], ingredientVariants, [localId]);
-  const formIds = forms.map((form) => form.id);
-  const [jars, layers] = await Promise.all([
-    findStockOfIngredients(membership, [localId]),
-    findLayersOfVariants(membership, formIds),
-  ]);
-  return forms
-    .map((form) => ({
-      formId: form.id,
-      form: form.form,
-      jars: jars.filter((jar) => jar.variantId === form.id).length,
-      spells: new Set(
-        layers.filter((layer) => layer.variantId === form.id).map((layer) => layer.spellId),
-      ).size,
-    }))
-    .sort((a, b) => a.form.localeCompare(b.form));
-}
-
-/**
  * Turns this coven's own ingredient `localId` into the compendium entry
- * `compendiumId`: the one-pick case of `splitLocalIntoCompendiumEntries`,
- * whose rules and refusals it keeps. The own entry's name stays on the new
- * cupboard row as its label unless `keepLabel` is false.
+ * `compendiumId`, in one transaction. Each live form of the own entry is
+ * matched to the compendium form it folds to; the coven's jars and the layers
+ * of its spells, private ones included, move to the matched form with their
+ * ids and amounts unchanged. A form that matches nothing and holds nothing is
+ * dropped. The cupboard row carries the label, notes and lists the own entry
+ * had that the compendium's differ from, and the own entry is soft-deleted,
+ * its forms, folk names, substitutes, categories, references and deities
+ * left on it as they were, which is how a spell layer laid before the
+ * convert on a form already deleted still reads it. Nothing is merged: a
+ * jar or a layer that would meet one of the compendium's is refused.
  *
  * @throws {Forbidden} the caller may not create and delete this coven's
  * ingredients and update its stock.
  * @throws {NotFound} `localId` is not a live ingredient of this coven, or
  * `compendiumId` not a live compendium entry.
- * @throws {ValidationError} as `splitLocalIntoCompendiumEntries` does.
+ * @throws {ValidationError} the coven already holds the entry, beside
+ * `ingredientId`; another entry of the coven already uses the label, beside
+ * `label`; a form that holds a jar or a spell layer matches no compendium
+ * form, beside `forms`; the coven holds a jar of a matched compendium form
+ * already, beside `jars`; or a spell lays both a form and its match, beside
+ * `layers`.
  */
 export async function convertLocalToCompendiumEntry(
   session: Session,
   workspaceId: string,
   localId: string,
   compendiumId: string,
-  keepLabel = true,
 ): Promise<ConvertedLocal> {
-  const { entries, dropped } = await splitLocalIntoCompendiumEntries(
-    session,
-    workspaceId,
-    localId,
-    [compendiumId],
-    [],
-    keepLabel ? compendiumId : null,
-  );
-  return { entry: entries[0], dropped };
-}
-
-/**
- * Turns this coven's own ingredient `localId` into the compendium entries
- * `picks`, in one transaction: one entry or several, as when the coven's own
- * entry turns out to have held two things (M8.17, the owner's call of
- * 2026-10-20). Each live form of the own entry goes to the pick whose form
- * it folds to; a form two picks both have goes where `assignments` sends it.
- * The coven's jars and the layers of its spells, private ones included, move
- * to the matched form with their ids and amounts unchanged. A form that
- * matches nothing and holds nothing is dropped, and so is one two picks
- * share that holds nothing and has no assignment. Each pick gets a cupboard
- * row carrying the notes and lists the own entry had that the pick's differ
- * from, and the own entry's name as its label on the one pick `labelOn`
- * names: the first pick when it is left out, and no pick when it is null,
- * since two rows of one coven cannot share a label (the owner's call of
- * 2026-10-20). The own entry is
- * soft-deleted, its forms, folk names, substitutes, categories, references
- * and deities left on it as they were, which is how a spell layer laid
- * before the convert on a form already deleted still reads it. Nothing is
- * merged: a jar or a layer that would meet one of a pick's is refused, and
- * so every refusal moves nothing.
- *
- * @throws {Forbidden} the caller may not create and delete this coven's
- * ingredients and update its stock.
- * @throws {NotFound} `localId` is not a live ingredient of this coven, or a
- * pick not a live compendium entry.
- * @throws {ValidationError} no pick, beside `picks`; the coven already holds
- * a pick, beside `ingredientId`; another entry of the coven already uses the
- * label, beside `label`; `labelOn` is not a pick, beside `labelOn`; an assignment names a form the own entry does not
- * have live or a pick without that form, beside `assignments`; a form that
- * holds a jar or a spell layer matches no pick's form, or two picks' with no
- * assignment, beside `forms`; the coven holds a jar of a matched form
- * already, beside `jars`; or a spell lays both a form and its match, beside
- * `layers`.
- */
-export async function splitLocalIntoCompendiumEntries(
-  session: Session,
-  workspaceId: string,
-  localId: string,
-  picks: readonly string[],
-  assignments: readonly FormAssignment[] = [],
-  labelOn?: string | null,
-): Promise<SplitLocal> {
   const membership = await assertMembership(session, workspaceId, CONVERT_PERMISSION);
   if (!RowId.safeParse(localId).success) throw new NotFound(NO_LOCAL);
-  const pickIds = [...new Set(picks)];
-  if (pickIds.length === 0) {
-    throw new ValidationError([
-      { path: ['picks'], message: 'Choose at least one compendium entry' },
-    ]);
-  }
-  if (pickIds.some((id) => !RowId.safeParse(id).success)) throw new NotFound(NO_ENTRY);
-  const labelled = labelOn === undefined ? pickIds[0] : labelOn;
-  if (labelled !== null && !pickIds.includes(labelled)) {
-    throw new ValidationError([
-      { path: ['labelOn'], message: 'Keep your name only on an entry you chose' },
-    ]);
-  }
+  if (!RowId.safeParse(compendiumId).success) throw new NotFound(NO_ENTRY);
   const own = await findOneByIdInWorkspace(membership, ingredients, localId);
   if (!own) throw new NotFound(NO_LOCAL);
-  const single = pickIds.length === 1;
-  const entries: IngredientRow[] = [];
-  for (const id of pickIds) {
-    const entry = await findOneIngredient([], id);
-    if (!entry) throw new NotFound(NO_ENTRY);
-    if (await findCupboardEntry(membership, id)) {
-      const message = single ? HELD : `Your coven already holds ${entry.name}`;
-      throw new ValidationError([{ path: ['ingredientId'], message }]);
-    }
-    entries.push(entry);
+  const entry = await findOneIngredient([], compendiumId);
+  if (!entry) throw new NotFound(NO_ENTRY);
+  if (await findCupboardEntry(membership, compendiumId)) {
+    throw new ValidationError([{ path: ['ingredientId'], message: HELD }]);
   }
-  const columnsOf = new Map<string, Partial<CupboardEntryInput>>(
-    entries.map((entry) => {
-      const { label, ...rest } = differingColumns(own, entry);
-      return [entry.id, entry.id === labelled && label ? { label, ...rest } : rest];
-    }),
-  );
-  if (labelled !== null)
-    await refuseLabelTaken(membership, columnsOf.get(labelled)!.label, undefined, own.id);
-  const nameOf = new Map(entries.map((entry) => [entry.id, entry.name]));
+  const columns = differingColumns(own, entry);
+  await refuseLabelTaken(membership, columns.label, undefined, own.id);
 
   const ownForms = await findManyOfIngredients([membership], ingredientVariants, [localId]);
   const lost = await childrenLost(session, own, ownForms);
   // No proofs reads the compendium's forms alone.
-  const entryForms = await findManyOfIngredients([], ingredientVariants, pickIds);
+  const entryForms = await findManyOfIngredients([], ingredientVariants, [compendiumId]);
 
   try {
-    const { rows, droppedForms } = await withAudit(session, async (write) => {
-      // The lock `createStock` takes, so no jar of any entry appears
+    const { row, droppedForms } = await withAudit(session, async (write) => {
+      // The lock `createStock` takes, so no jar of either entry appears
       // between the checks below and the moves.
       await write.lockCovenStock(membership);
       const forms = await write.lockLiveVariants(membership, localId);
-      const candidatesOf = (form: VariantRecord) =>
-        entryForms.filter((candidate) => foldForm(candidate.form) === foldForm(form.form));
-
-      const assigned = new Map<string, VariantRecord>();
-      for (const assignment of assignments) {
-        const form = forms.find((candidate) => candidate.id === assignment.formId);
-        const target =
-          form &&
-          candidatesOf(form).find(
-            (candidate) => candidate.ingredientId === assignment.compendiumId,
+      const matchOf = new Map(
+        forms.flatMap((form) => {
+          const match = entryForms.find(
+            (candidate) => foldForm(candidate.form) === foldForm(form.form),
           );
-        if (!form || !target) {
-          throw new ValidationError([
-            {
-              path: ['assignments'],
-              message: 'A form can go only to a chosen entry that has a form of its name',
-            },
-          ]);
-        }
-        assigned.set(form.id, target);
-      }
-      const matchOf = new Map<string, VariantRecord>();
-      for (const form of forms) {
-        const candidates = candidatesOf(form);
-        const match = assigned.get(form.id) ?? (candidates.length === 1 ? candidates[0] : null);
-        if (match) matchOf.set(form.id, match);
-      }
-
+          return match ? [[form.id, match] as const] : [];
+        }),
+      );
       const formIds = new Set(forms.map((form) => form.id));
       // A jar of a form deleted since is in no read and has nowhere to go.
       const jars = (await write.lockJarsOfIngredient(membership, localId)).filter((jar) =>
@@ -712,34 +583,21 @@ export async function splitLocalIntoCompendiumEntries(
         jars.some((jar) => jar.variantId === formId) ||
         layers.some((layer) => layer.variantId === formId);
 
-      const homeless = forms.filter((form) => !matchOf.has(form.id) && holds(form.id));
-      const missing = homeless.filter((form) => candidatesOf(form).length === 0);
+      const missing = forms.filter((form) => !matchOf.has(form.id) && holds(form.id));
       if (missing.length > 0) {
-        const names = listed(sortedNames(missing.map((form) => form.form)));
+        const names = sortedNames(missing.map((form) => form.form));
         throw new ValidationError([
           {
             path: ['forms'],
-            message: single
-              ? `The compendium entry has no ${names} form, which this coven's jars or spells hold`
-              : `None of the compendium entries has a ${names} form, which this coven's jars or spells hold`,
+            message: `The compendium entry has no ${listed(names)} form, which this coven's jars or spells hold`,
           },
         ]);
       }
-      if (homeless.length > 0) {
-        throw new ValidationError(
-          homeless.map((form) => ({
-            path: ['forms'],
-            message: `${listed(sortedNames(candidatesOf(form).map((candidate) => nameOf.get(candidate.ingredientId)!)))} each have a ${form.form} form, which this coven's jars or spells hold — choose which entry it goes to`,
-          })),
-        );
-      }
 
-      const theirJars = (
-        await Promise.all(pickIds.map((id) => write.lockJarsOfIngredient(membership, id)))
-      ).flat();
-      const jarClashes = jars.filter((jar) =>
-        theirJars.some((theirs) => theirs.variantId === matchOf.get(jar.variantId)?.id),
-      );
+      const theirJars = await write.lockJarsOfIngredient(membership, compendiumId);
+      const meeting = (jar: StockRow) =>
+        theirJars.some((theirs) => theirs.variantId === matchOf.get(jar.variantId)?.id);
+      const jarClashes = jars.filter(meeting);
       if (jarClashes.length > 0) {
         const names = sortedNames(jarClashes.map((jar) => matchOf.get(jar.variantId)!.form));
         throw new ValidationError([
@@ -770,37 +628,30 @@ export async function splitLocalIntoCompendiumEntries(
       }
 
       for (const jar of jars) {
-        const match = matchOf.get(jar.variantId)!;
         await write.updateByIdInWorkspace(membership, inventoryItems, jar.id, {
-          ingredientId: match.ingredientId,
-          variantId: match.id,
+          ingredientId: compendiumId,
+          variantId: matchOf.get(jar.variantId)!.id,
         });
       }
       for (const [formId, match] of matchOf) {
         await write.moveLayers(
           membership,
           layers.filter((layer) => layer.variantId === formId).map((layer) => layer.id),
-          { ingredientId: match.ingredientId, variantId: match.id },
+          { ingredientId: compendiumId, variantId: match.id },
         );
       }
-      const inserted: CupboardEntryRow[] = [];
-      for (const id of pickIds) {
-        const [row] = await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
-          ingredientId: id,
-          ...columnsOf.get(id),
-        });
-        inserted.push(row);
-      }
+      const [inserted] = await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
+        ingredientId: compendiumId,
+        ...columns,
+      });
       const [removed] = await write.softDeleteByIdInWorkspace(membership, ingredients, localId);
       if (!removed) throw new NotFound(NO_LOCAL);
       return {
-        rows: inserted,
-        droppedForms: forms
-          .filter((form) => candidatesOf(form).length === 0)
-          .map((form) => form.form),
+        row: inserted,
+        droppedForms: forms.filter((form) => !matchOf.has(form.id)).map((form) => form.form),
       };
     });
-    return { entries: rows, dropped: { forms: sortedNames(droppedForms), ...lost } };
+    return { entry: row, dropped: { forms: sortedNames(droppedForms), ...lost } };
   } catch (error) {
     return refuseRace(error);
   }

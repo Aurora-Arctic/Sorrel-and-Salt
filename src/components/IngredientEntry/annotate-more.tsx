@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
-import { ConfirmQuestion } from '../Modal';
+import { ConfirmQuestion, UNSAVED_CHANGES_LOST } from '../Modal';
 import Notice from '../Notice';
 import {
   CUPBOARD_MENU_LABEL,
@@ -13,7 +13,6 @@ import {
   RemoveQuestion,
   useCupboardWrites,
 } from './cupboard-writes';
-import { UNSAVED_CHANGES_LOST } from './link-confirm';
 import type { AnnotateMoreProps } from './types';
 
 // The Annotate dialog's Make It Ours and Remove (M8.17), set apart at the
@@ -23,8 +22,8 @@ import type { AnnotateMoreProps } from './types';
 // own type (the owner's call of 2026-10-20), opening above the button at the
 // dialog's foot, where the room is (MenuButton); with one, that one as a
 // button of its own, Remove destructive, so a menu never holds a single choice. Either asks in the
-// form's own confirmation card, the card, scrim and focus handling of Delete and
-// Link and of "You have unsaved changes", not in a second dialog over this one
+// form's own confirmation card, the card, scrim and focus handling of Delete
+// and of "You have unsaved changes", not in a second dialog over this one
 // (the owner's call, 2026-10-20). A write leaves the dialog with whatever it
 // held unsaved: Remove deletes the annotations, and Make It Ours copies the
 // saved ones, which its confirmation says while the form holds changes.

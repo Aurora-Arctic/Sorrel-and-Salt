@@ -1,6 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CardMore from '@/components/CovenCards/card-more';
 import type { CardMoreProps } from '@/components/CovenCards/types';
@@ -15,15 +14,13 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven card's More (M8.17): Link and Delete on the coven's own entry, Make It Ours and
+// A coven card's More (M8.17): Delete on the coven's own entry, Make It Ours and
 // Remove on a compendium entry, a lone choice in a menu of one; Delete, Make It Ours and Remove
 // ask in place (option A), and a write that takes the card away leaves the focus on the page's
 // heading, a refusal on More (claude-docs/components/coven-cards.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
-const LIST = '/coven/fixture-coven/ingredients';
-const LINK_HREF = `${LIST}?link=${ID}` as Route;
 
 const OWN: CardMoreProps = {
   id: ID,
@@ -31,14 +28,12 @@ const OWN: CardMoreProps = {
   name: 'Testwort',
   workspaceId: WORKSPACE_ID,
   covenSlug: 'fixture-coven',
-  linkHref: LINK_HREF,
   mayDelete: true,
 };
 const HELD: CardMoreProps = {
   ...OWN,
   label: 'House Salt',
   name: 'House Salt',
-  linkHref: undefined,
   mayDelete: false,
   mayMakeOurs: true,
   mayRemove: true,
@@ -89,23 +84,14 @@ describe('CardMore', () => {
     router.refresh.mockClear();
   });
 
-  it("offers Link and Delete on the coven's own entry, Link at its address", () => {
+  it("offers Delete alone on the coven's own entry, in a menu of one", () => {
     renderOnPage(OWN);
-    expect(choices('Testwort')).toEqual(['Link to the Compendium', 'Delete Ingredient']);
-    expect(screen.getByRole('menuitem', { name: 'Link to the Compendium' })).toHaveAttribute(
-      'href',
-      LINK_HREF,
-    );
+    expect(choices('Testwort')).toEqual(['Delete Ingredient']);
   });
 
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
     renderOnPage(HELD);
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
-  });
-
-  it('keeps a lone Link in a menu of one, as no role reaches it alone today', () => {
-    renderOnPage({ ...OWN, mayDelete: false });
-    expect(choices('Testwort')).toEqual(['Link to the Compendium']);
   });
 
   it('keeps a lone Make It Ours in a menu of one', () => {
@@ -114,7 +100,7 @@ describe('CardMore', () => {
   });
 
   it('draws nothing where the role may do nothing more', () => {
-    renderOnPage({ ...OWN, linkHref: undefined, mayDelete: false });
+    renderOnPage({ ...OWN, mayDelete: false });
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });

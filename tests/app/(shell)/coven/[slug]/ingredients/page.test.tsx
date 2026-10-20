@@ -1,6 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
@@ -11,8 +10,7 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 // decide is their own tests'; the page's own reads run for real over them. Here: the guard on
 // the slug from the address, one page of 24 with one stock call for the whole page, the address
 // becoming the filter, what a card shows of the coven's label, kind and jars, and the edit
-// dialog `?edit=<id>` opens over the list on the coven's own entry, the Link dialog
-// `?link=<id>` on it too, and the Annotate dialog `?annotate=<id>` over a compendium entry
+// dialog `?edit=<id>` opens over the list on the coven's own entry, and the Annotate dialog `?annotate=<id>` over a compendium entry
 // the cupboard holds (M8.17).
 
 const COVEN = {
@@ -45,7 +43,6 @@ const variantsOf = vi.fn();
 const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
 const heldCompendiumEntry = vi.fn();
-const localHoldings = vi.fn();
 vi.mock('@/modules/ingredients', async (importActual) => ({
   ...(await importActual<typeof import('@/modules/ingredients')>()),
   listWorkspaceIngredients,
@@ -55,26 +52,12 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
   workspaceIngredientFacets,
   getIngredient,
   heldCompendiumEntry,
-  localHoldings,
 }));
 
-// The form is its own tests'; here only which ways out of it lead where, and its foot's aside.
+// The form is its own tests'; here only which ways out of it lead where.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({
-    onSaved,
-    onCancel,
-    aside,
-  }: {
-    onSaved: (saved: unknown) => void;
-    onCancel: () => void;
-    aside?: (form: {
-      dirty: boolean;
-      discardAsking: boolean;
-      requestDelete: () => void;
-    }) => ReactNode;
-  }) => (
+  default: ({ onSaved, onCancel }: { onSaved: (saved: unknown) => void; onCancel: () => void }) => (
     <form aria-label="Fixture Form">
-      {aside?.({ dirty: false, discardAsking: false, requestDelete: () => undefined })}
       <button type="button" onClick={() => onSaved({ slug: 'testwort' })}>
         Save
       </button>
@@ -103,32 +86,6 @@ vi.mock('@/components/CupboardEntryForm', () => ({
         Cancel
       </button>
     </form>
-  ),
-}));
-
-// The edit dialog's More is its own tests' (edit-more.test.tsx); here, the Link address it is given.
-vi.mock('@/components/IngredientEntry/edit-more', () => ({
-  default: ({ linkHref }: { linkHref?: string }) => (
-    <output aria-label="Edit More">{linkHref ?? 'no link'}</output>
-  ),
-}));
-
-// The Link form is its own tests' (link-dialog.test.tsx); here, which entry it was handed and its way out.
-vi.mock('@/components/IngredientEntry/link-form', () => ({
-  default: ({
-    localId,
-    holdings,
-    onCancel,
-  }: {
-    localId: string;
-    holdings: { form: string }[];
-    onCancel: () => void;
-  }) => (
-    <section aria-label={`Link ${localId}, ${holdings.map(({ form }) => form).join(', ')}`}>
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
-    </section>
   ),
 }));
 
@@ -297,16 +254,12 @@ describe("the coven Ingredients page's edit dialog", () => {
     expect(editLinks()).toHaveLength(0);
   });
 
-  it("opens the coven's own entry under ?edit=<id>, its values read as the member, with More at its foot", async () => {
+  it("opens the coven's own entry under ?edit=<id>, its values read as the member", async () => {
     await renderPage({ source: 'local', edit: 'a1' });
     expect(getIngredient).toHaveBeenCalledWith(session, 'a1', COVEN.id);
     expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: 'a1' }), session);
     const dialog = editDialog()!;
     expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
-    // Link's address keeps the filter, as Edit's does.
-    expect(within(dialog).getByRole('status', { name: 'Edit More' })).toHaveTextContent(
-      `${FILTERED_HREF}&link=a1`,
-    );
   });
 
   it('opens nothing over a compendium entry the coven names', async () => {
@@ -444,67 +397,12 @@ describe("the coven Ingredients page's Annotate dialog", () => {
   });
 });
 
-describe("the coven Ingredients page's Link dialog", () => {
-  const asRole = (role: string) =>
-    requireCovenMembership.mockResolvedValue({
-      workspace: COVEN,
-      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
-    });
-  const linkDialog = () => screen.queryByRole('dialog', { name: /Link to the Compendium/ });
-  const FILTERED_HREF = '/coven/fixture-coven/ingredients?source=local';
-  const ROOT = { formId: 'f1', form: 'Fixture Herb', jars: 1, spells: 0 };
-
-  beforeEach(() => localHoldings.mockResolvedValue([ROOT]));
-
-  it('reads nothing for Link until asked', async () => {
-    await renderPage();
-    expect(screen.getByRole('link', { name: /^Testwort/ })).toBeInTheDocument();
-    expect(linkDialog()).not.toBeInTheDocument();
-    expect(localHoldings).not.toHaveBeenCalled();
-  });
-
-  it("opens the coven's own entry under ?link=<id>, what its forms hold read as the member", async () => {
-    await renderPage({ link: 'a1' });
-    expect(localHoldings).toHaveBeenCalledWith(session, COVEN.id, 'a1');
-    const dialog = linkDialog()!;
-    expect(dialog).toHaveAccessibleName(/Testwort/);
-    expect(
-      within(dialog).getByRole('region', { name: 'Link a1, Fixture Herb' }),
-    ).toBeInTheDocument();
-  });
-
-  it('opens nothing for a viewer, and reads nothing', async () => {
-    asRole('viewer');
-    await renderPage({ link: 'a1' });
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(localHoldings).not.toHaveBeenCalled();
-  });
-
-  it('opens nothing for an entry that is not the coven’s own', async () => {
-    // The service's answer for a compendium entry, a gone one, or another coven's.
-    localHoldings.mockImplementationOnce(async () => {
-      throw new NotFound('No such ingredient');
-    });
-    await renderPage({ link: 'b2' });
-    expect(localHoldings).toHaveBeenCalledWith(session, COVEN.id, 'b2');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('goes back to the filtered list on Cancel', async () => {
-    await renderPage({ source: 'local', link: 'a1' });
-    fireEvent.click(within(linkDialog()!).getByRole('button', { name: 'Cancel' }));
-    // The dialog closes through its own close, which fades out first.
-    await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
-  });
-});
-
 describe("the coven Ingredients page's card More", () => {
   const asRole = (role: string) =>
     requireCovenMembership.mockResolvedValue({
       workspace: COVEN,
       membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
     });
-  const FILTERED_HREF = '/coven/fixture-coven/ingredients?source=local';
   const choicesOf = (name: string): string[] => {
     fireEvent.click(screen.getByRole('button', { name }));
     return within(screen.getByRole('menu', { name }))
@@ -512,13 +410,9 @@ describe("the coven Ingredients page's card More", () => {
       .map((item) => item.textContent ?? '');
   };
 
-  it("gives a member Link and Delete on the coven's own entry, Link at ?link=<id> keeping the filter", async () => {
+  it("gives a member Delete alone on the coven's own entry", async () => {
     await renderPage({ source: 'local' });
-    expect(choicesOf('More for Testwort')).toEqual(['Link to the Compendium', 'Delete Ingredient']);
-    expect(screen.getByRole('menuitem', { name: 'Link to the Compendium' })).toHaveAttribute(
-      'href',
-      `${FILTERED_HREF}&link=a1`,
-    );
+    expect(choicesOf('More for Testwort')).toEqual(['Delete Ingredient']);
   });
 
   it('gives a member Make It Ours and Remove on a compendium entry the cupboard holds', async () => {

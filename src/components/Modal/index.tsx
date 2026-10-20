@@ -13,7 +13,7 @@ export { default as ModalButton } from './modal-button';
 export { RouteModalProvider, useOpenModalClick } from './route-modal-provider';
 export { ConfirmOverlay } from './confirm-overlay';
 export { DiscardQuestion, useDiscardGuard } from './discard';
-export { ConfirmQuestion } from './confirm-question';
+export { ConfirmQuestion, UNSAVED_CHANGES_LOST } from './confirm-question';
 export {
   HeaderNoteContext,
   HeaderSlotContext,

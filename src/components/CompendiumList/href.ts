@@ -35,8 +35,8 @@ export const covenIngredientsPath = (covenSlug: string): Route =>
 
 /**
  * The coven list under a filter, at a page, with a dialog open over it or not (M8.17):
- * its own entry's edit dialog (`?edit=<id>`), its Link dialog (`?link=<id>`), or a held
- * compendium entry's Annotate (`?annotate=<id>`). The coven's twin of `compendiumHref`.
+ * its own entry's edit dialog (`?edit=<id>`) or a held compendium entry's
+ * Annotate (`?annotate=<id>`). The coven's twin of `compendiumHref`.
  */
 export function covenIngredientsHref(
   covenSlug: string,
@@ -46,10 +46,6 @@ export function covenIngredientsHref(
   return COVEN_PARAMS.href(covenIngredientsPath(covenSlug), place, {
     after: place.after,
     before: place.before,
-    ...(dialog && 'annotate' in dialog
-      ? { annotate: dialog.annotate }
-      : dialog && 'link' in dialog
-        ? { link: dialog.link }
-        : dialogParams(dialog)),
+    ...(dialog && 'annotate' in dialog ? { annotate: dialog.annotate } : dialogParams(dialog)),
   });
 }
