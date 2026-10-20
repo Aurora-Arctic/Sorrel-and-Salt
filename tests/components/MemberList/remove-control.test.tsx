@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import RemoveControl from '@/components/MemberList/remove-control';
+import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
 const { refresh, graphqlRequest } = vi.hoisted(() => ({
@@ -47,13 +48,20 @@ describe('RemoveControl', () => {
     expect(announced()).toContain('Fixture Member');
   });
 
-  it('says why under the control, naming the member, when the service refuses', async () => {
-    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+  // The service's sentence alone, with no prefix naming the member: the
+  // callout hangs from that member's row (the owner's call, 2026-10-20).
+  it("says the service's refusal under the control when the service refuses", async () => {
+    graphqlRequest.mockRejectedValue(
+      new GraphQLClientError({
+        status: 200,
+        errors: [{ message: 'A coven needs at least one owner.' }],
+      }),
+    );
 
     await openAndConfirm();
 
     const said = await expectRefusalUnder(screen.getByRole('button', { name: NAME }), NAME);
-    expect(said).toContain('Fixture Member');
+    expect(said).toBe('A coven needs at least one owner.');
     expect(refresh).not.toHaveBeenCalled();
     expect(announced()).toBe('');
   });

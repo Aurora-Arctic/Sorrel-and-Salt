@@ -107,8 +107,7 @@ const ConfirmedAction = ({
       // No fields of its own, so the shared reader always answers an alert:
       // the service's refusal verbatim, or the one generic sentence, unless
       // the caller words the refusal itself.
-      const said = readGraphqlFailure(error).alert;
-      report(typeof refusal === 'function' ? said && refusal(said) : (refusal ?? said));
+      report(refusal ?? readGraphqlFailure(error).alert);
     }
   }
 

@@ -77,9 +77,6 @@ const RoleControl = ({
       closeOnSent
       busy={promoting ? 'Promoting' : 'Demoting'}
       confirmClass={promoting ? 'btn btn--solid' : 'btn btn--destructive'}
-      // Prefixed with whose role, as the refusal once was in the notice above
-      // the table, far from the row.
-      refusal={(message) => `${name}'s role was not changed. ${message}`}
       announcement={`${name} is now ${workspaceRoleLabel(chosen)}.`}
       send={() => graphqlRequest(UpdateMemberRoleDocument, { workspaceId, userId, role: chosen })}
     />

@@ -112,9 +112,9 @@ export interface ConfirmedActionProps {
   onSent?: () => void;
   /**
    * The sentence a refusal shows; absent, the service's own, read from the
-   * GraphQL error. A function words the service's sentence instead.
+   * GraphQL error.
    */
-  refusal?: string | ((message: string) => string);
+  refusal?: string;
   /**
    * Said in the page's status region after a success, for a screen reader:
    * the result the page then shows, in words. Absent for a control whose
