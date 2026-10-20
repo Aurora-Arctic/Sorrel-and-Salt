@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { useListPosition } from '../Combobox/position';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps } from './types';
 import './index.scss';
@@ -14,8 +15,12 @@ import './index.scss';
 // an action, and choosing either closes the menu first. It fades in and out
 // over the short motion (the owner's call, 2026-10-19): a closing menu stays
 // drawn, inert and hidden from assistive technology, until its fade ends. It
-// opens below the button, or above it (`opens`) at the foot of a dialog.
-// claude-docs/components/menu-button.md.
+// is placed as a Combobox's list is (MB.154), on Floating UI: hung from the
+// button's end edge, below it, or above it when there is more room there, as
+// at the foot of a dialog or the window, and shifted to stay on the screen,
+// clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip
+// it, and following a scroll or a resize while open. Not a placement the
+// caller states: the room decides (M8.17). claude-docs/components/menu-button.md.
 
 const Chevron = (): ReactElement => (
   <svg
@@ -36,6 +41,9 @@ const Chevron = (): ReactElement => (
     />
   </svg>
 );
+
+/** The gap between button and menu, space(2), as the stylesheet kept it before Floating UI. */
+const MENU_GAP_PX = 8;
 
 /** Past the fade's own length (index.scss), for a browser that never reports its end. */
 const FADE_LIMIT_MS = 400;
@@ -62,7 +70,6 @@ export default function MenuButton({
   items,
   busy = false,
   busyLabel,
-  opens = 'below',
   buttonType = false,
   icon,
   ref,
@@ -77,6 +84,11 @@ export default function MenuButton({
   const root = useRef<HTMLSpanElement>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const menuId = useId();
+  const { setControl, setList, listStyle } = useListPosition(open, undefined, {
+    matchWidth: false,
+    placement: 'bottom-end',
+    gap: MENU_GAP_PX,
+  });
 
   const setOpen = (next: boolean | ((was: boolean) => boolean)): void => {
     setOpenState((was) => {
@@ -132,6 +144,7 @@ export default function MenuButton({
       <button
         ref={(node) => {
           toggle.current = node;
+          setControl(node);
           if (typeof ref === 'function') ref(node);
           else if (ref) ref.current = node;
         }}
@@ -169,15 +182,16 @@ export default function MenuButton({
           can find that link when it closes and give the focus to this button
           (RouteModal's linkTo). */}
       <div
+        ref={setList}
         id={menuId}
         role="menu"
         aria-label={label}
         aria-hidden={!open || undefined}
         inert={!open}
         hidden={!drawn}
+        style={listStyle}
         className={[
           'menu-button__menu',
-          opens === 'above' && 'menu-button__menu--above',
           buttonType && 'menu-button__menu--button-type',
           !open && 'is-closing',
         ]

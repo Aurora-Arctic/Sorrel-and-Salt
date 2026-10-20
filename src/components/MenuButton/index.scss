@@ -2,11 +2,11 @@
 @use '../../scss/mixins' as *;
 
 // The menu as the bar's Add Ingredient menu draws it (app-shell's
-// `.app-shell__menu`), hung from the button's end edge, below it or above.
+// `.app-shell__menu`). Where it sits is the script's, on Floating UI: hung
+// from the button's end edge, below it or above, fixed (index.tsx).
 // claude-docs/components/menu-button.md.
 
 .menu-button {
-  position: relative;
   display: inline-flex;
 }
 
@@ -22,9 +22,6 @@
 }
 
 .menu-button__menu {
-  position: absolute;
-  top: calc(100% + #{space(2)});
-  right: 0;
   z-index: layer('floating');
   min-width: 11rem;
   // Clips a hovered first or last item to the rounded corners.
@@ -48,15 +45,6 @@
       animation: none;
     }
   }
-}
-
-// Above the button instead (`opens="above"`), for one at the foot of a dialog,
-// where a menu below would run past the dialog's edge and be cut off. Still
-// hung from the end edge, which keeps it inside a narrow dialog too, where the
-// stacked foot makes the button full width (M8.17).
-.menu-button__menu--above {
-  top: auto;
-  bottom: calc(100% + #{space(2)});
 }
 
 @keyframes menu-button-fade-in {

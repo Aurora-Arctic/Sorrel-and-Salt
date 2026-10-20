@@ -1,6 +1,14 @@
 'use client';
 
-import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/react-dom';
+import {
+  autoUpdate,
+  flip,
+  offset,
+  type Placement,
+  shift,
+  size,
+  useFloating,
+} from '@floating-ui/react-dom';
 import { useEffect, useState } from 'react';
 
 // Where an open list sits (MB.154, the owner's calls): beneath the box, as
@@ -12,7 +20,9 @@ import { useEffect, useState } from 'react';
 // rather than absolute, so a scrolling ancestor — M8.16's modal — cannot
 // clip it (claude-docs/components/combobox.md, "Where the list opens"). An
 // entry's summary opens on the same placement, as wide as its own content
-// rather than its chip (`matchWidth: false`).
+// rather than its chip (`matchWidth: false`). MenuButton's menu opens on the
+// same rules from its button's end edge (`placement: 'bottom-end'`, M8.17),
+// further off it (`gap`) and as wide as its items.
 
 /** Space kept between the list and the edge of the screen. */
 const EDGE_PX = 8;
@@ -43,7 +53,18 @@ function bottomBarPx(): number {
 export function useListPosition(
   isOpen: boolean,
   anchor?: HTMLElement | null,
-  { matchWidth = true }: { matchWidth?: boolean } = {},
+  {
+    matchWidth = true,
+    placement: preferred = 'bottom-start',
+    gap = 4,
+  }: {
+    /** As wide as the anchor; false keeps the list's own width. */
+    matchWidth?: boolean;
+    /** Where it opens when there is room; it flips to the other side when not. */
+    placement?: Placement;
+    /** Pixels between the anchor and the list. */
+    gap?: number;
+  } = {},
 ) {
   const [control, setControl] = useState<HTMLElement | null>(null);
 
@@ -51,10 +72,10 @@ export function useListPosition(
     open: isOpen,
     // The anchor places the list and gives it its width; the box when none.
     elements: { reference: anchor ?? control },
-    placement: 'bottom-start',
+    placement: preferred,
     strategy: 'fixed',
     middleware: [
-      offset(4),
+      offset(gap),
       // A function, so the bar is measured at every placement. Its room is
       // taken off the foot of the window: a list that would open behind it
       // flips above instead.

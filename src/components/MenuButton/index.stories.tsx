@@ -46,24 +46,19 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <Row />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// At a dialog's foot, as the Annotate dialog's More is: the menu opens above,
-// its items in the button's type.
+// At a dialog's foot, as the Annotate dialog's More is, its items in the
+// button's type: set at the window's foot, where the room is above, so the
+// menu flips over the button. No prop says so; the room decides.
 const Foot = () => (
   <p
     style={{
       display: 'flex',
       justifyContent: 'flex-end',
       alignItems: 'flex-end',
-      minHeight: '10rem',
+      minHeight: '90vh',
     }}
   >
-    <MenuButton
-      label="More"
-      className="btn btn--quiet"
-      items={ITEMS.slice(3)}
-      opens="above"
-      buttonType
-    />
+    <MenuButton label="More" className="btn btn--quiet" items={ITEMS.slice(3)} buttonType />
   </p>
 );
 

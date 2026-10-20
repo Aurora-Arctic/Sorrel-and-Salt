@@ -38,12 +38,6 @@ export interface MenuButtonProps {
   /** What is happening while busy, in title case: "Adding". */
   busyLabel?: string;
   /**
-   * Which side of the button the menu opens on: below, the default, or above,
-   * for a button at the foot of a dialog, whose menu would run past its edge.
-   * Either way it lines up with the button's end edge.
-   */
-  opens?: 'below' | 'above';
-  /**
    * The items take the button's type, its face, size and weight, rather than
    * the lighter menu item's: the Annotate dialog's More, whose two items are
    * actions of the dialog's foot (the owner's call of 2026-10-20). Off by default.

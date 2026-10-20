@@ -12,9 +12,9 @@ import { UNSAVED_CHANGES_LOST } from './link-confirm';
 
 // The coven edit dialog's foot (M8.17): Link to the Compendium and Delete
 // Ingredient, set apart in Delete's place, in a More menu drawn as the
-// Annotate dialog's is (annotate-more.tsx), opening upward so it stays inside
-// the dialog; with one allowed, that one as a button of its own, so a menu
-// never holds a single choice. Delete asks the form's own confirmation. Link
+// Annotate dialog's is (annotate-more.tsx), which opens above the button at
+// the dialog's foot, where the room is (MenuButton); with one allowed, that
+// one as a button of its own, so a menu never holds a single choice. Delete asks the form's own confirmation. Link
 // asks in the same card, then replaces this dialog with the Link dialog at
 // its address, as Make It Ours replaces the Annotate dialog, so its
 // confirmation warns, in a warning notice, that the form's unsaved changes
@@ -77,7 +77,6 @@ export default function EditMore({
           label={CUPBOARD_MENU_LABEL}
           className="btn btn--quiet"
           items={items}
-          opens="above"
           buttonType
         />
       ) : (

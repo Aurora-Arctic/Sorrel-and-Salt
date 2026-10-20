@@ -32,8 +32,9 @@ import {
 // its forms and categories and can be annotated and made its own, a held
 // compendium entry's card opens Annotate over the list and closes back to its
 // search (M8.17), a coven's own entry is deleted from its edit dialog over
-// the list (M8.17), and the page passes axe at both densities and at a phone's
-// width.
+// the list (M8.17), a card's More near the window's foot opens above it
+// inside the window (M8.17), and the page passes axe at both densities and at
+// a phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -685,6 +686,61 @@ test("a coven's own entry is deleted from its edit dialog over the list, back on
     (sql) => sql`select deleted_at from ingredients where id = ${gone.ingredientId}`,
   );
   expect(row.deleted_at).not.toBeNull();
+});
+
+// A menu placed by Floating UI (M8.17, as MB.154 places a list): a card's
+// More near the window's foot opens above the button, since there is more room
+// there, and stays inside the window, at a desktop's width and a phone's, where
+// the fixed bottom bar takes the foot.
+test("a card's More opened near the window's foot opens above it, inside the window", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Menu Foot', 'gate-menu-foot.test', {
+    A: 'owner',
+  });
+  await withSql((sql) =>
+    localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Footwort',
+      canonicalName: 'Fixtura pedis',
+    }),
+  );
+  await page.goto(listPath(coven));
+  const more = rowOf(ingredientList(page), 'Fixture Footwort').getByRole('button', {
+    name: /^More for Fixture Footwort/,
+  });
+  const menu = page.getByRole('menu', { name: /^More for Fixture Footwort/ });
+
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 800 });
+    // The window cut off just beneath More, with the bottom bar's room when
+    // the bar is drawn, so less room is left below it than the menu needs.
+    const bar = await page.evaluate(() => {
+      const nav = [...document.querySelectorAll('nav')].find(
+        (element) => getComputedStyle(element).position === 'fixed',
+      );
+      return nav ? nav.getBoundingClientRect().height : 0;
+    });
+    await more.scrollIntoViewIfNeeded();
+    const button = (await more.boundingBox())!;
+    const height = Math.ceil(button.y + button.height + bar + 16);
+    await page.setViewportSize({ width, height });
+    await more.scrollIntoViewIfNeeded();
+    await more.click();
+    await expect(menu.getByRole('menuitem')).toHaveText([
+      'Link to the Compendium',
+      'Delete Ingredient',
+    ]);
+    const at = (await more.boundingBox())!;
+    const box = (await menu.boundingBox())!;
+    // Why it could have opened below: the room under More is less than the menu.
+    expect(height - bar - (at.y + at.height)).toBeLessThan(box.height);
+    expect(box.y + box.height).toBeLessThanOrEqual(at.y);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    await page.keyboard.press('Escape');
+    await expect(more).toBeFocused();
+  }
 });
 
 test('a retired compendium entry the coven still holds can be removed, and leaves its list', async ({

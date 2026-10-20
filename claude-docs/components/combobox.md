@@ -204,6 +204,11 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   not followed.
 - **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
   clip it.
+- **Shared with MenuButton.** Its menu is placed by the same hook with three
+  options the list leaves at their defaults: `placement: 'bottom-end'`
+  rather than `'bottom-start'`, so it hangs from the button's end edge and
+  flips to `top-end`; `gap: 8` rather than 4; and `matchWidth: false`
+  ([`menu-button.md`](menu-button.md), "Where it opens"; M8.17).
 - **A row never scrolls it sideways**: a word too long for the list, an
   address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
   row, `overflow-x: hidden` on the list).

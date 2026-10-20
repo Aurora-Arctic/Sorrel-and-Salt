@@ -20,9 +20,9 @@ import type { AnnotateMoreProps } from './types';
 // form's foot in Delete's place, each offered on the member's permission. With
 // both, a More menu (the owner's call of 2026-10-19), drawn as every menu is,
 // with Remove in its destructive item style and both items in the button's
-// own type (the owner's call of 2026-10-20), opening upward so it stays
-// inside the dialog; with one, that one as a button of its own, Remove
-// destructive, so a menu never holds a single choice. Either asks in the
+// own type (the owner's call of 2026-10-20), opening above the button at the
+// dialog's foot, where the room is (MenuButton); with one, that one as a
+// button of its own, Remove destructive, so a menu never holds a single choice. Either asks in the
 // form's own confirmation card, the card, scrim and focus handling of Delete and
 // Link and of "You have unsaved changes", not in a second dialog over this one
 // (the owner's call, 2026-10-20). A write leaves the dialog with whatever it
@@ -94,7 +94,6 @@ export default function AnnotateMore({
           label={CUPBOARD_MENU_LABEL}
           className="btn btn--quiet"
           items={items}
-          opens="above"
           buttonType
         />
       ) : (
