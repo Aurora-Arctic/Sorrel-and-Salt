@@ -409,6 +409,13 @@ $warning: var(--warning);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
+// A halo of the page colour behind small text that sits over a backdrop ornament, so the
+// sorrel is pushed back to the page under the letters: two blurs, the tight one for density,
+// the wide one for a soft edge, in the theme's own page colour, so it darkens in dark and
+// lightens in light (the owner's call, 2026-10-20).
+$text-halo:
+  0 0 0.5rem $surface-page,
+  0 0 1rem $surface-page;
 $surface-card-hover: var(--surface-card-hover);
 $drawer-slot: var(--drawer-slot);
 $drawer-floor: var(--drawer-floor);

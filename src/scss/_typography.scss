@@ -136,6 +136,12 @@
     color: $text-muted;
   }
 
+  // A page head's eyebrow is the first thing in the top-left corner, where the sorrel lies
+  // (Backdrop); muted and small, it is the text the ornament can swallow, so it wears the halo.
+  .header .eyebrow {
+    text-shadow: $text-halo;
+  }
+
   // The muted sentence or two under a heading that says what the section is
   // for. Body size: it is read, not skimmed. A `p` already stops at the
   // measure; anything else given the class stops there too.
