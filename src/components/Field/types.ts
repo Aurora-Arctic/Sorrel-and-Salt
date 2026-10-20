@@ -96,6 +96,10 @@ export interface SelectOption {
   label: string;
   /** A mark drawn before the label, outside its accessible name: pass one hidden from assistive technology. */
   icon?: ReactNode;
+  /** Listed but not choosable: a coven that already holds the entry, in M9.12's picker. */
+  disabled?: boolean;
+  /** A second line under the option, read with it: why a disabled one is out. */
+  note?: string;
 }
 
 /** A closed set in a react-hook-form form, whose value is one of its options. */
@@ -150,8 +154,6 @@ export interface RadioOption<T extends string> {
   icon?: ReactNode;
   /** How many entries choosing it would leave, read with its name in the segmented layout: "Toxic (4)". */
   count?: number;
-  /** This one choice cannot be chosen, in the default list layout: the radio is dashed and the group stays live. */
-  disabled?: boolean;
 }
 
 export interface RadioGroupFieldProps<T extends string> {

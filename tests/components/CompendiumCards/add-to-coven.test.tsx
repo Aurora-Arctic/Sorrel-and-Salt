@@ -90,8 +90,14 @@ async function openPicker(): Promise<HTMLElement> {
   return screen.findByRole('dialog', PLUS);
 }
 
-const coven = (dialog: HTMLElement, { name }: { name: string }) =>
-  within(dialog).getByRole('radio', { name: new RegExp(`^${name}`) });
+/** The dropdown of covens, a select-only combobox labelled Coven. */
+const picker = (dialog: HTMLElement) => within(dialog).getByRole('combobox', { name: 'Coven' });
+
+/** Opens the dropdown and returns one coven's option. */
+function coven(dialog: HTMLElement, { name }: { name: string }): HTMLElement {
+  if (picker(dialog).getAttribute('aria-expanded') !== 'true') fireEvent.click(picker(dialog));
+  return within(dialog).getByRole('option', { name: new RegExp(`^${name}`) });
+}
 
 function mockAdd() {
   const calls: AddCupboardEntryMutationVariables[] = [];
@@ -144,13 +150,15 @@ describe('the add icon among several covens', () => {
 
     const dialog = await openPicker();
 
+    expect(picker(dialog)).toHaveTextContent(FIRST.name);
+    fireEvent.click(picker(dialog));
     expect(
       within(dialog)
-        .getAllByRole('radio')
-        .map((radio) => radio.getAttribute('value')),
-    ).toEqual(COVENS.map(({ id }) => id));
-    expect(coven(dialog, FIRST)).toBeChecked();
-    expect(coven(dialog, SECOND)).not.toBeChecked();
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(COVENS.map(({ name }) => name));
+    expect(coven(dialog, FIRST)).toHaveAttribute('aria-selected', 'true');
+    expect(coven(dialog, SECOND)).toHaveAttribute('aria-selected', 'false');
     expect(within(dialog).getByRole('button', { name: 'Add' })).toBeEnabled();
   });
 
@@ -159,7 +167,7 @@ describe('the add icon among several covens', () => {
 
     const dialog = await openPicker();
 
-    expect(coven(dialog, SECOND)).toBeChecked();
+    expect(picker(dialog)).toHaveTextContent(SECOND.name);
   });
 
   it('adds to the coven chosen, closes the modal and reads the page again', async () => {
@@ -180,10 +188,14 @@ describe('the add icon among several covens', () => {
 
     const dialog = await openPicker();
 
-    expect(coven(dialog, SECOND)).toBeDisabled();
-    expect(coven(dialog, SECOND)).toHaveAccessibleDescription('Already in My Ingredients');
-    expect(coven(dialog, FIRST)).toBeEnabled();
-    expect(coven(dialog, FIRST)).not.toHaveAccessibleDescription();
+    expect(coven(dialog, SECOND)).toHaveAttribute('aria-disabled', 'true');
+    expect(coven(dialog, SECOND)).toHaveTextContent('Already in My Ingredients');
+    expect(coven(dialog, FIRST)).toHaveAttribute('aria-disabled', 'false');
+    expect(coven(dialog, FIRST)).not.toHaveTextContent('Already in My Ingredients');
+    // A press on it chooses nothing: the box still shows the default coven.
+    fireEvent.click(coven(dialog, SECOND));
+    expect(picker(dialog)).toHaveTextContent(FIRST.name);
+    expect(picker(dialog)).not.toHaveTextContent(SECOND.name);
   });
 
   it('starts on the first coven that can be chosen where the default one holds the entry', async () => {
@@ -192,8 +204,9 @@ describe('the add icon among several covens', () => {
 
     const dialog = await openPicker();
 
-    expect(coven(dialog, FIRST)).toBeDisabled();
-    expect(coven(dialog, SECOND)).toBeChecked();
+    expect(picker(dialog)).toHaveTextContent(SECOND.name);
+    expect(coven(dialog, FIRST)).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(picker(dialog));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].workspaceId).toBe(SECOND.id);
@@ -207,11 +220,8 @@ describe('the add icon among several covens', () => {
 
     const dialog = await openPicker();
 
-    expect(
-      within(dialog)
-        .getAllByRole('radio')
-        .every((radio) => !(radio as HTMLInputElement).checked),
-    ).toBe(true);
+    expect(picker(dialog)).not.toHaveTextContent(FIRST.name);
+    expect(picker(dialog)).not.toHaveTextContent(SECOND.name);
     expect(within(dialog).getByRole('button', { name: 'Add' })).toBeDisabled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add' }));
     expect(calls).toEqual([]);

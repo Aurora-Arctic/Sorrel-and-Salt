@@ -156,7 +156,10 @@ test('a member of two covens picks which one the plus adds to, and the card keep
     );
   const card = () => rowOf(compendiumList(page), NAME_TWO);
   const dialog = page.getByRole('dialog', { name: ADD });
-  const coven = (name: string) => dialog.getByRole('radio', { name: new RegExp(`^${name}`) });
+  // The covens are a dropdown (the owner's call, 2026-10-20): the box, and one coven's option once
+  // it is open.
+  const picker = dialog.getByRole('combobox', { name: 'Coven' });
+  const coven = (name: string) => dialog.getByRole('option', { name: new RegExp(`^${name}`) });
 
   // Why the picker is this test's: B may write in both, and neither coven holds the entry.
   expect(await heldRows(one.id)).toHaveLength(0);
@@ -169,8 +172,10 @@ test('a member of two covens picks which one the plus adds to, and the card keep
   await test.step('the plus opens a picker of both covens instead of adding', async () => {
     await card().getByRole('button', { name: ADD }).click();
     await expect(dialog).toBeVisible();
-    await expect(coven(FIRST)).toBeEnabled();
-    await expect(coven(SECOND)).toBeEnabled();
+    await expect(picker).toHaveText(FIRST);
+    await picker.click();
+    await expect(coven(FIRST)).toHaveAttribute('aria-disabled', 'false');
+    await expect(coven(SECOND)).toHaveAttribute('aria-disabled', 'false');
     await expect(dialog.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
     expect(await heldRows(one.id)).toHaveLength(0);
     expect(await heldRows(second)).toHaveLength(0);
@@ -178,7 +183,8 @@ test('a member of two covens picks which one the plus adds to, and the card keep
   });
 
   await test.step('choosing the second coven adds there alone, and the card keeps its plus', async () => {
-    await coven(SECOND).check();
+    await coven(SECOND).click();
+    await expect(picker).toHaveText(SECOND);
     await dialog.getByRole('button', { name: 'Add', exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await expect.poll(async () => (await heldRows(second)).length).toBe(1);
@@ -190,10 +196,13 @@ test('a member of two covens picks which one the plus adds to, and the card keep
   await test.step('the picker now shows the second coven as held, and starts on the first', async () => {
     await card().getByRole('button', { name: ADD }).click();
     await expect(dialog).toBeVisible();
-    await expect(coven(SECOND)).toBeDisabled();
-    await expect(coven(SECOND)).toHaveAccessibleDescription('Already in My Ingredients');
-    await expect(coven(FIRST)).toBeChecked();
+    await expect(picker).toHaveText(FIRST);
+    await picker.click();
+    await expect(coven(SECOND)).toHaveAttribute('aria-disabled', 'true');
+    await expect(coven(SECOND)).toContainText('Already in My Ingredients');
     await assertNoAccessibilityViolations(page);
+    // Shut the list again, leaving the first coven chosen, so Add is in reach.
+    await picker.press('Escape');
   });
 
   await test.step('adding to the first as well swaps the plus for the check', async () => {

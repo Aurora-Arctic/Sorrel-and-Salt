@@ -1166,6 +1166,39 @@ describe('Combobox', () => {
       expect(element()).toHaveTextContent('Earth');
     });
 
+    it('lists a disabled choice with its note, and neither a press nor the arrows choose it', () => {
+      const choices = [
+        { value: 'earth', label: 'Earth', disabled: true, note: 'Taken' },
+        { value: 'air', label: 'Air' },
+      ];
+      function Harness() {
+        const [value, setValue] = useState('');
+        return (
+          <ComboboxSelect
+            id="element"
+            label="Element"
+            value={value}
+            onChange={setValue}
+            choices={choices}
+            placeholder="Choose an element"
+          />
+        );
+      }
+      render(<Harness />);
+
+      fireEvent.click(element());
+      const earth = screen.getByRole('option', { name: /^Earth/ });
+      expect(earth).toHaveAttribute('aria-disabled', 'true');
+      expect(earth).toHaveTextContent('Taken');
+      fireEvent.click(earth);
+      expect(element()).toHaveTextContent('Choose an element');
+
+      act(() => element().focus());
+      fireEvent.keyDown(element(), { key: 'ArrowDown' });
+      fireEvent.keyDown(element(), { key: 'Enter' });
+      expect(element()).toHaveTextContent('Air');
+    });
+
     // In a modal, an Escape let through shuts the whole dialog (MB.115); a
     // `<dialog>` ignores one marked handled, which happy-dom cannot show, so the
     // mark is what is asserted here (the browser checks the dialog stays open).

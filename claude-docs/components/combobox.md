@@ -318,11 +318,15 @@ in a modal to try it.
 | `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                                                               |
 | `label`              | What the box is called, and its list's name, "Classification choices".                                                                              |
 | `value`/`onChange`   | The chosen value, held by the caller.                                                                                                               |
-| `choices`            | `{ value, label, icon? }` in order. One whose value is `''` is the choice that clears the set: "None".                                              |
+| `choices`            | `{ value, label, icon?, disabled?, note? }` in order. One whose value is `''` is the choice that clears the set: "None".                            |
 | `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                                                                            |
 | `required`           | `aria-required`, as the field marks it.                                                                                                             |
 | `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                                                                  |
 | `busy`               | A change this box started is on its way (M12.33): `aria-busy="true"` on the box and a `Spinner` in its indicators. The value shown is the caller's. |
+
+A choice that is `disabled` (M9.12) is listed where it stands, `aria-disabled`, and
+stepped over by the arrows and refused a press, with its `note` on a second line
+beneath its name: the coven picker's coven that already holds the entry.
 
 A choice's `icon` (M12.7), a drawn, decorative node such as a form group's
 [`FormIcon`](form-icon.md), shows before its label in its row and in the closed
