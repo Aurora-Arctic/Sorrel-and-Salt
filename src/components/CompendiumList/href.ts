@@ -4,7 +4,7 @@ import type { ListDialog } from '../../lib/types';
 import { COVEN_PARAMS } from '../IngredientSearch/coven-params';
 import type { SearchCursor } from '../../lib/search-param-table';
 import { COMPENDIUM_PARAMS } from './params';
-import type { CompendiumPlace, CovenListFilter } from './types';
+import type { CompendiumPlace, CovenListDialog, CovenListFilter } from './types';
 
 // The address of `/admin/compendium` under a filter, at a page, with a modal
 // open over it or not: the list's links, the pager, the filter's submit and
@@ -35,17 +35,21 @@ export const covenIngredientsPath = (covenSlug: string): Route =>
 
 /**
  * The coven list under a filter, at a page, with a dialog open over it or not (M8.17):
- * its own entry's edit dialog (`?edit=<id>`), or a held compendium entry's Annotate
- * (`?annotate=<id>`). The coven's twin of `compendiumHref`.
+ * its own entry's edit dialog (`?edit=<id>`), its Link dialog (`?link=<id>`), or a held
+ * compendium entry's Annotate (`?annotate=<id>`). The coven's twin of `compendiumHref`.
  */
 export function covenIngredientsHref(
   covenSlug: string,
   place: Partial<CovenListFilter> & SearchCursor,
-  dialog?: { edit: string } | { annotate: string },
+  dialog?: CovenListDialog,
 ): Route {
   return COVEN_PARAMS.href(covenIngredientsPath(covenSlug), place, {
     after: place.after,
     before: place.before,
-    ...(dialog && 'annotate' in dialog ? { annotate: dialog.annotate } : dialogParams(dialog)),
+    ...(dialog && 'annotate' in dialog
+      ? { annotate: dialog.annotate }
+      : dialog && 'link' in dialog
+        ? { link: dialog.link }
+        : dialogParams(dialog)),
   });
 }

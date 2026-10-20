@@ -7,10 +7,14 @@ import {
   covenIngredientsHref,
   covenIngredientsPath,
 } from '../../../../../components/CompendiumList/href';
-import type { CovenListFilter } from '../../../../../components/CompendiumList/types';
+import type {
+  CovenListDialog,
+  CovenListFilter,
+} from '../../../../../components/CompendiumList/types';
 import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
 import AnnotateDialog from '../../../../../components/IngredientEntry/annotate-dialog';
 import EntryDialog from '../../../../../components/IngredientEntry/entry-dialog';
+import LinkDialog from '../../../../../components/IngredientEntry/link-dialog';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
 import PageHeader from '../../../../../components/PageHeader';
@@ -18,7 +22,7 @@ import { pagerHrefs } from '../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../lib/numbered-page';
 import { requireCovenMembership } from '../../../../../lib/request-session';
 import { readCategories, readDeities, readFormIcons } from '../../../../compendium-reads';
-import { readCovenFacets, readCovenIngredients, readEditedEntry } from './reads';
+import { readCovenFacets, readCovenIngredients, readEditedEntry, readLinkedEntry } from './reads';
 import type { CovenIngredientsParams } from './types';
 import { rolePermits } from '@/modules/coven';
 import {
@@ -38,8 +42,9 @@ import {
 // the page reads one page of 24 under them. A member's card for the coven's own entry has
 // Edit, which opens the entry page's dialog over the list under `?edit=<id>`, and a card
 // for a compendium entry the cupboard holds has Annotate, which opens the entry page's
-// Annotate dialog under `?annotate=<id>`; closing or saving either comes back to the list
-// as it was, filter and page kept (M8.17).
+// Annotate dialog under `?annotate=<id>`; an own entry's Link to the Compendium opens the
+// Link dialog under `?link=<id>`; closing or saving any of them comes back to the list as
+// it was, filter and page kept (M8.17).
 // claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
@@ -65,6 +70,12 @@ export default async function CovenIngredientsPage({
   // retired one included; an own entry or one not held opens nothing.
   const annotated =
     mayEdit && annotateId ? await heldCompendiumEntry(membership, annotateId) : undefined;
+  // And for Link, on the permission the split asserts: an own entry of this coven only.
+  const mayLink = rolePermits(membership.role, CONVERT_PERMISSION);
+  const linkId = typeof query.link === 'string' && query.link ? query.link : undefined;
+  const linked = mayLink && linkId ? await readLinkedEntry(workspace.id, linkId) : undefined;
+  const placed = (dialog: CovenListDialog) =>
+    covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
 
   // The address names categories and deities by slug; the service filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
@@ -100,20 +111,12 @@ export default async function CovenIngredientsPage({
       kind: own ? 'own' : 'cupboard',
       ...(own &&
         mayEdit && {
-          editHref: covenIngredientsHref(
-            workspace.slug,
-            { ...filter, after, before },
-            { edit: node.id },
-          ),
+          editHref: placed({ edit: node.id }),
           editHeading: editHeading(shown),
         }),
       ...(!own &&
         mayEdit && {
-          annotateHref: covenIngredientsHref(
-            workspace.slug,
-            { ...filter, after, before },
-            { annotate: node.id },
-          ),
+          annotateHref: placed({ annotate: node.id }),
         }),
       annotated: cupboardEntry !== null && isAnnotated(cupboardEntry),
       retired: isRetired(node),
@@ -166,9 +169,24 @@ export default async function CovenIngredientsPage({
               workspaceId: workspace.id,
               ingredientsHref: covenIngredientsPath(workspace.slug),
               mayPromote: mayEdit,
-              mayLink: rolePermits(membership.role, CONVERT_PERMISSION),
+              linkHref: mayLink && edited ? placed({ link: edited.entry.id }) : undefined,
             },
           }}
+        />
+      )}
+      {mayLink && (
+        <LinkDialog
+          closeHref={listHref}
+          opened={
+            linked && linkId
+              ? {
+                  workspaceId: workspace.id,
+                  localId: linkId,
+                  ingredientsHref: covenIngredientsPath(workspace.slug),
+                  ...linked,
+                }
+              : undefined
+          }
         />
       )}
       {mayEdit && (

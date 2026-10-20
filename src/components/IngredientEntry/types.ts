@@ -4,8 +4,8 @@ import type {
   CupboardOverrides,
 } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
-import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
-import type { EditedIngredient } from '../IngredientForm/types';
+import type { FormHolding, IngredientDetail, IngredientRow } from '@/modules/ingredients';
+import type { EditedIngredient, SubstituteLink } from '../IngredientForm/types';
 
 /** The part of an entry its edit modal names itself by and edits. */
 export type EditableEntry = Pick<IngredientRow, 'id' | 'name' | 'canonicalName' | 'nomenclature'>;
@@ -34,17 +34,22 @@ export interface IngredientEntryEdit {
   opened?: EditedIngredient;
   /**
    * A coven's own entry (M8.17): the form writes to this coven, and its
-   * near matches open in it. `mayPromote` and `mayLink` are the role's
-   * answers, which the page works out: making a folk name the display name,
-   * and Link to the Compendium beneath the form. Left out, the entry is the
-   * compendium's.
+   * near matches open in it. `mayPromote` is the role's answer, which the
+   * page works out, to making a folk name the display name; `linkHref`, the
+   * Link dialog's address, is given only where the role may link, for the
+   * foot's More menu. Left out, the entry is the compendium's.
    */
   coven?: {
     workspaceId: string;
     /** The coven's ingredient list; an entry's page in the coven is beneath it, by id. */
     ingredientsHref: Route;
     mayPromote: boolean;
-    mayLink: boolean;
+    linkHref?: Route;
+    /**
+     * The Link dialog's reading, present only when the address asks for it
+     * (`?link`) and the role may link; the dialog closes to `closeHref`.
+     */
+    linkOpened?: LinkDialogProps['opened'];
   };
 }
 
@@ -225,4 +230,38 @@ export interface AnnotateMoreProps {
   canMakeOurs: boolean;
   canRemove: boolean;
   removedHref?: Route;
+}
+
+/**
+ * The Link dialog's body (M8.17): the coven's own entry, what each of its
+ * forms holds as `localHoldings` counts it, and the coven's ingredient list,
+ * beneath which a linked entry's page is, by id.
+ */
+export interface LinkFormProps {
+  workspaceId: string;
+  localId: string;
+  ingredientsHref: Route;
+  holdings: FormHolding[];
+  onCancel: () => void;
+}
+
+/**
+ * The Link dialog (`link-dialog.tsx`), opened from the address's `?link`: where
+ * closing goes, and, once the address asks for it, the entry and its holdings.
+ * Left out, it shows only while a press loads it.
+ */
+export interface LinkDialogProps {
+  closeHref: Route;
+  returnTo?: () => HTMLElement | null | undefined;
+  opened?: Omit<LinkFormProps, 'onCancel'> & {
+    /** The entry as the coven calls it: the dialog's eyebrow. */
+    name: string;
+  };
+}
+
+/** One compendium entry picked in the Link dialog, as its row and the form map read it. */
+export interface LinkPick {
+  id: string;
+  name: string;
+  link: SubstituteLink;
 }

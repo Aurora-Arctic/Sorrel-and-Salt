@@ -45,6 +45,7 @@ import {
 } from './references';
 import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
+import LinkDialog from './link-dialog';
 import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
@@ -700,6 +701,9 @@ const IngredientEntry = ({
     <RouteModalProvider>
       {page}
       {edit && <EntryDialog entry={editable} edit={edit} />}
+      {edit?.coven?.linkHref && (
+        <LinkDialog closeHref={edit.closeHref} opened={edit.coven.linkOpened} />
+      )}
     </RouteModalProvider>
   ) : (
     page

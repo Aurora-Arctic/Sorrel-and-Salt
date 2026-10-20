@@ -13,6 +13,7 @@ import {
   countWorkspaceIngredients,
   getIngredient,
   listWorkspaceIngredients,
+  localHoldings,
   stockOf,
   variantsOf,
   workspaceIngredientFacets,
@@ -97,6 +98,25 @@ export const readCovenFacets = cache(async (workspaceId: string, variables: stri
   const filter: Filter = JSON.parse(variables);
   return workspaceIngredientFacets(session, workspaceId, filter);
 });
+
+/**
+ * The Link dialog's reading of this coven's own entry `id` (M8.17): its name
+ * and what each of its forms holds. `undefined` for anything else, a
+ * compendium entry or one gone, or for a role that may not link, so a stray
+ * `?link` opens nothing. A caller holding the entry passes its `name`,
+ * which spares reading it again.
+ */
+export async function readLinkedEntry(workspaceId: string, id: string, name?: string) {
+  const session = await requireSession();
+  try {
+    // Holdings first: it refuses anything but this coven's own live entry.
+    const holdings = await localHoldings(session, workspaceId, id);
+    return { name: name ?? (await getIngredient(session, id, workspaceId)).name, holdings };
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    throw error;
+  }
+}
 
 /**
  * The coven's own entry `?edit=<id>` names, with its values for the edit form (M8.17), read

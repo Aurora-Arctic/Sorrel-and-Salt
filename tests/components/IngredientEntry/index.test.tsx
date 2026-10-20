@@ -29,6 +29,7 @@ vi.mock('@/components/IngredientForm', () => ({
     onDeleted,
     duplicateHref,
     entryHref,
+    aside,
   }: IngredientFormProps) => (
     <form aria-label="Fixture Form">
       <output aria-label="Edited">{entry?.id}</output>
@@ -52,15 +53,16 @@ vi.mock('@/components/IngredientForm', () => ({
       <button type="button" onClick={() => onDeleted?.()}>
         Fixture Delete
       </button>
+      {aside?.({ dirty: false, discardAsking: false, requestDelete: () => {} })}
     </form>
   ),
 }));
 
-// The search Link to the Compendium offers in a coven's dialog is its own
-// tests' (link-search.test.tsx): a stand-in naming what it was handed.
-vi.mock('@/components/IngredientEntry/link-search', () => ({
-  default: ({ localId, workspaceId, ingredientsHref }: Record<string, string>) => (
-    <output aria-label="Link Search">{[workspaceId, localId, ingredientsHref].join(' ')}</output>
+// The edit dialog's More is its own tests' (edit-more.test.tsx): a stand-in
+// naming the Link address it was handed.
+vi.mock('@/components/IngredientEntry/edit-more', () => ({
+  default: ({ linkHref }: { linkHref?: string }) => (
+    <output aria-label="Edit More">{linkHref ?? 'no link'}</output>
   ),
 }));
 
@@ -1073,7 +1075,7 @@ describe('IngredientEntry edit', () => {
           workspaceId: COVEN,
           ingredientsHref: '/coven/fixture-coven/ingredients' as Route,
           mayPromote: false,
-          mayLink: false,
+
           ...coven,
         },
       });
@@ -1120,25 +1122,21 @@ describe('IngredientEntry edit', () => {
       expect(router.refresh).toHaveBeenCalledTimes(1);
     });
 
-    it('offers Link to the Compendium beneath the form, outside it, only when the role may link', () => {
+    it("sets the form's More at its foot, with Link's address only when the role may link", () => {
       const { unmount } = render(
         <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />,
       );
-      expect(within(covenDialog()).queryByRole('status', { name: 'Link Search' })).toBeNull();
+      expect(within(form()).getByRole('status', { name: 'Edit More' })).toHaveTextContent(
+        'no link',
+      );
       unmount();
 
+      const LINK = `/coven/fixture-coven/ingredients?link=${opened.id}` as Route;
       render(
-        <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ mayLink: true })} />,
+        <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ linkHref: LINK })} />,
       );
 
-      const search = shows('Link Search');
-      expect(search).toHaveTextContent(
-        `${COVEN} 00000000-0000-4000-8000-000000000001 /coven/fixture-coven/ingredients`,
-      );
-      expect(
-        form().compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      expect(form()).not.toContainElement(search);
+      expect(within(form()).getByRole('status', { name: 'Edit More' })).toHaveTextContent(LINK);
     });
   });
 });

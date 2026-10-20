@@ -2,7 +2,7 @@ import { act, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import { COMPENDIUM_EDIT_NOTICE } from '@/components/IngredientForm/compendium-notice';
-import type { IngredientFormValues } from '@/components/IngredientForm/types';
+import type { IngredientFormProps, IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import type {
   DeleteWorkspaceIngredientMutation,
@@ -35,7 +35,7 @@ const TESTWORT: IngredientFormValues = {
   folkNames: [{ value: 'Hedge Fixture', id: FOLK_ID }],
 };
 
-function renderEdit(props: { mayPromote?: boolean; onDeleted?: () => void } = {}) {
+function renderEdit(props: Pick<IngredientFormProps, 'mayPromote' | 'onDeleted' | 'aside'> = {}) {
   const onSaved = vi.fn();
   offerNothing();
   renderWithClient(
@@ -168,5 +168,30 @@ describe("IngredientForm editing a coven's own entry", () => {
     openSections('Identity');
 
     noButton('Make Hedge Fixture the Display Name');
+  });
+  // The coven's edit dialog sets Delete in its More menu beside Link to the
+  // Compendium (M8.17): the form hands `aside` its state and a way to ask
+  // Delete's own confirmation, and draws no Delete button of its own.
+  it("hands an aside Delete's confirmation and the form's state, in Delete's place", () => {
+    const seen: { dirty: boolean; discardAsking: boolean }[] = [];
+    renderEdit({
+      aside: ({ dirty, discardAsking, requestDelete }) => {
+        seen.push({ dirty, discardAsking });
+        return (
+          <button type="button" onClick={requestDelete}>
+            Fixture Aside
+          </button>
+        );
+      },
+    });
+    noButton('Delete Ingredient');
+    expect(seen[seen.length - 1]).toEqual({ dirty: false, discardAsking: false });
+
+    type('Name', 'Mockwort');
+    expect(seen[seen.length - 1]).toEqual({ dirty: true, discardAsking: false });
+
+    press('Fixture Aside');
+    expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+    expect(button('Keep It')).toHaveFocus();
   });
 });
