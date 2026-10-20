@@ -40,6 +40,16 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 - **Look.** The menu is the bar's Add Ingredient menu: a card hung under or over the button's end edge, small text, and on hover, focus and the chosen flash as the menu fades, the grey quiet fill, `$fill-quiet`. Green marks a menu's one primary action alone (the owner's call, 2026-10-20): a `primary` choice takes the highlight, `$fill-highlight` (the accent 12% into the card), as Edit Ingredient does on the ingredient page. Link to the Compendium, Annotate and Make It Ours are never green. A destructive choice is in the destructive colour, and filled with it on hover and focus as `.btn--destructive` is (the owner's call, 2026-10-19). Every ink on its fill holds 4.5:1 in both themes (`tests/scss/tokens.test.ts`).
 - **In the button's type.** With `buttonType` the items take the button's own face, size and weight, as `.btn` sets them, and its top and bottom padding and height (`space(2)`, `$control-height`), with the sides one step less than the button's, `space(4)` for its `space(5)` ("not so much left and right"), rather than the lighter, shorter item every other menu keeps. Only the Annotate dialog's More sets it, since its two items are the actions of the dialog's foot (the owner's call, 2026-10-20). A destructive choice stays destructive.
 
+## Styling
+
+`index.scss`, on the `menu-button` block, tokens only:
+
+- **The panel** (`.menu-button__menu`) is a floating card at `layer('floating')`, at least `$menu-min-width` wide, with `space(1)` of padding all round and `$shadow-floating`. Its own focus ring, when the panel itself takes the focus, is `focus-ring($placement: inset)`, inside its edge (MB.120).
+- **An item** (`.menu-button__item`) takes `$fill-quiet` on hover, focus and the chosen flash, rounded with `radius('control')`; `--primary` takes `$fill-highlight`, `--destructive` the destructive colour and its fill, and `[aria-disabled='true']` the muted ink with no hover fill.
+- **A mark** (`.menu-button__mark`) is HeldMark's green check at the glyph size.
+- **A section's heading and rule** (`.menu-button__heading`, `.menu-button__rule`) are small muted caption text and a hairline, both in the item's side padding.
+- **The button** is the caller's (`className`), with the chevron turned over while open (`chevron-flip`). A busy `.btn` takes the disabled look from `.btn[aria-disabled='true']`.
+
 ## Where it is tested
 
 `tests/components/MenuButton/index.test.tsx`: the keys, the closing, a link choice and the busy state, and the edge the menu hangs from (the end edge, even in the start half of the window). The entry page's choices are in `tests/components/IngredientEntry/cupboard-actions.test.tsx`, and the browser walks in `tests/e2e/cupboard-screens.spec.ts` and `tests/e2e/make-it-ours.spec.ts`; the Annotate dialog's More, staying inside the dialog, its items in its type, and full width at 375px, and a card's More near the window's foot opening above it inside the window at a desktop's width and at 375px, in `tests/e2e/coven-ingredients.spec.ts`. Story: `src/components/MenuButton/index.stories.tsx`.

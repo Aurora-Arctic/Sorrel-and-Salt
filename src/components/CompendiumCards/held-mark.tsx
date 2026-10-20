@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 import IconTip, { CheckIcon } from '../IconTip';
+// The held check's look lives with the plus's, whose place it takes (claude-docs/components/add-icon.md).
+import '../AddIcon/index.scss';
 
 // The check at a compendium card's bottom right, in the plus's place once every coven the
 // viewer may write in holds the entry (M9.12), and the same check on the entry pages. The
@@ -23,7 +25,7 @@ export const HELD_ALL_TIP = 'In Your Covens';
  */
 export const HeldMark = ({ name }: { name: string }): ReactElement => (
   <IconTip tip={HELD_ALL_TIP} opensOnPress>
-    <button type="button" className="icon-tip__held" aria-label={`${HELD_ALL_TIP}: ${name}`}>
+    <button type="button" className="add-icon--held" aria-label={`${HELD_ALL_TIP}: ${name}`}>
       <CheckIcon />
     </button>
   </IconTip>

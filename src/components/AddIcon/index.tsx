@@ -12,6 +12,7 @@ import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry'
 import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
 import type { NamedAddIconProps } from './types';
+import './index.scss';
 
 // The plus: Add to My Ingredients as an icon (M9.12, the owner's calls, 2026-10-20), at a
 // compendium card's bottom right and beside the public entry page's pencil, so both are one
@@ -54,12 +55,12 @@ const Glyph = ({
   onFaded: ReturnType<typeof useFade>['onAnimationEnd'];
 }): ReactElement =>
   state ? (
-    <span className="icon-tip__glyphs">
-      <span className="icon-tip__check" onAnimationEnd={onFaded}>
+    <span className="add-icon__glyphs">
+      <span className="add-icon__check" onAnimationEnd={onFaded}>
         <CheckIcon />
       </span>
       {state === 'returning' && (
-        <span className="icon-tip__plus">
+        <span className="add-icon__plus">
           <PlusIcon />
         </span>
       )}
@@ -158,7 +159,7 @@ const AddIcon = ({
           <MenuButton
             ref={plusRef}
             label={label}
-            className="icon-tip__add"
+            className="add-icon"
             icon={glyph}
             state={state}
             busy={busy && !state}
@@ -184,7 +185,7 @@ const AddIcon = ({
         <button
           ref={plusRef}
           type="button"
-          className="icon-tip__add"
+          className="add-icon"
           data-state={state}
           aria-busy={busy || undefined}
           aria-disabled={busy || state !== undefined || undefined}

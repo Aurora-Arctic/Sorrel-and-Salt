@@ -12,6 +12,8 @@ import AddIcon from '../AddIcon';
 import CompendiumCardMore from './card-more';
 import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
+// The empty sentence (`emptyText`, `.compendium-list__empty`) and the filter are CompendiumList's
+// own, so its stylesheet comes with them; the cards have no stylesheet of their own.
 import '../CompendiumList/index.scss';
 
 // The public compendium's list (M8.18): the filter row, one card per entry in a grid, and
