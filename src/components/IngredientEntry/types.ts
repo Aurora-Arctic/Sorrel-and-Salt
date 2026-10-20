@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
+import type { EntryMarksProps } from '../EntryMarks/types';
 
 /** The part of an entry its edit modal names itself by and edits. */
 export type EditableEntry = Pick<IngredientRow, 'id' | 'name' | 'canonicalName' | 'nomenclature'>;
@@ -213,10 +214,24 @@ export interface CupboardActionsProps extends CupboardProps {
   edit?: { href: Route; entry: EditableEntry };
 }
 
+/**
+ * The marks the details head draws, as `EntryMarks` takes them: plain values, so the
+ * server page can hand them to the client dialog. The safety badge goes beside the
+ * name and the rest in a row under the formal name, so `provenance` and `safety` are
+ * the dialog's to set.
+ */
+export type DetailsMarks = Omit<EntryMarksProps, 'provenance' | 'safety'>;
+
 /** What a details modal's address opens over a list (M12.5). */
 export interface IngredientDetailsOpened {
   /** The entry's name and formal name, under the eyebrow "Ingredient" (`detailsHeading`). */
   heading: ModalHeading;
+  /**
+   * What the head's badges say, worked out by the page from the entry
+   * (`detailsMarks`): the same marks the entry page and the card draw. Left out,
+   * no badge shows.
+   */
+  marks?: DetailsMarks;
   /** The entry's own page, which View Page reaches. */
   pageHref: Route;
   /**

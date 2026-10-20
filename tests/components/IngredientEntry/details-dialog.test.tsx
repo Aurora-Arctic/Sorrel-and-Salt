@@ -137,4 +137,125 @@ describe('DetailsDialog', () => {
     ).toBeInTheDocument();
     expect(dialog()).toBeInTheDocument();
   });
+
+  // The head (the owner's calls, 2026-10-20): the entry's badges are the card's and the
+  // entry page's own components, the safety badge beside the name, the formal name on its
+  // own line below it, the other badges in a row under that, and the Edit pencil last of
+  // what stands beside the name.
+  describe('head', () => {
+    const marks = (more: Record<string, unknown> = {}) => ({
+      kind: 'compendium' as const,
+      inCoven: true,
+      ...more,
+    });
+    const show = (
+      more: Record<string, unknown> = {},
+      editAction?: { href: Route; heading: ReturnType<typeof editHeading> },
+    ) =>
+      render(
+        <Navigating push={router.push}>
+          <RouteModalProvider>
+            <DetailsDialog
+              closeHref={LIST}
+              opened={{
+                heading: detailsHeading(ENTRY),
+                pageHref: PAGE,
+                marks: marks(more),
+                ...(editAction && { editAction }),
+              }}
+            />
+          </RouteModalProvider>
+        </Navigating>,
+      );
+    const follows = (first: Node, second: Node) =>
+      Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    it('shows Toxic alone for an entry that is both cautioned and toxic', () => {
+      show({ toxic: true, safetyNotes: 'Keep from children.' });
+
+      expect(within(dialog()).getByText('Toxic')).toBeInTheDocument();
+      expect(within(dialog()).queryByText('Caution')).not.toBeInTheDocument();
+    });
+
+    it('shows Caution for notes alone, and no safety badge for neither', () => {
+      const { unmount } = show({ safetyNotes: 'Keep from children.' });
+      expect(within(dialog()).getByText('Caution')).toBeInTheDocument();
+      unmount();
+
+      show();
+      expect(within(dialog()).queryByText('Caution')).not.toBeInTheDocument();
+      expect(within(dialog()).queryByText('Toxic')).not.toBeInTheDocument();
+    });
+
+    it('draws the provenance badges the entry page does', () => {
+      const { unmount } = show({ kind: 'own' });
+      expect(within(dialog()).getByText('Local')).toBeInTheDocument();
+      unmount();
+
+      const held = show({ kind: 'cupboard' });
+      expect(within(dialog()).getByText('Compendium')).toBeInTheDocument();
+      held.unmount();
+
+      const annotated = show({ kind: 'cupboard', annotated: true });
+      expect(within(dialog()).getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
+      annotated.unmount();
+
+      show({ kind: 'cupboard', retired: true });
+      expect(within(dialog()).getByRole('button', { name: 'Retired' })).toBeInTheDocument();
+    });
+
+    it('puts the formal name after the name, and New before the badges', () => {
+      show({ kind: 'own', recency: 'new' });
+
+      const name = within(dialog()).getByRole('heading', { name: /^Testwort/ });
+      const formal = within(dialog()).getByText('Fixtura testalis');
+      expect(follows(name, formal)).toBe(true);
+      // Not inside the heading, so the heading stays the entry name alone.
+      expect(name).not.toContainElement(formal);
+      expect(follows(formal, within(dialog()).getByText('New'))).toBe(true);
+      expect(follows(within(dialog()).getByText('New'), within(dialog()).getByText('Local'))).toBe(
+        true,
+      );
+    });
+
+    it('puts the safety badge beside the name and the Edit pencil after it', () => {
+      show({ toxic: true }, { href: EDIT, heading: editHeading(ENTRY) });
+
+      const name = within(dialog()).getByRole('heading', { name: /^Testwort/ });
+      const badge = within(dialog()).getByText('Toxic');
+      const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
+      expect(follows(name, badge)).toBe(true);
+      expect(follows(badge, edit)).toBe(true);
+      // The pencil is in the header with the name, not down in the scrolling body.
+      expect(edit.closest('.modal-dialog__header')).not.toBeNull();
+    });
+
+    it('keeps the pencil at the name line with no safety badge and no formal name', () => {
+      render(
+        <Navigating push={router.push}>
+          <RouteModalProvider>
+            <DetailsDialog
+              closeHref={LIST}
+              opened={{
+                heading: detailsHeading({
+                  name: 'Testwort',
+                  canonicalName: null,
+                  nomenclature: 'none',
+                }),
+                pageHref: PAGE,
+                marks: marks(),
+                editAction: { href: EDIT, heading: editHeading(ENTRY) },
+              }}
+            />
+          </RouteModalProvider>
+        </Navigating>,
+      );
+
+      const dlg = screen.getByRole('dialog', { name: 'Ingredient, Testwort' });
+      const name = within(dlg).getByRole('heading', { name: /^Testwort/ });
+      const edit = within(dlg).getByRole('link', { name: 'Edit Testwort' });
+      expect(follows(name, edit)).toBe(true);
+      expect(edit.closest('.modal-dialog__header')).not.toBeNull();
+    });
+  });
 });

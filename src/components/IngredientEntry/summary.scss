@@ -32,22 +32,6 @@
   color: $text-muted;
 }
 
-// The details header's rhythm (the owner's call, 2026-10-20): where the
-// header holds the Edit pencil, a full step under the name, and the body a step
-// and a half under that row, where the shared defaults suit the edit modals'
-// Undo and Redo. A header with nothing in its slot (no Edit) keeps the defaults.
-// Scoped by `:has()`, Baseline Widely Available, as the Modal's own header
-// rules are.
-.modal-dialog:has(.ingredient-summary) {
-  .modal-dialog__header:has(.modal-dialog__header-slot:not(:empty)) {
-    padding-bottom: space(5);
-  }
-
-  .modal-dialog__header-slot:not(:empty) {
-    margin-top: space(4);
-  }
-}
-
 // The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
 // Full Page, the last child of the scrolling body and fixed to the foot of the
 // window, so the text scrolls under it. It runs to the dialog's edges, on the

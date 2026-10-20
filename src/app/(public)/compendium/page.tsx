@@ -7,7 +7,7 @@ import { compendiumFacetCounts } from '../../../components/CompendiumList/facets
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
-import { detailsHeading } from '../../../components/IngredientEntry/details';
+import { detailsHeading, detailsMarks } from '../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
 import IngredientSummary from '../../../components/IngredientEntry/summary';
@@ -238,6 +238,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           shown &&
           detailed && {
             heading: detailsHeading(detailed),
+            marks: detailsMarks(shown),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             ...(canEdit && {
               editAction: {

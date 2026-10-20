@@ -183,6 +183,65 @@ $modal-padding: space(5) * 2;
   overflow-wrap: anywhere;
 }
 
+// A title with something at its end (`titleEnd`: the details window's safety badge and
+// Edit pencil, the owner's call, 2026-10-20) is a row of the title and that end, which
+// wraps. The title takes what the end leaves and wraps before it, and the end drops
+// under the title only when the title's first word would have to break to fit. The
+// card's technique (IngredientCard/index.scss): a flex basis of 0 with `anywhere` lets
+// the title count as no wider than a letter, while the first word, broken only when it
+// overflows (`break-word`) and never by the dictionary (`hyphens: manual`), counts whole.
+// `max-width` lets a first word wider than the dialog still break rather than spill.
+.modal-dialog__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  column-gap: space(2);
+}
+
+.modal-dialog__title-row > .modal-dialog__title {
+  flex: 1 1 0;
+  max-width: 100%;
+}
+
+.modal-dialog__first-word {
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+// The end, as tall as the larger of its parts, the pencil (the badge is shorter), and
+// centred on the title's first line: half the title's line box less its own height. It
+// shows only beside the title; wrapped beneath it, that much is added to the row gap.
+// Gone while nothing is in it (a badge that draws nothing, no Edit).
+.modal-dialog__title-end {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: space(2);
+  min-block-size: $icon-size-large;
+  margin-block-start: calc((#{heading-size(2)} * 1.15 - #{$icon-size-large}) / 2);
+
+  &:empty {
+    display: none;
+  }
+}
+
+// The qualifier on its own line below the title (`qualifierBelow`).
+.modal-dialog__qualifier--below {
+  margin: 0;
+}
+
+// The badges under the heading (`under`): a row, wrapping, hidden while it holds none.
+.modal-dialog__under {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(3);
+
+  &:empty {
+    display: none;
+  }
+}
+
 // A second identifier after the name, an ingredient's formal name or a
 // deity's tradition (MB.115): quieter than the name, the body's face at its
 // size and weight in the muted ink.
