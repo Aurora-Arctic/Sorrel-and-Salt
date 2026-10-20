@@ -26,7 +26,7 @@ import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-wr
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
-import AddToCovenDialog from '../CompendiumCards/add-to-coven-dialog';
+import AddToCovenDialog from './add-to-coven-dialog';
 import AnnotatePicker from './annotate-picker';
 import type {
   CupboardActionsProps,
@@ -364,7 +364,6 @@ export default function CupboardActions(
       {feedback.feedback}
       {asking === 'add' && (
         <AddToCovenDialog
-          title={LABEL.add}
           ingredientId={ingredientId}
           workspaceId={defaultWorkspaceId}
           covens={adders.map(({ workspaceId, name: coven }) => ({ id: workspaceId, name: coven }))}

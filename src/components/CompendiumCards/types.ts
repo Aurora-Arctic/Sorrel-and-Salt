@@ -92,7 +92,7 @@ export interface CompendiumCoven {
   name: string;
 }
 
-/** The plus at a card's bottom right: add this entry to a coven, asking which when several lack it. */
+/** The plus at a card's bottom right: add this entry to a coven, a menu of the covens lacking it where several do. */
 export interface AddIconProps {
   /** The default coven: added to at once where `covens` is empty. */
   workspaceId: string;
@@ -102,15 +102,6 @@ export interface AddIconProps {
   covens: readonly CompendiumCoven[];
   /** The ids of those that already hold the entry. */
   heldIn: readonly string[];
-}
-
-/** The picker the plus opens when the viewer may write in several covens. */
-export interface AddToCovenDialogProps extends AddIconProps {
-  /** The dialog's title: the card's "Add to My Ingredients" by default; the entry page's button says "Add to Cupboard" (M9.12). */
-  title?: string;
-  onClose: () => void;
-  /** The add succeeded and the modal is closing: the page is to be read again. */
-  onAdded: () => void;
 }
 
 /** The check at a card's bottom right: this entry is held, and the link leads to it. */
