@@ -7,7 +7,7 @@ import DetailsDialog from './details-dialog';
 import { detailsHeading, detailsMarks } from './details';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import IngredientSummary from './summary';
-import type { IngredientDetailsOpened, IngredientEntryProps } from './types';
+import type { IngredientDetailsOpened, IngredientEntryProps, SummaryJar } from './types';
 import type {
   CategoryDetail,
   CitedReference,
@@ -570,11 +570,13 @@ const Details = ({
   detail,
   listHref,
   covens,
+  jars,
   ...opened
 }: Omit<IngredientDetailsOpened, 'heading' | 'children'> & {
   detail: IngredientDetail;
   listHref: Route;
   covens?: readonly HoldingCoven[];
+  jars?: readonly SummaryJar[];
 }) => (
   <Reopenable>
     {() => (
@@ -583,7 +585,7 @@ const Details = ({
         opened={{
           heading: detailsHeading(detail.entry),
           marks: detailsMarks(detail),
-          children: <IngredientSummary detail={detail} covens={covens} />,
+          children: <IngredientSummary detail={detail} covens={covens} jars={jars} />,
           ...opened,
         }}
       />
@@ -617,6 +619,28 @@ export const DetailsFromCovenList: Story = () => (
   />
 );
 DetailsFromCovenList.meta = { iframed: true };
+
+// The same from the coven's list with its jars (M9.9): each form shows the coven's
+// jar of it: the oil low, the bundle unmeasured, the root out, and the leaf in
+// no jar, Not Stocked; a badge on the low and the out alone.
+const STOCKED: IngredientDetail = {
+  ...OWN,
+  variants: [...OWN.variants, variant('root'), variant('dried leaf')],
+};
+const [OIL, BUNDLE, ROOT] = STOCKED.variants.map(({ variant }) => variant.id);
+export const DetailsWithStock: Story = () => (
+  <Details
+    detail={STOCKED}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    jars={[
+      { variantId: OIL, quantity: 4, unit: 'ml', threshold: 10 },
+      { variantId: BUNDLE, quantity: null, unit: null, threshold: null },
+      { variantId: ROOT, quantity: 0, unit: 'g', threshold: null },
+    ]}
+  />
+);
+DetailsWithStock.meta = { iframed: true };
 
 // From the public compendium, to anyone but a curator: the same summary, and
 // only the page link.

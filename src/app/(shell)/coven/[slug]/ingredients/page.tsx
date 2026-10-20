@@ -216,7 +216,19 @@ export default async function CovenIngredientsPage({
               heading: detailsHeading(viewed.shown),
               marks: detailsMarks(viewed.detail, true),
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
-              children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
+              // The coven's jars of it, to every role: each form shows its stock (M9.9).
+              children: (
+                <IngredientSummary
+                  detail={viewed.detail}
+                  covens={viewed.covens}
+                  jars={
+                    stockOf(
+                      viewed.detail.variants.map(({ variant }) => variant),
+                      viewed.jars,
+                    ).jars
+                  }
+                />
+              ),
               // The card's own controls for this entry (the owner's call, 2026-10-20): Edit over the
               // details or Annotate, and More or the bin, whose delete or remove goes back to the
               // list, which closes them.

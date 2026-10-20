@@ -813,4 +813,13 @@ describe("the coven Ingredients page's Edit Stock", () => {
     expect(footOf(details)).toContain('Edit Stock, Testwort');
     expect(footOf(details)).toEqual(footOf(card as HTMLElement));
   });
+  it("shows each form's jar in the details' Forms to every role, a viewer included", async () => {
+    asRole('viewer');
+    await renderPage({ entry: 'a1' });
+    const forms = within(screen.getByRole('dialog', { name: 'Testwort' })).getByRole('list', {
+      name: 'Forms',
+    });
+    // The jar read for the details, on its form: the quantity is the coven's, not the compendium's.
+    expect(within(forms).getByRole('listitem')).toHaveTextContent(/Fixture Herb.*3 oz/);
+  });
 });
