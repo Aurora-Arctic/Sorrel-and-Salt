@@ -8,6 +8,7 @@ import {
   findCompendiumMatchPage,
   findCupboardEntryByLabel,
   findCupboardEntryIncludingSoftDeleted,
+  findLayersOfVariants,
   findManyOfIngredients,
   findOneByIdInWorkspace,
   findOneIngredient,
@@ -38,6 +39,7 @@ import type {
   CupboardEntryKey,
   DroppedOnConvert,
   FormAssignment,
+  FormHolding,
   IngredientValues,
   SplitLocal,
   VariantKey,
@@ -511,6 +513,43 @@ async function childrenLost(
     ),
     deities: sortedNames(answered(deities).map((row) => row.name)),
   };
+}
+
+/**
+ * What each live form of this coven's own ingredient `localId` holds: the
+ * coven's jars of it, and the live spells laying it, private ones of any
+ * member included, since a split moves those too (M8.17). The Link dialog's
+ * form map reads it to say which forms need a home. Only counts leave the
+ * service, so no private spell's content reaches the caller. Ordered by form.
+ *
+ * @throws {Forbidden} the caller may not convert this coven's ingredients.
+ * @throws {NotFound} `localId` is not a live ingredient of this coven.
+ */
+export async function localHoldings(
+  session: Session,
+  workspaceId: string,
+  localId: string,
+): Promise<FormHolding[]> {
+  const membership = await assertMembership(session, workspaceId, CONVERT_PERMISSION);
+  if (!RowId.safeParse(localId).success) throw new NotFound(NO_LOCAL);
+  const own = await findOneByIdInWorkspace(membership, ingredients, localId);
+  if (!own) throw new NotFound(NO_LOCAL);
+  const forms = await findManyOfIngredients([membership], ingredientVariants, [localId]);
+  const formIds = forms.map((form) => form.id);
+  const [jars, layers] = await Promise.all([
+    findStockOfIngredients(membership, [localId]),
+    findLayersOfVariants(membership, formIds),
+  ]);
+  return forms
+    .map((form) => ({
+      formId: form.id,
+      form: form.form,
+      jars: jars.filter((jar) => jar.variantId === form.id).length,
+      spells: new Set(
+        layers.filter((layer) => layer.variantId === form.id).map((layer) => layer.spellId),
+      ).size,
+    }))
+    .sort((a, b) => a.form.localeCompare(b.form));
 }
 
 /**

@@ -122,6 +122,14 @@ export interface FormAssignment {
   compendiumId: string;
 }
 
+/** What one form of a coven’s own entry holds, from `localHoldings`: the coven’s jars of it, and the spells laying it. */
+export interface FormHolding {
+  formId: string;
+  form: string;
+  jars: number;
+  spells: number;
+}
+
 /** What `splitLocalIntoCompendiumEntries` answers: a cupboard row per pick, in the picks' order, and what the coven lost. */
 export interface SplitLocal {
   entries: CupboardEntryRow[];

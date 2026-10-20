@@ -26,6 +26,7 @@ export {
 } from './finders';
 export {
   findIngredientsInSpellsIncludingSoftDeleted,
+  findLayersOfVariants,
   findManyInSpell,
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findManySpells,

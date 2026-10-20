@@ -48,6 +48,7 @@ export type {
   DeityDetail,
   FacetCount,
   FormAssignment,
+  FormHolding,
   IngredientDeityRow,
   IngredientDetail,
   IngredientFacets,
