@@ -860,6 +860,7 @@
   // of the same strength reads fainter.
   --notice-tint: 8%;
   --focus-ring-link-strength: #{$focus-ring-strength};
+  --focus-ring-tab-strength: #{$focus-ring-strength};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
   // Between floating and elevated: a card that rises under the pointer.
@@ -896,6 +897,7 @@
   --warning: #{$ochre-deep};
   --notice-tint: 7%;
   --focus-ring-link-strength: #{$focus-ring-link-strength-light};
+  --focus-ring-tab-strength: #{$focus-ring-tab-strength-light};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};

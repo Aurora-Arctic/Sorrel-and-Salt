@@ -513,19 +513,22 @@ Two rings keep another strength:
   at only 4.65:1 on the page, and 66.6% takes it to 2.61, under the 3:1 floor;
   75% is the least that clears it, at 3.01 (the owner's call, 2026-10-20).
   The page row passing by 0.01 is intended: it is the guard on the number.
-- **The tab row's ring** (`TabbedPage/index.scss`) is the accent at full
-  strength for now, drawn inside the pill. Faded to 66.6% it falls to 2.42 on
-  the light track and the open pill, and is still 2.75 at 75%; the strength
-  it should take is open with the owner.
+- **The tab row's ring** (`TabbedPage/index.scss`) is the accent, drawn
+  inside the pill, at `$focus-ring-tab-strength`, which each theme sets as
+  `--focus-ring-tab-strength`: the shared 66.6% in dark, and
+  `$focus-ring-tab-strength-light`, full strength, in light. On the light
+  track and the open pill the accent starts at only 4.05:1, so 66.6% takes it
+  to 2.42 and even 75% leaves it at 2.75 (the owner's call, 2026-10-20).
 
 The skip link's and the theme toggle's rings are the page's own colour round
 an accent fill, so it is the fill they are told from; faded, the ring sits
 closer to the ground behind it, and the fill is unchanged.
 
 A ring marks a control's state, so it is held to 3:1 (WCAG 1.4.11), laid
-over each ground it is drawn on. `tests/scss/tokens.test.ts` reads both
-strengths from the compiled CSS and checks every row below; it fails with
-the shared strength at 40%, and with the light link at 66.6%.
+over each ground it is drawn on. `tests/scss/tokens.test.ts` reads every
+strength from the compiled CSS and checks every row below; it fails with
+the shared strength at 40%, with the light link at 66.6%, and with the light
+tab at 75%.
 
 | Ring on                                 | Dark | Light |
 | --------------------------------------- | ---- | ----- |
@@ -538,6 +541,9 @@ the shared strength at 40%, and with the light link at 66.6%.
 | A link's accent ring on the page        | 4.14 | 3.01  |
 | … on a card                             | 3.97 | 3.22  |
 | … on a card pointed at                  | 3.72 | 3.31  |
+| A tab's accent ring on the open pill    | 3.18 | 4.05  |
+| … on the track over the page            | 3.77 | 4.05  |
+| … on the track over a card              | 3.49 | 4.49  |
 
 **Not covered: a ring on a coloured chip.** Combobox's ring on a category
 chip is the chip's ink faded over the chip's wash. For the seeded group
