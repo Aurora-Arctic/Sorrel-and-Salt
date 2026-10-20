@@ -1,0 +1,168 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Design F (claude-docs/components/click-feedback.md): a callout under the
+// control that failed, and a badge on the control that brings it back. Both
+// are placed by script (position.ts) and taken out of the flow, so neither
+// moves anything as it comes or goes.
+
+// The warning triangle's size in the callout, as an error notice draws it.
+$callout-mark: 1.0125rem;
+// The Dismiss button: 24px, a step in from the corner.
+$dismiss-size: 1.5rem;
+// The badge as drawn, and the mark inside it.
+$badge-size: 1.2rem;
+$badge-mark: 0.75rem;
+// What the badge's press target adds to reach 24px, over its own control only.
+$badge-reach: calc(#{$dismiss-size} - #{$badge-size});
+// The arrow: a square turned 45°, its two bordered sides showing above the
+// callout, its point about 11.5px under the control (position.ts's gap).
+$arrow-size: 12px;
+$arrow-rise: 7px;
+
+// Each fades in at the short step and out by the same keyframes reversed, as
+// SkeletonFade does; under reduced motion neither fades.
+@mixin fades {
+  @include arrived($motion-short);
+
+  &.is-closing {
+    animation: list-frame-fade-in $motion-short ease both reverse;
+    pointer-events: none;
+
+    @include reduced-motion {
+      animation: none;
+    }
+  }
+
+  // Until the script has placed it, it would stand at the corner of its box.
+  &:not(.is-placed) {
+    visibility: hidden;
+  }
+}
+
+.click-feedback__callout {
+  // Out of the flow at the origin before it is placed, as a tip's bubble is.
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: layer('callout');
+  box-sizing: border-box;
+  inline-size: max-content;
+  max-inline-size: min(20rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: space(3) calc(#{space(1)} + #{$dismiss-size} + #{space(2)}) space(3)
+    calc(#{space(4)} + #{$callout-mark} + #{space(2)});
+  border: 1px solid $secondary;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  color: $text-primary;
+  box-shadow: $shadow-floating;
+  font-size: type-size('small');
+  // A step over the body weight, as an error notice's text.
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: break-word;
+  @include fades;
+
+  // The triangle, on the first line as an error notice's is.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0.8rem;
+    inset-inline-start: space(4);
+    inline-size: $callout-mark;
+    block-size: $callout-mark;
+    @include warning-mark($secondary);
+  }
+
+  // The arrow, under the middle of the control (position.ts's `pointAt`).
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: -$arrow-rise;
+    left: calc(var(--click-feedback-arrow-x, #{space(5)}) - #{$arrow-size * 0.5});
+    inline-size: $arrow-size;
+    block-size: $arrow-size;
+    box-sizing: border-box;
+    border-block-start: 1px solid $secondary;
+    border-inline-start: 1px solid $secondary;
+    background-color: $surface-card;
+    transform: rotate(45deg);
+  }
+}
+
+.click-feedback__dismiss {
+  @include button-reset;
+  position: absolute;
+  inset-block-start: space(1);
+  inset-inline-end: space(1);
+  display: grid;
+  place-items: center;
+  inline-size: $dismiss-size;
+  block-size: $dismiss-size;
+  border-radius: radius('control');
+  color: $dismiss-ink;
+
+  svg {
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+  }
+
+  &:hover {
+    background-color: $fill-quiet;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.click-feedback__badge {
+  @include button-reset;
+  // Placed by script against the control (position.ts); absolute, so it
+  // scrolls and clips with it.
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: $badge-size;
+  block-size: $badge-size;
+  border-radius: radius('pill');
+  background-color: $secondary;
+  color: $text-on-color;
+  // A ring of the card, so it stands clear of the control's border.
+  box-shadow: 0 0 0 2px $surface-card;
+  @include fades;
+
+  &::before {
+    content: '';
+    inline-size: $badge-mark;
+    block-size: $badge-mark;
+    @include warning-mark;
+  }
+
+  // The press target: 24px, grown down and back over the control it sits on
+  // and never outwards, so it covers no neighbour (WCAG 2.5.8). Physical
+  // sides, as its place (`top-end`) is.
+  &::after {
+    content: '';
+    position: absolute;
+    // Top, right, bottom, left.
+    inset: 0 0 calc(-1 * #{$badge-reach}) calc(-1 * #{$badge-reach});
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Beside a quiet control: grown back over the control, and half the rest above
+// and below.
+.click-feedback__badge--beside::after {
+  top: calc(-0.5 * #{$badge-reach});
+  bottom: calc(-0.5 * #{$badge-reach});
+}
