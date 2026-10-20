@@ -32,18 +32,45 @@
   color: $text-muted;
 }
 
-// The details header's rhythm (the owner's call, 2026-10-20): Open Full Page
-// a full step under the name, and the body a step and a half under the row,
-// where the shared defaults suit the edit modals' Undo and Redo. Scoped by
-// `:has()`, Baseline Widely Available, as the Modal's own header rules are.
+// The details header's rhythm (the owner's call, 2026-10-20): where the
+// header holds the Edit pencil, a full step under the name, and the body a step
+// and a half under that row, where the shared defaults suit the edit modals'
+// Undo and Redo. A header with nothing in its slot (no Edit) keeps the defaults.
+// Scoped by `:has()`, Baseline Widely Available, as the Modal's own header
+// rules are.
 .modal-dialog:has(.ingredient-summary) {
-  .modal-dialog__header {
+  .modal-dialog__header:has(.modal-dialog__header-slot:not(:empty)) {
     padding-bottom: space(5);
   }
 
-  .modal-dialog__header-slot {
+  .modal-dialog__header-slot:not(:empty) {
     margin-top: space(4);
   }
+}
+
+// The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
+// Full Page, the last child of the scrolling body and fixed to the foot of the
+// window, so the text scrolls under it. It runs to the dialog's edges (the
+// body's own padding taken back), on the modal's surface so the text passes
+// behind it unseen, with only a hairline along its top; sticky rather than a
+// slot of the Modal's own, as no other modal has a foot. Its place in the flow
+// is the end of the text, so the last line scrolls clear of it by the bar's
+// own top padding. The button is the site's green, medium, the bar's width.
+.ingredient-details-foot {
+  position: sticky;
+  // Negative: a sticky box stops at the body's padding, and this one is to
+  // stand at the dialog's edge, over it.
+  bottom: calc(-1 * #{space(5)});
+  z-index: 1;
+  margin: space(5) calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
+  padding: space(3) space(5);
+  border-top: 1px solid $hairline;
+  background: $surface-card;
+  @include theme-transition(background-color, border-color);
+}
+
+.ingredient-details-foot__open {
+  width: 100%;
 }
 
 // The description and its Show More bar (the owner's calls, 2026-10-20). The

@@ -55,6 +55,40 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
+  it('puts Open Full Page in the scrolling body, after the summary', () => {
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE, children: <p>A summary</p> }}
+      />,
+    );
+
+    const open = within(dialog()).getByRole('link', { name: 'Open Full Page' });
+    const summary = within(dialog()).getByText('A summary');
+    // Why it could be elsewhere: the header has a slot for a modal's own controls.
+    // It is in the scroll body, with the summary, and after it.
+    expect(open.closest('.modal-dialog__header')).toBeNull();
+    expect(summary.parentElement).toContainElement(open);
+    expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("goes to the entry's page on a press of Open Full Page, as the site's link does", async () => {
+    render(
+      <Navigating push={router.push}>
+        <DetailsDialog
+          closeHref={LIST}
+          opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE, children: <p>A summary</p> }}
+        />
+      </Navigating>,
+    );
+
+    await act(async () => {
+      fireEvent.click(within(dialog()).getByRole('link', { name: 'Open Full Page' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith(PAGE);
+  });
+
   it('closes back to the list it opened over', async () => {
     render(
       <DetailsDialog
