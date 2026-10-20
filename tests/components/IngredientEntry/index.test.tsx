@@ -1,4 +1,7 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { makeQueryClient } from '@/lib/graphql-client';
+import type { ReactElement } from 'react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
@@ -1082,11 +1085,15 @@ describe('IngredientEntry edit', () => {
     const covenDialog = () => screen.getByRole('dialog', { name: /^Edit Ingredient, Testwort/ });
     const shows = (label: string) => within(covenDialog()).getByRole('status', { name: label });
     const form = () => within(covenDialog()).getByRole('form', { name: 'Fixture Form' });
+    // The page's Edit menu writes through the query client (`own-actions.tsx`).
+    const renderOwn = (ui: ReactElement) =>
+      render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
-    it("names the entry in Edit's link, and heads the dialog as an ingredient's, writing to the coven", () => {
-      render(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+    it("offers Edit in the page's Edit menu, and heads the dialog as an ingredient's, writing to the coven", () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
-      expect(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' })).toHaveAttribute(
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+      expect(screen.getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
         'href',
         `${OWN}?edit`,
       );
@@ -1096,7 +1103,7 @@ describe('IngredientEntry edit', () => {
     });
 
     it('lets a member promote a folk name when the page says the role may', () => {
-      render(
+      renderOwn(
         <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ mayPromote: true })} />,
       );
 
@@ -1104,7 +1111,7 @@ describe('IngredientEntry edit', () => {
     });
 
     it('links a near match to its page in the coven, and only a compendium substitute to a page', () => {
-      render(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
       expect(shows('Duplicate Address')).toHaveTextContent(
         '/coven/fixture-coven/ingredients/fixture-other-id',
@@ -1114,7 +1121,7 @@ describe('IngredientEntry edit', () => {
     });
 
     it('closes on a save, going back to the page and fetching it again', () => {
-      render(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
       fireEvent.click(within(covenDialog()).getByRole('button', { name: 'Fixture Save' }));
 
@@ -1123,7 +1130,7 @@ describe('IngredientEntry edit', () => {
     });
 
     it("sets the form's More at its foot, with Link's address only when the role may link", () => {
-      const { unmount } = render(
+      const { unmount } = renderOwn(
         <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />,
       );
       expect(within(form()).getByRole('status', { name: 'Edit More' })).toHaveTextContent(
@@ -1132,7 +1139,7 @@ describe('IngredientEntry edit', () => {
       unmount();
 
       const LINK = `/coven/fixture-coven/ingredients?link=${opened.id}` as Route;
-      render(
+      renderOwn(
         <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ linkHref: LINK })} />,
       );
 

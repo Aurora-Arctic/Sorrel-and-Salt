@@ -63,6 +63,7 @@ export default function MenuButton({
   busyLabel,
   opens = 'below',
   buttonType = false,
+  icon,
   ref,
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
@@ -149,8 +150,19 @@ export default function MenuButton({
         }}
       >
         {busy && <Spinner />}
-        {busy ? (busyLabel ?? label) : label}
-        {!busy && <Chevron />}
+        {icon ? (
+          // An icon alone (a list card's More, M8.17): the words still name the
+          // button, hidden, and no chevron, as the row's other icons have none.
+          <>
+            {!busy && icon}
+            <span className="visually-hidden">{busy ? (busyLabel ?? label) : label}</span>
+          </>
+        ) : (
+          <>
+            {busy ? (busyLabel ?? label) : label}
+            {!busy && <Chevron />}
+          </>
+        )}
       </button>
       {drawn && (
         <div

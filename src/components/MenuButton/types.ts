@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { MouseEvent, Ref } from 'react';
+import type { MouseEvent, ReactElement, Ref } from 'react';
 
 /** One choice in the menu: a link to an address, or an action. */
 export type MenuButtonItem = {
@@ -43,6 +43,12 @@ export interface MenuButtonProps {
    * actions of the dialog's foot (the owner's call of 2026-10-20). Off by default.
    */
   buttonType?: boolean;
+  /**
+   * An icon drawn in place of the label and the chevron, the label then hidden
+   * but still the button's name: a list card's More (M8.17), the vertical dots,
+   * among the card's other icon controls. Left out, the label shows.
+   */
+  icon?: ReactElement;
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
 }

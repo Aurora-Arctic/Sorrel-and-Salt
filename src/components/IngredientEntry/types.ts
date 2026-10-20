@@ -199,6 +199,19 @@ export interface CupboardWritesOptions {
 }
 
 /** One cupboard write: start it, and whether it is in flight. */
+/** What `useDeleteEntry` deletes, and what follows it (M8.17). */
+export interface DeleteEntryOptions {
+  workspaceId: string;
+  /** The coven's own entry. */
+  id: string;
+  /** Where a delete leads, replacing the address; left out, the page reads again. */
+  deletedHref?: Route;
+  /** Closes the caller's confirmation on a refusal; a delete's closes with the page it changed. */
+  onSettle: () => void;
+  /** Shows a refusal's sentence in the caller's alert. */
+  onRefused: (message: string) => void;
+}
+
 export interface CupboardWrite {
   run: () => void;
   pending: boolean;

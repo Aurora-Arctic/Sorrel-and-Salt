@@ -150,3 +150,33 @@ export function InfoIcon(): ReactElement {
     </svg>
   );
 }
+
+/**
+ * Three dots stacked, ⋮: more choices, in a menu. A list card's More (M8.17,
+ * the owner's call, 2026-10-20); a More drawn with words keeps its chevron.
+ */
+export function DotsIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle cx="8" cy="3.25" r="1.25" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.25" fill="currentColor" />
+      <circle cx="8" cy="12.75" r="1.25" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** A bin: delete or remove this. A list card's lone Delete or Remove (M8.17). */
+export function BinIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.75 4.25h10.5M6.25 4.25V2.75h3.5v1.5M4 4.25l.75 9h6.5l.75-9M6.75 6.75v4M9.25 6.75v4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
