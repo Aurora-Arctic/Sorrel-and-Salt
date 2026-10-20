@@ -27,8 +27,7 @@ import './summary.scss';
 // (the owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md, "The details modal".
 
 /** "The Oil form", "The Oil and Root forms", "The Oil, Root and Tincture forms". */
-function formsCarrying(forms: readonly string[]): string {
-  const labels = forms.map(formLabel);
+function formsCarrying(labels: readonly string[]): string {
   const named =
     labels.length === 1
       ? labels[0]
@@ -43,7 +42,7 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
   const shown = applyCupboardEntry(detail.entry, cupboardEntry);
   const cautioned = variants
     .filter(({ variant }) => said(variant.safetyNotes))
-    .map(({ variant }) => variant.form);
+    .map(({ variant }) => formLabel(variant.form));
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
   // With every section hidden, one line says so rather than leave the body blank
