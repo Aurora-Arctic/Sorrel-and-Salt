@@ -116,9 +116,17 @@ half each way up and down.
 
 ## Fades
 
-The callout and the badge fade in and out at `$motion-short`, with
-`list-frame-fade-in` (reversed to fade out). Under reduced motion neither
-fades. A fading piece stays drawn, `inert` and marked `is-closing`, until its
+The callout and the badge fade in and out at `$motion-short`, by two
+keyframes of their own, as MenuButton's menu does: `click-feedback-fade-in`
+and `click-feedback-fade-out`. Under reduced motion neither fades.
+
+Two things look simpler and do not work. The fade in starts only once the
+piece is placed (`is-placed`): a piece is hidden until Floating UI has placed
+it, and a fade started at the mount would run while it was hidden, spent
+before it shows on a page slow to place it. The fade out is a second
+keyframe, not the first run backwards: changing only an animation's direction
+updates the finished animation in place rather than running it again, so the
+piece jumped to nothing instead of fading. A fading piece stays drawn, `inert` and marked `is-closing`, until its
 animation ends or 400ms pass; whether it is open (`aria-expanded`, the focus
 going back) never waits for the fade.
 

@@ -107,3 +107,25 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <Pressed name="Remove" />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// Refused, then a later try that succeeds: the badge and the callout both go,
+// fading out, which the workshop spec samples.
+export const ThenSucceeds: Story = () => {
+  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Remove' });
+  return (
+    <div style={row}>
+      <button
+        type="button"
+        className="btn btn--destructive"
+        ref={anchorRef}
+        onClick={() => report(`Remove: ${REFUSED}`)}
+      >
+        Remove
+      </button>
+      {feedback}
+      <button type="button" className="btn" onClick={() => report(undefined)}>
+        Succeed
+      </button>
+    </div>
+  );
+};

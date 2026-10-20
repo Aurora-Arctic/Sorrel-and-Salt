@@ -20,23 +20,45 @@ $badge-reach: calc(#{$dismiss-size} - #{$badge-size});
 $arrow-size: 12px;
 $arrow-rise: 7px;
 
-// Each fades in at the short step and out by the same keyframes reversed, as
-// SkeletonFade does; under reduced motion neither fades.
+// Each fades in at the short step once placed, and out by a keyframe of its
+// own, as MenuButton's menu does; under reduced motion neither fades. The fade
+// in waits for `is-placed`: started at the mount, it would run while the piece
+// is still hidden, and be spent before it shows on a page slow to place it.
+// The fade out is a second name, not the first reversed: a finished animation
+// whose name stays is updated in place, so reversing it jumps to its start
+// instead of running again (claude-docs/components/click-feedback.md, "Fades").
 @mixin fades {
-  @include arrived($motion-short);
-
-  &.is-closing {
-    animation: list-frame-fade-in $motion-short ease both reverse;
-    pointer-events: none;
-
-    @include reduced-motion {
-      animation: none;
-    }
-  }
-
   // Until the script has placed it, it would stand at the corner of its box.
   &:not(.is-placed) {
     visibility: hidden;
+  }
+
+  &.is-placed {
+    animation: click-feedback-fade-in $motion-short ease both;
+  }
+
+  &.is-closing {
+    animation: click-feedback-fade-out $motion-short ease both;
+    pointer-events: none;
+  }
+
+  @include reduced-motion {
+    &.is-placed,
+    &.is-closing {
+      animation: none;
+    }
+  }
+}
+
+@keyframes click-feedback-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes click-feedback-fade-out {
+  to {
+    opacity: 0;
   }
 }
 
