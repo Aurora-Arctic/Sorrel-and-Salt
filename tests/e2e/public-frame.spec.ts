@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
@@ -43,6 +44,25 @@ test('a signed-in request gets the application shell from the same layout', asyn
   ).toBeVisible();
   // The shell's #main is the skip link's wrapper; the layout's main sits inside it.
   await expect(page.locator('#main main')).toBeVisible();
+});
+
+// The Compendium link is the page you are on, told to a screen reader by aria-current
+// (MB.120) in the public bar and in the shell's alike. The visible mark is a rule drawn
+// as a border, so it survives forced colours.
+const compendiumLink = (page: Page) =>
+  page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' });
+
+test('the signed-out bar marks the Compendium link as the current page', async ({ page }) => {
+  await page.goto('/compendium');
+
+  await expect(compendiumLink(page)).toHaveAttribute('aria-current', 'page');
+});
+
+test('the signed-in shell marks the Compendium link as the current page', async ({ page }) => {
+  await signInAs(page, 'marked@public-frame.test', ['discord']);
+  await page.goto('/compendium');
+
+  await expect(compendiumLink(page)).toHaveAttribute('aria-current', 'page');
 });
 
 test('a response off production is marked noindex', async ({ request }) => {

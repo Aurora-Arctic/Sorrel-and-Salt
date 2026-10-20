@@ -130,6 +130,13 @@ beforeEach(() => {
 });
 
 describe('the public compendium page', () => {
+  it('opens on its one heading', async () => {
+    await renderPage();
+
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Compendium' })).toBeInTheDocument();
+  });
+
   it('lists the entry as a link to its own page for a visitor with no account', async () => {
     await renderPage();
     const list = screen.getByRole('list', { name: 'Compendium' });

@@ -156,9 +156,33 @@
 
 // Defaults to the body ink, so the ring re-colours with the theme, at the
 // shared strength, mixed towards transparent so it softens over any ground.
-@mixin focus-ring($color: $text-primary, $strength: $focus-ring-strength) {
+// `$placement: inset` draws the ring 2px inside the box instead of outside it,
+// for a control whose own edge, or its bar's, would clip an outside ring (a nav
+// link filling the bar, a tab, a menu row). It is the last parameter so the
+// callers that pass a colour and a strength by position keep working:
+// `focus-ring($placement: inset)`, or `focus-ring($accent, $strength, inset)`.
+@mixin focus-ring($color: $text-primary, $strength: $focus-ring-strength, $placement: outset) {
   outline: 2px solid color-mix(in srgb, $color $strength, transparent);
-  outline-offset: 2px;
+
+  @if $placement == inset {
+    outline-offset: -2px;
+  } @else {
+    outline-offset: 2px;
+  }
+}
+
+// The page you are on, in a bar's nav link that fills the bar's height: weight
+// and the heavy rule along the link's foot, no fill, so it is told by shape and
+// not by colour alone, and a hover still shows. The rule is a border, not a
+// box-shadow, because forced colours drops a shadow and keeps a border, so the
+// mark survives a high-contrast mode (MB.120). The padding above it takes the
+// border's height back, so the label does not climb off the bar's centre.
+// Used for `a[aria-current='page']` in AppShell's and PublicFrame's navs.
+@mixin nav-current {
+  box-sizing: border-box;
+  padding-top: $rule-heavy;
+  border-bottom: $rule-heavy solid $accent;
+  font-weight: 500;
 }
 
 // Light text on a dark ground renders heavier; only theme-dark uses this.

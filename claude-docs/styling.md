@@ -497,7 +497,12 @@ owner's call at MB.116's sign-off, over Microsoft's own dark button.
 ## The focus ring
 
 Keyboard focus is a 2px outline drawn 2px outside the element by the
-`focus-ring($color, $strength)` mixin in `_mixins.scss`. Its colour is mixed
+`focus-ring($color, $strength, $placement)` mixin in `_mixins.scss`. A control
+that fills its bar or its row, whose own edge would clip an outside ring, passes
+`$placement: inset` and gets the ring 2px inside instead
+(`@include focus-ring($placement: inset)`; a coloured one passes it third, as
+`focus-ring($accent, $focus-ring-tab-strength, inset)`). It is last so the
+callers that pass a colour and a strength by position keep working (MB.120). Its colour is mixed
 towards transparent, `color-mix(in srgb, <colour> <strength>, transparent)`,
 so the ring softens over whatever ground it crosses rather than standing at
 the body ink's full 14:1, which read as harsh. The strength is
@@ -1231,12 +1236,22 @@ heavier than the reverse; light reverts to the browser default.
   0.8s, `$shimmer-duration` 1.4s, `$pulse-duration` 2s, `$arrive-duration`
   200ms; see [`loading.md`](loading.md)), and the four scales with their accessors — `type-size()`,
   `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
+  Sizes with a role of their own sit beside them: `$brand-size` (1.375rem, the
+  site name in the bars, set in the heading face), `$inline-mark-size` (0.72em,
+  an icon sized to the text beside it), `$text-stroke-hairline` (0.6px, the
+  safety note heading's stroke), `$safety-bar-width` (the safety note's side
+  bar, `$rule-heavy`), and the ingredient card drawer's `$drawer-inset` (10px),
+  `$drawer-wall` (7px), `$drawer-back-stop` and `$drawer-seam-stop` (38% and
+  48%), `$drawer-slot-shadow` and `$drawer-rim-shadow`. The last six are proposed
+  for MB.120; the card and note stylesheets take them in their own lanes.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
   the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
-  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`,
+  `theme-transition`, `nav-current` (a bar link's current-page mark: weight and a
+  `$rule-heavy` accent border, which forced colours keeps), `reduced-motion`,
+  `font-smoothing-antialiased`,
   `heading-face` (the headings' family, weight and letter spacing).
   The shapes that repeated by hand are mixins too, one line each:
   `color-scheme-light` and `forced-colors` (the two media queries, as
