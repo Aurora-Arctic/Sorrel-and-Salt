@@ -1,0 +1,15 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The details modal's section stacks at every width (the owner's call,
+// 2026-10-20): the page's two columns follow the viewport, and in the 32rem
+// modal they left the text column a few rem wide. As the page stacks below a
+// tablet's width, with the same steps.
+.ingredient-summary .ingredient-entry__section {
+  @include stack(4);
+}
+
+.ingredient-summary__forms-caution {
+  margin: 0;
+  color: $text-muted;
+}
