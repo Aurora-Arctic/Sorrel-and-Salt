@@ -81,7 +81,7 @@ Numbers are the audit's; each was checked in `/app` on `cc98c0ff`.
 
 **Not defects** (42–49, left as they are): one safety badge, Toxic over Caution (owner, 2026-10-20); the facet panel holds changes until shut (M12.4); the tip takes no pointer; the held check's press opens the tip, no hover wash, up to six tab stops a card; the recency half-step and eye glyph; SafetyNote's heading at 4.28:1 as large text; Prev/Next; 1px edges plain; PendingLink and modal focus settled.
 
-**To mint, not build here** (51–54; 50 withdrawn, see item 2; 55 dropped at sign-off, see the decisions below): public loading skeleton; forced-colours pass over the section; block Notice; generic form fields (recommend against). Item 55, the CardDensitySwitch on the public page, was proposed and then dropped.
+**To mint, not build here** (51–55; 50 withdrawn, see item 2): public loading skeleton; forced-colours pass over the section; block Notice; generic form fields (recommend against); CardDensitySwitch on the public page. Items 54 and 55 were minted and then retired at sign-off, see the decisions below.
 
 ## Phase 1 — Build the foundations and the proposals, then stop for sign-off
 
@@ -106,7 +106,7 @@ Lane worktrees `/home/node/worktrees/mb120-<lane>` off the task branch, `node_mo
 
 ## Phase 2 — Apply the sign-off
 
-Settle each contested call as the owner says, delete the `Proposal*` stories, retire the six markers (34), write the Styling sections (32) as built, correct the task entry's "read-only" wording and the comments in 30 and 31, mint 51–54 as M12.n tasks placed after the wave's done work, and copy this plan to `claude-docs/design-decisions/mb.120-plan.md` with "Where the build departed" and "Decisions taken at sign-off". `sync MB.120`. The PR targets `feature/m9.12-add-from-compendium` until #1157 merges, then staging.
+Settle each contested call as the owner says, delete the `Proposal*` stories, retire the six markers (34), write the Styling sections (32) as built, correct the task entry's "read-only" wording and the comments in 30 and 31, mint 51–55 as M12.n tasks placed after the wave's done work, and copy this plan to `claude-docs/design-decisions/mb.120-plan.md` with "Where the build departed" and "Decisions taken at sign-off". `sync MB.120`. The PR targets `feature/m9.12-add-from-compendium` until #1157 merges, then staging.
 
 ## Verification
 
@@ -149,10 +149,10 @@ The owner, 2026-10-20, one call per item:
 5. **Safety bar**: `$rule-heavy`, with the Caution heading's text stroke kept.
 6. **Sticky phone row**: two lines, the Filters button filling its line.
 7. **Duplicates notice**: the interim wording now, and the block Notice minted.
-8. **Form fields**: they stay in `IngredientForm/fields.tsx`; generic form fields are minted as "recommend against".
+8. **Form fields**: they stay in `IngredientForm/fields.tsx`. Item 54 was minted as M12.49 "recommend against" and retired the same day, on the owner's call (2026-10-20), so no task is kept; the reasons are in the comment at the top of `fields.tsx`.
 9. **Drawer**: the proposed drawer tokens, with `RECENCY_AT` fixed at `corner`.
 10. **Plus and check names**: the entry name goes in both the accessible name and the visible tip.
 11. **Forced colours**: the current-page border mark now; the full forced-colours pass over the section is minted into Wave 14.
-12. **Item 55, the Compact switch on the public compendium**: dropped at the owner’s call on 2026-10-20, before it was minted, because the different densities are intentional: the public compendium shows full cards and the coven’s Ingredients list shows compact ones. The public list gets no switch.
+12. **Item 55, the Compact switch on the public compendium**: minted as M12.50 and retired the same day, on the owner's call (2026-10-20), because the different densities are intentional: the public compendium shows full cards and the coven's Ingredients list shows compact ones. The public list gets no switch.
 
-Tasks 51–54 are minted as M12.47 (51, the public loading placeholder), M14.3 (52, the forced-colours pass over the section), M12.48 (53, the block Notice) and M12.49 (54, generic form fields, recommended against). Item 55, the Compact switch on the public compendium, was dropped before it was minted, so no task id was used for it.
+Tasks 51–55 were minted as M12.47 (51, the public loading placeholder), M14.3 (52, the forced-colours pass over the section), M12.48 (53, the block Notice), M12.49 (54, generic form fields, recommended against) and M12.50 (55, the Compact switch on the public compendium). M12.49 and M12.50 were retired at sign-off and are kept as stubs in `tasks/m12.md`, because task ids are immutable; M12.47, M14.3 and M12.48 stand.
