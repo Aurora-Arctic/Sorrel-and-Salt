@@ -2,7 +2,7 @@
 
 `src/components/EntryMarks/` — an ingredient entry's badge row: the badges saying whose it is
 (M8.14), and its one safety warning, Toxic or else Caution. The ingredient card and the head of the entry page (`IngredientEntry`)
-both draw them through this one component, so the two cannot drift.
+both draw them through this one component, so the two cannot drift. The entry page draws its safety badge with `SafetyMark` on its back row instead, after New or Updated, and passes `safety={false}` here (the owner's call, 2026-10-20; [`ingredient-entry.md`](ingredient-entry.md), "Structure").
 
 ## Props
 
