@@ -17,14 +17,6 @@
   gap: space(3);
 }
 
-// The search box at the compact scale, the filter panel's (M9.7): a step
-// shorter than a form's box, so the dialog gives its room to the picks and the
-// map beneath (the owner's call, 2026-10-20). The box alone: the select
-// beneath it and the dialog's buttons keep the full height.
-.link-form__search {
-  @include compact-controls;
-}
-
 .link-form__picks {
   display: flex;
   flex-direction: column;
@@ -102,6 +94,15 @@
     color: $text-muted;
     font-size: type-size('caption');
   }
+}
+
+// The Goes To column at the compact scale, the filter panel's (M9.7): its
+// select, shown when two picks share a form, sits a step shorter than a form's
+// box, so a row of the map stays a table row rather than a form field (the
+// owner's call, 2026-10-20). The column alone: the search box, the Keep Our
+// Name select and the dialog's buttons keep the full height.
+.link-form__goes-to {
+  @include compact-controls;
 }
 
 .link-form__holds {

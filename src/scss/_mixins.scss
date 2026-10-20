@@ -459,8 +459,8 @@
 // sizes, and colours and focus rings are the primitives' own. The height is a
 // custom property, `--compact-control`, so the workshop can compare scales.
 // Chips keep their size: they already fit inside a box this tall. The filter
-// panel wears it on every control (FacetPanel), the Link dialog on its search
-// box alone (IngredientEntry/link-form.scss); every other form keeps the full
+// panel wears it on every control (FacetPanel), the Link dialog on its form
+// map's Goes To column alone (IngredientEntry/link-form.scss); every other form keeps the full
 // height.
 @mixin compact-controls {
   --compact-control: #{$compact-control};

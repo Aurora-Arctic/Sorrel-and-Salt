@@ -196,13 +196,7 @@ export default function LinkForm({
 
   return (
     <div className="link-form">
-      <FieldShell
-        label="Compendium Entry"
-        hint={hint}
-        required
-        className="link-form__search"
-        {...shell}
-      >
+      <FieldShell label="Compendium Entry" hint={hint} required {...shell}>
         <Combobox
           id={shell.controlId}
           label="Compendium Entry"
@@ -261,7 +255,7 @@ export default function LinkForm({
                   <tr key={row.formId}>
                     <th scope="row">{label}</th>
                     <td className="link-form__holds">{holdsText(row.jars, row.spells)}</td>
-                    <td>
+                    <td className="link-form__goes-to">
                       {row.homes.length > 1 ? (
                         <select
                           className={[
