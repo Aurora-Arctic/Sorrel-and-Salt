@@ -62,23 +62,26 @@ const AccountMenu = ({
   const close = (): void => setOpen(false);
 
   // Open only: a closed menu listens for nothing. Escape is heard on the
-  // document, not the panel, so it works wherever the focus is, and it hands
-  // the focus back to the button the panel came from.
+  // window, not the panel, so it works wherever the focus is, and it hands
+  // the focus back to the button the panel came from. The window rather than
+  // the document, so it hears an Escape after a failed Sign Out's callout,
+  // which listens on the document and takes the one it closes on
+  // (`defaultPrevented`): that Escape leaves the menu open.
   useEffect(() => {
     if (!open) return;
     const closeOnOutsidePress = (event: PointerEvent): void => {
       if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
       setOpen(false);
       button.current?.focus();
     };
     document.addEventListener('pointerdown', closeOnOutsidePress);
-    document.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('keydown', closeOnEscape);
     return () => {
       document.removeEventListener('pointerdown', closeOnOutsidePress);
-      document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('keydown', closeOnEscape);
     };
   }, [open]);
 
