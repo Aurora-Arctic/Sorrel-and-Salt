@@ -408,7 +408,7 @@ $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
 
 // A highlight: the accent 12% into whatever is behind. MenuButton's one
-// primary or constructive item, and the account menu's, the shell's menu's
+// primary item, and the account menu's, the shell's menu's
 // and a suggestion list's row, pointed at, focused or chosen, and the same over the
 // field's ground for a quiet button pointed at (M8.17, the owner's call of
 // 2026-10-20). A wash of the accent rather than of the muted ink, so the row

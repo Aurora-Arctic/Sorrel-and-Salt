@@ -134,27 +134,6 @@
   }
 }
 
-// What adds something, Add to Cupboard: the entry page's primary action, in
-// the accent green, and pointed at, focused and chosen the green highlight
-// with its text in the accent's hover shade, which holds 4.5:1 on the tint
-// where the plain accent does not (tests/scss/tokens.test.ts). Not filled
-// solid as the destructive item is (the owner's call, 2026-10-20).
-.menu-button__item--constructive {
-  color: $accent;
-  @include theme-transition(background-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
-
-  &:hover,
-  &:focus-visible,
-  .is-closing &.is-chosen {
-    background-color: $fill-highlight;
-    color: $accent-hover;
-  }
-}
-
 // Shown and reached, but not choosable (`aria-disabled`): a coven that already holds the entry
 // (the owner's call, 2026-10-20). In the muted ink, as a disabled Combobox row's note is, with no
 // pointer and no wash under the pointer; the focus keeps its fill and ring, so the arrows still

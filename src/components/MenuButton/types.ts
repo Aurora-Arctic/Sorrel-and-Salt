@@ -11,12 +11,10 @@ export type MenuButtonItem = {
   destructive?: boolean;
   /**
    * The menu's one primary action, pointed at in the green highlight where
-   * every other plain item takes the grey: "Edit Ingredient". A constructive
-   * item is primary already. The menu draws it first, wherever it is given.
+   * every other plain item takes the grey: "Edit Ingredient". The menu draws
+   * it first, wherever it is given.
    */
   primary?: boolean;
-  /** Drawn in the accent green, for what adds something and is the menu's primary action: "Add to Cupboard". Drawn first, as a primary item is. */
-  constructive?: boolean;
 } & (
   | {
       href: Route;
@@ -51,8 +49,8 @@ export interface MenuButtonProps {
   /** The button's classes: `btn btn--quiet btn--medium`. */
   className: string;
   /**
-   * What the menu offers, in order, the green item (`primary` or `constructive`)
-   * first whatever its place here: the menu draws it first and keeps the rest in
+   * What the menu offers, in order, the green item (`primary`) first
+   * whatever its place here: the menu draws it first and keeps the rest in
    * this order (the owner's call, 2026-10-20).
    */
   items: readonly MenuButtonItem[];

@@ -56,13 +56,13 @@ const fadesAreOff = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * The items as drawn: the green one, marked `primary` or `constructive`, first,
+ * The items as drawn: the green one, marked `primary`, first,
  * and the rest in the caller's order (the owner's call, 2026-10-20). Done here
  * rather than asked of every caller, so no menu can put its green item
  * elsewhere. The keys read the page, so they follow this order too.
  */
 const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
-  const green = (item: MenuButtonItem): boolean => Boolean(item.primary || item.constructive);
+  const green = (item: MenuButtonItem): boolean => Boolean(item.primary);
   return [...items.filter(green), ...items.filter((item) => !green(item))];
 };
 
@@ -71,7 +71,6 @@ const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
     'menu-button__item',
     item.destructive && 'menu-button__item--destructive',
     item.primary && 'menu-button__item--primary',
-    item.constructive && 'menu-button__item--constructive',
     chosen && 'is-chosen',
   ]
     .filter(Boolean)

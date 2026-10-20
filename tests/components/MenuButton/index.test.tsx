@@ -261,7 +261,7 @@ describe('MenuButton placement', () => {
 });
 
 // The green item goes first (the owner's call, 2026-10-20): whatever place a
-// caller gives the item marked `primary` or `constructive`, the menu draws it
+// caller gives the item marked `primary`, the menu draws it
 // first and leaves the rest in the caller's order, and the keys follow what is
 // drawn.
 describe('MenuButton green item first', () => {
@@ -291,17 +291,6 @@ describe('MenuButton green item first', () => {
     expect(last).toHaveFocus();
     fireEvent.keyDown(last!, { key: 'Home' });
     expect(green).toHaveFocus();
-  });
-
-  it('draws a constructive item first too, after a link and an action', () => {
-    draw([
-      { key: 'edit', label: 'Edit Entry', href: '/fixture?edit' as Route },
-      plain('one', 'First Choice'),
-      { key: 'add', label: 'Add to Cupboard', constructive: true, onSelect: vi.fn() },
-    ]);
-    fireEvent.click(toggle());
-
-    expect(names()).toEqual(['Add to Cupboard', 'Edit Entry', 'First Choice']);
   });
 
   it('keeps the order given when no item is green', () => {

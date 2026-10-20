@@ -19,7 +19,6 @@ const ITEMS: MenuButtonItem[] = [
     onClick: (e) => e.preventDefault(),
   },
   { key: 'annotate', label: 'Annotate', onSelect: () => {} },
-  { key: 'add', label: 'Add to Cupboard', constructive: true, onSelect: () => {} },
   { key: 'own', label: 'Make It Ours', onSelect: () => {} },
   { key: 'remove', label: 'Remove', destructive: true, onSelect: () => {} },
 ];
@@ -58,7 +57,7 @@ const Foot = () => (
       minHeight: '90vh',
     }}
   >
-    <MenuButton label="More" className="btn btn--quiet" items={ITEMS.slice(3)} buttonType />
+    <MenuButton label="More" className="btn btn--quiet" items={ITEMS.slice(2)} buttonType />
   </p>
 );
 
