@@ -18,6 +18,7 @@ import { SubstituteSummary } from '../IngredientForm/substitute-summary';
 import { useCompendiumSubstitutes } from '../IngredientForm/suggestions';
 import Notice from '../Notice';
 import type { LinkFormProps, LinkPick } from './types';
+import './link-form.scss';
 
 /** Why a form with no jars, no spells and no pick that has it goes nowhere. */
 const NOTHING_MOVES =

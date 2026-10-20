@@ -101,6 +101,8 @@ When a long name wraps the header's action onto its own line, `space(4)` stands 
 
 `index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` and `retired` badge palettes are new here (`retired` takes `low-stock`'s muted inks until the design review), in `_variables.scss` (`styling.md`, "Badge palettes").
 
+The Link dialog's body has its own stylesheet, `link-form.scss`, which `link-form.tsx` imports itself. The Ingredients list opens the dialog (`?link=<id>`) without loading the entry page's component, and Next.js loads a stylesheet only alongside the module that imports it. While the rules sat in `index.scss`, the list's dialog showed its picks, its form map and its icon buttons unstyled (fixed 2026-10-20).
+
 Running text stops at `$measure`: the description is a `<p>`, which `typography-base` caps, and a `dd` or list item takes `max-width: $measure` itself. A description keeps the line breaks typed into its textarea (`white-space: pre-line`).
 
 ### Layout
