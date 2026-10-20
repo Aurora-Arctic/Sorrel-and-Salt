@@ -58,45 +58,33 @@
   color: $text-muted;
 }
 
-// The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
-// Full Page, the last child of the scrolling body and fixed to the foot of the
-// window, so the text scrolls under it. It runs to the dialog's edges, on the
-// modal's surface so the text passes behind it unseen, with only a hairline
-// along its top; sticky rather than a slot of the Modal's own, as no other modal
-// has a foot. Its place in the flow is the end of the text, so the last line
-// scrolls clear of it by the bar's own top margin. The button is the site's
-// green, the large (full) size, centred in the bar and as wide as its label.
-//
-// The edges are reached by taking the body's own side and bottom padding off and
-// giving the text its side margin instead, not by pulling the bar out over that
-// padding with negative margins and a negative `bottom` (the first version,
-// 632ca318): a box stuck or margined past its scroller's padding is the kind that
-// can overflow it by a pixel in some engines, and a window whose text fits
-// showed a scrollbar. Here nothing is wider or lower than the body's own box.
-.modal-dialog__body:has(> .ingredient-details-foot) {
-  padding-inline: 0;
-  padding-block-end: 0;
-
-  > :not(.ingredient-details-foot) {
-    margin-inline: space(5);
-  }
-}
-
+// The details modal's foot (the owner's call, 2026-10-20): the bar holding View
+// Page, in the Modal's `foot` slot under the body rather than inside it, so the
+// body is the only thing that scrolls and its scrollbar ends above the bar
+// (the owner's report, 2026-10-20: the track ran down past it). It runs to the
+// dialog's edges, on the modal's surface, with a hairline along its top. The
+// button is the site's green, the normal `.btn` size, centred in the bar and
+// two thirds of its width, a fraction of the bar rather than a length so it
+// holds at every window width; the bar takes no side padding, so the third is
+// of the bar itself, and the label stands centred in the button.
 .ingredient-details-foot {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  margin-block-start: space(5);
   display: flex;
   justify-content: center;
-  padding: space(3) space(5);
+  padding: space(3) 0;
   border-top: 1px solid $hairline;
   background: $surface-card;
   @include theme-transition(background-color, border-color);
+
+  > .btn {
+    box-sizing: border-box;
+    width: 66.6%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 // The description and its Show More bar (the owner's calls, 2026-10-20). The
-// clip box round the paragraph is cut to four lines by the script, which sets
+// clip box round the paragraph is cut to six lines by the script, which sets
 // its height in pixels (summary-description.tsx); without the script it has
 // none and the whole text shows. The cut text fades out into the modal's
 // surface, and under it stands the bar: one real button the full width of the

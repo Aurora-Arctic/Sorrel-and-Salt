@@ -23,7 +23,8 @@ import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import { covensHoldingEntry, heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
+import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
+import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
 import { readEditPlace } from '../../(shell)/admin/list-page';
@@ -107,15 +108,6 @@ async function heldEntryIds(workspaceIds: readonly string[], ids: readonly strin
   }
 }
 
-/**
- * The viewer's own covens that hold the open entry, for the details' links (M12.5): none for a
- * visitor. Per viewer, so read here and never inside the cached details read (rule 6).
- */
-async function covensHolding(entryId: string) {
-  const session = await getSession();
-  return session ? covensHoldingEntry(session, entryId) : [];
-}
-
 export default async function CompendiumPage({ searchParams }: PublicCompendiumPageProps) {
   const params = publicParams(await searchParams);
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
@@ -149,7 +141,10 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const hereWith = (edit: string) => compendiumHref(here, { edit }, PUBLIC_COMPENDIUM_PATH);
   const listWith = (edit: string) => compendiumHref(list, { edit }, PUBLIC_COMPENDIUM_PATH);
   const detailed = shown?.entry;
+  // The viewer's own covens that hold the open entry, for the details' links (M12.5) and its plus
+  // (M9.12): the one held read, per request and never inside the cached details read (rule 6).
   const holding = detailed ? await covensHolding(detailed.id) : [];
+  const detailsPlus = detailed ? await plusCovensOf(holding) : undefined;
   // An old address opens the entry at its new one, keeping the search (MB.82).
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
@@ -240,6 +235,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             heading: detailsHeading(detailed),
             marks: detailsMarks(shown),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             ...(canEdit && {
               editAction: {
                 href: hereWith(detailed.slug),

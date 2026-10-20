@@ -68,13 +68,15 @@ const Modal = ({
   destination,
   qualifier,
   qualifierBelow = false,
-  titleEnd,
+  titleBadge,
+  titleActions,
   under,
   onClose,
   returnTo,
   size,
   readingBody = false,
   loading = false,
+  foot,
   children,
 }: ModalProps): ReactElement => {
   const ref = useRef<HTMLDialogElement>(null);
@@ -82,6 +84,7 @@ const Modal = ({
   const eyebrowId = useId();
   const qualifierId = useId();
   const body = useRef<HTMLDivElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
   // The qualifier on its own line, which only a title with something to say after it has.
   const below = qualifierBelow && qualifier != null && qualifier !== false;
   // What held the focus as it opened, taken once, before showModal() moves
@@ -203,6 +206,7 @@ const Modal = ({
     const held = (on: boolean): void => {
       body.current?.toggleAttribute('inert', on);
       slotRef.current?.toggleAttribute('inert', on);
+      footRef.current?.toggleAttribute('inert', on);
     };
     holds.current += 1;
     held(true);
@@ -242,20 +246,12 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
-  // Beside a `titleEnd` the title's first word is set apart: the end drops below the
-  // title only once that word would have to break to fit (index.scss). Spans leave
-  // the heading's text, and so the dialog's name, as it was.
-  const [, first = title, rest = ''] = /^(\S+)(.*)$/s.exec(title) ?? [];
+  // A badge or actions at the title's end share its row, and give way in the order
+  // index.scss sets out. The hidden comma sits at the heading's end, and the spans
+  // beside it are not in the dialog's name.
   const titleHeading = (
     <h2 id={titleId} className="modal-dialog__title">
-      {titleEnd === undefined ? (
-        title
-      ) : (
-        <>
-          <span className="modal-dialog__first-word">{first}</span>
-          {rest}
-        </>
-      )}
+      {title}
       {qualifier && !below && (
         <>
           <span className="spoken-separator">,</span>{' '}
@@ -265,6 +261,7 @@ const Modal = ({
       {below && <span className="spoken-separator">,</span>}
     </h2>
   );
+  const titleEnds = titleBadge !== undefined || titleActions !== undefined;
 
   // The backdrop's click is the pointer's alone; Escape is its keyboard
   // equivalent, handled above.
@@ -308,13 +305,14 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
-          {titleEnd === undefined ? (
-            titleHeading
-          ) : (
+          {titleEnds ? (
             <div className="modal-dialog__title-row">
               {titleHeading}
-              <div className="modal-dialog__title-end">{titleEnd}</div>
+              <div className="modal-dialog__title-badge">{titleBadge}</div>
+              <div className="modal-dialog__title-actions">{titleActions}</div>
             </div>
+          ) : (
+            titleHeading
           )}
           {below && (
             <p id={qualifierId} className="modal-dialog__qualifier modal-dialog__qualifier--below">
@@ -354,6 +352,12 @@ const Modal = ({
           </CloseGuardContext.Provider>
         </div>
         <div ref={setLayerHost} className="modal-dialog__layer" />
+        {/* Under the body, outside what scrolls, so the body's scrollbar stops above it. */}
+        {foot != null && foot !== false && (
+          <div ref={footRef} className="modal-dialog__foot">
+            {foot}
+          </div>
+        )}
       </div>
     </dialog>
   );

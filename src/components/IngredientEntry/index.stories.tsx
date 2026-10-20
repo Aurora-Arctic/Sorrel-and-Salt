@@ -657,7 +657,7 @@ export const DetailsInOneCoven: Story = () => (
 );
 DetailsInOneCoven.meta = { iframed: true };
 
-// A long description, cut to its first four lines, Show More opening the
+// A long description, cut to its first six lines (the owner's call, 2026-10-20), Show More opening the
 // rest in place; the sparse story's short one stands whole with no button.
 export const DetailsLongDescription: Story = () => (
   <Details
@@ -668,6 +668,8 @@ export const DetailsLongDescription: Story = () => (
         description:
           'A low, grey-leaved fixture herb of dry banks and old walls, gathered at midsummer when its small yellow flowers first open.\n' +
           'Its leaves are dried in bundles under the eaves and kept through the winter, and its seed heads are left standing for the birds.\n' +
+          'The old herbals set it among the plants that keep a house, and the village women pressed it between the pages of the family book, where it scented the leaves for a generation.\n' +
+          'A tea of it is taken at the turn of the year, three sips for each of the three roads, and the cup is turned down on the hearth when it is empty.\n' +
           'In the fixture covens it is laid under the threshold stone of a new house, burned with the year’s last fire, and steeped for the wash that clears a room after a quarrel.',
       }),
     }}
@@ -777,8 +779,9 @@ export const DetailsToxic: Story = () => (
 );
 DetailsToxic.meta = { iframed: true };
 
-// The head's two ends with a name that wraps (the owner's calls, 2026-10-20): the safety
-// badge and the Edit pencil end the name's first line, the formal name stands on its
+// The head with a name that wraps (the owner's calls, 2026-10-20): the safety
+// badge and the Edit pencil end the name's last line where they fit, else drop under it
+// (pencil first); the formal name stands on its
 // own line below, and the provenance badges in a row of their own, New first.
 export const DetailsLongName: Story = () => (
   <Details
@@ -824,8 +827,8 @@ export const DetailsNewAndCautioned: Story = () => (
 );
 DetailsNewAndCautioned.meta = { iframed: true };
 
-// One word longer than the line: the badge and the pencil go under it rather than
-// breaking its first word.
+// One word longer than the line: the one case where a word of the name breaks, after the
+// pencil and the badge have both dropped under it (the owner's call, 2026-10-20).
 export const DetailsLongWord: Story = () => (
   <Details
     detail={{

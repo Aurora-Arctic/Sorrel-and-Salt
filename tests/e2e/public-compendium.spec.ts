@@ -19,6 +19,7 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
 const ADD = 'Add to My Ingredients';
+const HELD = 'In My Ingredients';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -183,13 +184,22 @@ test('the foot of a card follows the visitor: a button for an owner or member, n
   );
   expect(count).toBe(1);
 
-  for (const key of ['A', 'B']) {
+  // The plus works (M9.12): a member of one coven adds with a press, and the card shows the
+  // check in its place. The covens' held marks are the coven's own, so B, in the same coven,
+  // finds that card already held when the page is opened.
+  for (const [index, key] of ['A', 'B'].entries()) {
     await signInAgainAs(page, coven.users[key]);
     await page.goto('/compendium');
     const buttons = page.getByRole('button', { name: ADD });
-    await expect(buttons).toHaveCount(PAGE_SIZE);
-    // Disabled until M9.12 builds its dialog.
-    await expect(buttons.first()).toBeDisabled();
+    const held = page.getByRole('img', { name: HELD });
+    await expect(buttons).toHaveCount(PAGE_SIZE - index);
+    await expect(held).toHaveCount(index);
+    await expect(buttons.first()).toBeEnabled();
+    if (index === 0) {
+      await buttons.first().click();
+      await expect(held).toHaveCount(1);
+      await expect(buttons).toHaveCount(PAGE_SIZE - 1);
+    }
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
   }
 

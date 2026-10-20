@@ -20,11 +20,8 @@ import type {
 import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
-import {
-  covensHoldingEntry,
-  ingredientDetailOf,
-  resolveCompendiumSlug,
-} from '@/modules/ingredients';
+import { covensHolding, plusCovensOf } from '@/app/plus-covens';
+import { ingredientDetailOf, resolveCompendiumSlug } from '@/modules/ingredients';
 import { requireCuratorSession } from '../../../../lib/request-session';
 import {
   readCategories,
@@ -108,7 +105,10 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // them, and only while the details are open; none for an entry gone since.
   const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
   // The admin's or curator's own covens that hold it, and only those (M6.6; M12.5).
-  const covens = summary ? await covensHoldingEntry(session, detailed.id) : [];
+  const covens = summary ? await covensHolding(detailed.id) : [];
+  // The plus beside the pencil (M9.12), for the covens the admin or curator is a member of and
+  // may add in: none for one in no coven, so neither the plus nor its check shows.
+  const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const stamps = await editorStamps(
@@ -163,6 +163,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             heading: detailsHeading(detailed),
             marks: summary && detailsMarks(summary),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             editAction: {
               href: compendiumHref(here, { edit: detailed.slug }),

@@ -272,3 +272,100 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await assertNoAccessibilityViolations(page);
   });
 });
+
+// The Quick Look window carries the same plus and check beside its pencil (M9.12; the owner's
+// calls, 2026-10-20): on the public compendium a visitor and a viewer get neither, a member the
+// plus until the coven holds the entry and the check after, and the coven's own list and the
+// admin list follow the same rule.
+test('the Quick Look window has the plus, then the check, for a member only', async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const NAME_LOOK = 'Fixture Lookshelfwort';
+  const coven = await seedCoven(page, 'Fixture Coven Quick Look', 'entry-cupboard-look.test', {
+    A: 'owner',
+    B: 'member',
+    C: 'viewer',
+  });
+  const admin = await browser.newPage({ baseURL });
+  let adminId: string;
+  try {
+    ({ userId: adminId } = await signInAs(
+      admin,
+      'admin@entry-cupboard-look.test',
+      ['discord'],
+      'admin',
+    ));
+    await withSql((sql) =>
+      insertIngredient(
+        sql,
+        makeIngredient({ name: NAME_LOOK, canonicalName: null, nomenclature: 'none' }),
+        adminId,
+      ),
+    );
+    const [{ id, slug }] = await withSql(
+      (sql) => sql<{ id: string; slug: string }[]>`
+        select id, slug from ingredients
+        where name = ${NAME_LOOK} and workspace_id is null and deleted_at is null`,
+    );
+    // The admin list names an entry by slug, the public and coven lists by id.
+    const look = (path: string, by = id) => `${path}${path.includes('?') ? '&' : '?'}entry=${by}`;
+    const publicList = `/compendium?query=${encodeURIComponent(NAME_LOOK)}`;
+    const details = () =>
+      page.getByRole('dialog', { name: `Ingredient, ${NAME_LOOK}`, exact: true });
+    const add = () => details().getByRole('button', { name: ADD });
+    const check = () => details().getByRole('img', { name: HELD });
+    const opened = async (path: string, by = id) => {
+      await page.goto(look(path, by));
+      await expect(details()).toBeVisible();
+      // Why a missing plus is not a window still loading: the pencil or View Page is there.
+      await expect(details().getByRole('link', { name: 'View Page' })).toBeVisible();
+    };
+
+    await test.step('a visitor gets neither', async () => {
+      await page.context().setExtraHTTPHeaders({});
+      await page.context().clearCookies();
+      await opened(publicList);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toBeVisible();
+      await expect(add()).toHaveCount(0);
+      await expect(check()).toHaveCount(0);
+    });
+
+    await test.step('a viewer, who may add nowhere, gets neither', async () => {
+      await signInAgainAs(page, coven.users.C);
+      await opened(publicList);
+      await expect(add()).toHaveCount(0);
+      await expect(check()).toHaveCount(0);
+    });
+
+    await test.step('a site admin in no coven gets neither on the admin list', async () => {
+      await signInAgainAs(page, adminId);
+      await opened(`/admin/compendium?query=${encodeURIComponent(NAME_LOOK)}`, slug);
+      await expect(add()).toHaveCount(0);
+      await expect(check()).toHaveCount(0);
+    });
+
+    await test.step('a member gets the plus, which adds at once and gives way to the check', async () => {
+      await signInAgainAs(page, coven.users.B);
+      await opened(publicList);
+      // Why the plus is the answer: the coven does not hold the entry yet.
+      await expect(check()).toHaveCount(0);
+      await add().click();
+      await expect(
+        page.getByRole('status').filter({ hasText: 'Added to Fixture Coven Quick Look.' }),
+      ).toHaveCount(1);
+      await expect(add()).toHaveCount(0);
+      await expect(check()).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+    });
+
+    await test.step('the coven’s own list shows the check for the held entry, on a reload as well', async () => {
+      await opened(`/coven/${coven.slug}/ingredients?query=${encodeURIComponent(NAME_LOOK)}`);
+      await expect(add()).toHaveCount(0);
+      await expect(check()).toBeVisible();
+    });
+  } finally {
+    await admin.close();
+  }
+});

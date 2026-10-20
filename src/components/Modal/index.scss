@@ -53,7 +53,7 @@ $modal-padding: space(5) * 2;
 // at the width the form's own does.
 .modal-dialog__main {
   display: grid;
-  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  grid-template: minmax(0, 1fr) auto / minmax(0, 1fr);
   min-height: 0;
   margin: 0 calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
   container: modal-main / inline-size;
@@ -79,6 +79,12 @@ $modal-padding: space(5) * 2;
 
     outline-offset: -2px;
   }
+}
+
+// A bar under the body (`foot`): its own row, so it is outside the element that
+// scrolls and the body's scrollbar ends above it. No row at all without one.
+.modal-dialog__foot {
+  grid-area: 2 / 1;
 }
 
 // Where a question is drawn (ConfirmOverlay): no box of its own, so the
@@ -183,36 +189,37 @@ $modal-padding: space(5) * 2;
   overflow-wrap: anywhere;
 }
 
-// A title with something at its end (`titleEnd`: the details window's safety badge and
-// Edit pencil, the owner's call, 2026-10-20) is a row of the title and that end, which
-// wraps. The title takes what the end leaves and wraps before it, and the end drops
-// under the title only when the title's first word would have to break to fit. The
-// card's technique (IngredientCard/index.scss): a flex basis of 0 with `anywhere` lets
-// the title count as no wider than a letter, while the first word, broken only when it
-// overflows (`break-word`) and never by the dictionary (`hyphens: manual`), counts whole.
-// `max-width` lets a first word wider than the dialog still break rather than spill.
+// A title with something at its end (`titleBadge` and `titleActions`: the details
+// window's safety badge and Edit pencil) is a row of the title, the badge and the
+// actions, which wraps. Each is a flex item of its own, so as the line runs out of room
+// the last drops first: the actions to a line of their own, then the badge, and a word of
+// the title breaks only when it alone is wider than the dialog (the owner's call,
+// 2026-10-20, replacing a title that took what its end left and broke words to make
+// room). The title's basis is its whole text, so it never gives up room to them; it grows
+// to fill the line, which keeps the badge and the actions at the line's end beside it,
+// and `max-width` lets a long name wrap, and a word wider than the dialog break, rather
+// than spill. What drops lands at the line's start (`justify-content`), under the
+// left-aligned heading; the owner chose it from shots of both, the end being one line away.
 .modal-dialog__title-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
+  justify-content: flex-start;
   column-gap: space(2);
 }
 
 .modal-dialog__title-row > .modal-dialog__title {
-  flex: 1 1 0;
+  flex: 1 1 auto;
+  min-width: 0;
   max-width: 100%;
 }
 
-.modal-dialog__first-word {
-  overflow-wrap: break-word;
-  hyphens: manual;
-}
-
-// The end, as tall as the larger of its parts, the pencil (the badge is shorter), and
-// centred on the title's first line: half the title's line box less its own height. It
-// shows only beside the title; wrapped beneath it, that much is added to the row gap.
-// Gone while nothing is in it (a badge that draws nothing, no Edit).
-.modal-dialog__title-end {
+// The badge and the actions, each as tall as the pencil (the badge is shorter), and
+// centred on the title's first line: half the title's line box less its own height.
+// That shows only beside the title; wrapped beneath it, that much is added above them.
+// Gone while nothing is in them (a badge that draws nothing, no Edit).
+.modal-dialog__title-badge,
+.modal-dialog__title-actions {
   display: flex;
   flex: 0 0 auto;
   align-items: center;

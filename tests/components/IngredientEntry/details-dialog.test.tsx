@@ -1,6 +1,8 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { Navigating } from '../../support/navigating';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -52,7 +54,7 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
-  it('puts View Page in the scrolling body, after the summary', () => {
+  it('puts View Page after the summary and outside the body that scrolls', () => {
     render(
       <DetailsDialog
         closeHref={LIST}
@@ -62,10 +64,12 @@ describe('DetailsDialog', () => {
 
     const open = within(dialog()).getByRole('link', { name: 'View Page' });
     const summary = within(dialog()).getByText('A summary');
-    // Why it could be elsewhere: the header has a slot for a modal's own controls.
-    // It is in the scroll body, with the summary, and after it.
+    // Why it could be inside: it was the body's last child, held at the foot by position: sticky,
+    // so the body's scrollbar ran down past it. It is the modal's own foot now, under the body.
+    const body = summary.closest('.modal-dialog__body');
+    expect(body).not.toBeNull();
+    expect(body).not.toContainElement(open);
     expect(open.closest('.modal-dialog__header')).toBeNull();
-    expect(summary.parentElement).toContainElement(open);
     expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -258,5 +262,62 @@ describe('DetailsDialog', () => {
       expect(follows(name, edit)).toBe(true);
       expect(edit.closest('.modal-dialog__header')).not.toBeNull();
     });
+  });
+});
+
+// The plus beside the pencil, and the check once every coven the viewer may add in holds the
+// entry (M9.12; the owner's calls, 2026-10-20), as the entry page has them.
+describe('DetailsDialog plus', () => {
+  const ID = '00000000-0000-4000-8000-0000000000aa';
+  const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
+  const TWO = { id: '00000000-0000-4000-8000-000000000002', name: 'Fixture Coven Two' };
+
+  const show = (plus?: { covens: (typeof ONE)[]; heldIn: string[] }) =>
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <Navigating push={router.push}>
+          <RouteModalProvider>
+            <DetailsDialog
+              closeHref={LIST}
+              opened={{
+                heading: detailsHeading(ENTRY),
+                pageHref: PAGE,
+                editAction: { href: EDIT, heading: editHeading(ENTRY) },
+                ...(plus && { plus: { workspaceId: ONE.id, ...plus }, ingredientId: ID }),
+              }}
+            />
+          </RouteModalProvider>
+        </Navigating>
+      </QueryClientProvider>,
+    );
+  const before = (first: Node, second: Node) =>
+    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('puts the plus before the pencil while a coven that may add lacks the entry', () => {
+    show({ covens: [ONE, TWO], heldIn: [ONE.id] });
+
+    const add = within(dialog()).getByRole('button', { name: 'Add to My Ingredients' });
+    const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
+    expect(before(add, edit)).toBe(true);
+    // Why it could be the check: one coven already holds it, but not both.
+    expect(within(dialog()).queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+  });
+
+  it("shows the card's check in the plus's place once every coven that may add holds it", () => {
+    show({ covens: [ONE, TWO], heldIn: [ONE.id, TWO.id] });
+
+    const held = within(dialog()).getByRole('img', { name: 'In My Ingredients' });
+    const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
+    expect(before(held, edit)).toBe(true);
+    expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+  });
+
+  it('shows neither where the page gave no plus, the pencil alone', () => {
+    show();
+
+    // Why neither could show: the page would have given one for a viewer who may add.
+    expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+    expect(within(dialog()).queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
   });
 });

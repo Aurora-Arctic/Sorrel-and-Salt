@@ -29,7 +29,14 @@ const requireCovenMembership = vi.fn();
 vi.mock('@/lib/request-session', () => ({
   requireCovenMembership,
   requireSession: async () => session,
+  getSession: async () => session,
 }));
+
+// Which covens the viewer may add in, for the plus beside the details' pencil (M9.12); the rule
+// itself is tests/app/plus-covens.test.ts's, so by default none, and the details draw no plus.
+const viewerIfSignedIn = vi.fn();
+const covenRolesIfSignedIn = vi.fn();
+vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 
 vi.mock('@/app/compendium-reads', () => ({
   readFormIcons: async () => new Map([['fixture herb', 'botanical']]),
@@ -138,6 +145,8 @@ async function renderPage(search: Record<string, string> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   covensHoldingEntry.mockResolvedValue([]);
+  viewerIfSignedIn.mockResolvedValue(undefined);
+  covenRolesIfSignedIn.mockResolvedValue(undefined);
   requireCovenMembership.mockResolvedValue({
     workspace: COVEN,
     membership: { workspaceId: COVEN.id, userId: 'fixture-user', role: 'member' },
@@ -451,6 +460,44 @@ describe("the coven Ingredients page's details modal", () => {
       '/coven/fixture-coven/ingredients/b2',
     );
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+  });
+
+  it("draws the plus in the details of a held compendium entry while another of the member's covens lacks it, and the check once all hold it", async () => {
+    const other = { id: 'w-other', slug: 'other-coven', name: 'Other Coven' };
+    viewerIfSignedIn.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [COVEN, other].map((c) => ({ ...c, canReadMembers: true, canWrite: true })),
+    });
+    covenRolesIfSignedIn.mockResolvedValue(
+      new Map([
+        [COVEN.id, 'member'],
+        [other.id, 'member'],
+      ]),
+    );
+    covensHoldingEntry.mockResolvedValue([{ id: COVEN.id, slug: COVEN.slug, name: COVEN.name }]);
+    await renderPage({ entry: 'b2' });
+
+    // Why the plus: this coven holds the entry, the other may add and does not.
+    expect(
+      within(details('House Salt')!).getByRole('button', { name: 'Add to My Ingredients' }),
+    ).toBeInTheDocument();
+    expect(
+      within(details('House Salt')!).queryByRole('img', { name: 'In My Ingredients' }),
+    ).toBeNull();
+
+    cleanup();
+    covensHoldingEntry.mockResolvedValue([
+      { id: COVEN.id, slug: COVEN.slug, name: COVEN.name },
+      other,
+    ]);
+    await renderPage({ entry: 'b2' });
+
+    expect(
+      within(details('House Salt')!).getByRole('img', { name: 'In My Ingredients' }),
+    ).toBeInTheDocument();
+    expect(
+      within(details('House Salt')!).queryByRole('button', { name: 'Add to My Ingredients' }),
+    ).toBeNull();
   });
 
   it("lists the member's own covens that hold a held compendium entry in the details, read as the member", async () => {

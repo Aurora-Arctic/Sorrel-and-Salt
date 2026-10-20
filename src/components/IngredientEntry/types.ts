@@ -262,6 +262,16 @@ export interface IngredientDetailsOpened {
    * a compendium entry it holds). None for anyone else.
    */
   editAction?: RouteModalLink;
+  /**
+   * The plus beside the pencil, for a live compendium entry (M9.12; the owner's call, 2026-10-20):
+   * every coven the viewer may add in and which hold it, read per request by `plusCovensOf`
+   * (src/app/plus-covens.ts). The check stands in its place once every one holds the entry. Left
+   * out (a coven's own entry, a retired one, a viewer in no coven that may add, a visitor),
+   * neither is drawn. Needs `ingredientId`.
+   */
+  plus?: CupboardPlus;
+  /** The compendium entry's id, which the plus adds. */
+  ingredientId?: string;
   /** The summary, drawn by the server page from the entry page's own sections. */
   children?: ReactNode;
 }

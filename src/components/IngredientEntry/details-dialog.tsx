@@ -8,6 +8,7 @@ import EntryMarks from '../EntryMarks';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import { SafetyMark } from '../SafetyNote';
+import PlusMark from './plus-mark';
 import { DETAILS_PLACE } from './details';
 import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './types';
 
@@ -16,39 +17,48 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // the list's other place, over it. A client part because RouteModal takes its
 // body as a function, which a server page cannot hand down; the summary
 // arrives as the page's rendered children. Its safety badge and Edit pencil end the
-// name's first line, through the modal's `titleEnd` (claude-docs/components/modal.md,
+// name's first line, through the modal's `titleBadge` and `titleActions` (claude-docs/components/modal.md,
 // "A title with its own end"), and View Page is a bar at its foot.
 
 /**
- * The head's two ends (the owner's calls, 2026-10-20). Beside the name, at the end of its
+ * The head's badge and actions (the owner's calls, 2026-10-20). Beside the name, at the end of its
  * first line: the one safety badge, Toxic over Caution, and after it the Edit pencil, the
  * cards' with its tip, named for the entry, a press opening the edit modal at once under
- * its head (M9.18). Under the formal name: New or Updated and then the other badges. All
+ * its head (M9.18); left of it the plus, or the check once every coven the viewer may add in holds the entry. Under the formal name: New or Updated and then the other badges. All
  * the entry page's and the card's own components, so the three cannot differ.
  */
-function headingOf({ heading, marks, editAction }: IngredientDetailsOpened): ModalHeading {
+function headingOf({
+  heading,
+  marks,
+  editAction,
+  plus,
+  ingredientId,
+}: IngredientDetailsOpened): ModalHeading {
   const safety = marks && (
     <SafetyMark toxic={marks.toxic} safetyNotes={marks.safetyNotes} variants={marks.variants} />
   );
   const edit = editAction && <EditLink {...editAction} name={heading.title} />;
+  // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
+  // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
+  const add = plus && ingredientId && <PlusMark plus={plus} ingredientId={ingredientId} />;
+  const actions = (add || edit) && (
+    <>
+      {add}
+      {edit}
+    </>
+  );
   return {
     ...heading,
-    ...((safety || edit) && {
-      titleEnd: (
-        <>
-          {safety}
-          {edit}
-        </>
-      ),
-    }),
+    ...(safety && { titleBadge: safety }),
+    ...(actions && { titleActions: actions }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} /> }),
   };
 }
 
 /**
- * View Page: a bar fixed to the foot of the modal while the body scrolls
- * under it (the owner's call, 2026-10-20), holding the one green button, large
- * (the site's full-size `.btn`) and centred. Still a link, to the entry's page,
+ * View Page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body
+ * (the owner's calls, 2026-10-20), holding the one green button, the
+ * site's normal `.btn` size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
 function ViewPageBar({ pageHref }: IngredientDetailsOpened): ReactElement {
@@ -77,12 +87,8 @@ export default function DetailsDialog({
       content={
         opened && {
           heading: headingOf(opened),
-          body: () => (
-            <>
-              {opened.children}
-              <ViewPageBar {...opened} />
-            </>
-          ),
+          body: () => opened.children,
+          foot: <ViewPageBar {...opened} />,
         }
       }
     />
