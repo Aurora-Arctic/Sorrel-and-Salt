@@ -46,7 +46,7 @@ interface IngredientFormCallbacks {
    * asking (which a confirmation of the aside's steps aside for, both being
    * drawn in one place), and a way to ask Delete's own confirmation.
    */
-  aside?: (form: {
+  aside?: (state: {
     dirty: boolean;
     discardAsking: boolean;
     requestDelete: () => void;

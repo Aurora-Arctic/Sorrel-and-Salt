@@ -78,7 +78,9 @@ export default function EntryDialog({
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
                 // Only a compendium entry has a page by its slug.
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
-                aside={(form) => <EditMore name={entry.name} linkHref={coven.linkHref} {...form} />}
+                aside={(state) => (
+                  <EditMore name={entry.name} linkHref={coven.linkHref} {...state} />
+                )}
               />
             ) : (
               <IngredientForm
