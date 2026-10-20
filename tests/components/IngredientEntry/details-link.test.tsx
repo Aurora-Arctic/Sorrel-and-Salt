@@ -20,7 +20,7 @@ const DETAILS: Route = '/admin/compendium?entry=testwort';
 const heading = detailsHeading({
   name: 'Testwort',
   canonicalName: 'Fixtura testalis',
-  nomenclature: 'binomial',
+  nomenclature: 'botanical',
 });
 
 const link = () => screen.getByRole('link', { name: 'Quick Look Testwort, Fixtura testalis' });
@@ -59,9 +59,7 @@ describe('DetailsLink', () => {
     expect(router.push).toHaveBeenCalledWith(DETAILS);
     // One dialog: the press shows in the details place, not the edit modal's too.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(
-      screen.getByRole('dialog', { name: 'Ingredient, Testwort, Fixtura testalis' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Testwort' })).toBeInTheDocument();
   });
 
   it('leaves a press with a modifier to the browser', () => {

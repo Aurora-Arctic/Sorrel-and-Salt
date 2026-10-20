@@ -122,4 +122,33 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height).toBeLessThanOrEqual(844);
   }
+
+  // The same ⓘ in the Quick Look window, which scrolls under a clipped dialog: the tip must
+  // stay inside the viewport there too, below the ⓘ on a phone and beside it on a wide screen
+  // (the owner's call, 2026-10-20).
+  for (const [width, height] of [
+    [390, 844],
+    [1280, 800],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto(`/compendium?entry=${ingredientId}`);
+    const dialog = page.getByRole('dialog', { name: 'Fixture Tipwort' });
+    await expect(dialog).toBeVisible();
+    const button = dialog.getByRole('button', { name: 'About Botanical Name' });
+    // Why the check could fail: the window draws the formal name's ⓘ.
+    await expect(button).toBeVisible();
+    await button.focus();
+    const tip = page.getByRole('tooltip').filter({ hasText: 'Its botanical name' });
+    await expect(tip).toBeVisible();
+    await page.waitForTimeout(300);
+    const box = await tip.boundingBox();
+    if (!box) throw new Error(`The Quick Look tip at ${width}px has no box`);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(height);
+    // Escape closes the tip, not the window.
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeVisible();
+  }
 });

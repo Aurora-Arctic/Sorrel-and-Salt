@@ -67,7 +67,7 @@ const Modal = ({
   eyebrow,
   destination,
   qualifier,
-  qualifierBelow = false,
+  formalName,
   titleBadge,
   titleActions,
   under,
@@ -82,11 +82,8 @@ const Modal = ({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const eyebrowId = useId();
-  const qualifierId = useId();
   const body = useRef<HTMLDivElement>(null);
   const footRef = useRef<HTMLDivElement>(null);
-  // The qualifier on its own line, which only a title with something to say after it has.
-  const below = qualifierBelow && qualifier != null && qualifier !== false;
   // What held the focus as it opened, taken once, before showModal() moves
   // it: the focus goes back there as it closes (APG, "Dialog (Modal)"). The
   // modal does it, rather than each owner, because the owner closes it by
@@ -252,13 +249,12 @@ const Modal = ({
   const titleHeading = (
     <h2 id={titleId} className="modal-dialog__title">
       {title}
-      {qualifier && !below && (
+      {qualifier && (
         <>
           <span className="spoken-separator">,</span>{' '}
           <span className="modal-dialog__qualifier">{qualifier}</span>
         </>
       )}
-      {below && <span className="spoken-separator">,</span>}
     </h2>
   );
   const titleEnds = titleBadge !== undefined || titleActions !== undefined;
@@ -276,11 +272,13 @@ const Modal = ({
       tabIndex={-1}
       // Named by the eyebrow and the heading together, "Edit Ingredient,
       // Mugwort", or by the heading then where it lands, "Add Ingredient to
-      // Whitethorn Coven".
-      aria-labelledby={[
-        ...(eyebrow ? [eyebrowId, titleId] : destination ? [titleId, eyebrowId] : [titleId]),
-        ...(below ? [qualifierId] : []),
-      ].join(' ')}
+      // Whitethorn Coven"; by the heading alone with a formal name over it.
+      aria-labelledby={(eyebrow
+        ? [eyebrowId, titleId]
+        : destination
+          ? [titleId, eyebrowId]
+          : [titleId]
+      ).join(' ')}
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -305,6 +303,7 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
+          {formalName}
           {titleEnds ? (
             <div className="modal-dialog__title-row">
               {titleHeading}
@@ -313,11 +312,6 @@ const Modal = ({
             </div>
           ) : (
             titleHeading
-          )}
-          {below && (
-            <p id={qualifierId} className="modal-dialog__qualifier modal-dialog__qualifier--below">
-              {qualifier}
-            </p>
           )}
           {under !== undefined && <div className="modal-dialog__under">{under}</div>}
         </div>

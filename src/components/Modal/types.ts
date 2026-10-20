@@ -33,11 +33,12 @@ export interface ModalHeading {
    */
   qualifier?: ReactNode;
   /**
-   * Draws the qualifier on a line of its own below the title instead of after
-   * it (the owner's call, 2026-10-20: the Quick Look's formal name). It is still
-   * in the dialog's accessible name, after the title.
+   * The entry's formal name over the title, in the eyebrow's place (the owner's call,
+   * 2026-10-20): the entry page's own (`FormalName`), with its tip and its states, built by
+   * the caller. Never with an eyebrow, and not in the dialog's name, which is the title's
+   * alone: the name is read in the body, first, with its term.
    */
-  qualifierBelow?: boolean;
+  formalName?: ReactNode;
   /**
    * Beside the title, at the end of its first line, centred on that line: a badge.
    * As the line runs out of room the actions drop first, then this, and a word of

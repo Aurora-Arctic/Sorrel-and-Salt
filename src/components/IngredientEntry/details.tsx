@@ -1,8 +1,8 @@
-import { editHeading } from '../CompendiumList/heading';
 import { entryRecency } from '@/lib/entry-recency';
-import type { IngredientDetail } from '@/modules/ingredients';
+import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import type { ModalHeading } from '../Modal/types';
+import FormalName from './formal-name';
 import type { DetailsMarks } from './types';
 
 // The details modal an ingredient's name opens over a list (M12.5): the
@@ -16,16 +16,16 @@ import type { DetailsMarks } from './types';
  */
 export const DETAILS_PLACE = 'details';
 
-/** The small line over the details modal's title. */
-export const DETAILS_EYEBROW = 'Ingredient';
-
 /**
- * The details modal's head: the entry's name, and its formal name on a line of its
- * own below it (the owner's call, 2026-10-20), as the list names it.
+ * The details modal's head: the entry's name, and over it the formal name the entry page draws
+ * over its own heading, with its tip and its states (the owner's call, 2026-10-20). There is no
+ * eyebrow: the formal name takes its place, so the dialog is named by the entry's name alone.
  */
-export const detailsHeading = (entry: Parameters<typeof editHeading>[0]): ModalHeading => ({
-  ...editHeading(entry, DETAILS_EYEBROW),
-  qualifierBelow: true,
+export const detailsHeading = (
+  entry: Pick<IngredientRow, 'name' | 'canonicalName' | 'nomenclature'>,
+): ModalHeading => ({
+  title: entry.name,
+  formalName: <FormalName entry={entry} />,
 });
 
 /**

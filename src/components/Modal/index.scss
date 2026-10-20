@@ -232,11 +232,6 @@ $modal-padding: space(5) * 2;
   }
 }
 
-// The qualifier on its own line below the title (`qualifierBelow`).
-.modal-dialog__qualifier--below {
-  margin: 0;
-}
-
 // The badges under the heading (`under`): a row, wrapping, hidden while it holds none.
 .modal-dialog__under {
   display: flex;

@@ -297,34 +297,6 @@ $formal-line: 1.5rem;
   }
 }
 
-// The formal name over the heading as an eyebrow, its tip beside it; the
-// term ("Botanical Name") is read, not seen (the owner's call).
-.ingredient-entry__formal {
-  // The side its tip opens, read by `useTip` as it opens (`--tip-placement`):
-  // below the mark rather than above it, where the shell's sticky bar would
-  // cover it at the top of the page; it covers the heading while open. The
-  // hook places it, so nothing here moves the bubble itself: a rule that did
-  // would shift it off the hook's 4px gap.
-  --tip-placement: bottom-start;
-
-  dt {
-    @include visually-hidden;
-  }
-
-  dd {
-    display: flex;
-    gap: space(1);
-    align-items: center;
-  }
-
-  // Beside the mark where there is room, so it covers nothing, level with its
-  // middle. A phone keeps it below, where 18rem to the right of the mark would
-  // run off the screen.
-  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-    --tip-placement: right;
-  }
-}
-
 // A section: its heading, its text (description and caution), then its side
 // column (the correspondences and lists), one under the other on a phone.
 .ingredient-entry__section {
@@ -385,9 +357,8 @@ $formal-line: 1.5rem;
   align-items: center;
 }
 
-// The formal name and each correspondence: the term above its value, so a
-// long list of colours wraps under its label rather than beside it.
-.ingredient-entry__formal,
+// Each correspondence: the term above its value, so a long list of colours wraps under its
+// label rather than beside it (the formal name's are in formal-name.scss).
 .ingredient-entry__correspondences {
   @include stack(2);
 
@@ -520,13 +491,6 @@ $formal-line: 1.5rem;
 .ingredient-entry__chips {
   flex-flow: row wrap;
   gap: space(2);
-}
-
-// Said where a field holds nothing, in the muted ink, so it reads as a
-// statement and not as a value.
-.ingredient-entry__empty {
-  margin: 0;
-  color: $text-muted;
 }
 
 // A short hairline under "In the Compendium", for a coven's own entry and for a

@@ -21,8 +21,12 @@ const { editHeading } = await import('@/components/CompendiumList/heading');
 const LIST: Route = '/admin/compendium';
 const PAGE = '/compendium/ingredients/testwort' as Route;
 const EDIT: Route = '/admin/compendium?entry=testwort&edit=testwort';
-const ENTRY = { name: 'Testwort', canonicalName: 'Fixtura testalis', nomenclature: 'binomial' };
-const DETAILS_NAME = 'Ingredient, Testwort, Fixtura testalis';
+const ENTRY = {
+  name: 'Testwort',
+  canonicalName: 'Fixtura testalis',
+  nomenclature: 'botanical' as const,
+};
+const DETAILS_NAME = 'Testwort';
 
 const dialog = () => screen.getByRole('dialog', { name: DETAILS_NAME });
 
@@ -53,6 +57,37 @@ describe('DetailsDialog', () => {
     // Only to read, with its links in the header: the body takes its own Tab stop.
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
+
+  it.each([
+    [{ canonicalName: null, nomenclature: 'none' as const }, 'None', 'Formal Name'],
+    [
+      { canonicalName: null, nomenclature: 'botanical' as const },
+      'Not yet looked up',
+      'Botanical Name',
+    ],
+    [
+      { canonicalName: 'Testium', nomenclature: 'unknown' as const },
+      '(unconfirmed)',
+      'Formal Name',
+    ],
+  ])(
+    "draws the page's formal name over the title with its states, and its tip (%j)",
+    (formal, said, label) => {
+      render(
+        <DetailsDialog
+          closeHref={LIST}
+          opened={{ heading: detailsHeading({ name: 'Testwort', ...formal }), pageHref: PAGE }}
+        />,
+      );
+
+      const dlg = screen.getByRole('dialog', { name: 'Testwort' });
+      expect(within(dlg).getByText(said, { exact: false })).toBeInTheDocument();
+      // A tip says what the name is, the term being read by a screen reader only.
+      expect(within(dlg).getByRole('button', { name: `About ${label}` })).toBeInTheDocument();
+      // No kicker: the title is the dialog's first heading, and nothing says "Ingredient".
+      expect(within(dlg).queryByText('Ingredient')).not.toBeInTheDocument();
+    },
+  );
 
   it('puts View Page after the summary and outside the body that scrolls', () => {
     render(
@@ -127,7 +162,8 @@ describe('DetailsDialog', () => {
     expect(edit).toHaveAttribute('href', EDIT);
     fireEvent.mouseEnter(edit);
     // After the 300ms a hover waits for (IconTip).
-    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    // The formal name's tip stands in the dialog too, so the pencil's is found by its words.
+    expect(await screen.findByText('Edit', { selector: '[role="tooltip"]' })).toBeInTheDocument();
     fireEvent.mouseLeave(edit);
 
     await act(async () => {
@@ -209,15 +245,15 @@ describe('DetailsDialog', () => {
       expect(within(dialog()).getByRole('button', { name: 'Retired' })).toBeInTheDocument();
     });
 
-    it('puts the formal name after the name, and New before the badges', () => {
+    it('puts the formal name over the name, and New before the badges', () => {
       show({ kind: 'own', recency: 'new' });
 
-      const name = within(dialog()).getByRole('heading', { name: /^Testwort/ });
+      const name = within(dialog()).getByRole('heading', { name: 'Testwort' });
       const formal = within(dialog()).getByText('Fixtura testalis');
-      expect(follows(name, formal)).toBe(true);
+      expect(follows(formal, name)).toBe(true);
       // Not inside the heading, so the heading stays the entry name alone.
       expect(name).not.toContainElement(formal);
-      expect(follows(formal, within(dialog()).getByText('New'))).toBe(true);
+      expect(follows(name, within(dialog()).getByText('New'))).toBe(true);
       expect(follows(within(dialog()).getByText('New'), within(dialog()).getByText('Local'))).toBe(
         true,
       );
@@ -245,7 +281,7 @@ describe('DetailsDialog', () => {
                 heading: detailsHeading({
                   name: 'Testwort',
                   canonicalName: null,
-                  nomenclature: 'none',
+                  nomenclature: 'none' as const,
                 }),
                 pageHref: PAGE,
                 marks: marks(),
@@ -256,7 +292,7 @@ describe('DetailsDialog', () => {
         </Navigating>,
       );
 
-      const dlg = screen.getByRole('dialog', { name: 'Ingredient, Testwort' });
+      const dlg = screen.getByRole('dialog', { name: 'Testwort' });
       const name = within(dlg).getByRole('heading', { name: /^Testwort/ });
       const edit = within(dlg).getByRole('link', { name: 'Edit Testwort' });
       expect(follows(name, edit)).toBe(true);

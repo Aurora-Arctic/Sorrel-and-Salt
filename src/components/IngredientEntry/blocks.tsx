@@ -2,6 +2,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
+// Holds `.ingredient-entry__empty`, which these blocks say "None recorded" in.
+import './formal-name.scss';
 
 // The entry page's blocks, which its Details section, its form sections and
 // the details modal's summary (M12.5) all draw: a headed list, the

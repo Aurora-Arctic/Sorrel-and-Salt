@@ -26,20 +26,20 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop                                                    | What it is                                                                                                                              |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`                                                 | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
-| `eyebrow`                                               | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
-| `destination`                                           | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
-| `qualifier`                                             | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
-| `qualifierBelow`, `titleBadge`, `titleActions`, `under` | The quick-look head's three extras ("A title with its own end"); absent on every other dialog                                           |
-| `onClose`                                               | Asked for by the Close button, Escape and a click outside                                                                               |
-| `size`                                                  | `'wide'` for a long form; absent, the default width                                                                                     |
-| `readingBody`                                           | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
-| `loading`                                               | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
-| `children`                                              | The body: a form, a confirmation, whatever the owner puts here                                                                          |
-| `foot`                                                  | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                         |
-| `returnTo`                                              | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
+| Prop                                                | What it is                                                                                                                              |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                                             | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
+| `eyebrow`                                           | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
+| `destination`                                       | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
+| `qualifier`                                         | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
+| `formalName`, `titleBadge`, `titleActions`, `under` | The quick-look head's extras ("A title with its own end"); absent on every other dialog                                                 |
+| `onClose`                                           | Asked for by the Close button, Escape and a click outside                                                                               |
+| `size`                                              | `'wide'` for a long form; absent, the default width                                                                                     |
+| `readingBody`                                       | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
+| `loading`                                           | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
+| `children`                                          | The body: a form, a confirmation, whatever the owner puts here                                                                          |
+| `foot`                                              | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                         |
+| `returnTo`                                          | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
 
 ## Contracts
 
@@ -411,10 +411,15 @@ Four optional `ModalHeading` fields shape a head the quick look (M12.5) uses, an
 the details window passes them; every other dialog is drawn as before (the owner's calls,
 2026-10-20).
 
-- **`qualifierBelow`** puts the qualifier on a line of its own under the title, where
-  it would follow it. The h2's own name is then just the title, with the spoken comma
-  at its end, and the qualifier is a separate `<p>` that `aria-labelledby` still lists,
-  so the dialog is still named "Ingredient, Testwort, Fixtura testalis".
+- **`formalName`** is the entry's formal name over the title, in the eyebrow's place and
+  never with one: the entry page's own `FormalName` (`IngredientEntry/formal-name.tsx`),
+  with its ⓘ tip and its states (None, Not yet looked up, unconfirmed), built by the caller
+  (`detailsHeading`). Its term ("Botanical Name") is read, not seen, as on the page. The
+  dialog is named by the title alone, "Testwort", with the formal name read first in the
+  body; it replaces `qualifierBelow` and the "Ingredient" kicker (the owner's call,
+  2026-10-20). Its tip opens to the right of the ⓘ from tablet width up and below it on a
+  phone, as on the page, and a test in `tests/e2e/tip-placement.spec.ts` holds it inside
+  the viewport within the scrolling dialog.
 - **`titleBadge`** and **`titleActions`** are nodes that follow the title: the details
   window's safety badge, and its Edit pencil (with the plus beside it where a coven can
   add the entry). The title, the badge and the actions are three flat items of one
