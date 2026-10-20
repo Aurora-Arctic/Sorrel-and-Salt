@@ -2087,10 +2087,12 @@
     }
   }
 
-  // Right-aligned buttons beneath the jar lines.
+  // Right-aligned buttons beneath the jar lines, each centred on the row: stretched,
+  // a control whose box is fixed would sit at the top of a row a taller item grew.
   .specimen__actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
     gap: space(2);
     margin-top: space(3);

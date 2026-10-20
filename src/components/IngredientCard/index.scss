@@ -164,8 +164,14 @@
 }
 
 // The foot's start (M12.5): the coven's Quick Look eye at the bottom left, the
-// other actions kept at the right by the auto margin.
+// other actions kept at the right by the auto margin. A flex row, not inline: as
+// a line box its text's line height and `vertical-align: middle` set the eye
+// on the baseline rather than the row's centre, and could grow the row past the
+// 2rem controls, which then sat above the eye.
 .ingredient-card .specimen__actions-start {
+  display: flex;
+  align-items: center;
+  gap: space(2);
   margin-inline-end: auto;
 }
 
