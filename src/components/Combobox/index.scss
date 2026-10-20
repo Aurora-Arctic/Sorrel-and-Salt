@@ -616,7 +616,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: inherit;
 
     &:focus-visible {
-      outline-color: currentcolor;
+      outline-color: color-mix(in srgb, currentcolor $focus-ring-strength, transparent);
     }
   }
 }
@@ -649,7 +649,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The ring sits on a coloured chip's fill, where only the inverted ink is
   // checked; `:where` keeps the held chip's rule above it.
   :where(.is-coloured) &:focus-visible {
-    outline-color: currentcolor;
+    outline-color: color-mix(in srgb, currentcolor $focus-ring-strength, transparent);
   }
 
   // Held, the chip's accent edge marks it, so the ring around the text
@@ -722,7 +722,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     }
 
     &:focus-visible {
-      outline-color: currentcolor;
+      outline-color: color-mix(in srgb, currentcolor $focus-ring-strength, transparent);
     }
   }
 

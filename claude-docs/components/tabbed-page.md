@@ -176,7 +176,10 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   rides on an experimental flag and animates whole-page snapshots, and a
   tab press should move one pill.
 - **Keyboard focus** is the accent ring, drawn 2px inside the pill rather
-  than round it, where the track would clip it.
+  than round it, where the track would clip it: at the shared ring's 66.6%
+  in the dark theme, and at full strength in the light, where any fade takes
+  it under 3:1 on the track and the open pill (2.75 even at 75%;
+  [`styling.md`](../styling.md), "The focus ring").
 - **Pressed**, for as long as a pointer is down on a pill, the pill's fill
   comes under its label at once and the pill sinks a pixel, so a press
   answers before the pill slides over. A tap marks it too, through

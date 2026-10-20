@@ -470,26 +470,88 @@ held to a floor, which is all but the rows marked "before MB.116" and the
 hover fills on the page, reading the colours from `$brand-palettes` and the
 theme tokens, in one assertion per theme:
 
-| Pair                                                  | Dark page `$soot`                                             | Light page `$parchment` |
-| ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
-| Google edge `#dadce0` (before MB.116)                 | 13.62                                                         | **1.13, fails**         |
-| Google edge `#747775` (Google's current light button) | 4.13                                                          | 3.74                    |
-| Microsoft edge `#8c8c8c` (before MB.116)              | 5.56                                                          | **2.78, fails**         |
-| Microsoft edge `#808080`                              | 4.74                                                          | 3.26                    |
-| Discord / Facebook fill on the page                   | 4.06 / 3.88                                                   | 3.80 / 3.98             |
-| Discord / Facebook hover fill on the page             | 2.91 / 2.85                                                   | 5.30 / 5.43             |
-| Inks on fills (both themes)                           | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
-| Inks on hover fills (both themes)                     | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
-| Focus ring `$text-primary` on the page                | 14.77                                                         | 13.41                   |
-| Muted text `$text-muted` / `--accent` on the page     | 9.67 / 7.97                                                   | 5.99 / 4.65             |
+| Pair                                                    | Dark page `$soot`                                             | Light page `$parchment` |
+| ------------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
+| Google edge `#dadce0` (before MB.116)                   | 13.62                                                         | **1.13, fails**         |
+| Google edge `#747775` (Google's current light button)   | 4.13                                                          | 3.74                    |
+| Microsoft edge `#8c8c8c` (before MB.116)                | 5.56                                                          | **2.78, fails**         |
+| Microsoft edge `#808080`                                | 4.74                                                          | 3.26                    |
+| Discord / Facebook fill on the page                     | 4.06 / 3.88                                                   | 3.80 / 3.98             |
+| Discord / Facebook hover fill on the page               | 2.91 / 2.85                                                   | 5.30 / 5.43             |
+| Inks on fills (both themes)                             | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
+| Inks on hover fills (both themes)                       | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
+| Focus ring, the body ink at 66.6% (M12.45), on the page | 7.00                                                          | 4.94                    |
+| Muted text `$text-muted` / `--accent` on the page       | 9.67 / 7.97                                                   | 5.99 / 4.65             |
 
 **Hover is not held to 3:1.** WCAG 1.4.11 covers what identifies a control
 and its states, and a hover ground is neither: the button is already known
 by its resting fill, and keyboard focus is shown by the focus ring, which
-clears 13:1 in both themes. So Discord's and Facebook's darker hover grounds
+clears 3:1 on every ground it is drawn on in both themes ("The focus ring", below). So Discord's and Facebook's darker hover grounds
 may sit under 3:1 on the dark page. Microsoft keeps its white face in both
 themes, with the darker `#808080` edge that clears 3:1 on the light page: the
 owner's call at MB.116's sign-off, over Microsoft's own dark button.
+
+## The focus ring
+
+Keyboard focus is a 2px outline drawn 2px outside the element by the
+`focus-ring($color, $strength)` mixin in `_mixins.scss`. Its colour is mixed
+towards transparent, `color-mix(in srgb, <colour> <strength>, transparent)`,
+so the ring softens over whatever ground it crosses rather than standing at
+the body ink's full 14:1, which read as harsh. The strength is
+`$focus-ring-strength` in `_variables.scss`, 66.6% in both themes: the
+owner compared 100%, 70%, 66.6%, 55% and 40% in both themes and chose 66.6%
+(M12.45, 2026-10-20). The rings that set their own colour use the same
+number, so Combobox's rings on a coloured chip fade the chip's own ink
+(`currentcolor`) by it too.
+
+Two rings keep another strength:
+
+- **A link's ring** (`_typography.scss`) is the accent, at
+  `$focus-ring-link-strength`, which each theme sets as
+  `--focus-ring-link-strength`: the shared 66.6% in dark, and
+  `$focus-ring-link-strength-light`, 75%, in light. The light accent starts
+  at only 4.65:1 on the page, and 66.6% takes it to 2.61, under the 3:1 floor;
+  75% is the least that clears it, at 3.01 (the owner's call, 2026-10-20).
+  The page row passing by 0.01 is intended: it is the guard on the number.
+- **The tab row's ring** (`TabbedPage/index.scss`) is the accent, drawn
+  inside the pill, at `$focus-ring-tab-strength`, which each theme sets as
+  `--focus-ring-tab-strength`: the shared 66.6% in dark, and
+  `$focus-ring-tab-strength-light`, full strength, in light. On the light
+  track and the open pill the accent starts at only 4.05:1, so 66.6% takes it
+  to 2.42 and even 75% leaves it at 2.75 (the owner's call, 2026-10-20).
+
+The skip link's and the theme toggle's rings are the page's own colour round
+an accent fill, so it is the fill they are told from; faded, the ring sits
+closer to the ground behind it, and the fill is unchanged.
+
+A ring marks a control's state, so it is held to 3:1 (WCAG 1.4.11), laid
+over each ground it is drawn on. `tests/scss/tokens.test.ts` reads every
+strength from the compiled CSS and checks every row below; it fails with
+the shared strength at 40%, with the light link at 66.6%, and with the light
+tab at 75%.
+
+| Ring on                                 | Dark | Light |
+| --------------------------------------- | ---- | ----- |
+| The body-ink ring on the page           | 7.00 | 4.94  |
+| … on a card                             | 6.61 | 5.18  |
+| … on a card pointed at                  | 6.23 | 5.26  |
+| … on the ingredient card's drawer, slot | 7.15 | 3.88  |
+| … on the drawer's side                  | 4.30 | 4.17  |
+| … on the drawer's back                  | 6.87 | 3.41  |
+| A link's accent ring on the page        | 4.14 | 3.01  |
+| … on a card                             | 3.97 | 3.22  |
+| … on a card pointed at                  | 3.72 | 3.31  |
+| A tab's accent ring on the open pill    | 3.18 | 4.05  |
+| … on the track over the page            | 3.77 | 4.05  |
+| … on the track over a card              | 3.49 | 4.49  |
+
+**Not covered: a ring on a coloured chip.** Combobox's ring on a category
+chip is the chip's ink faded over the chip's wash. For the seeded group
+colours it clears 3.53 to 3.91 in dark and 3.17 to 3.31 in light (lowest:
+`#606c2f`, light). The write-time check on a group's colours
+(`src/lib/contrast.ts`) holds the colour itself at 4.5:1 against its theme's
+harder surface, not this faded mix, so a colour an admin adds could put the
+ring under 3:1. Noted, not fixed.
 
 ## Type
 
