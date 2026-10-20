@@ -1,13 +1,25 @@
 'use client';
 
-import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import {
+  Fragment,
+  type KeyboardEvent,
+  type ReactElement,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
+import type { MenuSection } from '../MenuButton/types';
 import type { AddDestination } from './types';
 
 // The chevron beside Add Ingredient and the menu of places it can go. The repo
 // had no ARIA menu to reuse (AccountMenu is a disclosure on purpose), so this
 // is the small one the APG menu-button pattern asks for: the focus moves to
 // the first item on opening, the arrows, Home and End rove, Escape closes and
-// hands the focus back to the chevron, and a press outside closes.
+// hands the focus back to the chevron, and a press outside closes. Where the
+// viewer may add to both the compendium and a coven, the places are drawn in
+// two labelled groups, the side they are on first, as the MenuButton's are
+// (the owner's call, 2026-10-20); one kind of place is a plain list.
 // claude-docs/components/app-shell.md, "Add Ingredient".
 
 const Chevron = (): ReactElement => (
@@ -31,11 +43,12 @@ const Chevron = (): ReactElement => (
 );
 
 export default function AddIngredientMenu({
-  destinations,
+  sections,
   className,
   onChoose,
 }: {
-  destinations: readonly AddDestination[];
+  /** The places in the order to draw them: two or more groups, or one, which is drawn flat. */
+  sections: readonly MenuSection<AddDestination>[];
   className: string;
   onChoose: (destination: AddDestination) => void;
 }): ReactElement {
@@ -43,6 +56,7 @@ export default function AddIngredientMenu({
   const root = useRef<HTMLSpanElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
   const menuId = useId();
+  const headingId = useId();
 
   const items = (): HTMLElement[] =>
     Array.from(root.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
@@ -103,21 +117,37 @@ export default function AddIngredientMenu({
           className="app-shell__menu"
           onKeyDown={onMenuKey}
         >
-          {destinations.map((destination) => (
-            <button
-              key={destination.key}
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              className="app-shell__menu-item"
-              onClick={() => {
-                setOpen(false);
-                onChoose(destination);
-              }}
-            >
-              to {destination.name}
-            </button>
-          ))}
+          {sections.map((section, at) => {
+            const items = section.items.map((destination) => (
+              <button
+                key={destination.key}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                className="app-shell__menu-item"
+                onClick={() => {
+                  setOpen(false);
+                  onChoose(destination);
+                }}
+              >
+                to {destination.name}
+              </button>
+            ));
+            if (sections.length < 2) return items;
+            // A group named by its visible heading, which is text and not an item, so
+            // the arrows skip it; a rule between groups and none before the first.
+            return (
+              <Fragment key={section.key}>
+                {at > 0 && <div role="separator" className="app-shell__menu-rule" />}
+                <div role="group" aria-labelledby={`${headingId}-${section.key}`}>
+                  <div id={`${headingId}-${section.key}`} className="app-shell__menu-heading">
+                    {section.label}
+                  </div>
+                  {items}
+                </div>
+              </Fragment>
+            );
+          })}
         </div>
       )}
     </span>
