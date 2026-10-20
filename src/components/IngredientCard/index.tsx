@@ -3,9 +3,8 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
-import EntryMarks, { RecencyMark } from '../EntryMarks';
+import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
-import { SafetyMark } from '../SafetyNote';
 import LinkHint from '../LinkHint';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
@@ -22,7 +21,8 @@ import './index.scss';
 // Where New or Updated sits: 'corner', just left of the safety badge in the card's
 // top-right corner, or in the corner itself without one (the owner's call,
 // 2026-10-20); 'row' puts it in the badge row under the formal name, the
-// alternative the owner was offered. One word moves it; both places are styled.
+// alternative the owner was offered. One word moves it; both places are styled, and in
+// either EntryMarks draws it before the badges (the owner's call, 2026-10-20).
 const RECENCY_AT = 'corner' as 'corner' | 'row';
 
 const IngredientCard = ({
@@ -89,8 +89,13 @@ const IngredientCard = ({
               owner's call, 2026-10-20). */}
           {marked && (
             <div className="specimen__badges">
-              <EntryMarks kind={kind} retired={retired} provenance={false} safety={false} />
-              {RECENCY_AT === 'row' && <RecencyMark recency={recency} />}
+              <EntryMarks
+                kind={kind}
+                retired={retired}
+                provenance={false}
+                safety={false}
+                recency={RECENCY_AT === 'row' ? recency : null}
+              />
             </div>
           )}
         </div>
@@ -101,8 +106,16 @@ const IngredientCard = ({
             where it lands when it wraps below. */}
         {cornered && (
           <div className="ingredient-card__corner">
-            {RECENCY_AT === 'corner' && <RecencyMark recency={recency} />}
-            {safe && <SafetyMark toxic={toxic} safetyNotes={safetyNotes} variants={variants} />}
+            {/* EntryMarks for the safety badge alone (no kind mark, no provenance), so
+                New or Updated comes first here as in every row it shares with badges. */}
+            <EntryMarks
+              kind="compendium"
+              provenance={false}
+              recency={RECENCY_AT === 'corner' ? recency : null}
+              toxic={toxic}
+              safetyNotes={safetyNotes}
+              variants={variants}
+            />
           </div>
         )}
       </div>

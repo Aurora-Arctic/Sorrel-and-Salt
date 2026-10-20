@@ -36,6 +36,11 @@ export interface EntryMarksProps {
    * elsewhere: the card, beside the name (the owner's call, 2026-10-20).
    */
   safety?: boolean;
+  /**
+   * New or Updated (MB.106), drawn before every badge (the owner's call, 2026-10-20).
+   * Not a badge: `RecencyMark`, which a caller with no badge row beside it draws alone.
+   */
+  recency?: EntryRecency | null;
   /** The ingredient's own Toxic flag; it or any form's shows Toxic, last in the row. */
   toxic?: boolean | null;
   /** The ingredient's own safety notes; these or any form's show Caution, unless Toxic shows. */

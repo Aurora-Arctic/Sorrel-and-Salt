@@ -1,6 +1,7 @@
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { SafetyMark } from '../SafetyNote';
 import type { EntryMarksProps } from './types';
+import RecencyMark from './recency-mark';
 import TipMark from './tip-mark';
 import './index.scss';
 
@@ -34,6 +35,7 @@ const EntryMarks = ({
   inCoven = false,
   provenance = true,
   safety = true,
+  recency,
   toxic,
   safetyNotes,
   variants,
@@ -99,6 +101,9 @@ const EntryMarks = ({
   }
   return (
     <>
+      {/* New or Updated before every badge, in reading order and on screen (the
+          owner's call, 2026-10-20): here once, so no row that shares it can differ. */}
+      <RecencyMark recency={recency} />
       {byTone(marks).map((mark) => (
         <Fragment key={mark.key}>{mark.node}</Fragment>
       ))}
