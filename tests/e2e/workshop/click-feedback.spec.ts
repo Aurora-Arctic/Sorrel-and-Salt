@@ -11,10 +11,20 @@ import { assertNoAccessibilityViolations } from '../axe';
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
 
-/** The story in Ladle's bare preview, in `theme`. */
+/**
+ * The story in Ladle's bare preview, in `theme`, with its text in the web
+ * font: measured before the font arrives, on a cold Ladle, a control is
+ * narrower than it will be and every place taken from it is wrong. The fonts
+ * are waited for once the story's controls are drawn, since a font is fetched
+ * only when text first asks for it.
+ */
 async function openStory(page: Page, story: string, theme: string, width: number) {
   await page.setViewportSize({ width, height: 800 });
   await page.goto(`/?story=surfaces--click-feedback--${story}&mode=preview&theme=${theme}`);
+  await expect(page.locator('.ladle-story-frame button').first()).toBeVisible();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
 }
 
 const callout = (page: Page) => page.getByRole('alert');
