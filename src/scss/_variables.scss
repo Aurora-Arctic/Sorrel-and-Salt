@@ -89,11 +89,11 @@ $shadow-ink-dark: #060503;
 // lifts toward chalk, so the floor and sides come forward of the page and the back wall
 // sits almost on it. The slot's interior is the page under the site's shadow ink in dark
 // (the same ink the shadows use), and iron-gall into parchment in light. The seam is the
-// back wall easing into the floor. Percentages are the owner's, from the approved mock.
-$drawer-slot-light: color.mix($iron-gall, $parchment, 45%);
-$drawer-floor-light: color.mix($iron-gall, $parchment, 17%);
-$drawer-side-light: color.mix($iron-gall, $parchment, 32%);
-$drawer-back-light: color.mix($iron-gall, $parchment, 65%);
+// back wall easing into the floor. Percentages are the owner's; light was lightened from the mock's after review (2026-10-20).
+$drawer-slot-light: color.mix($iron-gall, $parchment, 25%);
+$drawer-floor-light: color.mix($iron-gall, $parchment, 9%);
+$drawer-side-light: color.mix($iron-gall, $parchment, 18%);
+$drawer-back-light: color.mix($iron-gall, $parchment, 35%);
 $drawer-seam-light: color.mix($drawer-back-light, $drawer-floor-light, 55%);
 $drawer-slot-dark: color.mix($soot, $shadow-ink-dark, 50%);
 $drawer-floor-dark: color.mix($chalk, $soot, 17%);
