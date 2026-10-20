@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                               |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                                                                                                                                                  |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient) |
+| File            | What it holds                                                                                                                                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                 |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip; `AnnotateLink`; and `QuickLookLink`, an entry's Quick Look eye                                                                                                                                    |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient), and `MysticEyeIcon` (Quick Look) |
 
 ## The props contract
 
@@ -37,6 +37,8 @@ same dialog ([`modal.md`](modal.md), "Opening at once"). It is still a link:
 a press with a modifier key, a new tab, or one before the script has loaded
 follows `href` as before.
 
+`QuickLookLink` takes `EditLink`'s props and a `place`, the modal place its press shows in ([`modal.md`](modal.md), "Two places on one page"). It is named "Quick Look" and the entry, and opens the entry's details modal over its list (M12.5, [`ingredient-entry.md`](ingredient-entry.md), "The details modal").
+
 ## Where it is used
 
 - **`LinkIcon` inside a link** is drawn through `LinkIconHint`
@@ -56,6 +58,7 @@ follows `href` as before.
   choice is Delete or Remove, `BinIcon` on a button of its own,
   `.icon-tip__remove`, tipped with its verb (M8.17; the owner's call,
   2026-10-20).
+- **Quick Look on the lists of entries** (M12.5), through `QuickLookLink`: left of each name on the admin Compendium list, and at each card's bottom left on a coven's Ingredients and the public compendium. `MysticEyeIcon` is an almond eye whose iris is a waxing crescent with a small four-point star, its outline drawn at stroke width 1 rather than the set's 1.5 (the owner's pick, 2026-10-20). It wears `.icon-tip__look`: Edit's large size and accent ink.
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),

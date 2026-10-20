@@ -14,7 +14,7 @@
 
 ## Contracts
 
-- Each card is a plain link to `/compendium/ingredients/<slug>`, with no modal. Two entries sharing a label are told apart by the formal-name line the card draws.
+- Each card is a plain link to `/compendium/ingredients/<slug>`. The Quick Look eye at its bottom left, when the entry carries `details`, opens the entry's details modal over the results instead (M12.5). Two entries sharing a label are told apart by the formal-name line the card draws.
 - The list is regular density, never compact, and sits in `ListFrame` through `IngredientSearch shape="cards"`, so a page on its way draws `ListBody shape="cards"`.
 - The filter is `CompendiumListFilter audience="public"`: no Classification facet and no No Refs or No Form control. Those are the curators' to-do lists ([`compendium-list.md`](compendium-list.md)).
 - The foot of a card is chosen by the page, from the visitor:
@@ -28,6 +28,8 @@
 `src/app/(public)/compendium/page.tsx` draws it per request over the cached reads in `src/app/compendium-reads.ts`, which the admin page shares. The reads take no session, so every card and link is in the server HTML. The page asks for the viewer only to choose `action`: `add` when any of the viewer's coven memberships `canWrite` (the per-role statement in `viewerFor`, never a comparison of role names), `none` otherwise, with no session included.
 
 **A curator's Edit (M8.17).** An admin or curator (`canCurate`) gets Edit on each card: the search's own address with `?edit=<slug>`, which opens the admin Compendium's edit dialog (`CompendiumDialog`, given `path="/compendium"`) over the results, headed Edit Compendium Entry. Close or a save comes back to the same search, the query and page kept, inside a `RouteModalProvider` so a press opens the dialog at once. `?edit=` is read only once the viewer is known to curate, through the admin page's own `readEditPlace` and `readCompendiumEntry`: an old slug redirects to the new one, and a slug naming nothing shows `MissingNotice` over the list. For a visitor or any other account there is no Edit, and `?edit=` opens nothing and reads nothing. The list's reads are unchanged, cached and sessionless, keyed by the address alone, whoever asks (rule 6).
+
+**Quick Look (M12.5).** Every card, for anyone, a visitor with no account included, carries `details`: the search's own address with `?entry=<id>`, which opens the entry's details modal over the results ([`ingredient-entry.md`](ingredient-entry.md), "The details modal"), read by `readCompendiumDetails` with no session. An id that names no compendium entry, a coven's own included, opens nothing and says nothing: the page is the page without it, so the address tells nobody a coven's entry exists. A curator's Edit pressed inside the details opens the edit dialog over them.
 
 `?withoutReferences=1` and `?withoutForms=1` are dropped before the address is read, so it lists what the unfiltered page lists. `generateMetadata` marks a filtered view `noindex` with the canonical address `/compendium`; the unfiltered list and its pages stay indexable.
 

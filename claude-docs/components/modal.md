@@ -34,6 +34,7 @@ is the wrapper every admin page opens it through (below).
 | `qualifier`   | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
 | `onClose`     | Asked for by the Close button, Escape and a click outside                                                                               |
 | `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
+| `readingBody` | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
 | `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
 | `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
 | `returnTo`    | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
@@ -529,12 +530,14 @@ skipped the fade.
 
 `RouteModalProps` (`types.ts`):
 
-| Prop        | What it is                                                                                                                                                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `closeHref` | The page it opened over, its modal parameter dropped                                                                                                                                                           |
-| `size`      | As `Modal`'s                                                                                                                                                                                                   |
-| `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
-| `returnTo`  | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
+| Prop          | What it is                                                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `closeHref`   | The page it opened over, its modal parameter dropped                                                                                                                                                           |
+| `size`        | As `Modal`'s                                                                                                                                                                                                   |
+| `readingBody` | As `Modal`'s                                                                                                                                                                                                   |
+| `place`       | Which of the page's modal places this is, where it has two ([Two places on one page](#opening-at-once)); absent on a page with one                                                                             |
+| `content`     | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+| `returnTo`    | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
   `done` all fade the modal out, then `navigate(closeHref, { replace: true })`,
@@ -561,16 +564,16 @@ The form arrives in the same dialog.
 
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
   mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
-  is given `edit` (M8.19; the two entry routes have no layout one). It keeps the heading of the
+  is given `edit` (M8.19; the two entry routes have no layout one), and by the two pages whose lists open a details modal outside `/admin`, `/compendium` and a coven's Ingredients (M8.17, M12.5). It keeps the heading of the
   modal just pressed and navigates through `usePendingNavigation`
   (`src/lib/navigation/`), which runs `router.push(href)` inside a React
   transition (a call that marks a change as in progress until it finishes);
   the page bar shows as well ([`../loading.md`](../loading.md)). It
   offers `loading` (that heading while the push is pending, otherwise
-  nothing), `open(href, heading)` and `cancel()`. The workshop, whose
+  nothing) with `loadingPlace`, the place it shows in, `open(href, heading, place?)` and `cancel()`. The workshop, whose
   router goes nowhere, supplies its own value through the exported
   `RouteModalContext`; a provider already above is kept, not shadowed.
-- **`useOpenModalClick(href, heading)`** returns the `onClick` for a link.
+- **`useOpenModalClick(href, heading, place?)`** returns the `onClick` for a link.
   For a plain press of the main button it stops the browser following the
   link and calls `open`. A press with Ctrl, Cmd, Shift or Alt, or any other
   button, is the browser's (a new tab or window), and so is a press before
@@ -628,6 +631,8 @@ not cut off. So the header stays at the top as a long form scrolls beneath
 it, the owner's call at MB.115, without being `position: sticky`, and a
 question's layer can lie over exactly the part of the body in view. The body
 is isolated, so nothing in it raised by a `z-index` rises over the layer.
+
+**A body only to read takes a Tab stop** (`readingBody`, M12.5). A scrolling body with no field in it cannot be scrolled from the keyboard, and axe's `scrollable-region-focusable` rule fails it: the details modal holds only links in its header, so its long summary was out of reach. The body gets `tabIndex={0}` and an inset focus ring, as the header and the dialog's edge would clip an outer one. A form leaves it off, since its fields already reach every part of it.
 
 **The dialog clips, so nothing can scroll it** (MB.258). Its overflow is
 `clip`, not `hidden`. A `hidden` box is still a scroll container that a
