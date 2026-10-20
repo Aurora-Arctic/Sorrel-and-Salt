@@ -45,6 +45,16 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
     .filter(({ variant }) => said(variant.safetyNotes))
     .map(({ variant }) => variant.form);
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
+  const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
+  // With every section hidden, one line says so rather than leave the body blank
+  // (the owner's call, 2026-10-20).
+  if (!listed && !said(shown.safetyNotes) && cautioned.length === 0) {
+    return (
+      <div className="ingredient-summary">
+        <p className="ingredient-summary__nothing">Nothing recorded yet.</p>
+      </div>
+    );
+  }
   return (
     <div className="ingredient-summary">
       {/* No Details heading: the dialog's title names the entry, and its h2
@@ -59,7 +69,7 @@ export default function IngredientSummary({ detail }: { detail: IngredientDetail
         }
       />
       {/* Not drawn when every block is empty, so it adds no gap of its own. */}
-      {(rows.length > 0 || folkNames.length > 0 || categories.length > 0) && (
+      {listed && (
         <div className="ingredient-entry__side">
           {rows.length > 0 && (
             <CorrespondenceBlock

@@ -192,11 +192,33 @@ describe('IngredientSummary', () => {
 
     // The page says each of these is empty (the IngredientEntry tests); the modal hides them.
     expect(screen.queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
-    expect(screen.queryByText('None recorded')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Correspondences' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Categories' })).not.toBeInTheDocument();
-    expect(screen.queryByText(/recorded/)).not.toBeInTheDocument();
+    // One line says so, so the body is not left blank.
+    expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
+    expect(screen.queryByText('None recorded')).not.toBeInTheDocument();
+  });
+
+  it('says nothing is recorded only when every section is empty', () => {
+    const { unmount } = render(<IngredientSummary detail={full()} />);
+    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    unmount();
+
+    // A caution alone is something recorded.
+    render(
+      <IngredientSummary
+        detail={full({
+          folkNames: [],
+          categories: [],
+          deities: [],
+          variants: [],
+          entry: entryDetail({ safetyNotes: 'Fixture lone caution.' }).entry,
+        })}
+      />,
+    );
+    expect(screen.getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
   });
 
   it("keeps a block's filled rows and drops its empty ones", () => {
