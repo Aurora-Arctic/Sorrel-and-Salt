@@ -79,6 +79,24 @@ describe('EntryMarks', () => {
     },
   );
 
+  // The card's switch (the owner's call, 2026-10-20): Compendium and Annotated
+  // say where a held entry came from, which the entry page says and a card does not.
+  it('leaves Compendium and Annotated off without provenance, keeping Local and Retired', () => {
+    const card = render(<EntryMarks kind="cupboard" annotated provenance={false} />);
+    expect(held()).toBeNull();
+    expect(annotated()).toBeNull();
+    expect(card.container).toBeEmptyDOMElement();
+    card.unmount();
+
+    const retiredCard = render(<EntryMarks kind="cupboard" retired annotated provenance={false} />);
+    expect(retired()).toBeInTheDocument();
+    expect(annotated()).toBeNull();
+    retiredCard.unmount();
+
+    render(<EntryMarks kind="own" provenance={false} />);
+    expect(local()).toBeInTheDocument();
+  });
+
   it('shows nothing for a compendium entry the cupboard does not hold', () => {
     const { container } = render(<EntryMarks kind="compendium" />);
 

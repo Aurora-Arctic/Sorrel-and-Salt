@@ -24,6 +24,12 @@ export interface EntryMarksProps {
    * every entry is one, so it shows nothing.
    */
   inCoven?: boolean;
+  /**
+   * Compendium and Annotated, which say where a held entry came from. On by
+   * default; the ingredient card turns it off, as a coven's card leaves the
+   * question to the entry page (the owner's call, 2026-10-20).
+   */
+  provenance?: boolean;
 }
 
 export interface RecencyMarkProps {

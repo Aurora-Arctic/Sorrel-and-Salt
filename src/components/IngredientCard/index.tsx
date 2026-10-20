@@ -29,7 +29,6 @@ const IngredientCard = ({
   toxic,
   safetyNotes,
   kind,
-  annotated,
   retired,
   recency,
   level = 2,
@@ -42,7 +41,7 @@ const IngredientCard = ({
 
   // Without a mark the cluster is left out, not left empty, so it adds no gap.
   const marked = Boolean(
-    kind !== 'compendium' ||
+    kind === 'own' ||
     retired ||
     toxic ||
     variants.some((v) => v.toxic) ||
@@ -81,7 +80,7 @@ const IngredientCard = ({
         </div>
         {marked && (
           <div className="specimen__badges">
-            <EntryMarks kind={kind} annotated={annotated} retired={retired} />
+            <EntryMarks kind={kind} retired={retired} provenance={false} />
             <CautionMark safetyNotes={safetyNotes} variants={variants} />
             <ToxicMark toxic={toxic} variants={variants} />
           </div>

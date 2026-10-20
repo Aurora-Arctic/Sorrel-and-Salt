@@ -14,6 +14,7 @@ const EntryMarks = ({
   annotated = false,
   retired = false,
   inCoven = false,
+  provenance = true,
 }: EntryMarksProps): ReactElement => {
   const held = kind === 'cupboard';
   return (
@@ -23,7 +24,7 @@ const EntryMarks = ({
           Every compendium entry in a coven wears it, held or not (the owner's call,
           2026-10-19), and Annotated sits beside it; the page's shelf mark says which
           the cupboard holds. On the public compendium every entry is one, so none does. */}
-      {(held || (kind === 'compendium' && inCoven)) && !retired && (
+      {provenance && (held || (kind === 'compendium' && inCoven)) && !retired && (
         <output className="badge badge--low-stock">Compendium</output>
       )}
       {/* A compendium entry the curators retired, read because this coven's
@@ -35,7 +36,7 @@ const EntryMarks = ({
           tip="No longer in the Compendium; your coven still has it."
         />
       )}
-      {held && annotated && (
+      {provenance && held && annotated && (
         <TipMark
           label="Annotated"
           palette="annotated"

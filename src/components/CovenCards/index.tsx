@@ -116,7 +116,6 @@ const CovenCards = ({
             toxic={entry.toxic}
             safetyNotes={entry.safetyNotes}
             kind={entry.kind}
-            annotated={entry.annotated}
             retired={entry.retired}
             actions={actionsOf(entry, workspaceId, covenSlug)}
             startActions={<DetailsLink opens={entry.details} name={nameOf(entry)} />}

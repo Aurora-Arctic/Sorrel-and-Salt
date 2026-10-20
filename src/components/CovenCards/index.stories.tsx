@@ -55,7 +55,6 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   toxic: false,
   safetyNotes: null,
   kind: 'cupboard',
-  annotated: false,
   retired: false,
   jars: [],
   details: {
@@ -81,7 +80,7 @@ const ENTRIES = [
       { id: 'j2', form: 'Oil', icon: 'botanical', quantity: 0.5, unit: 'oz', threshold: 1 },
     ],
   }),
-  entry('named-1', 'House Salt', { annotated: true }),
+  entry('named-1', 'House Salt'),
   entry('named-2', 'Fixture Salt'),
 ];
 
