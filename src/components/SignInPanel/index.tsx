@@ -5,10 +5,8 @@ import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
-import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
-import { PROVIDER_MARKS } from './icons';
+import ProviderButton from './provider-button';
 import type { ProviderId } from '../../lib/types';
 import type { SignInPanelProps } from './types';
 import './index.scss';
@@ -30,9 +28,9 @@ const getLastUsedProvider = (): ProviderId | null => {
 };
 
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
-  // Seeded from the server-rendered callback error, then replaced by a
-  // pre-redirect failure (signIn.social's own `{ error }` result) — the two
-  // never show at once, so one field covers both.
+  // The server-rendered callback error, the page's own, until a press starts
+  // a new attempt. A failure of that press is said under its own button
+  // instead (./provider-button.tsx).
   const [message, setMessage] = useState(error);
   // Better Auth's documented read, taken after hydration: the server has no
   // `document`, so rendering the mark there and here would disagree
@@ -51,8 +49,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     return () => window.removeEventListener('pageshow', restored);
   }, []);
 
-  const handleClick = async (providerId: ProviderId): Promise<void> => {
-    if (!configured.includes(providerId) || signingIn) return;
+  const signInWith = async (providerId: ProviderId): Promise<string | undefined> => {
     setMessage(undefined);
     setSigningIn(providerId);
     // errorCallbackURL carries `next` along: a failed attempt would otherwise
@@ -67,12 +64,12 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
       }
     })();
     if (result?.error) {
-      setMessage(GENERIC_SIGN_IN_ERROR);
       setSigningIn(null);
-      return;
+      return GENERIC_SIGN_IN_ERROR;
     }
     // The redirect has started: keep the page bar up until the browser leaves.
     reportLeaving();
+    return undefined;
   };
 
   return (
@@ -85,59 +82,16 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
       </div>
       {message && <Notice kind="error">{message}</Notice>}
       <div className="sign-in-panel__providers">
-        {SOCIAL_PROVIDERS.map((provider) => {
-          const isAvailable = configured.includes(provider.id);
-          const noteId = `sign-in-panel__note-${provider.id}`;
-          // The familiar per-provider "Continue with X" mark, matched to each
-          // provider's own brand button rather than the app's own icon set —
-          // claude-docs/components/sign-in-panel.md, "Provider branding".
-          // Facebook's white "f" sits on its blue chip on a button.
-          const Mark = PROVIDER_MARKS[provider.id];
-          const isLastUsed = provider.id === lastUsed;
-          return (
-            <div key={provider.id} className="sign-in-panel__provider">
-              <BusyButton
-                busy={signingIn === provider.id}
-                busyLabel="Signing In"
-                // The brand colour class is dropped entirely once
-                // unavailable, rather than layered under a disabled
-                // modifier: `.btn[aria-disabled='true']`
-                // (_primitives.scss) is what styles this state, and a
-                // brand-colour class sitting alongside it would tie in
-                // specificity — the winner then depending on which
-                // stylesheet loads second, exactly what "unavailable"
-                // must never be.
-                className={
-                  isAvailable
-                    ? `btn sign-in-panel__button sign-in-panel__button--${provider.id}`
-                    : 'btn sign-in-panel__button'
-                }
-                // Not `disabled`: that removes the button from the tab order,
-                // and every provider must stay keyboard-reachable.
-                aria-disabled={isAvailable ? undefined : true}
-                aria-describedby={isAvailable ? undefined : noteId}
-                // Read as one phrase with a pause, where the text alone would
-                // run the label into the badge: "Discord Last Used".
-                aria-label={
-                  isLastUsed && signingIn !== provider.id
-                    ? `Continue with ${provider.label}, last used`
-                    : undefined
-                }
-                // The others wait for the pressed one; `disabled`, since a page
-                // being left has no use for their tab stops.
-                disabled={signingIn !== null && signingIn !== provider.id}
-                onClick={() => handleClick(provider.id)}
-              >
-                <Mark chip />
-                Continue with {provider.label}
-                {isLastUsed && (
-                  <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
-                )}
-              </BusyButton>
-              {!isAvailable && <ProviderUnavailableNote id={noteId} />}
-            </div>
-          );
-        })}
+        {SOCIAL_PROVIDERS.map((provider) => (
+          <ProviderButton
+            key={provider.id}
+            provider={provider}
+            available={configured.includes(provider.id)}
+            lastUsed={provider.id === lastUsed}
+            signingIn={signingIn}
+            onSignIn={signInWith}
+          />
+        ))}
       </div>
     </div>
   );

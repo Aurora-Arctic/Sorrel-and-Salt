@@ -5,7 +5,7 @@ import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '../../lib/sign-in
 import SignInPanel from '.';
 import type { SignInPanelProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SignInPanel. Real
+// Behaviour is asserted in tests/components/SignInPanel. Real
 // sign-in requires a browser round trip through a real provider, so every
 // story here fixes `configured` by hand rather than reading env.
 export default {
@@ -72,6 +72,15 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // left unanswered: that button reads "Signing In" and the others are disabled,
 // as while the browser is on its way to the provider (M12.33).
 export const LoadingSignIn: Story = () => {
+  lastUsed(null);
+  usePressOnMount('Continue with Google');
+  return <Page next="/" configured={ALL_PROVIDERS} />;
+};
+
+// Continue with Google pressed, as a person would: the workshop serves no
+// /api/auth, so the sign-in fails before any redirect, into its callout under
+// that button, with the badge on it (claude-docs/components/click-feedback.md).
+export const FailedSignIn: Story = () => {
   lastUsed(null);
   usePressOnMount('Continue with Google');
   return <Page next="/" configured={ALL_PROVIDERS} />;
