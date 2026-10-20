@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 
 // The Change Role control (M6.13): it asks which role in a modal, sends
@@ -24,8 +25,15 @@ beforeEach(() => {
 });
 
 describe('RoleControl', () => {
-  it('says a refusal under the control, naming the member, the focus back on it', async () => {
-    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+  // The service's sentence alone, with no prefix naming the member: the
+  // callout hangs from that member's row (the owner's call, 2026-10-20).
+  it("says the service's refusal under the control, the focus back on it", async () => {
+    graphqlRequest.mockRejectedValue(
+      new GraphQLClientError({
+        status: 200,
+        errors: [{ message: 'A coven needs at least one owner.' }],
+      }),
+    );
     renderControl();
 
     fireEvent.click(screen.getByRole('button', { name: 'Change Role for Testwort' }));
@@ -33,7 +41,7 @@ describe('RoleControl', () => {
 
     const name = 'Change Role for Testwort';
     const said = await expectRefusalUnder(screen.getByRole('button', { name }), name);
-    expect(said).toContain('Testwort');
+    expect(said).toBe('A coven needs at least one owner.');
     expect(refresh).not.toHaveBeenCalled();
   });
 

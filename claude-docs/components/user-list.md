@@ -260,12 +260,10 @@ head, both built by the page per row, as the other admin lists carry
   `ConfirmedAction` is built on `useClickFeedback` (M12.31, [`click-feedback.md`](click-feedback.md)).
   Its `announcement` is the sentence the status region says once the action
   has worked, and is left out where the success leaves the page. Its
-  `refusal` is either a sentence in place of the service's or a function
-  that wraps the service's sentence, as the members page's controls do with
-  the member's name. A refusal gives the focus back to the button that opened
+  `refusal`, when given, is a sentence in place of the service's. A refusal gives the focus back to the button that opened
   the modal and floats under it, with the badge on the button. With
   `inModal`, where the button already sits in a dialog, the refusal stays in
-  that dialog as a `Notice`, or goes to the `onFailure` the caller passes. A
+  that dialog as a plain `Notice` beside the button (the owner's call). A
   promotion warns on an unverified address as Approve does, in its own verb
   (above); a demotion does not.
 - **The switch on admin changes is the Users tab's action** (MB.63,

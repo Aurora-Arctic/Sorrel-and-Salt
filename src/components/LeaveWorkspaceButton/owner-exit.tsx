@@ -47,9 +47,10 @@ const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElem
 type Report = (message: string | undefined) => void;
 
 /**
- * The dialog's body, which says a refusal at its top, a plain notice inside
- * the dialog rather than a callout over it (M12.31's rule 6). Its own
- * component, so the refusal goes when the dialog closes.
+ * The dialog's body, which says Promote and Leave's refusal at its top, a
+ * plain notice inside the dialog rather than a callout over it (M12.31's rule
+ * 6); Delete says its own beside its button. Its own component, so the
+ * refusal goes when the dialog closes.
  */
 const ExitDialog = ({
   workspaceId,
@@ -62,7 +63,7 @@ const ExitDialog = ({
     <>
       {failure && <Notice kind="error">{failure}</Notice>}
       {successors.length === 0 ? (
-        <SoleMember workspaceId={workspaceId} name={name} onCancel={onCancel} report={setFailure} />
+        <SoleMember workspaceId={workspaceId} name={name} onCancel={onCancel} />
       ) : (
         <Options
           workspaceId={workspaceId}
@@ -81,10 +82,8 @@ const SoleMember = ({
   workspaceId,
   name,
   onCancel,
-  report,
 }: Pick<OwnerExitProps, 'workspaceId' | 'name'> & {
   onCancel: () => void;
-  report: Report;
 }): ReactElement => (
   <>
     <p>
@@ -95,13 +94,7 @@ const SoleMember = ({
       Nothing is destroyed, but only an administrator with database access can restore it.
     </Notice>
     <div className="modal__actions">
-      <DeleteWorkspaceButton
-        workspaceId={workspaceId}
-        name={name}
-        inModal
-        onlyOwner
-        onFailure={report}
-      />
+      <DeleteWorkspaceButton workspaceId={workspaceId} name={name} inModal onlyOwner />
       <button className="btn btn--quiet" type="button" onClick={onCancel}>
         Cancel
       </button>
@@ -217,13 +210,7 @@ const Options = ({
         ) : (
           // The confirm for this choice: it asks M6.14's question over the
           // dialog, and nothing is deleted from the dialog itself.
-          <DeleteWorkspaceButton
-            workspaceId={workspaceId}
-            name={name}
-            inModal
-            onlyOwner
-            onFailure={report}
-          />
+          <DeleteWorkspaceButton workspaceId={workspaceId} name={name} inModal onlyOwner />
         )}
         <button className="btn btn--quiet" type="button" disabled={sending} onClick={onCancel}>
           Cancel

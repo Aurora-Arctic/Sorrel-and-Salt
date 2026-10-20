@@ -143,7 +143,11 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
-    expect(await within(dialog).findByRole('alert')).toBeVisible();
+    const alert = await within(dialog).findByRole('alert');
+    // At the dialog's top, above the question's choices.
+    expect(
+      alert.compareDocumentPosition(handOver(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(graphqlRequest).toHaveBeenCalledTimes(1);
     expect(replace).not.toHaveBeenCalled();
   });
@@ -169,9 +173,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(graphqlRequest.mock.calls[0][1]).toEqual({ workspaceId: ID });
   });
 
-  // A refusal asked over the dialog is said at the dialog's top, a plain
-  // notice inside it, as the hand-over's are, never a callout over it.
-  it('says a refused deletion at the top of the dialog, which stays open', async () => {
+  // A refusal asked over the dialog is said beside Delete, a plain notice
+  // inside the dialog, never a callout over it (the owner's call).
+  it('says a refused deletion beside Delete, inside the dialog, which stays open', async () => {
     graphqlRequest.mockRejectedValue(new Error('Forbidden'));
     const dialog = await openDialog();
     fireEvent.click(deleteIt(dialog));
@@ -181,8 +185,12 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     fireEvent.click(within(confirmation).getByRole('button', { name: 'Delete Coven' }));
 
     const alert = await within(dialog).findByRole('alert');
+    const button = within(dialog).getByRole('button', { name: 'Delete Coven' });
+    // In Delete's own row, after it, rather than at the dialog's top.
+    expect(button.parentElement).toContainElement(alert);
+    expect(button.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(
-      alert.compareDocumentPosition(deleteIt(dialog)) & Node.DOCUMENT_POSITION_FOLLOWING,
+      deleteIt(dialog).compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
     expect(replace).not.toHaveBeenCalled();

@@ -70,11 +70,11 @@ choice: **Promote**, green (`btn--solid`), for a role above their own, and
 
 Both controls say what happened through `ConfirmedAction`'s click feedback
 ([`click-feedback.md`](click-feedback.md), M12.31). A refusal gives the focus
-back to the button that opened the modal and floats under it in a callout,
-naming the member ahead of the service's sentence ("<name>'s role was not
-changed. This is the last owner, and a coven needs one. Make another member an
-owner first.", or "<name> was not removed. …"), with a badge on the button to
-bring it back; nothing on the page moves, and the next attempt clears it. A
+back to the button that opened the modal and floats under it in a callout
+saying the service's sentence alone ("This is the last owner, and a coven
+needs one. Make another member an owner first."), with no prefix naming the
+member, since the callout hangs from that member's row (the owner's call,
+2026-10-20), and with a badge on the button to bring it back; nothing on the page moves, and the next attempt clears it. A
 success is said in the page's status region: "<name> is now <role>." or
 "<name> is removed.".
 
@@ -106,5 +106,5 @@ column without `removeAction`, each control given its row's member, "You"
 on the own row only, and the address only under
 `showEmail`. `tests/components/MemberList/remove-control.test.tsx`
 and `role-control.test.tsx` hold each control's refusal, said under the button
-with the member's name and the focus on the button, the badge bringing it back,
+as the service's sentence alone and the focus on the button, the badge bringing it back,
 and its success said in the status region.

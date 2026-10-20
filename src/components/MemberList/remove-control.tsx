@@ -33,9 +33,6 @@ const RemoveControl = ({ workspaceId, userId, name }: RemoveControlProps): React
     }
     busy="Removing"
     confirmClass="btn btn--destructive"
-    // Prefixed with whom, as the refusal once was in the notice above the
-    // table, far from the row.
-    refusal={(message) => `${name} was not removed. ${message}`}
     announcement={`${name} is removed.`}
     send={() => graphqlRequest(RemoveMemberDocument, { workspaceId, userId })}
   />
