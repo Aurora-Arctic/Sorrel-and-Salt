@@ -14,6 +14,7 @@ import {
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
 import { firstShownField } from './fields';
+import { pageHeading } from './page-heading';
 import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
@@ -45,14 +46,18 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
 
 /**
  * Back to what opened the modal, if it is still in the page, or else to where
- * the owner says; and only if nothing has taken the focus meanwhile, as a page
- * a save opens may. The dialog is already out of the page, so a focus that was
- * in it is on the body.
+ * the owner says, or else, with the opener gone and the owner naming nowhere,
+ * as after a row's Remove takes the row away, to the page's heading; and only
+ * if nothing has taken the focus meanwhile, as a page a save opens may. The
+ * dialog is already out of the page, so a focus that was in it is on the body.
  */
 function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
   const now = document.activeElement;
   if (now && now !== document.body) return;
-  const target = opener instanceof HTMLElement && opener.isConnected ? opener : returnTo?.(opener);
+  const target =
+    opener instanceof HTMLElement && opener.isConnected
+      ? opener
+      : (returnTo?.(opener) ?? pageHeading());
   target?.focus();
 }
 

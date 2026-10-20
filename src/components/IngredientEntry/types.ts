@@ -179,7 +179,7 @@ export interface AnnotateDialogProps {
   more?: AnnotateMoreProps;
 }
 
-/** What `useCupboardWrites` needs: the entry, where a remove leads, and how the caller's question closes and shows a refusal. */
+/** What `useCupboardWrites` needs: the entry, where a remove leads, and how the caller's confirmation closes and shows a refusal. */
 export interface CupboardWritesOptions {
   workspaceId: string;
   /** The coven's address segment, for the own entry Make It Ours leads to. */
@@ -187,7 +187,7 @@ export interface CupboardWritesOptions {
   ingredientId: string;
   /** Where a remove leads, replacing the address; left out, the page reads again. */
   removedHref?: Route;
-  /** Closes the caller's question, after either write is answered. */
+  /** Closes the caller's confirmation on a refusal, or before a remove leads to `removedHref`; a remove without it closes once the entry is gone. */
   onSettle: () => void;
   /** Shows a refusal's sentence in the caller's alert. */
   onRefused: (message: string) => void;

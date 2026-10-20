@@ -9,7 +9,7 @@ import LinkConfirm, { type LinkTarget } from './link-confirm';
 
 // Link to the Compendium in the edit dialog of a coven's own entry (M8.17):
 // a search of the whole compendium, where the page's Similar block offers
-// only the near matches it found, then Link, which asks the shared question
+// only the near matches it found, then Link, which asks the shared confirmation
 // (`link-confirm.tsx`) over the form. It sits beneath the form rather than in
 // it: it saves nothing of the form's, and what it does replaces the entry the
 // form edits. The pick is the compendium entry itself, so an edit of the text

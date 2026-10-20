@@ -15,8 +15,8 @@ import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } fro
 // Make It Ours (M12.23) and Remove (M12.17), the two writes a coven's member
 // makes to a compendium entry it holds, shared by the entry page's Edit menu
 // and the Annotate dialog's More menu (M8.17), so the two ask the same
-// question and land in the same place. The entry page asks in a dialog; the
-// Annotate dialog asks in its form's own question card, as its Delete and Link
+// confirmation and land in the same place. The entry page asks in a dialog; the
+// Annotate dialog asks in its form's own confirmation card, as its Delete and Link
 // do, rather than a dialog inside a dialog (the owner's call, 2026-10-20).
 
 /**
@@ -42,7 +42,7 @@ const MakeItOursDocument = graphql(`
   }
 `);
 
-/** Make It Ours's question, naming the entry as the coven calls it. */
+/** Make It Ours's confirmation, naming the entry as the coven calls it. */
 export function MakeItOursQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
@@ -51,11 +51,11 @@ export function MakeItOursQuestion({ name }: { name: string }): ReactElement {
   );
 }
 
-/** What Make It Ours changes, beneath its question. */
+/** What Make It Ours changes, beneath its confirmation. */
 export const MAKE_IT_OURS_DETAILS =
   "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it.";
 
-/** Remove's question, which says what goes with the entry. */
+/** Remove's confirmation, which says what goes with the entry. */
 export function RemoveQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
@@ -148,10 +148,13 @@ export function RemoveDialog({
 
 /**
  * The two writes, with what follows each: a remove leads to `removedHref`,
- * replacing the history entry so Back does not return to what is gone, or
- * reads the page again where there is none; Make It Ours leads to the own entry
- * it wrote. Either way the question closes first (`onSettle`), and a refusal,
- * which names its remedy, goes to `onRefused` as the service wrote it.
+ * replacing the history entry so Back does not return to what is gone, closing
+ * its confirmation first (`onSettle`); where there is none it reads the page
+ * again and stays busy, as ConfirmedAction does, until the re-read says the
+ * coven no longer holds the entry and the caller closes the confirmation with
+ * it, so the focus can go to the page's heading in that one step. Make It Ours
+ * leads to the own entry it wrote. A refusal, which names its remedy, closes
+ * the confirmation and goes to `onRefused` as the service wrote it.
  */
 export function useCupboardWrites({
   workspaceId,
@@ -169,10 +172,10 @@ export function useCupboardWrites({
   const remove = useMutation({
     mutationFn: () => graphqlRequest(RemoveCupboardEntryDocument, { workspaceId, ingredientId }),
     onSuccess: () => {
-      // The page stays mounted as it reads again, so the question has to close.
-      onSettle();
-      if (removedHref) navigate(removedHref, { replace: true });
-      else refresh();
+      if (removedHref) {
+        onSettle();
+        navigate(removedHref, { replace: true });
+      } else refresh();
     },
     onError: refused,
   });
@@ -185,7 +188,11 @@ export function useCupboardWrites({
     onError: refused,
   });
   return {
-    remove: { run: () => remove.mutate(), pending: remove.isPending },
+    remove: {
+      run: () => remove.mutate(),
+      // Busy past the write too while the page reads again (above).
+      pending: remove.isPending || (remove.isSuccess && !removedHref),
+    },
     makeOurs: { run: () => makeOurs.mutate(), pending: makeOurs.isPending },
   };
 }

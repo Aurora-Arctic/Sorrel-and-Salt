@@ -30,7 +30,7 @@ Seven, in this order: Label, Description, Safety Notes, Elements, Celestial Bodi
 
 - Save is disabled until something changes, shows a spinner while saving, and Cancel is quiet; leaving a changed form asks first (`useDiscardGuard`).
 - A `VALIDATION` error lands on its field by the issue's path, a leading `input` stripped; Label is the one the server refuses (another entry of the coven has it). Anything else shows in a `role="alert"` notice above the actions.
-- `aside`, optional, is a render prop for the far end of the actions row (`FormActions`' `aside`), handed the form's `onRefused`, so what it draws can show a refusal in the form's own alert, `dirty`, whether the form holds unsaved changes, and `discardAsking`, whether the unsaved-changes question is asking. The Annotate dialog draws its More menu there, or its lone button (M8.17): Make It Ours reads `dirty` to warn that unsaved changes are not kept, and both questions step aside while `discardAsking`, since they are drawn in the same card.
+- `aside`, optional, is a render prop for the far end of the actions row (`FormActions`' `aside`), handed the form's `onRefused`, so what it draws can show a refusal in the form's own alert, `dirty`, whether the form holds unsaved changes, and `discardAsking`, whether the unsaved-changes confirmation is asking. The Annotate dialog draws its More menu there, or its lone button (M8.17): Make It Ours reads `dirty` to warn that unsaved changes are not kept, and both confirmations step aside while `discardAsking`, since they are drawn in the same card.
 - On success the form calls `router.refresh()` so the page shows the marks and merged values, then `onDone`.
 
 ## Stories

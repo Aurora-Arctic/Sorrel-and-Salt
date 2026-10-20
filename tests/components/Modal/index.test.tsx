@@ -323,6 +323,47 @@ describe('Modal', () => {
       expect(button('Elsewhere')).toHaveFocus();
     });
 
+    // A row's own control removes the row: the opener goes with the modal, and
+    // the owner's place with them, so the page's heading takes the focus
+    // rather than the page losing it (M8.17, after M12.31's follow-up 5).
+    it("gives the focus to the page's heading when its opener goes with it and its owner names nowhere", async () => {
+      function Row(): ReactElement {
+        const [open, setOpen] = useState(false);
+        return (
+          <li>
+            <button type="button" onClick={() => setOpen(true)}>
+              Remove Testwort
+            </button>
+            {open && (
+              <Modal title="Remove Testwort" onClose={vi.fn()} returnTo={() => null}>
+                <button type="button">Remove</button>
+              </Modal>
+            )}
+          </li>
+        );
+      }
+      function List({ present }: { present: boolean }): ReactElement {
+        return (
+          <main>
+            <h1>Members</h1>
+            <ul>{present && <Row />}</ul>
+          </main>
+        );
+      }
+      const view = render(<List present />);
+      button('Remove Testwort').focus();
+      fireEvent.click(button('Remove Testwort'));
+      await settle();
+      expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement);
+
+      view.rerender(<List present={false} />);
+
+      const heading = screen.getByRole('heading', { level: 1, name: 'Members' });
+      expect(heading).toHaveFocus();
+      // Focusable by script alone, so Tab never stops on it.
+      expect(heading).toHaveAttribute('tabindex', '-1');
+    });
+
     it('gives the focus back to its opener through a Strict Mode remount', async () => {
       render(
         <StrictMode>

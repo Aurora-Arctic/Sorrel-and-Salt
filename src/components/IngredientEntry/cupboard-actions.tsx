@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -60,15 +60,28 @@ export default function CupboardActions({
 }: CupboardActionsProps): ReactElement | null {
   const { refresh } = usePendingNavigation();
   const [alert, setAlert] = useState<string>();
-  // Which of the two questions is open, one at a time. The Annotate dialog is
-  // the address's instead (`annotate.opened`), as the curator's Edit is.
+  // Which of the two confirmations is open, one at a time. The Annotate dialog
+  // is the address's instead (`annotate.opened`), as the curator's Edit is.
   const [asking, setAsking] = useState<'remove' | 'own'>();
   // The menu's button, or the one plain button: where the focus goes back to
-  // once a question or the dialog closes, since the menu item that opened it
-  // is gone with the menu. Modal gives it there itself.
+  // once a confirmation or the dialog closes, since the menu item that opened
+  // it is gone with the menu. Modal gives it there itself. Once a remove has
+  // taken the entry away, the button left offers something else (Add to
+  // Cupboard), so it names nowhere and Modal gives the focus to the page's
+  // heading, as a row's Remove does (M8.17). Read as the dialog closes, after
+  // this render's layout, so the ref is the commit's own.
   const trigger = useRef<HTMLButtonElement>(null);
   const link = useRef<HTMLAnchorElement>(null);
-  const back = () => trigger.current ?? link.current;
+  const heldNow = useRef(held);
+  useLayoutEffect(() => {
+    heldNow.current = held;
+  }, [held]);
+  const back = () => (heldNow.current ? (trigger.current ?? link.current) : null);
+  // The remove's confirmation stays, busy, until the re-read drops the entry;
+  // it closes in that render (below), and the choice is forgotten here.
+  useEffect(() => {
+    if (!held) setAsking(undefined);
+  }, [held]);
   const openEdit = useOpenModalClick(
     edit?.href ?? ('' as Route),
     editHeading(
@@ -96,7 +109,7 @@ export default function CupboardActions({
     onRefused: setAlert,
   });
 
-  // The entry as the coven calls it, for the two questions.
+  // The entry as the coven calls it, for the two confirmations.
   const name = overrides.label ?? compendium.name;
   const ask = (what: 'remove' | 'own') => () => {
     setAlert(undefined);
@@ -175,7 +188,7 @@ export default function CupboardActions({
       {asking === 'own' && (
         <MakeItOursDialog name={name} write={writes.makeOurs} onClose={settle} returnTo={back} />
       )}
-      {asking === 'remove' && (
+      {asking === 'remove' && held && (
         <RemoveDialog name={name} write={writes.remove} onClose={settle} returnTo={back} />
       )}
       <AnnotateDialog

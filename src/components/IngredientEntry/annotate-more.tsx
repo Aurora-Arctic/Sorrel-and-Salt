@@ -22,16 +22,16 @@ import type { AnnotateMoreProps } from './types';
 // own type (the owner's call of 2026-10-20), opening upward so it stays
 // inside the dialog; with one, that one as a button of its own, Remove
 // destructive, so a menu never holds a single choice. Either asks in the
-// form's own question card, the card, scrim and focus handling of Delete and
+// form's own confirmation card, the card, scrim and focus handling of Delete and
 // Link and of "You have unsaved changes", not in a second dialog over this one
 // (the owner's call, 2026-10-20). A write leaves the dialog with whatever it
 // held unsaved: Remove deletes the annotations, and Make It Ours copies the
-// saved ones, which its question says while the form holds changes.
+// saved ones, which its confirmation says while the form holds changes.
 
 interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   workspaceId: string;
   ingredientId: string;
-  /** The entry as the coven calls it, for the two questions. */
+  /** The entry as the coven calls it, for the two confirmations. */
   name: string;
   /** Where the dialog closes to, and so where a remove leads without `removedHref`. */
   closeHref: Route;
@@ -39,7 +39,7 @@ interface AnnotateMoreBodyProps extends AnnotateMoreProps {
   /** The form holds unsaved changes. */
   dirty: boolean;
   /**
-   * The form's unsaved-changes question is asking: the question here steps
+   * The form's unsaved-changes confirmation is asking: the confirmation here steps
    * aside, both being drawn in the one place, and comes back on Keep Editing.
    */
   discardAsking: boolean;

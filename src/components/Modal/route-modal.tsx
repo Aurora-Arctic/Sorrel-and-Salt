@@ -27,14 +27,6 @@ function linkTo(href: string): HTMLElement | undefined {
   );
 }
 
-/** The page's heading, made focusable by script alone so Tab never stops on it. */
-function pageHeading(): HTMLElement | null {
-  const heading =
-    document.querySelector<HTMLElement>('main h1') ?? document.querySelector<HTMLElement>('h1');
-  if (heading && !heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
-  return heading;
-}
-
 export default function RouteModal({
   closeHref,
   size,
@@ -56,11 +48,11 @@ export default function RouteModal({
   // A link a close draws afresh, or a press that focused nothing, as a click
   // in WebKit does not, leaves the address it opened: a link to it takes the
   // focus. With none, as on a pasted address or a reload, the owner's place
-  // or the page's heading does, rather than the focus being lost to the
-  // page (claude-docs/components/modal.md, "Giving the focus back").
+  // does, and failing that Modal gives it to the page's heading rather than
+  // lose it to the page (claude-docs/components/modal.md, "Giving the focus back").
   const backTo = (gone: Element | null): HTMLElement | null | undefined => {
     const href = gone instanceof HTMLAnchorElement ? gone.getAttribute('href') : opener?.opened;
-    return (href && linkTo(href)) || returnTo?.() || pageHeading();
+    return (href && linkTo(href)) || returnTo?.() || null;
   };
   return (
     <Modal {...heading} size={size} loading={!content} onClose={close} returnTo={backTo}>

@@ -160,6 +160,12 @@ test.describe('removing a member, and leaving', () => {
       await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(dialog).toHaveCount(0);
       await expectRoll(page, { [ASH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      // The Remove that had the focus went with its row: the page's heading
+      // takes it, rather than the page losing it (M8.17).
+      await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
+      await page.setViewportSize({ width: 375, height: 812 });
+      await assertNoAccessibilityViolations(page);
+      await assertNoSidewaysScroll(page);
 
       // A soft removal: Birch's seat is kept, marked, and no other is touched.
       const seats = await withSql(
@@ -241,6 +247,8 @@ test.describe('removing a member, and leaving', () => {
       await page.getByRole('dialog').getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(refusal(page)).toBeVisible();
       await expect(page.getByRole('dialog')).toHaveCount(0);
+      // The row stays, so the focus goes back to its Remove.
+      await expect(remove).toBeFocused();
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({
         [ash]: 'owner',

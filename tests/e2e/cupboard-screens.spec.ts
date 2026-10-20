@@ -94,4 +94,10 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Add to Cupboard' })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
+  // The confirmation stays until the re-read drops the entry, then closes onto
+  // the page's heading: Remove went with the menu, and the button left offers
+  // something else (M8.17).
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
+  await assertNoAccessibilityViolations(page);
 });

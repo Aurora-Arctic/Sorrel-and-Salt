@@ -67,6 +67,21 @@ function renderActions(props: Partial<CupboardActionsProps> = {}) {
   );
 }
 
+/** The actions under the entry's page heading, as the page draws them. */
+const onPage = (props: Partial<CupboardActionsProps> = {}) => (
+  <QueryClientProvider client={queryClient}>
+    <main>
+      <h1>Testwort</h1>
+      <CupboardActions {...BASE} {...props} />
+    </main>
+  </QueryClientProvider>
+);
+let queryClient = makeQueryClient();
+function renderOnPage(props: Partial<CupboardActionsProps> = {}) {
+  queryClient = makeQueryClient();
+  return render(onPage(props));
+}
+
 const button = (name: string) => screen.queryByRole('button', { name });
 
 /** The Edit menu's choices, in order, after opening it. */
@@ -221,18 +236,52 @@ describe('CupboardActions', () => {
     await waitFor(() => expect(button('Edit')).toHaveFocus());
   });
 
-  it('closes the question and reads the page again once the entry is removed', async () => {
+  // The entry's page heading takes the focus once the re-read says the coven no
+  // longer holds it: Remove went with its menu, and the control left may be
+  // another element (M8.17, after M12.31's follow-up 5). Until then the
+  // confirmation stays, busy, as ConfirmedAction's does.
+  it("reads the page again once the entry is removed, and closes onto the page's heading when the re-read drops it", async () => {
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
       'RemoveCupboardEntry',
       () => ({ removeCupboardEntry: BASE.ingredientId }),
     );
-    renderActions({ held: true });
+    router.refresh.mockClear();
+    const view = renderOnPage({ held: true });
 
     choose('Remove');
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
 
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Remov/ }),
+    ).toBeDisabled();
+
+    view.rerender(onPage({ held: false }));
+
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(router.refresh).toHaveBeenCalled();
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toHaveFocus();
+  });
+
+  it("closes the Annotate dialog's Remove onto the page's heading once the coven no longer holds the entry", async () => {
+    mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
+      'RemoveCupboardEntry',
+      () => ({ removeCupboardEntry: BASE.ingredientId }),
+    );
+    router.replace.mockClear();
+    const view = renderOnPage({ held: true, annotate: { ...ANNOTATE, opened: true } });
+    const annotating = screen.getByRole('dialog', { name: 'Annotate This Entry' });
+
+    fireEvent.click(within(annotating).getByRole('button', { name: 'More' }));
+    fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Remove' }));
+    const card = within(annotating).getByRole('group', { name: /^Remove Testwort/ });
+    press(within(card).getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(ANNOTATE.closeHref));
+
+    // The address drops ?annotate and the re-read, in one, drops the entry.
+    view.rerender(onPage({ held: false, annotate: ANNOTATE }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toHaveFocus();
   });
 
   it('leads to removedHref once a retired entry is removed, since its page reads nothing then', async () => {
@@ -266,6 +315,9 @@ describe('CupboardActions', () => {
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+    // The entry stays held, so the focus goes back to its menu, not the heading.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(button('Edit')).toHaveFocus();
   });
 
   it('asks before making it ours, in a dialog, and changes nothing on the way out', async () => {

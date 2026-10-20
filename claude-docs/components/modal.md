@@ -54,8 +54,9 @@ is the wrapper every admin page opens it through (below).
   only, but React passes it up its own tree to the outer dialog's handler
   too, which closed both. Each dialog now answers only a `cancel` aimed at
   itself. Nothing in the app opens one inside another now: the Annotate
-  dialog's More, which did, asks over its form instead (the owner's call,
-  2026-10-20), so the fix stays only until the owner decides on it.
+  dialog's More, which did, asks for its confirmation over its form instead
+  (the owner's call, 2026-10-20). The fix stays all the same, for the next
+  dialog that opens one (the owner's call, 2026-10-20).
 - **It fades in and out** (M5.5, the owner's call), dialog and backdrop
   together over 150ms. In is CSS alone, `@starting-style` as `showModal()`
   shows it. Out is the component's, since the owner's unmount would take it
@@ -118,15 +119,45 @@ and a Modal's owner closes it by unmounting it, so Modal does it instead
    An owner whose opener sits in a menu that closed, or is drawn afresh,
    names its trigger there: `ModalButton` its button, Add Ingredient the
    page's main area, `CupboardActions` its menu's button.
+4. **If the owner names nowhere**, it focuses the page's `<h1>`, given
+   `tabindex="-1"` by script so it can take the focus without becoming a
+   Tab stop (`pageHeading()`, in `page-heading.ts`).
+
+Step 4 is for a row whose own control removes the row (M8.17, after
+M12.31's follow-up 5). The confirmation's Remove succeeds, the list is read
+again, and the row goes, taking the button that opened the confirmation with
+it. Without step 4 the focus would fall to the page's body, and a screen
+reader would start again from the top. The rows that do this:
+
+| Row                                          | Removed by                                               |
+| -------------------------------------------- | -------------------------------------------------------- |
+| A member on the members page                 | Remove (`MemberList`)                                    |
+| A pending or declined invitation in a coven  | Revoke, or Remove once declined (`PendingInvitations`)   |
+| An invitation on the account page            | Decline (`ReceivedInvitations`)                          |
+| An invitation on the admin Invitations page  | Revoke (`AdminInvitations`)                              |
+| A compendium entry's page, held by the coven | Remove, from the Edit menu or the Annotate dialog's More |
+
+The first four ask through `ConfirmedAction`, whose confirmation stays open
+and busy until the page is read again, so it closes in the same step as the
+row goes. Its `returnTo` names the row's button, which is gone by then, so
+step 4 answers. `CupboardActions` keeps its Remove confirmation busy the
+same way, and its `returnTo` names nowhere once the coven no longer holds
+the entry: the button left there offers Add to Cupboard instead, which is
+not where the person was. A refusal closes the confirmation with the row
+still there, so the focus goes back to the row's button as usual.
+
+A confirmation asked over a modal's form (`ConfirmOverlay`, as in the M9.19
+user modal) never reaches step 4: the modal stays open, and the overlay
+gives the focus back inside it.
 
 A modal that left the focus somewhere else, on a page it navigated to, say,
 is left alone: the return never steals the focus. An owner never calls
 `.focus()` to bring the focus back itself.
 `tests/guards/focus-return.test.ts` fails a file that draws a dialog and
 does, bar three named exceptions: the Filters panel (`FacetPanel`), a
-dialog of its own; the question asked over a modal's form
+dialog of its own; the confirmation asked over a modal's form
 (`ConfirmOverlay`), which gives the focus back inside the modal that stays
-open; and the confirm a `ConfirmedAction` question focuses as it opens,
+open; and the confirm a `ConfirmedAction` confirmation focuses as it opens,
 the focus going in rather than back.
 
 `RouteModal` adds what a modal opened by the page's address needs, since
@@ -138,9 +169,9 @@ gone it tries, in order:
    the provider, which notes it on a press (so it is known in WebKit too,
    where a click focuses no link).
 2. **Its owner's `returnTo`**, if one is given.
-3. **The page's `<h1>`**, given `tabindex="-1"` by script so it can take
-   the focus without becoming a Tab stop. This is where a modal reached by a
-   pasted address or a reload lands, since nothing on the page opened it.
+3. **Modal's own last step, the page's `<h1>`.** This is where a modal
+   reached by a pasted address or a reload lands, since nothing on the page
+   opened it.
 
 Back closes a route modal too, and the focus goes to the link the same way.
 `tests/e2e/route-modal-focus.spec.ts` walks both of those closes in a
@@ -210,8 +241,8 @@ each form.
 A form asks before it acts, "Delete this?" or "Discard them?", on a card
 drawn over the form rather than where its buttons were (MB.115, the owner's
 call): one way of asking across the admin forms. `ConfirmOverlay`, in
-`confirm-overlay.tsx`, is that card; the unsaved-changes question, every
-form's Delete question, Link to the Compendium's question over the edit
+`confirm-overlay.tsx`, is that card; the unsaved-changes confirmation, every
+form's Delete confirmation, Link to the Compendium's confirmation over the edit
 dialog, and the Annotate dialog's Make It Ours and Remove (M8.17, the
 owner's call of 2026-10-20) are drawn through it, never a second dialog.
 
@@ -396,7 +427,7 @@ it through `useModalHeaderNote()`. It is a line apart rather than the row's
 first item because the row is a line of controls that never wraps. It stands
 `space(2)` below the title, the gap the row has there without it, and the
 row `space(2)` below it. Empty, it takes no line, so a dialog with no
-sentence is unchanged. It is not held while a question is asked, as it holds
+sentence is unchanged. It is not held while a confirmation is asked, as it holds
 no control.
 
 ## ModalButton

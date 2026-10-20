@@ -963,6 +963,8 @@ test(
     await expect(
       section.getByRole('row', { name: new RegExp(withdrawnEmail.replace(/[.]/g, '\\.')) }),
     ).toHaveCount(0);
+    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     // Still listed: the two that were not withdrawn, the lapsed one until it lapses.
     await expect(
       section.getByRole('row', { name: new RegExp(lapsedEmail.replace(/[.]/g, '\\.')) }),
