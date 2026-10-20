@@ -125,6 +125,35 @@ Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyp
 
 Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
+## Styling
+
+Tokens only, until the section's design review (MB.84). `IngredientCard/index.scss` holds the card, the
+slot it hangs in and the drawer that opens under it; the shared `.specimen*` primitives it builds on
+are in `_primitives.scss`. The compact look is the `[data-density='compact']` block of the same file and `_compact.scss`, keyed off the
+list's `data-density` ([`ingredient-card-list.md`](ingredient-card-list.md)).
+
+The drawer's measurements are tokens, not pixel literals: its inset from the slot
+(`$drawer-inset`), its side walls (`$drawer-wall`), its travel (`$drawer-travel`) and its slot shadow
+(`$drawer-slot-shadow`), with the shade colours as theme tokens (lighter in the light theme).
+The `ProposalDrawerTokens` stories in `.ladle/ingredient-card-drawer.stories.tsx` draw the drawer in
+both themes; the computed styles were checked identical to the pixel values the tokens replaced.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:
+the kinds (`Compendium`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
+`RetiredCaution`, `NewWithoutSafety`), the stress cases for the name (`LongName`, `OneLongWord`,
+`MineralName`, `NoFormalName`, `NewLongName`), the other marks and chips (`ManyForms`,
+`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`,
+`CompactLongName`) and the recency marks (`NewEntry`, `UpdatedEntry`).
+
+## Testing
+
+`tests/components/IngredientCard/index.test.tsx`: the card's name and link, the category chips, safety,
+the cupboard marks, the jar-line slot, the actions, the navigation (the whole card is one target for the
+name link) and the recency marks. Layout and the drawer's look are checked in Ladle and in the page
+specs that place the card, not in jsdom, which has no layout.
+
 ## Accessibility
 
 Meaning is carried by words and shape, never colour alone: every badge has its

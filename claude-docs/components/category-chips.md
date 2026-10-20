@@ -22,6 +22,11 @@ The panel is `position: fixed`, placed by Floating UI beneath the chip row (the 
 
 `compact` adds `category-chips--compact`, which applies `chip($size: compact)` ([`styling.md`](../styling.md), "Category chips", "Size") to the chips and the button, with a 4px row gap. About 18.8px tall. The +N button's pill is as short, with a transparent 24px hit area (WCAG 2.5.8).
 
+## Styling
+
+Tokens only, until the section's design review. `CategoryChips/index.scss` styles the chip inside the list (`.category-chips .chip`), the `+N` item (`.category-more-item`) and its button (`.category-more__button`, a `space()` step), the toggletip's fixed panel and its fade (`.category-more__panel`), and the compact size (`.category-chips--compact`). The chip itself is the shared `.chip`
+primitive.
+
 ## Testing
 
 `tests/components/CategoryChips` covers the chips, the limit and the panel's open and close paths. Placement and height are measured in a browser: `tests/e2e/public-compendium.spec.ts` (the card) and `tests/e2e/admin-compendium.spec.ts` (the table, desktop and phone).

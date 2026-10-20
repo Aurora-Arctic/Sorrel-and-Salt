@@ -85,6 +85,32 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
   hidden behind it (WCAG 2.4.11).
 - **Chips come out only by their cross**, inside the panel.
 
+## Styling
+
+Tokens only, until the section's design review. `FacetPanel/index.scss` is laid out in the order
+the panel is built: the Filters button and Clear All, the dialog and its slide, the static block
+before script, the rows (`__line`, `__quick`), then the choice chip (`.facet-chip__*`) and the foot. The
+sizes are `space()` steps and tokens. Four measurements stay as named, commented locals because no
+token fits: the categories floor and wide width, the compact control height, the native select's
+cap and the form's quarter-em gap.
+
+The `WIDE` constant, the width from which the panel stays beside the results with no scrim, is
+exported from `index.tsx`, and a test guards it against the Sass `$shell-tablet-width` it must equal.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/FacetPanel/index.stories.tsx), under `Admin / Facet Panel`:
+`Empty`, `Public`, `Chosen`, `FormsAndToxic`, `Admin`, `Coven` and `CovenEmpty`; the counts
+(`MatchShown`, `AllZeroFacet`); each choice chip stuck on a value (`MatchStuck`, `ToxicStuck`,
+`SourceStuck`); and each chip's menu open (`MatchMenu`, `SourceMenu`, `ToxicMenu`).
+
+## Testing
+
+`tests/components/FacetPanel/index.test.tsx`: the panel and its fields, the choice chips, the coven's
+Source, In Stock and Low Stock Only controls, the Toxic and Source fields when a count is zero, the
+phone sheet's slide, and the `WIDE` guard. The panel's placement under the search row is proved in
+the compendium page specs.
+
 ## Not here
 
 The GET form, the address state and the debounce that applies a change are the
