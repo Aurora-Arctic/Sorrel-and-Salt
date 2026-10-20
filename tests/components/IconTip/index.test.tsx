@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import IconTip, { EditLink } from '@/components/IconTip';
+import IconTip, { CheckIcon, EditLink } from '@/components/IconTip';
 import Modal from '@/components/Modal';
 
 // A word above an icon control, "Edit" over a pencil: shown on hover or the
@@ -137,5 +137,20 @@ describe('EditLink', () => {
 
     fireEvent.mouseEnter(link);
     expect(tip()).not.toBeNull();
+  });
+});
+
+describe('CheckIcon', () => {
+  it('is a glyph the control around it names, hidden from assistive technology', () => {
+    const { container } = render(
+      <a href="/fixture" aria-label="In My Ingredients">
+        <CheckIcon />
+      </a>,
+    );
+
+    expect(screen.getByRole('link', { name: 'In My Ingredients' })).toBeInTheDocument();
+    const glyph = container.querySelector('svg');
+    expect(glyph).toHaveAttribute('aria-hidden', 'true');
+    expect(glyph).toHaveAttribute('focusable', 'false');
   });
 });

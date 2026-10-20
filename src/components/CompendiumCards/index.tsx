@@ -6,16 +6,19 @@ import { EditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
+import { AddIcon, HeldLink } from './add-icon';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
 // The public compendium's list (M8.18): the filter row, one card per entry in a grid, and
 // the pager. Render-only, like the admin's table (CompendiumList): the page reads one page
 // under the address's filter and hands it here. Each card is a plain link to the entry's
-// page. The foot of a card holds Add to My Ingredients for someone who can add,
-// which stays disabled until M9.12 builds its dialog (the owner's call, 2026-10-19), and, for
-// a curator, Edit, which opens the compendium's edit dialog over the results (M8.17). A visitor
-// with no account sees no action on the cards and signs in through the header. claude-docs/components/compendium-cards.md.
+// page. A card's foot holds two things: at its left, for someone who can add, the plus
+// (Add to My Ingredients), or the check (In My Ingredients) once the switcher's coven holds the
+// entry; at its right, for a curator, Edit, which opens the compendium's edit dialog over the
+// results (M8.17). The plus adds directly until M9.12's dialog asks for a quantity (the owner's
+// call, 2026-10-20). A visitor with no account sees nothing on the cards and signs in through
+// the header. claude-docs/components/compendium-cards.md.
 
 const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
 
@@ -23,29 +26,23 @@ const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${
 const nameOf = (entry: CompendiumCardEntry): string =>
   entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name;
 
-// The foot: Add to My Ingredients for someone who can add, and a curator's Edit where the
-// page gave the entry an edit address (M8.17).
-const actionsOf = (
+// The foot's left end: the plus while the coven does not hold the entry, the check once it
+// does. Both need the switcher's coven; a held entry with no address to lead to shows neither.
+const startOf = (
   entry: CompendiumCardEntry,
   action: CompendiumCardsProps['action'],
+  workspaceId: string | undefined,
 ): ReactElement | undefined => {
-  const add = action === 'add' && (
-    // Disabled until M9.12 builds the dialog it opens.
-    <button type="button" className="btn btn--small" disabled>
-      Add to My Ingredients
-    </button>
-  );
-  const edit = entry.editHref && entry.editHeading && (
-    <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
-  );
-  if (!add && !edit) return undefined;
-  return (
-    <>
-      {add}
-      {edit}
-    </>
-  );
+  if (action !== 'add' || !workspaceId) return undefined;
+  if (!entry.held) return <AddIcon workspaceId={workspaceId} ingredientId={entry.id} />;
+  return entry.heldHref ? <HeldLink href={entry.heldHref} /> : undefined;
 };
+
+// The foot's right end: a curator's Edit, where the page gave the entry an edit address (M8.17).
+const endOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
+  entry.editHref && entry.editHeading ? (
+    <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
+  ) : undefined;
 
 const CompendiumCards = ({
   entries,
@@ -58,6 +55,7 @@ const CompendiumCards = ({
   position,
   total,
   action,
+  workspaceId,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -92,7 +90,8 @@ const CompendiumCards = ({
             safetyNotes={entry.safetyNotes}
             kind="compendium"
             recency={entry.recency}
-            actions={actionsOf(entry, action)}
+            startActions={startOf(entry, action, workspaceId)}
+            actions={endOf(entry)}
           />
         ))}
       </IngredientCardList>

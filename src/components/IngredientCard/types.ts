@@ -58,6 +58,12 @@ export interface IngredientCardProps {
    */
   actions?: ReactNode;
   /**
+   * Controls for the foot's left end, level with `actions` on the right (M9.12's add and
+   * held icons). Its own slot rather than a second use of `actions`, which is one
+   * right-aligned group; sits above the card's link the same way.
+   */
+  startActions?: ReactNode;
+  /**
    * The jar-line slot beneath the forms. The coven's Ingredients page fills it
    * with a line per jar (M9.6); the public compendium leaves it empty.
    */

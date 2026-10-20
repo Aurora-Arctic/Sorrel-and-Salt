@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                               |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                                                                                                                                                  |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient) |
+| File            | What it holds                                                                                                                                                                                                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                                                      |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                                                                                                                                                                                                                         |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `CheckIcon`, a tick for a compendium card's In My Ingredients (M9.12), `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient) |
 
 ## The props contract
 
@@ -50,6 +50,7 @@ follows `href` as before.
   `AnnotateIcon`, an open book with a filled pencil,
   drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
   (M8.17, 2026-10-19).
+- **Add and held on a compendium card** (`CompendiumCards`' `AddIcon` and `HeldLink`, M9.12): `PlusIcon` on a button tipped "Add to My Ingredients", and `CheckIcon` on a link tipped "In My Ingredients", both `.icon-tip__add`/`.icon-tip__held` (Edit's size and green), at the card's bottom left. The button shows the shared spinner in the plus's place while it works.
 - **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
   vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
   "More", where the card holds two or more choices; and, where its one

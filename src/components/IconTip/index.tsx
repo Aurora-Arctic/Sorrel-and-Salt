@@ -4,6 +4,7 @@ export { default } from './icon-tip';
 export { AnnotateLink, EditLink, QuickLookLink } from './edit-link';
 export {
   BinIcon,
+  CheckIcon,
   CopyIcon,
   DotsIcon,
   LinkIcon,

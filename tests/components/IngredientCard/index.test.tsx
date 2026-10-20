@@ -319,6 +319,22 @@ describe('IngredientCard actions', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
+  it('draws start controls alone, or beside the actions', () => {
+    const { rerender } = render(
+      <IngredientCard {...BASE} startActions={<button type="button">Fixture Start</button>} />,
+    );
+    expect(screen.getByRole('button', { name: 'Fixture Start' })).toBeTruthy();
+    rerender(
+      <IngredientCard
+        {...BASE}
+        startActions={<button type="button">Fixture Start</button>}
+        actions={<button type="button">Fixture Use</button>}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Fixture Start' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fixture Use' })).toBeTruthy();
+  });
+
   it('draws no foot without actions or jar lines', () => {
     render(<IngredientCard {...BASE} />);
     expect(screen.queryByRole('button')).toBeNull();
