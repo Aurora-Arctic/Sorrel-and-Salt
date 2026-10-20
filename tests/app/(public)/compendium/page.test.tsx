@@ -172,7 +172,7 @@ describe('the public compendium page', () => {
   it('leaves a visitor with no account no action on the cards, and no second Sign In', async () => {
     await renderPage();
     expect(screen.getAllByRole('link', { name: 'Testwort' }).length).toBeGreaterThan(0);
-    expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
   });
 
@@ -186,7 +186,7 @@ describe('the public compendium page', () => {
     async (_who, writes, buttons) => {
       viewerIfSignedIn.mockResolvedValue(shellOf(...writes));
       await renderPage();
-      const add = screen.queryAllByRole('button', { name: 'Add to My Ingredients' });
+      const add = screen.queryAllByRole('button', { name: /^Add to My Ingredients: / });
       expect(add).toHaveLength(buttons);
       expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
     },

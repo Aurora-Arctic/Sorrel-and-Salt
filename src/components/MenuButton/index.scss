@@ -23,7 +23,7 @@
 
 .menu-button__menu {
   z-index: layer('floating');
-  min-width: 11rem;
+  min-width: $menu-min-width;
   // A step of air all round, so an item's hover, focus and chosen fill sits
   // inset from the panel's edge and is never cut by it (the owner's call,
   // 2026-10-20). The panel needs no clipping now: nothing touches its corners.
@@ -114,9 +114,7 @@
   }
 
   &:focus-visible {
-    @include focus-ring;
-
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 }
 

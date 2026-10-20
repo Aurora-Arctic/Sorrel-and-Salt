@@ -85,9 +85,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   // A body only to read takes a Tab stop (readingBody), so it shows where the
   // keyboard is: inset, as the header above and the dialog's edge would clip it.
   &:focus-visible {
-    @include focus-ring;
-
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 }
 
@@ -396,7 +394,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   border-radius: radius('pill');
   background-color: transparent;
   color: $text-muted;
-  font-size: 2rem;
+  font-size: $close-target;
   line-height: 1;
   cursor: pointer;
 
@@ -538,7 +536,7 @@ $confirm-flash: $motion-short * 4;
 @keyframes confirm-overlay-mark {
   0%,
   50% {
-    outline: 2px solid $secondary;
+    outline: $rule-medium solid $secondary;
   }
 
   25%,

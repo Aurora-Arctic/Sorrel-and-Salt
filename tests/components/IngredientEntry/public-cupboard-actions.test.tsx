@@ -206,7 +206,7 @@ describe('CupboardActions on the public page', () => {
       // Why Add could have been one of the dots': both covens may add and the second lacks it.
       show(props([place(1), place(2, { held: true })], { edit: EDIT }));
 
-      const plus = screen.getByRole('button', { name: 'Add to My Ingredients' });
+      const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
       // The plus first, then the icons.
       expect(plus.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -214,11 +214,11 @@ describe('CupboardActions on the public page', () => {
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 
       fireEvent.click(plus);
-      const menu = screen.getByRole('menu', { name: 'Add to My Ingredients' });
+      const menu = screen.getByRole('menu', { name: /^Add to My Ingredients: / });
       const [one, two] = within(menu).getAllByRole('menuitem');
       expect(one).toHaveAccessibleName(place(1).name);
       expect(one).not.toHaveAttribute('aria-disabled');
-      expect(two).toHaveAccessibleName(`${place(2).name}, in My Ingredients`);
+      expect(two).toHaveAccessibleName(`${place(2).name}, already added`);
       expect(two).toHaveAttribute('aria-disabled', 'true');
       expect(two).not.toHaveAccessibleDescription();
 
@@ -233,7 +233,7 @@ describe('CupboardActions on the public page', () => {
       });
       show(props([place(1)]));
 
-      const plus = screen.getByRole('button', { name: 'Add to My Ingredients' });
+      const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       expect(plus).not.toHaveAttribute('aria-haspopup');
       expect(screen.queryByRole('link')).toBeNull();
       fireEvent.click(plus);
@@ -248,15 +248,15 @@ describe('CupboardActions on the public page', () => {
       show(props([place(1, { held: true }), place(2, { held: true })], { edit: EDIT }));
 
       expect(screen.getByRole('link', { name: 'Edit in Compendium Testwort' })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.getByRole('button', { name: 'In All Covens' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
+      expect(screen.getByRole('button', { name: /^In Your Covens: / })).toBeInTheDocument();
     });
 
     it('is not drawn, nor the check, for covens that may not add', () => {
       show(props([place(1, { canAdd: false }), place(2, { held: true, canAdd: false })]));
 
-      expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
+      expect(screen.queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
+      expect(screen.queryByRole('button', { name: /^In Your Covens: / })).toBeNull();
     });
   });
 

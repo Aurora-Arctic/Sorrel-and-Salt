@@ -60,7 +60,10 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
 
   // Add is the card's plus beside the pencil, as on the public page (the owner's call, 2026-10-20).
   const plus = () =>
-    page.getByRole('main').getByRole('button', { name: 'Add to My Ingredients', exact: true });
+    page.getByRole('main').getByRole('button', {
+      name: 'Add to My Ingredients: Fixture Screens Wort',
+      exact: true,
+    });
 
   // Why the buttons could show: the owner holds ingredient:create, update and
   // delete, and the coven does not hold the entry yet.
@@ -94,7 +97,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   await expect(plus()).toHaveCount(0);
   // The one coven that may add holds it now: the card's check in the plus's place.
-  await expect(page.getByRole('main').getByRole('button', { name: 'In All Covens' })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('button', { name: 'In Your Covens: Fixture Screens Wort' }),
+  ).toBeVisible();
   // The failed try's badge went with the button it belonged to.
   await expect(page.getByRole('button', { name: /^Show the error for / })).toHaveCount(0);
 
