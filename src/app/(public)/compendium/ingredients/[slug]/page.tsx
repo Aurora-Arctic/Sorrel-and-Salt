@@ -9,7 +9,7 @@ import { entryDescription, publicPageMetadata } from '../../../../../lib/page-me
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
 import { entryValues } from '@/app/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
-import { publicCupboardOf } from './cupboard';
+import { covensHolding, publicCupboardOf } from './cupboard';
 import type { CompendiumEntryParams } from './types';
 
 // One compendium entry, at its public address (M8.19; MB.80): readable by
@@ -22,8 +22,9 @@ import type { CompendiumEntryParams } from './types';
 // request: it asks `viewerIfSignedIn()`, which never redirects, to decide
 // whether to offer a curator Edit, and a signed-in person's cupboard choices
 // across the covens they may write in (M9.12, `cupboard.ts`). A visitor with
-// no session reads the page the same as ever, and the choices change none of
-// the page's marks.
+// no session reads the page the same as ever. A member whose covens hold the
+// entry sees the In Your Cupboard shelf before its name, read once with the
+// choices (`covensHolding`); the choices change none of the page's other marks.
 //
 // An unknown slug and a coven entry's slug both answer 404, since the read
 // refuses them alike. A slug the entry has moved off answers 308 to its
@@ -78,7 +79,10 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
     canEdit && 'edit' in search
       ? { id: entry.id, values: await entryValues(entry, null) }
       : undefined;
-  const covens = shell ? await publicCupboardOf(entry, own, search) : undefined;
+  // The covens of the viewer's that hold the entry, read once: the shelf mark before the
+  // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.
+  const holding = shell?.workspaces.length ? await covensHolding(entry.id) : [];
+  const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
 
   return (
     <>
@@ -102,6 +106,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
             : undefined
         }
         covens={covens}
+        heldInCovens={holding.length > 0}
         movedAway={
           movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined
         }

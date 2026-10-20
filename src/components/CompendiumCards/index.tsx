@@ -7,7 +7,8 @@ import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientSearch from '../IngredientSearch';
-import { AddIcon, HeldMark } from './add-icon';
+import AddIcon from '../AddIcon';
+import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import '../CompendiumList/index.scss';
 

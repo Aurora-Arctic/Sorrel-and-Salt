@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -85,6 +85,13 @@ function renderOnPage(props: Partial<CupboardActionsProps> = {}) {
 const button = (name: string) => screen.queryByRole('button', { name });
 
 /** The Edit menu's choices, in order, after opening it. */
+/** The open Edit menu's choices, read without pressing. */
+function shownChoices(): string[] {
+  return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
+    .getAllByRole('menuitem')
+    .map((item) => item.textContent ?? '');
+}
+
 function choices(): string[] {
   fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
   const items = within(screen.getByRole('menu', { name: 'Edit Testwort' })).getAllByRole(
@@ -104,7 +111,7 @@ describe('CupboardActions', () => {
 
   // The pencil at the end of the name's row (the owner's call, 2026-10-20): MenuButton's icon
   // form, named for the entry as the modal's pencil is, with the Edit tip and no word of its own.
-  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', () => {
+  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', async () => {
     renderActions({ held: true });
 
     const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
@@ -113,7 +120,12 @@ describe('CupboardActions', () => {
     fireEvent.mouseEnter(pencil);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
-    expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
+    // press: inside an async act, so that update is awaited rather than left outside it.
+    await act(async () => {
+      fireEvent.click(pencil);
+    });
+    expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
   it('offers Add to Cupboard alone, as a plain button, while the coven does not hold the entry', () => {

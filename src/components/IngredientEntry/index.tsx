@@ -26,7 +26,7 @@ import type { IngredientRow, SubstituteDetail, VariantDetail } from '@/modules/i
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
 import { cupboardFormValues } from '../CupboardEntryForm/entry-values';
-import EditButton from './edit-button';
+import { EditPencil } from './edit-pencil';
 import { editEyebrow } from './edit-heading';
 import {
   BIBLIOGRAPHY_ID,
@@ -316,6 +316,7 @@ const IngredientEntry = ({
   similar,
   cupboard,
   covens,
+  heldInCovens = false,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
@@ -403,7 +404,7 @@ const IngredientEntry = ({
           <FormalName entry={entry} />
           <PageHeader
             title={shown.name}
-            lead={(local || held) && <HeldMark />}
+            lead={(local || held || heldInCovens) && <HeldMark />}
             action={
               (edit || cupboard || covens) && (
                 <>
@@ -413,7 +414,9 @@ const IngredientEntry = ({
                   ) : (
                     edit &&
                     !(choices && !local) && (
-                      <EditButton href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
+                      // Edit alone, as for a curator in no coven: the pencil everyone's Edit is,
+                      // a link straight into the dialog (the owner's call, 2026-10-20).
+                      <EditPencil href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
                     )
                   )}
                   {cupboard && !local && (

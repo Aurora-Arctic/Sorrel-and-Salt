@@ -126,7 +126,7 @@
 }
 
 // The plus after an add (the owner's call, 2026-10-20): the spinner turns into the check, drawn
-// along its stroke, which holds, then cross-fades back to the plus (`returning`); add-icon.tsx
+// along its stroke, which holds, then cross-fades back to the plus (`returning`); AddIcon
 // sets `data-state` and times the hold. While the check shows, the plus wears the held mark's
 // look, no wash under it and the default cursor, so where the add left every coven holding the
 // entry the page's held mark takes its place with nothing moving. Under reduced motion nothing is

@@ -17,15 +17,16 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
-import IconTip, { PencilIcon } from '../IconTip';
+import AddIcon from '../AddIcon';
+import IconTip, { EditLink, PencilIcon } from '../IconTip';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
+import { HeldMark as CardHeldMark } from '../CompendiumCards/held-mark';
 import { useOpenModalClick } from '../Modal';
 import { AddCupboardEntryDocument } from './add-cupboard-entry';
 import AnnotateDialog from './annotate-dialog';
 import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-writes';
 import { ANNOTATE_HEADING } from './annotate-heading';
-import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import AddToCovenDialog from './add-to-coven-dialog';
 import AnnotatePicker from './annotate-picker';
@@ -54,15 +55,26 @@ import type {
 // title; the three share it, since one press at a time can fail.
 //
 // The public entry page offers the same (M9.12), across every coven the viewer
-// may write in: Add while any of them lacks the entry. Standing alone, Add is a
-// menu of every coven that may add where two or more may, a coven holding the
-// entry shown disabled rather than left off (the owner's call, 2026-10-20);
-// inside the Edit menu, it asks which in a dialog where two or more may add.
-// And each held choice while one of the covens holding the entry permits it, acting at once where one does and asking
+// may write in, but for Add: while any of them lacks the entry, Add is the
+// compendium card's plus (AddIcon), just before the pencil and never one of its
+// choices (the owner's calls, 2026-10-20). Without the plus (PUBLIC_ADD_AS_PLUS),
+// Add standing alone is a menu of every coven that may add where two or more may,
+// a coven holding the entry disabled, and inside the Edit menu it asks which in a
+// dialog. And each held choice while one of the covens holding the entry permits it, acting at once where one does and asking
 // which where several do. Make It Ours and Remove ask in their own
 // confirmation, the dropdown above the question; Annotate asks in a picker of
 // its own, then opens that coven's `?annotate=<covenSlug>`. A coven's page is
 // the one-place case of the same list.
+
+// The public page's plus (the owner's calls, 2026-10-20), each a default the coordinator chose
+// and flagged to the owner, so each is one line to change:
+/** Add to Cupboard leaves the pencil's menu there, for the card's plus just before the pencil. */
+const PUBLIC_ADD_AS_PLUS = true;
+/**
+ * Once every coven that may add holds the entry: 'none' draws nothing in the plus's place, as the
+ * shelf before the name already says it; 'check' would draw the card's check there instead.
+ */
+const PLUS_ONCE_ALL_HOLD: 'none' | 'check' = 'none';
 
 // A held coven's note in the lone Add menu, as AddToCovenDialog and the card's plus word it.
 const HELD_NOTE = 'Already in My Ingredients';
@@ -102,6 +114,7 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
       // No coven's label: the public page is the compendium's.
       name: props.compendium.name,
       removedHref: undefined,
+      plus: PUBLIC_ADD_AS_PLUS,
     };
   }
   const { workspaceId, covenSlug, held, canAdd, canAnnotate, canRemove, canMakeOurs } = props;
@@ -125,6 +138,7 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
     // The entry as the coven calls it, for the two confirmations.
     name: props.overrides.label ?? props.compendium.name,
     removedHref: props.removedHref,
+    plus: false,
   };
 }
 
@@ -135,11 +149,16 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
  * them, since the hook that draws the badge is called before the choices'
  * handlers exist.
  */
-function feedbackName(places: readonly CupboardPlace[], edit: boolean, name: string): string {
+function feedbackName(
+  places: readonly CupboardPlace[],
+  edit: boolean,
+  name: string,
+  plus: boolean,
+): string {
   const keys = (
     [
       edit && 'edit',
-      placesFor.add(places).some(({ held }) => !held) && 'add',
+      !plus && placesFor.add(places).some(({ held }) => !held) && 'add',
       placesFor.annotate(places).length > 0 && 'annotate',
       placesFor.own(places).length > 0 && 'own',
       placesFor.remove(places).length > 0 && 'remove',
@@ -159,7 +178,8 @@ export default function CupboardActions(
   props: CupboardActionsProps | PublicCupboardActionsProps,
 ): ReactElement | null {
   const { ingredientId, compendium, edit } = props;
-  const { places, defaultWorkspaceId, closeHref, opened, name, removedHref } = normalise(props);
+  const { places, defaultWorkspaceId, closeHref, opened, name, removedHref, plus } =
+    normalise(props);
   const { refresh } = usePendingNavigation();
   // Which question is open, one at a time. The Annotate dialog is the
   // address's instead (`opened`), as the curator's Edit is.
@@ -179,7 +199,7 @@ export default function CupboardActions(
   const trigger = useRef<HTMLButtonElement | null>(null);
   // The callout hangs from the same button, named as the badge says it: the
   // pencil's Edit and the entry, or the lone button's own label.
-  const feedback = useClickFeedback({ name: feedbackName(places, !!edit, name) });
+  const feedback = useClickFeedback({ name: feedbackName(places, !!edit, name, plus) });
   const { anchorRef } = feedback;
   const triggerRef = useCallback(
     (node: HTMLButtonElement | null) => {
@@ -270,7 +290,7 @@ export default function CupboardActions(
 
   const items: MenuButtonItem[] = [
     ...(edit ? [{ key: 'edit', label: LABEL.edit, href: edit.href, onClick: openEdit }] : []),
-    ...(lacking.length > 0
+    ...(lacking.length > 0 && !plus
       ? [
           {
             key: 'add',
@@ -306,22 +326,41 @@ export default function CupboardActions(
         ]
       : []),
   ];
-  if (items.length === 0) return null;
+  // The plus, where Add is not one of the choices: while some coven that may add lacks the entry.
+  const plusMark =
+    plus && adders.length > 0 ? (
+      lacking.length > 0 ? (
+        <AddIcon
+          workspaceId={startOn(adders, defaultWorkspaceId)}
+          ingredientId={ingredientId}
+          covens={adders.map(({ workspaceId, name: coven }) => ({ id: workspaceId, name: coven }))}
+          heldIn={adders.filter(({ held }) => held).map(({ workspaceId }) => workspaceId)}
+        />
+      ) : PLUS_ONCE_ALL_HOLD === 'check' ? (
+        <CardHeldMark />
+      ) : null
+    ) : null;
+  if (items.length === 0 && !plusMark) return null;
 
   // One choice is a plain button, as Add Ingredient is with one place to go.
   const only = items.length === 1 ? items[0] : undefined;
+  // Icons alone, the plus and the pencil, as one pair that sits where the pencil sits.
+  const icons = items.length !== 1 || only?.key === 'edit';
   const openedPlace =
     opened && places.find(({ workspaceId }) => workspaceId === opened.workspaceId);
 
   return (
     <div
       className={
-        only === undefined
-          ? 'ingredient-entry__cupboard ingredient-entry__cupboard--pencil'
+        icons
+          ? plusMark && items.length > 0
+            ? 'ingredient-entry__cupboard ingredient-entry__cupboard--pencil ingredient-entry__cupboard--pair'
+            : 'ingredient-entry__cupboard ingredient-entry__cupboard--pencil'
           : 'ingredient-entry__cupboard'
       }
     >
-      {only === undefined ? (
+      {plusMark}
+      {items.length === 0 ? null : only === undefined ? (
         <IconTip tip="Edit">
           <MenuButton
             ref={triggerRef}
@@ -334,7 +373,13 @@ export default function CupboardActions(
           />
         </IconTip>
       ) : only.key === 'edit' && edit ? (
-        <EditButton href={edit.href} entry={edit.entry} />
+        // Edit alone: the pencil still, as a link straight into the edit dialog rather than a
+        // menu of one (the owner's call, 2026-10-20).
+        <EditLink
+          href={edit.href}
+          name={name}
+          heading={editHeading(edit.entry, EDIT_ENTRY_EYEBROW)}
+        />
       ) : only.key === 'add' && adders.length > 1 ? (
         // Add to Cupboard alone, with two or more covens that may add: a menu
         // of them all by name, adding to the one chosen at once, as the
