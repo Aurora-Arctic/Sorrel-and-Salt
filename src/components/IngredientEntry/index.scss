@@ -238,7 +238,7 @@ $formal-line: 1.5rem;
 
 // Beside a jump menu the shelf hangs out into the menu's column, so the name
 // keeps its line with the text beneath it, held or not (the owner's call,
-// 2026-10-19). With no menu column, as on a phone, it stays on the line.
+// 2026-10-19). With no menu column it goes above the name (below).
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
   .ingredient-entry--with-nav .page-header__title {
     position: relative;
@@ -258,6 +258,32 @@ $formal-line: 1.5rem;
 
   .ingredient-entry--with-nav .ingredient-entry__held {
     margin-inline-end: 0;
+  }
+}
+
+// Without the menu column, below the breakpoint that sets the menu beside the content (the
+// same `$shell-phone-width` as the rule above, and `entry-nav-grid`'s), the shelf stands on a
+// line of its own above the name, between the formal name and the heading, so the name keeps the
+// line's whole width and starts where the text beneath it does (the owner's call, 2026-10-20).
+// The header's `lead` turns from a row into a column; the markup and the reading order stay as
+// they are, the shelf read before the heading. Not above the formal name: placed there, it stood
+// alone two lines from the name it marks, and needed the pencil moved down with it. On its own
+// line the shelf is 30% larger than beside the name (the owner's call, 2026-10-20): the drawing's
+// own size, not a transform, so the line and the button, its tap target, grow with it.
+@media (max-width: #{$shell-phone-width}) {
+  .ingredient-entry__head .page-header__title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: space(1);
+  }
+
+  .ingredient-entry__head .ingredient-entry__held {
+    margin-inline-end: 0;
+
+    > svg {
+      width: calc(0.72em * 1.3);
+      height: calc(0.72em * 1.3);
+    }
   }
 }
 
