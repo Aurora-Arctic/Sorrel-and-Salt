@@ -319,6 +319,11 @@ describe('IngredientCard actions', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
+  it('draws its start actions with no other actions or jar lines', () => {
+    render(<IngredientCard {...BASE} startActions={<button type="button">Fixture Look</button>} />);
+    expect(screen.getByRole('button', { name: 'Fixture Look' })).toBeTruthy();
+  });
+
   it('draws no foot without actions or jar lines', () => {
     render(<IngredientCard {...BASE} />);
     expect(screen.queryByRole('button')).toBeNull();

@@ -2,6 +2,8 @@ import type { Story } from '@ladle/react';
 import { Jars } from './story-jars';
 import IngredientCard from '.';
 import type { SafetyVariant } from '../SafetyNote/types';
+import DetailsLink from '../IngredientEntry/details-link';
+import { detailsHeading } from '../IngredientEntry/details';
 
 // Render-only; what shows and when is asserted in tests/components/IngredientCard.
 export default {
@@ -154,6 +156,35 @@ export const WithActions: Story = () => (
           Restock
         </button>
       </>
+    }
+  >
+    <Jars />
+  </IngredientCard>
+);
+
+// The coven's Quick Look eye in the start slot, at the foot's bottom left, with the
+// other actions kept at its right (M12.5). In a story the eye is a plain link.
+export const WithStartActions: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="own"
+    startActions={
+      <DetailsLink
+        opens={{
+          href: '/coven/fixture/ingredients?entry=testwort',
+          heading: detailsHeading({
+            name: BASE.label,
+            canonicalName: BASE.formalName,
+            nomenclature: BASE.nomenclature,
+          }),
+        }}
+        name={`${BASE.label}, ${BASE.formalName}`}
+      />
+    }
+    actions={
+      <button type="button" className="btn btn--small">
+        Restock
+      </button>
     }
   >
     <Jars />

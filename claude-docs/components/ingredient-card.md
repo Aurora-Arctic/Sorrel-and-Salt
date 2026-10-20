@@ -26,6 +26,7 @@ nothing from the data.
 | `level`        | The name's heading level, 2 to 5; Defaults to 2                                                                                                                                                                                                                                                           |
 | `children`     | The jar-line slot, last (see the slot’s contract)                                                                                                                                                                                                                                                         |
 | `actions`      | Buttons for the card's foot, right-aligned beneath the jar lines; they sit above the stretched link, so they press on their own                                                                                                                                                                           |
+| `startActions` | Controls for the foot's start, at its bottom left, apart from `actions` at the right: the coven's Quick Look eye (M12.5). They sit above the stretched link too                                                                                                                                           |
 
 ## What it is made of
 
@@ -110,7 +111,7 @@ leaves) takes `z-index: 1`, so its tips paint over the cards before and after it
 Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
 
-The foot (`.specimen__foot`) holds the jar lines and then the actions, and sits at the card's bottom, so cards of one grid row share a bottom line. The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
+The foot (`.specimen__foot`) holds the jar lines and then the actions, and sits at the card's bottom, so cards of one grid row share a bottom line. The foot shows when there are jars, actions or start actions. `startActions` render first in the actions row, in `.specimen__actions-start`, whose `margin-inline-end: auto` keeps them at the left and pushes `actions` to the right: the coven's Quick Look eye sits there, with More and a pencil at the right (the owner's call, 2026-10-20; it sat after the name at first, where it wrapped the badges and sat low on the name's line). The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
 
 ## Order
 

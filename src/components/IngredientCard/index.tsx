@@ -5,7 +5,6 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
-import DetailsLink from '../IngredientEntry/details-link';
 import LinkHint from '../LinkHint';
 import { CautionMark, ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
@@ -13,8 +12,8 @@ import type { IngredientCardProps } from './types';
 import './index.scss';
 
 // One ingredient in a list, for the public compendium (M8.18) and the coven's
-// Ingredients page (M9.6) alike: its name as the card's link (with a Quick Look
-// eye beside it on the coven's list, M12.5), the formal
+// Ingredients page (M9.6) alike: its name as the card's link (a Quick Look eye at
+// the foot's left on the coven's list, M12.5), the formal
 // name and the forms beneath it (two entries can share a label, and these tell
 // them apart), the marks, and a slot for jar lines. Presentational:
 // it takes props only and works out nothing from the data, so the marks and the
@@ -22,7 +21,6 @@ import './index.scss';
 // as they are and never restyled here. claude-docs/components/ingredient-card.md.
 const IngredientCard = ({
   href,
-  opens,
   label,
   formalName,
   nomenclature,
@@ -36,6 +34,7 @@ const IngredientCard = ({
   recency,
   level = 2,
   actions,
+  startActions,
   children,
 }: IngredientCardProps): ReactElement => {
   const Heading = `h${level}` as const;
@@ -53,6 +52,7 @@ const IngredientCard = ({
 
   const jars = children != null && children !== false;
   const hasActions = actions != null && actions !== false;
+  const hasStart = startActions != null && startActions !== false;
 
   return (
     <article className="ingredient-card specimen">
@@ -66,13 +66,6 @@ const IngredientCard = ({
               {label} <LinkHint />
             </PendingLink>
           </Heading>
-          {/* Outside the heading, so its name stays the entry's alone; in its line. */}
-          {opens && (
-            <>
-              {' '}
-              <DetailsLink opens={opens} name={formal ? `${label}, ${formal}` : label} />
-            </>
-          )}
           {formal !== '' && (
             <p className="meta ingredient-card__formal">
               {/* `i` rather than `em`: a taxonomic name is set apart, not stressed.
@@ -118,12 +111,18 @@ const IngredientCard = ({
           ))}
         </p>
       )}
-      {(jars || hasActions) && (
-        // The foot: the jar lines, then the actions. Pushed to the card's bottom edge
-        // (`margin-top: auto`), so cards in one grid row end on the same line.
+      {(jars || hasActions || hasStart) && (
+        // The foot: the jar lines, then the actions, with any start actions at their
+        // left. Pushed to the card's bottom edge (`margin-top: auto`), so cards in one
+        // grid row end on the same line.
         <div className="specimen__foot">
           {jars && <div className="specimen__stock">{children}</div>}
-          {hasActions && <div className="specimen__actions">{actions}</div>}
+          {(hasActions || hasStart) && (
+            <div className="specimen__actions">
+              {hasStart && <span className="specimen__actions-start">{startActions}</span>}
+              {actions}
+            </div>
+          )}
         </div>
       )}
     </article>

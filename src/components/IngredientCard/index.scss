@@ -163,6 +163,12 @@
   z-index: 1;
 }
 
+// The foot's start (M12.5): the coven's Quick Look eye at the bottom left, the
+// other actions kept at the right by the auto margin.
+.ingredient-card .specimen__actions-start {
+  margin-inline-end: auto;
+}
+
 // The badges (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
 // badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
 .ingredient-card .badge {
@@ -190,19 +196,6 @@
 // unless a stored Regular choice sits on <html> (data-card-density, CardDensitySwitch).
 [data-density='compact']:not(:root[data-card-density='regular'] *) {
   @include ingredient-card-compact;
-}
-
-// The name and its Quick Look eye in one line (M12.5): the heading runs
-// inline, so the eye follows its last word, and the formal name beneath stays
-// a block of its own. The eye is above the stretched link, as the actions are,
-// so a press on it opens the details rather than the page.
-.ingredient-card__name {
-  display: inline;
-}
-
-.ingredient-card .ingredient-card__heading > .icon-tip {
-  position: relative;
-  z-index: 1;
 }
 
 // The card's More (the three dots, M8.17) in the card's own ink, white in dark and the

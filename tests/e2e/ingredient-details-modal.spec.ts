@@ -16,8 +16,8 @@ import {
 import { discardQuestion, editIngredientDialog } from './stories/ingredient-dialogs';
 
 // M12.5: an entry's details in a modal over its list, opened by the Quick Look
-// eye beside its name, on the admin Compendium list and a coven's Ingredients
-// (claude-docs/components/ingredient-entry.md, "The details modal"). This
+// eye, left of the name on the admin Compendium list and at the card's foot on
+// a coven's Ingredients (claude-docs/components/ingredient-entry.md, "The details modal"). This
 // proves what no story walks: the eye opens the details and every close gives
 // it the focus back, the name itself still reaches the entry's page, Edit
 // opens the edit modal over the details and closes back to them, a coven's
@@ -33,7 +33,7 @@ const NAME = 'Fixture Lookwort';
 const FORMAL = 'Fixtura spectata';
 const ENTRY = `${NAME}, ${FORMAL}`;
 
-/** The eye beside the entry's name, named by its verb and the entry. */
+/** The Quick Look eye, named by its verb and the entry. */
 const quickLook = (scope: Locator | Page, entry = ENTRY) =>
   scope.getByRole('link', { name: `Quick Look ${entry}`, exact: true });
 

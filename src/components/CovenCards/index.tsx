@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { AnnotateLink, EditLink } from '../IconTip';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
+import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
@@ -107,7 +108,6 @@ const CovenCards = ({
           <IngredientCard
             key={entry.id}
             href={`/coven/${covenSlug}/ingredients/${entry.id}` as Route}
-            opens={entry.details}
             label={entry.label}
             formalName={entry.canonicalName}
             nomenclature={entry.nomenclature}
@@ -119,6 +119,7 @@ const CovenCards = ({
             annotated={entry.annotated}
             retired={entry.retired}
             actions={actionsOf(entry, workspaceId, covenSlug)}
+            startActions={<DetailsLink opens={entry.details} name={nameOf(entry)} />}
           >
             {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
           </IngredientCard>
