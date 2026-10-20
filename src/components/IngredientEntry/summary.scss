@@ -23,6 +23,32 @@
   margin-block-start: 0;
 }
 
+// In Your Covens: each coven's link led by the In Your Cupboard shelf, the name
+// one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
+// stands at the top of the link, level with the name's first line, so a wrapped
+// name runs on under itself; the link sits at the top of its line box
+// (`vertical-align`), where an inline-flex box would otherwise sit on its first
+// item's synthesised baseline. The shelf is the line's height, 1.25em at
+// `line-height: normal`, and centres on the capitals rather than the line box by
+// an optical drop, as a badge's label does: Lexend's capitals sit 0.03em below
+// the line box's centre (measured 2026-10-20). Moved, not margined, so the row's
+// height holds. claude-docs/components/ingredient-entry.md, "The details modal".
+.ingredient-summary__covens a {
+  display: inline-flex;
+  align-items: flex-start;
+  vertical-align: top;
+  gap: space(2);
+  font-weight: 400;
+
+  > svg {
+    flex: none;
+    width: 1.25em;
+    height: 1.25em;
+    position: relative;
+    inset-block-start: 0.03em;
+  }
+}
+
 // The line naming the forms with their own cautions, inside the caution so the
 // two read as one warning, in the muted ink. The section's own gap spaces it
 // from the notes, as it spaces the notes from each other.
