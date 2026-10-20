@@ -145,7 +145,7 @@ test.describe('on the admin Compendium list', () => {
     const bar = details.getByRole('button', { name: 'Show More' });
     const paragraph = details.locator(`#${(await bar.getAttribute('aria-controls')) ?? ''}`);
 
-    // Why it could be cut: the whole text is longer than the four lines it shows.
+    // Why it could be cut: the whole text is longer than the six lines it shows.
     await expect(bar).toHaveAttribute('aria-expanded', 'false');
     const closed = (await paragraph.evaluate((p) => p.parentElement?.clientHeight)) ?? 0;
     const whole = await paragraph.evaluate((p) => p.scrollHeight);
@@ -155,9 +155,9 @@ test.describe('on the admin Compendium list', () => {
     const textBox = await paragraph.boundingBox();
     expect(Math.round(barBox?.width ?? 0)).toBe(Math.round(textBox?.width ?? -1));
 
-    // Four lines are showing, not three: the clip is four line heights tall.
+    // Six lines are showing, not five: the clip is six line heights tall.
     const lineHeight = await paragraph.evaluate((p) => parseFloat(getComputedStyle(p).lineHeight));
-    expect(Math.round(closed / lineHeight)).toBe(4);
+    expect(Math.round(closed / lineHeight)).toBe(6);
     const gapClosed =
       (barBox?.y ?? 0) -
       (await details

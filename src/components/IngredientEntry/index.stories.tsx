@@ -577,7 +577,7 @@ export const DetailsInYourCovens: Story = () => (
 );
 DetailsInYourCovens.meta = { iframed: true };
 
-// A long description, cut to its first four lines, Show More opening the
+// A long description, cut to its first six lines (the owner's call, 2026-10-20), Show More opening the
 // rest in place; the sparse story's short one stands whole with no button.
 export const DetailsLongDescription: Story = () => (
   <Details
@@ -588,6 +588,8 @@ export const DetailsLongDescription: Story = () => (
         description:
           'A low, grey-leaved fixture herb of dry banks and old walls, gathered at midsummer when its small yellow flowers first open.\n' +
           'Its leaves are dried in bundles under the eaves and kept through the winter, and its seed heads are left standing for the birds.\n' +
+          'The old herbals set it among the plants that keep a house, and the village women pressed it between the pages of the family book, where it scented the leaves for a generation.\n' +
+          'A tea of it is taken at the turn of the year, three sips for each of the three roads, and the cup is turned down on the hearth when it is empty.\n' +
           'In the fixture covens it is laid under the threshold stone of a new house, burned with the year’s last fire, and steeped for the wash that clears a room after a quarrel.',
       }),
     }}

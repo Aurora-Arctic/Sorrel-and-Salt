@@ -303,7 +303,7 @@ describe('IngredientSummary', () => {
 
     /**
      * The paragraph's measured overflow: happy-dom lays nothing out, so its height and
-     * its line height (three of which are the cut) are the test's.
+     * its line height (six of which are the cut) are the test's.
      */
     function measures(scrollHeight: number, lineHeight = 24): void {
       vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
@@ -366,8 +366,8 @@ describe('IngredientSummary', () => {
       expect(bar).toHaveFocus();
     });
 
-    it('shows a description of four lines or fewer whole, with no toggle', () => {
-      measures(97);
+    it('shows a description of six lines or fewer whole, with no toggle', () => {
+      measures(145);
       render(<IngredientSummary detail={full()} />);
 
       // Why it could show: the description is drawn.
@@ -375,8 +375,8 @@ describe('IngredientSummary', () => {
       expect(screen.queryByRole('button', { name: 'Show More' })).not.toBeInTheDocument();
     });
 
-    it('shows a fifth line behind the toggle', () => {
-      measures(98);
+    it('shows a seventh line behind the toggle', () => {
+      measures(146);
       render(<IngredientSummary detail={full()} />);
 
       expect(screen.getByRole('button', { name: 'Show More' })).toBeInTheDocument();
