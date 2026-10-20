@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
 import { useEffect, useId, useLayoutEffect, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -26,6 +27,7 @@ import type { CitationFields } from '../../lib/types';
 import { ComboboxEntry } from '../Combobox';
 import Modal from '../Modal';
 import IngredientForm from '.';
+import { NameField } from './duplicates';
 import { substituteSummary } from './substitute-summary';
 import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
 import { useHangingFetch } from '../../../.ladle/hanging-fetch';
@@ -1477,3 +1479,60 @@ export const LoadingSubstituteSummary: Story = () => {
     </div>
   );
 };
+
+// The duplicates notice as MB.120 proposes it (the MB.120 plan): the warning
+// while a name is typed against, and the same notice once a save is held on
+// it. Colour told the two apart alone; the words now do too. Built from fixed
+// state rather than the lookup, so both show at once. The block Notice that
+// replaces the hand-written classes is a follow-on task, not this story.
+const NEAR_MATCHES = CATS_CLAW.map((match) => ({
+  ...match,
+  isGlobal: true,
+  inCupboard: false,
+}));
+
+const noop = async () => false;
+
+function ProposalNameField({ blocking }: { blocking: boolean }) {
+  const methods = useForm<IngredientFormValues>({
+    defaultValues: { ...EMPTY_VALUES, name: "Cat's Claws" },
+  });
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={(event) => event.preventDefault()}>
+        <NameField
+          warning={{
+            shown: NEAR_MATCHES,
+            blocking,
+            pending: false,
+            exact: [],
+            check: noop,
+            dismiss: () => undefined,
+          }}
+          hrefOf={covenDuplicateHref}
+          onUse={() => undefined}
+          ref={null}
+        />
+      </form>
+    </FormProvider>
+  );
+}
+
+function ProposalDuplicates() {
+  return (
+    <div className="page-column">
+      <h2>Typing: A Question</h2>
+      <ProposalNameField blocking={false} />
+      <h2>Save Pressed: On Hold</h2>
+      <ProposalNameField blocking />
+    </div>
+  );
+}
+
+export const ProposalDuplicatesNotice: Story = () => <ProposalDuplicates />;
+
+export const ProposalDuplicatesNoticePhoneDark: Story = () => <ProposalDuplicates />;
+ProposalDuplicatesNoticePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const ProposalDuplicatesNoticePhoneLight: Story = () => <ProposalDuplicates />;
+ProposalDuplicatesNoticePhoneLight.meta = { theme: 'light', width: 375 };
