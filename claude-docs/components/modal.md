@@ -38,6 +38,7 @@ is the wrapper every admin page opens it through (below).
 | `readingBody`                                           | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
 | `loading`                                               | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
 | `children`                                              | The body: a form, a confirmation, whatever the owner puts here                                                                          |
+| `foot`                                                  | A bar under the body, outside what scrolls ("The foot"); absent on every dialog but the details                                         |
 | `returnTo`                                              | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
 
 ## Contracts
@@ -661,6 +662,8 @@ not cut off. So the header stays at the top as a long form scrolls beneath
 it, the owner's call at MB.115, without being `position: sticky`, and a
 question's layer can lie over exactly the part of the body in view. The body
 is isolated, so nothing in it raised by a `z-index` rises over the layer.
+
+**The foot** (`foot`, the owner's call, 2026-10-20). A bar under the body that stays in view while the body scrolls, for the details modal's View Page. It is a sibling of the body in `.modal-dialog__main`, which is a two-row grid, the body in the first row and the foot in the second, and not a `position: sticky` child of the body: a sticky child lies inside the scroller, so the scrollbar's track ran its whole height, down past the bar, and drew over it. In its own row the body is the only thing that scrolls and its scrollbar starts under the head and ends above the foot. With no `foot` there is no second row. The scrim of a question (`.modal-dialog__layer`) covers the body's row alone, so `hold()` marks the foot `inert` with the body and the header slot while a question is asked, and live again once answered (`tests/components/Modal/index.test.tsx`). `RouteModal`'s `content` takes it too (`RouteModalContent.foot`). The foot brings its own surface and hairline; the Modal draws neither.
 
 **A body only to read takes a Tab stop** (`readingBody`, M12.5). A scrolling body with no field in it cannot be scrolled from the keyboard, and axe's `scrollable-region-focusable` rule fails it: the details modal holds only links in its header, so its long summary was out of reach. The body gets `tabIndex={0}` and an inset focus ring, as the header and the dialog's edge would clip an outer one. A form leaves it off, since its fields already reach every part of it.
 

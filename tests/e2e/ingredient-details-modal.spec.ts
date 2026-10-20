@@ -201,15 +201,14 @@ test.describe('on the admin Compendium list', () => {
       .toBeLessThan(whole);
   });
 
-  test('a short entry fits its window: the body overflows on neither axis, and the bar still runs edge to edge', async ({
+  test('a short entry fits its window: the body overflows on neither axis, with View Page outside it', async ({
     page,
   }) => {
     await page.goto(`${listPath}&entry=${slug}`);
     const details = detailsDialog(page);
     const body = details.locator('.modal-dialog__body');
-    // Why it could overflow: the foot bar is in the body, with the margins that take it to the edges.
-    const bar = details.locator('.ingredient-details-foot');
-    await expect(bar).toBeVisible();
+    // Why it could overflow: the entry has a View Page foot, which was once the body's last child.
+    await expect(details.getByRole('link', { name: 'View Page' })).toBeVisible();
     // Why it is short: the one caution, nothing near the window's height.
     const room = await body.evaluate((b) => b.clientHeight);
     expect(room).toBeLessThan((page.viewportSize()?.height ?? 0) / 2);
@@ -219,18 +218,15 @@ test.describe('on the admin Compendium list', () => {
         x: b.scrollWidth - b.clientWidth,
       }));
     await expect.poll(overflow).toEqual({ y: 0, x: 0 });
-    // Edge to edge: the bar is as wide as the dialog.
-    const dialogBox = await details.boundingBox();
-    const barBox = await bar.boundingBox();
-    expect(Math.abs((barBox?.width ?? 0) - (dialogBox?.width ?? 1))).toBeLessThan(2);
+    // The scrollbar is the browser's to draw, and only for text that overflows: never forced.
+    expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
+    // The foot is the modal's own, under the body and out of what scrolls.
+    await expect(body.getByRole('link', { name: 'View Page' })).toHaveCount(0);
   });
 
-  test('a description that fits the window once opened leaves the body with nothing to scroll, during the opening and after, with the scrollbars drawn', async ({
+  test('a description that fits the window once opened leaves the body with nothing to scroll, during the opening and after', async ({
     page,
   }) => {
-    // Chromium's headless mode hides scrollbars; draw them, so one would take its width from the text.
-    const session = await page.context().newCDPSession(page);
-    await session.send('Emulation.setScrollbarsHidden', { hidden: false });
     await page.setViewportSize({ width: 1280, height: 1000 });
     const midName = 'Fixture Midwort';
     const midFormal = 'Fixtura media';
@@ -259,7 +255,6 @@ test.describe('on the admin Compendium list', () => {
       body.evaluate((b) => ({
         y: b.scrollHeight - b.clientHeight,
         x: b.scrollWidth - b.clientWidth,
-        gutter: b.getBoundingClientRect().width - b.clientWidth,
       }));
 
     // Why it could scroll: the description is cut, and opening it adds height to the body.
@@ -268,51 +263,42 @@ test.describe('on the admin Compendium list', () => {
     const closedHeight = await body.evaluate((b) => b.clientHeight);
     // Why it should not: opened, the whole window is still taller than the body asks for.
     await bar.click();
-    const samples: { y: number; x: number; gutter: number }[] = [];
+    const samples: { y: number; x: number }[] = [];
     for (let i = 0; i < 16; i++) {
       samples.push(await overflow());
       await page.waitForTimeout(50);
     }
-    await expect
-      .poll(() => body.evaluate((b) => b.clientHeight))
-      .toBeGreaterThan(closedHeight + 20);
+    await expect.poll(() => body.evaluate((b) => b.clientHeight)).toBeGreaterThan(closedHeight);
     expect(await body.evaluate((b) => b.clientHeight)).toBeLessThan(
-      (page.viewportSize()?.height ?? 0) - 120,
+      page.viewportSize()?.height ?? 0,
     );
     samples.push(await overflow());
-    expect(samples.every((s) => s.y === 0 && s.x === 0 && s.gutter === 0)).toBe(true);
+    expect(samples.every((s) => s.y === 0 && s.x === 0)).toBe(true);
+    // Not forced: the body's own overflow is auto, so a scrollbar shows for overflow alone.
+    expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
   });
 
-  test('View Page is a centred button in a bar fixed to the foot of the window, with the text scrolling under it', async ({
+  test('View Page is a button in a foot outside the scrolling body, which scrolls the text under its own end', async ({
     page,
   }) => {
     const details = await openLongEntry(page);
     const open = details.getByRole('link', { name: 'View Page' });
     const body = details.locator('.modal-dialog__body');
-    const bottomOf = async (el: Locator) =>
-      (await el.evaluate((node) => node.getBoundingClientRect().bottom)) ?? 0;
 
     // Why it could scroll: opened whole, the long text is taller than the window the body shows.
     await details.getByRole('button', { name: 'Show More' }).click();
     await expect
       .poll(() => body.evaluate((b) => b.scrollHeight - b.clientHeight))
-      .toBeGreaterThan(100);
-    const dialogBottom = await bottomOf(details);
-    const barAtTop = await bottomOf(open);
-    expect(barAtTop).toBeLessThanOrEqual(dialogBottom + 1);
-    // The button stands in the middle of the dialog (its width, two thirds of the bar, is the style's).
-    const box = await open.boundingBox();
-    const bodyBox = await body.boundingBox();
-    const centre = (box?.x ?? 0) + (box?.width ?? 0) / 2;
-    expect(Math.abs(centre - ((bodyBox?.x ?? 0) + (bodyBox?.width ?? 0) / 2))).toBeLessThan(2);
+      .toBeGreaterThan(0);
+    // The foot is outside the element that scrolls, so its scrollbar starts under the head and
+    // ends above the foot's rule instead of running down past it.
+    await expect(body.getByRole('link', { name: 'View Page' })).toHaveCount(0);
+    await expect(open).toBeInViewport();
 
-    // Scrolled to the end, the bar has not moved and the last text stands clear above it.
+    // Scrolled to the end, the foot is still in view and the last text is readable above it.
     await body.evaluate((b) => b.scrollTo(0, b.scrollHeight));
-    expect(Math.abs((await bottomOf(open)) - barAtTop)).toBeLessThan(2);
-    const lastText = details.locator('.ingredient-summary > *:last-child');
-    const barTop = (await open.boundingBox())?.y ?? 0;
-    expect((await lastText.boundingBox())?.y ?? 0).toBeLessThan(barTop);
-    expect(await bottomOf(lastText)).toBeLessThanOrEqual(barTop);
+    await expect(open).toBeInViewport();
+    await expect(details.locator('.ingredient-summary > *:last-child')).toBeInViewport();
 
     // It still goes to the entry's page.
     await open.click();

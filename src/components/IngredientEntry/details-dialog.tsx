@@ -56,8 +56,8 @@ function headingOf({
 }
 
 /**
- * View Page: a bar fixed to the foot of the modal while the body scrolls
- * under it (the owner's call, 2026-10-20), holding the one green button, the
+ * View Page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body
+ * (the owner's calls, 2026-10-20), holding the one green button, the
  * site's normal `.btn` size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
@@ -87,12 +87,8 @@ export default function DetailsDialog({
       content={
         opened && {
           heading: headingOf(opened),
-          body: () => (
-            <>
-              {opened.children}
-              <ViewPageBar {...opened} />
-            </>
-          ),
+          body: () => opened.children,
+          foot: <ViewPageBar {...opened} />,
         }
       }
     />

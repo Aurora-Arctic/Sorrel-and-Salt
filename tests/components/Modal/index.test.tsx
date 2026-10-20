@@ -615,6 +615,34 @@ describe('Modal', () => {
       expect(button('Open All').closest('[inert]')).toBeNull();
     });
 
+    it('keeps a foot outside the body that scrolls, and makes it inert while asking', () => {
+      render(
+        <Modal
+          title="Edit Category"
+          onClose={vi.fn()}
+          foot={
+            <button type="button" onClick={() => undefined}>
+              Open Page
+            </button>
+          }
+        >
+          {(done) => <GuardedForm close={done} />}
+        </Modal>,
+      );
+      // Why it could be inside: it is passed beside the children, which the body wraps.
+      const foot = button('Open Page');
+      expect(foot.closest('.modal-dialog__body')).toBeNull();
+      expect(field('Name').closest('.modal-dialog__body')).not.toBeNull();
+      change('Name', 'Testwort');
+      expect(foot.closest('[inert]')).toBeNull();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(foot.closest('[inert]')).not.toBeNull();
+      fireEvent.click(button('Keep Editing'));
+      expect(foot.closest('[inert]')).toBeNull();
+    });
+
     it.each([
       ['the Close button', () => fireEvent.click(button('Close'))],
       ['Escape', escape],

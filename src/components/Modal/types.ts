@@ -88,6 +88,12 @@ export interface ModalProps extends ModalHeading {
    */
   loading?: boolean;
   /**
+   * A bar under the body rather than in it (the details' View Page): outside the
+   * element that scrolls, so the body's scrollbar ends above it and the bar never
+   * moves. Held inert while a question is asked, as the body is.
+   */
+  foot?: ReactNode;
+  /**
    * What it holds; or a function of the modal's own close, for contents that
    * close it themselves — a form after its save — so that fades out too.
    */
@@ -124,6 +130,8 @@ export interface RouteModalContent {
    * delete, so the modal fades out before the page goes back.
    */
   body: (done: () => void) => ReactNode;
+  /** A bar under the body, outside its scroll (`ModalProps.foot`). */
+  foot?: ReactNode;
 }
 
 /**

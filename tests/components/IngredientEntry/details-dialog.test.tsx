@@ -54,7 +54,7 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
-  it('puts View Page in the scrolling body, after the summary', () => {
+  it('puts View Page after the summary and outside the body that scrolls', () => {
     render(
       <DetailsDialog
         closeHref={LIST}
@@ -64,10 +64,12 @@ describe('DetailsDialog', () => {
 
     const open = within(dialog()).getByRole('link', { name: 'View Page' });
     const summary = within(dialog()).getByText('A summary');
-    // Why it could be elsewhere: the header has a slot for a modal's own controls.
-    // It is in the scroll body, with the summary, and after it.
+    // Why it could be inside: it was the body's last child, held at the foot by position: sticky,
+    // so the body's scrollbar ran down past it. It is the modal's own foot now, under the body.
+    const body = summary.closest('.modal-dialog__body');
+    expect(body).not.toBeNull();
+    expect(body).not.toContainElement(open);
     expect(open.closest('.modal-dialog__header')).toBeNull();
-    expect(summary.parentElement).toContainElement(open);
     expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

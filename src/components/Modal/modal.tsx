@@ -76,6 +76,7 @@ const Modal = ({
   size,
   readingBody = false,
   loading = false,
+  foot,
   children,
 }: ModalProps): ReactElement => {
   const ref = useRef<HTMLDialogElement>(null);
@@ -83,6 +84,7 @@ const Modal = ({
   const eyebrowId = useId();
   const qualifierId = useId();
   const body = useRef<HTMLDivElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
   // The qualifier on its own line, which only a title with something to say after it has.
   const below = qualifierBelow && qualifier != null && qualifier !== false;
   // What held the focus as it opened, taken once, before showModal() moves
@@ -204,6 +206,7 @@ const Modal = ({
     const held = (on: boolean): void => {
       body.current?.toggleAttribute('inert', on);
       slotRef.current?.toggleAttribute('inert', on);
+      footRef.current?.toggleAttribute('inert', on);
     };
     holds.current += 1;
     held(true);
@@ -349,6 +352,12 @@ const Modal = ({
           </CloseGuardContext.Provider>
         </div>
         <div ref={setLayerHost} className="modal-dialog__layer" />
+        {/* Under the body, outside what scrolls, so the body's scrollbar stops above it. */}
+        {foot != null && foot !== false && (
+          <div ref={footRef} className="modal-dialog__foot">
+            {foot}
+          </div>
+        )}
       </div>
     </dialog>
   );

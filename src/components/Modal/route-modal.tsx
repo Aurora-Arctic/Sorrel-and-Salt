@@ -82,6 +82,7 @@ export default function RouteModal({
       size={size}
       readingBody={readingBody}
       loading={!content}
+      foot={content?.foot}
       onClose={close}
       returnTo={backTo}
     >
