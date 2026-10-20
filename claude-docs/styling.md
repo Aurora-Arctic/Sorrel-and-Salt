@@ -251,7 +251,7 @@ Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
-(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its label on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. It also keeps its word, drawing and heavier border, so its meaning never rests on colour. That keeps
+(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its drawing on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. The badge is its drawing alone (the owner's call, 2026-10-20), a slashed ring that Low's double chevron does not share, with the words in its name and tip, so its meaning never rests on colour. That keeps
 exactly one alarming badge in the app and spends no new hue, which matters because every
 hue not already reserved belongs to one of the eight groups.
 

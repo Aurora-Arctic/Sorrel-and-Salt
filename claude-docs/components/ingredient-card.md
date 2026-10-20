@@ -46,10 +46,9 @@ restyled here:
 
 The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is top row, chips, forms, stock (changed 2026-10-18): the chips sit under the name and the forms line leads into the jar lines it describes, with the stock line last under its rule.
 
-On the card only, Out of Stock takes Low's weight in the jar slot: a thin border,
-the badge's normal font weight and padding, so both come out the same height. The
-word and the icon still tell the states apart; the heavier edge is M9.8's for a
-badge standing alone.
+The stock badges are icon-only squares ([`stock-badge.md`](stock-badge.md)); on the card
+`.ingredient-card .specimen__stock .stock-badge` zeroes the padding the card's badge
+size would add, so the drawing is not squeezed.
 **The forms line's dot is drawn in CSS and never leads or ends a wrapped line.** The mechanism is the shared `dotted-row` mixin ([`styling.md`](../styling.md), "Dotted lists"), which the admin Compendium's Form cell uses too.
 Each form after the first carries a `::before` circle (4px, `currentcolor`, so not
 text and never announced) in the 24px margin to its left. The line has a matching

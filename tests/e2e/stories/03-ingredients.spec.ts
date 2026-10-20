@@ -302,8 +302,16 @@ test(
         await expect(lowBadge(rowOf(list, name))).toHaveCount(0);
         await expect(outBadge(rowOf(list, name))).toHaveCount(0);
       }
-      // The badges are words, not a colour alone, and axe holds their contrast.
-      await expect(outBadge(rowOf(list, 'Rosemary'))).toBeVisible();
+      // Each badge is a drawing alone, named in full for a screen reader, and its
+      // tip says the state in words: not a colour alone. Axe holds their contrast.
+      await outBadge(rowOf(list, 'Rosemary')).focus();
+      await expect(page.getByRole('tooltip')).toHaveText('Out of Stock');
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('tooltip')).toHaveCount(0);
+      await lowBadge(rowOf(list, 'Sea Salt')).focus();
+      await expect(page.getByRole('tooltip')).toContainText('Low Stock · 10 g');
+      await expect(page.getByRole('tooltip')).toContainText('Low at 10 g or less');
+      await page.keyboard.press('Escape');
       await assertNoAccessibilityViolations(page);
     });
 

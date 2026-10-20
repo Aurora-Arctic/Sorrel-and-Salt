@@ -224,13 +224,10 @@
   gap: space(1);
 }
 
-// Out of Stock takes Low's weight on the card: the word and the icon still tell
-// the states apart, and the heavier edge is M9.8's for a badge standing alone.
-// The values are the badge mixin's own, so both come out the same height.
-.ingredient-card .specimen__stock .stock-badge--out {
-  border-width: 1px;
-  padding-block: 0.125rem;
-  font-weight: 500;
+// The stock badge is its drawing alone in a square, so it keeps no padding of the
+// card's badge size (`.ingredient-card .badge`, below), which would squeeze the drawing.
+.ingredient-card .specimen__stock .stock-badge {
+  padding: 0;
 }
 
 // The actions' own addition to the primitive: above the stretched link, so each

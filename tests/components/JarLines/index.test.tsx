@@ -1,11 +1,7 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import JarLines from '@/components/JarLines';
 import type { JarLine } from '@/components/JarLines/types';
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
-}));
 
 // The jar lines of a card (claude-docs/components/jar-lines.md). Fixture forms are invented.
 const jar = (extra: Partial<JarLine> & Pick<JarLine, 'id' | 'form'>): JarLine => ({
@@ -44,18 +40,14 @@ describe('JarLines', () => {
     );
     const [low, out, ok] = lines();
     expect(within(low).getByRole('button', { name: /low stock/i })).toBeInTheDocument();
-    expect(within(out).queryByRole('button')).not.toBeInTheDocument();
-    // The badge's words are the only rendering of an out jar (rule 2's exception).
-    expect(out).toHaveTextContent(/out of stock/i);
+    expect(within(out).getByRole('button', { name: 'Out of Stock' })).toBeInTheDocument();
     expect(within(ok).queryByRole('button')).not.toBeInTheDocument();
-    expect(ok).not.toHaveTextContent(/stock/i);
   });
 
   it('keeps a jar held without a quantity, with no badge', () => {
     render(<JarLines jars={[jar({ id: 'a', form: 'resin', quantity: null, unit: null })]} />);
     expect(lines()).toHaveLength(1);
     expect(within(lines()[0]).queryByRole('button')).not.toBeInTheDocument();
-    expect(lines()[0]).not.toHaveTextContent(/stock/i);
   });
 
   it('hides the dot from assistive technology and leaves a spoken comma', () => {
