@@ -37,7 +37,7 @@ export function PlusIcon(): ReactElement {
   );
 }
 
-/** A tick: this is already held. A compendium card's In My Ingredients (M9.12). */
+/** A tick: this is already held. A compendium card's In All Covens (M9.12). */
 export function CheckIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

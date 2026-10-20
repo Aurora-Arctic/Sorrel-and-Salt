@@ -300,13 +300,13 @@ describe('DetailsDialog plus', () => {
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(before(add, edit)).toBe(true);
     // Why it could be the check: one coven already holds it, but not both.
-    expect(within(dialog()).queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'In All Covens' })).toBeNull();
   });
 
   it("shows the card's check in the plus's place once every coven that may add holds it", () => {
     show({ covens: [ONE, TWO], heldIn: [ONE.id, TWO.id] });
 
-    const held = within(dialog()).getByRole('img', { name: 'In My Ingredients' });
+    const held = within(dialog()).getByRole('button', { name: 'In All Covens' });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(before(held, edit)).toBe(true);
     expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
@@ -318,6 +318,6 @@ describe('DetailsDialog plus', () => {
     // Why neither could show: the page would have given one for a viewer who may add.
     expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
     expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-    expect(within(dialog()).queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'In All Covens' })).toBeNull();
   });
 });

@@ -26,7 +26,7 @@ const SHELF = 'In Your Cupboard';
 // What a held coven's check in the plus's menu stands for, joined to its name.
 const HELD_MARK = 'in My Ingredients';
 const NAME = 'Fixture Shelfwort';
-const HELD = 'In My Ingredients';
+const HELD = 'In All Covens';
 
 test('a member adds the entry from its public page, and the Edit menu then offers its removal', async ({
   page,
@@ -71,7 +71,7 @@ test('a member adds the entry from its public page, and the Edit menu then offer
   const add = () => page.getByRole('main').getByRole('button', { name: ADD });
   const menu = () => page.getByRole('button', { name: `Edit ${NAME}`, exact: true });
   const shelf = () => page.getByRole('button', { name: SHELF });
-  const check = () => page.getByRole('main').getByRole('img', { name: HELD });
+  const check = () => page.getByRole('main').getByRole('button', { name: HELD });
 
   // Why the add is this test's: the entry is live and public, and the coven does not hold it.
   expect(await heldRows()).toHaveLength(0);
@@ -261,14 +261,14 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     await expect.poll(async () => (await heldRows(one.id)).length).toBe(1);
     // Both hold it now: the card's check in the plus's place (the owner's call, 2026-10-20).
     await expect(add()).toHaveCount(0);
-    await expect(page.getByRole('main').getByRole('img', { name: HELD })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('button', { name: HELD })).toBeVisible();
   });
 
   await test.step('the coven’s own page of the entry shows the check as well', async () => {
     await page.goto(`/coven/${one.slug}/ingredients/${ingredientId}`);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME_TWO);
     await expect(add()).toHaveCount(0);
-    await expect(page.getByRole('main').getByRole('img', { name: HELD })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('button', { name: HELD })).toBeVisible();
     await assertNoAccessibilityViolations(page);
   });
 });
@@ -315,7 +315,7 @@ test('the Quick Look window has the plus, then the check, for a member only', as
     const details = () =>
       page.getByRole('dialog', { name: `Ingredient, ${NAME_LOOK}`, exact: true });
     const add = () => details().getByRole('button', { name: ADD });
-    const check = () => details().getByRole('img', { name: HELD });
+    const check = () => details().getByRole('button', { name: HELD });
     const opened = async (path: string, by = id) => {
       await page.goto(look(path, by));
       await expect(details()).toBeVisible();

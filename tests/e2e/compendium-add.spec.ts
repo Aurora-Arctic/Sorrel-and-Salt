@@ -22,7 +22,7 @@ test.beforeAll(async () => {
 });
 
 const ADD = 'Add to My Ingredients';
-const HELD = 'In My Ingredients';
+const HELD = 'In All Covens';
 const NAME = 'Fixture Holdwort';
 
 test('a member adds a compendium entry with the plus, the check shows, and the coven’s list shows it', async ({
@@ -75,15 +75,15 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
     await signInAgainAs(page, coven.users.C);
     await open(page);
     await expect(card(page).getByRole('button', { name: ADD })).toHaveCount(0);
-    await expect(card(page).getByRole('img', { name: HELD })).toHaveCount(0);
+    await expect(card(page).getByRole('button', { name: HELD })).toHaveCount(0);
   });
 
   await test.step('the member presses the plus and the card shows the check in its place', async () => {
     await signInAgainAs(page, coven.users.B);
     await open(page);
-    await expect(card(page).getByRole('img', { name: HELD })).toHaveCount(0);
+    await expect(card(page).getByRole('button', { name: HELD })).toHaveCount(0);
     await card(page).getByRole('button', { name: ADD }).click();
-    await expect(card(page).getByRole('img', { name: HELD })).toBeVisible();
+    await expect(card(page).getByRole('button', { name: HELD })).toBeVisible();
     await expect(card(page).getByRole('button', { name: ADD })).toHaveCount(0);
     expect(await heldRows(coven.id)).toHaveLength(1);
     await assertNoAccessibilityViolations(page);
@@ -93,7 +93,7 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
   // In Your Covens list carries the links.
   await test.step('the check stays after a reload, as a mark and no link, and the coven’s list shows the entry', async () => {
     await open(page);
-    await expect(card(page).getByRole('img', { name: HELD })).toBeVisible();
+    await expect(card(page).getByRole('button', { name: HELD })).toBeVisible();
     await expect(card(page).getByRole('link', { name: HELD })).toHaveCount(0);
     await page.goto(`/coven/${coven.slug}/ingredients?query=${encodeURIComponent(NAME)}`);
     await expect(rowOf(ingredientList(page), NAME)).toBeVisible();
@@ -103,7 +103,7 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
     await signInAgainAs(page, elsewhere.users.D);
     await open(page);
     await expect(card(page).getByRole('button', { name: ADD })).toBeVisible();
-    await expect(card(page).getByRole('img', { name: HELD })).toHaveCount(0);
+    await expect(card(page).getByRole('button', { name: HELD })).toHaveCount(0);
     expect(await heldRows(elsewhere.id)).toHaveLength(0);
   });
 });
@@ -184,7 +184,7 @@ test('a member of two covens chooses from the plus which one it adds to, and the
     await expect.poll(async () => (await heldRows(second)).length).toBe(1);
     expect(await heldRows(one.id)).toHaveLength(0);
     await expect(plus()).toBeVisible();
-    await expect(card().getByRole('img', { name: HELD })).toHaveCount(0);
+    await expect(card().getByRole('button', { name: HELD })).toHaveCount(0);
   });
 
   await test.step('with the second coven holding it, the plus is still the menu, that coven disabled, and choosing the first brings the check', async () => {
@@ -201,7 +201,7 @@ test('a member of two covens chooses from the plus which one it adds to, and the
     await expect(menu).toBeVisible();
     expect(await heldRows(second)).toHaveLength(1);
     await menu.getByRole('menuitem', { name: FIRST }).click();
-    await expect(card().getByRole('img', { name: HELD })).toBeVisible();
+    await expect(card().getByRole('button', { name: HELD })).toBeVisible();
     await expect(plus()).toHaveCount(0);
     await expect(menu).toHaveCount(0);
     expect(await heldRows(one.id)).toHaveLength(1);

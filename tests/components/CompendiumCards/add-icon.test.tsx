@@ -263,8 +263,8 @@ describe('the add icon among several covens', () => {
     );
 
     expect(screen.getAllByRole('button', PLUS)).toHaveLength(1);
-    expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'In All Covens' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'In All Covens' })).toBeNull();
   });
 });
 

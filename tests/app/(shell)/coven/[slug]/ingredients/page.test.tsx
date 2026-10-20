@@ -482,7 +482,7 @@ describe("the coven Ingredients page's details modal", () => {
       within(details('House Salt')!).getByRole('button', { name: 'Add to My Ingredients' }),
     ).toBeInTheDocument();
     expect(
-      within(details('House Salt')!).queryByRole('img', { name: 'In My Ingredients' }),
+      within(details('House Salt')!).queryByRole('button', { name: 'In All Covens' }),
     ).toBeNull();
 
     cleanup();
@@ -493,7 +493,7 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ entry: 'b2' });
 
     expect(
-      within(details('House Salt')!).getByRole('img', { name: 'In My Ingredients' }),
+      within(details('House Salt')!).getByRole('button', { name: 'In All Covens' }),
     ).toBeInTheDocument();
     expect(
       within(details('House Salt')!).queryByRole('button', { name: 'Add to My Ingredients' }),

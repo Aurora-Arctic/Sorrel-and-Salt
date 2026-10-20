@@ -235,14 +235,14 @@ describe('CupboardActions on the public page', () => {
 
       expect(screen.getByRole('button', { name: 'Edit Testwort' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'In All Covens' })).toBeInTheDocument();
     });
 
     it('is not drawn, nor the check, for covens that may not add', () => {
       show(props([place(1, { canAdd: false }), place(2, { held: true, canAdd: false })]));
 
       expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
     });
   });
 

@@ -19,7 +19,7 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
 const ADD = 'Add to My Ingredients';
-const HELD = 'In My Ingredients';
+const HELD = 'In All Covens';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -191,7 +191,7 @@ test('the foot of a card follows the visitor: a button for an owner or member, n
     await signInAgainAs(page, coven.users[key]);
     await page.goto('/compendium');
     const buttons = page.getByRole('button', { name: ADD });
-    const held = page.getByRole('img', { name: HELD });
+    const held = page.getByRole('button', { name: HELD });
     await expect(buttons).toHaveCount(PAGE_SIZE - index);
     await expect(held).toHaveCount(index);
     await expect(buttons.first()).toBeEnabled();

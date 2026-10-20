@@ -577,7 +577,7 @@ describe('CupboardActions', () => {
       });
 
       expect(button('Add to My Ingredients')).not.toBeInTheDocument();
-      expect(screen.getByRole('img', { name: 'In My Ingredients' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'In All Covens' })).toBeInTheDocument();
       expect(button('Edit Testwort')).toBeInTheDocument();
     });
 
@@ -586,7 +586,7 @@ describe('CupboardActions', () => {
       renderActions({ held: true });
 
       expect(button('Add to My Ingredients')).not.toBeInTheDocument();
-      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
     });
   });
 });

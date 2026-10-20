@@ -146,36 +146,38 @@ describe('CompendiumCards', () => {
       const buttons = screen.getAllByRole('button', { name: 'Add to My Ingredients' });
       expect(buttons).toHaveLength(ENTRIES.length);
       for (const button of buttons) expect(button).toBeEnabled();
-      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
     });
 
-    // The owner's call, 2026-10-20: the check is a status mark, not a link. The details
-    // modal's In Your Covens list carries the links to each coven's copy.
-    it('swaps the plus for a check mark on a card every coven holds, a mark and no link', () => {
+    // The owner's calls, 2026-10-20: the check is a status mark, not a link, since the details
+    // modal's In Your Covens list carries the links to each coven's copy; and it is named and
+    // tipped In All Covens, a button only to carry its tip, as the entry page's shelf is.
+    it('swaps the plus for a check named In All Covens on a card every coven holds, tipped and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
       expect(screen.getAllByRole('button', { name: 'Add to My Ingredients' })).toHaveLength(2);
-      const mark = screen.getByRole('img', { name: 'In My Ingredients' });
+      const mark = screen.getByRole('button', { name: 'In All Covens' });
       expect(mark.closest('a')).toBeNull();
-      expect(mark).not.toHaveAttribute('tabindex');
-      expect(screen.queryByRole('link', { name: 'In My Ingredients' })).toBeNull();
-      // Nothing in the card's foot under that name takes the focus either.
-      for (const named of screen.getAllByLabelText('In My Ingredients')) {
-        expect(named.closest('a, button')).toBeNull();
-      }
+      expect(screen.queryByRole('link', { name: 'In All Covens' })).toBeNull();
+
+      const tips = () =>
+        screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
+      expect(tips()).not.toContain('In All Covens');
+      act(() => mark.focus());
+      expect(tips()).toContain('In All Covens');
     });
 
     it('draws neither without a coven to add to', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add', workspaceId: undefined })} />);
       expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
     });
 
     it('draws neither where the action is none, even for a held entry', () => {
       const held = ENTRIES.map((one) => ({ ...one, held: true }));
       render(<Cards {...props({ entries: held, action: 'none' })} />);
-      expect(screen.queryByRole('img', { name: 'In My Ingredients' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
     });
 
     it('adds that entry to the coven and reads the page again', async () => {

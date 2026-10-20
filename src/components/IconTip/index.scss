@@ -111,8 +111,8 @@
   @include icon-button-edit;
 }
 
-// Its check (In My Ingredients): the same box and green, but a status mark and no control (the
-// owner's call, 2026-10-20), so no pointer and no wash under it.
+// Its check (In All Covens): the same box and green, but a status mark that does nothing (the
+// owner's call, 2026-10-20), a button only to carry its tip, so no pointer and no wash under it.
 .icon-tip__held {
   @include icon-button($icon-size-large, $glyph-size-large, $cursor: default);
 

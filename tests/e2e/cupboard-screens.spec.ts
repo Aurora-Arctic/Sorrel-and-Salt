@@ -89,9 +89,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   await expect(plus()).toHaveCount(0);
   // The one coven that may add holds it now: the card's check in the plus's place.
-  await expect(
-    page.getByRole('main').getByRole('img', { name: 'In My Ingredients' }),
-  ).toBeVisible();
+  await expect(page.getByRole('main').getByRole('button', { name: 'In All Covens' })).toBeVisible();
   // The failed try's badge went with the button it belonged to.
   await expect(page.getByRole('button', { name: /^Show the error for / })).toHaveCount(0);
 
