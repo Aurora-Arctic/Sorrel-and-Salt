@@ -5,7 +5,7 @@ field, on the `.notice` primitive ([`styling.md`](../styling.md), "Form
 fields"): a form's root error, a warning, a sent confirmation. Added by
 MB.116, once the same markup had been written by hand in twenty-two files.
 
-_See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md): how a click outside a form says its result and its failure, decided on 2026-10-20 as a floating callout (Design F), and the open question on when an alert may be mounted with its text. F replaces [`ActionFailure`](action-failure.md), which M12.31 removes; a failure inside a dialog, such as the owner-exit dialog of `LeaveWorkspaceButton`, stays in the dialog as a plain `Notice`.
+_See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md): how a click outside a form says its result and its failure, decided on 2026-10-20 as a floating callout (Design F), and the open question on when an alert may be mounted with its text. F replaced `ActionFailure`, which M12.31 removed; a failure inside a dialog, such as the owner-exit dialog of `LeaveWorkspaceButton`, stays in the dialog as a plain `Notice`.
 
 ## Props
 

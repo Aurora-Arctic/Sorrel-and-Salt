@@ -34,6 +34,7 @@ const RemoveControl = ({ workspaceId, invitation }: RevokeControlProps): ReactEl
     }
     busy="Removing"
     confirmClass="btn btn--destructive"
+    announcement={`The declined invitation to ${invitation.email} is removed.`}
     send={() =>
       graphqlRequest(RemoveDeclinedInvitationDocument, { workspaceId, id: invitation.id })
     }

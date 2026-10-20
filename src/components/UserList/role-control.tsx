@@ -97,6 +97,7 @@ const RoleControl = ({
       busy={promoting ? 'Promoting' : 'Demoting'}
       confirmClass={promoting ? 'btn btn--solid' : 'btn btn--destructive'}
       withNote
+      announcement={`${name} is now ${roleLabel(chosen)}.`}
       inModal={inModal}
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: chosen, note })}
     />

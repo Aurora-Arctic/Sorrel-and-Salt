@@ -110,15 +110,26 @@ export interface ConfirmedActionProps {
   send: (note?: string) => Promise<unknown>;
   /** What follows a success, the confirm still busy; absent, the page is read again. */
   onSent?: () => void;
-  /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
-  refusal?: string;
+  /**
+   * The sentence a refusal shows; absent, the service's own, read from the
+   * GraphQL error. A function words the service's sentence instead.
+   */
+  refusal?: string | ((message: string) => string);
+  /**
+   * Said in the page's status region after a success, for a screen reader:
+   * the result the page then shows, in words. Absent for a control whose
+   * success leaves the page, which says it by arriving.
+   */
+  announcement?: string;
   /** A choice the modal asks beside the question, such as a role to move to; the caller holds its state. */
   choices?: ReactNode | ((sending: boolean) => ReactNode);
   /** Close the modal on success, for a control the re-read does not replace. */
   closeOnSent?: boolean;
   /**
-   * Takes the refusal's sentence (and `undefined` when a new attempt starts)
-   * for the caller to show elsewhere; absent, it shows beside the control.
+   * In a modal only: takes the refusal's sentence (and `undefined` when a new
+   * attempt starts) for the caller to show elsewhere in the dialog; absent,
+   * it shows beside the control. Outside a modal the refusal is always the
+   * control's own callout.
    */
   onFailure?: (message: string | undefined) => void;
   /**

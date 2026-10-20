@@ -5,7 +5,6 @@ import type { WorkspaceRole } from '@/modules/coven';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { RadioGroupField } from '../Field';
-import { useActionFailure } from '../ActionFailure';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
@@ -15,8 +14,9 @@ import type { RoleControlProps } from './types';
 // modal naming the member and asking which role they move to, every other
 // role with what it may do, then sends `updateMemberRole`. The page shows the
 // control to owners only; the service is the guard, and refuses a change that
-// would leave no owner, which the failure notice then says above the table, or beside the
-// control when nothing above it takes it (claude-docs/components/member-list.md).
+// would leave no owner, which a callout under the control then says (M12.31).
+// A change is said in the page's status region, beside the role the table
+// shows once read again (claude-docs/components/member-list.md).
 
 const UpdateMemberRoleDocument = graphql(`
   mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {
@@ -38,7 +38,6 @@ const RoleControl = ({
   name,
   currentRole,
 }: RoleControlProps): ReactElement => {
-  const failure = useActionFailure();
   // Every role but the one held now: choosing it would change nothing.
   const options = ROLES.filter((candidate) => candidate !== currentRole);
   const [picked, setPicked] = useState(options[0]);
@@ -78,13 +77,10 @@ const RoleControl = ({
       closeOnSent
       busy={promoting ? 'Promoting' : 'Demoting'}
       confirmClass={promoting ? 'btn btn--solid' : 'btn btn--destructive'}
-      // Without an ActionFailure above, left out: the control then says the
-      // refusal itself, beside its button, rather than dropping it.
-      onFailure={
-        failure
-          ? (message) => failure.report(message && `${name}'s role was not changed. ${message}`)
-          : undefined
-      }
+      // Prefixed with whose role, as the refusal once was in the notice above
+      // the table, far from the row.
+      refusal={(message) => `${name}'s role was not changed. ${message}`}
+      announcement={`${name} is now ${workspaceRoleLabel(chosen)}.`}
       send={() => graphqlRequest(UpdateMemberRoleDocument, { workspaceId, userId, role: chosen })}
     />
   );

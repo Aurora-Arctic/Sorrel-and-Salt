@@ -1,12 +1,11 @@
 import type { Story } from '@ladle/react';
-import ActionFailure from '../ActionFailure';
 import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/ReceivedInvitations.
 // Each story sits in the account page's Invitations section as the page writes
-// it, a panel in the narrow frame under its head, with the ActionFailure the
-// page wraps the list in: the list's stacked rows depend on the panel's width.
+// it, a panel in the narrow frame under its head: the list's stacked rows
+// depend on the panel's width.
 export default {
   title: 'Account / Received Invitations',
 };
@@ -50,9 +49,7 @@ const Page = ({ invitations, ...rest }: ReceivedInvitationsProps) => (
         <h2 id="invitations-heading">Invitations</h2>
         <p className="lede">Covens that have invited this email address to join them.</p>
       </div>
-      <ActionFailure>
-        <ReceivedInvitations invitations={invitations} {...rest} />
-      </ActionFailure>
+      <ReceivedInvitations invitations={invitations} {...rest} />
     </section>
   </main>
 );

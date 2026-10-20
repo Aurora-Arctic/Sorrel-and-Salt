@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import ActionFailure from '../../../../../../components/ActionFailure';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import MemberList from '../../../../../../components/MemberList';
 import RemoveControl from '../../../../../../components/MemberList/remove-control';
@@ -109,38 +108,36 @@ export default async function MembersPage({
           </Notice>
         )}
         <ListBody>
-          <ActionFailure>
-            <MemberList
-              members={members}
-              currentUserId={session.userId}
-              showEmail={showEmail}
-              roleAction={
-                canChangeRoles
-                  ? (member) => (
-                      <RoleControl
+          <MemberList
+            members={members}
+            currentUserId={session.userId}
+            showEmail={showEmail}
+            roleAction={
+              canChangeRoles
+                ? (member) => (
+                    <RoleControl
+                      workspaceId={workspace.id}
+                      userId={member.userId}
+                      name={member.name}
+                      currentRole={member.role}
+                    />
+                  )
+                : undefined
+            }
+            // Another's row only: leaving is the coven page's, for every role.
+            removeAction={
+              canRemove
+                ? (member) =>
+                    member.userId !== session.userId && (
+                      <RemoveControl
                         workspaceId={workspace.id}
                         userId={member.userId}
                         name={member.name}
-                        currentRole={member.role}
                       />
                     )
-                  : undefined
-              }
-              // Another's row only: leaving is the coven page's, for every role.
-              removeAction={
-                canRemove
-                  ? (member) =>
-                      member.userId !== session.userId && (
-                        <RemoveControl
-                          workspaceId={workspace.id}
-                          userId={member.userId}
-                          name={member.name}
-                        />
-                      )
-                  : undefined
-              }
-            />
-          </ActionFailure>
+                : undefined
+            }
+          />
           <Pager
             {...pagerHrefs(page.pageInfo, (cursor) => listHref(`/coven/${slug}/members`, cursor))}
             soft

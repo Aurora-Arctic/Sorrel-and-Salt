@@ -5,18 +5,18 @@ import type { Route } from 'next';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import { useActionFailure } from '../ActionFailure';
+import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import Notice from '../Notice';
+import { useClickFeedback } from '../ClickFeedback';
 import type { AcceptControlProps } from './types';
 
 // A received invitation's Accept on the account page (M10.32). It sends
 // `acceptInvitationById`, which checks that the invitation is addressed to
-// this verified account and decides; the landing is the coven itself, or the
-// refusal is said above the list when the page wraps it in an ActionFailure,
-// and beside the button when it does not (MB.119). It is the by-id twin of
-// InvitationAcceptance's link accept (claude-docs/components/received-invitations.md).
+// this verified account and decides; the landing is the coven itself, which
+// says the success, or the refusal is said in a callout under the button
+// (M12.31), floating, so a phone card does not wrap round it. It is the by-id
+// twin of InvitationAcceptance's link accept
+// (claude-docs/components/received-invitations.md).
 
 const AcceptInvitationByIdDocument = graphql(`
   mutation AcceptInvitationById($id: ID!) {
@@ -32,15 +32,15 @@ const AcceptControl = ({
 }: AcceptControlProps): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
   const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<string>();
-  // Where the page says a refusal once, above the list, so a phone card does
-  // not wrap it under the button; null outside one.
-  const place = useActionFailure();
+  const feedback = useClickFeedback({ name: `Accept the invitation to ${covenName}` });
 
   async function accept() {
+    // aria-disabled rather than disabled while sending, so the focus stays on
+    // the button and the callout of a refusal is read from it; a second press
+    // meanwhile sends nothing.
+    if (sending) return;
     setSending(true);
-    setFailure(undefined);
-    place?.report(undefined);
+    feedback.report(undefined);
     try {
       await graphqlRequest(AcceptInvitationByIdDocument, { id });
       // Busy until the coven replaces this page. A cast: the built routes
@@ -50,27 +50,25 @@ const AcceptControl = ({
       refresh();
     } catch (error) {
       setSending(false);
-      // No fields of its own, so the reader always answers with an alert;
-      // the fallback only satisfies its type.
-      const message = readGraphqlFailure(error).alert ?? GENERIC_FAILURE;
-      if (place) place.report(message);
-      else setFailure(message);
+      // No fields of its own, so the reader always answers with an alert.
+      feedback.report(readGraphqlFailure(error).alert);
     }
   }
 
   return (
     <>
-      {failure && <Notice kind="error">{failure}</Notice>}
       <BusyButton
+        ref={feedback.anchorRef}
         className="btn btn--small btn--solid"
         aria-label={`Accept the invitation to ${covenName}`}
-        disabled={sending}
+        aria-disabled={sending || undefined}
         busy={sending}
         busyLabel="Accepting"
         onClick={() => void accept()}
       >
         Accept
       </BusyButton>
+      {feedback.feedback}
     </>
   );
 };
