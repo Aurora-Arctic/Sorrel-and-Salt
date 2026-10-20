@@ -113,6 +113,62 @@ test.describe('on the admin Compendium list', () => {
     await expect(detailsDialog(page)).toHaveCount(0);
   });
 
+  test('a long description is cut behind a full-width Show More bar, which opens it whole and closes it again', async ({
+    page,
+  }) => {
+    const longName = 'Fixture Longwort';
+    const sentence =
+      'Fixture Longwort is a fictional herb of the fixture hedgerows, gathered in the dark of the moon and dried in bundles under the eaves.';
+    await withSql(async (sql) => {
+      const [held] =
+        await sql`select 1 from ingredients where name = ${longName} and workspace_id is null`;
+      const [admin] = await sql`select id from users order by created_at desc limit 1`;
+      if (!held)
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: longName,
+            canonicalName: 'Fixtura longa',
+            description: Array.from({ length: 4 }, () => sentence).join('\n\n'),
+          }),
+          String(admin?.id),
+        );
+    });
+    await page.goto(`/admin/compendium?query=${encodeURIComponent(longName)}`);
+    await quickLook(page, `${longName}, Fixtura longa`).click();
+    const details = detailsDialog(page, `${longName}, Fixtura longa`);
+    const bar = details.getByRole('button', { name: 'Show More' });
+    const paragraph = details.locator(`#${(await bar.getAttribute('aria-controls')) ?? ''}`);
+
+    // Why it could be cut: the whole text is longer than the three lines it shows.
+    await expect(bar).toHaveAttribute('aria-expanded', 'false');
+    const closed = (await paragraph.evaluate((p) => p.parentElement?.clientHeight)) ?? 0;
+    const whole = await paragraph.evaluate((p) => p.scrollHeight);
+    expect(whole).toBeGreaterThan(closed);
+    // The bar is the full width of the text, so the whole of it is the target.
+    const barBox = await bar.boundingBox();
+    const textBox = await paragraph.boundingBox();
+    expect(Math.round(barBox?.width ?? 0)).toBe(Math.round(textBox?.width ?? -1));
+
+    await bar.click();
+    const less = details.getByRole('button', { name: 'Show Less' });
+    await expect(less).toHaveAttribute('aria-expanded', 'true');
+    await expect(less).toBeFocused();
+    // Open, the whole text is in view: the clip has grown to hold it.
+    await expect
+      .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
+      .toBeGreaterThanOrEqual(whole);
+
+    await less.click();
+    await expect(details.getByRole('button', { name: 'Show More' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    await expect
+      .poll(() => paragraph.evaluate((p) => p.parentElement?.clientHeight ?? 0))
+      .toBeLessThan(whole);
+  });
+
   test('Edit opens the edit modal over the details, and closing it goes back to them', async ({
     page,
   }) => {

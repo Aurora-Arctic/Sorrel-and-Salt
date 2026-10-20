@@ -301,14 +301,30 @@ describe('IngredientSummary', () => {
       vi.restoreAllMocks();
     });
 
-    /** The paragraph's measured overflow: jsdom lays nothing out, so each height is the test's. */
-    function measures(scrollHeight: number, clientHeight: number): void {
+    /**
+     * The paragraph's measured overflow: happy-dom lays nothing out, so its height and
+     * its line height (three of which are the cut) are the test's.
+     */
+    function measures(scrollHeight: number, lineHeight = 24): void {
       vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
-      vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(clientHeight);
+      const real = window.getComputedStyle.bind(window);
+      // Everything else still reads the real style (the role queries need it); only
+      // the two figures this component measures are the test's.
+      vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+        const style = real(element, pseudo);
+        return new Proxy(style, {
+          get(target, key) {
+            if (key === 'lineHeight') return `${lineHeight}px`;
+            if (key === 'transitionDuration') return '0s';
+            const value = Reflect.get(target, key) as unknown;
+            return typeof value === 'function' ? value.bind(target) : value;
+          },
+        });
+      });
     }
 
     it('is cut to its first lines, Show More opening the rest and Show Less closing it', () => {
-      measures(200, 72);
+      measures(200);
       const before = window.location.href;
       render(<IngredientSummary detail={full()} />);
 
@@ -321,6 +337,10 @@ describe('IngredientSummary', () => {
       fireEvent.click(more);
       const less = screen.getByRole('button', { name: 'Show Less' });
       expect(less).toHaveAttribute('aria-expanded', 'true');
+      // Open, the region it controls holds the whole text.
+      expect(document.getElementById(less.getAttribute('aria-controls') ?? '')).toHaveTextContent(
+        'A fixture description.',
+      );
       // Opening it stays in the modal: the address is unchanged.
       expect(window.location.href).toBe(before);
 
@@ -331,13 +351,35 @@ describe('IngredientSummary', () => {
       );
     });
 
-    it('shows a description that fits whole, with no toggle', () => {
-      measures(48, 48);
+    it('is one button the whole way, so a press leaves the focus on it', () => {
+      measures(200);
+      render(<IngredientSummary detail={full()} />);
+
+      const bar = screen.getByRole('button', { name: 'Show More' });
+      bar.focus();
+      fireEvent.click(bar);
+      expect(screen.getByRole('button', { name: 'Show Less' })).toBe(bar);
+      expect(bar).toHaveFocus();
+
+      fireEvent.click(bar);
+      expect(screen.getByRole('button', { name: 'Show More' })).toBe(bar);
+      expect(bar).toHaveFocus();
+    });
+
+    it('shows a description of three lines or fewer whole, with no toggle', () => {
+      measures(73);
       render(<IngredientSummary detail={full()} />);
 
       // Why it could show: the description is drawn.
       expect(screen.getByText('A fixture description.')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Show More' })).not.toBeInTheDocument();
+    });
+
+    it('shows a fourth line behind the toggle', () => {
+      measures(74);
+      render(<IngredientSummary detail={full()} />);
+
+      expect(screen.getByRole('button', { name: 'Show More' })).toBeInTheDocument();
     });
   });
 

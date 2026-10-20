@@ -46,24 +46,106 @@
   }
 }
 
-// The description and its Show More, a step apart, the button at its own
-// width rather than the column's.
+// The description and its Show More bar (the owner's calls, 2026-10-20). The
+// clip box round the paragraph is cut to three lines by the script, which sets
+// its height in pixels (summary-description.tsx); without the script it has
+// none and the whole text shows. The cut text fades out into the modal's
+// surface, and under it stands the bar: one real button the full width of the
+// text, on the modal's own surface with only a hairline along its top, the
+// label in the primary ink and a chevron after it. Opening moves the height
+// and the fade together over the short motion while the chevron turns over
+// with them; the bar stays where it is, under the text, and reads Show Less.
+// Under reduced motion nothing moves and each is at once.
 .ingredient-summary__description {
-  @include stack(2);
+  display: flex;
+  flex-direction: column;
+}
 
-  > button {
-    align-self: flex-start;
+.ingredient-summary__description-clip {
+  position: relative;
+  overflow: hidden;
+  transition: height $motion-short ease-in-out;
+
+  // The fade: the surface the text stands on, in from clear at the top, so the
+  // last lines go into the bar rather than being cut. It lets the pointer through.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 60%;
+    background: linear-gradient(to bottom, transparent, $surface-card);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $motion-short ease-in-out;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::after {
+      transition: none;
+    }
   }
 }
 
-// Its first three lines (the owner's call, 2026-10-20). The prefixed clamp,
-// as it is Baseline Widely Available and the unprefixed `line-clamp` is not;
-// it keeps the paragraph's `pre-line`.
-.ingredient-summary__description-text--cut {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+.ingredient-summary__description--cut .ingredient-summary__description-clip::after {
+  opacity: 1;
+}
+
+// The whole bar is the target. No fill and no corners: the modal's surface and
+// the hairline above it, so the hover cue is the label underlined and the
+// chevron in the accent, and the focus is the ring, drawn inside the bar.
+.ingredient-summary__more {
+  @include button-reset;
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: space(2);
+  width: 100%;
+  margin-top: space(1);
+  padding: space(2) 0;
+  border-top: 1px solid $hairline;
+  background-color: $surface-card;
+  color: $text-primary;
+  font-family: $font-body;
+  font-size: type-size('small');
+  font-weight: 500;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}
+
+// The chevron after the label, down while the text is cut and turned over
+// once it is open, in step with the height.
+.ingredient-summary__more-chevron {
+  flex: none;
+  transition:
+    transform $motion-short ease-in-out,
+    color $motion-short ease-in-out;
+
+  [aria-expanded='true'] > & {
+    transform: rotate(180deg);
+  }
+
+  .ingredient-summary__more:hover > &,
+  .ingredient-summary__more:focus-visible > & {
+    color: $accent;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 // The one line an entry with nothing in any section shows, in the muted ink.
