@@ -269,6 +269,63 @@ describe('updateStock', () => {
     expect((await jars())[0]).toMatchObject({ unit: null, unit_dimension: null });
   });
 
+  describe('the default threshold', () => {
+    // A jar saved with a quantity and no unit holds no threshold either; the
+    // unit it later gets brings the dimension's default, as a new jar's does.
+    it.each([
+      ['g', 10],
+      ['kg', 0.01],
+      ['ml', 15],
+      ['tsp', 3],
+      ['piece', 3],
+    ] as const)(
+      'writes the default threshold for the first unit a jar gets: %s',
+      async (unit, threshold) => {
+        const id = await seedJar({ unit: null, lowStockThreshold: null });
+
+        await updateStock(asUser(B), WORKSPACE_W_ID, id, { unit });
+
+        const [jar] = await jars();
+        expect(jar.unit).toBe(unit);
+        expect(Number(jar.low_stock_threshold)).toBeCloseTo(threshold, 6);
+      },
+    );
+
+    it('leaves a threshold the jar already holds alone, as it leaves one the input states', async () => {
+      const held = await seedJar({ unit: null, lowStockThreshold: '4' });
+      await updateStock(asUser(A), WORKSPACE_W_ID, held, { unit: 'g' });
+      expect(Number((await jars())[0].low_stock_threshold)).toBe(4);
+
+      const stated = await seedJar({
+        ingredientId: ownIngredient,
+        variantId: ownForm,
+        unit: null,
+        lowStockThreshold: null,
+      });
+      await updateStock(asUser(A), WORKSPACE_W_ID, stated, { unit: 'g', lowStockThreshold: 0 });
+      const rows = await jars();
+      expect(Number(rows.find((row) => row.id === stated)?.low_stock_threshold)).toBe(0);
+    });
+
+    it('writes none for a jar that already had a unit, or when the update sets none', async () => {
+      const united = await seedJar({ unit: 'g', lowStockThreshold: null });
+      await updateStock(asUser(A), WORKSPACE_W_ID, united, { unit: 'kg' });
+      await updateStock(asUser(A), WORKSPACE_W_ID, united, { quantityOnHand: 2 });
+      expect((await jars())[0].low_stock_threshold).toBeNull();
+
+      const bare = await seedJar({
+        ingredientId: ownIngredient,
+        variantId: ownForm,
+        unit: null,
+        lowStockThreshold: null,
+      });
+      await updateStock(asUser(A), WORKSPACE_W_ID, bare, { quantityOnHand: 2 });
+      await updateStock(asUser(A), WORKSPACE_W_ID, bare, { unit: null });
+      const rows = await jars();
+      expect(rows.find((row) => row.id === bare)?.low_stock_threshold).toBeNull();
+    });
+  });
+
   it('refuses a viewer, who may still read the jar', async () => {
     const id = await seedJar();
     await expect(getStock(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
@@ -278,6 +335,10 @@ describe('updateStock', () => {
       Forbidden,
     );
     expect(await jars()).toEqual([before]);
+    // The same call by a member succeeds, so the refusal is the role.
+    await expect(
+      updateStock(asUser(B), WORKSPACE_W_ID, id, { quantityOnHand: 0 }),
+    ).resolves.toMatchObject({ id });
   });
 
   it('refuses D a jar of W by direct id, under either coven', async () => {
@@ -296,6 +357,10 @@ describe('updateStock', () => {
       NotFound,
     );
     expect((await jars())[0]).toEqual(before);
+    // The jar is live and a member of W writes it by the same id.
+    await expect(
+      updateStock(asUser(B), WORKSPACE_W_ID, id, { quantityOnHand: 0 }),
+    ).resolves.toMatchObject({ id });
   });
 
   it('refuses the site admin', async () => {

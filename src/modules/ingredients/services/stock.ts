@@ -107,8 +107,10 @@ export async function createStock(
 
 /**
  * Changes a jar of this coven. A field `input` leaves out keeps its value and
- * one it sets to null is cleared; a new unit brings its own dimension. No
- * default threshold here: that is the new jar's alone.
+ * one it sets to null is cleared; a new unit brings its own dimension. A jar
+ * that had no unit and gets one while its threshold is empty takes the unit's
+ * default, as a new jar does (M9.9); a threshold already set, or stated by the
+ * input, is never replaced, and a jar that already had a unit gets none.
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {ValidationError} the input breaks `StockInput`.
@@ -123,10 +125,19 @@ export async function updateStock(
 ): Promise<StockRow> {
   const membership = await assertMembership(session, workspaceId, { inventory: ['update'] });
   const parsed = parseInput(StockInput, input);
-  await readableJar(membership, id);
+  const current = await readableJar(membership, id);
+
+  const first = current.unit === null && parsed.unit ? parsed.unit : null;
+  const emptied =
+    parsed.lowStockThreshold === undefined
+      ? current.lowStockThreshold === null
+      : parsed.lowStockThreshold === null;
+  const columns = stockColumns(
+    first && emptied ? { ...parsed, lowStockThreshold: defaultThreshold(first) } : parsed,
+  );
 
   const [row] = await withAudit(session, (write) =>
-    write.updateByIdInWorkspace(membership, inventoryItems, id, stockColumns(parsed)),
+    write.updateByIdInWorkspace(membership, inventoryItems, id, columns),
   );
   if (!row) throw new NotFound(NO_JAR);
   return row;
