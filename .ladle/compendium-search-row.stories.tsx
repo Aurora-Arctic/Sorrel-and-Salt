@@ -109,3 +109,11 @@ export const ProposalStickyPhoneOneLineLight: Story = () => (
   <Page variant="proposal-sticky-one-line" />
 );
 ProposalStickyPhoneOneLineLight.meta = { theme: 'light', width: 375 };
+
+// (d) The owner's call, 2026-10-20, built: two lines, the search box then the Filters button and
+// Clear All, and the two stick together. The page as built, for comparison with (a) to (c).
+export const ProposalStickyPhoneTwoLinesDark: Story = () => <Page />;
+ProposalStickyPhoneTwoLinesDark.meta = { theme: 'dark', width: 375 };
+
+export const ProposalStickyPhoneTwoLinesLight: Story = () => <Page />;
+ProposalStickyPhoneTwoLinesLight.meta = { theme: 'light', width: 375 };

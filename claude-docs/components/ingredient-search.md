@@ -87,19 +87,21 @@ in the filter slot to carry.
   root's `scroll-padding-top` leaves room for the stuck row, padding included,
   when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
-- **On a phone, only the search box sticks** (the MB.120 review, item 6). Under the
-  narrow column (`$narrow-column` plus the page's two gutters, tested on the window) the
-  row would stack three lines deep: the box, the Filters button and Clear All. A row that
-  tall covers a third of the window, so the `<search>` and the form become
-  `display: contents`, the box alone is `position: sticky`, and the Filters button and
-  Clear All scroll away with the cards (each keeps the gap the row gave it). The reason
-  for the two `display: contents`: a sticky box stops at the end of its parent, and
-  those two parents end above the results. The query is on the window, not a container
-  query on the list, because a container is the containing block for `position: fixed`,
-  which the cards' tips use. `top` stays declared on the `<search>` for StuckMark. The
-  tray still opens from the Filters button, which scrolls with the page. The other
-  designs weighed (nothing sticks; one nowrap line with the Filters button beside the
-  box) are the `Proposal*` stories in `.ladle/compendium-search-row.stories.tsx`.
+- **On a phone the row is two lines, and both stick** (the MB.120 review, item 6; the
+  owner's call, 2026-10-20). Under the narrow column (`$narrow-column`, tested as the
+  filter row's own container width) the search box takes the first line, and the Filters
+  button and Clear All share the second, the button at its start and Clear All at its
+  end. The `<search>` stays the one sticky box at every width, so the two lines stick
+  together as the desktop row does. The primitive's narrow-row rule
+  (`_primitives.scss`, "On a phone's narrow row") gives the first child and each choice
+  a whole line and leaves the rest at their own width, so the compendium's button and
+  Clear All share one; a row of selects elsewhere on the site still reads as before.
+  The root's `scroll-padding-top` adds one control height and the row's gap
+  (`space(3)`) under the same width, as the row is two controls tall there. A design that
+  made only the box stick (`display: contents` on the `<search>` and the form, so the
+  box's sticky range ran to the end of the results) was weighed and dropped; it and the
+  other alternative (nothing sticks; one nowrap line) are the `Proposal*` stories in
+  `.ladle/compendium-search-row.stories.tsx`.
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file
