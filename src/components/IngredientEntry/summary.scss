@@ -51,9 +51,8 @@
   vertical-align: top;
   gap: space(2);
   font-weight: 400;
-  // The green text keeps its colour; only the underline fades, at the mixin's
-  // own mixes, under 3:1 in light (the owner's call, 2026-10-20; `faded-underline`).
-  @include faded-underline;
+  // Its colours, focus ring and faded underline are the References links' own
+  // rule (index.scss), so they rest in the body ink (the owner's call, 2026-10-20).
 
   > svg {
     flex: none;
