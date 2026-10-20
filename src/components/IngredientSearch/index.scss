@@ -63,6 +63,61 @@ $stuck-pad: space(4);
   pointer-events: none;
 }
 
+// On a phone the row would stack three lines deep (the search, the Filters button, Clear All),
+// and a row that tall sticking covers a third of the window. So under the narrow column only the
+// search box sticks and the rest of the row scrolls away with the page (the MB.120 review, item 6;
+// claude-docs/components/ingredient-search.md, "On a phone"). A sticky box stops at the end of its
+// parent, and the `<search>` and the form end above the results, so both become `display: contents`
+// and the row's children are placed by the list's own column. The query is on the window, not the
+// row's container: a container is a containing block for `position: fixed`, which the cards' tips
+// use, and the column is the window less the page's two gutters. `top` stays declared above on the
+// `<search>`, which StuckMark reads. Each child keeps the gap the row gave it (a row gap of
+// space(3) in place of the column's space(5)).
+$narrow-row-window: calc(#{$narrow-column} + 2 * #{space(4)});
+
+@media (max-width: $narrow-row-window) {
+  .ingredient-search > search,
+  .ingredient-search > search > .filter-row {
+    display: contents;
+  }
+
+  .ingredient-search > search > .filter-row > :not(dialog) {
+    flex: none;
+  }
+
+  .ingredient-search > search > .filter-row > :first-child {
+    position: sticky;
+    // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
+    top: var(--sticky-top, 0px);
+    z-index: layer('sticky-row');
+    margin-block-start: calc(-1 * #{$stuck-pad});
+    padding-block: $stuck-pad space(2);
+    background-color: $surface-page;
+    transition: box-shadow $modal-fade;
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .ingredient-search > search[data-stuck] > .filter-row > :first-child {
+    box-shadow: $shadow-floating;
+  }
+
+  .ingredient-search > search > .filter-row > :not(:first-child, dialog) {
+    margin-block-start: calc(#{space(3)} - #{space(5)});
+  }
+
+  // The first one also clears the search box's own padding below.
+  .ingredient-search > search > .filter-row > :nth-child(2):not(dialog) {
+    margin-block-start: calc(#{space(3)} - #{space(5)} - #{space(2)});
+  }
+
+  .ingredient-search > search + .search-sentence {
+    margin-block-start: 0;
+  }
+}
+
 // A focus or a jump that scrolls a control into view lands it below the stuck row, not
 // under it: the bar (the shell's alone), the row's own height, and a step of air. The root
 // is the scroll container, which cannot read the frames' `--sticky-top`, set below it.

@@ -15,7 +15,18 @@ import type { FilterFormCase, FilterFormSubject } from './types';
 // FilterForm's own behaviour, the row off while a list is on its way and the
 // focus coming back, is CompendiumList's (claude-docs/components/filter-form.md).
 
-const form = (subject: FilterFormSubject) => screen.getByRole('form', { name: subject.label });
+/**
+ * A filter row's form by its name. The name is on the `<search>` around it, the
+ * row's one landmark, which jsdom's role table cannot find, so it is found by
+ * its label and the form taken from inside.
+ */
+export const filterForm = (name: string, scope: Pick<typeof screen, 'getByLabelText'> = screen) => {
+  const form = scope.getByLabelText(name).querySelector<HTMLFormElement>('form');
+  if (!form) throw new Error(`The filter row named "${name}" holds no form.`);
+  return form;
+};
+
+const form = (subject: FilterFormSubject) => filterForm(subject.label);
 const searchbox = (subject: FilterFormSubject) =>
   screen.getByRole(subject.searchRole ?? 'searchbox', { name: subject.searchLabel });
 

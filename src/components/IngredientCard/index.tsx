@@ -18,12 +18,10 @@ import './index.scss';
 // it takes props only and works out nothing from the data, so the marks and the
 // stock badge are each the project's one presentation, used
 // as they are and never restyled here. claude-docs/components/ingredient-card.md.
-// Where New or Updated sits: 'corner', just left of the safety badge in the card's
-// top-right corner, or in the corner itself without one (the owner's call,
-// 2026-10-20); 'row' puts it in the badge row under the formal name, the
-// alternative the owner was offered. One word moves it; both places are styled, and in
-// either EntryMarks draws it before the badges (the owner's call, 2026-10-20).
-const RECENCY_AT = 'corner' as 'corner' | 'row';
+// New or Updated sits just left of the safety badge in the card's top-right corner, or in
+// the corner itself without one (the owner's call, 2026-10-20); EntryMarks draws it before
+// the badges. The badge row under the formal name was the alternative offered and is gone
+// (MB.120, item 28).
 
 const IngredientCard = ({
   href,
@@ -46,12 +44,12 @@ const IngredientCard = ({
   const formal = (formalName ?? '').trim();
 
   // Without a mark each holder is left out, not left empty, so it adds no gap.
-  const marked = kind === 'own' || Boolean(retired) || (RECENCY_AT === 'row' && recency != null);
+  const marked = kind === 'own' || Boolean(retired);
   const safe =
     Boolean(toxic) ||
     (safetyNotes ?? '').trim() !== '' ||
     variants.some((v) => v.toxic || (v.safetyNotes ?? '').trim() !== '');
-  const cornered = safe || (RECENCY_AT === 'corner' && recency != null);
+  const cornered = safe || recency != null;
   // The first word apart, so the safety badge beside the name drops below it only
   // once that word would have to break to fit (the owner's call, 2026-10-20): the
   // name block's narrowest width is this word's (index.scss). Spans do not change
@@ -93,13 +91,7 @@ const IngredientCard = ({
               owner's call, 2026-10-20). */}
             {marked && (
               <div className="specimen__badges">
-                <EntryMarks
-                  kind={kind}
-                  retired={retired}
-                  provenance={false}
-                  safety={false}
-                  recency={RECENCY_AT === 'row' ? recency : null}
-                />
+                <EntryMarks kind={kind} retired={retired} provenance={false} safety={false} />
               </div>
             )}
           </div>
@@ -115,7 +107,7 @@ const IngredientCard = ({
               <EntryMarks
                 kind="compendium"
                 provenance={false}
-                recency={RECENCY_AT === 'corner' ? recency : null}
+                recency={recency}
                 toxic={toxic}
                 safetyNotes={safetyNotes}
                 variants={variants}

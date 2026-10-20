@@ -67,8 +67,6 @@ The owner asked for smaller type, about half way to the compact look, with the s
 
 ### The safety badge beside the name (changed 2026-10-20)
 
-**Moving New or Updated into the row under the formal name.** The owner was offered the alternative, and it is one word: `RECENCY_AT` at the top of `index.tsx`, `'corner'` today, `'row'` to hand `recency` to the `EntryMarks` of `.specimen__badges` instead, which draws it before Local and Retired (the owner's rule that it comes before every badge, 2026-10-20; [`entry-marks.md`](entry-marks.md), "New and Updated"), a row the stylesheet already centres across. The trade-off, measured in Chromium at 390px: in the corner, Updated takes 74px beside the name, so "Testwort Longer Nameicanicusmus" wraps onto four lines and breaks "Nameicanicusmus" inside the word; in the row it wraps onto two, as it does with the safety badge alone.
-
 The specimen tops the name and the badges flush (`align-items: flex-start`), so the 24px badges sat above the middle of the taller line of name: 1.5px high in the compact card and 4.5px in the regular one. On the card, the corner (`.ingredient-card__corner`) is a badge tall even holding New or Updated alone, and has a top margin of half the name's line box less the badge's height. The name's line box is its size times 1.15, so that is `heading-size(3)` in the regular card and `heading-size(4)` in compact. The margin centres it on the name's first line, the way the forms line's icons are centred on their line. Measured in Chromium, the same in both themes and at 1280px and 375px, the badge sits 0.3px below the text's middle in compact and 0.05px below it in regular. When it wraps beneath the name block, the margin adds to the row gap (about 2px in compact and 5px in regular), so it sits a little further under the row of other marks than they sit under the formal name. The row under the formal name is `space(2)` below it (`space(1)` compact).
 
 ### Compact
@@ -126,6 +124,35 @@ the `(name, id)` keyset the list pages on
 Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
 
 Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+
+## Styling
+
+Tokens only, until the section's design review (MB.84). `IngredientCard/index.scss` holds the card, the
+slot it hangs in and the drawer that opens under it; the shared `.specimen*` primitives it builds on
+are in `_primitives.scss`. The compact look is the `[data-density='compact']` block of the same file and `_compact.scss`, keyed off the
+list's `data-density` ([`ingredient-card-list.md`](ingredient-card-list.md)).
+
+The drawer's measurements are tokens, not pixel literals: its inset from the slot
+(`$drawer-inset`), its side walls (`$drawer-wall`), its travel (`$drawer-travel`) and its slot shadow
+(`$drawer-slot-shadow`), with the shade colours as theme tokens (lighter in the light theme).
+The `ProposalDrawerTokens` stories in `.ladle/ingredient-card-drawer.stories.tsx` draw the drawer in
+both themes; the computed styles were checked identical to the pixel values the tokens replaced.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:
+the kinds (`Compendium`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
+`RetiredCaution`, `NewWithoutSafety`), the stress cases for the name (`LongName`, `OneLongWord`,
+`MineralName`, `NoFormalName`, `NewLongName`), the other marks and chips (`ManyForms`,
+`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`,
+`CompactLongName`) and the recency marks (`NewEntry`, `UpdatedEntry`).
+
+## Testing
+
+`tests/components/IngredientCard/index.test.tsx`: the card's name and link, the category chips, safety,
+the cupboard marks, the jar-line slot, the actions, the navigation (the whole card is one target for the
+name link) and the recency marks. Layout and the drawer's look are checked in Ladle and in the page
+specs that place the card, not in jsdom, which has no layout.
 
 ## Accessibility
 

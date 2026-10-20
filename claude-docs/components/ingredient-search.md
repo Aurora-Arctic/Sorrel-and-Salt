@@ -87,6 +87,19 @@ in the filter slot to carry.
   root's `scroll-padding-top` leaves room for the stuck row, padding included,
   when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
+- **On a phone, only the search box sticks** (the MB.120 review, item 6). Under the
+  narrow column (`$narrow-column` plus the page's two gutters, tested on the window) the
+  row would stack three lines deep: the box, the Filters button and Clear All. A row that
+  tall covers a third of the window, so the `<search>` and the form become
+  `display: contents`, the box alone is `position: sticky`, and the Filters button and
+  Clear All scroll away with the cards (each keeps the gap the row gave it). The reason
+  for the two `display: contents`: a sticky box stops at the end of its parent, and
+  those two parents end above the results. The query is on the window, not a container
+  query on the list, because a container is the containing block for `position: fixed`,
+  which the cards' tips use. `top` stays declared on the `<search>` for StuckMark. The
+  tray still opens from the Filters button, which scrolls with the page. The other
+  designs weighed (nothing sticks; one nowrap line with the Filters button beside the
+  box) are the `Proposal*` stories in `.ladle/compendium-search-row.stories.tsx`.
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file

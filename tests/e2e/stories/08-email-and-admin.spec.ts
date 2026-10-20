@@ -630,7 +630,7 @@ test(
       `/admin/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
     );
     await expect(
-      page.getByRole('form', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
+      page.getByRole('search', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
     ).toHaveValue(subjectEmail);
 
     // Their three changes alone, newest first: what changed, how, who, why.
@@ -683,7 +683,7 @@ test(
     // privilege dropdown, a select-only box once the page has hydrated,
     // applies the moment a choice is picked, carrying the search with it.
     await page.waitForLoadState('networkidle');
-    const filter = page.getByRole('form', { name: 'Filter Privilege Changes' });
+    const filter = page.getByRole('search', { name: 'Filter Privilege Changes' });
     const search = filter.getByLabel('Name or Email');
     const part = subjectEmail.split('@')[0].toUpperCase();
     await search.fill(part);

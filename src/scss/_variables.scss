@@ -720,6 +720,9 @@ $table-stack-width: 40rem;
 // The narrowest an ingredient card is drawn: the grid of cards (IngredientCardList)
 // and the skeleton standing in for it both fill a row with as many as fit.
 $ingredient-card-min: 20rem;
+// The same, for the compact density (IngredientCardList, the data-density switch): a
+// narrower card, so more fit across. No space step or other width is this size.
+$ingredient-card-min-compact: 16rem;
 
 // The heavy rule, for a line that must read by its weight as well as its
 // colour: the impersonation banner's foot, the owner's call in MB.53, where it

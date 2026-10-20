@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
 import { useEffect, useRef, useState } from 'react';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
-import FacetPanel from '.';
+import FacetPanel, { WIDE } from '.';
 import type { FacetPanelFilter } from './types';
 
 // Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values (M12.4).
@@ -103,7 +103,7 @@ function Panel({
   useEffect(() => () => window.clearTimeout(timer.current), []);
   // Press Filters once hydrated, on the wide layout only (below it the sheet is modal).
   useEffect(() => {
-    if (!open || !window.matchMedia('(min-width: 56rem)').matches) return;
+    if (!open || !window.matchMedia(WIDE).matches) return;
     const button = frame.current?.querySelector<HTMLButtonElement>('.facet-panel__button');
     if (button && button.getAttribute('aria-expanded') !== 'true') button.click();
     if (!menu) return undefined;

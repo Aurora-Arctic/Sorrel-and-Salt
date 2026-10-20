@@ -100,7 +100,7 @@
     &::after {
       content: '';
       position: absolute;
-      inset-block: calc(50% - 0.75rem);
+      inset-block: calc(50% - #{space(3)});
       inset-inline: 0;
     }
   }

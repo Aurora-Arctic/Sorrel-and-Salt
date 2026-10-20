@@ -15,6 +15,12 @@
 
 The coven list's filter (`CompendiumListFilter` with `audience="coven"`, a client component like the switch) draws it in its row, inside the `search` landmark (story 12 counts editing controls outside it). The admin and public compendium lists draw none. Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
 
+## Styling
+
+The switch has no stylesheet of its own: it is a plain switch control. What it changes is styled by the
+cards. The compact selectors, with the `:not(:root[data-card-density='regular'] *)` guard, are in
+`IngredientCard/index.scss` (the `[data-density='compact']` block, with the `_compact.scss` partial it uses) and `IngredientCardList/index.scss` (the grid).
+
 ## Tests
 
 `tests/components/CardDensitySwitch/index.test.tsx`: default on, starting off from the attribute, the attribute and storage on each toggle, blocked storage, and following an outside change. `tests/app/pre-paint-scripts.test.tsx` covers the script.

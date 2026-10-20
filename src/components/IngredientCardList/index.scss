@@ -28,7 +28,10 @@
   // A stored Regular choice sets data-card-density="regular" on <html> (pre-paint script,
   // CardDensitySwitch) and turns the compact look off.
   &[data-density='compact']:not(:root[data-card-density='regular'] *) {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(100%, #{$ingredient-card-min-compact}), 1fr)
+    );
     gap: space(3);
   }
 }
