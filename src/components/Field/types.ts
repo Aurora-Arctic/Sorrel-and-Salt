@@ -4,6 +4,11 @@ import type { FieldPath, FieldValues } from 'react-hook-form';
 /** What every field shares: what it is called, and what it is told about it. */
 export interface FieldProps {
   label: string;
+  /**
+   * Read after the label, out of sight: "Quantity, Flower". For a field drawn
+   * once per row, so two rows' fields never share a name (M9.9's StockDialog).
+   */
+  labelSuffix?: string;
   /** What the field is for, behind an info tip beside the label. */
   hint?: string;
   /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */

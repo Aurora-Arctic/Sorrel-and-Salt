@@ -42,3 +42,27 @@ export const MeasuredPhoneLight: Story = () => (
 
 MeasuredPhoneDark.meta = { theme: 'dark', width: 375 };
 MeasuredPhoneLight.meta = { theme: 'light', width: 375 };
+
+interface Jars {
+  jars: StockFormValues[];
+}
+
+/** Two jars in one form, as the stock dialog lays its rows: each field named for its form. */
+export const Rows: Story = () => {
+  const methods = useForm<Jars>({
+    defaultValues: {
+      jars: [
+        stockFormValues({ quantity: 250, unit: 'g', threshold: 30 }),
+        stockFormValues({ quantity: 0, unit: 'ml', threshold: 15 }),
+      ],
+    },
+  });
+  return (
+    <FormProvider {...methods}>
+      <form className="form" noValidate>
+        <StockFields<Jars> prefix="jars.0" form="Flower" />
+        <StockFields<Jars> prefix="jars.1" form="Oil" />
+      </form>
+    </FormProvider>
+  );
+};

@@ -25,3 +25,10 @@ export interface StockOfJar {
   unit: string | null;
   threshold: number | null;
 }
+
+export interface StockFieldsProps {
+  /** Where the three sit in the form's values, a row of a list: `jars.0`. Left out, at the top level. */
+  prefix?: string;
+  /** The row's form as the screen says it, read after each label out of sight: "Quantity, Flower". */
+  form?: string;
+}

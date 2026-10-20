@@ -33,7 +33,7 @@ beforeEach(() => {
 const trigger = () => screen.getByRole('button', { name: 'Edit Stock, Rosemary, Oil' });
 const dialog = () => screen.getByRole('dialog', { name: 'Edit Stock, Rosemary, Oil' });
 const quantity = () => within(dialog()).getByRole('spinbutton', { name: 'Quantity' });
-const threshold = () => within(dialog()).getByRole('spinbutton', { name: 'Low-Stock Threshold' });
+const threshold = () => within(dialog()).getByRole('spinbutton', { name: 'Low Stock At' });
 const unit = () => within(dialog()).getByRole('combobox', { name: 'Unit' });
 const save = () => within(dialog()).getByRole('button', { name: /^Sav(e|ing) Stock$/ });
 

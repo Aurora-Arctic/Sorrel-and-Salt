@@ -30,6 +30,7 @@ export const Required = (): ReactElement => (
 /** The block around one control: its label row, note, the control, and its error. */
 export function FieldShell({
   label,
+  labelSuffix,
   hint,
   note,
   required,
@@ -51,10 +52,11 @@ export function FieldShell({
       <div className="field__label-row">
         <label className="field__label" id={labelId} htmlFor={controlId}>
           {label}
+          {labelSuffix && <span className="visually-hidden">, {labelSuffix}</span>}
           {required && <Required />}
         </label>
         {hint && (
-          <InfoTip id={hintId} label={label}>
+          <InfoTip id={hintId} label={labelSuffix ? `${label}, ${labelSuffix}` : label}>
             {hint}
           </InfoTip>
         )}

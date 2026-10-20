@@ -32,7 +32,7 @@ function Harness({ start }: { start: StockFormValues }) {
 }
 
 const quantity = () => screen.getByRole('spinbutton', { name: 'Quantity' });
-const threshold = () => screen.getByRole('spinbutton', { name: 'Low-Stock Threshold' });
+const threshold = () => screen.getByRole('spinbutton', { name: 'Low Stock At' });
 const unit = () => screen.getByRole('combobox', { name: 'Unit' });
 
 describe('StockFields', () => {
@@ -143,5 +143,49 @@ describe('stockAmountsOf', () => {
       unit: 'fl_oz_uk',
       lowStockThreshold: 0,
     });
+  });
+});
+
+describe('StockFields in a list of jars', () => {
+  interface Jars {
+    jars: StockFormValues[];
+  }
+  let jars: Jars;
+
+  function Rows({ start }: { start: StockFormValues[] }) {
+    const methods = useForm<Jars>({ defaultValues: { jars: start } });
+    jars = methods.watch();
+    return (
+      <FormProvider {...methods}>
+        <form>
+          <StockFields<Jars> prefix="jars.0" form="Flower" />
+          <StockFields<Jars> prefix="jars.1" form="Oil" />
+        </form>
+      </FormProvider>
+    );
+  }
+
+  const start = [
+    stockFormValues({ quantity: 250, unit: 'g', threshold: 30 }),
+    stockFormValues({ quantity: 5, unit: 'ml', threshold: 1 }),
+  ];
+
+  it('names each row by its form, so two rows never share a field name', () => {
+    render(<Rows start={start} />);
+
+    expect(screen.getByRole('spinbutton', { name: 'Quantity, Flower' })).toHaveValue(250);
+    expect(screen.getByRole('spinbutton', { name: 'Quantity, Oil' })).toHaveValue(5);
+    expect(screen.getByRole('spinbutton', { name: 'Low Stock At, Oil' })).toHaveValue(1);
+    expect(screen.getByRole('combobox', { name: 'Unit, Flower' })).toHaveTextContent('g');
+  });
+
+  it('keeps what is typed under its own row', () => {
+    render(<Rows start={start} />);
+
+    typeIn(screen.getByRole('spinbutton', { name: 'Quantity, Oil' }), '7');
+    choose('Unit, Flower', 'kg');
+
+    expect(jars.jars[0]).toEqual({ quantityOnHand: '250', unit: 'kg', lowStockThreshold: '30' });
+    expect(jars.jars[1]).toEqual({ quantityOnHand: '7', unit: 'ml', lowStockThreshold: '1' });
   });
 });

@@ -15,6 +15,7 @@ import { useField } from './use-field';
 export function TextField<V extends FieldValues = FieldValues>({
   name,
   label,
+  labelSuffix,
   hint,
   note,
   required,
@@ -63,6 +64,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   return (
     <FieldShell
       label={label}
+      labelSuffix={labelSuffix}
       hint={hint}
       note={note}
       required={required}
