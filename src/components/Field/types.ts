@@ -69,8 +69,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
   multiline?: boolean;
   /** A textarea's height in lines, where its prose runs longer than the primitive's 6rem holds. */
   rows?: number;
-  /** The input's type, for a single line: a reference's days are `date`s. */
-  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
+  /** The input's type, for a single line: a reference's days are `date`s, a jar's amounts `number`s (any decimal, read back as the text typed). */
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
   /** Shut, for a field the rest of the form has ruled out; its note says why. */
   disabled?: boolean;
   /** Fields whose errors this one's value decides as well, revalidated when it changes. */

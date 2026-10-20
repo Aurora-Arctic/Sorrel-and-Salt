@@ -78,6 +78,16 @@ export interface ModalButtonProps {
   className: string;
   /** The dialog's heading and accessible name, in title case. */
   title: string;
+  /** The small line over the title, for an edit dialog's head: "Edit Stock" (see `ModalHeading`). */
+  eyebrow?: string;
+  /** After the title, in the dialog's name: the jar's form under its ingredient's name. */
+  qualifier?: ReactNode;
+  /**
+   * The button's accessible name where its text alone would not tell one
+   * button from the next: a row's "Edit" is named "Edit Stock, Rosemary, Oil".
+   * It starts with the text, so a voice command for what is shown still works.
+   */
+  ariaLabel?: string;
   size?: ModalProps['size'];
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;

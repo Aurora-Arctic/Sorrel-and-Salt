@@ -152,7 +152,7 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 </FieldShell>;
 ```
 
-`TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`),
+`TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`, `number`: any decimal, held as the text typed),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `action`, `format` (a tidy run
 as the field is left), `autoComplete` and `busy` (its text is being looked up: the
 [`Spinner`](spinner.md) inside the box at its right end, shown after 100ms so a quick answer

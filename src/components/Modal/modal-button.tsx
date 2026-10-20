@@ -16,6 +16,9 @@ export default function ModalButton({
   label,
   className,
   title,
+  eyebrow,
+  qualifier,
+  ariaLabel,
   size,
   children,
 }: ModalButtonProps): ReactElement {
@@ -24,12 +27,20 @@ export default function ModalButton({
 
   return (
     <>
-      <button ref={button} className={className} type="button" onClick={() => setOpen(true)}>
+      <button
+        ref={button}
+        className={className}
+        type="button"
+        aria-label={ariaLabel}
+        onClick={() => setOpen(true)}
+      >
         {label}
       </button>
       {open && (
         <Modal
           title={title}
+          eyebrow={eyebrow}
+          qualifier={qualifier}
           size={size}
           onClose={() => setOpen(false)}
           // Modal gives the focus back to the button; named too, as a click
