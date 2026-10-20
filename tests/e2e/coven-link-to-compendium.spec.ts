@@ -211,6 +211,16 @@ test('a member links an own entry with a formal name to a compendium entry of an
   await pick(page, dialog, 'Fixture Linkroot');
   await expect(goesTo(dialog, 'Root')).toHaveText('Fixture Linkroot');
   await assertNoAccessibilityViolations(page);
+  // The pick's name opens its summary, checked open, then shut by a second press.
+  const opener = dialog
+    .getByRole('list', { name: 'Picked Entries' })
+    .getByRole('button', { name: 'Fixture Linkroot', exact: true });
+  await opener.click();
+  const summary = page.getByRole('dialog', { name: 'About Fixture Linkroot' });
+  await expect(summary.getByRole('link', { name: /Open Entry/ })).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await opener.click();
+  await expect(summary).toBeHidden();
   await dialog.getByRole('button', { name: 'Link', exact: true }).click();
 
   await expect(page).toHaveURL(`/coven/${coven.slug}/ingredients/${compendiumId}`);

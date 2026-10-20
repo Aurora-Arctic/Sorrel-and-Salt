@@ -24,7 +24,7 @@ compendium page wrap it rather than containing their own form.
 | `summaries.tsx`          | `SectionSummary`, the one line a closed section reads, each section's watching its own fields, and `variantSectionSummary`, a variant's section's line                                                                                                               |
 | `icons.tsx`              | The rows' icons: `EditIcon` (IconTip's pencil, re-exported), `RemoveIcon`, and Edit Source's `SourceEditIcon`                                                                                                                                                        |
 | `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                                                                                    |
-| `substitute-summary.tsx` | A linked substitute's summary (MB.115): its query, `SubstituteSummary`, `substituteSummary`, which a list's chip opens, and `EntryHrefContext`, which carries `entryHref` to it                                                                                      |
+| `substitute-summary.tsx` | A linked substitute's summary (MB.115): its query, `SubstituteSummary`, `substituteSummary`, which a list's chip opens, and `EntryHrefContext`, which carries `entryHref` to it; its rules in `substitute-summary.scss`                                              |
 | `values.ts`              | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, `SECTION_KEYS`, `sectionsWithErrors` and their variant forms, and the two resolvers, a coven's and the compendium's |
 | `options.ts`             | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                                                                                                     |
 | `types.ts`               | The props, the form's own values, and the input it sends                                                                                                                                                                                                             |
@@ -491,6 +491,11 @@ links. In both substitute lists, the ingredient's and each variant's:
   compendium's entry page, `/compendium/ingredients/[slug]`, for a compendium
   substitute and nothing for a coven's own, since the summary is given a slug
   and not an id and a coven's page is addressed by id.
+- **Its rules are its own stylesheet**, `substitute-summary.scss`, which
+  `substitute-summary.tsx` imports, not the form's `index.scss`: the Link
+  dialog's picks open the same summary, and the Ingredients list opens that
+  dialog without the form (M8.17; [`ingredient-entry.md`](ingredient-entry.md)).
+  The panel around it is Combobox's `.combobox__entry-summary`.
 
 ### The categories
 

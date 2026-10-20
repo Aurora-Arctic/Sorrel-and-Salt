@@ -7,9 +7,9 @@
 // its own rules wherever it is opened.
 //
 // The Link dialog's body (M8.17): the picks as rows beneath the search box,
-// drawn as References' rows are (MB.154), each with its ×; then the
-// form map, a table that scrolls sideways inside its own box at a phone's
-// width rather than the dialog. claude-docs/components/ingredient-entry.md,
+// drawn as References' rows are (MB.154), each with its × and its name
+// opening its summary; then the form map, a table that scrolls sideways
+// inside its own box at a phone's width rather than the dialog. claude-docs/components/ingredient-entry.md,
 // "Link to the Compendium".
 .link-form {
   display: flex;
@@ -58,15 +58,17 @@
   }
 }
 
-// A pick's formal name and forms, in InfoTip's bubble and its fade, above
-// the name from its left edge, as a substitute chip's detail is
-// (.combobox__entry-tip); `useTip` keeps it on the screen.
-.link-form__tip {
-  @include tip-above;
+// A pick's name, which opens its summary: the linked chip's button
+// (.combobox__entry-open), its text wrapping rather than cut off, and
+// underlined while the panel beneath is this pick's, as the chip's is.
+.link-form__pick-open {
+  text-align: start;
 
-  // Border-box, so the padding sits inside the measure rather than past it.
-  box-sizing: border-box;
-  overflow-wrap: anywhere;
+  &[aria-expanded='true'] .link-form__pick-text {
+    text-decoration: underline;
+    text-decoration-thickness: $rule-medium;
+    text-underline-offset: 0.2em;
+  }
 }
 
 // The column's space(3) gap (0.75rem) plus this margin (0.75rem) gives the

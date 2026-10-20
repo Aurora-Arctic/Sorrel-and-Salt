@@ -10,10 +10,12 @@ import { readGraphqlIssues } from '../../lib/graphql-failure';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import BusyButton from '../BusyButton';
 import Combobox from '../Combobox';
+import { LinkIcon } from '../Combobox/icons';
+import { useEntrySummary } from '../Combobox/summary';
 import { FieldShell, fieldDescription } from '../Field';
 import { RemoveIcon } from '../IngredientForm/icons';
+import { EntryHrefContext, SubstituteSummary } from '../IngredientForm/substitute-summary';
 import { useCompendiumSubstitutes } from '../IngredientForm/suggestions';
-import { useTip } from '../InfoTip/use-tip';
 import Notice from '../Notice';
 import type { LinkFormProps, LinkPick } from './types';
 import './link-form.scss';
@@ -24,7 +26,7 @@ const NOTHING_MOVES =
 
 // The Link dialog's body (M8.17): a search of the compendium whose picks list
 // as rows beneath it, as References' do, each with its formal name and forms
-// in a tooltip on its name, as a substitute chip shows its detail, then
+// on a line beneath its name, which opens the entry's summary, then
 // the form map, which says where each of the coven's forms goes. A form goes
 // to the one pick with a form of its name, matched as the service matches
 // (trimmed, lower-cased); where two picks have it the member chooses, and a
@@ -74,58 +76,65 @@ function holdsText(jars: number, spells: number): string {
   return parts.length ? parts.join(' · ') : 'Nothing';
 }
 
+/** Where a pick's summary links it: every pick is a compendium entry, so its public page. */
+const pickHref = ({ slug }: { slug: string }): Route => `/compendium/ingredients/${slug}` as Route;
+
 /**
- * One pick's row: its name, its formal name and forms, and its ×. The formal
- * name and forms also show in a tooltip while the name is hovered or the ×
- * has focus, closed by Escape, as a substitute chip's detail does (MB.164,
- * Combobox/entry.tsx): the chip's text is not in the tab order unless it opens
- * something, so its × carries the focus and reads the detail as its
- * description, and so does this one.
+ * One pick's row: its name, its formal name and forms on a line beneath, and
+ * its ×. The name is a button that opens the entry's summary in a panel
+ * beneath it, the same one a linked substitute's chip opens (MB.115,
+ * Combobox/summary.ts, IngredientForm/substitute-summary.tsx), whose link
+ * opens the entry's page in a new tab so the dialog and its picks stay.
  */
-function PickRow({ pick, onRemove }: { pick: LinkPick; onRemove: () => void }): ReactElement {
-  const detailId = useId();
+function PickRow({
+  pick,
+  workspaceId,
+  onRemove,
+}: {
+  pick: LinkPick;
+  workspaceId: string;
+  onRemove: () => void;
+}): ReactElement {
+  const opens = useEntrySummary();
   const { canonicalName, forms } = pick.link;
-  const hasDetail = Boolean(canonicalName) || forms.length > 0;
-  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(
-    () => hasDetail,
-    'top-start',
-  );
-  const detail = (
-    <>
-      {canonicalName && <i>{canonicalName}</i>}
-      {canonicalName && forms.length > 0 && ' · '}
-      {forms.map(formLabel).join(', ')}
-    </>
-  );
   return (
     <li className="link-form__pick">
       <span className="link-form__pick-name">
-        {/* Hover on a wrapper holding the tooltip as well as the name, so the
-            pointer can move onto the tooltip without closing it. */}
-        <span ref={anchor} onMouseEnter={show} onMouseLeave={hideSoon}>
-          {pick.name}
-          {/* In the page while closed, faded out and aria-hidden, so it
-              fades both ways and the × can still read it. */}
-          <span
-            ref={bubble}
-            id={detailId}
-            role="tooltip"
-            style={bubbleStyle}
-            className={open ? 'link-form__tip is-open' : 'link-form__tip'}
-            aria-hidden={!open}
+        {/* Named by its text alone; it says it opens a dialog, and whether
+            that is open. */}
+        <button
+          type="button"
+          className="combobox__entry-open link-form__pick-open"
+          {...opens.opener}
+        >
+          <LinkIcon />
+          <span className="link-form__pick-text">{pick.name}</span>
+        </button>{' '}
+        <small>
+          {canonicalName && <i>{canonicalName}</i>}
+          {canonicalName && forms.length > 0 && ' · '}
+          {forms.map(formLabel).join(', ')}
+        </small>
+        {/* After the button, so the Tab order runs from the name into the
+            panel and on to the ×; a non-modal dialog opened by its
+            attribute, so the hook's Escape is the only one. */}
+        {opens.open && (
+          <dialog
+            open
+            aria-label={`About ${pick.name}`}
+            className="combobox__entry-summary"
+            {...opens.panel}
           >
-            {detail}
-          </span>
-        </span>{' '}
-        <small>{detail}</small>
+            <EntryHrefContext.Provider value={pickHref}>
+              <SubstituteSummary link={pick.link} workspaceId={workspaceId} />
+            </EntryHrefContext.Provider>
+          </dialog>
+        )}
       </span>
       <button
         type="button"
         className="link-form__icon-button link-form__remove"
         aria-label={`Remove ${pick.name}`}
-        aria-describedby={hasDetail ? detailId : undefined}
-        onFocus={show}
-        onBlur={hide}
         onClick={onRemove}
       >
         <RemoveIcon />
@@ -229,6 +238,7 @@ export default function LinkForm({
             <PickRow
               key={pick.id}
               pick={pick}
+              workspaceId={workspaceId}
               onRemove={() => {
                 setPicks(picks.filter(({ id }) => id !== pick.id));
                 // The name goes back to the first pick, not to none.

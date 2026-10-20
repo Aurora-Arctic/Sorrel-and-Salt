@@ -2,8 +2,9 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LinkForm from '@/components/IngredientEntry/link-form';
+import type { IngredientSummaryQuery, IngredientSummaryQueryVariables } from '@/gql/graphql';
 import type { FormHolding } from '@/modules/ingredients';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { offerCompendium } from '../../support/msw/ingredient-lookups';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { press, type } from '../../support/interact';
@@ -54,6 +55,29 @@ function show(holdings: FormHolding[]) {
   );
 }
 
+/** Answers `IngredientSummary`, the panel a pick's name opens, with Splitwort. */
+function offerSummary() {
+  mockGraphQLQuery<IngredientSummaryQuery, IngredientSummaryQueryVariables>(
+    'IngredientSummary',
+    () => ({
+      ingredient: {
+        id: SPLIT,
+        name: 'Splitwort',
+        canonicalName: 'Fixtura splitta',
+        description: null,
+        nomenclature: 'botanical',
+        isGlobal: true,
+        slug: 'splitwort-fixtura-splitta',
+        elements: [],
+        celestialBodies: [],
+        zodiacSigns: null,
+        colors: [],
+        variants: [],
+      },
+    }),
+  );
+}
+
 const ROOT: FormHolding = { formId: 'f-root', form: 'rootform', jars: 1, spells: 0 };
 const LEAF: FormHolding = { formId: 'f-leaf', form: 'leafform', jars: 2, spells: 1 };
 const BARK: FormHolding = { formId: 'f-bark', form: 'barkform', jars: 0, spells: 0 };
@@ -92,26 +116,34 @@ describe('LinkForm', () => {
     expect(within(picks()!).getAllByRole('listitem')).toHaveLength(1);
   });
 
-  it("shows a pick's formal name and forms while its name is hovered or its × has focus, and Escape closes them", async () => {
+  it("opens a pick's summary when its name is pressed, and shuts it on a second press", async () => {
+    offerSummary();
     show([ROOT]);
     await pick('Splitwort');
-    const tip = () => screen.queryByRole('tooltip');
-    const detail = 'Fixtura splitta · Rootform, Leafform';
-    // Shut until asked, and nothing beside the row opens a summary.
-    expect(tip()).toBeNull();
-    expect(within(picks()!).getAllByRole('button')).toHaveLength(1);
+    const opener = within(picks()!).getByRole('button', { name: 'Splitwort' });
+    expect(screen.queryByRole('dialog', { name: 'About Splitwort' })).not.toBeInTheDocument();
 
-    fireEvent.mouseEnter(within(picks()!).getByText('Splitwort'));
-    expect(tip()).toHaveTextContent(detail);
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(tip()).toBeNull();
+    fireEvent.click(opener);
+    const panel = screen.getByRole('dialog', { name: 'About Splitwort' });
+    expect(opener).toHaveAttribute('aria-expanded', 'true');
+    // The summary is the entry's, read through its query.
+    expect(await within(panel).findByText('Fixtura splitta')).toBeInTheDocument();
 
-    const remove = screen.getByRole('button', { name: 'Remove Splitwort' });
-    act(() => remove.focus());
-    expect(tip()).toHaveTextContent(detail);
-    expect(remove).toHaveAccessibleDescription(detail);
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(tip()).toBeNull();
+    fireEvent.click(opener);
+    expect(screen.queryByRole('dialog', { name: 'About Splitwort' })).not.toBeInTheDocument();
+  });
+
+  it("links a pick's summary to the entry's compendium page, in a new tab", async () => {
+    offerSummary();
+    show([ROOT]);
+    await pick('Splitwort');
+
+    fireEvent.click(within(picks()!).getByRole('button', { name: 'Splitwort' }));
+
+    const panel = screen.getByRole('dialog', { name: 'About Splitwort' });
+    const entry = await within(panel).findByRole('link');
+    expect(entry).toHaveAttribute('href', '/compendium/ingredients/splitwort-fixtura-splitta');
+    expect(entry).toHaveAttribute('target', '_blank');
   });
 
   it('marks a form that holds nothing and no pick has as moving nothing, the reason told to a screen reader', async () => {

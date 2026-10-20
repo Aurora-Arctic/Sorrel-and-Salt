@@ -13,6 +13,7 @@ import type { EntrySummary } from '../Combobox/types';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
 import { tierOf } from './values';
+import './substitute-summary.scss';
 
 // A linked substitute's summary (MB.115, the owner's ask): what the
 // ingredient is, read when its chip is pressed and not before, so a list of

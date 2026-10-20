@@ -1,0 +1,83 @@
+@use '../../scss/variables' as *;
+
+// Imported by substitute-summary.tsx itself, not by the form's index.scss:
+// the Link dialog opens the same summary from its picks (M8.17), and the
+// Ingredients list opens that dialog without the form, while a stylesheet
+// loads only with the module that imports it. So the summary brings its own
+// rules wherever it is opened. The panel around it is Combobox's
+// (.combobox__entry-summary).
+
+// The summary while it reads: a tip's width, which a summary with a
+// description grows to. The panel is as wide as its content, and the
+// skeleton is as wide as its container, so neither can set the width and
+// both collapse without a width given here.
+.entry-summary__loading {
+  width: $tip-width;
+  max-width: 100%;
+}
+
+// A linked substitute's summary (MB.115), inside the Combobox's panel: the
+// name, the formal name muted beneath it, the description cut to three
+// lines, then a term and its value to a
+// line, the term muted, and a link to the entry. Muted text on the card, the
+// panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
+.entry-summary__name {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 space(2);
+}
+
+.entry-summary__formal {
+  color: $text-muted;
+}
+
+// The description, three lines at most and then an ellipsis: a glance, the
+// whole of it being the entry's own page.
+.entry-summary__description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 space(2);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  line-clamp: 3;
+}
+
+.entry-summary__facts {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  margin: 0;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 space(1);
+  }
+
+  dt {
+    color: $text-muted;
+
+    &::after {
+      content: ':';
+    }
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.entry-summary__link {
+  display: inline-block;
+  margin-top: space(2);
+}
+
+// Loading and a failed read: the sentence, and Try Again beneath it.
+.entry-summary__status {
+  margin: 0;
+
+  > p {
+    margin: 0 0 space(2);
+  }
+}
