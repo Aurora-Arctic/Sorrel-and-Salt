@@ -868,6 +868,9 @@
   --drawer-side: #{$drawer-side-dark};
   --drawer-back: #{$drawer-back-dark};
   --drawer-seam: #{$drawer-seam-dark};
+  --drawer-shade: #{$drawer-shade-dark};
+  --drawer-shade-fade: #{$drawer-shade-fade-dark};
+  --drawer-shade-edge: #{$drawer-shade-edge-dark};
   --dismiss-ink: #{$dismiss-ink-dark};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
@@ -899,6 +902,9 @@
   --drawer-side: #{$drawer-side-light};
   --drawer-back: #{$drawer-back-light};
   --drawer-seam: #{$drawer-seam-light};
+  --drawer-shade: #{$drawer-shade-light};
+  --drawer-shade-fade: #{$drawer-shade-fade-light};
+  --drawer-shade-edge: #{$drawer-shade-edge-light};
   --dismiss-ink: var(--text-primary);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;

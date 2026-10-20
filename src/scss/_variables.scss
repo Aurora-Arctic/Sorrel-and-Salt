@@ -101,6 +101,18 @@ $drawer-side-dark: color.mix($chalk, $soot, 25%);
 $drawer-back-dark: color.mix($chalk, $soot, 2%);
 $drawer-seam-dark: color.mix($drawer-back-dark, $drawer-floor-dark, 55%);
 
+// The shading over the drawer: the shadow the face casts (a strong stop, then a second just
+// under it where the band begins to fade) and the wash from each side wall. Dark shades with
+// black, as the site's shadows do. Light shades with iron-gall at alpha, so it stays in the
+// palette, and lighter: the dark's strengths laid over a light floor read as a hole, which
+// the owner found too dark (2026-10-20).
+$drawer-shade-dark: rgba(0, 0, 0, 0.5);
+$drawer-shade-fade-dark: rgba(0, 0, 0, 0.45);
+$drawer-shade-edge-dark: rgba(0, 0, 0, 0.22);
+$drawer-shade-light: rgba($iron-gall, 0.22);
+$drawer-shade-fade-light: rgba($iron-gall, 0.2);
+$drawer-shade-edge-light: rgba($iron-gall, 0.12);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -393,6 +405,9 @@ $drawer-floor: var(--drawer-floor);
 $drawer-side: var(--drawer-side);
 $drawer-back: var(--drawer-back);
 $drawer-seam: var(--drawer-seam);
+$drawer-shade: var(--drawer-shade);
+$drawer-shade-fade: var(--drawer-shade-fade);
+$drawer-shade-edge: var(--drawer-shade-edge);
 $dismiss-ink: var(--dismiss-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`

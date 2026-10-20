@@ -89,17 +89,12 @@
     transition: inset-block-start $motion-medium ease;
     // Top of the stack first. Straight bands, not blurred shadows: a blur piles up in the
     // corners and reads as a curve. The face's cast shadow is dark in the 10px under it and
-    // fades out by 22px; a wash of 10px shades in from each wall; 7px side walls; then the
+    // fades out by 22px; a wash of 10px shades in from each wall (shade colours are theme tokens: lighter in light); 7px side walls; then the
     // back wall (top 38%), a seam easing into the floor (to 48%) and the floor.
     background:
-      linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.5) 10px,
-        rgba(0, 0, 0, 0.45) 11px,
-        rgba(0, 0, 0, 0) 22px
-      ),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0) 10px),
-      linear-gradient(270deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0) 10px),
+      linear-gradient(0deg, $drawer-shade 10px, $drawer-shade-fade 11px, transparent 22px),
+      linear-gradient(90deg, $drawer-shade-edge, transparent 10px),
+      linear-gradient(270deg, $drawer-shade-edge, transparent 10px),
       linear-gradient(
         90deg,
         $drawer-side 0 7px,
