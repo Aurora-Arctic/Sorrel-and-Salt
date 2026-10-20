@@ -697,8 +697,9 @@ export const DetailsToxic: Story = () => (
 );
 DetailsToxic.meta = { iframed: true };
 
-// The head's two ends with a name that wraps (the owner's calls, 2026-10-20): the safety
-// badge and the Edit pencil end the name's first line, the formal name stands on its
+// The head with a name that wraps (the owner's calls, 2026-10-20): the safety
+// badge and the Edit pencil end the name's last line where they fit, else drop under it
+// (pencil first); the formal name stands on its
 // own line below, and the provenance badges in a row of their own, New first.
 export const DetailsLongName: Story = () => (
   <Details
@@ -744,8 +745,8 @@ export const DetailsNewAndCautioned: Story = () => (
 );
 DetailsNewAndCautioned.meta = { iframed: true };
 
-// One word longer than the line: the badge and the pencil go under it rather than
-// breaking its first word.
+// One word longer than the line: the one case where a word of the name breaks, after the
+// pencil and the badge have both dropped under it (the owner's call, 2026-10-20).
 export const DetailsLongWord: Story = () => (
   <Details
     detail={{

@@ -68,7 +68,8 @@ const Modal = ({
   destination,
   qualifier,
   qualifierBelow = false,
-  titleEnd,
+  titleBadge,
+  titleActions,
   under,
   onClose,
   returnTo,
@@ -242,20 +243,12 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
-  // Beside a `titleEnd` the title's first word is set apart: the end drops below the
-  // title only once that word would have to break to fit (index.scss). Spans leave
-  // the heading's text, and so the dialog's name, as it was.
-  const [, first = title, rest = ''] = /^(\S+)(.*)$/s.exec(title) ?? [];
+  // A badge or actions at the title's end share its row, and give way in the order
+  // index.scss sets out. The hidden comma sits at the heading's end, and the spans
+  // beside it are not in the dialog's name.
   const titleHeading = (
     <h2 id={titleId} className="modal-dialog__title">
-      {titleEnd === undefined ? (
-        title
-      ) : (
-        <>
-          <span className="modal-dialog__first-word">{first}</span>
-          {rest}
-        </>
-      )}
+      {title}
       {qualifier && !below && (
         <>
           <span className="spoken-separator">,</span>{' '}
@@ -265,6 +258,7 @@ const Modal = ({
       {below && <span className="spoken-separator">,</span>}
     </h2>
   );
+  const titleEnds = titleBadge !== undefined || titleActions !== undefined;
 
   // The backdrop's click is the pointer's alone; Escape is its keyboard
   // equivalent, handled above.
@@ -308,13 +302,14 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
-          {titleEnd === undefined ? (
-            titleHeading
-          ) : (
+          {titleEnds ? (
             <div className="modal-dialog__title-row">
               {titleHeading}
-              <div className="modal-dialog__title-end">{titleEnd}</div>
+              <div className="modal-dialog__title-badge">{titleBadge}</div>
+              <div className="modal-dialog__title-actions">{titleActions}</div>
             </div>
+          ) : (
+            titleHeading
           )}
           {below && (
             <p id={qualifierId} className="modal-dialog__qualifier modal-dialog__qualifier--below">

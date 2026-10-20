@@ -39,12 +39,18 @@ export interface ModalHeading {
    */
   qualifierBelow?: boolean;
   /**
-   * Beside the title, at the end of its first line, centred on that line: a
-   * badge and a pencil. The title wraps before it, and it drops below the title
-   * only when the title's first word would otherwise have to break. Not in the
+   * Beside the title, at the end of its first line, centred on that line: a badge.
+   * As the line runs out of room the actions drop first, then this, and a word of
+   * the title breaks only after both (the owner's call, 2026-10-20). Not in the
    * dialog's name.
    */
-  titleEnd?: ReactNode;
+  titleBadge?: ReactNode;
+  /**
+   * After the badge, the title's controls: a pencil, a plus. The first to drop to a
+   * line of their own, at the end of it, as the line runs out of room. Not in the
+   * dialog's name.
+   */
+  titleActions?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
   under?: ReactNode;
 }

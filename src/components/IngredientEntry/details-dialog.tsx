@@ -16,11 +16,11 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // the list's other place, over it. A client part because RouteModal takes its
 // body as a function, which a server page cannot hand down; the summary
 // arrives as the page's rendered children. Its safety badge and Edit pencil end the
-// name's first line, through the modal's `titleEnd` (claude-docs/components/modal.md,
+// name's first line, through the modal's `titleBadge` and `titleActions` (claude-docs/components/modal.md,
 // "A title with its own end"), and View Page is a bar at its foot.
 
 /**
- * The head's two ends (the owner's calls, 2026-10-20). Beside the name, at the end of its
+ * The head's badge and actions (the owner's calls, 2026-10-20). Beside the name, at the end of its
  * first line: the one safety badge, Toxic over Caution, and after it the Edit pencil, the
  * cards' with its tip, named for the entry, a press opening the edit modal at once under
  * its head (M9.18). Under the formal name: New or Updated and then the other badges. All
@@ -33,14 +33,8 @@ function headingOf({ heading, marks, editAction }: IngredientDetailsOpened): Mod
   const edit = editAction && <EditLink {...editAction} name={heading.title} />;
   return {
     ...heading,
-    ...((safety || edit) && {
-      titleEnd: (
-        <>
-          {safety}
-          {edit}
-        </>
-      ),
-    }),
+    ...(safety && { titleBadge: safety }),
+    ...(edit && { titleActions: edit }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} /> }),
   };
 }
