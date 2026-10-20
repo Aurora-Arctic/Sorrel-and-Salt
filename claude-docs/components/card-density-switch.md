@@ -13,7 +13,7 @@
 
 ## Placement
 
-The coven list's filter (`CompendiumListFilter` with `audience="coven"`, a client component like the switch) draws it in its row, inside the `search` landmark (story 12 counts editing controls outside it). The admin and public compendium lists draw none. Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
+The coven list's filter (`CompendiumListFilter` with `audience="coven"`, a client component like the switch) draws it in its row, inside the `search` landmark (story 12 counts editing controls outside it). The admin and public compendium lists draw none, deliberately: the switch is on the coven’s list only, because the public compendium shows full cards by design (the owner’s call, 2026-10-20). Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
 
 ## Styling
 
