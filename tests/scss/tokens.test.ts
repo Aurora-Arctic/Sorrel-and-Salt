@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { compileString } from 'sass';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/lib/contrast';
@@ -132,17 +133,26 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
     // The tab row's pills (TabbedPage/index.scss): the open tab's label on its
     // pill, the accent 18% into the card, and the pill's accent edge against
-    // the track, the highlight (the accent 12% over the page or a card, the
-    // owner's call of 2026-10-20), the line that marks which tab is open,
-    // since the fill alone sits under 3:1 against the track. The other labels
-    // are the muted ink on that track.
+    // the track, a grey wash of the muted ink, fainter than `$fill-quiet`'s
+    // 18% so the green pill stands apart from it (the owner's call of
+    // 2026-10-20), over the page or a card: the edge is the line that marks
+    // which tab is open, since the fill alone sits under 3:1 against the
+    // track. The other labels are the muted ink on that track. The track's
+    // mix is the stylesheet's own `$segment-track`, read from it here.
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
+    const trackMix =
+      /\$segment-track: color-mix\(in srgb, \$text-muted (\d+)%, transparent\);/.exec(
+        readFileSync(fromRoot('src/components/TabbedPage/index.scss'), 'utf8'),
+      );
+    expect(trackMix, 'TabbedPage/index.scss declares $segment-track as a grey mix').not.toBeNull();
+    const trackWeight = Number(trackMix![1]) / 100;
+    expect(trackWeight).toBeLessThan(0.18);
     for (const [ground, under] of [
       ['page', page],
       ['card', card],
     ] as const) {
-      const track = mixed(accent, under, 0.12);
+      const track = mixed(toHex(tokens['--text-muted'], theme), under, trackWeight);
       row(`--text-muted on the tab track on the ${ground}`, tokens['--text-muted'], track, 4.5);
       row(`the open tab's edge on the track on the ${ground}`, accent, track, 3);
     }
