@@ -390,10 +390,22 @@ $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 // 4.5:1 on it (tests/scss/tokens.test.ts).
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
 
+// A highlight: the accent 12% into whatever is behind. A menu's item and a
+// suggestion list's row pointed at, focused or chosen, and the same over the
+// field's ground for a quiet button pointed at (M8.17, the owner's call of
+// 2026-10-20). A wash of the accent rather than of the muted ink, so the row
+// in hand reads as the one about to act; the body and muted inks hold 4.5:1
+// on it (tests/scss/tokens.test.ts).
+$fill-highlight: color-mix(in srgb, $accent 12%, transparent);
+$fill-highlight-field: color-mix(in srgb, $accent 12%, $surface-card);
+
 // A hairline: the muted ink 45% into whatever is behind, so one line reads on
 // the page and on a card alike. The ingredient form's section rules and the
 // tab strip's shade each wrote this mix.
 $hairline: color-mix(in srgb, $text-muted 45%, transparent);
+
+// A quiet button's hairline pointed at: partway from the line to the accent.
+$edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
 
 // How much of a control remains when it is busy or cannot be used: the
 // switch, the pending tab panel and the busy list frame each wrote 0.55.

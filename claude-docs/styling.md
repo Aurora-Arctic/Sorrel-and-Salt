@@ -73,9 +73,14 @@ to.
   switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
-  skeleton's bars, the pressed admin menu), `$hairline` (the muted ink 45%
+  skeleton's bars, the pressed admin menu), `$fill-highlight` (the accent 12%
+  into whatever is behind: a menu's item and a suggestion list's row pointed
+  at, focused or chosen, in MenuButton, the account menu, the shell's menu
+  and Combobox), `$fill-highlight-field` (the same 12% over the field's
+  ground: a quiet button pointed at), `$hairline` (the muted ink 45%
   into whatever is behind: the ingredient form's section rules, the tab
-  strip's shade) and `$opacity-disabled` (0.55: what is left of a control
+  strip's shade, a quiet button's edge), `$edge-highlight` (the accent 45%
+  into the hairline: a quiet button's edge pointed at) and `$opacity-disabled` (0.55: what is left of a control
   that is busy or cannot be used).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
@@ -620,8 +625,14 @@ Four variants:
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
 - **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
-  The body ink on an edge, so it neither competes with the primary nor reads as
-  destructive — and, unlike the muted ink, not as disabled either.
+  The label in the body ink, so it neither competes with the primary nor reads as
+  destructive — and, unlike the muted ink, not as disabled either. It sits in a
+  field's ground (`$surface-card`, what an input fills with) inside a
+  `$hairline` edge rather than an ink outline, so it stands back beside the
+  primary; pointed at or focused, the ground takes `$fill-highlight-field` and
+  the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
+  call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
+  (`tests/scss/tokens.test.ts`).
 - **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.

@@ -88,7 +88,7 @@
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
-    background-color: $fill-quiet;
+    background-color: $fill-highlight;
   }
 
   // Held, not faded: the menu's own fade-out is the only motion on the way out.

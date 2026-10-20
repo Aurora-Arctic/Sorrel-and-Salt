@@ -150,7 +150,7 @@ $account-menu-avatar: 2rem;
   @include theme-transition(background-color, color);
 
   &:hover {
-    background-color: $fill-quiet;
+    background-color: $fill-highlight;
   }
 
   &:focus-visible {

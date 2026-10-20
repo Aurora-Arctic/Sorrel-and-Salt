@@ -314,8 +314,8 @@ $modal-padding: space(5) * 2;
 // the ring never lingers under the pointer (claude-docs/components/modal.md,
 // "Unsaved changes").
 .confirm-overlay__card .btn--quiet:focus {
-  background-color: $text-primary;
-  color: $text-on-color;
+  border-color: $edge-highlight;
+  background-color: $fill-highlight-field;
   @include focus-ring;
 }
 

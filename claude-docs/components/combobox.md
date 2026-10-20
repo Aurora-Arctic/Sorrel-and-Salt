@@ -79,7 +79,7 @@ step in from the row's top and bottom, so each row's reads as its own, with the 
 steps clear of the bar at its widest. The bar widens to 5px on the
 highlighted or hovered row, over 150ms, or at once under reduced motion. It
 is a background image rather than a border, so the widening moves no text
-and the highlight's wash still shows behind it. The colour says which group's chip a
+and the highlight's wash still shows behind it. That wash is `$fill-highlight`, the accent 12% into the card, the one every menu's item wears too (M8.17, the owner's call of 2026-10-20; it was 22%). The dragged chip keeps its own opaque 22%, so it hides the chips it passes over. The colour says which group's chip a
 pick will become; the group's name is still the bucket's heading, so the
 colour is never the only cue.
 

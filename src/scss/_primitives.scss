@@ -237,17 +237,24 @@
     }
   }
 
-  // Cancel, dismiss, go back: an action that changes nothing, in the body
-  // ink, so it neither competes with the primary nor reads as destructive —
-  // and, unlike the muted ink, not as disabled either.
+  // Cancel, dismiss, go back: an action that changes nothing, its label in the
+  // body ink, so it neither competes with the primary nor reads as
+  // destructive — and, unlike the muted ink, not as disabled either. Set in a
+  // field's ground inside a hairline rather than an ink outline, so it sits
+  // back beside the primary (M8.17, the owner's call of 2026-10-20); pointed
+  // at, the ground takes the highlight and the edge goes partway to the
+  // accent, rather than filling with ink.
   .btn--quiet {
-    border-color: $text-primary;
+    border-color: $hairline;
+    background-color: $surface-card;
     color: $text-primary;
     box-shadow: none;
 
     &:hover,
     &:focus-visible {
-      background-color: $text-primary;
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+      color: $text-primary;
     }
   }
 

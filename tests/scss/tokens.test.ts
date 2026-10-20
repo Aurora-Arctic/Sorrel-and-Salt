@@ -186,6 +186,25 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row("a linked chip's mark on its wash", tokens['--accent'], wash, 3);
     row('a linked chip pointed at on its wash', tokens['--accent-hover'], wash, 4.5);
 
+    // A list's highlighted row and a quiet button pointed at (M8.17, the
+    // owner's call of 2026-10-20): the accent 12% into what is behind, the
+    // card a menu or a suggestion list sits on and the field a quiet button
+    // fills with. Text on it, the body ink and the muted ink a row's
+    // qualifier wears, holds 4.5:1. `$fill-highlight` and
+    // `$fill-highlight-field` name the two mixes once.
+    const highlight = declarations(
+      compile(
+        `@use 'variables' as v; .probe { --on-any: #{v.$fill-highlight}; --on-field: #{v.$fill-highlight-field}; }`,
+      ),
+      '.probe',
+    );
+    expect(highlight['--on-any']).toContain('var(--accent) 12%, transparent');
+    expect(highlight['--on-field']).toContain('var(--accent) 12%, var(--surface-card)');
+    const lit = mixed(accent, card, 0.12);
+    row('a highlighted row’s text', tokens['--text-primary'], lit, 4.5);
+    row('a highlighted row’s muted text', tokens['--text-muted'], lit, 4.5);
+    row('a quiet button’s label pointed at', tokens['--text-primary'], lit, 4.5);
+
     // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
     // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is
     // not yet an answer (WCAG 1.4.3).
