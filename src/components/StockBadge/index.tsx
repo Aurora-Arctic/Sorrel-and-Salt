@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
-import { useTip } from '../InfoTip/use-tip';
+import IconTip from '../IconTip';
 import { stockState } from './stock-state';
 import type { StockBadgeProps } from './types';
 import './index.scss';
@@ -15,13 +15,16 @@ import './index.scss';
 // 2026-10-20), so neither can rest on colour: Low is a double chevron on the
 // muted low-stock tint and Out of Stock a slashed ring on a red tint of its own;
 // safety stays the only alarming badge (styling.md). The words moved to a button
-// name and a tip. Both states are buttons whose only job is to open that tip,
-// InfoTip's, through `useTip` (hover, tap and focus open it, Escape closes it,
-// the pointer may rest on it: WCAG 1.4.13). Low's tip is one statement of the
+// name and a tip. Both states are buttons whose only job is to open that tip, and
+// they are icon tips (the owner's call, 2026-10-20): `IconTip`'s, which opens after
+// a rest of the pointer or at once on focus, fades, closes the moment the pointer
+// leaves or on Escape, and cannot be hovered. Low's tip is one statement of the
 // level, "Low Stock at 10 g or less", without the jar's amount, which the jar line
-// already shows (the owner's call, 2026-10-20); Out of Stock's is its name. The
-// name is an `aria-label` ("Low Stock" / "Out of Stock") so a screen reader has the
-// words without opening the tip, and Low's tip is its description.
+// already shows; Out of Stock's is its name. The name is an `aria-label` ("Low
+// Stock" / "Out of Stock") so a screen reader has the words without opening the tip.
+// `IconTip`'s bubble is decoration, hidden from a screen reader and mounted only
+// while open, so Low's statement is also written once, out of sight, as the button's
+// description: a reader hears it with or without the tip.
 // claude-docs/components/stock-badge.md.
 
 const Drawing = ({ out }: { out: boolean }): ReactElement => (
@@ -52,8 +55,7 @@ const withUnit = (amount: number, unit: string | null | undefined): string =>
   unit ? `${amount} ${unit}` : `${amount}`;
 
 export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
-  const tipId = useId();
-  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const descriptionId = useId();
   const state = stockState(quantity, threshold);
   if (state === 'ok') return null;
 
@@ -63,33 +65,21 @@ export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): Reac
   const name = out ? 'Out of Stock' : 'Low Stock';
 
   return (
-    // Hover on the wrapper, which holds the tip as well as the button, so the
-    // pointer can move onto the tip without closing it.
-    <span ref={anchor} className="stock-badge-tip" onMouseEnter={showSoon} onMouseLeave={hideSoon}>
-      {/* A tap opens rather than toggles, as InfoTip's does: on touch the
-          emulated hover has already opened it. */}
+    <IconTip tip={tip}>
       <button
         type="button"
         className={`badge stock-badge ${out ? 'badge--out-of-stock stock-badge--out' : 'badge--low-stock stock-badge--low'}`}
         aria-label={name}
-        aria-describedby={out ? undefined : tipId}
-        onFocus={show}
-        onBlur={hide}
-        onClick={show}
+        aria-describedby={out ? undefined : descriptionId}
       >
         <Drawing out={out} />
       </button>
-      <span
-        ref={bubble}
-        id={tipId}
-        role="tooltip"
-        className={open ? 'stock-badge__tip is-open' : 'stock-badge__tip'}
-        aria-hidden={!open}
-        style={bubbleStyle}
-      >
-        {tip}
-      </span>
-    </span>
+      {out ? null : (
+        <span id={descriptionId} className="visually-hidden">
+          {tip}
+        </span>
+      )}
+    </IconTip>
   );
 };
 

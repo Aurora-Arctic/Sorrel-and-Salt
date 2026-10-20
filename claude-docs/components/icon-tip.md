@@ -56,6 +56,7 @@ follows `href` as before.
   choice is Delete or Remove, `BinIcon` on a button of its own,
   `.icon-tip__remove`, tipped with its verb (M8.17; the owner's call,
   2026-10-20).
+- **A jar line's stock badge** (`StockBadge`, M9.8), tipped "Low Stock at 10 g or less" or "Out of Stock" (the owner's call, 2026-10-20: an icon alone is an icon tip, not an InfoTip). Low's statement is also written out of sight as the button's description, since the bubble is hidden from a screen reader ([`stock-badge.md`](stock-badge.md)).
 - **A jar line's Edit Stock pencil** (`EditStock`, M9.9), tipped "Edit Stock": a
   `ModalButton` whose label is `PencilIcon`, in `.icon-tip__edit` with the
   `--plain` modifier, which inks the pencil `$text-primary`, chalk on the dark

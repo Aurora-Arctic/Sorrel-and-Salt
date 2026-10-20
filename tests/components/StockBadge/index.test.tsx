@@ -10,6 +10,8 @@ import { JAR_STATES } from '../../support/jar-states';
 // around them.
 
 const out = () => screen.queryByRole('button', { name: 'Out of Stock' });
+// An icon tip's bubble is decoration, kept out of the accessibility tree, so it is found with `hidden`.
+const tipEl = () => screen.queryByRole('tooltip', { hidden: true });
 const low = () => screen.queryByRole('button', { name: /^Low Stock/ });
 
 describe('stockState: the shared table of jar states', () => {
@@ -41,7 +43,7 @@ describe('StockBadge', () => {
     expect(low()).toBeNull();
     act(() => badge.focus());
     expect(badge).toHaveFocus();
-    expect(screen.getByRole('tooltip')).toHaveTextContent('Out of Stock');
+    expect(tipEl()).toHaveTextContent('Out of Stock');
   });
 
   it('shows Low Stock, named without the amount, with the level as its description', () => {
@@ -67,54 +69,49 @@ describe('StockBadge', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  // The badges are icon tips (IconTip): the same wait, fade and closing as an Edit pencil's.
   it.each([
     ['Low', 6, 'Low Stock', /^Low Stock at 10 g or less$/],
     ['Out of Stock', 0, 'Out of Stock', /^Out of Stock$/],
   ])(
-    'opens the %s tip on focus, on hover and on a tap, and closes it on Escape',
+    'opens the %s tip after the pointer rests 300ms or at once on focus, closes it the moment the pointer leaves or on Escape',
     (_, quantity, name, words) => {
       vi.useFakeTimers();
       try {
         render(<StockBadge quantity={quantity} threshold={10} unit="g" />);
         const badge = screen.getByRole('button', { name });
-        const tip = () => screen.queryByRole('tooltip');
-        expect(tip()).toBeNull();
+        expect(tipEl()).toBeNull();
 
         act(() => badge.focus());
-        expect(tip()).toHaveTextContent(words);
+        expect(tipEl()).toHaveTextContent(words);
         fireEvent.keyDown(document, { key: 'Escape' });
-        expect(tip()).toBeNull();
+        act(() => vi.advanceTimersByTime(120));
+        expect(tipEl()).toBeNull();
         act(() => badge.blur());
 
         fireEvent.mouseEnter(badge);
-        act(() => vi.advanceTimersByTime(300));
-        expect(tip()).toBeInTheDocument();
+        act(() => vi.advanceTimersByTime(299));
+        expect(tipEl()).toBeNull();
+        act(() => vi.advanceTimersByTime(1));
+        expect(tipEl()).toHaveTextContent(words);
+        // No wait to cross onto it: it stays only for its fade.
         fireEvent.mouseLeave(badge);
-        act(() => vi.advanceTimersByTime(200));
-        expect(tip()).toBeNull();
-
-        fireEvent.click(badge);
-        expect(tip()).toBeInTheDocument();
+        act(() => vi.advanceTimersByTime(120));
+        expect(tipEl()).toBeNull();
       } finally {
         vi.useRealTimers();
       }
     },
   );
 
-  it('lets the pointer rest on the tip: moving from the badge onto it keeps it open', () => {
+  it('keeps the tip out of the accessibility tree: Low is described by one statement, not read twice', () => {
     vi.useFakeTimers();
     try {
       render(<StockBadge quantity={6} threshold={10} unit="g" />);
-      const badge = screen.getByRole('button', { name: /^Low Stock/ });
-      fireEvent.mouseEnter(badge);
-      act(() => vi.advanceTimersByTime(300));
-      const tip = screen.getByRole('tooltip');
-      // Leaving the badge for the tip: the wrapper holds both, so the pointer
-      // enters again before the close delay is up.
-      fireEvent.mouseLeave(badge);
-      fireEvent.mouseEnter(tip);
-      act(() => vi.advanceTimersByTime(500));
-      expect(screen.queryByRole('tooltip')).toBeInTheDocument();
+      const badge = screen.getByRole('button', { name: 'Low Stock' });
+      act(() => badge.focus());
+      expect(tipEl()).toHaveAttribute('aria-hidden', 'true');
+      expect(badge).toHaveAccessibleDescription('Low Stock at 10 g or less');
     } finally {
       vi.useRealTimers();
     }

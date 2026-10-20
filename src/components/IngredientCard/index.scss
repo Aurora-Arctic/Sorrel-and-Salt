@@ -185,9 +185,9 @@
   font-size: heading-size(3);
 }
 
-// Above the overlay, so the Low badge's button keeps its own hover, focus and
-// click (it opens a tip) instead of following the card's link.
-.ingredient-card .stock-badge-tip {
+// Above the overlay, so the stock badge's button keeps its own hover and focus (it
+// opens an icon tip) instead of following the card's link.
+.ingredient-card .specimen__stock .icon-tip {
   z-index: 1;
 }
 

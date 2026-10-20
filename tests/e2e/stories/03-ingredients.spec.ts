@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type postgres from 'postgres';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
@@ -303,13 +303,16 @@ test(
         await expect(outBadge(rowOf(list, name))).toHaveCount(0);
       }
       // Each badge is a drawing alone, named in full for a screen reader, and its
-      // tip says the state in words: not a colour alone. Axe holds their contrast.
+      // tip says the state in words: not a colour alone. The tip is an icon tip, kept out
+      // of the accessibility tree, so it is found with `includeHidden`, in its badge's row
+      // (the page's hidden info tips are tooltips too). Axe holds their contrast.
+      const tipIn = (row: Locator) => row.getByRole('tooltip', { includeHidden: true });
       await outBadge(rowOf(list, 'Rosemary')).focus();
-      await expect(page.getByRole('tooltip')).toHaveText('Out of Stock');
+      await expect(tipIn(rowOf(list, 'Rosemary'))).toHaveText('Out of Stock');
       await page.keyboard.press('Escape');
-      await expect(page.getByRole('tooltip')).toHaveCount(0);
+      await expect(tipIn(rowOf(list, 'Rosemary'))).toHaveCount(0);
       await lowBadge(rowOf(list, 'Sea Salt')).focus();
-      await expect(page.getByRole('tooltip')).toHaveText('Low Stock at 10 g or less');
+      await expect(tipIn(rowOf(list, 'Sea Salt'))).toHaveText('Low Stock at 10 g or less');
       await page.keyboard.press('Escape');
       await assertNoAccessibilityViolations(page);
     });

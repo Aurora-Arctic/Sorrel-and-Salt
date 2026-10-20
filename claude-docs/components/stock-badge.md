@@ -42,10 +42,17 @@ jar states that both are tested against, so a change to one copy alone fails.
   badge" rows.
 - **Each badge is its drawing alone** (the owner's call, 2026-10-20), a 24px square
   holding the icon, with no words on it. It is a button whose only job is to open a
-  tip, for both states. The tip is InfoTip's, through `useTip`
-  (`src/components/InfoTip/use-tip.ts`, which also places the bubble on screen) and
-  the InfoTip markup: it opens on hover, tap and focus, closes on Escape, and stays
-  open while the pointer is over it (WCAG 1.4.13).
+  tip, for both states. The tip is an icon tip, `IconTip`'s
+  ([`icon-tip.md`](icon-tip.md)), the owner's call (2026-10-20): the badge is an icon
+  alone, so it behaves as every icon control's tip does. It opens once the pointer
+  has rested on the badge 300ms or at once on focus, fades in, closes the moment the
+  pointer leaves (after a 120ms fade) or on Escape, and **cannot be hovered**. Until
+  2026-10-20 it was InfoTip's, which lets the pointer rest on the bubble (WCAG
+  1.4.13's hoverable clause); that is not wanted here, since the bubble only repeats
+  what the badge's name says and lingering it covers what is beside the badge, the
+  same reason the icon tip gives. The words are on the button as its name and
+  description, so the clause's purpose (a user who cannot read the bubble can still
+  get the content) is met without it.
 - **Low's tip is one statement,** "Low Stock at 10 g or less", the threshold and unit
   as a plain number, and **without the current amount**, which the jar line already
   shows (the owner's call, 2026-10-20; the tip first read "Low Stock · 6 g" over the
@@ -53,9 +60,12 @@ jar states that both are tested against, so a change to one copy alone fails.
   "Out of Stock".**
 - **The words are in the name, not on the badge.** The button's `aria-label` is "Low
   Stock" or "Out of Stock", so a screen reader has the words without opening the tip.
-  Low's tip is its `aria-describedby`, so it hears the level too, as the description
-  and not part of the name; Out of Stock has no description, since its tip would only
-  repeat the name.
+  Low's statement is its `aria-describedby`, so it hears the level too, as the
+  description and not part of the name; Out of Stock has no description, since its tip
+  would only repeat the name. An icon tip's bubble is `aria-hidden` and mounted only
+  while open, so it cannot be the description; `StockBadge` writes the statement
+  once more beside the button as a `.visually-hidden` span, and `IconTip` takes no
+  new prop for it.
 - **A threshold of 0 or none shows no Low badge.** It never means "always low". A
   jar at 0 still reads Out of Stock.
 - **The meaning never rests on colour.** Each state has its own drawing (a double
@@ -87,7 +97,7 @@ gone the drawings do that.
 `stockState`, checks which of the two badges shows (and that the other does not), that
 a zero threshold still reads Out of Stock at 0, that the two states differ in their
 drawing, that neither badge carries words, each badge's name and description, and each
-tip's words, opening on focus, hover and click, closing on Escape and holding while the
-pointer rests on it. The `lowStockOnly` filter is proved
+tip's words, opening on focus or after a 300ms rest, closing the moment the pointer
+leaves or on Escape, and that the bubble is kept from a screen reader. The `lowStockOnly` filter is proved
 on the same jar states, one entry each, in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
 and its count in `tests/modules/ingredients/services/ingredient-facets.test.ts`.

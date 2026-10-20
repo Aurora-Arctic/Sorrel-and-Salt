@@ -57,7 +57,7 @@ start a wrapped line falls in the clipped band and a line never ends with one,
 since each dot belongs to the form after it. A screen reader gets a
 `.spoken-separator` comma in each item, so "Dried Leaf, Oil" is not run together;
 the jar-line dot gets the same, and the slot's CSS takes that separator out of the flex flow (`position: absolute`) so the dot has the same gap either side: left to flow, it would add a gap of its own after the dot ("Dried Leaf· 6 g").
-The Low badge's tip opens from the badge's right edge on the card only (`.ingredient-card .stock-badge__tip`, the same `tip-above($align: end)` the Retired tip uses), since the badge sits at the card's right edge and a left-anchored bubble would run off the screen; `StockBadge` keeps its own default elsewhere. Nothing focusable sits in the line, so the clip
+The stock badges' tips are icon tips and open to the badge's left (`IconTip`'s default `side`), so the bubble stays on the card, which the badge's place at its right edge needs; `.ingredient-card .specimen__stock .icon-tip` lifts the badge above the card's link overlay so it keeps its own hover and focus. Nothing but those badges is focusable in the line, so the clip
 cuts no focus ring.
 
 ### Sizes and padding (changed 2026-10-19)
