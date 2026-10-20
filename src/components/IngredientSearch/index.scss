@@ -84,7 +84,7 @@ $page-gutter: space(4);
   inset: 0 calc(-1 * #{$page-gutter});
   z-index: -1;
   pointer-events: none;
-  clip-path: inset(0 calc(-1 * #{$page-gutter}));
+  clip-path: inset(0);
   background-color: $surface-page;
 
   &::before,
