@@ -189,6 +189,13 @@ $close-reserve: calc(#{$close-target} + #{space(3)});
   padding-inline-end: $close-reserve;
 }
 
+// A head with a top line (`topEnd`, the details window's) stands further above what follows it,
+// `space(5)` in place of `space(4)`, so the description is set off from the name and its badges
+// (the owner's call, 2026-10-20). It is the only head with one, so no other dialog's gap moves.
+.modal-dialog__header--topped {
+  padding-bottom: space(5);
+}
+
 // A head with a top line (`topEnd`) keeps the × out of its other lines: the line is the
 // × 's own band, so the rest of the head has the whole width, and what stands at its end
 // (a formal name's pencil) is clear of the × beneath which it stands.
