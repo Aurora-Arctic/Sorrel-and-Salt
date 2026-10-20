@@ -403,6 +403,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   convertLocalToCompendiumEntry: write(
     `mutation { convertLocalToCompendiumEntry(workspaceId: "${WORKSPACE_W_ID}", localId: "${NOWHERE}", compendiumId: "${NOWHERE}") { entry { id } } }`,
   ),
+  splitLocalIntoCompendiumEntries: write(
+    `mutation { splitLocalIntoCompendiumEntries(workspaceId: "${WORKSPACE_W_ID}", localId: "${NOWHERE}", picks: ["${NOWHERE}"]) { entries { id } } }`,
+  ),
   // An id naming no compendium entry the coven holds, so a caller past the
   // scope is refused by the service before anything is written.
   convertCompendiumEntryToLocal: write(
@@ -585,6 +588,7 @@ const OPEN_WRITES = [
   'annotateCupboardEntry',
   'removeCupboardEntry',
   'convertLocalToCompendiumEntry',
+  'splitLocalIntoCompendiumEntries',
   'convertCompendiumEntryToLocal',
   'createReference',
   'updateReference',

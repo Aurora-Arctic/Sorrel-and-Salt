@@ -113,6 +113,21 @@ export interface ConvertedLocal {
   dropped: DroppedOnConvert;
 }
 
+/**
+ * Where one form of an own entry goes when it is split (M8.17): the form's
+ * id, and the pick it goes to. Needed only for a form two picks both have.
+ */
+export interface FormAssignment {
+  formId: string;
+  compendiumId: string;
+}
+
+/** What `splitLocalIntoCompendiumEntries` answers: a cupboard row per pick, in the picks' order, and what the coven lost. */
+export interface SplitLocal {
+  entries: CupboardEntryRow[];
+  dropped: DroppedOnConvert;
+}
+
 /** What `convertCompendiumEntryToLocal` answers: the own entry it wrote, and what that could not carry. */
 export interface ConvertedCompendium {
   entry: IngredientRow;

@@ -56,9 +56,11 @@ let unheldEntryId: string;
 let heldEntryId: string;
 let removableEntryId: string;
 // An own entry of W and the compendium entry it is converted into, each with
-// a Root form, for the convert probe alone.
+// a Root form, for the convert probe alone; and a pair for the split probe.
 let convertibleId: string;
 let convertTargetId: string;
+let splittableId: string;
+let splitTargetId: string;
 // A compendium entry W holds, for the probe that makes it W's own.
 let ownableEntryId: string;
 
@@ -136,6 +138,25 @@ beforeAll(async () => {
     makeIngredient({
       workspaceId: WORKSPACE_W_ID,
       name: 'Fixture Convertible',
+      nomenclature: 'none',
+      variants: [makeVariant({ form: 'Root' })],
+    }),
+    A.id,
+  );
+  splitTargetId = await insertIngredient(
+    sql,
+    makeIngredient({
+      name: 'Fixture Split Target',
+      nomenclature: 'none',
+      variants: [makeVariant({ form: 'Root' })],
+    }),
+    A.id,
+  );
+  splittableId = await insertIngredient(
+    sql,
+    makeIngredient({
+      workspaceId: WORKSPACE_W_ID,
+      name: 'Fixture Splittable',
       nomenclature: 'none',
       variants: [makeVariant({ form: 'Root' })],
     }),
@@ -359,6 +380,14 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       }
     }`,
     variables: () => ({ localId: convertibleId, compendiumId: convertTargetId }),
+  },
+  splitLocalIntoCompendiumEntries: {
+    source: `mutation ($workspaceId: ID!, $localId: ID!, $picks: [ID!]!) {
+      splitLocalIntoCompendiumEntries(workspaceId: $workspaceId, localId: $localId, picks: $picks) {
+        entries { id }
+      }
+    }`,
+    variables: () => ({ localId: splittableId, picks: [splitTargetId] }),
   },
   convertCompendiumEntryToLocal: {
     source: `mutation ($workspaceId: ID!, $ingredientId: ID!) {
