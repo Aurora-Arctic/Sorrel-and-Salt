@@ -127,12 +127,14 @@ form state, and its select must submit natively.
 
 Every field takes `FieldProps` (`types.ts`):
 
-| Prop       | What it is                                                                             |
-| ---------- | -------------------------------------------------------------------------------------- |
-| `label`    | The label, title case: "Email Address"                                                 |
-| `hint`     | Optional: what the field is for, behind an info tip beside the label                   |
-| `note`     | Optional: a state the field is in, such as why it is shut, as a line beneath the label |
-| `required` | Optional: marked required beside its label, and to assistive technology                |
+| Prop          | What it is                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `label`       | The label, title case: "Email Address"                                                                                                                                                     |
+| `hint`        | Optional: what the field is for, behind an info tip beside the label                                                                                                                       |
+| `note`        | Optional: a state the field is in, such as why it is shut, as a line beneath the label                                                                                                     |
+| `required`    | Optional: marked required beside its label, and to assistive technology                                                                                                                    |
+| `labelSuffix` | Optional: read after the label, out of sight ("Quantity, Flower"), and in the hint's tip name. For a field drawn once per row, so two rows' fields never share a name (M9.9's StockDialog) |
+| `size`        | Optional: `compact` draws the field shorter, its label and text at the caption size, for a row of fields the full size would make tall. A size, not a look: every other field is full size |
 
 `FieldShell` adds what `fieldDescription` returns (`controlId`, `labelId`,
 `hintId`, `noteId`, `errorId`, `error`), `children` (the control), `after`

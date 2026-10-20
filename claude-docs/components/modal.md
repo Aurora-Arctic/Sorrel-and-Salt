@@ -528,7 +528,7 @@ Coven. `ModalButtonProps` (`types.ts`):
 | `title`     | The dialog's heading and accessible name                                                       |
 | `eyebrow`   | As `Modal`'s: an edit dialog's small line over the title (M9.9)                                |
 | `qualifier` | As `Modal`'s: after the title, in the dialog's name (M9.9)                                     |
-| `ariaLabel` | The button's name where its text repeats down a list: "Edit Stock, Rosemary, Oil"              |
+| `ariaLabel` | The button's name where its text repeats down a list: "Edit Stock, Rosemary"                   |
 | `tip`       | A tip over an icon button, "Edit Stock" over the pencil; it wraps the button, never the dialog |
 | `size`      | As `Modal`'s                                                                                   |
 | `children`  | A function of the modal's close, so a form can close it once it has sent                       |
@@ -537,11 +537,11 @@ It gives the focus back through Modal's own return
 ([above](#giving-the-focus-back)), naming its button as `returnTo` for
 WebKit, where a click focuses no button.
 
-A button repeated down a list, the Edit Stock on each jar line (M9.9), is an
+A button repeated down a list, the Edit Stock on each coven card (M9.9), is an
 icon (the pencil) whose `ariaLabel` is its whole name. Its `tip` wraps the
 button alone: the dialog is a DOM child of whatever wraps it, so a tip around
 both would open on the dialog's focus and hover and take its Escape. Its dialog's head is the edit head: `eyebrow` "Edit Stock", `title`
-the ingredient, `qualifier` the form, so the dialog is named as the button is.
+the ingredient, so the dialog is named as the button is.
 
 ### Add Ingredient
 

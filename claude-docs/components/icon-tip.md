@@ -49,6 +49,7 @@ follows `href` as before.
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
 - **The buttons beside them** (`icon-button.tsx`, the owner's calls, 2026-10-20), shared by the coven cards' foot, the entry page's icons and the Quick Look window, so the places cannot differ: `BinButton` (the bin, tipped with its verb, "Delete Ingredient" or "Remove"), `AnnotateButton` (Annotate as a button, where a press asks which coven first) and `MoreMenu` (the three dots, a [`MenuButton`](menu-button.md) taking items or sections, named "More for <entry>"). `CompendiumEditLink` is the pencil for the compendium's own edit on the entry page, named and tipped "Edit in Compendium". Each is named "<verb> <entry>" in hidden text, with the verb as the tip, and takes the entry's name as the card names it (`cardName`, "Name, Formal").
+- **Edit Stock on a coven's card and its Quick Look window** (M9.9), through [`StockDialog`](stock-dialog.md): the same `PencilIcon` in `.icon-tip__edit icon-tip__edit--plain`, tipped "Edit Stock" through `ModalButton`'s `tip` so the tip wraps the button and never the dialog it opens, named "Edit Stock, <ingredient>". Staged removal in the dialog uses `BinButton` (verb "Remove", named by the form).
 - **Annotate on a coven's list** (`CovenCards`), through `AnnotateLink`:
   `AnnotateIcon`, an open book with a filled pencil,
   drawn at stroke width 1.25 rather than the set's 1.5, the owner's call

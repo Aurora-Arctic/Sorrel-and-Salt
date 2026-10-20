@@ -55,24 +55,47 @@ export const Default: Story = () => <Dialog jars={[LEAF, OIL]} />;
 
 // Pressed already, as after a click on the pencil: the dialog over the page.
 // `remove` then presses the first row's Remove, staging it.
+// `save` then types into the first quantity and presses Save, which the workshop's missing
+// server refuses: the alert over the rows, with what was typed kept.
 const Pressed = ({
   jars,
   remove = false,
+  save = false,
 }: {
   jars: StockJar[];
   remove?: boolean;
+  save?: boolean;
 }): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     root.current?.querySelector('button')?.click();
-    if (!remove) return;
-    const timer = setTimeout(
-      () =>
-        document.querySelector<HTMLButtonElement>('.stock-dialog__row .icon-tip__remove')?.click(),
-      100,
-    );
-    return () => clearTimeout(timer);
-  }, [remove]);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (remove) {
+      timers.push(
+        setTimeout(
+          () =>
+            document
+              .querySelector<HTMLButtonElement>('.stock-dialog__row .icon-tip__remove')
+              ?.click(),
+          100,
+        ),
+      );
+    }
+    if (save) {
+      timers.push(
+        setTimeout(() => {
+          const box = document.querySelector<HTMLInputElement>('.stock-dialog__row input');
+          if (!box) return;
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(box, '7');
+          box.dispatchEvent(new Event('input', { bubbles: true }));
+        }, 100),
+        setTimeout(() => {
+          document.querySelector<HTMLButtonElement>('dialog button[type="submit"]')?.click();
+        }, 300),
+      );
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [remove, save]);
   return (
     <div ref={root}>
       <Dialog jars={jars} />
@@ -83,6 +106,7 @@ const Pressed = ({
 export const Open: Story = () => <Pressed jars={[LEAF, OIL]} />;
 export const OpenNoneHeld: Story = () => <Pressed jars={[]} />;
 export const OpenAllHeld: Story = () => <Pressed jars={[LEAF, OIL, RESIN]} />;
+export const OpenRefused: Story = () => <Pressed jars={[LEAF, OIL]} save />;
 export const OpenRemoving: Story = () => <Pressed jars={[LEAF, OIL]} remove />;
 export const OpenPhoneDark: Story = () => <Pressed jars={[LEAF, OIL]} />;
 export const OpenPhoneLight: Story = () => <Pressed jars={[LEAF, OIL]} />;
