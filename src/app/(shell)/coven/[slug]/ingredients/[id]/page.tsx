@@ -11,6 +11,7 @@ import { requireCovenMembership, requireSession } from '../../../../../../lib/re
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/entry-values';
+import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
@@ -122,6 +123,12 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // carries the cupboard entry the retired-entry read found, where
   // `cupboardEntry` reads live entries only.
   const held = entry.workspaceId === null && detail.cupboardEntry != null;
+  // The plus beside the pencil (M9.12; the owner's call, 2026-10-20): every coven the viewer may
+  // add in, this one first where it may, and which of them hold the entry, from the one held
+  // read. A compendium entry only: a coven's own entry and a retired one take no plus.
+  const plus = inCompendium
+    ? await plusCovensOf(await covensHolding(entry.id), workspace.id)
+    : undefined;
 
   // Edit opens a dialog over this page from a bare `?edit`, and the form's
   // values are read only when it is asked for. A compendium entry offers it
@@ -202,6 +209,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 canAnnotate: rolePermits(role, { ingredient: ['update'] }),
                 canRemove: rolePermits(role, { ingredient: ['delete'] }),
                 canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
+                plus,
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
                 // A retired entry's page reads nothing once its row is gone.
                 removedHref: detail.retired

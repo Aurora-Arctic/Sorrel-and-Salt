@@ -1,10 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { useListPosition } from '../Combobox/position';
+import { CheckIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
-import type { MenuButtonItem, MenuButtonProps } from './types';
+import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 
 // A labelled button with a chevron that opens a menu of choices, none of them
@@ -12,15 +21,16 @@ import './index.scss';
 // chevron has it (claude-docs/components/app-shell.md). Opening moves the
 // focus to the first item; the arrows, Home and End rove; Escape closes and
 // hands the focus back; Tab and a press outside close. An item is a link or
-// an action, and choosing either closes the menu first. It fades in and out
+// an action, and choosing either closes the menu first; an action may be disabled, shown and
+// reached but not choosable, with a note saying why. It fades in and out
 // over the short motion (the owner's call, 2026-10-19): a closing menu stays
 // drawn, inert and hidden from assistive technology, until its fade ends. It
 // is placed as a Combobox's list is (MB.154), on Floating UI: hung from the
 // button's end edge, below it, or above it when there is more room there, as
 // at the foot of a dialog or the window, and shifted to stay on the screen,
 // clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip
-// it, and following a scroll or a resize while open. Not a placement the
-// caller states: the room decides (M8.17). claude-docs/components/menu-button.md.
+// it, and following a scroll or a resize while open. Which side it opens
+// toward is the room's to decide (M8.17). claude-docs/components/menu-button.md.
 
 const Chevron = (): ReactElement => (
   <svg
@@ -53,26 +63,65 @@ const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/**
+ * The items as drawn: the green one, marked `primary`, first,
+ * and the rest in the caller's order (the owner's call, 2026-10-20). Done here
+ * rather than asked of every caller, so no menu can put its green item
+ * elsewhere. The keys read the page, so they follow this order too.
+ */
+const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
+  const green = (item: MenuButtonItem): boolean => Boolean(item.primary);
+  return [...items.filter(green), ...items.filter((item) => !green(item))];
+};
+
 const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
   [
     'menu-button__item',
     item.destructive && 'menu-button__item--destructive',
     item.primary && 'menu-button__item--primary',
-    item.constructive && 'menu-button__item--constructive',
     chosen && 'is-chosen',
   ]
     .filter(Boolean)
     .join(' ');
 
+/**
+ * One section: a group named by its visible label (APG: `role="group"` and `aria-labelledby`), a
+ * separator above every one but the first. The label is text, not a menu item, so the arrows
+ * skip it: the roving reads `[role="menuitem"]` alone, and the sections run on as one list.
+ */
+function MenuGroup({
+  section,
+  first,
+  children,
+}: {
+  section: MenuSection;
+  first: boolean;
+  children: ReactNode;
+}): ReactElement {
+  const labelId = useId();
+  return (
+    <>
+      {!first && <div role="separator" className="menu-button__rule" />}
+      <div role="group" aria-labelledby={labelId} className="menu-button__group">
+        <div id={labelId} className="menu-button__heading">
+          {section.label}
+        </div>
+        {children}
+      </div>
+    </>
+  );
+}
+
 export default function MenuButton({
   label,
   className,
-  items,
   busy = false,
   busyLabel,
   buttonType = false,
   icon,
   ref,
+  state,
+  ...choices
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
   // Still drawn: open, or fading out.
@@ -139,6 +188,52 @@ export default function MenuButton({
     } else if (event.key === 'Tab') setOpen(false);
   };
 
+  const drawItem = (item: MenuButtonItem): ReactElement =>
+    item.href !== undefined ? (
+      <Link
+        key={item.key}
+        href={item.href}
+        role="menuitem"
+        tabIndex={-1}
+        className={itemClass(item, chosen === item.key)}
+        onClick={(event) => {
+          setChosen(item.key);
+          setOpen(false);
+          item.onClick?.(event);
+        }}
+      >
+        {item.label}
+      </Link>
+    ) : (
+      <button
+        key={item.key}
+        type="button"
+        role="menuitem"
+        tabIndex={-1}
+        className={itemClass(item, chosen === item.key)}
+        // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
+        // in the roving, read as unavailable. A press runs nothing and the menu stays open.
+        aria-disabled={item.disabled || undefined}
+        // The mark joins the name, since the check that draws it is a glyph and says nothing.
+        aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}
+        onClick={() => {
+          if (item.disabled) return;
+          setChosen(item.key);
+          setOpen(false);
+          item.onSelect();
+        }}
+      >
+        {item.label}
+        {item.mark && (
+          <span className="menu-button__mark">
+            <CheckIcon />
+          </span>
+        )}
+      </button>
+    );
+
+  const sections = 'sections' in choices ? choices.sections : undefined;
+
   return (
     <span ref={root} className="menu-button">
       <button
@@ -150,6 +245,7 @@ export default function MenuButton({
         }}
         type="button"
         className={className}
+        data-state={state}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -202,39 +298,15 @@ export default function MenuButton({
           if (!open && event.target === event.currentTarget) setDrawn(false);
         }}
       >
-        {items.map((item) =>
-          item.href !== undefined ? (
-            <Link
-              key={item.key}
-              href={item.href}
-              role="menuitem"
-              tabIndex={-1}
-              className={itemClass(item, chosen === item.key)}
-              onClick={(event) => {
-                setChosen(item.key);
-                setOpen(false);
-                item.onClick?.(event);
-              }}
-            >
-              {item.label}
-            </Link>
-          ) : (
-            <button
-              key={item.key}
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              className={itemClass(item, chosen === item.key)}
-              onClick={() => {
-                setChosen(item.key);
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.label}
-            </button>
-          ),
-        )}
+        {sections
+          ? sections
+              .filter((section) => section.items.length > 0)
+              .map((section, at) => (
+                <MenuGroup key={section.key} section={section} first={at === 0}>
+                  {greenFirst(section.items).map(drawItem)}
+                </MenuGroup>
+              ))
+          : greenFirst(choices.items ?? []).map(drawItem)}
       </div>
     </span>
   );

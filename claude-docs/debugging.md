@@ -142,6 +142,30 @@ Two alternatives were not taken:
 A CLI `--server-fast-refresh` overrides the config, so no `dev` script passes
 it.
 
+## A restart compiles from the files
+
+`next.config.ts` sets `experimental.turbopackFileSystemCacheForDev: false`.
+Since Next 16.1, `next dev` has kept its compiled work on disk, in
+`.next/dev/cache/turbopack`, by default, so that a restart picks up where the
+last run left off. Three times that cache went on serving an old copy of a Sass
+partial, a file such as `src/scss/_variables.scss` that other stylesheets load
+with `@use`. It happened on 2026-10-11, 2026-10-16 and 2026-10-20: each time
+after a new variable was added, or an agent or a merge changed the partial with
+the server running. Every page then failed with "Undefined variable" or
+"() isn't a valid CSS value". Each time:
+
+- `npx sass src/app/globals.scss` compiled the same files cleanly;
+- restarting the server did not help;
+- only stopping it and deleting `.next/dev/cache` did.
+
+With the cache off, a restart is enough. The cost is that the first page after
+a restart compiles cold. `next build` keeps its own cache in `.next/cache`,
+under `turbopackFileSystemCacheForBuild`, which is unchanged.
+
+The running server can still miss a change to a partial; why it misses one has
+not been found. If a page shows one of those errors while `npx sass` passes,
+restart `next dev`.
+
 ## Test debugging
 
 **Vitest**: `npm run test:debug` runs

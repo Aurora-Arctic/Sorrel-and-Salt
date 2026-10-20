@@ -22,7 +22,10 @@ test(
     // The list itself, not the sign-in page with a way back.
     await expect(page).toHaveURL(/\/compendium$/);
     const card = compendiumList(page).locator(':scope > li').first();
-    const link = card.getByRole('link');
+    // The entry link is the one in the card's heading, named for the entry; the card also
+    // carries a Quick Look link beside it (M12.5).
+    const name = await card.getByRole('heading', { level: 2 }).innerText();
+    const link = card.getByRole('link', { name, exact: true });
     const href = await link.getAttribute('href');
     const slug = href?.replace('/compendium/ingredients/', '');
     const [entry] = await withSql(

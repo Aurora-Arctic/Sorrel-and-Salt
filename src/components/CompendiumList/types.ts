@@ -11,7 +11,7 @@ import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
 import type { COVEN_PARAMS } from '../IngredientSearch/coven-params';
 import type { COMPENDIUM_PARAMS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
-import type { ModalHeading } from '../Modal/types';
+import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /**
@@ -33,6 +33,8 @@ export interface CompendiumListEntry extends UpdatedStamp {
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;
+  /** Its details modal over the list, `?entry=<slug>`, which the Quick Look eye left of its name opens (M12.5). */
+  details: RouteModalLink;
 }
 
 /** One live form of an entry: its text, and its curated group's icon name, null for a form with none. */
@@ -154,11 +156,15 @@ export type CompendiumListFilter = SearchFilter<typeof COMPENDIUM_PARAMS.entries
  */
 export type CovenListFilter = SearchFilter<typeof COVEN_PARAMS.entries>;
 
+/**
+ * Where the list stands: its filter, the cursor of the page a modal opens
+ * over, and the entry whose details modal is open, `?entry=<slug>` (M12.5),
+ * which an edit modal stacked over the details keeps, so it closes back to them.
+ */
+export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor & { entry?: string };
+
 /** The dialog a coven list address opens over it (M8.17): an own entry's Edit, or a held compendium entry's Annotate. */
 export type CovenListDialog = { edit: string } | { annotate: string };
-
-/** Where the list stands: its filter, and the cursor of the page a modal opens over. */
-export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<

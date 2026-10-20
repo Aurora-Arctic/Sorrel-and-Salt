@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import FormIcon from '@/components/FormIcon';
-import SafetyNote, { CautionMark, ToxicMark } from '@/components/SafetyNote';
+import SafetyNote, { CautionMark, SafetyMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
 
 // The one presentation of an ingredient's caution (M8.13a;
@@ -104,6 +104,22 @@ describe('SafetyNote', () => {
     expect(within(region).getByRole('definition')).toHaveTextContent(OIL.safetyNotes);
   });
 
+  it("holds its consumer's footnote after the notes, and shows for a footnote alone", () => {
+    const { unmount } = render(
+      <SafetyNote safetyNotes={INGREDIENT_NOTES} footnote={<p>Fixture footnote.</p>} />,
+    );
+    const region = screen.getByRole('region', { name: 'Caution' });
+    const own = within(region).getByText(INGREDIENT_NOTES);
+    const footnote = within(region).getByText('Fixture footnote.');
+    expect(own.compareDocumentPosition(footnote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    unmount();
+
+    render(<SafetyNote safetyNotes="" footnote={<p>Fixture footnote.</p>} />);
+    expect(
+      within(screen.getByRole('region', { name: 'Caution' })).getByText('Fixture footnote.'),
+    ).toBeInTheDocument();
+  });
+
   it('is never focusable', () => {
     render(<SafetyNote safetyNotes={INGREDIENT_NOTES} variants={[LEAF]} />);
 
@@ -158,5 +174,36 @@ describe('CautionMark', () => {
 
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.queryByRole('link')).toBeNull();
+  });
+});
+
+// One safety badge wherever a row shows one (the owner's call, 2026-10-20): Toxic
+// says more than Caution, so it stands alone when both apply.
+describe('SafetyMark', () => {
+  const caution = () => screen.queryByText('Caution', { exact: true });
+  const toxic = () => screen.queryByText('Toxic', { exact: true });
+
+  it.each([
+    ['the ingredient is toxic and has notes', { toxic: true, safetyNotes: 'Fixture caution.' }],
+    ['a form is toxic and has notes', { variants: [OIL] }],
+    ['the ingredient is toxic and a form has notes', { toxic: true, variants: [LEAF] }],
+  ])('shows Toxic alone when %s', (_, props) => {
+    render(<SafetyMark {...props} />);
+
+    expect(toxic()).toBeInTheDocument();
+    expect(caution()).toBeNull();
+  });
+
+  it('shows Caution for notes with no toxic flag', () => {
+    render(<SafetyMark safetyNotes="Fixture caution." variants={[ROOT]} />);
+
+    expect(caution()).toBeInTheDocument();
+    expect(toxic()).toBeNull();
+  });
+
+  it('renders nothing with neither', () => {
+    const { container } = render(<SafetyMark safetyNotes=" " variants={[ROOT]} />);
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

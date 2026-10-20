@@ -4,3 +4,4 @@
 export { default } from './safety-note';
 export { CautionMark } from './caution-mark';
 export { ToxicMark } from './toxic-mark';
+export { SafetyMark } from './safety-mark';

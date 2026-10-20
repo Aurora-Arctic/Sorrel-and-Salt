@@ -90,7 +90,8 @@ body:has(.context-row) .backdrop--sorrel {
 }
 
 .backdrop--salt {
-  right: 0;
+  // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
+  right: var(--scrollbar-width, 0);
   bottom: 0;
   aspect-ratio: 3 / 2;
   background-image: url('./salt-spoon.webp');

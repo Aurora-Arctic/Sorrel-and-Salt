@@ -41,17 +41,20 @@
     display: inline-flex;
   }
 
-  // Above the plus, its right edge on the plus's: the plus stands at the
-  // heading line's end, at the column's edge, where a centred tip would run
-  // past it. Over the shell's bars, which a tip beneath them would slip under;
+  // Above the plus, its right edge on the plus's (`--tip-placement`, read by
+  // `useTip`, which places the bubble 4px off; nothing here moves it): the
+  // plus stands at the heading line's end, at the column's edge, where a
+  // centred tip would run past it, and to its left the tip would cover the
+  // heading. Over the shell's bars, which a tip beneath them would slip under;
   // the Add's wrapper carries no `translate` for this reason (it would make a
   // stacking context, and the tip's layer would rank only inside it).
+  #{$header} .icon-tip:has(> .add-action) {
+    --tip-placement: top-end;
+  }
+
   #{$header} .icon-tip:has(> .add-action) .icon-tip__bubble {
-    inset: auto 0 100% auto;
     z-index: layer('floating');
     display: block;
-    margin: 0 0 space(1);
-    translate: none;
 
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
     @starting-style {
@@ -2094,10 +2097,12 @@
     }
   }
 
-  // Right-aligned buttons beneath the jar lines.
+  // Right-aligned buttons beneath the jar lines, each centred on the row: stretched,
+  // a control whose box is fixed would sit at the top of a row a taller item grew.
   .specimen__actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
     gap: space(2);
     margin-top: space(3);

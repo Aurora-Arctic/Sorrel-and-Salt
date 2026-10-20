@@ -1,14 +1,14 @@
 'use client';
 
 import { type ReactElement, useRef, useState } from 'react';
-import IconTip, { BinIcon, DotsIcon } from '../IconTip';
+import { BinButton, MoreMenu } from '../IconTip';
 import {
   MakeItOursDialog,
   RemoveDialog,
   useCupboardWrites,
 } from '../IngredientEntry/cupboard-writes';
 import { DeleteDialog, useDeleteEntry } from '../IngredientEntry/delete-entry';
-import MenuButton from '../MenuButton';
+import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import Notice from '../Notice';
 import type { CardMoreProps } from './types';
@@ -24,7 +24,9 @@ import type { CardMoreProps } from './types';
 // one press can do. That is the coven's own entry now that Link to the
 // Compendium has gone from the card (a v2 feature). A lone Make It Ours stays
 // a menu: it needs the delete permission too, so no role reaches it alone,
-// and no icon is built for a case that cannot happen. A write that takes the
+// and no icon is built for a case that cannot happen. The menu draws its
+// choices under the one "Coven" section label, as every More does though all
+// its choices are the coven's (the owner's call, 2026-10-20). A write that takes the
 // card away reads the list again, and the focus then goes to the page's
 // heading, the card's More (or bin) having gone with it; a refusal gives that
 // control the focus back. claude-docs/components/coven-cards.md.
@@ -40,6 +42,7 @@ export default function CardMore({
   mayDelete = false,
   mayMakeOurs = false,
   mayRemove = false,
+  leaveHref,
 }: CardMoreProps): ReactElement | null {
   const [asking, setAsking] = useState<Asking>();
   const [alert, setAlert] = useState<string>();
@@ -52,6 +55,7 @@ export default function CardMore({
   const deleting = useDeleteEntry({
     workspaceId,
     id,
+    deletedHref: leaveHref,
     onSettle: settle,
     onRefused: setAlert,
   });
@@ -59,6 +63,7 @@ export default function CardMore({
     workspaceId,
     covenSlug,
     ingredientId: id,
+    removedHref: leaveHref,
     onSettle: settle,
     onRefused: setAlert,
   });
@@ -83,29 +88,18 @@ export default function CardMore({
   const verb = only.key === 'delete' ? 'Delete Ingredient' : 'Remove';
 
   const control = bin ? (
-    <IconTip tip={verb}>
-      <button
-        ref={trigger}
-        type="button"
-        className="icon-tip__remove"
-        onClick={only.href === undefined ? only.onSelect : undefined}
-      >
-        <BinIcon />
-        <span className="visually-hidden">
-          {verb} {name}
-        </span>
-      </button>
-    </IconTip>
+    <BinButton
+      ref={trigger}
+      verb={verb}
+      name={name}
+      onClick={only.href === undefined ? only.onSelect : () => {}}
+    />
   ) : (
-    <IconTip tip="More">
-      <MenuButton
-        ref={trigger}
-        label={`More for ${name}`}
-        className="icon-tip__edit"
-        icon={<DotsIcon />}
-        items={items}
-      />
-    </IconTip>
+    <MoreMenu
+      ref={trigger}
+      name={name}
+      {...choicesFor({ compendium: [], coven: items }, 'coven')}
+    />
   );
 
   const close = () => setAsking(undefined);

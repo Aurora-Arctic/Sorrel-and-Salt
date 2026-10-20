@@ -38,8 +38,6 @@ export interface IngredientCardProps {
   kind: EntryKind;
   /** New or Updated for a compendium entry (`entryRecency`); none for a coven's own. */
   recency?: EntryRecency | null;
-  /** The cupboard row overrides a field of the compendium's. */
-  annotated?: boolean;
   /** The curators retired the entry. */
   retired?: boolean;
   /** The name's heading level, 2 to 5; Defaults to 2. */
@@ -49,6 +47,11 @@ export interface IngredientCardProps {
    * They sit above the card's link, so each keeps its own click, hover and focus.
    */
   actions?: ReactNode;
+  /**
+   * Controls for the foot's start, at its bottom left, apart from `actions` at the
+   * right: the coven's Quick Look eye (M12.5). Above the card's link, as `actions` are.
+   */
+  startActions?: ReactNode;
   /**
    * The jar-line slot beneath the forms. The coven's Ingredients page fills it
    * with a line per jar (M9.6); the public compendium leaves it empty.

@@ -141,12 +141,55 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: 'Revoke Admin' })).toHaveFocus();
   });
 
+  // axe's scrollable-region-focusable: a body with no field must be reachable
+  // by Tab, or a keyboard cannot scroll it. A form's body is reached by its fields.
+  it("gives a body only to read a Tab stop of its own, and a form's body none", async () => {
+    const { unmount } = render(
+      <Modal title="Testwort" onClose={vi.fn()} readingBody>
+        <p>Fixture reading.</p>
+      </Modal>,
+    );
+    await settle();
+    const reading = screen.getByText('Fixture reading.').parentElement!;
+    expect(reading.tabIndex).toBe(0);
+    // The dialog still takes the focus as it opens, not the body.
+    expect(screen.getByRole('dialog', { name: 'Testwort' })).toHaveFocus();
+    unmount();
+
+    renderModal();
+    expect(
+      screen.getByRole('textbox', { name: 'Name' }).closest('[tabindex]:not(dialog)'),
+    ).toBeNull();
+  });
+
   it('asks its owner to close it from the Close button', () => {
     const onClose = renderModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes from the Close button on its top line, with the top line empty or full', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Modal title="Edit Category" topEnd={<></>} onClose={onClose}>
+        <input aria-label="Name" />
+      </Modal>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <Modal title="Edit Category" topEnd={<output>Marked</output>} onClose={onClose}>
+        <input aria-label="Name" />
+      </Modal>,
+    );
+    const mark = screen.getByText('Marked');
+    const close = screen.getByRole('button', { name: 'Close' });
+    // The marks first, as on screen, and neither is in the dialog's name.
+    expect(mark.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Edit Category' })).toBeInTheDocument();
   });
 
   // The owner decides: a URL-driven modal closes by navigating, and the
@@ -594,6 +637,34 @@ describe('Modal', () => {
       expect(button('Open All').closest('[inert]')).toBeNull();
     });
 
+    it('keeps a foot outside the body that scrolls, and makes it inert while asking', () => {
+      render(
+        <Modal
+          title="Edit Category"
+          onClose={vi.fn()}
+          foot={
+            <button type="button" onClick={() => undefined}>
+              Open Page
+            </button>
+          }
+        >
+          {(done) => <GuardedForm close={done} />}
+        </Modal>,
+      );
+      // Why it could be inside: it is passed beside the children, which the body wraps.
+      const foot = button('Open Page');
+      expect(foot.closest('.modal-dialog__body')).toBeNull();
+      expect(field('Name').closest('.modal-dialog__body')).not.toBeNull();
+      change('Name', 'Testwort');
+      expect(foot.closest('[inert]')).toBeNull();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(foot.closest('[inert]')).not.toBeNull();
+      fireEvent.click(button('Keep Editing'));
+      expect(foot.closest('[inert]')).toBeNull();
+    });
+
     it.each([
       ['the Close button', () => fireEvent.click(button('Close'))],
       ['Escape', escape],
@@ -751,5 +822,79 @@ describe('Modal', () => {
       expect(asking()).not.toBeInTheDocument();
       expect(onClose).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+// While a modal is open the root's scroll is hidden, and the scrollbar's room
+// is given back as padding (Modal/page-hold.ts): the width is published as
+// `--scrollbar-width` only where the page had a scrollbar, and only until the
+// last modal closes. The padding itself is presentation, measured by hand.
+describe('Modal holding the page', () => {
+  const root = document.documentElement;
+  const widthOf = () => root.style.getPropertyValue('--scrollbar-width');
+
+  // happy-dom lays nothing out, so the root's width is set to say whether
+  // the page has a scrollbar: narrower than the window means it has one.
+  function pageWithScrollbar(scrollbar: number) {
+    Object.defineProperty(root, 'clientWidth', {
+      configurable: true,
+      get: () => window.innerWidth - scrollbar,
+    });
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(root, 'clientWidth');
+  });
+
+  it('gives the room back while open where the page has a scrollbar, and takes it back on close', () => {
+    pageWithScrollbar(15);
+    expect(widthOf()).toBe('');
+
+    const { unmount } = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(widthOf()).toBe('15px');
+
+    unmount();
+    expect(widthOf()).toBe('');
+  });
+
+  it('sets nothing where the page has no scrollbar', () => {
+    pageWithScrollbar(0);
+
+    const { unmount } = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Edit Category' })).toHaveAttribute('open');
+    expect(widthOf()).toBe('');
+    unmount();
+  });
+
+  // A second modal opens once the scrollbar is already gone, so it must not
+  // measure again, and the first closing must not give the room back early.
+  it('keeps the room until the last of two open modals closes', () => {
+    pageWithScrollbar(15);
+    const first = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    pageWithScrollbar(0);
+    const second = render(
+      <Modal title="Delete Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(widthOf()).toBe('15px');
+
+    first.unmount();
+    expect(widthOf()).toBe('15px');
+
+    second.unmount();
+    expect(widthOf()).toBe('');
   });
 });

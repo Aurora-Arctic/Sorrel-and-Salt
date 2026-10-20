@@ -483,10 +483,10 @@ $skeleton-fade: 300ms;
     }
 
     // The title link in the body ink with the faded underline the entry
-    // page's links wear (the owner's call), never the Open It `.btn`.
+    // page's links wear (`faded-underline`; the owner's call), never the Open It `.btn`.
     a:not(.btn) {
       color: $text-primary;
-      text-decoration-color: color-mix(in srgb, currentcolor 55%, transparent);
+      @include faded-underline;
       @include theme-transition(color);
 
       &:hover,
@@ -494,7 +494,6 @@ $skeleton-fade: 300ms;
       &:hover:where(:visited),
       &:focus-visible:where(:visited) {
         color: $accent-hover;
-        text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
       }
 
       &:where(:visited) {

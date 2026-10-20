@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'compact' as *;
@@ -169,13 +170,55 @@
   }
 }
 
-// Takes the room it needs and may shrink below its longest word, which breaks
-// (hyphenated where the dictionary can, anywhere where it cannot) rather than
-// pushing the badges off the card. `hyphens` is Baseline Widely Available.
+// The name block and the safety badge share the top row until the name's first word
+// no longer fits beside the badge; only then does the badge wrap below (the owner's
+// call, 2026-10-20). A flex row wraps on its items' narrowest widths, and the name
+// block's is made its first word's: from a zero basis it grows into the spare room, and
+// its content-based minimum (`min-width: auto`) is its min-content width. Every other
+// word may break anywhere (`overflow-wrap: anywhere`), so it counts as no wider than a
+// letter there, and the badge row below counts as nothing; the first word breaks only
+// when it overflows (`break-word`) and never by the dictionary (`hyphens: manual`), so
+// it counts whole. Not the longest word, which `flex-wrap` alone keys on, nor the whole
+// name, which a `flex-basis: auto` keys on. `max-width` lets a first word wider than
+// the card still break rather than spill. All Baseline Widely Available.
 .ingredient-card__heading {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 1 0;
+  max-width: 100%;
   overflow-wrap: anywhere;
+}
+
+// The pending dot takes only its start margin on the line, its own width hanging into
+// the gap beside the safety badge, so it never wraps alone onto a blank line under a
+// name that just fits (the narrower block made that common). Hidden but for a slow
+// navigation; the gap holds it. No no-break space: Chrome breaks before the dot anyway.
+.ingredient-card__name .link-hint {
+  margin-inline-end: -0.6em;
+}
+
+.ingredient-card__first {
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+// The corner: New or Updated, then the safety badge at the very end. As tall as a badge
+// even when it holds only the recency mark, so the centring margin below fits both.
+.ingredient-card__corner {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: space(2);
+  min-block-size: map.get($badge-sizes, 'medium', 'min-block-size');
+}
+
+// The other badges, a row under the formal name. Its zero width and full minimum
+// keep it the block's width while adding nothing to the block's narrowest width, so
+// a wide badge never pushes the safety badge down.
+.ingredient-card .ingredient-card__heading > .specimen__badges {
+  inline-size: 0;
+  min-inline-size: 100%;
+  margin-block: space(2) 0;
+  // Centred across, should New or Updated be moved in beside the badges (`RECENCY_AT`).
+  align-items: center;
 }
 
 .ingredient-card__name {
@@ -229,7 +272,7 @@
 // The values are the badge mixin's own, so both come out the same height.
 .ingredient-card .specimen__stock .stock-badge--out {
   border-width: 1px;
-  padding-block: 0.125rem;
+  @include badge-padding-block('medium');
   font-weight: 500;
 }
 
@@ -240,10 +283,33 @@
   z-index: 1;
 }
 
+// The foot's start (M12.5): the coven's Quick Look eye at the bottom left, the
+// other actions kept at the right by the auto margin. A flex row, not inline: as
+// a line box its text's line height and `vertical-align: middle` set the eye
+// on the baseline rather than the row's centre, and could grow the row past the
+// 2rem controls, which then sat above the eye.
+.ingredient-card .specimen__actions-start {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  margin-inline-end: auto;
+}
+
 // The badges (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
 // badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
 .ingredient-card .badge {
   @include badge-size('medium');
+}
+
+// The corner centred on the name's first line, as the forms line's icons are
+// centred on theirs: the specimen tops them flush (`align-items: flex-start`), which sat the
+// 24px badge above a taller line of name. Half the name's line box less the badge's height,
+// so the step follows the name's size (`heading-size(3)` here, `heading-size(4)` compact).
+// It shows only beside the name; wrapped beneath it, it adds that much to the row gap.
+.ingredient-card .ingredient-card__corner {
+  margin-block-start: calc(
+    (#{heading-size(3)} * 1.15 - #{map.get($badge-sizes, 'medium', 'min-block-size')}) / 2
+  );
 }
 
 // Above the cards beside it while a category panel is open, as the tips are, lifted by
@@ -257,3 +323,5 @@
 [data-density='compact']:not(:root[data-card-density='regular'] *) {
   @include ingredient-card-compact;
 }
+
+// The card's More takes its ink from IconTip's `.icon-tip__more`, as every More does.

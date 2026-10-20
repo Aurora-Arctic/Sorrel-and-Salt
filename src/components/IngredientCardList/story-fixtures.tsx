@@ -58,7 +58,6 @@ export interface FixtureEntry {
   safetyNotes?: string;
   /** How the entry shows on the coven's Ingredients page. */
   kind: EntryKind;
-  annotated?: boolean;
   retired?: boolean;
   /** The jars the coven holds: each names a form the card lists. */
   jars: Jar[];
@@ -93,7 +92,6 @@ export const ENTRIES: FixtureEntry[] = [
     variants: [form('whole root'), form('powder')],
     toxic: true,
     kind: 'cupboard',
-    annotated: true,
     retired: true,
     jars: [{ form: 'whole root', quantity: 40, threshold: 10, unit: 'g' }],
   },
@@ -116,7 +114,6 @@ export const ENTRIES: FixtureEntry[] = [
     categories: [CATS.protection],
     variants: [form('tumbled stone')],
     kind: 'cupboard',
-    annotated: true,
     jars: [{ form: 'tumbled stone', quantity: 3, threshold: 5, unit: 'pcs' }],
   },
   {

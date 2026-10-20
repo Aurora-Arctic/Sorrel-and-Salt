@@ -85,9 +85,20 @@ $jump-link-line: 1.25;
   margin-block-end: space(3);
 }
 
-.ingredient-entry__bar > .recency-mark {
-  // Right end even with no back link beside it.
+// New or Updated, then the safety badge, at the row's right end, each as far right as it can go:
+// `auto` on the first of them, whichever is there.
+.ingredient-entry__bar > .recency-mark,
+.ingredient-entry__bar > .badge:first-child,
+.ingredient-entry__back + .badge {
   margin-inline-start: auto;
+}
+
+// With New or Updated there, the two are one pair that ends flush with the pencil at the text
+// column's right end, the badge last, so New moves left by the badge's width and the gap (the
+// owner's call, 2026-10-20). In flow, not placed, so nothing passes the column and clips at 390.
+// The pair sits closer than the row's gap, as on the card's corner.
+.ingredient-entry__bar > .recency-mark + .badge {
+  margin-inline-start: calc(#{space(2)} - #{space(3)});
 }
 
 .ingredient-entry__back {
@@ -162,9 +173,57 @@ $jump-link-line: 1.25;
   }
 }
 
+// A name wraps inside the column at every width (the owner's call, 2026-10-20). The title row
+// sizes the heading to its longest word, so a word wider than a phone's column (the LongNames
+// stories' at 390) ran past the right edge; capped at the column, the heading breaks that word
+// at the edge, and `break-word` rather than `anywhere` or hyphens breaks it only when it cannot
+// fit a line of its own.
+.ingredient-entry__head h1 {
+  max-inline-size: 100%;
+  overflow-wrap: break-word;
+}
+
+// The formal name and the name, one stack, positioned so the pencil can be placed against it.
+.ingredient-entry__naming {
+  @include stack(3);
+
+  position: relative;
+}
+
+// The entry's icons (the plus, the main Edit or Annotate, More, the bin: one to four, the owner's
+// call, 2026-10-20) as one row at the end of the formal name's line, above the name. Taken out of
+// the name's row rather than moved in the markup, so a screen reader still meets them after the
+// heading, and which icons there are stays the client part's choice (`cupboard-actions.tsx`),
+// which says how many in `data-icons`: `:has()`, Baseline Widely Available, finds the row. Centred on
+// the formal line's first line, `$formal-line` tall (the tip button the line centres on), and the
+// formal name wraps short of them. Placed, so the name's row keeps the whole width for the name.
+$formal-line: 1.5rem;
+
+.ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--icons)
+  > .ingredient-entry__formal {
+  padding-inline-end: calc(#{$icon-size-large} + #{space(2)});
+}
+
+@each $count in 2, 3, 4 {
+  .ingredient-entry__naming:has(
+      > .page-header > .ingredient-entry__cupboard--icons[data-icons='#{$count}']
+    )
+    > .ingredient-entry__formal {
+    padding-inline-end: calc(#{$count} * (#{$icon-size-large} + #{space(2)}));
+  }
+}
+
+.ingredient-entry__head .page-header > .ingredient-entry__cupboard--icons {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc((#{$formal-line} - #{$icon-size-large}) / 2);
+  margin: 0;
+}
+
 // In Your Cupboard: the shelf before the name, at the heading's size and in
 // the muted ink, so it reads as a mark on the name and not part of it (the
-// owner's mock-up, 2026-10-19). A button only to carry its tip (held-mark.tsx).
+// owner's mock-up, 2026-10-19). A button to carry its tip, which a press opens
+// too (held-mark.tsx).
 .ingredient-entry__held {
   display: inline-flex;
   flex: none;
@@ -189,7 +248,7 @@ $jump-link-line: 1.25;
 
 // Beside a jump menu the shelf hangs out into the menu's column, so the name
 // keeps its line with the text beneath it, held or not (the owner's call,
-// 2026-10-19). With no menu column, as on a phone, it stays on the line.
+// 2026-10-19). With no menu column it goes above the name (below).
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
   .ingredient-entry--with-nav .page-header__title {
     position: relative;
@@ -212,41 +271,28 @@ $jump-link-line: 1.25;
   }
 }
 
-// The formal name over the heading as an eyebrow, its tip beside it; the
-// term ("Botanical Name") is read, not seen (the owner's call).
-.ingredient-entry__formal {
-  // The tip is placed against the nearest positioned ancestor: this.
-  position: relative;
-
-  dt {
-    @include visually-hidden;
-  }
-
-  dd {
-    display: flex;
+// Without the menu column, below the breakpoint that sets the menu beside the content (the
+// same `$shell-phone-width` as the rule above, and `entry-nav-grid`'s), the shelf stands on a
+// line of its own above the name, between the formal name and the heading, so the name keeps the
+// line's whole width and starts where the text beneath it does (the owner's call, 2026-10-20).
+// The header's `lead` turns from a row into a column; the markup and the reading order stay as
+// they are, the shelf read before the heading. Not above the formal name: placed there, it stood
+// alone two lines from the name it marks, and needed the pencil moved down with it. On its own
+// line the shelf is 30% larger than beside the name (the owner's call, 2026-10-20): the drawing's
+// own size, not a transform, so the line and the button, its tap target, grow with it.
+@media (max-width: #{$shell-phone-width}) {
+  .ingredient-entry__head .page-header__title {
+    flex-direction: column;
+    align-items: flex-start;
     gap: space(1);
-    align-items: center;
   }
 
-  // Below the name rather than above it, where the shell's sticky bar would
-  // cover it at the top of the page; it covers the heading while open.
-  .info-tip__bubble {
-    inset: 100% auto auto 0;
-    margin: space(1) 0 0;
-  }
+  .ingredient-entry__head .ingredient-entry__held {
+    margin-inline-end: 0;
 
-  // Beside the mark where there is room, so it covers nothing: anchored on
-  // the mark itself, level with its middle. A phone keeps it below, where
-  // 18rem to the right of the mark would run off the screen.
-  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-    .info-tip {
-      position: relative;
-    }
-
-    .info-tip__bubble {
-      inset: 50% auto auto calc(100% + #{space(2)});
-      margin: 0;
-      translate: 0 -50%;
+    > svg {
+      width: calc(0.72em * 1.3);
+      height: calc(0.72em * 1.3);
     }
   }
 }
@@ -282,6 +328,27 @@ $jump-link-line: 1.25;
   @include entry-side;
 }
 
+// Said where a field holds nothing, so it reads as a statement and not as a
+// value: the side column's "None recorded" and "No folk names recorded.", the
+// text's "No description recorded.", "No sources recorded.", a form that adds
+// nothing, and the details modal's "Nothing recorded yet." Faded further than
+// the muted ink (the owner's call, 2026-10-20) with a placeholder's ink, which
+// reads as not yet an answer, and set in italic. On the card and in the details
+// modal that holds 4.65:1 light and 6.71:1 dark, the placeholder's own. The
+// page's ground is a step darker in light, where the placeholder falls to 4.17:1
+// (below AA's 4.5:1), so within `.ingredient-entry`, the page's own container,
+// it takes the muted ink instead (the owner's call, 2026-10-20): 5.99:1 light and
+// 9.67:1 dark, still in italic. Computed from the tokens 2026-10-20.
+.ingredient-entry__empty {
+  margin: 0;
+  color: $text-placeholder;
+  font-style: italic;
+
+  .ingredient-entry & {
+    color: $text-muted;
+  }
+}
+
 @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
   // The head keeps to the text column, so Edit at the end of the heading's
   // line ends where the text does (the owner's call).
@@ -311,9 +378,8 @@ $jump-link-line: 1.25;
   align-items: center;
 }
 
-// The formal name and each correspondence: the term above its value, so a
-// long list of colours wraps under its label rather than beside it.
-.ingredient-entry__formal,
+// Each correspondence: the term above its value, so a long list of colours wraps under its
+// label rather than beside it (the formal name's are in formal-name.scss).
 .ingredient-entry__correspondences {
   @include stack(2);
 
@@ -331,13 +397,14 @@ $jump-link-line: 1.25;
 }
 
 // In the side column a row is a term over a list that may wrap to several
-// lines: a step more between the term and its value, and a clear break
-// before the next term, so the rows read apart (the owner's call).
+// lines: the term a small step over its value, and a clear break before the
+// next row, so the rows read apart (the owner's call, 2026-10-20). Each row is
+// its own `<div>`, so the rows are the list's stack and the pair is the row's.
 .ingredient-entry__correspondences {
-  @include stack(3);
+  @include stack(4);
 
-  dd + dt {
-    margin-block-start: space(5);
+  > div {
+    @include stack(1);
   }
 }
 
@@ -420,7 +487,12 @@ $jump-link-line: 1.25;
   }
 }
 
-.ingredient-entry__back {
+// A note's and a bibliography entry's way back to where it is cited: its own
+// class, not the top Back link's, whose pull to the column's edge would draw
+// it back over the gap before it. A step off the citation and off each other,
+// kept whole with its number.
+.ingredient-entry__return {
+  margin-inline-start: space(2);
   white-space: nowrap;
 }
 
@@ -440,13 +512,6 @@ $jump-link-line: 1.25;
 .ingredient-entry__chips {
   flex-flow: row wrap;
   gap: space(2);
-}
-
-// Said where a field holds nothing, in the muted ink, so it reads as a
-// statement and not as a value.
-.ingredient-entry__empty {
-  margin: 0;
-  color: $text-muted;
 }
 
 // A short hairline under "In the Compendium", for a coven's own entry and for a
@@ -496,9 +561,17 @@ $replaces-gap: space(5);
     }
   }
 
+  // The ⓘ centres on the heading's capitals, from cap height to baseline (the owner's call,
+  // 2026-10-20). `middle` centred it on the row's own body text, half its x-height above the
+  // baseline, which left it about 5px below the heading's capitals. Given the heading's face and size,
+  // its `cap` is the heading's cap height. With no text inside, the ⓘ's baseline is its glyph's
+  // bottom edge (the button's one flex item), so standing that edge half a glyph less half a cap
+  // below the heading's baseline puts the glyph's middle on the capitals.
   > .info-tip {
+    @include heading-face;
     margin-inline-start: space(1);
-    vertical-align: middle;
+    font-size: heading-size(3);
+    vertical-align: calc(0.5cap - #{$glyph-size} / 2);
   }
 }
 
@@ -507,41 +580,49 @@ $replaces-gap: space(5);
   @include icon-link;
 }
 
+// "In the Compendium" and "Similar in the Compendium": the whole name is the link, the chain
+// icon after it. Where the side column stacks under the text, the icon ends the name's last line
+// with the hint's own spacing, as the Substitutes links' hint does (the owner's call, 2026-10-20).
 .ingredient-entry__replaced {
   // More air between the entries than a plain list has (the owner's call,
   // 2026-10-19).
   gap: space(3);
 }
 
-.ingredient-entry__replaced li {
-  display: flex;
-  align-items: flex-start;
-  gap: space(2);
+.ingredient-entry__entry-title {
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
-// "In the Compendium" and "Similar in the Compendium" (the owner's call,
-// 2026-10-19): the whole name is the link. The title wraps within itself
-// (breaking and hyphenating), then the chain icon `flex: none` at the right
-// end, level with the first line, so the icons of both blocks stand in one
-// column.
-.ingredient-entry__replaced li > a {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  align-items: flex-start;
-
-  .ingredient-entry__entry-title {
-    flex: 1 1 0;
-    min-width: 0;
-    margin-inline-end: space(2);
-    overflow-wrap: break-word;
-    hyphens: auto;
+// Beside the text, in the side column, the icons of a block stand in one column (the owner's
+// call, 2026-10-19), ending under the heading's ⓘ (the owner's call, 2026-10-20). The block
+// shrinks to its heading, which ends in the ⓘ: the titles are sized by `contain: inline-size`
+// so they add nothing to the block's width, and wrap to the heading's rather than widening
+// it. Each link is then a row of the title, filling, and the icon at the block's end, level
+// with the title's first line. A heading that itself wraps fills the column, and its ⓘ ends
+// its last line, so there the icons end at the column's edge instead.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .ingredient-entry__replaces {
+    inline-size: fit-content;
+    max-inline-size: 100%;
   }
 
-  .link-icon-hint {
-    flex: none;
-    margin-inline-start: auto;
-    margin-block-start: 0.125em;
+  .ingredient-entry__replaced li > a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+
+    .ingredient-entry__entry-title {
+      contain: inline-size;
+      margin-inline-end: space(2);
+    }
+
+    // Held in from the block's end as the ⓘ's glyph is inside its 24px target, so the two
+    // drawings, not their boxes, end on one line.
+    .link-icon-hint {
+      margin-inline: 0 calc((#{$icon-size} - #{$glyph-size}) / 2);
+      margin-block-start: 0.125em;
+    }
   }
 }
 
@@ -581,21 +662,19 @@ $replaces-gap: space(5);
 // the darker link colour, `$accent-hover` (the owner's call; `$accent` is 3.96:1
 // on the `:target` highlight, `$accent-hover` is above 6:1), as the admin
 // compendium's name links do. The underline stays, since it is what marks
-// them as links without the colour, but faded: 55% of the link's own colour at
-// rest and 65% pointed at or focused, so it follows the colour to a faded green.
-// Those are the lowest mixes that hold 3:1 against the page and the `:target`
-// fill in both themes. No token holds a faded underline, so it is a `color-mix`,
-// as `$fill-quiet` is.
+// them as links without the colour, but faded (`faded-underline`, _mixins.scss).
+// The covens under In Your Covens in the details modal (summary.scss) share it
+// (the owner's call, 2026-10-20).
 .ingredient-entry__marks a,
-.ingredient-entry__references a {
+.ingredient-entry__references a,
+.ingredient-summary__covens a {
   color: $text-primary;
-  text-decoration-color: color-mix(in srgb, currentcolor 55%, transparent);
+  @include faded-underline;
   @include theme-transition(color);
 
   &:hover,
   &:focus-visible {
     color: $accent-hover;
-    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
   }
 
   &:focus-visible {
@@ -609,7 +688,6 @@ $replaces-gap: space(5);
   &:hover:where(:visited),
   &:focus-visible:where(:visited) {
     color: $accent-hover;
-    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
   }
 
   @include reduced-motion {
@@ -617,7 +695,7 @@ $replaces-gap: space(5);
   }
 }
 
-// The cupboard choices beside the title (M12.17): the Edit menu or one plain
+// The cupboard choices beside the title (M12.17): the icons or one plain
 // button, and a refusal's notice, in a row that wraps on a phone.
 .ingredient-entry__cupboard {
   margin-block-end: space(3);
@@ -625,4 +703,9 @@ $replaces-gap: space(5);
   flex-wrap: wrap;
   align-items: center;
   gap: space(2);
+
+  // Icons stay on one line, a row of at most four, wherever it stands.
+  &--icons {
+    flex-wrap: nowrap;
+  }
 }
