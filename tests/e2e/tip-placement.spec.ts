@@ -1,11 +1,16 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { seedCoven } from './stories/coven-ingredients';
+import { seedCoven, withSql } from './stories/coven-ingredients';
 import { openAddIngredient } from './stories/ingredient-dialogs';
+import { signInAs } from './session';
+import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
+import { insertIngredient } from '../support/db/insert-ingredient';
+import { makeIngredient } from '../support/fixtures/ingredient';
 
 // Every tip stays on screen (M8.14, amended 2026-10-18). No story walks this:
 // it is a layout fact at the narrowest phone, so this gate opens the tips of
-// the Add Ingredient dialog at 320px and measures each one's box.
+// the Add Ingredient dialog at 320px and measures each one's box, and the
+// formal name's on both entry pages at a 390px phone.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -58,4 +63,63 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
   // Both a left-hand and a right-hand tip were measured.
   expect(Math.min(...edges)).toBeLessThan(160);
   expect(Math.max(...edges)).toBeGreaterThan(160);
+});
+
+// The formal name's ⓘ heads both pages of an entry, a coven's and the public one, and opens
+// below the ⓘ on a phone, where the shell's sticky bar would cover a tip above. The page's own
+// stylesheet once moved the bubble after useTip had placed it, so it stood off its ⓘ
+// (claude-docs/components/ingredient-entry.md, "The formal name is never blank").
+test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s page and the public page', async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const coven = await seedCoven(page, 'Fixture Coven Formal Tip', 'formal-tip.test', {
+    A: 'owner',
+  });
+  const admin = await browser.newPage({ baseURL });
+  let ingredientId: string;
+  try {
+    const { userId } = await signInAs(admin, 'admin@formal-tip.test', ['discord'], 'admin');
+    ingredientId = await withSql(async (sql) => {
+      const id = await insertIngredient(
+        sql,
+        makeIngredient({
+          name: 'Fixture Tipwort',
+          canonicalName: 'Fixtura monstrata',
+          nomenclature: 'botanical',
+        }),
+        userId,
+      );
+      await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId: id }, coven.users.A);
+      return id;
+    });
+  } finally {
+    await admin.close();
+  }
+  const [{ slug }] = await withSql(
+    (sql) => sql<{ slug: string }[]>`select slug from ingredients where id = ${ingredientId}`,
+  );
+
+  for (const address of [
+    `/coven/${coven.slug}/ingredients/${ingredientId}`,
+    `/compendium/ingredients/${slug}`,
+  ]) {
+    await page.goto(address);
+    const button = page.getByRole('button', { name: 'About Botanical Name' });
+    // Why the check could fail: the page draws the formal name's ⓘ.
+    await expect(button).toBeVisible();
+    await button.focus();
+    const tip = page.getByRole('tooltip');
+    await expect(tip).toBeVisible();
+    // Let the fade and the first position settle before measuring.
+    await page.waitForTimeout(300);
+    const box = await tip.boundingBox();
+    if (!box) throw new Error(`The tip on ${address} has no box`);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(844);
+  }
 });
