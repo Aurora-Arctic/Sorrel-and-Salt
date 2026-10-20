@@ -11,7 +11,8 @@ import '../CompendiumList/index.scss';
 
 // A coven's Ingredients list (M9.6), the twin of CompendiumCards: the filter row in its coven
 // mode, one compact card per entry of the cupboard, and the pager. Render-only: the page reads
-// one page and hands it here. Each card links to the entry's page inside the coven, shows the
+// one page and hands it here. Each card links to the entry's page inside the coven, which a plain
+// press opens as its details modal over the list instead (M12.5), shows the
 // coven's own label, and holds its jars beneath the forms. The foot of a card (Edit, Delete)
 // stays empty until M8.17 and M9.10 fill it. An empty list is EmptyCupboard's (M9.11).
 // claude-docs/components/coven-cards.md.
@@ -56,6 +57,7 @@ const CovenCards = ({
           <IngredientCard
             key={entry.id}
             href={`/coven/${covenSlug}/ingredients/${entry.id}` as Route}
+            opens={entry.details}
             label={entry.label}
             formalName={entry.canonicalName}
             nomenclature={entry.nomenclature}

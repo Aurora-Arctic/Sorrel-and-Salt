@@ -2,6 +2,7 @@ import type { CompendiumListFilterProps, CompendiumListProps } from '../Compendi
 import type { EntryKind } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { JarLine } from '../JarLines/types';
+import type { RouteModalLink } from '../Modal/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
@@ -26,6 +27,8 @@ export interface CovenCardEntry {
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
+  /** Its details modal over the list, `?entry=<id>`, which a plain press of its name opens (M12.5). */
+  details: RouteModalLink;
 }
 
 export interface CovenCardsProps extends Pick<

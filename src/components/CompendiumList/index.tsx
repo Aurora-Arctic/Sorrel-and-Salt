@@ -1,6 +1,5 @@
 import type { Route } from 'next';
-import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
+import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
 import { LinkIconHint } from '../LinkHint';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
@@ -39,17 +38,18 @@ const NONE = '—';
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   {
     heading: 'Name',
-    // The entry's own public page, by its stored slug (M8.19), which offers a
-    // curator Edit; the pencil still opens the modal from here.
+    // The entry's own public page, by its stored slug (M8.19), which a plain
+    // press opens as its details modal over the list instead (M12.5); the
+    // pencil still opens the edit modal from here.
     cell: (entry) => (
-      <PendingLink
+      <DetailsLink
         className="compendium-list__name"
         href={`/compendium/ingredients/${entry.slug}` as Route}
-        navigationTarget={ingredientLinkTarget(`/compendium/ingredients/${entry.slug}`)}
+        opens={entry.details}
       >
         {entry.name}
         <LinkIconHint />
-      </PendingLink>
+      </DetailsLink>
     ),
   },
   { heading: 'Formal Name', cell: (entry) => entry.canonicalName ?? NONE },

@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -9,6 +9,9 @@ import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { sent } from '../../support/filter-form';
+import { Navigating } from '../../support/navigating';
+import { RouteModal, RouteModalProvider } from '@/components/Modal';
+import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -73,6 +76,10 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   annotated: false,
   retired: false,
   jars: [],
+  details: {
+    href: `/coven/fixture-coven/ingredients?entry=${id}` as Route,
+    heading: { eyebrow: 'Ingredient', title: label },
+  },
   ...over,
 });
 
@@ -117,6 +124,24 @@ describe('CovenCards', () => {
       .getAllByRole('link')
       .map((link) => link.getAttribute('href'));
     expect(hrefs).toEqual(ENTRIES.map(({ id }) => `/coven/fixture-coven/ingredients/${id}`));
+  });
+
+  it("opens an entry's details modal over the list on a plain press of its name", async () => {
+    render(
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <Cards {...props()} />
+          <RouteModal place={DETAILS_PLACE} closeHref="/coven/fixture-coven/ingredients" />
+        </RouteModalProvider>
+      </Navigating>,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Fixture Salt' }));
+    });
+
+    expect(router.push.mock.lastCall?.[0]).toBe('/coven/fixture-coven/ingredients?entry=e2');
+    expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
   it('draws a jar line for each jar an entry holds', () => {

@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import type { Route } from 'next';
 import CovenCards from '.';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
@@ -57,6 +58,10 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   annotated: false,
   retired: false,
   jars: [],
+  details: {
+    href: `/coven/fixture-coven/ingredients?entry=${id}` as Route,
+    heading: { eyebrow: 'Ingredient', title: label },
+  },
   ...over,
 });
 

@@ -5,6 +5,7 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import FormIcon from '../FormIcon';
+import DetailsLink from '../IngredientEntry/details-link';
 import LinkHint from '../LinkHint';
 import { CautionMark, ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
@@ -20,6 +21,7 @@ import './index.scss';
 // as they are and never restyled here. claude-docs/components/ingredient-card.md.
 const IngredientCard = ({
   href,
+  opens,
   label,
   formalName,
   nomenclature,
@@ -58,10 +60,18 @@ const IngredientCard = ({
       <div className="specimen__top">
         <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
-            {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
-            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
-              {label} <LinkHint />
-            </PendingLink>
+            {/* The entry page draws its own frame while it loads, so the link names it (M12.33).
+                Given `opens`, a plain press opens the details modal over the list
+                instead, the name still a link to the page (M12.5). */}
+            {opens ? (
+              <DetailsLink href={href} opens={opens}>
+                {label} <LinkHint />
+              </DetailsLink>
+            ) : (
+              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+                {label} <LinkHint />
+              </PendingLink>
+            )}
           </Heading>
           {formal !== '' && (
             <p className="meta ingredient-card__formal">

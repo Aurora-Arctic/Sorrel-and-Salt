@@ -251,3 +251,13 @@ export interface ConfirmQuestionProps {
   /** Told a refused action's sentence, for the form's alert; the form closes the question. */
   onRefused?: (message: string) => void;
 }
+
+/**
+ * A route modal a control opens: its address, and the head a press shows at
+ * once while that address is on its way (M9.18). An ingredient name's
+ * details modal is one (M12.5), and so is the Edit a page hands down.
+ */
+export interface RouteModalLink {
+  href: Route;
+  heading: ModalHeading;
+}

@@ -6,6 +6,7 @@ import { covenIngredientsHref } from '../../../../../components/CompendiumList/h
 import type { CovenListFilter } from '../../../../../components/CompendiumList/types';
 import { COVEN_PARAMS } from '../../../../../components/IngredientSearch/coven-params';
 import type { JarLine } from '../../../../../components/JarLines/types';
+import { detailsHeading } from '../../../../../components/IngredientEntry/details';
 import PageHeader from '../../../../../components/PageHeader';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../lib/numbered-page';
@@ -60,6 +61,10 @@ export default async function CovenIngredientsPage({
     return {
       id: node.id,
       label: shown.name,
+      details: {
+        href: covenIngredientsHref(workspace.slug, { ...filter, after, before, entry: node.id }),
+        heading: detailsHeading(shown),
+      },
       canonicalName: shown.canonicalName,
       nomenclature: shown.nomenclature,
       categories: page.categories[i],

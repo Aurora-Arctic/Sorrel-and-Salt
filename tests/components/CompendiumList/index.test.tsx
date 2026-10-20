@@ -22,6 +22,8 @@ import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
+import { RouteModal, RouteModalProvider } from '@/components/Modal';
+import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -67,6 +69,10 @@ const ENTRIES: CompendiumListEntry[] = [
     ],
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+    details: {
+      href: compendiumHref({ entry: 'testwort' }),
+      heading: { eyebrow: 'Ingredient', title: 'Testwort' },
+    },
   },
   {
     id: 'i2',
@@ -80,6 +86,10 @@ const ENTRIES: CompendiumListEntry[] = [
     categories: [],
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
+    details: {
+      href: compendiumHref({ entry: 'fixture-salt' }),
+      heading: { eyebrow: 'Ingredient', title: 'Fixture Salt' },
+    },
   },
 ];
 
@@ -269,6 +279,26 @@ describe('CompendiumList', () => {
       'href',
       '/compendium/ingredients/fixture-salt',
     );
+  });
+
+  it("opens a name's details modal over the list on a plain press, its href still the entry's page", async () => {
+    render(
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <CompendiumList {...props()} />
+          <RouteModal place={DETAILS_PLACE} closeHref="/admin/compendium" />
+        </RouteModalProvider>
+      </Navigating>,
+    );
+
+    const name = screen.getByRole('link', { name: 'Fixture Salt' });
+    await act(async () => {
+      fireEvent.click(name);
+    });
+
+    expect(name).toHaveAttribute('href', '/compendium/ingredients/fixture-salt');
+    expect(router.push.mock.lastCall?.[0]).toBe('/admin/compendium?entry=fixture-salt');
+    expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
   it("names the entry page it leads to, so that page's frame is drawn while it loads", async () => {

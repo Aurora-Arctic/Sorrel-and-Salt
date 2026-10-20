@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import type { RouteModalLink } from '../Modal/types';
 import type { CardCategory } from '../CategoryChips/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { EntryKind, EntryRecency } from '../EntryMarks/types';
@@ -10,6 +11,13 @@ export type { CardCategory };
 export interface IngredientCardProps {
   /** The entry's page (M8.19); the name links to it, and it is the card's one link. */
   href: Route;
+  /**
+   * The entry's details modal over the list (M12.5), which a plain press of
+   * the name opens instead of the page; the name still links to `href`. The
+   * coven's Ingredients page gives it; the public compendium does not, so its
+   * names go to the page.
+   */
+  opens?: RouteModalLink;
   /**
    * The label to show, already merged by the caller: a cupboard entry's own
    * label where it set one, the compendium's name where not

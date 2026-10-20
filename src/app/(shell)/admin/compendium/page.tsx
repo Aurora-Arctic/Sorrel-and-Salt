@@ -6,6 +6,7 @@ import CompendiumList from '../../../../components/CompendiumList';
 import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
+import { detailsHeading } from '../../../../components/IngredientEntry/details';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
   CompendiumCategoryChoice,
@@ -114,6 +115,10 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     canonicalName: node.canonicalName,
     forms: page.forms[i],
     categories: chipRows[i],
+    details: {
+      href: compendiumHref({ ...here, entry: node.slug }),
+      heading: detailsHeading(node),
+    },
     editHref: compendiumHref(here, { edit: node.slug }),
     editHeading: editHeading(node),
   }));
