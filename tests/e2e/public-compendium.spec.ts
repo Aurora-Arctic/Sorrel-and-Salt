@@ -269,6 +269,11 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
   });
 });
 
+// Under the narrow column only the search box sticks (the MB.120 review, item 6): the `<search>`
+// and the form are `display: contents` there, so the box is the form's first child, and the
+// Filters button and Clear All scroll away with the cards.
+const stuckBox = (page: Page) => searchForm(page).locator(':scope > :first-child');
+
 test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
   page,
 }) => {
@@ -276,10 +281,28 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 1500));
-  const row = await searchRow(page).boundingBox();
-  expect(row?.y).toBeCloseTo(0, 0);
+  const box = await stuckBox(page).boundingBox();
+  expect(box?.y).toBeCloseTo(0, 0);
+  // Only the search box stays: the Filters button has scrolled out of the window.
+  const filters = await page.getByRole('button', { name: /^Filters/ }).boundingBox();
+  expect(filters!.y + filters!.height).toBeLessThanOrEqual(0);
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+test('at 375px a control focused below the fold lands under the stuck search box, not behind it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto('/compendium');
+  await expect(cardsOf(page).first()).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  // Tab walks from the top of the page, so focus a card's link far below the row directly:
+  // the browser scrolls it into view, and `scroll-padding-top` keeps it clear of the box.
+  const link = cardsOf(page).nth(2).getByRole('link').first();
+  await link.focus();
+  const [box, focused] = await Promise.all([stuckBox(page).boundingBox(), link.boundingBox()]);
+  expect(focused!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
 });
 
 test('the search row is marked stuck once scrolled past, and unmarked back at the top', async ({
