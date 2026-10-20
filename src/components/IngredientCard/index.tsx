@@ -19,6 +19,12 @@ import './index.scss';
 // it takes props only and works out nothing from the data, so the marks and the
 // stock badge are each the project's one presentation, used
 // as they are and never restyled here. claude-docs/components/ingredient-card.md.
+// Where New or Updated sits: 'corner', just left of the safety badge in the card's
+// top-right corner, or in the corner itself without one (the owner's call,
+// 2026-10-20); 'row' puts it in the badge row under the formal name, the
+// alternative the owner was offered. One word moves it; both places are styled.
+const RECENCY_AT = 'corner' as 'corner' | 'row';
+
 const IngredientCard = ({
   href,
   label,
@@ -40,11 +46,12 @@ const IngredientCard = ({
   const formal = (formalName ?? '').trim();
 
   // Without a mark each holder is left out, not left empty, so it adds no gap.
-  const marked = kind === 'own' || Boolean(retired);
+  const marked = kind === 'own' || Boolean(retired) || (RECENCY_AT === 'row' && recency != null);
   const safe =
     Boolean(toxic) ||
     (safetyNotes ?? '').trim() !== '' ||
     variants.some((v) => v.toxic || (v.safetyNotes ?? '').trim() !== '');
+  const cornered = safe || (RECENCY_AT === 'corner' && recency != null);
   // The first word apart, so the safety badge beside the name drops below it only
   // once that word would have to break to fit (the owner's call, 2026-10-20): the
   // name block's narrowest width is this word's (index.scss). Spans do not change
@@ -57,8 +64,6 @@ const IngredientCard = ({
 
   return (
     <article className="ingredient-card specimen">
-      {/* The top right of the card, above the name row (the owner, 2026-10-19). */}
-      <RecencyMark recency={recency} />
       <div className="specimen__top">
         <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
@@ -85,15 +90,19 @@ const IngredientCard = ({
           {marked && (
             <div className="specimen__badges">
               <EntryMarks kind={kind} retired={retired} provenance={false} safety={false} />
+              {RECENCY_AT === 'row' && <RecencyMark recency={recency} />}
             </div>
           )}
         </div>
-        {/* The one safety badge, Toxic over Caution, at the top right beside the
-            name. After the row above in the document: read last, as the row's red
-            mark is, and where it lands when it wraps below. */}
-        {safe && (
-          <div className="ingredient-card__safety">
-            <SafetyMark toxic={toxic} safetyNotes={safetyNotes} variants={variants} />
+        {/* The card's top-right corner, beside the name: the one safety badge, Toxic
+            over Caution, always at the very corner, and New or Updated just left of it,
+            or in the corner itself without one (the owner's call, 2026-10-20). After
+            the row above in the document: read last, as the row's red mark is, and
+            where it lands when it wraps below. */}
+        {cornered && (
+          <div className="ingredient-card__corner">
+            {RECENCY_AT === 'corner' && <RecencyMark recency={recency} />}
+            {safe && <SafetyMark toxic={toxic} safetyNotes={safetyNotes} variants={variants} />}
           </div>
         )}
       </div>

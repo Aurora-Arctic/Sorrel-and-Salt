@@ -239,3 +239,28 @@ export const NewEntry: Story = () => <IngredientCard {...BASE} kind="compendium"
 export const UpdatedEntry: Story = () => (
   <IngredientCard {...BASE} kind="compendium" recency="updated" />
 );
+
+// New or Updated sits just left of the safety badge in the card's top-right corner, and the
+// safety badge keeps the very corner (the owner's call, 2026-10-20). NewEntry shows both; these
+// show the mark alone in the corner, and both beside a long name that wraps.
+export const NewWithoutSafety: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="compendium"
+    recency="new"
+    variants={VARIANTS.map((v) => ({ ...v, toxic: false, safetyNotes: '' }))}
+  />
+);
+
+export const NewLongName: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="cupboard"
+    retired
+    recency="updated"
+    label="Testwort Longer Nameicanicusmus"
+    formalName="Fixtura testalis longissimanicusmus"
+  >
+    <Jars />
+  </IngredientCard>
+);

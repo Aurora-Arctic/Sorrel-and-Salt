@@ -436,6 +436,32 @@ describe('IngredientCard recency (MB.106)', () => {
     expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
   });
 
+  // The safety badge is the card's top-right corner and the mark sits just left of it
+  // (the owner's call, 2026-10-20), so it is read after the name block and before it.
+  it('reads the mark after the name and the formal name, and before the safety badge', () => {
+    render(
+      <IngredientCard
+        {...BASE}
+        kind="compendium"
+        recency="new"
+        formalName="Fixtura testalis"
+        safetyNotes="Fixture entry caution."
+      />,
+    );
+    const order = [
+      screen.getByRole('link', { name: /Fixture Testwort/ }),
+      screen.getByText('Fixtura testalis'),
+      screen.getByText('New', { exact: true }),
+      cautionMark(),
+    ];
+
+    for (const [at, mark] of order.slice(1).entries()) {
+      expect(
+        order[at]!.compareDocumentPosition(mark!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+
   it('shows neither with no recency', () => {
     render(<IngredientCard {...BASE} kind="compendium" recency={null} />);
 

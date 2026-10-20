@@ -122,9 +122,14 @@
   hyphens: manual;
 }
 
-.ingredient-card__safety {
+// The corner: New or Updated, then the safety badge at the very end. As tall as a badge
+// even when it holds only the recency mark, so the centring margin below fits both.
+.ingredient-card__corner {
   display: flex;
   flex: 0 0 auto;
+  align-items: center;
+  gap: space(2);
+  min-block-size: map.get($badge-sizes, 'medium', 'min-block-size');
 }
 
 // The other badges, a row under the formal name. Its zero width and full minimum
@@ -134,6 +139,8 @@
   inline-size: 0;
   min-inline-size: 100%;
   margin-block: space(2) 0;
+  // Centred across, should New or Updated be moved in beside the badges (`RECENCY_AT`).
+  align-items: center;
 }
 
 .ingredient-card__name {
@@ -216,12 +223,12 @@
   @include badge-size('medium');
 }
 
-// The safety badge centred on the name's first line, as the forms line's icons are
+// The corner centred on the name's first line, as the forms line's icons are
 // centred on theirs: the specimen tops them flush (`align-items: flex-start`), which sat the
 // 24px badge above a taller line of name. Half the name's line box less the badge's height,
 // so the step follows the name's size (`heading-size(3)` here, `heading-size(4)` compact).
 // It shows only beside the name; wrapped beneath it, it adds that much to the row gap.
-.ingredient-card .ingredient-card__safety {
+.ingredient-card .ingredient-card__corner {
   margin-block-start: calc(
     (#{heading-size(3)} * 1.15 - #{map.get($badge-sizes, 'medium', 'min-block-size')}) / 2
   );
