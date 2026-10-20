@@ -16,6 +16,10 @@ $modal-padding: space(5) * 2;
 $close-inset: space(5);
 $close-reserve: calc(#{$close-target} + #{space(3)});
 
+// The eyebrow's own line: its size, set in the typography layer, at the 1.65 a `p` is given there.
+// A head with no top line has the eyebrow for its first line, and the × is brought level with it.
+$eyebrow-line: calc(#{type-size('overline')} * 1.65);
+
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
 // Border-box, so the primitive's padding sits inside the limits rather than
@@ -359,6 +363,16 @@ $close-reserve: calc(#{$close-target} + #{space(3)});
   &[inert] .btn {
     @include btn-disabled;
   }
+}
+
+// A head with no top line and an eyebrow (an edit dialog's "Edit Ingredient", a destination's "To ...")
+// has the eyebrow for its first line, so the × is raised from the padding's inset until its middle is
+// the eyebrow text's middle (the owner's call, 2026-10-20): half the difference between the two lines
+// above the inset. The head's own first line, as a top line is for the details window, keeps the inset;
+// a dialog with no eyebrow keeps it too, its title being the first line. Written with `:has()`, as
+// this file's other rules are, so a browser that lacks it leaves the × at the inset.
+.modal-dialog__header:has(> .modal-dialog__heading > .eyebrow:first-child) > .modal-dialog__close {
+  inset-block-start: calc(#{$close-inset} + (#{$eyebrow-line} - #{$close-target}) / 2);
 }
 
 // A 2rem × in a `$close-target` square, 2rem too, at the dialog's padding from its top and

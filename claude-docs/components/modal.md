@@ -101,6 +101,15 @@ is the wrapper every admin page opens it through (below).
   it. The head stops short of it (`$close-reserve`), so a long name wraps rather than runs
   under it, and the × is level with the head's first line, as in MB.115, rather than
   adrift beside a name wrapped over lines.
+  A head with an eyebrow first and no top line (an edit dialog's "Edit Ingredient", an
+  add's destination) has the eyebrow for its first line, so the × is raised to put its
+  middle on the eyebrow text's middle (the owner's call, 2026-10-20): the inset less half
+  of what the 32px target is taller than the eyebrow's line (`$eyebrow-line`, the
+  overline size at the 1.65 a paragraph is given, 19.8px), 17.9px from the top, a middle at
+  33.9px in place of 40px, written with `:has()` so a browser without it keeps the inset.
+  A head with a top line keeps the inset, level with that line, and a dialog with no
+  eyebrow (Add Category) keeps it too, the title being its first line, 40px to the × and
+  about 55px to the title's middle.
 - **A click outside asks the owner to close it** (M5.5, the owner's call,
   reversing M5.6's "no close on a backdrop click"), through `onClose` as
   Close and Escape do. The backdrop is the dialog's own box to an event, so
