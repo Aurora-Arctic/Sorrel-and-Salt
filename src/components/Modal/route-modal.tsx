@@ -24,10 +24,13 @@ export default function RouteModal({
   closeHref,
   size,
   content,
+  place,
 }: RouteModalProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
-  const heading = content?.heading ?? opener?.loading;
+  // A press shows in the place it names alone (M12.5).
+  const pressed = opener?.loadingPlace === place ? opener?.loading : undefined;
+  const heading = content?.heading ?? pressed;
   if (!heading) return null;
   const close = () => {
     // A close while it loads forgets the press; the navigation back

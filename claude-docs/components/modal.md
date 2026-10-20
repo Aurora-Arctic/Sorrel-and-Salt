@@ -487,6 +487,12 @@ The form arrives in the same dialog.
 - **Focus.** When `loading` turns false, the focus moves to the form's first
   field, but only if it is still on the dialog itself. A person who has
   already moved it, to Close say, keeps it.
+- **Two places on one page.** A list whose names open a details modal and
+  whose Edit opens the edit modal over it (M12.5) renders two `RouteModal`s.
+  Each takes a `place`, and a press shows only in the place it names
+  (`useOpenModalClick(href, heading, place)`), so a press of a name does not
+  draw a skeleton in the edit modal's place too. A page with one place leaves
+  it unnamed.
 - **A direct request** to `?edit=` or `?new` (a bookmark, a new tab) still
   renders the modal on the server, with no skeleton.
 - **A row deleted since the list was drawn.** The navigation lands with no

@@ -7,7 +7,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
+const { RouteModal, RouteModalProvider, useOpenModalClick } = await import('@/components/Modal');
 const { RouteModalContext } = await import('@/components/Modal/route-modal-provider');
 const { EditLink } = await import('@/components/IconTip');
 
@@ -164,5 +164,52 @@ describe('EditLink outside a provider', () => {
 
     // `true`: nothing prevented the link's own navigation.
     expect(fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }))).toBe(true);
+  });
+});
+
+describe('two modal places on one page', () => {
+  // A list whose names open a details modal and whose Edit opens the edit
+  // modal over it (M12.5): each place shows only the press meant for it.
+  const DETAILS: Route = '/admin/categories?entry=testcraft';
+  const DETAILS_HEADING: ModalHeading = { eyebrow: 'Ingredient', title: 'Testcraft' };
+  const NameLink = () => {
+    const onClick = useOpenModalClick(DETAILS, DETAILS_HEADING, 'details');
+    return (
+      <a href="/compendium/ingredients/testcraft" onClick={onClick}>
+        Testcraft
+      </a>
+    );
+  };
+  const renderPage = () =>
+    render(
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <NameLink />
+          <EditLink href={EDIT} name="Testcraft" heading={HEADING} />
+          <RouteModal place="details" closeHref={CLOSE} />
+          <RouteModal closeHref={CLOSE} />
+        </RouteModalProvider>
+      </Navigating>,
+    );
+
+  it('shows a press of the name in the details place alone', async () => {
+    renderPage();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Testcraft' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith(DETAILS);
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Ingredient, Testcraft' })).toBeInTheDocument();
+  });
+
+  it('shows a press of Edit in the unnamed place alone, as before', async () => {
+    renderPage();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Edit Testcraft' }));
+    });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
   });
 });

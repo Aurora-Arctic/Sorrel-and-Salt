@@ -30,11 +30,12 @@ export const RouteModalContext = createContext<RouteModalOpener | null>(null);
 export const RouteModalProvider = ({ children }: RouteModalProviderProps): ReactElement => {
   const outer = useContext(RouteModalContext);
   const { pending, navigate } = usePendingNavigation();
-  const [opening, setOpening] = useState<ModalHeading>();
+  const [opening, setOpening] = useState<{ heading: ModalHeading; place?: string }>();
   const value = outer ?? {
-    loading: pending ? opening : undefined,
-    open: (href, heading) => {
-      setOpening(heading);
+    loading: pending ? opening?.heading : undefined,
+    loadingPlace: opening?.place,
+    open: (href, heading, place) => {
+      setOpening({ heading, place });
       navigate(href);
     },
     cancel: () => setOpening(undefined),
@@ -48,7 +49,8 @@ export function useRouteModalOpener(): RouteModalOpener | undefined {
 }
 
 /**
- * A link's click that opens its route modal at once, under a provider: a
+ * A link's click that opens its route modal at once, in `place` where the
+ * page has more than one (`RouteModalProps.place`), under a provider: a
  * plain press of the main button. A press with a modifier or another button
  * is the browser's, a new tab or window, so it is left to the link, as is
  * every press outside a provider and before the page's script has loaded.
@@ -56,6 +58,7 @@ export function useRouteModalOpener(): RouteModalOpener | undefined {
 export function useOpenModalClick(
   href: Route,
   heading: ModalHeading,
+  place?: string,
 ): ((event: MouseEvent<HTMLAnchorElement>) => void) | undefined {
   const opener = useRouteModalOpener();
   if (!opener) return undefined;
@@ -63,6 +66,6 @@ export function useOpenModalClick(
     const { button, metaKey, ctrlKey, shiftKey, altKey, defaultPrevented } = event;
     if (defaultPrevented || button !== 0 || metaKey || ctrlKey || shiftKey || altKey) return;
     event.preventDefault();
-    opener.open(href, heading);
+    opener.open(href, heading, place);
   };
 }

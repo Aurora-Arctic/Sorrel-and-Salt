@@ -101,6 +101,13 @@ export interface RouteModalProps {
   size?: ModalProps['size'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
+  /**
+   * Which of a page's modal places this is, where it has more than one: a
+   * press shows only in the place it names, so a list whose names open a
+   * details modal and whose Edit opens the edit modal over it draws each in
+   * its own (M12.5). Unnamed, as every page with one place leaves it.
+   */
+  place?: string;
 }
 
 /**
@@ -110,8 +117,10 @@ export interface RouteModalProps {
 export interface RouteModalOpener {
   /** The head of the modal on its way, while its navigation is pending; undefined otherwise. */
   loading: ModalHeading | undefined;
-  /** Opens the modal at once with `heading`, and navigates to `href` for its contents. */
-  open: (href: Route, heading: ModalHeading) => void;
+  /** The place the modal on its way shows in (`RouteModalProps.place`); undefined for the unnamed one. */
+  loadingPlace?: string;
+  /** Opens the modal at once with `heading` in `place`, and navigates to `href` for its contents. */
+  open: (href: Route, heading: ModalHeading, place?: string) => void;
   /** Forgets the modal on its way, which a close while it loads asks for. */
   cancel: () => void;
 }
