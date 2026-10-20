@@ -109,9 +109,9 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
 });
 
 // Someone who may write in two covens chooses which from the plus (M9.12, the owner's call,
-// 2026-10-20): it is a menu of the covens that lack the entry, adding to the one chosen at once.
-// A coven that holds it is left off, so with one coven left the plus adds there with no menu,
-// and the card keeps the plus until both hold it.
+// 2026-10-20): it is a menu of both covens by name, adding to the one chosen at once. It adds
+// with no menu only where there is one coven at all, so once one coven holds the entry the plus
+// is still the menu, that coven shown disabled; the card keeps the plus until both hold it.
 test('a member of two covens chooses from the plus which one it adds to, and the card keeps the plus until both hold the entry', async ({
   page,
   browser,
@@ -187,10 +187,20 @@ test('a member of two covens chooses from the plus which one it adds to, and the
     await expect(card().getByRole('img', { name: HELD })).toHaveCount(0);
   });
 
-  await test.step('with the first coven alone left, the plus adds there with no menu, and the check takes its place', async () => {
-    // A button of its own now, not the menu toggle it was.
-    await expect(plus()).not.toHaveAttribute('aria-haspopup', 'menu');
+  await test.step('with the second coven holding it, the plus is still the menu, that coven disabled, and choosing the first brings the check', async () => {
+    await expect(plus()).toHaveAttribute('aria-haspopup', 'menu');
     await plus().click();
+    await expect(menu).toBeVisible();
+    const held = menu.getByRole('menuitem', { name: SECOND });
+    await expect(held).toHaveAttribute('aria-disabled', 'true');
+    await expect(held).toHaveAccessibleDescription('Already in My Ingredients');
+    await assertNoAccessibilityViolations(page);
+    // Choosing the held coven does nothing: the menu stays open and no second row is written.
+    // Forced, since Playwright waits on an aria-disabled element as it would on a disabled one.
+    await held.click({ force: true });
+    await expect(menu).toBeVisible();
+    expect(await heldRows(second)).toHaveLength(1);
+    await menu.getByRole('menuitem', { name: FIRST }).click();
     await expect(card().getByRole('img', { name: HELD })).toBeVisible();
     await expect(plus()).toHaveCount(0);
     await expect(menu).toHaveCount(0);

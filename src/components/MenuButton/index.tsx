@@ -12,7 +12,8 @@ import './index.scss';
 // chevron has it (claude-docs/components/app-shell.md). Opening moves the
 // focus to the first item; the arrows, Home and End rove; Escape closes and
 // hands the focus back; Tab and a press outside close. An item is a link or
-// an action, and choosing either closes the menu first. It fades in and out
+// an action, and choosing either closes the menu first; an action may be disabled, shown and
+// reached but not choosable, with a note saying why. It fades in and out
 // over the short motion (the owner's call, 2026-10-19): a closing menu stays
 // drawn, inert and hidden from assistive technology, until its fade ends. It
 // is placed as a Combobox's list is (MB.154), on Floating UI: hung from the
@@ -255,13 +256,28 @@ export default function MenuButton({
               role="menuitem"
               tabIndex={-1}
               className={itemClass(item, chosen === item.key)}
+              // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
+              // in the roving, read as unavailable. A press runs nothing and the menu stays open.
+              aria-disabled={item.disabled || undefined}
+              aria-describedby={item.note ? `${menuId}-${item.key}-note` : undefined}
               onClick={() => {
+                if (item.disabled) return;
                 setChosen(item.key);
                 setOpen(false);
                 item.onSelect();
               }}
             >
               {item.label}
+              {/* Hidden from the name, which stays the label; read as the description instead. */}
+              {item.note && (
+                <span
+                  id={`${menuId}-${item.key}-note`}
+                  className="menu-button__note"
+                  aria-hidden="true"
+                >
+                  {item.note}
+                </span>
+              )}
             </button>
           ),
         )}

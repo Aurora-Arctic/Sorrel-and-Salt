@@ -108,8 +108,10 @@ test('a member adds the entry from its public page, and the Edit menu then offer
   });
 });
 
-// Add to Cupboard alone, with two covens lacking the entry, is a menu of them, adding to the
-// one chosen at once (M9.12, the owner's call, 2026-10-20). Once that coven holds it, Add to
+// Add to Cupboard alone, with two covens that may add, is a menu of them, adding to the one
+// chosen at once (M9.12, the owner's call, 2026-10-20); a coven holding the entry would be shown
+// there disabled, which the component test proves, since here the holder's owner role brings the
+// Edit menu instead. Once that coven holds it, Add to
 // Cupboard is one choice in the Edit menu, and asks for the other coven in a dialog, the held
 // one listed but not choosable.
 test('a member of two covens chooses from Add to Cupboard’s menu, then adds to the other from the Edit menu’s dialog', async ({
