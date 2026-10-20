@@ -329,6 +329,20 @@ $formal-line: 1.5rem;
   @include entry-side;
 }
 
+// Said where a field holds nothing, so it reads as a statement and not as a
+// value: the side column's "None recorded" and "No folk names recorded.", the
+// text's "No description recorded.", "No sources recorded.", a form that adds
+// nothing, and the details modal's "Nothing recorded yet." Faded further than
+// the muted ink (the owner's call, 2026-10-20) with a placeholder's ink, which
+// reads as not yet an answer, and set in italic. On the card it holds 4.65:1
+// light and 6.71:1 dark, the placeholder's own; on the page's ground, a step
+// darker in light, 4.18:1 light and 7.38:1 dark. Measured 2026-10-20.
+.ingredient-entry__empty {
+  margin: 0;
+  color: $text-placeholder;
+  font-style: italic;
+}
+
 @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
   // The head keeps to the text column, so Edit at the end of the heading's
   // line ends where the text does (the owner's call).

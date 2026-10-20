@@ -143,13 +143,13 @@ $close-reserve: calc(#{$close-target} + #{space(3)});
 
 // While a dialog is open the page behind it holds still, the owner's call
 // during M5.5: `showModal()` makes the page inert, but a wheel over the
-// backdrop still scrolled it. CSS alone, so no listener can leave it locked;
-// the gutter stays, so nothing shifts sideways as the scrollbar goes. The
-// dialog keeps its own scroll, so nothing in it is out of reach.
+// backdrop still scrolled it. CSS alone, so no listener can leave it locked.
+// Nothing shifts sideways as the scrollbar goes, since the page keeps its room
+// whether it scrolls or not (`scrollbar-gutter`, globals.scss); set only
+// here, a page with no scrollbar gained the room as a modal opened and moved.
+// The dialog keeps its own scroll, so nothing in it is out of reach.
 :root:has(.modal-dialog:modal) {
   overflow: hidden;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the content shifts by a scrollbar width once it starts to scroll, widely available 2027-06-11
-  scrollbar-gutter: stable;
 }
 
 // A long form's width (M5.5), the compendium entry's first: its list fields
