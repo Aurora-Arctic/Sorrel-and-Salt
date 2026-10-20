@@ -126,7 +126,8 @@ describe('DetailsDialog', () => {
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(edit).toHaveAttribute('href', EDIT);
     fireEvent.mouseEnter(edit);
-    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    // After the 300ms a hover waits for (IconTip).
+    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(edit);
 
     await act(async () => {

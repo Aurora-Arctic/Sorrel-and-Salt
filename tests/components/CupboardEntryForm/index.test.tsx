@@ -78,6 +78,25 @@ const save = () => screen.getByRole('button', { name: 'Save Annotation' });
 const label = () => screen.getByRole('textbox', { name: 'Label' });
 
 describe('CupboardEntryForm', () => {
+  // A tip only where it says a rule (the owner's call, 2026-10-20): the
+  // label's uniqueness, and that an emptied list says the entry has none.
+  it('gives Label and the four lists a tip, and Description and Safety Notes none', () => {
+    renderForm();
+
+    const tips = screen
+      .getAllByRole('button', { name: /^About / })
+      .map((tip) => tip.getAttribute('aria-label'));
+    expect(tips).toEqual([
+      'About Label',
+      'About Elements',
+      'About Celestial Bodies',
+      'About Zodiac Signs',
+      'About Colours',
+    ]);
+    expect(screen.getByRole('textbox', { name: 'Description' })).not.toHaveAccessibleDescription();
+    expect(screen.getByRole('textbox', { name: 'Safety Notes' })).not.toHaveAccessibleDescription();
+  });
+
   it('keeps Save off until something changes', () => {
     renderForm();
 

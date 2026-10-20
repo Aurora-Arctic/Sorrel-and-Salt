@@ -86,11 +86,12 @@ and Sources (references). Their headings are `h4`s,
 a level beneath the Variants `h3`, and each folds as the ingredient's do
 (["Sections"](#sections)).
 
-**Every field shows a short action while it is empty**, and what it is for
-sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
+**Every field shows a short action while it is empty**, and what it is for,
+where its label does not say it, sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
 "Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
-panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
+panel's fields "Add a title", "Name the book" and so on, or an example
+where the format matters ("2nd ed."; ["The new reference panel"](#the-new-reference-panel)). `SuggestField`,
 `ListField` (and so `LookupListField`) and `CategoryPicker` take
 `placeholder` for it, and a reference field's spec carries its own. A date
 field shows none: the browser draws its own format there.
@@ -110,11 +111,14 @@ field shows none: the browser draws its own format there.
   still refuses a save that ignores it.
 
 - **A field's hint is an info tip beside its label**, [`InfoTip`](info-tip.md),
-  not a line beneath it, on every field whose meaning is not plain from its
-  label: name, classification, formal name, form, folk names, celestial bodies,
-  zodiac signs, colours, deities, substitute ingredients, categories and
-  safety notes.
-  The colours tip says each is a correspondence, not the colour the thing is.
+  not a line beneath it, kept only where the label cannot carry a rule, a
+  flow or a format with a trap ([`info-tip.md`](info-tip.md), "When a field
+  gets a tip", the owner's call, 2026-10-20): classification (what Unknown and
+  None mean), colours (each is a correspondence, not the colour the thing
+  is), the Variants list, References and a reference's locator. The rest,
+  which restated their labels, went: name, formal name, form, folk names,
+  celestial bodies, zodiac signs, deities, substitute ingredients, categories,
+  safety notes and both Toxic toggles.
   How a tip opens and is read is [`info-tip.md`](info-tip.md#behaviour). A field's `note` is the one line kept beneath a label, for a state
   that must stay in view: only the formal name's reason for being shut uses
   it.
@@ -628,9 +632,25 @@ provides them, and its errors render through `FieldError`.
   always, a book's date, a chapter's, article's or entry's container, and a
   web page's address and day read. A printed work's online fields follow
   its publication: Read Through (`host`), Address, Last Modified, Accessed
-  and Note. The two days are `<input type="date">`. A title, a container
-  and a note say in their tip that underscores italicise a title inside
-  them (MB.151).
+  and Note. The two days are `<input type="date">`.
+- **One How to Cite tip, in place of a hint per field** (the owner's call,
+  2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
+  sits at the end of the panel's head, just before its ×, in New Reference
+  and Edit Source alike (the owner's call, 2026-10-20), and says
+  the rules once, each on a line of its own and each a sentence ending in a full stop, any example in round brackets before it so the stop is never read as part of what to type (the stored values carry none): the first author inverted,
+  edition and volume as printed, contributors as a sentence, a date as
+  precise as the source gives it, underscores round a title inside a title
+  to italicise it (MB.151), and a note printing after the citation in
+  brackets. The rules are a list, read as separate lines; since the bubble
+  is a `<span>` and may not hold a `<ul>`, they are spans with the `list`
+  and `listitem` roles, and the bubble is only as wide as its longest
+  rule needs, up to the tip's cap. The panel's
+  `aria-describedby` names it, after an edit's reach note, so it is read on
+  entering the panel rather than with every field. A field whose format
+  matters shows an example as its placeholder instead of an action:
+  Authors "Shelley, Mary", Edition "2nd ed.", Volume "Vol. 2", Place
+  "London", Published "1985", Pages "112–30", Address "https://" and Read
+  Through "Perseus Digital Library". The rest keep their actions.
 - **A kind change keeps what was typed** in every field, but only the
   chosen kind's are sent: `toReferenceInput` sends the rest as null, and a
   blank day as null, since `LocalDate` takes no empty text. The resolver
@@ -658,8 +678,21 @@ provides them, and its errors render through `FieldError`.
 - **A × at its top closes it too** (MB.258), so a panel taller than the
   dialog can be left without scrolling to its foot. It does exactly what
   Cancel does, saving nothing and asking nothing, and is held with Cancel
-  while a save is in flight. It shares the note's line, at its right end,
-  and is named for the panel, "Close New Reference" or "Close Edit Source",
+  while a save is in flight. The panel's Undo and Redo, the How to Cite ⓘ
+  and the ×, the ⓘ and × abutting, stand at the right end of the panel's
+  top border, level with the legend and on the dialog's surface colour so
+  the line stops short of them (the owner's call, 2026-10-20); the note,
+  if there is one, is the panel's first line. The legend's words and the
+  group's marks stop the border the same distance short,
+  `$panel-head-gap` (one step), so the two cannot drift apart (the
+  owner's call, 2026-10-20). The group goes onto the border only where the
+  panel's content is at least 18rem wide, a container query, since the
+  panel's width, not the viewport's, decides whether it clears the
+  longer legend. In a narrower panel, as on a phone, the head is one
+  line: the note at the start and the group at the end, and where the
+  note would be squeezed under 14rem the group drops to a line of its own
+  directly beneath it, still at the right. The owner approved that split:
+  "I like it splitting the line" (2026-10-20). The × is named for the panel, "Close New Reference" or "Close Edit Source",
   since the modal's own × is "Close". It comes before Kind in Tab order, as
   it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
@@ -933,9 +966,9 @@ variant's fields but its Form has a **Copy From Ingredient** icon button
 Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
 References. The ingredient's own fields have none, and nor has a form's
 Toxic toggle: its flag is its own and never the ingredient's (M11.21).
-Each Toxic toggle carries a hint behind its info tip, as every other field
-does: the ingredient's is on when any part of it is poisonous, and a form's
-when that form is.
+Neither Toxic toggle carries a hint (2026-10-20): the ingredient's is on when
+any part of it is poisonous, and a form's when that form is, and the label
+says as much.
 
 - **Where it sits.** A small quiet button, `.btn--small.btn--quiet`, at the
   right end of the field's label row or legend, after its tip, through the
@@ -1367,7 +1400,8 @@ inside this one, so the two must not share a list:
   `ignore` is the backstop for the moment the panel's loading shell is up and
   has no listener yet.
 - `PanelForm` (`reference-panel.tsx`) runs its own `useFormHistory`,
-  provider and `FormHistoryButtons`, in `PanelHead` beside Close. They sit
+  provider and `FormHistoryButtons`, in `PanelHead` before How to Cite and
+  Close. They sit
   under a `HeaderSlotContext` set to `null`, so they draw there and never
   portal into the modal's header, which is the ingredient's.
 

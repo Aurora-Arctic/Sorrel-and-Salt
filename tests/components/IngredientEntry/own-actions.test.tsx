@@ -97,7 +97,8 @@ describe('OwnEntryActions', () => {
     expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
     fireEvent.mouseEnter(pencil);
-    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    // After the 300ms a hover waits for (IconTip).
+    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
     // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
     // press: inside an async act, so that update is awaited rather than left outside it.

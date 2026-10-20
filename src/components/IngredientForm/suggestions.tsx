@@ -413,7 +413,6 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
     <SuggestField
       name={`${at}.form`}
       label="Form"
-      hint="How it comes: dried leaf, whole root, oil."
       placeholder="Add a form"
       suggestions={suggestions}
       onActivate={() => setActive(true)}

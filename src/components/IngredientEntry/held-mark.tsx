@@ -12,7 +12,8 @@ import IconTip from '../IconTip';
 
 export const HELD_TIP = 'In Your Cupboard';
 
-const ShelfIcon = (): ReactElement => (
+// Exported for the details modal's In Your Covens links, which each lead with it.
+export const ShelfIcon = (): ReactElement => (
   <svg
     viewBox="0 0 32 32"
     width="1em"

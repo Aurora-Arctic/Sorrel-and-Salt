@@ -9,11 +9,21 @@ export interface InfoTipProps {
   children: ReactNode;
 }
 
+/** How long a hover waits before a tip opens, and a leave before it closes, in ms. */
+export interface TipTiming {
+  /** 300 by default. */
+  openDelayMs?: number;
+  /** 150 by default, time to cross onto the tip; 0 closes at once. */
+  closeDelayMs?: number;
+}
+
 /** A tip's open state and the handlers that move it: what `useTip` returns. */
 export interface Tip {
   open: boolean;
-  /** Opens it, cancelling a pending close: hover, focus and a tap. */
+  /** Opens it at once, cancelling a pending open or close: focus and a tap. */
   show: () => void;
+  /** Opens it once the pointer has rested on the control: hover. */
+  showSoon: () => void;
   /** Closes it at once: blur, and Escape. */
   hide: () => void;
   /** Closes it after a moment the pointer can cross onto the tip in: leaving it. */

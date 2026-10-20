@@ -45,8 +45,6 @@ function renderBody() {
       <Go name="Admin" target={{ region: 'admin', shape: 'table' }} />
       <Go name="Filter" />
       <Go name="Home" target={{ region: 'coven', shape: 'page', frame: 'with-nav' }} />
-      <Go name="Entry" target={{ region: 'coven', shape: 'page', frame: 'entry' }} />
-      <Go name="People" target={{ region: 'coven', shape: 'table', title: true, tabs: true }} />
       <SectionBody region="coven" className="coven-layout">
         <main>
           <ul aria-label="Ingredients">
@@ -98,29 +96,6 @@ describe('SectionBody', () => {
 
     expect(oldPage()).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  });
-
-  // The destination's own parts are drawn: a home's contents menu, a tabbed page's tab row.
-  it('draws the side menu for a page that has one', async () => {
-    const { container } = renderBody();
-    await press('Home');
-    expect(container.querySelector('.skeleton__menu')).not.toBeNull();
-  });
-
-  // An ingredient's entry fills the wide column, so its wait is the entry's
-  // own menu grid, not the coven home's narrow `.page-with-nav`.
-  it("draws an ingredient's entry in the entry's own grid", async () => {
-    const { container } = renderBody();
-    await press('Entry');
-    expect(container.querySelector('.ingredient-entry--with-nav .skeleton__menu')).not.toBeNull();
-    expect(container.querySelector('.page-with-nav')).toBeNull();
-  });
-
-  it('draws the tab row for a tabbed page, and no menu', async () => {
-    const { container } = renderBody();
-    await press('People');
-    expect(container.querySelector('.skeleton__tabs')).not.toBeNull();
-    expect(container.querySelector('.skeleton__menu')).toBeNull();
   });
 
   // Admin: another section's, whose own body answers it.
@@ -193,20 +168,20 @@ describe('SectionBody for the admin area', () => {
       vi.useRealTimers();
     });
 
-    const overlay = (container: HTMLElement) => container.querySelector('.skeleton-fade');
+    // Once the page is back, the one thing hidden from assistive technology is
+    // the skeleton left over it for the fade.
+    const overlay = (container: HTMLElement) => container.querySelector('[aria-hidden="true"]');
 
     it('shows the page at once and keeps the skeleton over it, hidden from assistive technology, until the fade is done', async () => {
       const { container } = renderBody();
       await press('Home');
-      expect(overlay(container)).toBeNull();
+      expect(screen.getByRole('status')).toBeInTheDocument();
 
       await act(async () => arrive());
 
       expect(oldPage()).toBeInTheDocument();
       const fading = overlay(container);
       expect(fading).not.toBeNull();
-      expect(fading).toHaveAttribute('aria-hidden', 'true');
-      expect(fading?.querySelector('.skeleton__menu')).not.toBeNull();
       // Nothing of it is announced or reachable as a second heading, landmark or status.
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
       expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();

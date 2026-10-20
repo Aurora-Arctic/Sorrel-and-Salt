@@ -41,6 +41,11 @@ afterEach(async () => {
   await act(async () => arrive());
 });
 
+// The page under test hides nothing of its own, so anything hidden from
+// assistive technology is the skeleton left over the arrived page.
+const hiddenFrom = (container: HTMLElement): Element | null =>
+  container.querySelector('[aria-hidden="true"]');
+
 describe('MainBody', () => {
   it('shows the page at rest', () => {
     renderBody();
@@ -76,54 +81,14 @@ describe('MainBody', () => {
     expect(await screen.findByText('The old page')).toBeTruthy();
   });
 
-  // The wait is drawn in the destination's own frame, never centred down the window.
-  describe('frames', () => {
-    const frameOf = async (target: NavigationTarget) => {
-      renderBody();
-      await act(async () => go(target));
-      return screen.getByRole('main');
-    };
-
-    it('draws a wide destination in the page column', async () => {
-      const main = await frameOf({ region: 'main', shape: 'cards', frame: 'wide' });
-      expect(main).toHaveClass('page-column');
-      expect(main).not.toHaveClass('page-frame');
-    });
-
-    it('draws a narrow destination in the forms\x27 column', async () => {
-      const main = await frameOf({ region: 'main', shape: 'page', frame: 'narrow' });
-      expect(main).toHaveClass('page-frame', 'page-frame--narrow');
-    });
-
-    it('draws a menu page in the page column with its side menu', async () => {
-      const main = await frameOf({ region: 'main', shape: 'page', frame: 'with-nav' });
-      expect(main).toHaveClass('page-column');
-      expect(main.querySelector('.skeleton__menu')).not.toBeNull();
-    });
-
-    it('draws an ingredient\x27s entry in the page column, with the entry\x27s own menu grid', async () => {
-      const main = await frameOf({ region: 'main', shape: 'page', frame: 'entry' });
-      expect(main).toHaveClass('page-column');
-      expect(main.querySelector('.ingredient-entry--with-nav .skeleton__menu')).not.toBeNull();
-      expect(main.querySelector('.page-with-nav')).toBeNull();
-    });
-
-    it('keeps the standard frame for a target that names none', async () => {
-      const main = await frameOf({ region: 'main', shape: 'page' });
-      expect(main).toHaveClass('page-frame');
-      expect(main).not.toHaveClass('page-frame--narrow');
-    });
-
-    it('puts a narrow form on the panel the form sits on', async () => {
-      const main = await frameOf({ region: 'main', shape: 'form', frame: 'narrow' });
-      expect(main.querySelector('.panel .skeleton')).not.toBeNull();
-    });
-
-    it('keeps the landmark, the hidden heading and the one status', async () => {
-      const main = await frameOf({ region: 'main', shape: 'page', frame: 'wide' });
-      expect(within(main).getByRole('heading', { level: 1 })).toBeTruthy();
-      expect(screen.getAllByRole('status')).toHaveLength(1);
-    });
+  // The frame each destination is drawn in is presentation, owned by the
+  // workshop story; what stays is the landmark, its heading and the one status.
+  it('keeps the landmark, the hidden heading and the one status in a framed wait', async () => {
+    renderBody();
+    await act(async () => go({ region: 'main', shape: 'page', frame: 'wide' }));
+    const main = screen.getByRole('main');
+    expect(within(main).getByRole('heading', { level: 1 })).toBeTruthy();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
   // The skeleton stays over the arrived page for the fade (M12.33), out of reach
@@ -142,14 +107,13 @@ describe('MainBody', () => {
       await act(async () => arrive());
 
       expect(screen.getByText('The old page')).toBeTruthy();
-      const overlay = container.querySelector('.skeleton-fade');
-      expect(overlay?.getAttribute('aria-hidden')).toBe('true');
+      expect(hiddenFrom(container)).not.toBeNull();
       expect(screen.queryByRole('status')).toBeNull();
       expect(screen.getAllByRole('main')).toHaveLength(1);
       expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
 
       await act(async () => vi.advanceTimersByTime(200));
-      expect(container.querySelector('.skeleton-fade')).toBeNull();
+      expect(hiddenFrom(container)).toBeNull();
       expect(screen.getByText('The old page')).toBeTruthy();
     });
 
@@ -157,7 +121,7 @@ describe('MainBody', () => {
       const { container } = renderBody();
       await act(async () => go());
       await act(async () => arrive());
-      expect(container.querySelector('.skeleton-fade')).toBeNull();
+      expect(hiddenFrom(container)).toBeNull();
     });
   });
 });

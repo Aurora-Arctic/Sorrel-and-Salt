@@ -16,6 +16,7 @@ import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
 import IconTip from '../IconTip';
+import InfoTip from '../InfoTip';
 import Notice from '../Notice';
 import { RemoveIcon } from './icons';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
@@ -131,51 +132,40 @@ const KIND_LABELS: Record<ReferenceKind, string> = {
 
 const KIND_OPTIONS = REFERENCE_KINDS.map((kind) => ({ value: kind, label: KIND_LABELS[kind] }));
 
-// The fields, each with what it is told. A title, a container and a note may
-// mark a title inside them in italics (MB.151), so their hint says how.
-const ITALICS = 'Wrap a title inside it in underscores to italicise it: _Hamlet_.';
+// The fields. No field carries a hint: how to cite is one How to Cite tip
+// at the panel's head, and a field whose format matters shows an example
+// as its placeholder (the owner's call, 2026-10-20; info-tip.md).
 const title = (label: string): ReferenceFieldSpec => ({
   name: 'title',
   label,
   required: true,
-  hint: ITALICS,
   placeholder: 'Add a title',
 });
-const container = (
-  label: string,
-  required: boolean,
-  hint: string,
-  placeholder: string,
-): ReferenceFieldSpec => ({
+const container = (label: string, required: boolean, placeholder: string): ReferenceFieldSpec => ({
   name: 'container',
   label,
   required,
-  hint: `${hint} ${ITALICS}`,
   placeholder,
 });
 const AUTHORS: ReferenceFieldSpec = {
   name: 'authors',
   label: 'Authors',
-  placeholder: 'Add authors',
-  hint: 'As printed, the first name inverted: Shelley, Mary.',
+  placeholder: 'Shelley, Mary',
 };
 const CONTRIBUTORS: ReferenceFieldSpec = {
   name: 'contributors',
   label: 'Contributors',
   placeholder: 'Add contributors',
-  hint: 'Translators and editors, as a sentence: Translated by Angela Hall.',
 };
 const EDITION: ReferenceFieldSpec = {
   name: 'edition',
   label: 'Edition',
-  placeholder: 'Add an edition',
-  hint: 'As printed: 2nd ed.',
+  placeholder: '2nd ed.',
 };
 const VOLUMES: ReferenceFieldSpec = {
   name: 'volume',
   label: 'Volume',
-  placeholder: 'Add a volume',
-  hint: 'As printed: Vol. 2, or 4 vols.',
+  placeholder: 'Vol. 2',
 };
 const SERIES: ReferenceFieldSpec = {
   name: 'series',
@@ -185,8 +175,7 @@ const SERIES: ReferenceFieldSpec = {
 const PLACE: ReferenceFieldSpec = {
   name: 'place',
   label: 'Place',
-  placeholder: 'Add a place',
-  hint: 'The city it was published in: London.',
+  placeholder: 'London',
 };
 const PUBLISHER: ReferenceFieldSpec = {
   name: 'publisher',
@@ -197,28 +186,24 @@ const published = (required = false): ReferenceFieldSpec => ({
   name: 'published',
   label: 'Published',
   required,
-  placeholder: 'Add a date',
-  hint: 'As precise as the source gives it: 1985, November 1950, 1882–88.',
+  placeholder: '1985',
 });
 const PAGES: ReferenceFieldSpec = {
   name: 'pages',
   label: 'Pages',
-  hint: 'Its pages: 112–30.',
-  placeholder: 'Add pages',
+  placeholder: '112–30',
 };
 const HOST: ReferenceFieldSpec = {
   name: 'host',
   label: 'Read Through',
-  placeholder: 'Name the library',
-  hint: 'The library or archive a printed work was read through online: Perseus Digital Library.',
+  placeholder: 'Perseus Digital Library',
 };
 const url = (required = false): ReferenceFieldSpec => ({
   name: 'url',
   label: 'Address',
   required,
-  placeholder: 'Add an address',
+  placeholder: 'https://',
   type: 'url',
-  hint: 'The full web address, starting https://',
 });
 const MODIFIED: ReferenceFieldSpec = { name: 'modified', label: 'Last Modified', type: 'date' };
 const accessed = (required = false): ReferenceFieldSpec => ({
@@ -226,13 +211,11 @@ const accessed = (required = false): ReferenceFieldSpec => ({
   label: 'Accessed',
   required,
   type: 'date',
-  hint: 'The day it was read online.',
 });
 const NOTE: ReferenceFieldSpec = {
   name: 'note',
   label: 'Note',
   placeholder: 'Add a note',
-  hint: `A short note, shown after the citation in brackets. ${ITALICS}`,
 };
 
 /** Where a printed work was read online, after its publication. */
@@ -258,7 +241,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   chapter: [
     title('Chapter Title'),
-    container('Book', true, 'The book this chapter is in.', 'Name the book'),
+    container('Book', true, 'Name the book'),
     AUTHORS,
     CONTRIBUTORS,
     PAGES,
@@ -272,7 +255,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   article: [
     title('Article Title'),
-    container('Journal', true, 'The journal this article is in.', 'Name the journal'),
+    container('Journal', true, 'Name the journal'),
     AUTHORS,
     { name: 'volume', label: 'Volume', placeholder: 'Add a volume' },
     { name: 'issue', label: 'Issue', placeholder: 'Add an issue' },
@@ -282,12 +265,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   entry: [
     title('Entry'),
-    container(
-      'Reference Work',
-      true,
-      'The encyclopedia or dictionary the entry is in.',
-      'Name the work',
-    ),
+    container('Reference Work', true, 'Name the work'),
     AUTHORS,
     EDITION,
     CONTRIBUTORS,
@@ -298,7 +276,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   web_page: [
     title('Page Title'),
-    container('Site', false, 'The website it is on.', 'Name the site'),
+    container('Site', false, 'Name the site'),
     AUTHORS,
     PUBLISHER,
     published(),
@@ -362,37 +340,78 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 }
 
 /**
- * The panel's top line: what it says first, if anything, and a × that closes
- * it as Cancel does (MB.258), so a long panel can be left without scrolling
- * to its foot. Named for the panel, since the modal around it has a Close of
+ * The panel's head, one line: what it says first, if anything, and at its end
+ * edge its own Undo and Redo, any tip it carries, and a × that closes it as
+ * Cancel does (MB.258), so a long panel can be left without scrolling to its
+ * foot. The × stays last, the one stop before the panel's first field. Named for the panel, since the modal around it has a Close of
  * its own; held while a save is in flight, as Cancel is.
  */
 function PanelHead({
   legend,
   held = false,
   onClose,
+  tip,
+  history,
   children,
 }: {
   legend: string;
   held?: boolean;
   onClose: () => void;
+  tip?: ReactNode;
+  history?: ReactNode;
   children?: ReactNode;
 }): ReactElement {
   return (
     <div className="ingredient-form__panel-head">
       {children}
-      <IconTip tip="Close">
-        <button
-          type="button"
-          className="ingredient-form__icon-button ingredient-form__panel-close"
-          aria-label={`Close ${legend}`}
-          disabled={held}
-          onClick={onClose}
-        >
-          <RemoveIcon />
-        </button>
-      </IconTip>
+      <div className="ingredient-form__panel-end">
+        {history}
+        {tip}
+        <IconTip tip="Close">
+          <button
+            type="button"
+            className="ingredient-form__icon-button"
+            aria-label={`Close ${legend}`}
+            disabled={held}
+            onClick={onClose}
+          >
+            <RemoveIcon />
+          </button>
+        </IconTip>
+      </div>
     </div>
+  );
+}
+
+/**
+ * How to cite, said once for the whole panel rather than beside each field
+ * (the owner's call, 2026-10-20): the panel's `aria-describedby` names it,
+ * so it is read on entering the panel. A title inside a title, the one
+ * format a placeholder cannot show, is here (MB.151). One rule to a line,
+ * as a list of spans given the list roles: the bubble is a `span`, which
+ * may not hold a `ul`. Each rule is a sentence with its full stop; an
+ * example sits in brackets before it, since the typed value has no stop.
+ */
+const CITE_RULES = [
+  'Names as printed, the first author inverted (Shelley, Mary).',
+  'Edition and volume as printed (2nd ed., Vol. 2).',
+  'Contributors as a sentence (Translated by Angela Hall).',
+  'A date as precise as the source gives it.',
+  'Underscores round a title inside a title italicise it (_Hamlet_).',
+  'A note prints after the citation, in brackets.',
+];
+
+function HowToCite({ id }: { id: string }): ReactElement {
+  return (
+    <InfoTip id={id} label="How to Cite">
+      <span role="list" className="ingredient-form__cite-rules">
+        {CITE_RULES.map((rule) => (
+          <span key={rule} role="listitem" className="ingredient-form__cite-rule">
+            {rule}
+          </span>
+        ))}
+      </span>
+    </InfoTip>
   );
 }
 
@@ -465,6 +484,7 @@ function PanelForm({
   const history = useFormHistory(methods, { root: panel });
   const legendId = useId();
   const noteId = useId();
+  const citeId = useId();
   const kind = useWatch({ control, name: 'kind' });
   const shown = kind === '' ? [] : FIELDS_OF[kind];
 
@@ -535,22 +555,29 @@ function PanelForm({
           ref={panel}
           className="fieldset ingredient-form__panel"
           aria-labelledby={legendId}
-          aria-describedby={editing ? noteId : undefined}
+          aria-describedby={editing ? `${noteId} ${citeId}` : citeId}
           onKeyDown={onKeyDown}
         >
           <legend className="fieldset__legend" id={legendId}>
             {legend}
           </legend>
-          <PanelHead legend={legend} held={isSubmitting} onClose={onCancel}>
+          <PanelHead
+            legend={legend}
+            held={isSubmitting}
+            onClose={onCancel}
+            tip={<HowToCite id={citeId} />}
+            history={
+              // Never the modal's header: that is the ingredient form's history.
+              <HeaderSlotContext.Provider value={null}>
+                <FormHistoryButtons />
+              </HeaderSlotContext.Provider>
+            }
+          >
             {editing && (
               <p className="ingredient-form__panel-note" id={noteId}>
                 A change here reaches every entry citing this source.
               </p>
             )}
-            {/* Never the modal's header: that is the ingredient form's history. */}
-            <HeaderSlotContext.Provider value={null}>
-              <FormHistoryButtons />
-            </HeaderSlotContext.Provider>
           </PanelHead>
           {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
           <SelectField<ReferenceFormValues>

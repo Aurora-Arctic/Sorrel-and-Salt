@@ -399,7 +399,8 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   reads `control._subjects`. A react-hook-form upgrade re-checks both.
 - **The buttons** are small quiet icon buttons in an `IconTip`, labelled Undo and
   Redo and disabled while there is nothing to do, joined as one pair: no gap,
-  one shared border, the inner corners square. In a modal they portal into the
+  no border round either, and one hairline between the two (the owner's call,
+  2026-10-20), the same wherever a pair is drawn. In a modal they portal into the
   header slot's toolbar row, at its end ([`modal.md`](modal.md#a-control-in-the-header));
   elsewhere they sit at the start of the form. `FormHistoryButtons` draws nothing
   without a `FormHistoryContext`. Their `.form-history` row is styled in

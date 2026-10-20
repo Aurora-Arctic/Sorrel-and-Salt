@@ -227,9 +227,9 @@ const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, des
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: LIST_KINDS.category.label,
+    // No Description tip: its label and placeholder say it (the owner's
+    // call, 2026-10-20). The searched kinds keep theirs, a flow.
     describe: 'What this category covers',
-    descriptionHint:
-      "What the category covers. It is shown with the category wherever an ingredient's categories are picked.",
     group: {
       label: 'Group',
       placeholder: 'Choose a group',

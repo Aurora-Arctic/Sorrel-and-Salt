@@ -27,12 +27,6 @@ const CreateWorkspaceDocument = graphql(`
   }
 `);
 
-// One string for two jobs: the tip's text, and the id `fieldDescription` makes
-// the control point at. Given to only one of them, the control would point at
-// a tip that was never drawn.
-const NAME_HINT =
-  'What the coven is called. Its address is made from it, and everyone you invite sees it.';
-
 const CreateWorkspaceForm = (): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
   const [value, setValue] = useState('');
@@ -64,7 +58,6 @@ const CreateWorkspaceForm = (): ReactElement => {
 
   const { aria, ...field } = fieldDescription({
     id: useId(),
-    hint: NAME_HINT,
     error: fieldError,
   });
 
@@ -87,7 +80,8 @@ const CreateWorkspaceForm = (): ReactElement => {
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Name" hint={NAME_HINT} required {...field}>
+        {/* No tip: the label says it (the owner's call, 2026-10-20). */}
+        <FieldShell label="Name" required {...field}>
           <input
             id={field.controlId}
             className="input"

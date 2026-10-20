@@ -382,6 +382,24 @@ export const LongNames: Story = () => (
   />
 );
 
+// The same long names on the public page, for a curator: the pencil and no shelf.
+export const LongNamesPublic: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({
+        name: 'Testwort Longer Nameicanicusmus',
+        canonicalName: 'Fixtura testalis longissimanicusmus var. fixturissima subsp. testarum',
+      }),
+    }}
+    edit={{
+      href: '/compendium/ingredients/testwort-fixtura-testalis?edit' as Route,
+      closeHref: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+      deletedHref: '/compendium' as Route,
+    }}
+  />
+);
+
 // No formal name: the line still stands, saying None, and the pencil keeps to it.
 export const NoFormalNameWithEdit: Story = () => (
   <Entry
@@ -603,24 +621,41 @@ export const DetailsFromCompendium: Story = () => (
 );
 DetailsFromCompendium.meta = { iframed: true };
 
-// From the public compendium, to a member of two covens that hold the entry: a
-// last block, In Your Covens, links the entry in each by the coven's name.
+// From the public compendium, to a member of four covens that hold the entry: a
+// last block, In Your Covens, links the entry in each by the coven's name, each
+// link led by the In Your Cupboard shelf (the owner's call, 2026-10-20). The
+// long name wraps, its shelf level with its first line.
+const HOLDING = [
+  { id: '00000000-0000-4000-8000-0000000000c1', slug: 'fixture-coven', name: 'Fixture Coven' },
+  { id: '00000000-0000-4000-8000-0000000000c2', slug: 'testwort-circle', name: 'Testwort Circle' },
+  {
+    id: '00000000-0000-4000-8000-0000000000c3',
+    slug: 'the-hedge-witches-of-the-lower-fixture-valley',
+    name: 'The Hedge Witches of the Lower Fixture Valley and Its Neighbouring Hamlets',
+  },
+  { id: '00000000-0000-4000-8000-0000000000c4', slug: 'stillroom', name: 'Stillroom' },
+];
+
 export const DetailsInYourCovens: Story = () => (
   <Details
     detail={FULL}
     listHref={'/compendium' as Route}
     pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
-    covens={[
-      { id: '00000000-0000-4000-8000-0000000000c1', slug: 'fixture-coven', name: 'Fixture Coven' },
-      {
-        id: '00000000-0000-4000-8000-0000000000c2',
-        slug: 'testwort-circle',
-        name: 'Testwort Circle',
-      },
-    ]}
+    covens={HOLDING}
   />
 );
 DetailsInYourCovens.meta = { iframed: true };
+
+// The same, to a member of one coven that holds it.
+export const DetailsInOneCoven: Story = () => (
+  <Details
+    detail={FULL}
+    listHref={'/compendium' as Route}
+    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    covens={HOLDING.slice(0, 1)}
+  />
+);
+DetailsInOneCoven.meta = { iframed: true };
 
 // A long description, cut to its first six lines (the owner's call, 2026-10-20), Show More opening the
 // rest in place; the sparse story's short one stands whole with no button.
