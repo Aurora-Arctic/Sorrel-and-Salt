@@ -14,8 +14,9 @@ import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixture
 
 // M8.17: what each form of a coven's own entry holds, which the Link dialog's
 // form map shows before anything is chosen (the owner's call, 2026-10-20).
-// Counts what a split would move: the coven's jars, and the spells laying the
-// form, private ones of other members included.
+// Counts the coven's jars, and the spells laying the form that the caller may
+// read: another member's private spell is left out, since a count would tell
+// the caller it exists, though the split still moves its layers.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -54,7 +55,7 @@ async function spellLaying(variantId: string, visibility: 'private' | 'workspace
 }
 
 describe('localHoldings', () => {
-  it('counts each live form’s jars and the spells laying it, private ones included', async () => {
+  it('counts each live form’s jars and the spells laying it that the caller may read', async () => {
     await insertStock(
       sql,
       {
@@ -67,8 +68,8 @@ describe('localHoldings', () => {
       A.id,
     );
     await spellLaying(root, 'workspace');
-    // A's private spell, which B cannot read but the split would move.
-    await spellLaying(root, 'private');
+    // B's own private spell, which B reads.
+    await spellLaying(root, 'private', B.id);
     const deleted = await spellLaying(leaf, 'workspace');
     await sql`update spells set deleted_at = now(), deleted_by = ${A.id} where id = ${deleted}`;
 
@@ -79,6 +80,21 @@ describe('localHoldings', () => {
       { form: 'Rootform', jars: 1, spells: 2 },
     ]);
     expect(holdings.find((row) => row.form === 'Rootform')!.formId).toBe(root);
+  });
+
+  it('leaves another member’s private spell out of the count', async () => {
+    const spellId = await spellLaying(leaf, 'private', A.id);
+    // Why it could have been counted: the layer is live on the form, and its author counts it.
+    const [layer] = await sql`
+      select id from spell_ingredients
+      where spell_id = ${spellId} and variant_id = ${leaf} and deleted_at is null`;
+    expect(layer).toBeDefined();
+    const ofA = await localHoldings(asUser(A), WORKSPACE_W_ID, local);
+    expect(ofA.find((row) => row.form === 'Leafform')!.spells).toBe(1);
+
+    const ofB = await localHoldings(asUser(B), WORKSPACE_W_ID, local);
+
+    expect(ofB.find((row) => row.form === 'Leafform')!.spells).toBe(0);
   });
 
   it('refuses an entry that is not a live own entry of the coven', async () => {

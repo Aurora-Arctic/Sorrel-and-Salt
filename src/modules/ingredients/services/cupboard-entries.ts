@@ -517,10 +517,11 @@ async function childrenLost(
 
 /**
  * What each live form of this coven's own ingredient `localId` holds: the
- * coven's jars of it, and the live spells laying it, private ones of any
- * member included, since a split moves those too (M8.17). The Link dialog's
- * form map reads it to say which forms need a home. Only counts leave the
- * service, so no private spell's content reaches the caller. Ordered by form.
+ * coven's jars of it, and the live spells laying it that the caller may
+ * read, the coven's shared ones and their own private ones (M8.17). Another
+ * member's private spell is not counted, since the count would tell the
+ * caller it exists; the split still moves its layers. The Link dialog's form
+ * map reads it to say which forms need a home. Ordered by form.
  *
  * @throws {Forbidden} the caller may not convert this coven's ingredients.
  * @throws {NotFound} `localId` is not a live ingredient of this coven.

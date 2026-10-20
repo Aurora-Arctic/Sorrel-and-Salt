@@ -122,7 +122,7 @@ export interface FormAssignment {
   compendiumId: string;
 }
 
-/** What one form of a coven’s own entry holds, from `localHoldings`: the coven’s jars of it, and the spells laying it. */
+/** What one form of a coven’s own entry holds, from `localHoldings`: the coven’s jars of it, and the spells laying it that the caller may read. */
 export interface FormHolding {
   formId: string;
   form: string;

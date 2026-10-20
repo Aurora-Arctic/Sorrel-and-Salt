@@ -132,11 +132,12 @@ export async function findManyOfSpellIngredientsIncludingSoftDeleted<
 }
 
 /**
- * The live layers, in live spells of the proof's coven, that lay any of these
- * forms: what a split would move, read unlocked so the Link dialog can say
- * what each form holds before anything is chosen (M8.17). Private spells are
- * included, whoever wrote them, as the move includes them; a caller answers
- * counts, never the layers, so no private spell's content leaves the service.
+ * The live layers that lay any of these forms, in the spells this member may
+ * read: the coven's shared ones and their own private ones. Read unlocked so
+ * the Link dialog can say what each form holds before anything is chosen
+ * (M8.17). Another member's private spell is left out even from a count,
+ * since a count would tell the reader it exists (rule 7); the split itself
+ * moves those layers through `lockLayersOfVariants`.
  */
 export function findLayersOfVariants(
   membership: Membership,
@@ -148,7 +149,7 @@ export function findLayersOfVariants(
     and(
       notSoftDeleted(spellIngredients),
       inArray(spellIngredients.variantId, [...variantIds]),
-      existsIn(spells, and(eq(spells.id, spellIngredients.spellId), scopedTo(membership, spells))),
+      existsIn(spells, and(eq(spells.id, spellIngredients.spellId), readableSpells(membership))),
     ),
   );
 }
