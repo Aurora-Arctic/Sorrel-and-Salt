@@ -64,7 +64,7 @@ to.
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
-  button, 2.5rem), `$table-stack-width` (the frame width under which a table
+  button, 2rem), `$table-stack-width` (the frame width under which a table
   stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear

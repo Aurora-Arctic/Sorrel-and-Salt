@@ -40,16 +40,17 @@ export interface ModalHeading {
    */
   formalName?: ReactNode;
   /**
-   * Beside the title, at the end of its first line, centred on that line: a badge.
-   * As the line runs out of room the actions drop first, then this, and a word of
-   * the title breaks only after both (the owner's call, 2026-10-20). Not in the
-   * dialog's name.
+   * The head's top line, beside the Close button, over everything else in the head: the marks
+   * the entry page's own top bar carries, New or Updated and the safety badge (the owner's
+   * call, 2026-10-20). Its presence, even empty, gives the head that line to itself, with Close
+   * on it, so what stands under it, a formal name's actions, is clear of Close. Without it
+   * Close stands at the corner beside the head's first line. Not in the dialog's name.
    */
-  titleBadge?: ReactNode;
+  topEnd?: ReactNode;
   /**
-   * After the badge, the title's controls: a pencil, a plus. The first to drop to a
-   * line of their own, at the end of it, as the line runs out of room. Not in the
-   * dialog's name.
+   * After the title, the title's controls: a pencil, a plus. At the end of the title's
+   * first line, dropping to a line of their own, at its start, as the line runs out of room.
+   * Not in the dialog's name.
    */
   titleActions?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */

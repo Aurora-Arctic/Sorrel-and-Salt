@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import { EditLink } from '../IconTip';
-import EntryMarks from '../EntryMarks';
+import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import { SafetyMark } from '../SafetyNote';
@@ -16,16 +16,19 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // list's details place, so an Edit pressed inside it opens the edit modal in
 // the list's other place, over it. A client part because RouteModal takes its
 // body as a function, which a server page cannot hand down; the summary
-// arrives as the page's rendered children. Its safety badge and Edit pencil end the
-// name's first line, through the modal's `titleBadge` and `titleActions` (claude-docs/components/modal.md,
-// "A title with its own end"), and View Page is a bar at its foot.
+// arrives as the page's rendered children. Its New or Updated marker and safety badge stand on
+// the top line beside Close, through the modal's `topEnd`, its Edit pencil ends the name's
+// first line through `titleActions` (claude-docs/components/modal.md, "A title with its own
+// end"), and View Page is a bar at its foot.
 
 /**
- * The head's badge and actions (the owner's calls, 2026-10-20). Beside the name, at the end of its
- * first line: the one safety badge, Toxic over Caution, and after it the Edit pencil, the
- * cards' with its tip, named for the entry, a press opening the edit modal at once under
- * its head (M9.18); left of it the plus, or the check once every coven the viewer may add in holds the entry. Under the formal name: New or Updated and then the other badges. All
- * the entry page's and the card's own components, so the three cannot differ.
+ * The head's marks and actions (the owner's calls, 2026-10-20). On the top line beside Close, as the
+ * entry page's top bar has them: New or Updated, then the one safety badge, Toxic over Caution.
+ * Beside the name, at the end of its first line: the Edit pencil, the cards' with its tip,
+ * named for the entry, a press opening the edit modal at once under its head (M9.18); left of
+ * it the plus, or the check once every coven the viewer may add in holds the entry. Under the
+ * formal name: the other badges. All the entry page's and the card's own components, so the
+ * three cannot differ.
  */
 function headingOf({
   heading,
@@ -34,8 +37,16 @@ function headingOf({
   plus,
   ingredientId,
 }: IngredientDetailsOpened): ModalHeading {
-  const safety = marks && (
-    <SafetyMark toxic={marks.toxic} safetyNotes={marks.safetyNotes} variants={marks.variants} />
+  // The top line's, beside Close, as the entry page's own top bar has them: New or Updated, then
+  // the one safety badge. The line is there for every entry, empty or not, so Close has it to
+  // itself and the head's other lines are clear of it.
+  const top = (
+    <>
+      {marks && <RecencyMark recency={marks.recency} />}
+      {marks && (
+        <SafetyMark toxic={marks.toxic} safetyNotes={marks.safetyNotes} variants={marks.variants} />
+      )}
+    </>
   );
   const edit = editAction && <EditLink {...editAction} name={heading.title} />;
   // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
@@ -49,9 +60,9 @@ function headingOf({
   );
   return {
     ...heading,
-    ...(safety && { titleBadge: safety }),
+    topEnd: top,
     ...(actions && { titleActions: actions }),
-    ...(marks && { under: <EntryMarks {...marks} safety={false} /> }),
+    ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
   };
 }
 

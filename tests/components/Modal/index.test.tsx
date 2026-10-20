@@ -170,6 +170,28 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('closes from the Close button on its top line, with the top line empty or full', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Modal title="Edit Category" topEnd={<></>} onClose={onClose}>
+        <input aria-label="Name" />
+      </Modal>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <Modal title="Edit Category" topEnd={<output>Marked</output>} onClose={onClose}>
+        <input aria-label="Name" />
+      </Modal>,
+    );
+    const mark = screen.getByText('Marked');
+    const close = screen.getByRole('button', { name: 'Close' });
+    // The marks first, as on screen, and neither is in the dialog's name.
+    expect(mark.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Edit Category' })).toBeInTheDocument();
+  });
+
   // The owner decides: a URL-driven modal closes by navigating, and the
   // element closing itself first would leave the address saying it is open.
   it('turns Escape into a request to its owner rather than closing itself', () => {

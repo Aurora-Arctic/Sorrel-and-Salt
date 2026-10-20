@@ -68,7 +68,7 @@ const Modal = ({
   destination,
   qualifier,
   formalName,
-  titleBadge,
+  topEnd,
   titleActions,
   under,
   onClose,
@@ -243,9 +243,9 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
-  // A badge or actions at the title's end share its row, and give way in the order
-  // index.scss sets out. The hidden comma sits at the heading's end, and the spans
-  // beside it are not in the dialog's name.
+  // Actions at the title's end share its row, and give way as index.scss sets out. The
+  // hidden comma sits at the heading's end, and the spans beside it are not in the
+  // dialog's name.
   const titleHeading = (
     <h2 id={titleId} className="modal-dialog__title">
       {title}
@@ -257,7 +257,13 @@ const Modal = ({
       )}
     </h2>
   );
-  const titleEnds = titleBadge !== undefined || titleActions !== undefined;
+  // At the dialog's corner; with a top line it stands on that line, in the markup too.
+  const closeButton = (
+    <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
+      <span aria-hidden="true">×</span>
+    </button>
+  );
+  const titleEnds = titleActions !== undefined;
 
   // The backdrop's click is the pointer's alone; Escape is its keyboard
   // equivalent, handled above.
@@ -287,11 +293,22 @@ const Modal = ({
         if (event.target === event.currentTarget) finish();
       }}
     >
-      <div className="modal-dialog__header">
+      <div
+        className={['modal-dialog__header', topEnd !== undefined && 'modal-dialog__header--topped']
+          .filter(Boolean)
+          .join(' ')}
+      >
         {/* An edit dialog's head (MB.115): what it does to what kind, then
             which entry. The hidden commas are for the dialog's name alone,
             which a screen reader would otherwise run together. */}
         <div className="header modal-dialog__heading">
+          {/* The top line, with Close on it, first in the head as it is on screen. */}
+          {topEnd !== undefined && (
+            <div className="modal-dialog__top">
+              {topEnd}
+              {closeButton}
+            </div>
+          )}
           {eyebrow && (
             <p id={eyebrowId} className="eyebrow">
               {eyebrow}
@@ -307,7 +324,6 @@ const Modal = ({
           {titleEnds ? (
             <div className="modal-dialog__title-row">
               {titleHeading}
-              <div className="modal-dialog__title-badge">{titleBadge}</div>
               <div className="modal-dialog__title-actions">{titleActions}</div>
             </div>
           ) : (
@@ -315,9 +331,7 @@ const Modal = ({
           )}
           {under !== undefined && <div className="modal-dialog__under">{under}</div>}
         </div>
-        <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
-          <span aria-hidden="true">×</span>
-        </button>
+        {topEnd === undefined && closeButton}
         {/* Under the heading, for a sentence the contents put there
             (HeaderNoteContext), above the row of controls. */}
         <div ref={setHeaderNote} className="modal-dialog__header-note" />

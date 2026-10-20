@@ -245,7 +245,7 @@ describe('DetailsDialog', () => {
       expect(within(dialog()).getByRole('button', { name: 'Retired' })).toBeInTheDocument();
     });
 
-    it('puts the formal name over the name, and New before the badges', () => {
+    it('puts the formal name over the name, with New above both and before the badges', () => {
       show({ kind: 'own', recency: 'new' });
 
       const name = within(dialog()).getByRole('heading', { name: 'Testwort' });
@@ -253,20 +253,24 @@ describe('DetailsDialog', () => {
       expect(follows(formal, name)).toBe(true);
       // Not inside the heading, so the heading stays the entry name alone.
       expect(name).not.toContainElement(formal);
-      expect(follows(name, within(dialog()).getByText('New'))).toBe(true);
-      expect(follows(within(dialog()).getByText('New'), within(dialog()).getByText('Local'))).toBe(
-        true,
-      );
+      // On the top line, with Close, as the entry page's top bar has it.
+      const recency = within(dialog()).getByText('New');
+      expect(follows(recency, formal)).toBe(true);
+      expect(follows(recency, within(dialog()).getByText('Local'))).toBe(true);
+      expect(follows(recency, within(dialog()).getByRole('button', { name: 'Close' }))).toBe(true);
     });
 
-    it('puts the safety badge beside the name and the Edit pencil after it', () => {
+    it('puts the safety badge on the top line with Close and the Edit pencil after the name', () => {
       show({ toxic: true }, { href: EDIT, heading: editHeading(ENTRY) });
 
       const name = within(dialog()).getByRole('heading', { name: /^Testwort/ });
       const badge = within(dialog()).getByText('Toxic');
       const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
-      expect(follows(name, badge)).toBe(true);
-      expect(follows(badge, edit)).toBe(true);
+      const close = within(dialog()).getByRole('button', { name: 'Close' });
+      expect(follows(badge, close)).toBe(true);
+      expect(follows(close, name)).toBe(true);
+      expect(follows(name, edit)).toBe(true);
+      expect(badge.closest('.modal-dialog__header')).not.toBeNull();
       // The pencil is in the header with the name, not down in the scrolling body.
       expect(edit.closest('.modal-dialog__header')).not.toBeNull();
     });

@@ -603,10 +603,10 @@ $filter-choice-width: 14rem;
 // sooner than the search gives way.
 $filter-search-basis: 16rem;
 
-// The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
-// during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
-// `Modal/index.scss`.
-$close-target: 2.5rem;
+// The dialog's close button: a 2rem × in a 2rem square, set in from the dialog's corner
+// (`Modal/index.scss`); the owner's call during M5.5 made it 2.5rem, and again on
+// 2026-10-20 moved it up and right, where 2rem is still well past WCAG 2.2's 24px minimum.
+$close-target: 2rem;
 
 // The width of its own frame under which a `.data-table--stack` table turns
 // each row into a card (MB.115): a container width, not the screen's, so a
