@@ -477,7 +477,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             <span
               ref={tip.anchor}
               className="combobox__qualifier"
-              onMouseEnter={tip.show}
+              onMouseEnter={tip.showSoon}
               onMouseLeave={tip.hideSoon}
             >
               {/* In brackets, as the row picked read: "Wax (Animal)". */}

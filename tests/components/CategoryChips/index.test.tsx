@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import CategoryChips from '@/components/CategoryChips';
 import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 
@@ -82,12 +82,39 @@ describe('CategoryChips', () => {
     expect(more()).toHaveFocus();
   });
 
-  it('opens on hover and on focus, and a press elsewhere closes it', () => {
+  describe('hover', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('opens after the pointer rests 300ms, as every tip does', () => {
+      vi.useFakeTimers();
+      render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 2)} label="Testwort" />);
+
+      fireEvent.mouseEnter(more()!.parentElement!);
+      act(() => vi.advanceTimersByTime(299));
+      expect(more()).toHaveAttribute('aria-expanded', 'false');
+      act(() => vi.advanceTimersByTime(1));
+      expect(more()).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('opens nothing for a pointer that leaves before 300ms', () => {
+      vi.useFakeTimers();
+      render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 2)} label="Testwort" />);
+
+      fireEvent.mouseEnter(more()!.parentElement!);
+      act(() => vi.advanceTimersByTime(200));
+      fireEvent.mouseLeave(more()!.parentElement!);
+      // Never open at any point, not merely closed once the leave's grace has run.
+      expect(more()).toHaveAttribute('aria-expanded', 'false');
+      act(() => vi.advanceTimersByTime(1000));
+      expect(more()).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
+  it('opens at once on focus and on a tap, and a press elsewhere closes it', () => {
     render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 2)} label="Testwort" />);
 
-    fireEvent.mouseEnter(more()!);
-    expect(more()).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(more()!);
+    expect(more()).toHaveAttribute('aria-expanded', 'true');
     fireEvent.pointerDown(document.body);
     expect(more()).toHaveAttribute('aria-expanded', 'false');
 

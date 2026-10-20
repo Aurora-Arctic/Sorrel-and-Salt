@@ -130,6 +130,29 @@ describe('GroupedValueForm, what every kind shares', () => {
 
 // Every way out asks first while the form has changes (MB.115): the
 // guard's shape is tests/components/Modal's, and this its wiring.
+// A Description keeps its tip only where suggestions match it as well as the
+// name, a flow its label does not say (the owner's call, 2026-10-20).
+describe('GroupedValueForm, its Description tip', () => {
+  it.each([
+    { kind: 'category', groups: CATEGORY_GROUPS, tip: false },
+    { kind: 'form', groups: FORM_GROUPS, tip: true },
+    { kind: 'deity', groups: TRADITIONS, tip: true },
+    { kind: 'celestialBody', groups: undefined, tip: true },
+    { kind: 'zodiacSign', groups: undefined, tip: true },
+  ] as const)('a $kind: tip $tip', ({ kind, groups, tip }) => {
+    renderForm({ kind, groups });
+
+    const about = screen.queryByRole('button', { name: 'About Description' });
+    if (tip) {
+      expect(about).toBeInTheDocument();
+      expect(description()).toHaveAccessibleDescription(/\S/);
+    } else {
+      expect(about).not.toBeInTheDocument();
+      expect(description()).not.toHaveAccessibleDescription();
+    }
+  });
+});
+
 describe('GroupedValueForm, its unsaved changes', () => {
   it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
     const onClose = renderInModal((done) => (

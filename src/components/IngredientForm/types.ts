@@ -462,12 +462,14 @@ export type ReferenceSendInput = z.input<typeof ReferenceInput>;
 /** A panel field other than the kind. */
 export type ReferenceFieldName = Exclude<keyof ReferenceFormValues, 'kind'>;
 
-/** One field a kind shows: what it writes, what it is called there, and what it is told. */
+/**
+ * One field a kind shows: what it writes and what it is called there. No
+ * hint: how to cite is the panel's one How to Cite tip.
+ */
 export interface ReferenceFieldSpec {
   name: ReferenceFieldName;
   label: string;
-  hint?: string;
-  /** A short action shown while the field is empty: "Add a title". */
+  /** Shown while the field is empty: an action ("Add a title"), or an example where the format matters ("2nd ed."). */
   placeholder?: string;
   required?: boolean;
   type?: 'date' | 'url';

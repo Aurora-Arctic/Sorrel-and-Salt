@@ -55,7 +55,11 @@ const AnnotateCupboardEntryDocument = graphql(`
   }
 `);
 
-const TEXT: Record<TextField, { label: string; hint: string; placeholder: string }> = {
+// A field keeps a tip only for a rule its label does not say (the owner's
+// call, 2026-10-20; info-tip.md, "When a field gets a tip"): Label's
+// uniqueness, and the lists' "empty says none". Description and Safety Notes
+// say what they are.
+const TEXT: Record<TextField, { label: string; hint?: string; placeholder: string }> = {
   label: {
     label: 'Label',
     hint: "What your coven calls this entry. It stands in for the Compendium's name on your pages, and no two entries in a coven share one.",
@@ -63,15 +67,22 @@ const TEXT: Record<TextField, { label: string; hint: string; placeholder: string
   },
   description: {
     label: 'Description',
-    hint: "Your coven's own description, in place of the Compendium's.",
     placeholder: 'Add a description',
   },
   safetyNotes: {
     label: 'Safety Notes',
-    hint: "Your coven's own safety notes, in place of the Compendium's.",
     placeholder: 'Add safety notes',
   },
 };
+
+/**
+ * A list's tip, one wording for all four: the list is the coven's own, and an
+ * emptied one says the entry has none rather than handing back to the
+ * Compendium's. Colours adds that a colour is what it corresponds to in a
+ * working, not the colour the ingredient is.
+ */
+const listHint = (things: string, how = ''): string =>
+  `The ${things} your coven ties it to${how}, in place of the Compendium's. An empty list says it has none.`;
 
 /** Where a server refusal lands: the field's own place, or a list's entry or typing box. */
 const placeOf = (
@@ -229,7 +240,7 @@ const CupboardEntryForm = ({
           <MultiSelectField
             name="elements"
             label="Elements"
-            hint="The elements your coven ties it to. An empty list says it has none."
+            hint={listHint('elements')}
             placeholder="Add an element"
             options={ELEMENT_OPTIONS}
             action={useCompendium('elements', 'Elements')}
@@ -241,7 +252,7 @@ const CupboardEntryForm = ({
             ordered
             legend="Celestial Bodies"
             entry="Celestial Body"
-            hint="The heavenly bodies your coven ties it to. An empty list says it has none."
+            hint={listHint('heavenly bodies')}
             placeholder="Add a body"
             action={handBackAction('celestialBodies', 'Celestial Bodies')}
           />
@@ -252,7 +263,7 @@ const CupboardEntryForm = ({
             ordered
             legend="Zodiac Signs"
             entry="Zodiac Sign"
-            hint="The signs your coven ties it to. An empty list says it has none."
+            hint={listHint('signs')}
             placeholder="Add a sign"
             action={handBackAction('zodiacSigns', 'Zodiac Signs')}
           />
@@ -261,7 +272,7 @@ const CupboardEntryForm = ({
             ordered
             legend="Colours"
             entry="Colour"
-            hint="The colours your coven ties it to in a working. An empty list says it has none."
+            hint={listHint('colours', ' in a working, not the colour it is')}
             placeholder="Add a colour"
             action={handBackAction('colors', 'Colours')}
           />

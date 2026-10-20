@@ -554,7 +554,7 @@ describe('Combobox', () => {
 
       expect(tooltip()).not.toBeInTheDocument();
       fireEvent.mouseEnter(qualifier());
-      expect(tooltip()).toHaveTextContent(DETAIL);
+      await waitFor(() => expect(tooltip()).toHaveTextContent(DETAIL));
       fireEvent.mouseLeave(qualifier());
       await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
 
@@ -574,7 +574,7 @@ describe('Combobox', () => {
 
     // MB.115: the tip gets out of the way of typing, and comes back on focus
     // or a hover; the detail stays in the box's description throughout.
-    it('closes its tooltip at the first printable key and when the list opens', () => {
+    it('closes its tooltip at the first printable key and when the list opens', async () => {
       render(
         <Harness
           initial="Wax"
@@ -592,7 +592,7 @@ describe('Combobox', () => {
       expect(box()).toHaveAccessibleDescription(expect.stringContaining(DETAIL));
 
       fireEvent.mouseEnter(qualifier());
-      expect(tooltip()).toBeInTheDocument();
+      await waitFor(() => expect(tooltip()).toBeInTheDocument());
       fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
       expect(box()).toHaveAttribute('aria-expanded', 'true');
       expect(tooltip()).not.toBeInTheDocument();
@@ -728,10 +728,12 @@ describe('Combobox', () => {
       });
     });
 
-    it('opens no tooltip for a text that fits and has no detail', () => {
+    it('opens no tooltip for a text that fits and has no detail', async () => {
       renderEntries(['Hedge Fixture']);
 
       fireEvent.mouseEnter(entryText('Hedge Fixture'));
+      // Past the hover's 300ms rest, when a tooltip would have opened.
+      await act(() => new Promise((resolve) => setTimeout(resolve, 350)));
       expect(tooltip()).not.toBeInTheDocument();
     });
 
@@ -765,7 +767,7 @@ describe('Combobox', () => {
         renderDetailed();
 
         fireEvent.mouseEnter(entryText('Hedge Fixture'));
-        expect(tooltip()).toHaveTextContent('Hedge Fixture');
+        await waitFor(() => expect(tooltip()).toHaveTextContent('Hedge Fixture'));
         expect(tooltip()).toHaveTextContent(DETAIL);
         fireEvent.mouseLeave(entryText('Hedge Fixture'));
         await waitFor(() => expect(tooltip()).not.toBeInTheDocument());

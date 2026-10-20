@@ -261,11 +261,10 @@ test('the toxic toggles start off, save, and read back on reopening, each its ow
   const toggles = adding.getByRole('switch', { name: 'Toxic', exact: true });
   await expect(toggles.first()).not.toBeChecked();
 
-  // The ingredient's, reached from its Safety Notes by Tab, past its hint's
-  // info tip, and turned by Space. Its sections come before Variants, so its
-  // toggle is the first.
+  // The ingredient's, the next stop after its Safety Notes by Tab (neither
+  // carries an info tip since 2026-10-20), and turned by Space. Its sections
+  // come before Variants, so its toggle is the first.
   await adding.getByRole('textbox', { name: 'Safety Notes' }).first().focus();
-  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await expect(toggles.first()).toBeFocused();
   await page.keyboard.press('Space');

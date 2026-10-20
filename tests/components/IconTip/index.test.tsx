@@ -1,12 +1,12 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IconTip, { EditLink } from '@/components/IconTip';
 import Modal from '@/components/Modal';
 
-// A word above an icon control, "Edit" over a pencil: shown on hover or the
-// control's focus, kept while the pointer is on it, and dismissed by Escape
-// (WCAG 1.4.13); decoration only, since the control's own name says more
-// (claude-docs/components/icon-tip.md).
+// A word above an icon control, "Edit" over a pencil: shown once the pointer
+// rests on the control or at its focus, gone the moment the pointer leaves,
+// and dismissed by Escape; decoration only, since the control's own name says
+// more (claude-docs/components/icon-tip.md).
 
 // Open, the tip is in the page but kept out of the accessibility tree, so
 // it is found with `hidden`; shut, it is not in the page at all.
@@ -31,31 +31,41 @@ describe('IconTip', () => {
     vi.useRealTimers();
   });
 
-  it('opens on hover, stays while the pointer crosses onto it, and closes a moment after it leaves', () => {
+  it('opens once the pointer has rested on the control 300ms, and closes the moment it leaves, gone after a 120ms fade', () => {
     const button = renderTip();
     expect(tip()).toBeNull();
 
     fireEvent.mouseEnter(button);
-    expect(tip()).not.toBeNull();
+    act(() => vi.advanceTimersByTime(299));
+    expect(tip()).toBeNull();
+    act(() => vi.advanceTimersByTime(1));
+    expect(tip()).toHaveClass('icon-tip__bubble');
+    expect(tip()).not.toHaveClass('icon-tip__bubble--closing');
 
+    // Closed at once, with no wait to cross onto it: it stays only for its fade.
     fireEvent.mouseLeave(button);
-    fireEvent.mouseEnter(tip()!);
-    act(() => vi.advanceTimersByTime(200));
-    expect(tip()).not.toBeNull();
-
-    // Closed: it stays for its fade, then goes.
-    fireEvent.mouseLeave(tip()!);
-    act(() => vi.advanceTimersByTime(200));
-    expect(tip()).not.toBeNull();
-    act(() => vi.advanceTimersByTime(500));
+    expect(tip()).toHaveClass('icon-tip__bubble--closing');
+    act(() => vi.advanceTimersByTime(120));
     expect(tip()).toBeNull();
   });
 
-  it('opens on the control’s focus and closes on its blur', () => {
+  it('opens nothing for a pointer that passes over without resting', () => {
+    const button = renderTip();
+
+    fireEvent.mouseEnter(button);
+    act(() => vi.advanceTimersByTime(200));
+    fireEvent.mouseLeave(button);
+    act(() => vi.advanceTimersByTime(500));
+
+    expect(tip()).toBeNull();
+  });
+
+  it('opens at once on the control’s focus and closes on its blur', () => {
     const button = renderTip();
 
     act(() => button.focus());
     expect(tip()).not.toBeNull();
+    expect(tip()).not.toHaveClass('icon-tip__bubble--closing');
 
     act(() => button.blur());
     act(() => vi.advanceTimersByTime(500));
@@ -123,7 +133,7 @@ describe('IconTip', () => {
 });
 
 describe('EditLink', () => {
-  it('is a link named Edit and its row’s name, wearing the tip', () => {
+  it('is a link named Edit and its row’s name, wearing the tip', async () => {
     render(
       <EditLink
         href="/admin/compendium?edit=fixture-salt"
@@ -136,6 +146,6 @@ describe('EditLink', () => {
     expect(link).toHaveAttribute('href', '/admin/compendium?edit=fixture-salt');
 
     fireEvent.mouseEnter(link);
-    expect(tip()).not.toBeNull();
+    await waitFor(() => expect(tip()).not.toBeNull());
   });
 });

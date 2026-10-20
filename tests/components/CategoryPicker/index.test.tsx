@@ -162,7 +162,7 @@ describe('CategoryPicker', () => {
     expect(box()).toHaveFocus();
   });
 
-  it('describes each pick by its group and description, its tooltip naming the group', () => {
+  it('describes each pick by its group and description, its tooltip naming the group', async () => {
     renderPicker({ value: ['c-ab', 'c-tw'] });
 
     expect(removeButton('Testward')).toHaveAccessibleDescription(
@@ -173,7 +173,7 @@ describe('CategoryPicker', () => {
     fireEvent.mouseEnter(
       within(entry('Testward')).getByText('Testward', { ignore: '[role="tooltip"]' }),
     );
-    expect(screen.getByRole('tooltip')).toHaveTextContent('Fixture Wards');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Fixture Wards');
   });
 
   // Nothing typed is a category, so Enter adds only the one the text names whole.

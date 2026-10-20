@@ -17,6 +17,11 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
   await seedCoven(page, 'Fixture Coven Tips', 'tip-placement.test', { A: 'owner' });
   await page.goto('/account');
   const dialog = await openAddIngredient(page);
+  // A New Reference panel, for its How to Cite tip at the head's end edge:
+  // the tip measured against the right of the viewport.
+  await dialog.getByRole('combobox', { name: 'Reference' }).click();
+  await page.getByRole('option', { name: 'New Reference' }).click();
+  await expect(dialog.getByRole('group', { name: 'New Reference' })).toBeVisible();
 
   const buttons = dialog.getByRole('button', { name: /^About / });
   const count = await buttons.count();

@@ -82,7 +82,6 @@ export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
     <CategoryPicker
       legend="Categories"
       entry="Category"
-      hint="What it is used for. Pick as many as apply."
       placeholder="Add a category"
       categories={categories}
       pending={isPending}

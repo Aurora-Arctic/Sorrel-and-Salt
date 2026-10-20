@@ -479,7 +479,7 @@ $skeleton-fade: 300ms;
     // as its Use It, so the mark is centred on the row instead.
     li::before {
       top: 50%;
-      translate: 0 -50%;
+      @include theme-transition(background-color);
     }
 
     // The title link in the body ink with the faded underline the entry
@@ -644,6 +644,11 @@ $skeleton-fade: 300ms;
 
 // The new reference panel: a group set off from the field it opens beneath,
 // its own fields at the form's spacing.
+// How far a reference panel's top border stops short of the legend's words
+// and of the head's marks, one step so the two cannot drift apart. Undo's
+// `.btn--small` inline padding is this step too.
+$panel-head-gap: space(3);
+
 .ingredient-form .ingredient-form__panel {
   gap: space(4);
   margin-top: space(2);
@@ -654,26 +659,83 @@ $skeleton-fade: 300ms;
   // the top edge, still in view.
   scroll-margin-top: space(5);
 
+  // An icon button's height, and no gap under it but the panel's padding, so
+  // the head's buttons below can sit centred on the same border line. The
+  // border stops `$panel-head-gap` short of its words on either side, as
+  // it does of the buttons' marks (the owner's call, 2026-10-20).
   .fieldset__legend {
-    padding: 0 space(1);
+    margin-bottom: 0;
+    padding: 0 $panel-head-gap;
+    line-height: $icon-size;
   }
 
-  // Its top line (MB.258): the note, if it has one, and the × at the end,
-  // which keeps to the right edge with no note beside it.
+  // Its head (MB.258; the owner's calls, 2026-10-20): the note, if there is
+  // one, and the panel's Undo and Redo, the How to Cite tip and the ×, the
+  // tip and the × abutting, each its full `$icon-size` target. Narrow, they
+  // are one line, the group at the end; where the note would be squeezed
+  // under 14rem the group drops to a line of its own straight beneath it,
+  // still at the right (the owner liked the split). Wide enough for the
+  // legend and the group side by side, the group goes up onto the top
+  // border at its right end, level with the legend and, like it, on the
+  // card's surface so the line stops either side of it; the note is then
+  // the first line inside. A container query, since it is the panel's
+  // width that decides, not the window's.
+  position: relative;
+  container-type: inline-size;
+
   .ingredient-form__panel-head {
     display: flex;
-    gap: space(2);
+    flex-wrap: wrap;
+    gap: space(1) space(2);
     align-items: center;
-    justify-content: space-between;
   }
 
-  .ingredient-form__panel-close {
-    margin-inline-start: auto;
+  .ingredient-form__panel-end {
+    display: flex;
+    flex: none;
+    align-items: center;
+    margin-inline: auto calc(-1 * #{space(2)});
+    background-color: $surface-card;
+
+    @include theme-transition(background-color);
+
+    .form-history {
+      align-self: center;
+      margin-inline-end: space(1);
+    }
+  }
+
+  // The content width at which "New Reference", the longer legend, and the
+  // group still have a step of border between them (measured 2026-10-20).
+  @container (min-width: 18rem) {
+    // Absolutely placed against the fieldset, so the head is no box of its
+    // own: without a note it would otherwise still take a gap above Kind.
+    .ingredient-form__panel-head {
+      display: contents;
+    }
+
+    .ingredient-form__panel-end {
+      position: absolute;
+      // Up the legend's height from the content's top edge, which is the
+      // legend's foot: level with the legend, so the border runs through
+      // the middle of both.
+      inset-block-start: calc(-1 * #{$icon-size});
+      // A panel's padding in from the corner, where the legend's box starts
+      // at the other, so the legend's words and the ×'s mark stand as far
+      // from their corners.
+      inset-inline-end: space(4);
+      margin: 0;
+      // The border stops `$panel-head-gap` short of the marks: Undo's own
+      // inline padding is that gap at the start, and at the end the ×'s
+      // mark sits `space(1)` inside its target, so the rest is padding.
+      padding-inline: 0 calc(#{$panel-head-gap} - #{space(1)});
+    }
   }
 
   // What an edit reaches, or that the source is loading: a caption's ink,
   // as the tier's, above the fields.
   .ingredient-form__panel-note {
+    flex: 1 1 14rem;
     margin: 0;
     color: $text-muted;
     font-size: type-size('caption');
@@ -684,6 +746,19 @@ $skeleton-fade: 300ms;
   > .form__actions {
     margin-block: space(2);
   }
+}
+
+// How to Cite's rules, one to a line (the owner's call, 2026-10-20), a
+// small step apart. Spans given the list roles, so they are made blocks
+// here; the bubble's own `max-content` width keeps it to the longest rule.
+.ingredient-form__cite-rules {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+}
+
+.ingredient-form__cite-rule {
+  display: block;
 }
 
 // The Variants section (MB.221): each form a card, one summary line with its
