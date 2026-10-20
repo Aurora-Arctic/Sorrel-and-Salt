@@ -14,7 +14,7 @@ The account page's sections are panels; the coven index's are plain
 
 ## Props
 
-- `label`: the landmark's accessible name ("On this page").
+- `label`: the landmark's accessible name ("On This Page").
 - `entries`: `{ href: '#id', label, group?, apart? }[]`, one per section, in page order.
   `apart` (MB.155) sets an item off from those above it: a break a step
   wider than a group label's (`space(6)` above, so the rule has air on both

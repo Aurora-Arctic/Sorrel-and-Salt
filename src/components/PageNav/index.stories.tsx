@@ -9,7 +9,7 @@ export default {
 
 export const Default: Story = () => (
   <PageNav
-    label="On this page"
+    label="On This Page"
     entries={[
       { href: '#one', label: 'Name' },
       { href: '#two', label: 'Email' },
@@ -22,7 +22,7 @@ export const Default: Story = () => (
 // forms under Forms (M8.19).
 export const Grouped: Story = () => (
   <PageNav
-    label="On this page"
+    label="On This Page"
     entries={[
       { href: '#one', label: 'Details' },
       { href: '#two', label: 'Root', group: 'Forms' },
@@ -36,7 +36,7 @@ export const Grouped: Story = () => (
 // notes: the break and the short rule halfway through it.
 export const GroupedApart: Story = () => (
   <PageNav
-    label="On this page"
+    label="On This Page"
     entries={[
       { href: '#one', label: 'Details' },
       { href: '#two', label: 'Root', group: 'Forms' },

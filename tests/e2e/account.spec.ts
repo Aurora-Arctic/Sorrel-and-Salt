@@ -37,7 +37,7 @@ test('shows all four sections, with no accessibility violations', async ({ page 
   );
 
   // The on-page nav jumps to a section.
-  const nav = main.getByRole('navigation', { name: 'On this page' });
+  const nav = main.getByRole('navigation', { name: 'On This Page' });
   await nav.getByRole('link', { name: 'Sign-In Methods' }).click();
   await expect(page).toHaveURL(/#account-sign-in-methods$/);
   await expect(main.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInViewport();

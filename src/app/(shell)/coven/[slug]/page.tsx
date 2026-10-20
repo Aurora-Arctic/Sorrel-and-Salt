@@ -76,7 +76,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           {WORKSPACE_ROLE_ACCESS[membership.role]}
         </p>
       </div>
-      <PageNav label="On this page" entries={entries} />
+      <PageNav label="On This Page" entries={entries} />
       <section
         id="coven-contents"
         className="page-frame__section"

@@ -43,11 +43,11 @@ describe('PageNav', () => {
   });
 
   it('is a named navigation of links to the sections, the first current', () => {
-    render(<PageNav label="On this page" entries={[...entries]} />, {
+    render(<PageNav label="On This Page" entries={[...entries]} />, {
       container: document.body.appendChild(document.createElement('div')),
     });
 
-    expect(screen.getByRole('navigation', { name: 'On this page' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'On This Page' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'First' })).toHaveAttribute('href', '#one');
     expect(screen.getByRole('link', { name: 'Second' })).toHaveAttribute('href', '#two');
     expect(screen.getByRole('link', { name: 'First' })).toHaveAttribute('aria-current', 'location');
@@ -55,7 +55,7 @@ describe('PageNav', () => {
   });
 
   it('draws one flat list when no entry names a group', () => {
-    render(<PageNav label="On this page" entries={[...entries]} />, {
+    render(<PageNav label="On This Page" entries={[...entries]} />, {
       container: document.body.appendChild(document.createElement('div')),
     });
 
@@ -66,7 +66,7 @@ describe('PageNav', () => {
     document.body.innerHTML += '<section id="three"></section>';
     render(
       <PageNav
-        label="On this page"
+        label="On This Page"
         entries={[
           { href: '#one', label: 'First' },
           { href: '#two', label: 'Second', group: 'Parts' },
@@ -96,7 +96,7 @@ describe('PageNav', () => {
     document.body.innerHTML += '<section id="three"></section>';
     render(
       <PageNav
-        label="On this page"
+        label="On This Page"
         entries={[
           { href: '#one', label: 'First' },
           { href: '#two', label: 'Second', group: 'Parts', apart: true },
@@ -116,7 +116,7 @@ describe('PageNav', () => {
   });
 
   it('moves the current mark to the section that comes into view', () => {
-    render(<PageNav label="On this page" entries={[...entries]} />, {
+    render(<PageNav label="On This Page" entries={[...entries]} />, {
       container: document.body.appendChild(document.createElement('div')),
     });
 

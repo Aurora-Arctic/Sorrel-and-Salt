@@ -205,7 +205,7 @@ describe('the /coven/[slug] page', () => {
   // The jump menu (PageNav): an entry per section shown, each landing on a
   // section that exists. A viewer has Contents and Your Membership.
   describe('the jump menu', () => {
-    const menu = () => screen.queryByRole('navigation', { name: 'On this page' });
+    const menu = () => screen.queryByRole('navigation', { name: 'On This Page' });
 
     it.each<[WorkspaceRole, number]>([
       ['owner', 3],
