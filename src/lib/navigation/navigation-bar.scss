@@ -9,7 +9,8 @@
 .navigation-bar {
   position: fixed;
   top: calc(#{$top-inset} + #{$shell-bar-height} - 3px);
-  right: 0;
+  // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
+  right: var(--scrollbar-width, 0);
   left: 0;
   z-index: layer('banner');
   height: 3px;

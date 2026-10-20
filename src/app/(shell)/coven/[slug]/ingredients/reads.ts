@@ -8,10 +8,15 @@ import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
 import type { CovenIngredientPage } from './types';
 import { entryValues } from '@/app/entry-values';
+import { covensHolding } from '@/app/plus-covens';
 import type { CovenMembership } from '@/modules/coven';
 import {
+  applyCupboardEntry,
   countWorkspaceIngredients,
   getIngredient,
+  heldCompendiumEntry,
+  ingredientDetailOf,
+  isRetired,
   listWorkspaceIngredients,
   stockOf,
   variantsOf,
@@ -115,4 +120,41 @@ export async function readEditedEntry(workspaceId: string, id: string) {
   }
   if (entry.workspaceId !== workspaceId) return undefined;
   return { entry, values: await entryValues(entry, session) };
+}
+
+/**
+ * The entry `?entry=<id>` opens the details of over the list (M12.5), read as the signed-in
+ * member, any role: the coven's own entry, or a compendium entry its cupboard holds, under
+ * the coven's label, a retired one included, as the list shows it. Nothing for an id the
+ * coven cannot reach, or a compendium entry the cupboard does not hold, which the list
+ * never shows: the list then opens no modal, as `readEditedEntry`'s does. Any other failure
+ * of the read is let through rather than called no entry. With it, `detail`: the sections
+ * the details show, read as the entry's page in the coven reads them, the held entry's
+ * cupboard entry laid in.
+ */
+export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
+  const session = await requireSession();
+  let entry: Awaited<ReturnType<typeof getIngredient>>;
+  try {
+    entry = await getIngredient(session, id, membership.workspaceId);
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    throw error;
+  }
+  // A retired entry is read in the coven, whose cupboard entry is its proof (M12.24).
+  const detailOf = () =>
+    ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
+  if (entry.workspaceId === membership.workspaceId) {
+    return { shown: entry, own: true, detail: await detailOf(), covens: [] };
+  }
+  const held = await heldCompendiumEntry(membership, id);
+  if (!held) return undefined;
+  // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
+  const [read, covens] = await Promise.all([detailOf(), covensHolding(id)]);
+  return {
+    shown: applyCupboardEntry(held.entry, held.cupboardEntry),
+    own: false,
+    detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },
+    covens,
+  };
 }

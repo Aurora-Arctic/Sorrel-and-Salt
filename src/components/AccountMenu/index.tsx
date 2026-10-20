@@ -123,7 +123,7 @@ const AccountMenu = ({
                 the account page (the owner's call, M10.32). */}
             {pending && (
               <span className="account-menu__count">
-                <IconTip tip={`You have ${invitations}`} placement="below">
+                <IconTip tip={`You Have ${invitations}`} placement="below">
                   <PendingLink
                     href={ACCOUNT_INVITATIONS_PATH}
                     navigationTarget={ACCOUNT_TARGET}

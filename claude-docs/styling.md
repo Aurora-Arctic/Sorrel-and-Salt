@@ -64,20 +64,21 @@ to.
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
-  button, 2.5rem), `$table-stack-width` (the frame width under which a table
+  button, 2rem), `$table-stack-width` (the frame width under which a table
   stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of). A duration with a role of its own is one too: `$motion-short`
   (150ms), a control answering a press with a movement of its own, as the
-  switch's thumb slides, `$tip-fade` (500ms), a tip bubble's fade, and `$icon-tip-fade`
+  switch's thumb slides, `$motion-medium` (300ms), a movement the eye follows,
+  as the details window's description opens under its Show More bar, `$tip-fade` (500ms), a tip bubble's fade, and `$icon-tip-fade`
   (120ms), IconTip's quicker one.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
   skeleton's bars, an entry's targeted section, MenuButton's plain item
   pointed at, focused or chosen, and the hover of every
   navigation link, tab and outlined chip), `$fill-highlight` (the accent 12%
-  into whatever is behind: MenuButton's one primary or constructive item, and
+  into whatever is behind: MenuButton's one primary item, and
   a menu's item and a suggestion list's row in the account menu, the shell's
   menu and Combobox, pointed at, focused or chosen), `$fill-highlight-field` (the same 12% over the field's
   ground: a quiet button pointed at), `$hairline` (the muted ink 45%
@@ -449,6 +450,8 @@ decides, from its own selector, so one badge reads the same wherever it is rende
 
 The 24px floor is the least a badge with a tip may be as a target.
 
+Each size also lowers its label by an **optical drop**, taken from the top padding and given to the bottom so the height holds (the owner's call, 2026-10-20). Without it every badge's capitals sat above the box's centre: measured in Chromium, the space under the baseline was 1.26px more than the space above the capitals on the card, and up to 1.33px more on the entry page. Chrome rounds a font's ascent and descent to whole pixels, so 12px and 13px Lexend sit differently and each size has its own drop: `default` 0.0125em, `medium` and `small` 0.05em. The card's badges now centre within 0.04px; a `default` badge lands within half a pixel either way, since its baseline snaps to the pixel grid wherever the badge happens to sit. `text-box-trim` would do this from the font's own metrics, but it is past the browser floor. `badge-padding()` and `badge-padding-block()` in `_mixins.scss` apply it; a rule that sets a badge's block padding itself, as Out of Stock's heavier border does, goes through them.
+
 ## Brand colours
 
 A sign-in provider's button wears the provider's colours, not ours:
@@ -470,26 +473,88 @@ held to a floor, which is all but the rows marked "before MB.116" and the
 hover fills on the page, reading the colours from `$brand-palettes` and the
 theme tokens, in one assertion per theme:
 
-| Pair                                                  | Dark page `$soot`                                             | Light page `$parchment` |
-| ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
-| Google edge `#dadce0` (before MB.116)                 | 13.62                                                         | **1.13, fails**         |
-| Google edge `#747775` (Google's current light button) | 4.13                                                          | 3.74                    |
-| Microsoft edge `#8c8c8c` (before MB.116)              | 5.56                                                          | **2.78, fails**         |
-| Microsoft edge `#808080`                              | 4.74                                                          | 3.26                    |
-| Discord / Facebook fill on the page                   | 4.06 / 3.88                                                   | 3.80 / 3.98             |
-| Discord / Facebook hover fill on the page             | 2.91 / 2.85                                                   | 5.30 / 5.43             |
-| Inks on fills (both themes)                           | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
-| Inks on hover fills (both themes)                     | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
-| Focus ring `$text-primary` on the page                | 14.77                                                         | 13.41                   |
-| Muted text `$text-muted` / `--accent` on the page     | 9.67 / 7.97                                                   | 5.99 / 4.65             |
+| Pair                                                    | Dark page `$soot`                                             | Light page `$parchment` |
+| ------------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
+| Google edge `#dadce0` (before MB.116)                   | 13.62                                                         | **1.13, fails**         |
+| Google edge `#747775` (Google's current light button)   | 4.13                                                          | 3.74                    |
+| Microsoft edge `#8c8c8c` (before MB.116)                | 5.56                                                          | **2.78, fails**         |
+| Microsoft edge `#808080`                                | 4.74                                                          | 3.26                    |
+| Discord / Facebook fill on the page                     | 4.06 / 3.88                                                   | 3.80 / 3.98             |
+| Discord / Facebook hover fill on the page               | 2.91 / 2.85                                                   | 5.30 / 5.43             |
+| Inks on fills (both themes)                             | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
+| Inks on hover fills (both themes)                       | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
+| Focus ring, the body ink at 66.6% (M12.45), on the page | 7.00                                                          | 4.94                    |
+| Muted text `$text-muted` / `--accent` on the page       | 9.67 / 7.97                                                   | 5.99 / 4.65             |
 
 **Hover is not held to 3:1.** WCAG 1.4.11 covers what identifies a control
 and its states, and a hover ground is neither: the button is already known
 by its resting fill, and keyboard focus is shown by the focus ring, which
-clears 13:1 in both themes. So Discord's and Facebook's darker hover grounds
+clears 3:1 on every ground it is drawn on in both themes ("The focus ring", below). So Discord's and Facebook's darker hover grounds
 may sit under 3:1 on the dark page. Microsoft keeps its white face in both
 themes, with the darker `#808080` edge that clears 3:1 on the light page: the
 owner's call at MB.116's sign-off, over Microsoft's own dark button.
+
+## The focus ring
+
+Keyboard focus is a 2px outline drawn 2px outside the element by the
+`focus-ring($color, $strength)` mixin in `_mixins.scss`. Its colour is mixed
+towards transparent, `color-mix(in srgb, <colour> <strength>, transparent)`,
+so the ring softens over whatever ground it crosses rather than standing at
+the body ink's full 14:1, which read as harsh. The strength is
+`$focus-ring-strength` in `_variables.scss`, 66.6% in both themes: the
+owner compared 100%, 70%, 66.6%, 55% and 40% in both themes and chose 66.6%
+(M12.45, 2026-10-20). The rings that set their own colour use the same
+number, so Combobox's rings on a coloured chip fade the chip's own ink
+(`currentcolor`) by it too.
+
+Two rings keep another strength:
+
+- **A link's ring** (`_typography.scss`) is the accent, at
+  `$focus-ring-link-strength`, which each theme sets as
+  `--focus-ring-link-strength`: the shared 66.6% in dark, and
+  `$focus-ring-link-strength-light`, 75%, in light. The light accent starts
+  at only 4.65:1 on the page, and 66.6% takes it to 2.61, under the 3:1 floor;
+  75% is the least that clears it, at 3.01 (the owner's call, 2026-10-20).
+  The page row passing by 0.01 is intended: it is the guard on the number.
+- **The tab row's ring** (`TabbedPage/index.scss`) is the accent, drawn
+  inside the pill, at `$focus-ring-tab-strength`, which each theme sets as
+  `--focus-ring-tab-strength`: the shared 66.6% in dark, and
+  `$focus-ring-tab-strength-light`, full strength, in light. On the light
+  track and the open pill the accent starts at only 4.05:1, so 66.6% takes it
+  to 2.42 and even 75% leaves it at 2.75 (the owner's call, 2026-10-20).
+
+The skip link's and the theme toggle's rings are the page's own colour round
+an accent fill, so it is the fill they are told from; faded, the ring sits
+closer to the ground behind it, and the fill is unchanged.
+
+A ring marks a control's state, so it is held to 3:1 (WCAG 1.4.11), laid
+over each ground it is drawn on. `tests/scss/tokens.test.ts` reads every
+strength from the compiled CSS and checks every row below; it fails with
+the shared strength at 40%, with the light link at 66.6%, and with the light
+tab at 75%.
+
+| Ring on                                 | Dark | Light |
+| --------------------------------------- | ---- | ----- |
+| The body-ink ring on the page           | 7.00 | 4.94  |
+| … on a card                             | 6.61 | 5.18  |
+| … on a card pointed at                  | 6.23 | 5.26  |
+| … on the ingredient card's drawer, slot | 7.15 | 3.88  |
+| … on the drawer's side                  | 4.30 | 4.17  |
+| … on the drawer's back                  | 6.87 | 3.41  |
+| A link's accent ring on the page        | 4.14 | 3.01  |
+| … on a card                             | 3.97 | 3.22  |
+| … on a card pointed at                  | 3.72 | 3.31  |
+| A tab's accent ring on the open pill    | 3.18 | 4.05  |
+| … on the track over the page            | 3.77 | 4.05  |
+| … on the track over a card              | 3.49 | 4.49  |
+
+**Not covered: a ring on a coloured chip.** Combobox's ring on a category
+chip is the chip's ink faded over the chip's wash. For the seeded group
+colours it clears 3.53 to 3.91 in dark and 3.17 to 3.31 in light (lowest:
+`#606c2f`, light). The write-time check on a group's colours
+(`src/lib/contrast.ts`) holds the colour itself at 4.5:1 against its theme's
+harder surface, not this faded mix, so a colour an admin adds could put the
+ring under 3:1. Noted, not fixed.
 
 ## Type
 

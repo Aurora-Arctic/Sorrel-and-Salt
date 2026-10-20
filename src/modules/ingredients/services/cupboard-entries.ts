@@ -32,6 +32,7 @@ import type {
   CitedReference,
   ConvertedCompendium,
   CupboardEntryKey,
+  HoldingCoven,
   IngredientValues,
   VariantKey,
 } from '../types';
@@ -52,7 +53,7 @@ import {
   splitChildren,
   writeChildren,
 } from './ingredient-rows';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership, byCovenName, membershipsOf } from '@/modules/coven';
 import { curatedNames } from '@/modules/vocabulary';
 
 // A compendium entry in a coven's cupboard (M12.14): the coven's row naming
@@ -670,4 +671,68 @@ export async function convertCompendiumEntryToLocal(
   } catch (error) {
     return refuseCollision(error, membership, fields, columns.slug, undefined);
   }
+}
+
+/**
+ * Which of these compendium entries the coven's cupboard holds, as a set of
+ * their ids: the compendium page's question for the check icon (M9.12). Read
+ * for the viewer's own coven and never cached, so it sits beside the cached
+ * compendium read rather than inside it (CLAUDE.md rule 6). Any member,
+ * viewers included; whether to offer them an icon is the page's call.
+ *
+ * @throws {Forbidden} the caller may not read this coven's ingredients.
+ */
+export async function heldCompendiumEntryIds(
+  session: Session,
+  workspaceId: string,
+  ingredientIds: readonly string[],
+): Promise<ReadonlySet<string>> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  const rows = await findCupboardEntriesOf(membership, ingredientIds);
+  return new Set(rows.map(({ ingredientId }) => ingredientId));
+}
+
+/**
+ * The same question across several covens, for a viewer in more than one: each coven's held
+ * ids by its id, so the compendium's plus can ask which coven and mark the ones that already
+ * hold the entry (M9.12). One `Membership` proof per coven, each finder scoped by its own, so
+ * a coven the caller is not in refuses the whole read. A coven holding none of them maps to an
+ * empty set, never a missing key.
+ *
+ * @throws {Forbidden} the caller may not read one of these covens' ingredients.
+ */
+export async function heldCompendiumEntryIdsIn(
+  session: Session,
+  workspaceIds: readonly string[],
+  ingredientIds: readonly string[],
+): Promise<ReadonlyMap<string, ReadonlySet<string>>> {
+  // One coven after another, not at once: a refusal then leaves no read still running behind it.
+  const held = new Map<string, ReadonlySet<string>>();
+  for (const workspaceId of workspaceIds)
+    held.set(workspaceId, await heldCompendiumEntryIds(session, workspaceId, ingredientIds));
+  return held;
+}
+
+/**
+ * The viewer's own covens that hold this compendium entry, by name: the details modal's In
+ * Your Covens links (M12.5, the owner's call of 2026-10-20). The covens come from the viewer's
+ * own memberships, never from who holds the entry, so a coven they are not in never appears,
+ * and an admin or curator gets only the covens they belong to (M6.6). Each is read under its own
+ * `Membership` proof, filtered in SQL; viewers count. Per viewer, so never cached (rule 6).
+ */
+export async function covensHoldingEntry(
+  session: Session,
+  ingredientId: string,
+): Promise<readonly HoldingCoven[]> {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  if (!memberships || memberships instanceof Error) return [];
+  const held = await heldCompendiumEntryIdsIn(
+    session,
+    memberships.map(({ workspace }) => workspace.id),
+    [ingredientId],
+  );
+  return memberships
+    .filter(({ workspace }) => held.get(workspace.id)?.has(ingredientId))
+    .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }))
+    .sort(byCovenName);
 }

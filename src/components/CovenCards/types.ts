@@ -3,7 +3,7 @@ import type { CompendiumListFilterProps, CompendiumListProps } from '../Compendi
 import type { EntryKind } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { JarLine } from '../JarLines/types';
-import type { ModalHeading } from '../Modal/types';
+import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
@@ -22,12 +22,12 @@ export interface CovenCardEntry {
   safetyNotes: string | null;
   /** Whose entry it is: the coven's `own`, or a compendium entry its cupboard names (`cupboard`). */
   kind: EntryKind;
-  /** The coven's cupboard row overrides a field of the compendium's. */
-  annotated: boolean;
   /** The curators retired the entry. */
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
+  /** Its details modal over the list, `?entry=<id>`, which the Quick Look eye at the card's bottom left opens (M12.5). */
+  details: RouteModalLink;
   /**
    * The list's own address with `?edit=<id>`, where the card's Edit opens the
    * coven's edit dialog over the list (M8.17). Left out, no Edit shows: a
@@ -59,6 +59,11 @@ export interface CardMoreProps extends Pick<
   name: string;
   workspaceId: string;
   covenSlug: string;
+  /**
+   * Where a delete or a remove leads once done, replacing the history entry: the Quick Look
+   * window's, which goes back to the list without it. Left out, the list is read again.
+   */
+  leaveHref?: Route;
 }
 
 export interface CovenCardsProps extends Pick<

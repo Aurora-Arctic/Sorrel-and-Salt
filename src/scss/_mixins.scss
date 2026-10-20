@@ -131,9 +131,33 @@
   }
 }
 
-// Defaults to the body ink, so the ring re-colours with the theme.
-@mixin focus-ring($color: $text-primary) {
-  outline: 2px solid $color;
+// A link's underline faded into what is behind it, so it marks the link
+// without the colour (WCAG 1.4.1) yet reads quieter than the text: the
+// link's own colour at `$rest`, and at `$pointed` when pointed at or
+// focused, so it follows the colour as it changes. 55% and 65% are the
+// lowest mixes that hold 3:1 against the page, the card and the `:target`
+// fill in both themes for a link resting in the body ink and pointed at in
+// `$accent-hover`: the entry page's References and marks, IngredientForm's
+// title links, the details modal's In Your Covens. A link resting in another
+// colour needs its own mixes worked out before it takes these.
+// No token holds a faded underline, so it is a `color-mix`, as `$fill-quiet` is.
+// Chromium draws no underline under 1px, and `auto` is already 1px for the
+// body text, so a fade is what makes an underline lighter, not a thickness.
+@mixin faded-underline($rest: 55%, $pointed: 65%) {
+  text-decoration-color: color-mix(in srgb, currentcolor #{$rest}, transparent);
+
+  &:hover,
+  &:focus-visible,
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    text-decoration-color: color-mix(in srgb, currentcolor #{$pointed}, transparent);
+  }
+}
+
+// Defaults to the body ink, so the ring re-colours with the theme, at the
+// shared strength, mixed towards transparent so it softens over any ground.
+@mixin focus-ring($color: $text-primary, $strength: $focus-ring-strength) {
+  outline: 2px solid color-mix(in srgb, $color $strength, transparent);
   outline-offset: 2px;
 }
 
@@ -247,6 +271,26 @@
   }
 }
 
+// A badge's padding, with the label lowered by its size's optical-drop: the top
+// gains what the bottom loses, so the height holds. Lexend's capitals sit above
+// the centre of its line box, so a centred label read high in every badge, by up
+// to 1.3px (measured 2026-10-20); the owner's call, 2026-10-20, is to centre them
+// optically. Padding rather than text-box-trim, which is past the browser floor.
+// claude-docs/styling.md, "Badge sizes".
+@mixin badge-padding($name) {
+  @include badge-padding-block($name);
+  padding-inline: map.get(map.get($badge-sizes, $name), padding-inline);
+}
+
+// The block half alone, for a rule that must leave a badge's sides to its size.
+@mixin badge-padding-block($name) {
+  $size: map.get($badge-sizes, $name);
+  $block: map.get($size, padding-block);
+  $drop: map.get($size, optical-drop);
+
+  padding-block: calc(#{$block} + #{$drop}) calc(#{$block} - #{$drop});
+}
+
 // Takes a palette key, not a colour, so the two badges cannot swap inks; the
 // palette's own treatment decides the drawing. Square-cornered, unlike a chip.
 @mixin badge($palette) {
@@ -254,7 +298,7 @@
 
   display: inline-flex;
   align-items: center;
-  padding: 0.125rem 0.4375rem;
+  @include badge-padding('default');
   border-radius: radius('sharp');
   font-family: $font-body;
   font-size: type-size('caption');
@@ -292,8 +336,7 @@
   }
 
   font-size: type-size(map.get($size, font-size));
-  padding-block: map.get($size, padding-block);
-  padding-inline: map.get($size, padding-inline);
+  @include badge-padding($name);
 
   @if map.get($size, min-block-size) {
     min-block-size: map.get($size, min-block-size);
@@ -858,6 +901,8 @@
   // How much of its colour a notice's tint takes: more on dark, where a tint
   // of the same strength reads fainter.
   --notice-tint: 8%;
+  --focus-ring-link-strength: #{$focus-ring-strength};
+  --focus-ring-tab-strength: #{$focus-ring-strength};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
   // Between floating and elevated: a card that rises under the pointer.
@@ -872,6 +917,7 @@
   --drawer-shade-fade: #{$drawer-shade-fade-dark};
   --drawer-shade-edge: #{$drawer-shade-edge-dark};
   --dismiss-ink: #{$dismiss-ink-dark};
+  --card-more-ink: #{$card-more-ink-dark};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -893,6 +939,8 @@
   --secondary-hover: #{$wax-deep};
   --warning: #{$ochre-deep};
   --notice-tint: 7%;
+  --focus-ring-link-strength: #{$focus-ring-link-strength-light};
+  --focus-ring-tab-strength: #{$focus-ring-tab-strength-light};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};
@@ -906,6 +954,7 @@
   --drawer-shade-fade: #{$drawer-shade-fade-light};
   --drawer-shade-edge: #{$drawer-shade-edge-light};
   --dismiss-ink: var(--text-primary);
+  --card-more-ink: #{$iron-gall};
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 

@@ -10,6 +10,16 @@ $modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
 // width, so a column keeps the content width it had.
 $modal-padding: space(5) * 2;
 
+// The × stands in the dialog's padding: its top and right edges are the padding's own, so its
+// right edge is the right edge of whatever ends a line beneath it (the formal name's pencil), and the
+// head stops short of it by its width and a gap.
+$close-inset: space(5);
+$close-reserve: calc(#{$close-target} + #{space(3)});
+
+// The eyebrow's own line: its size, set in the typography layer, at the 1.65 a `p` is given there.
+// A head with no top line has the eyebrow for its first line, and the × is brought level with it.
+$eyebrow-line: calc(#{type-size('overline')} * 1.65);
+
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
 // Border-box, so the primitive's padding sits inside the limits rather than
@@ -53,7 +63,7 @@ $modal-padding: space(5) * 2;
 // at the width the form's own does.
 .modal-dialog__main {
   display: grid;
-  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  grid-template: minmax(0, 1fr) auto / minmax(0, 1fr);
   min-height: 0;
   margin: 0 calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
   container: modal-main / inline-size;
@@ -71,6 +81,20 @@ $modal-padding: space(5) * 2;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the dialog moves the page behind it, not yet Baseline
   overscroll-behavior: contain;
   isolation: isolate;
+
+  // A body only to read takes a Tab stop (readingBody), so it shows where the
+  // keyboard is: inset, as the header above and the dialog's edge would clip it.
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}
+
+// A bar under the body (`foot`): its own row, so it is outside the element that
+// scrolls and the body's scrollbar ends above it. No row at all without one.
+.modal-dialog__foot {
+  grid-area: 2 / 1;
 }
 
 // Where a question is drawn (ConfirmOverlay): no box of its own, so the
@@ -123,13 +147,18 @@ $modal-padding: space(5) * 2;
 
 // While a dialog is open the page behind it holds still, the owner's call
 // during M5.5: `showModal()` makes the page inert, but a wheel over the
-// backdrop still scrolled it. CSS alone, so no listener can leave it locked;
-// the gutter stays, so nothing shifts sideways as the scrollbar goes. The
-// dialog keeps its own scroll, so nothing in it is out of reach.
+// backdrop still scrolled it. The overflow is CSS, so no listener can leave
+// the page locked. The room the scrollbar took is given back as padding,
+// `--scrollbar-width`, which `holdPage` (page-hold.ts) measures as the first
+// modal opens and sets only where there was a scrollbar, so nothing behind
+// moves (the owner's call, 2026-10-20). It replaces `scrollbar-gutter: stable`:
+// kept on every page it left a blank strip beside the header on a page that
+// fits the window, and kept only here a page with no scrollbar gained the room
+// as a modal opened. The dialog keeps its own scroll, so nothing in it is out
+// of reach.
 :root:has(.modal-dialog:modal) {
   overflow: hidden;
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the content shifts by a scrollbar width once it starts to scroll, widely available 2027-06-11
-  scrollbar-gutter: stable;
+  padding-inline-end: var(--scrollbar-width, 0);
 }
 
 // A long form's width (M5.5), the compendium entry's first: its list fields
@@ -138,10 +167,9 @@ $modal-padding: space(5) * 2;
   width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
-// The × at the head's top, at its larger size (M5.5): level with a one-line
-// title, which is its height, and with an edit's eyebrow, as the owner's
-// mock-up drew it, rather than adrift beside a name wrapped over lines
-// (MB.115). It stays at the
+// The × at the dialog's top right, out of the header's flow (the owner's call,
+// 2026-10-20; see `.modal-dialog__close`), so the head's first line is level with
+// it and a name that wraps cannot leave it adrift (MB.115). It stays at the
 // top as a long form scrolls beneath it, the owner's call at MB.115: outside
 // the body, which is what scrolls, the gap beneath it padding rather than
 // margin so it belongs to the header.
@@ -153,26 +181,119 @@ $modal-padding: space(5) * 2;
 .modal-dialog__header {
   display: grid;
   flex: none;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
-  gap: 0 space(3);
   padding-bottom: space(4);
 }
 
 // The eyebrow over the title, in the `.header` primitive's column, closer
-// than its gap. It may shrink past its content, so a long name wraps rather
-// than pushing the × out, and a name with no break in it breaks anywhere
-// rather than overflow.
+// than its gap. It stops short of the × by what the × takes of the head's width
+// (`$close-reserve`), so a long name wraps rather than running under it, and a
+// name with no break in it breaks anywhere rather than overflow.
 .modal-dialog__heading {
   grid-row: 1;
   align-self: start;
   gap: space(1);
   min-width: 0;
+  padding-inline-end: $close-reserve;
+}
+
+// A head with a top line (`topEnd`, the details window's) stands further above what follows it,
+// `space(5)` in place of `space(4)`, so the description is set off from the name and its badges
+// (the owner's call, 2026-10-20). It is the only head with one, so no other dialog's gap moves.
+.modal-dialog__header--topped {
+  padding-bottom: space(5);
+}
+
+// A head with a top line (`topEnd`) keeps the × out of its other lines: the line is the
+// × 's own band, so the rest of the head has the whole width, and what stands at its end
+// (a formal name's pencil) is clear of the × beneath which it stands.
+.modal-dialog__header--topped > .modal-dialog__heading {
+  padding-inline-end: 0;
+}
+
+// The top line (the owner's call, 2026-10-20): the entry page's top bar, its marks at the start
+// and the × level with them at the far end, as tall as the × is, so each mark is centred on the
+// × 's own middle. Apart from the line under it (the owner's call, 2026-10-20) by the head's own
+// 8px gap and `space(2)` more, 16px, so the pencil there clears the × and the line reads as a
+// bar of its own. The margin is set through the heading's own class, as `.header > *` (layout)
+// zeroes a child's margin at the same weight as a single class, and a margin set on the top line
+// alone is lost to it. Stopped short of the × by its width, which stands over its end.
+.modal-dialog__heading > .modal-dialog__top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: space(2);
+  min-block-size: $close-target;
+  margin-block-end: space(2);
+  padding-inline-end: $close-reserve;
 }
 
 .modal-dialog__title {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+// The formal name, the title and the title's controls (`formalActions`: the details window's
+// Edit pencil and plus), laid out as the entry page lays its own (the owner's call,
+// 2026-10-20): the controls at the end of the formal name's line, over the title, which
+// takes the whole width beneath. The controls come after the title in the markup, as the
+// page's do, and are placed here. The formal name wraps short of them. Each control is as
+// tall as the pencil, which is taller than the formal name's line, so the controls' margin
+// takes half the difference off each side and their middle stands on the line's. With no
+// formal name the title stands in the first row and the controls beside it.
+.modal-dialog__naming {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: space(1) space(2);
+  align-items: start;
+
+  > .modal-dialog__title {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  > .modal-dialog__formal-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  &:not(:has(> .ingredient-entry__formal)) > .modal-dialog__title {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+// Placed by the grid, so whatever stands in it has no margin of its own (an entry page's
+// controls row has one under it).
+.modal-dialog__naming > .modal-dialog__formal-actions > * {
+  margin: 0;
+}
+
+// Gone while nothing is in it (no Edit, no plus).
+.modal-dialog__formal-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: space(2);
+  min-block-size: $icon-size-large;
+  margin-block: calc((#{$icon-size} - #{$icon-size-large}) / 2);
+
+  &:empty {
+    display: none;
+  }
+}
+
+// The badges under the heading (`under`): a row, wrapping, hidden while it holds none.
+.modal-dialog__under {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(3);
+
+  &:empty {
+    display: none;
+  }
 }
 
 // A second identifier after the name, an ingredient's formal name or a
@@ -244,14 +365,28 @@ $modal-padding: space(5) * 2;
   }
 }
 
-// A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,
-// in the proportion it began at: well past WCAG 2.2's 24px minimum target.
-// The icon's 2rem is on no scale: it is the × drawn at the size of the
-// target it sits in, not a length of the layout. Its column is its own
-// width, so a heading that wraps cannot squeeze the round target to an oval.
+// A head with no top line and an eyebrow (an edit dialog's "Edit Ingredient", a destination's "To ...")
+// has the eyebrow for its first line, so the × is raised from the padding's inset until its middle is
+// the eyebrow text's middle (the owner's call, 2026-10-20): half the difference between the two lines
+// above the inset. The head's own first line, as a top line is for the details window, keeps the inset;
+// a dialog with no eyebrow keeps it too, its title being the first line. Written with `:has()`, as
+// this file's other rules are, so a browser that lacks it leaves the × at the inset.
+.modal-dialog__header:has(> .modal-dialog__heading > .eyebrow:first-child) > .modal-dialog__close {
+  inset-block-start: calc(#{$close-inset} + (#{$eyebrow-line} - #{$close-target}) / 2);
+}
+
+// A 2rem × in a `$close-target` square, 2rem too, at the dialog's padding from its top and
+// right edges (the owner's call, 2026-10-20: level with the head's first line, and its right
+// edge on that of the pencil or plus on the formal name's line beneath it). Past WCAG 2.2's
+// 24px minimum target. The dialog's header ends well below it, so it is clear of the body's
+// scrollbar, which stands beneath the header. The icon's 2rem is on no scale: it is the × drawn at the size of the target it sits
+// in, not a length of the layout. Taken out of the flow, so a heading that wraps cannot
+// squeeze the round target to an oval; the head stops short of it (`$close-reserve`).
 .modal-dialog__close {
+  position: absolute;
+  inset-block-start: $close-inset;
+  inset-inline-end: $close-inset;
   display: inline-flex;
-  place-self: start end;
   align-items: center;
   justify-content: center;
   width: $close-target;

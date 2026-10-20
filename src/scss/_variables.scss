@@ -121,6 +121,10 @@ $shadow-light: rgba(35, 32, 26, 0.18);
 // over the card where the body text is chalk, as design F has it (M12.31).
 $dismiss-ink-dark: #fff;
 
+// A coven card's More (the three dots) in the dark theme, pure white, the owner's call
+// (2026-10-20); the light theme draws them in $iron-gall, its body text.
+$card-more-ink-dark: #fff;
+
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
@@ -254,23 +258,29 @@ $stock-badge-size: 1.5rem;
 // badge has everywhere; medium and small are for the ingredient card only (regular and
 // compact), one step down in text. The two smaller sizes hold 24px (1.5rem) tall, the
 // least a tipped badge may be as a target; default needs no floor, its text sets it.
+// optical-drop lowers the label so its capitals centre on the box (the owner's call,
+// 2026-10-20), measured per size because Chrome rounds the font's ascent and descent
+// to whole pixels, so 12px and 13px Lexend sit differently in their line boxes.
 $badge-sizes: (
   'default': (
     font-size: caption,
     padding-block: 0.125rem,
     padding-inline: 0.4375rem,
+    optical-drop: 0.0125em,
     min-block-size: null,
   ),
   'medium': (
     font-size: overline,
     padding-block: 0.125rem,
     padding-inline: 0.4375rem,
+    optical-drop: 0.05em,
     min-block-size: 1.5rem,
   ),
   'small': (
     font-size: overline,
     padding-block: 0.125rem,
     padding-inline: 0.3125rem,
+    optical-drop: 0.05em,
     min-block-size: 1.5rem,
   ),
 );
@@ -414,6 +424,7 @@ $drawer-shade: var(--drawer-shade);
 $drawer-shade-fade: var(--drawer-shade-fade);
 $drawer-shade-edge: var(--drawer-shade-edge);
 $dismiss-ink: var(--dismiss-ink);
+$card-more-ink: var(--card-more-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks
@@ -442,7 +453,7 @@ $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
 
 // A highlight: the accent 12% into whatever is behind. MenuButton's one
-// primary or constructive item, and the account menu's, the shell's menu's
+// primary item, and the account menu's, the shell's menu's
 // and a suggestion list's row, pointed at, focused or chosen, and the same over the
 // field's ground for a quiet button pointed at (M8.17, the owner's call of
 // 2026-10-20). A wash of the accent rather than of the muted ink, so the row
@@ -458,6 +469,27 @@ $hairline: color-mix(in srgb, $text-muted 45%, transparent);
 
 // A quiet button's hairline pointed at: partway from the line to the accent.
 $edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
+
+// The focus ring's strength (M12.45): how much of its colour the ring keeps,
+// mixed towards transparent, so it marks the focus without overpowering the
+// page. One number for both themes, shared by the `focus-ring` mixin and the
+// rings that set their own colour; each clears 3:1 where it is drawn
+// (tests/scss/tokens.test.ts; claude-docs/styling.md, "The focus ring").
+$focus-ring-strength: 66.6%;
+
+// A link's ring, in the accent, at its own strength per theme: the shared one
+// in dark, and more in light, where the accent starts lower against the page
+// and the shared strength would take it under 3:1. Read through
+// `--focus-ring-link-strength`, which each theme sets.
+$focus-ring-link-strength-light: 75%;
+$focus-ring-link-strength: var(--focus-ring-link-strength);
+
+// The tab row's ring, in the accent inside the pill, the same way: the shared
+// strength in dark, and full in light, where the accent sits lower against
+// the track and the pill than against the page. Read through
+// `--focus-ring-tab-strength`, which each theme sets.
+$focus-ring-tab-strength-light: 100%;
+$focus-ring-tab-strength: var(--focus-ring-tab-strength);
 
 // How much of a control remains when it is busy or cannot be used: the
 // switch, the pending tab panel and the busy list frame each wrote 0.55.
@@ -637,10 +669,10 @@ $filter-choice-width: 14rem;
 // sooner than the search gives way.
 $filter-search-basis: 16rem;
 
-// The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
-// during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
-// `Modal/index.scss`.
-$close-target: 2.5rem;
+// The dialog's close button: a 2rem × in a 2rem square, set in from the dialog's corner
+// (`Modal/index.scss`); the owner's call during M5.5 made it 2.5rem, and again on
+// 2026-10-20 moved it up and right, where 2rem is still well past WCAG 2.2's 24px minimum.
+$close-target: 2rem;
 
 // The width of its own frame under which a `.data-table--stack` table turns
 // each row into a card (MB.115): a container width, not the screen's, so a
@@ -681,6 +713,12 @@ $motion-medium: 300ms;
 // How far a card's face slides down out of its slot, and so how tall the drawer body
 // behind it must be to leave no gap (M12.44).
 $drawer-travel: 11px;
+
+// A movement the eye should follow, not just register: the details window's
+// description opening and closing under its Show More bar (the owner's call,
+// 2026-10-20). Twice `$motion-short`, since a block of text
+// changing height needs longer than a thumb sliding to read as one move.
+$motion-medium: 300ms;
 
 // The loading standard (M12.33; claude-docs/design-decisions/m12.33-plan.md).
 // How long a wait must last before an indicator shows (the spinner, the link

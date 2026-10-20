@@ -22,6 +22,8 @@ import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
+import { RouteModal, RouteModalProvider } from '@/components/Modal';
+import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -67,6 +69,10 @@ const ENTRIES: CompendiumListEntry[] = [
     ],
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+    details: {
+      href: compendiumHref({ entry: 'testwort' }),
+      heading: { eyebrow: 'Ingredient', title: 'Testwort' },
+    },
   },
   {
     id: 'i2',
@@ -80,6 +86,10 @@ const ENTRIES: CompendiumListEntry[] = [
     categories: [],
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
+    details: {
+      href: compendiumHref({ entry: 'fixture-salt' }),
+      heading: { eyebrow: 'Ingredient', title: 'Fixture Salt' },
+    },
   },
 ];
 
@@ -165,12 +175,12 @@ describe('CompendiumList', () => {
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(rows).toHaveLength(3);
-    expect(within(rows[1]).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
+    expect(within(rows[1]).getByRole('link', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(
       within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' }),
     ).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
+    expect(within(rows[2]).getByRole('link', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
   // Categories column: the card's chips, the first few shown and the rest behind +N.
@@ -256,6 +266,37 @@ describe('CompendiumList', () => {
       'href',
       '/compendium/ingredients/fixture-salt',
     );
+  });
+
+  it("opens an entry's details modal over the list from its Quick Look, the name a plain link to its page", async () => {
+    render(
+      <Navigating push={router.push}>
+        <RouteModalProvider>
+          <CompendiumList {...props()} />
+          <RouteModal place={DETAILS_PLACE} closeHref="/admin/compendium" />
+        </RouteModalProvider>
+      </Navigating>,
+    );
+
+    const name = screen.getByRole('link', { name: 'Fixture Salt' });
+    expect(name).toHaveAttribute('href', '/compendium/ingredients/fixture-salt');
+    await act(async () => {
+      fireEvent.click(name);
+    });
+    expect(router.push.mock.lastCall?.[0]).toBe('/compendium/ingredients/fixture-salt');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    const look = screen.getByRole('link', { name: 'Quick Look Fixture Salt' });
+    expect(look).toHaveAttribute('href', '/admin/compendium?entry=fixture-salt');
+    expect(fireEvent.click(look, { metaKey: true })).toBe(true);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(look);
+    });
+
+    expect(router.push.mock.lastCall?.[0]).toBe('/admin/compendium?entry=fixture-salt');
+    expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
   it("names the entry page it leads to, so that page's frame is drawn while it loads", async () => {

@@ -204,15 +204,44 @@ describe('IngredientCard', () => {
       expect(cautionMark()).toBeNull();
     });
 
-    it('shows Toxic without Caution when nothing has notes, and both when both apply', () => {
+    // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
+    it('shows Toxic alone, with or without notes', () => {
       const bare = render(<IngredientCard {...BASE} toxic variants={[LEAF]} />);
       expect(toxicMark()).not.toBeNull();
       expect(cautionMark()).toBeNull();
       bare.unmount();
 
-      render(<IngredientCard {...BASE} toxic variants={[OIL]} />);
+      render(
+        <IngredientCard {...BASE} toxic safetyNotes="Fixture entry caution." variants={[OIL]} />,
+      );
       expect(toxicMark()).not.toBeNull();
-      expect(cautionMark()).not.toBeNull();
+      expect(cautionMark()).toBeNull();
+    });
+
+    // The safety badge sits beside the name and the rest under the formal name
+    // (the owner's call, 2026-10-20). It is read last, after the name, the formal
+    // name and the row beneath them: the row the badge joins when it wraps.
+    it('reads the name, the formal name, the other marks, then the safety badge', () => {
+      render(
+        <IngredientCard
+          {...BASE}
+          kind="own"
+          formalName="Fixtura testalis"
+          safetyNotes="Fixture entry caution."
+        />,
+      );
+      const order = [
+        screen.getByRole('link', { name: /Fixture Testwort/ }),
+        screen.getByText('Fixtura testalis'),
+        localMark(),
+        cautionMark(),
+      ];
+
+      for (const [at, mark] of order.slice(1).entries()) {
+        expect(
+          order[at]!.compareDocumentPosition(mark!) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      }
     });
 
     it('draws no caution block, even when a listed form has notes', () => {
@@ -254,19 +283,19 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    it('shows the held mark, and Annotated beside it once a field is overridden', () => {
-      const held = render(<IngredientCard {...BASE} kind="cupboard" />);
-      expect(heldMark()).toBeInTheDocument();
-      expect(screen.getAllByRole('status')).toHaveLength(1);
-      held.unmount();
+    // The owner's call, 2026-10-20: a coven's card says nothing of where a held
+    // entry came from; the entry page and its head still do (EntryMarks' own tests).
+    it('shows neither Compendium nor Annotated on a compendium entry the cupboard holds', () => {
+      const { container } = render(<IngredientCard {...BASE} kind="cupboard" />);
 
-      render(<IngredientCard {...BASE} kind="cupboard" annotated />);
-      expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-      expect(heldMark()).toBeInTheDocument();
-      expect(screen.getAllByRole('status')).toHaveLength(1);
+      expect(heldMark()).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Annotated' })).toBeNull();
+      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      // With no mark left, the cluster is left out, not left empty.
+      expect(container.querySelector('.specimen__badges')).toBeNull();
     });
 
-    it('shows the retired mark in place of the held one', () => {
+    it('shows Retired on a held entry the curators retired', () => {
       render(<IngredientCard {...BASE} kind="cupboard" retired />);
 
       expect(screen.queryAllByRole('status')).toHaveLength(0);
@@ -315,6 +344,22 @@ describe('IngredientCard actions', () => {
     render(<IngredientCard {...BASE} actions={<button type="button">Fixture Use</button>} />);
     expect(screen.getByRole('button', { name: 'Fixture Use' })).toBeTruthy();
     expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('draws start controls alone, or beside the actions', () => {
+    const { rerender } = render(
+      <IngredientCard {...BASE} startActions={<button type="button">Fixture Start</button>} />,
+    );
+    expect(screen.getByRole('button', { name: 'Fixture Start' })).toBeTruthy();
+    rerender(
+      <IngredientCard
+        {...BASE}
+        startActions={<button type="button">Fixture Start</button>}
+        actions={<button type="button">Fixture Use</button>}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Fixture Start' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fixture Use' })).toBeTruthy();
   });
 
   it('draws no foot without actions or jar lines', () => {
@@ -387,6 +432,32 @@ describe('IngredientCard recency (MB.106)', () => {
     render(<IngredientCard {...BASE} kind="compendium" recency={recency} />);
 
     expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
+  });
+
+  // The safety badge is the card's top-right corner and the mark sits just left of it
+  // (the owner's call, 2026-10-20), so it is read after the name block and before it.
+  it('reads the mark after the name and the formal name, and before the safety badge', () => {
+    render(
+      <IngredientCard
+        {...BASE}
+        kind="compendium"
+        recency="new"
+        formalName="Fixtura testalis"
+        safetyNotes="Fixture entry caution."
+      />,
+    );
+    const order = [
+      screen.getByRole('link', { name: /Fixture Testwort/ }),
+      screen.getByText('Fixtura testalis'),
+      screen.getByText('New', { exact: true }),
+      cautionMark(),
+    ];
+
+    for (const [at, mark] of order.slice(1).entries()) {
+      expect(
+        order[at]!.compareDocumentPosition(mark!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
   });
 
   it('shows neither with no recency', () => {

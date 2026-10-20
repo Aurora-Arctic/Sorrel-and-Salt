@@ -361,9 +361,9 @@ export interface ComboboxChoice {
   count?: number;
   /**
    * The row is shown and read but cannot be chosen (`aria-disabled`, stepped
-   * over by the arrow keys). A disabled row is listed after the others. The
-   * caller sets it by hand.
-   * Honoured by the multi-select box only.
+   * over by the arrow keys). The caller sets it by hand. Honoured by the
+   * multi-select box, which lists a disabled row after the others, and by the
+   * select-only box, which keeps the order given (M9.12's coven picker).
    */
   disabled?: boolean;
   /** A second line under the row, also part of its name: why a disabled choice is out. */

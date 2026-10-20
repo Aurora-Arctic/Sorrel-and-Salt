@@ -266,6 +266,22 @@
   box-shadow: $shadow-floating;
 }
 
+// The group names and the rule between groups when the menu holds both the compendium and a
+// coven, as MenuButton draws its sections (the owner's call, 2026-10-20): discreet caption text
+// in the item's own side padding, and a hairline inset from the panel's edge.
+.app-shell__menu-heading {
+  padding: space(1) space(4);
+  color: $text-muted;
+  font-size: type-size('caption');
+  line-height: 1.4;
+}
+
+.app-shell__menu-rule {
+  height: 0;
+  margin: space(1) space(2);
+  border-top: 1px solid $hairline;
+}
+
 .app-shell__menu-item {
   @include button-reset;
 

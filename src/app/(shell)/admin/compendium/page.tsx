@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -6,6 +6,11 @@ import CompendiumList from '../../../../components/CompendiumList';
 import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
+import { cardName } from '../../../../components/IngredientCard/card-name';
+import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
+import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
+import IngredientSummary from '../../../../components/IngredientEntry/summary';
+import { single } from '../../../../lib/search-params';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
   CompendiumCategoryChoice,
@@ -16,6 +21,8 @@ import type {
 import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
+import { covensHolding, plusCovensOf } from '@/app/plus-covens';
+import { ingredientDetailOf, resolveCompendiumSlug } from '@/modules/ingredients';
 import { requireCuratorSession } from '../../../../lib/request-session';
 import {
   readCategories,
@@ -27,7 +34,7 @@ import {
 import { readCardCategories } from '../../../compendium-reads';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
-import { readEditPlace, readListPlace } from '../list-page';
+import { readEditPlace, readListPlace, readOrMissing } from '../list-page';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { readCompendiumEntry } from './read-entry';
@@ -68,21 +75,41 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
 
-  const [page, counts, formIcons, { edited, missing }] = await Promise.all([
+  // The entry whose details are open over the list, `?entry=` (M12.5).
+  const entrySlug = single(params.entry);
+  const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
     readCompendium(variables, after, before),
     readFacets(variables),
     readFormIcons(),
     readEditPlace(place, readCompendiumEntry),
+    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug)) : undefined,
   ]);
   const facets = compendiumFacetCounts(counts, {
     formIcons,
     deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
     categories: new Map(categories.map((category) => [category.id, category])),
   });
-  const here = { ...filter, after, before };
+  // The list as it stands, no modal over it: where the details close to, and
+  // what each row's Edit and name open over.
+  const list = { ...filter, after, before };
+  // The list with the details open, which an edit modal opens over and closes back to.
+  const here = { ...list, entry: shown ? entrySlug : undefined };
   // An old address opens the entry at its new one, as the public route's
   // redirect does (MB.82).
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
+  if (shown?.kind === 'moved') {
+    const dialog = adding ? 'new' : place.editSlug ? { edit: place.editSlug } : undefined;
+    redirect(compendiumHref({ ...list, entry: shown.slug }, dialog));
+  }
+  const detailed = shown?.kind === 'entry' ? shown.entry : undefined;
+  // The open details' sections (M12.5), read uncached as the entry's page reads
+  // them, and only while the details are open; none for an entry gone since.
+  const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
+  // The admin's or curator's own covens that hold it, and only those (M6.6; M12.5).
+  const covens = summary ? await covensHolding(detailed.id) : [];
+  // The plus beside the pencil (M9.12), for the covens the admin or curator is a member of and
+  // may add in: none for one in no coven, so neither the plus nor its check shows.
+  const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const stamps = await editorStamps(
@@ -99,7 +126,11 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     canonicalName: node.canonicalName,
     forms: page.forms[i],
     categories: chipRows[i],
-    editHref: compendiumHref(here, { edit: node.slug }),
+    details: {
+      href: compendiumHref({ ...list, entry: node.slug }),
+      heading: detailsHeading(node),
+    },
+    editHref: compendiumHref(list, { edit: node.slug }),
     editHeading: editHeading(node),
   }));
 
@@ -108,12 +139,12 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <PageHeader
         title="Compendium"
         action={
-          <AddAction href={compendiumHref(here, 'new')} heading={ADD_HEADING}>
+          <AddAction href={compendiumHref(list, 'new')} heading={ADD_HEADING}>
             {ADD_TITLE}
           </AddAction>
         }
       />
-      {missing && <MissingNotice noun="compendium entry" />}
+      {(missing || (entrySlug && !shown)) && <MissingNotice noun="compendium entry" />}
       <CompendiumList
         entries={entries}
         filter={filter}
@@ -123,6 +154,25 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         position={page.position}
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
+      />
+      {/* The details a Quick Look opens, in their own place beneath the edit modal's,
+          so an Edit pressed in them opens over them (M12.5). */}
+      <DetailsDialog
+        closeHref={compendiumHref(list)}
+        opened={
+          detailed && {
+            heading: detailsHeading(detailed),
+            marks: summary && detailsMarks(summary),
+            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
+            children: summary && <IngredientSummary detail={summary} covens={covens} />,
+            editAction: {
+              href: compendiumHref(here, { edit: detailed.slug }),
+              name: cardName(detailed.name, detailed.canonicalName),
+              heading: editHeading(detailed),
+            },
+          }
+        }
       />
       {/* One dialog in one place for both, so Save Ingredient's move from ?new
           to ?edit= keeps the modal open rather than fading it out and in; the

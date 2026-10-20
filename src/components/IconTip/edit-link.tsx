@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
-import { AnnotateIcon, PencilIcon } from './icons';
+import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
 import type { EditLinkProps } from './types';
 
 /**
@@ -19,13 +19,21 @@ const IconLink = ({
   href,
   name,
   heading,
+  ref,
   verb,
   icon,
-}: EditLinkProps & { verb: string; icon: ReactElement }): ReactElement => {
-  const onClick = useOpenModalClick(href, heading);
+  place,
+  className = 'icon-tip__edit',
+}: EditLinkProps & {
+  verb: string;
+  icon: ReactElement;
+  place?: string;
+  className?: string;
+}): ReactElement => {
+  const onClick = useOpenModalClick(href, heading, place);
   return (
     <IconTip tip={verb}>
-      <Link className="icon-tip__edit" href={href} onClick={onClick}>
+      <Link ref={ref} className={className} href={href} onClick={onClick}>
         {icon}
         <span className="visually-hidden">
           {verb} {name}
@@ -41,10 +49,29 @@ export const EditLink = (props: EditLinkProps): ReactElement => (
 );
 
 /**
+ * Edit on a compendium entry, for an admin or a curator (the owner's call, 2026-10-20): the same
+ * pencil, but named and tipped for the compendium it changes, "Edit in Compendium", so that on a
+ * page that also offers a coven's own choices it cannot be taken for one of them.
+ */
+export const CompendiumEditLink = (props: EditLinkProps): ReactElement => (
+  <IconLink {...props} verb="Edit in Compendium" icon={<PencilIcon />} />
+);
+
+/**
  * A compendium entry's Annotate in a coven's list (M8.17): `AnnotateIcon`, not
  * Edit's pencil, since it writes the coven's notes over the entry
  * rather than changing the entry.
  */
 export const AnnotateLink = (props: EditLinkProps): ReactElement => (
   <IconLink {...props} verb="Annotate" icon={<AnnotateIcon />} />
+);
+
+/**
+ * An entry's Quick Look in a list (M12.5): the eye beside its name, opening
+ * the entry's details over the list in the modal place `place` names, the
+ * name itself still a plain link to the entry's page. Its own class, not
+ * Edit's, as it sits in the name's line rather than a row's foot.
+ */
+export const QuickLookLink = (props: EditLinkProps & { place?: string }): ReactElement => (
+  <IconLink {...props} verb="Quick Look" icon={<MysticEyeIcon />} className="icon-tip__look" />
 );

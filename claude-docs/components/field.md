@@ -158,7 +158,8 @@ as the field is left), `autoComplete` and `busy` (its text is being looked up: t
 [`Spinner`](spinner.md) inside the box at its right end, shown after 100ms so a quick answer
 never flashes it, and the input `aria-busy`; the name's duplicate check, the owner's
 call of 2026-10-18). `SelectField` adds `name`,
-`options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
+`options` (each `{ value, label, icon?, disabled?, note? }`, a disabled one listed and not
+choosable, its `note` saying why), `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a
 set long enough to want a search: `GroupedValueForm`'s group, a category's or
 a form's Group and a deity's Tradition (MB.115). Its text

@@ -10,10 +10,11 @@ import BusyButton from '../BusyButton';
 import Modal from '../Modal';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import CovenChoice from './coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
 
 // Make It Ours (M12.23) and Remove (M12.17), the two writes a coven's member
-// makes to a compendium entry it holds, shared by the entry page's Edit menu
+// makes to a compendium entry it holds, shared by the entry page's More and bin
 // and the Annotate dialog's More menu (M8.17), so the two ask the same
 // confirmation and land in the same place. The entry page asks in a dialog; the
 // Annotate dialog asks in its form's own confirmation card, as its Delete and Link
@@ -66,18 +67,22 @@ export function RemoveQuestion({ name }: { name: string }): ReactElement {
 
 /**
  * Make It Ours asked in a dialog, as Leave Coven asks (the owner's call,
- * 2026-10-19), on the entry page.
+ * 2026-10-19), on the entry page. With `covens`, the dialog first asks which
+ * coven, in the dropdown Add's picker uses, above the question (M9.12), inside
+ * the `.form` stack that spaces the picker's field.
  */
 export function MakeItOursDialog({
   name,
   write,
   onClose,
   returnTo,
+  covens,
 }: CupboardQuestionProps): ReactElement {
   return (
     <Modal title="Make It Ours" onClose={onClose} returnTo={returnTo}>
       {(close) => (
-        <>
+        <div className={covens ? 'form' : undefined}>
+          {covens && <CovenChoice {...covens} />}
           <p>
             <MakeItOursQuestion name={name} />
           </p>
@@ -88,7 +93,7 @@ export function MakeItOursDialog({
               busy={write.pending}
               busyLabel="Making It Ours"
               disabled={write.pending}
-              onClick={write.run}
+              onClick={() => write.run()}
             >
               Make It Ours
             </BusyButton>
@@ -101,23 +106,25 @@ export function MakeItOursDialog({
               Cancel
             </button>
           </div>
-        </>
+        </div>
       )}
     </Modal>
   );
 }
 
-/** Remove asked in a dialog, the same way. */
+/** Remove asked in a dialog, the same way, asking which coven the same way too. */
 export function RemoveDialog({
   name,
   write,
   onClose,
   returnTo,
+  covens,
 }: CupboardQuestionProps): ReactElement {
   return (
     <Modal title="Remove from Cupboard" onClose={onClose} returnTo={returnTo}>
       {(close) => (
-        <>
+        <div className={covens ? 'form' : undefined}>
+          {covens && <CovenChoice {...covens} />}
           <p>
             <RemoveQuestion name={name} />
           </p>
@@ -127,7 +134,7 @@ export function RemoveDialog({
               busy={write.pending}
               busyLabel="Removing"
               disabled={write.pending}
-              onClick={write.run}
+              onClick={() => write.run()}
             >
               Remove
             </BusyButton>
@@ -140,7 +147,7 @@ export function RemoveDialog({
               Cancel
             </button>
           </div>
-        </>
+        </div>
       )}
     </Modal>
   );
@@ -192,7 +199,8 @@ export function useCupboardWrites({
       run: () => remove.mutate(),
       // Busy past the write too, until the page it changed arrives (above).
       pending: remove.isPending || remove.isSuccess,
+      reset: remove.reset,
     },
-    makeOurs: { run: () => makeOurs.mutate(), pending: makeOurs.isPending },
+    makeOurs: { run: () => makeOurs.mutate(), pending: makeOurs.isPending, reset: makeOurs.reset },
   };
 }

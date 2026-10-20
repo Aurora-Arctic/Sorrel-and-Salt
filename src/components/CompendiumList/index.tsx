@@ -1,7 +1,9 @@
 import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
+import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
+import { cardName } from '../IngredientCard/card-name';
 import { LinkIconHint } from '../LinkHint';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
@@ -35,21 +37,30 @@ import './index.scss';
 // name from no formal name by this column.
 const NONE = '—';
 
+// Named with the formal name too, as two entries can share a label but never
+// a formal name: Edit and Quick Look read it after their verb.
+const nameOf = (entry: CompendiumListEntry): string => cardName(entry.name, entry.canonicalName);
+
 /** The columns; Edit's pencil stands at a card's top right on a phone. */
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   {
     heading: 'Name',
-    // The entry's own public page, by its stored slug (M8.19), which offers a
-    // curator Edit; the pencil still opens the modal from here.
+    // The Quick Look eye, opening the entry's details over the list (M12.5), to
+    // the left of the name (the owner's call, 2026-10-20); then the entry's own
+    // public page, by its stored slug (M8.19), which offers a curator Edit. The
+    // pencil still opens the edit modal from here.
     cell: (entry) => (
-      <PendingLink
-        className="compendium-list__name"
-        href={`/compendium/ingredients/${entry.slug}` as Route}
-        navigationTarget={ingredientLinkTarget(`/compendium/ingredients/${entry.slug}`)}
-      >
-        {entry.name}
-        <LinkIconHint />
-      </PendingLink>
+      <>
+        <DetailsLink opens={entry.details} name={nameOf(entry)} />{' '}
+        <PendingLink
+          className="compendium-list__name"
+          href={`/compendium/ingredients/${entry.slug}` as Route}
+          navigationTarget={ingredientLinkTarget(`/compendium/ingredients/${entry.slug}`)}
+        >
+          {entry.name}
+          <LinkIconHint />
+        </PendingLink>
+      </>
     ),
   },
   { heading: 'Formal Name', cell: (entry) => entry.canonicalName ?? NONE },
@@ -109,14 +120,8 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     action: 'corner',
     className: 'compendium-list__edit',
     headingClassName: 'compendium-list__edit',
-    // Named with the formal name too, as two entries can share a label but
-    // never a formal name.
     cell: (entry) => (
-      <EditLink
-        href={entry.editHref}
-        heading={entry.editHeading}
-        name={entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
-      />
+      <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
     ),
   },
 ];

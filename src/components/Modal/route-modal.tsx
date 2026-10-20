@@ -48,12 +48,16 @@ function linkTo(href: string): HTMLElement | undefined {
 export default function RouteModal({
   closeHref,
   size,
+  readingBody,
   content,
+  place,
   returnTo,
 }: RouteModalProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
-  const heading = content?.heading ?? opener?.loading;
+  // A press shows in the place it names alone (M12.5).
+  const pressed = opener?.loadingPlace === place ? opener?.loading : undefined;
+  const heading = content?.heading ?? pressed;
   if (!heading) return null;
   const close = () => {
     // A close while it loads forgets the press; the navigation back
@@ -73,7 +77,15 @@ export default function RouteModal({
     return (href && linkTo(href)) || returnTo?.() || null;
   };
   return (
-    <Modal {...heading} size={size} loading={!content} onClose={close} returnTo={backTo}>
+    <Modal
+      {...heading}
+      size={size}
+      readingBody={readingBody}
+      loading={!content}
+      foot={content?.foot}
+      onClose={close}
+      returnTo={backTo}
+    >
       {(done) => (content ? content.body(done) : <ModalLoading />)}
     </Modal>
   );
