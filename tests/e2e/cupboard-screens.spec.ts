@@ -89,6 +89,9 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await assertNoAccessibilityViolations(page);
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toBeHidden();
+  // Closed with nothing changed, the dialog gives the focus back to the menu
+  // button its item sat behind, where the press began (M8.17).
+  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeFocused();
 
   await choose('Remove');
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();

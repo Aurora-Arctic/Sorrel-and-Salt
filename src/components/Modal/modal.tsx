@@ -45,7 +45,8 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
 }
 
 /**
- * Back to what opened the modal, if it is still in the page, or else to where
+ * Back to what opened the modal, if it is still in the page and not hidden
+ * (an item of a menu since closed is), or else to where
  * the owner says, or else, with the opener gone and the owner naming nowhere,
  * as after a row's Remove takes the row away, to the page's heading; and only
  * if nothing has taken the focus meanwhile, as a page a save opens may. The
@@ -55,7 +56,7 @@ function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo'])
   const now = document.activeElement;
   if (now && now !== document.body) return;
   const target =
-    opener instanceof HTMLElement && opener.isConnected
+    opener instanceof HTMLElement && opener.isConnected && !opener.closest('[hidden], [inert]')
       ? opener
       : (returnTo?.(opener) ?? pageHeading());
   target?.focus();

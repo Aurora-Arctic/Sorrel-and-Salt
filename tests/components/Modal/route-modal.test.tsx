@@ -10,6 +10,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { RouteModalContext } = await import('@/components/Modal/route-modal-provider');
 const { EditLink } = await import('@/components/IconTip');
+const { useOpenModalClick } = await import('@/components/Modal');
+const { default: MenuButton } = await import('@/components/MenuButton');
 
 // A page's one modal place (M9.18): the form its address opens, or, while a
 // press's navigation is on its way, the pressed modal's head over a skeleton
@@ -221,6 +223,47 @@ describe('RouteModal giving the focus back', () => {
 
     expect(link()).not.toBe(pressed);
     expect(link()).toHaveFocus();
+  });
+
+  // A menu's item (the entry page's Edit menu, M8.17): the item goes with its
+  // closed menu, and the button that opened the menu is where the press began.
+  it('goes to the button of the menu whose item opened it, once that menu has closed', async () => {
+    function MenuPage({ open }: { open: boolean }) {
+      const onClick = useOpenModalClick(EDIT, HEADING);
+      return (
+        <main>
+          <h1>Categories</h1>
+          <MenuButton
+            label="Edit"
+            className="btn"
+            items={[{ key: 'edit', label: 'Edit Category', href: EDIT, onClick }]}
+          />
+          <RouteModal closeHref={CLOSE} content={open ? content : undefined} />
+        </main>
+      );
+    }
+    const page = (open: boolean) => (
+      <RouteModalProvider>
+        <MenuPage open={open} />
+      </RouteModalProvider>
+    );
+    const view = render(page(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const item = screen.getByRole('menuitem', { name: 'Edit Category' });
+    act(() => item.focus());
+    await act(async () => {
+      fireEvent.click(item);
+    });
+    view.rerender(page(true));
+    expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    });
+
+    view.rerender(page(false));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
   });
 
   // A pasted address or a reload: nothing opened it.

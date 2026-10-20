@@ -164,61 +164,63 @@ export default function MenuButton({
           </>
         )}
       </button>
-      {drawn && (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label={label}
-          aria-hidden={!open || undefined}
-          inert={!open}
-          className={[
-            'menu-button__menu',
-            opens === 'above' && 'menu-button__menu--above',
-            buttonType && 'menu-button__menu--button-type',
-            !open && 'is-closing',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          onKeyDown={onMenuKey}
-          onAnimationEnd={(event) => {
-            if (!open && event.target === event.currentTarget) setDrawn(false);
-          }}
-        >
-          {items.map((item) =>
-            item.href !== undefined ? (
-              <Link
-                key={item.key}
-                href={item.href}
-                role="menuitem"
-                tabIndex={-1}
-                className={itemClass(item, chosen === item.key)}
-                onClick={(event) => {
-                  setChosen(item.key);
-                  setOpen(false);
-                  item.onClick?.(event);
-                }}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <button
-                key={item.key}
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                className={itemClass(item, chosen === item.key)}
-                onClick={() => {
-                  setChosen(item.key);
-                  setOpen(false);
-                  item.onSelect();
-                }}
-              >
-                {item.label}
-              </button>
-            ),
-          )}
-        </div>
-      )}
+      {/* Kept in the page once closed, hidden, so a dialog an item's link opened
+          can find that link when it closes and give the focus to this button
+          (RouteModal's linkTo). */}
+      <div
+        id={menuId}
+        role="menu"
+        aria-label={label}
+        aria-hidden={!open || undefined}
+        inert={!open}
+        hidden={!drawn}
+        className={[
+          'menu-button__menu',
+          opens === 'above' && 'menu-button__menu--above',
+          buttonType && 'menu-button__menu--button-type',
+          !open && 'is-closing',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        onKeyDown={onMenuKey}
+        onAnimationEnd={(event) => {
+          if (!open && event.target === event.currentTarget) setDrawn(false);
+        }}
+      >
+        {items.map((item) =>
+          item.href !== undefined ? (
+            <Link
+              key={item.key}
+              href={item.href}
+              role="menuitem"
+              tabIndex={-1}
+              className={itemClass(item, chosen === item.key)}
+              onClick={(event) => {
+                setChosen(item.key);
+                setOpen(false);
+                item.onClick?.(event);
+              }}
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <button
+              key={item.key}
+              type="button"
+              role="menuitem"
+              tabIndex={-1}
+              className={itemClass(item, chosen === item.key)}
+              onClick={() => {
+                setChosen(item.key);
+                setOpen(false);
+                item.onSelect();
+              }}
+            >
+              {item.label}
+            </button>
+          ),
+        )}
+      </div>
     </span>
   );
 }

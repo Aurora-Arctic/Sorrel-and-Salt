@@ -114,11 +114,19 @@ and a Modal's owner closes it by unmounting it, so Modal does it instead
 
 1. **Before it opens**, Modal notes the focused element, the opener.
 2. **As it unmounts**, if the focus is on nothing (the page's body), it
-   focuses the opener again, if the opener is still on the page.
+   focuses the opener again, if the opener is still on the page and not
+   hidden. An item of a menu that has since closed is still on the page but
+   hidden, so it counts as gone.
 3. **If the opener is gone**, it asks its owner's `returnTo` for a place.
    An owner whose opener sits in a menu that closed, or is drawn afresh,
    names its trigger there: `ModalButton` its button, Add Ingredient the
    page's main area, `CupboardActions` its menu's button.
+   `RouteModal` (a dialog opened by its address, such as `?edit`) looks for
+   a link to that address and focuses it. If the link is an item of a closed
+   `MenuButton`, it focuses that menu's button instead, where the press
+   began. For example, Edit Ingredient chosen from a coven entry's Edit menu,
+   then Cancel, leaves the focus on Edit; the curator's Edit Compendium Entry
+   item works the same way (M8.17, the owner's call, 2026-10-20).
 4. **If the owner names nowhere**, it focuses the page's `<h1>`, given
    `tabindex="-1"` by script so it can take the focus without becoming a
    Tab stop (`pageHeading()`, in `page-heading.ts`).
