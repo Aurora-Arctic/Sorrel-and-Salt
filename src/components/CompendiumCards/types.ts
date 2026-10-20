@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
+import type { CompendiumCoven } from '../AddIcon/types';
 import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
 import type { EntryRecency } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
@@ -81,22 +82,5 @@ export interface CompendiumCardsProps extends Pick<
   covens?: readonly CompendiumCoven[];
 }
 
-/** A coven the viewer may add to, as the plus's menu names it. */
-export interface CompendiumCoven {
-  id: string;
-  name: string;
-}
-
-/** The plus at a card's bottom right: add this entry to a coven, a menu of the covens where there are several. */
-export interface AddIconProps {
-  /** The default coven: added to at once where `covens` is empty. */
-  workspaceId: string;
-  /** The compendium entry's id. */
-  ingredientId: string;
-  /** Every coven the viewer may write in. */
-  covens: readonly CompendiumCoven[];
-  /** The ids of those that already hold the entry. */
-  heldIn: readonly string[];
-}
-
+export type { CompendiumCoven };
 export type { CompendiumListFilter };

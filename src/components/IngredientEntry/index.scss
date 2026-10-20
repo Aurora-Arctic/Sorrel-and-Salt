@@ -200,6 +200,17 @@ $formal-line: 1.5rem;
   margin: 0;
 }
 
+// The public page's plus beside the pencil (M9.12, the owner's call, 2026-10-20): one placed pair,
+// the plus then the pencil, kept on one line, and the formal name wraps short of both.
+.ingredient-entry__naming:has(> .page-header > .ingredient-entry__cupboard--pair)
+  > .ingredient-entry__formal {
+  padding-inline-end: calc(2 * #{$icon-size-large} + 2 * #{space(2)});
+}
+
+.ingredient-entry__head .page-header > .ingredient-entry__cupboard--pair {
+  flex-wrap: nowrap;
+}
+
 // In Your Cupboard: the shelf before the name, at the heading's size and in
 // the muted ink, so it reads as a mark on the name and not part of it (the
 // owner's mock-up, 2026-10-19). A button only to carry its tip (held-mark.tsx).

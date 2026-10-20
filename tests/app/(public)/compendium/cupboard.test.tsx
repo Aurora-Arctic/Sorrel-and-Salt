@@ -23,11 +23,11 @@ const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
 
 const readCompendiumEntry = vi.fn();
-const heldCompendiumEntryIdsIn = vi.fn();
+const covensHoldingEntry = vi.fn();
 const getCupboardEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumEntry,
-  heldCompendiumEntryIdsIn,
+  covensHoldingEntry,
   getCupboardEntry,
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
@@ -62,10 +62,12 @@ const signedIn = (...workspaces: ReturnType<typeof coven>[]) =>
 const roles = (entries: Record<string, string>) =>
   covenRolesIfSignedIn.mockResolvedValue(new Map(Object.entries(entries)));
 const holding = (...ids: string[]) =>
-  heldCompendiumEntryIdsIn.mockResolvedValue(new Map(ids.map((id) => [id, new Set([ENTRY_ID])])));
+  covensHoldingEntry.mockResolvedValue(
+    ids.map((id) => ({ id, slug: id.replace('ws-', ''), name: `Coven ${id}` })),
+  );
 
-/** The cupboard choices the page handed the entry, once it has drawn. */
-async function covensGiven(search: Record<string, string> = {}) {
+/** The props the page handed the entry, once it has drawn. */
+async function entryProps(search: Record<string, string> = {}) {
   entryComponent.mockClear();
   const tree = await Page({
     params: Promise.resolve({ slug: detail.entry.slug }),
@@ -81,8 +83,12 @@ async function covensGiven(search: Record<string, string> = {}) {
   };
   walk(tree);
   expect(found).toHaveLength(1);
-  return found[0].covens as PublicCupboardProps | undefined;
+  return found[0];
 }
+
+/** The cupboard choices the page handed the entry. */
+const covensGiven = async (search: Record<string, string> = {}) =>
+  (await entryProps(search)).covens as PublicCupboardProps | undefined;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -90,7 +96,7 @@ beforeEach(() => {
   viewerIfSignedIn.mockResolvedValue(null);
   covenRolesIfSignedIn.mockResolvedValue(null);
   getSession.mockResolvedValue(SESSION);
-  heldCompendiumEntryIdsIn.mockResolvedValue(new Map());
+  covensHoldingEntry.mockResolvedValue([]);
   getCupboardEntry.mockResolvedValue(null);
 });
 
@@ -99,7 +105,7 @@ describe('the public entry page’s cupboard choices', () => {
     expect(await covensGiven({ annotate: 'w' })).toBeUndefined();
 
     expect(covenRolesIfSignedIn).not.toHaveBeenCalled();
-    expect(heldCompendiumEntryIdsIn).not.toHaveBeenCalled();
+    expect(covensHoldingEntry).not.toHaveBeenCalled();
     expect(getCupboardEntry).not.toHaveBeenCalled();
   });
 
@@ -108,7 +114,6 @@ describe('the public entry page’s cupboard choices', () => {
     roles({ 'ws-w': 'viewer' });
 
     expect(await covensGiven()).toBeUndefined();
-    expect(heldCompendiumEntryIdsIn).not.toHaveBeenCalled();
   });
 
   it('offers none to a viewer, whose role permits no write even where a coven says it may', async () => {
@@ -117,7 +122,7 @@ describe('the public entry page’s cupboard choices', () => {
     roles({ 'ws-w': 'viewer' });
 
     expect(await covensGiven()).toBeUndefined();
-    expect(heldCompendiumEntryIdsIn).toHaveBeenCalledWith(SESSION, ['ws-w'], [ENTRY_ID]);
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, ENTRY_ID);
   });
 
   it('offers a member of one coven Add there, with the coven first', async () => {
@@ -157,7 +162,7 @@ describe('the public entry page’s cupboard choices', () => {
   it('reads a refusal of the held read as no coven holding it, still offering Add', async () => {
     signedIn(coven('ws-w', 'w'));
     roles({ 'ws-w': 'member' });
-    heldCompendiumEntryIdsIn.mockRejectedValue(new Forbidden());
+    covensHoldingEntry.mockRejectedValue(new Forbidden());
 
     expect((await covensGiven())?.covens[0]).toMatchObject({ held: false, canAdd: true });
   });
@@ -186,7 +191,7 @@ describe('the public entry page’s cupboard choices', () => {
 
     expect(getCupboardEntry).not.toHaveBeenCalled();
     expect(covens?.annotate.opened).toBeUndefined();
-    expect(heldCompendiumEntryIdsIn).toHaveBeenCalledWith(SESSION, ['ws-x'], [ENTRY_ID]);
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, ENTRY_ID);
   });
 
   it('ignores the address naming a coven of the viewer’s that does not hold the entry', async () => {
@@ -196,5 +201,44 @@ describe('the public entry page’s cupboard choices', () => {
 
     expect((await covensGiven({ annotate: 'w' }))?.annotate.opened).toBeUndefined();
     expect(getCupboardEntry).not.toHaveBeenCalled();
+  });
+});
+
+// The In Your Cupboard shelf before the name (M9.12): shown when any coven of the viewer's holds
+// the entry, viewers' covens included, from the one held read that feeds the choices too.
+describe('the public entry page’s shelf mark', () => {
+  const heldInCovens = async () => (await entryProps()).heldInCovens;
+
+  it('shows a member whose coven holds the entry the shelf, from the one held read', async () => {
+    signedIn(coven('ws-w', 'w'));
+    roles({ 'ws-w': 'member' });
+    holding('ws-w');
+
+    expect(await heldInCovens()).toBe(true);
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, ENTRY_ID);
+  });
+
+  it('shows a viewer the shelf where their coven holds it, though they may add nowhere', async () => {
+    signedIn(coven('ws-w', 'w', false));
+    roles({ 'ws-w': 'viewer' });
+    holding('ws-w');
+
+    expect(await heldInCovens()).toBe(true);
+  });
+
+  it('shows a member whose covens hold none of it no shelf', async () => {
+    // The precondition: signed in and a member, so only the held read says no.
+    signedIn(coven('ws-w', 'w'));
+    roles({ 'ws-w': 'member' });
+
+    expect(await heldInCovens()).toBe(false);
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, ENTRY_ID);
+  });
+
+  it('shows a signed-out visitor no shelf, reading nothing held for them', async () => {
+    holding('ws-w');
+
+    expect(await heldInCovens()).toBe(false);
+    expect(covensHoldingEntry).not.toHaveBeenCalled();
   });
 });

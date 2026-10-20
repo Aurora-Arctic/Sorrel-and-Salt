@@ -1020,11 +1020,15 @@ describe('IngredientEntry edit', () => {
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     unmount();
 
+    // A curator in no coven: Edit is the head's one choice, the pencil named Edit and the
+    // entry, and no labelled Edit link is left under the name.
     renderEntry({ edit: edit() });
-    expect(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
       'href',
       `${PUBLIC}?edit`,
     );
+    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /^Edit/ })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
   });
@@ -1038,7 +1042,7 @@ describe('IngredientEntry edit', () => {
     expect(dialog()).not.toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Edit Testwort' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
@@ -1265,6 +1269,27 @@ describe('IngredientEntry on a coven page', () => {
 
     expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+// The public page's shelf (M9.12): a compendium entry any of the viewer's covens holds carries
+// In Your Cupboard before its name, as it does on the coven's own page.
+describe('IngredientEntry on the public page, held in a coven', () => {
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+
+  it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
+    renderEntry({ heldInCovens: true });
+
+    const mark = shelf()!;
+    const heading = screen.getByRole('heading', { level: 1, name: 'Testwort' });
+    expect(mark.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('puts no shelf on a compendium entry no coven of the viewer’s holds', () => {
+    renderEntry({ heldInCovens: false });
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
+    expect(shelf()).toBeNull();
   });
 });
 

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OwnEntryActions from '@/components/IngredientEntry/own-actions';
@@ -51,6 +51,13 @@ function renderOnPage(edit?: IngredientEntryEdit) {
 
 const menuButton = () => screen.getByRole('button', { name: 'Edit Testwort' });
 
+/** The open Edit menu's choices, read without pressing. */
+function shownChoices(): string[] {
+  return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
+    .getAllByRole('menuitem')
+    .map((item) => item.textContent ?? '');
+}
+
 function choices(): string[] {
   fireEvent.click(menuButton());
   return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
@@ -83,7 +90,7 @@ describe('OwnEntryActions', () => {
 
   // The pencil at the end of the name's row (the owner's call, 2026-10-20): MenuButton's icon
   // form, named for the entry as the modal's pencil is, with the Edit tip and no word of its own.
-  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', () => {
+  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', async () => {
     renderOnPage();
 
     const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
@@ -92,7 +99,12 @@ describe('OwnEntryActions', () => {
     fireEvent.mouseEnter(pencil);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
-    expect(choices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
+    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
+    // press: inside an async act, so that update is awaited rather than left outside it.
+    await act(async () => {
+      fireEvent.click(pencil);
+    });
+    expect(shownChoices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
   });
 
   it('offers Edit and Delete in one Edit menu, Edit at its address', () => {

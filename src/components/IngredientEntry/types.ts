@@ -126,6 +126,12 @@ export interface IngredientEntryProps {
    * compendium's, and says nothing of any coven's.
    */
   covens?: PublicCupboardProps;
+  /**
+   * The public page's (M9.12): one of the viewer's covens, of any role, holds this entry, read
+   * by `covensHoldingEntry` as the details modal's In Your Covens is. Draws the shelf before the
+   * name and nothing else; false for a visitor.
+   */
+  heldInCovens?: boolean;
 }
 
 /** One of the viewer's writable covens, as the public page's cupboard choices name it (M9.12). */
