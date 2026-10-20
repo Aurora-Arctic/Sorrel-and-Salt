@@ -22,11 +22,11 @@ both draw them through this one component, so the two cannot drift.
 The reasoning is in
 [`../design-decisions/m12.13-cupboard-names-the-compendium-plan.md`](../design-decisions/m12.13-cupboard-names-the-compendium-plan.md).
 
-| Kind         | Whose entry                                                  | Shows                                                       |
-| ------------ | ------------------------------------------------------------ | ----------------------------------------------------------- |
-| `own`        | The coven's own (`isGlobal` false)                           | Local                                                       |
-| `cupboard`   | A compendium entry this coven's cupboard names               | Compendium; Annotated beside it once a field is overridden  |
-| `compendium` | A compendium entry no cupboard names: all of the public list | Compendium with `inCoven`; nothing on the public compendium |
+| Kind         | Whose entry                                                  | Shows                                                         |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| `own`        | The coven's own (`isGlobal` false)                           | Local                                                         |
+| `cupboard`   | A compendium entry this coven's cupboard names               | Compendium; Annotated in its place once a field is overridden |
+| `compendium` | A compendium entry no cupboard names: all of the public list | Compendium with `inCoven`; nothing on the public compendium   |
 
 The mark reads "Compendium", not "From the Compendium" (changed 2026-10-18, to pair with Local; a word change only, same look, no tip).
 
@@ -34,7 +34,7 @@ A retired entry shows **Retired** in place of Compendium (it was worded "No Long
 
 **Compendium on every compendium entry in a coven** (the owner's call, 2026-10-19): held or not, so the mark says where the entry is from and nothing more. Which ones the cupboard holds is the entry page's shelf mark ([`ingredient-entry.md`](ingredient-entry.md), "In Your Cupboard"). On the public compendium every entry is one, so none wears it.
 
-**Annotated** (changed 2026-10-18; beside Compendium since 2026-10-19, in its place before): "Annotated", a tipped button like Retired ("From the Compendium, with your coven's own changes."), opening from its right edge and lifted above the card's stretched link so a click opens the tip and does not navigate. A retired and annotated entry shows Retired and Annotated, each with its own tip; a retired, unannotated one shows Retired alone. It wears the `annotated` palette: Local's inks, through the `$local-badge-dark` and `$local-badge-light` tokens in `_variables.scss`, so the two cannot drift apart (it marks your coven's own changes, the same idea as your own entry). Its contrast is Local's. It is never rendered as `badge--local`.
+**Annotated** (changed 2026-10-18; in place of Compendium, beside it from 2026-10-19 until the owner's call of 2026-10-20 that Annotated wins, since it already says the entry is the Compendium's): "Annotated", a tipped button like Retired ("From the Compendium, with your coven's own changes."), opening from its right edge and lifted above the card's stretched link so a click opens the tip and does not navigate. A retired and annotated entry shows Retired and Annotated, each with its own tip; a retired, unannotated one shows Retired alone. It wears the `annotated` palette: Local's inks, through the `$local-badge-dark` and `$local-badge-light` tokens in `_variables.scss`, so the two cannot drift apart (it marks your coven's own changes, the same idea as your own entry). Its contrast is Local's. It is never rendered as `badge--local`.
 
 **The card leaves Compendium and Annotated off** (the owner's call, 2026-10-20). A coven's card shows Local, Retired, Caution and Toxic, and never Compendium or Annotated: where a held entry came from, and whether the coven changed it, is the entry page's to say. `IngredientCard` passes `provenance={false}`; the entry page's head leaves it on, so both still draw through this one component. The Quick Look details modal draws no badges at all.
 
@@ -51,7 +51,7 @@ Every badge row is drawn by this component, so the order holds in one place rath
 | Caution    | `caution`   | wax red tint           | red     |
 | Toxic      | `safety`    | solid wax red          | red     |
 
-So a held, annotated entry with notes reads Annotated, Compendium, Caution, Toxic, and a retired, annotated one Annotated, Retired, Caution, Toxic. Low (`low-stock`, neutral) and Out of Stock (`out-of-stock`, a muted wax tint, red) are `StockBadge`s on the jar lines, one to a line, so they share no row with these. The form heading's lone `ToxicMark` on the entry page is a row of one.
+So a held, annotated entry with notes reads Annotated, Caution, Toxic (Annotated wins over Compendium), a held, unannotated one Compendium, Caution, Toxic, and a retired, annotated one Annotated, Retired, Caution, Toxic. Low (`low-stock`, neutral) and Out of Stock (`out-of-stock`, a muted wax tint, red) are `StockBadge`s on the jar lines, one to a line, so they share no row with these. The form heading's lone `ToxicMark` on the entry page is a row of one.
 
 ## Contracts
 

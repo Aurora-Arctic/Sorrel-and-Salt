@@ -30,12 +30,15 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  it('shows Annotated beside Compendium once the cupboard row overrides a field', () => {
+  // Annotated wins (the owner's call, 2026-10-20): it already says the entry is the
+  // Compendium's, so the two never show together. The test above is the precondition:
+  // held and unannotated, the same entry shows Compendium.
+  it('shows Annotated alone, without Compendium, once the cupboard row overrides a field', () => {
     render(<EntryMarks kind="cupboard" annotated />);
 
     expect(annotated()).toBeInTheDocument();
-    expect(held()).toBeInTheDocument();
-    expect(statuses()).toHaveLength(1);
+    expect(held()).toBeNull();
+    expect(statuses()).toHaveLength(0);
   });
 
   it('marks a compendium entry the cupboard does not hold when read in a coven', () => {
@@ -131,11 +134,7 @@ describe('EntryMarks badge order', () => {
     expect(precedes(annotated(), retired())).toBe(true);
   });
 
-  it('draws Annotated ahead of Compendium, and Local ahead of the red marks', () => {
-    const cupboard = render(<EntryMarks kind="cupboard" annotated />);
-    expect(precedes(annotated(), held())).toBe(true);
-    cupboard.unmount();
-
+  it('draws Local ahead of the red marks', () => {
     render(<EntryMarks kind="own" toxic safetyNotes="Fixture caution." />);
     expect(precedes(local(), caution())).toBe(true);
     expect(precedes(local(), toxic())).toBe(true);

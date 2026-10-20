@@ -74,7 +74,8 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
       .getByRole('link', { name: /^Fixture Reference Wort/ }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
+  // Annotated wins over Compendium (the owner's call, 2026-10-20).
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
   // At a phone's width, the narrowest a section signs off at.
   await page.setViewportSize({ width: 375, height: 812 });

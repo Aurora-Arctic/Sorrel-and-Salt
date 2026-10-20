@@ -46,11 +46,13 @@ const EntryMarks = ({
       node: <span className="badge badge--local">Local</span>,
     });
   }
+  const shownAnnotated = provenance && held && annotated;
   // Where the row lives, as Local is, and in a neutral tint: neither is a warning.
   // Every compendium entry in a coven wears it, held or not (the owner's call,
   // 2026-10-19); the page's shelf mark says which the cupboard holds. On the
-  // public compendium every entry is one, so none does.
-  if (provenance && (held || (kind === 'compendium' && inCoven)) && !retired) {
+  // public compendium every entry is one, so none does. Annotated, which already
+  // says the entry is the Compendium's, wins over it (the owner's call, 2026-10-20).
+  if (provenance && (held || (kind === 'compendium' && inCoven)) && !retired && !shownAnnotated) {
     marks.push({
       key: 'compendium',
       tone: 'neutral',
@@ -72,7 +74,7 @@ const EntryMarks = ({
       ),
     });
   }
-  if (provenance && held && annotated) {
+  if (shownAnnotated) {
     marks.push({
       key: 'annotated',
       tone: 'green',

@@ -1148,7 +1148,7 @@ describe('IngredientEntry on a coven page', () => {
   const rowOf = (term: string): string =>
     screen.getByText(term, { selector: 'dt' }).nextElementSibling!.textContent!;
 
-  it('shows the merged values of an annotated compendium entry, marked from the compendium', () => {
+  it('shows the merged values of an annotated compendium entry, marked Annotated', () => {
     renderEntry({
       detail: detail({
         cupboardEntry: held({
@@ -1169,9 +1169,12 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Planets')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // Annotated sits beside Compendium; a compendium entry is never Local.
+    // Annotated stands in place of Compendium (the owner's call, 2026-10-20); a
+    // compendium entry is never Local. The next test is the precondition: held and
+    // unannotated, it shows Compendium.
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryByText('Compendium', { exact: true })).toBeNull();
+    expect(screen.queryAllByRole('status')).toHaveLength(0);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
