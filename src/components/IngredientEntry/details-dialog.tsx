@@ -75,8 +75,8 @@ function headingOf({
 
 /**
  * The link to the entry's page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body
- * (the owner's calls, 2026-10-20), holding the one green button, the
- * site's normal `.btn` size, centred and two thirds of the bar. Still a link, to the entry's page,
+ * (the owner's calls, 2026-10-20), holding the one green outline button, the
+ * site's plain `.btn` at its normal size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
 function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
@@ -87,7 +87,7 @@ function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
   return (
     <div className="ingredient-details-foot">
       <PendingLink
-        className="btn btn--solid"
+        className="btn"
         href={pageHref}
         navigationTarget={ingredientLinkTarget(pageHref)}
       >
