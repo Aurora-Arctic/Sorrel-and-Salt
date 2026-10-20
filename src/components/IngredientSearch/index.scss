@@ -23,6 +23,11 @@
 // the floating shadow, faded in and out.
 $stuck-pad: space(4);
 
+// The page's side gutter, the same from a phone up and in the shell and the public frame: the
+// layer below reaches across it, so a card scrolled under the row does not show its shadow
+// beside the row. No wider, or the page would scroll sideways.
+$page-gutter: space(4);
+
 .ingredient-search {
   // The sentinel's anchor.
   position: relative;
@@ -54,13 +59,14 @@ $stuck-pad: space(4);
 // own background and beneath the controls. The `clip-path` cuts the fixed copies to the row
 // and makes the layer a stacking context, so they blend with its page colour, as the real one
 // does with the page's. It is on this layer and never on the `<search>`, which would cut
-// off the stuck shadow and the tray.
+// off the stuck shadow and the tray. It reaches a gutter past the row either side, so a card
+// under the row (its hover shadow carries 20px) shows no shadow beside it.
 .ingredient-search > search > .filter-sorrel {
   position: absolute;
-  inset: 0;
+  inset: 0 calc(-1 * #{$page-gutter});
   z-index: -1;
   pointer-events: none;
-  clip-path: inset(0);
+  clip-path: inset(0 calc(-1 * #{$page-gutter}));
   background-color: $surface-page;
 
   &::before,

@@ -113,14 +113,18 @@ context, so no `z-index` can put the real sorrel between that fill and the row's
 controls. The row draws a copy instead (M12.46): `.filter-sorrel`, an
 `aria-hidden` child of the `<search>` (not of the form, whose `container-type`
 would become the containing block of fixed children), `position: absolute`,
-`inset: 0`, `z-index: -1`, filled with `$surface-page` and clipped by
-`clip-path: inset(0)`. Its `::before` and `::after` are the `screen` and
+`inset: 0 -16px` (the row's width and the page's side gutter either side), `z-index: -1`, filled
+with `$surface-page` and clipped by `clip-path: inset(0 -16px)`. Its `::before` and `::after` are the `screen` and
 `multiply` layers, `position: fixed` like the real ones, so a fixed copy
 lines up with the real sorrel and the clip shows only the part inside the
 row. The clip makes the layer a stacking context, which is why it carries the
 page colour: the blends need something the colour of the page to blend with. It
 sits on the layer and never on the `<search>`, which would cut off the stuck
-shadow and the Filters tray.
+shadow and the Filters tray. The 16px either side is the page's gutter: a card scrolled
+under the row, above all one raised by hover, casts its shadow up to 20px past its edge, and
+beside the row that showed as a dark strip across the real sorrel, cut straight at the row's
+edge; the layer now covers the gutter, and the row's own stuck shadow with it. No wider, since
+the layer would then widen the page.
 
 The shape, the photograph and the offsets (the shell bar, the context row, the
 `sorrel-follow-bar` scroll animation) are written once, in the mixins of

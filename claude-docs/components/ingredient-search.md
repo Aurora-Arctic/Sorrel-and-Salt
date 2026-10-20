@@ -86,7 +86,8 @@ in the filter slot to carry.
   Without the API (past the browser floor) the row simply has no shadow.
   The fill is not the row's own background but `.filter-sorrel`, a decorative
   `aria-hidden` child `FilterForm` draws for `IngredientSearchForm` (its `sorrel`
-  prop), clipped to the row and holding a copy of the corner sorrel, so the
+  prop), clipped to the row and the page's side gutter either side (so a card's
+  shadow under the row does not show beside it), and holding a copy of the corner sorrel, so the
   sorrel shows through the stuck row while the cards under it stay hidden
   (M12.46; [`backdrop.md`](backdrop.md), "The copy in the search row"). It is
   hidden with the sorrel under `prefers-contrast: more`, and the row stays opaque. The
