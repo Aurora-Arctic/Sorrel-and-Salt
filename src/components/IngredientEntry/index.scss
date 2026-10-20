@@ -331,13 +331,14 @@ $jump-link-line: 1.25;
 }
 
 // In the side column a row is a term over a list that may wrap to several
-// lines: a step more between the term and its value, and a clear break
-// before the next term, so the rows read apart (the owner's call).
+// lines: the term a small step over its value, and a clear break before the
+// next row, so the rows read apart (the owner's call, 2026-10-20). Each row is
+// its own `<div>`, so the rows are the list's stack and the pair is the row's.
 .ingredient-entry__correspondences {
-  @include stack(3);
+  @include stack(4);
 
-  dd + dt {
-    margin-block-start: space(5);
+  > div {
+    @include stack(1);
   }
 }
 
