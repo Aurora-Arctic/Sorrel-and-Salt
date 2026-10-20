@@ -123,7 +123,7 @@ beforeEach(() => {
   requireSession.mockResolvedValue(SESSION);
   entryValues.mockResolvedValue(EMPTY_VALUES);
   getCupboardEntry.mockResolvedValue(null);
-  compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0, canConvert: false });
+  compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0 });
 });
 
 describe('the coven ingredient page', () => {
@@ -398,9 +398,8 @@ describe('the coven ingredient page’s marks', () => {
 });
 
 describe('the coven ingredient page’s compendium matches', () => {
-  const replaced = (count: number, total: number, kind = 'same', canConvert = false) => ({
+  const replaced = (count: number, total: number, kind = 'same') => ({
     kind,
-    canConvert,
     entries: Array.from({ length: count }, (_, at) => ({
       id: `00000000-0000-4000-8000-00000000010${at}`,
       slug: `fixture-replaced-${at}`,
@@ -430,25 +429,34 @@ describe('the coven ingredient page’s compendium matches', () => {
     expect(seeAll.getAttribute('href')).toContain('/compendium?query=');
   });
 
-  it('offers an unnamed own entry the matches as Similar, a radio for each to choose from', async () => {
-    compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar', true));
+  // M12.42: linking goes one way in v1, so the Similar list only shows. The
+  // precondition is that an owner is the role that once could convert.
+  it.each(['owner', 'member', 'viewer'])(
+    'lists an unnamed own entry’s matches as Similar to a %s and offers no action on them',
+    async (role) => {
+      requireCovenMembership.mockResolvedValue({
+        workspace: WORKSPACE,
+        membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role },
+      });
+      compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar'));
 
-    await open(covenRow());
+      await open(covenRow());
 
-    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
-    const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
-    expect(within(similar).getAllByRole('radio')).toHaveLength(2);
-  });
-
-  it('offers a role that may not convert the matches and no radios', async () => {
-    compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar', false));
-
-    await open(covenRow());
-
-    const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
-    expect(within(similar).getAllByRole('link')).toHaveLength(2);
-    expect(within(similar).queryByRole('radio')).toBeNull();
-  });
+      expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+      const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
+      expect(
+        within(similar)
+          .getAllByRole('link')
+          .map((link) => link.getAttribute('href')),
+      ).toEqual([
+        '/compendium/ingredients/fixture-replaced-0',
+        '/compendium/ingredients/fixture-replaced-1',
+      ]);
+      expect(screen.queryByRole('radio')).toBeNull();
+      expect(within(similar).queryByRole('button')).toBeNull();
+      expect(screen.queryByRole('button', { name: /link to|this is it/i })).toBeNull();
+    },
+  );
 
   it('passes a compendium entry itself, once, to its public address, and no See All', async () => {
     await open(compendiumRow());

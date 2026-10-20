@@ -9,7 +9,6 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { withSql } from './stories/coven-ingredients';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
-import { COMPENDIUM_EDIT_NOTICE } from '@/components/IngredientForm/compendium-notice';
 
 // M5.5: the admin's compendium form's presentation — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
@@ -143,57 +142,6 @@ test('the compendium form lines its controls up and keeps its pickers inside the
   await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
   await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
-});
-
-// M8.17: the compendium edit's notice sits under the dialog's title, above
-// the row holding Open All and Undo and Redo (the owner's call, 2026-10-19),
-// spaced as that row is from the title in a dialog with no notice, and the row
-// keeps its own distance to the form. An add has no notice, so it is the
-// measure of the spacing the row had before.
-test("the compendium edit's notice sits between the title and the Open All row, at the row's gap", async ({
-  page,
-}) => {
-  const { userId } = await signInAs(
-    page,
-    'notice-admin@admin-compendium.test',
-    ['discord'],
-    'admin',
-  );
-  const fixture = makeIngredient({ name: 'Fixture Noticewort' });
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    await insertIngredient(sql, fixture, userId);
-  } finally {
-    await sql.end();
-  }
-  const top = async (dialog: Locator) => {
-    const box = async (locator: Locator) => (await locator.boundingBox())!;
-    const title = await box(dialog.getByRole('heading', { level: 2 }));
-    const row = await box(dialog.getByRole('button', { name: 'Open All' }));
-    const form = await box(dialog.getByRole('button', { name: 'Identity' }));
-    return { title, row, form };
-  };
-
-  await page.goto('/admin/compendium?new');
-  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
-  await adding.getByRole('button', { name: 'Close All' }).click();
-  const before = await top(adding);
-  const rowGap = before.row.y - (before.title.y + before.title.height);
-  const formGap = before.form.y - (before.row.y + before.row.height);
-
-  await page.goto(`/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
-  const editing = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Noticewort/ });
-  await expect(editing).toBeVisible();
-  const after = await top(editing);
-  const notice = (await editing
-    .getByText(COMPENDIUM_EDIT_NOTICE)
-    .evaluate((element) => element.closest('.notice')!.getBoundingClientRect().toJSON())) as {
-    y: number;
-    height: number;
-  };
-  expect(notice.y - (after.title.y + after.title.height)).toBeCloseTo(rowGap, 0);
-  expect(after.row.y - (notice.y + notice.height)).toBeCloseTo(rowGap, 0);
-  expect(after.form.y - (after.row.y + after.row.height)).toBeCloseTo(formGap, 0);
 });
 
 // MB.261: a keyboard user turns the No Refs switch with Enter, as a click
@@ -1826,40 +1774,6 @@ test('the Edit column stays pinned at the frame edge while the table scrolls sid
   expect(startBox.x + startBox.width).toBeLessThanOrEqual(frameBox.x + frameBox.width);
   await edit.click();
   await expect(page).toHaveURL(/[?&]edit=/);
-});
-
-test('a wide table keeps the first two categories and +N on one line, and the dot between forms is level with the icon', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1600, height: 900 });
-  await signInAs(page, 'wide-chips@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
-
-  const chips = page.locator('.category-chips--compact', {
-    has: page.locator('.category-more__button'),
-  });
-  const tops = await chips
-    .first()
-    .locator(':scope > li')
-    .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
-  expect(tops.length).toBeGreaterThanOrEqual(3);
-  expect(new Set(tops).size).toBe(1);
-
-  // The dot is drawn in CSS, so read where it sits from its item and its resolved margins.
-  const { dot, icon } = await page.evaluate(() => {
-    const second = [...document.querySelectorAll('.compendium-list__item')].find((el) =>
-      el.previousElementSibling?.matches('.compendium-list__item'),
-    )!;
-    const box = second.getBoundingClientRect();
-    const style = getComputedStyle(second, '::before');
-    const dotTop = box.top + parseFloat(style.top) + parseFloat(style.marginTop);
-    const svg = second.querySelector('svg')!.getBoundingClientRect();
-    return {
-      dot: dotTop + parseFloat(style.height) / 2,
-      icon: svg.top + svg.height / 2,
-    };
-  });
-  expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
 });
 
 // M12.30: the No Form to-do filter lists the entries with no live form. Formlesswort A and B

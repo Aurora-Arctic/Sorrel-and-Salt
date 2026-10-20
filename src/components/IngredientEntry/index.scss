@@ -469,10 +469,9 @@ $jump-link-line: 1.25;
   }
 }
 
-// One space for both: heading to the first entry, and the list (with its See
-// All) to Link to Selected, equal in both blocks (the owner's call,
-// 2026-10-19). The block's own stack gap is dropped so these margins are the
-// whole of it.
+// The space from the heading to the first entry, equal in both blocks (the
+// owner's call, 2026-10-19). The block's own stack gap is dropped so this
+// margin is the whole of it.
 $replaces-gap: space(5);
 
 .ingredient-entry__replaces {
@@ -508,16 +507,9 @@ $replaces-gap: space(5);
   @include icon-link;
 }
 
-// An entry of "Similar in the Compendium" is three columns (the owner's call,
-// 2026-10-19): the radio and title in a label that takes the row's width and
-// wraps within itself (breaking and hyphenating a long title), then the chain
-// icon as a link of its own, `flex: none` and pushed to the right end, so
-// every row's icon stands in one column however its title breaks. Neither
-// the radio nor the icon can be left alone on a line, and the icon stays
-// level with the title's first line (Link to Selected, below the list).
 .ingredient-entry__replaced {
-  // More air between the options than a plain list has, so a row's radio is
-  // easy to tell from its neighbour's (the owner's call, 2026-10-19).
+  // More air between the entries than a plain list has (the owner's call,
+  // 2026-10-19).
   gap: space(3);
 }
 
@@ -525,31 +517,13 @@ $replaces-gap: space(5);
   display: flex;
   align-items: flex-start;
   gap: space(2);
-
-  > .radio {
-    flex: 1 1 0;
-    min-width: 0;
-    padding-block: 0;
-    overflow-wrap: break-word;
-    hyphens: auto;
-  }
-
-  > .icon-tip {
-    flex: none;
-    margin-inline-start: auto;
-  }
-
-  a .link-icon-hint {
-    margin-inline-start: 0;
-  }
 }
 
-// "In the Compendium" (the owner's call, 2026-10-19): no radios, so the whole
-// name stays the link, but laid out as the Similar rows are: the title wraps
-// within itself (breaking and hyphenating), then the chain icon `flex: none`
-// at the right end, level with the first line, so the icons stand in one
-// column. The dot (LinkHint) follows the icon, as it does in Similar's link, so the
-// two blocks' icons share one x.
+// "In the Compendium" and "Similar in the Compendium" (the owner's call,
+// 2026-10-19): the whole name is the link. The title wraps within itself
+// (breaking and hyphenating), then the chain icon `flex: none` at the right
+// end, level with the first line, so the icons of both blocks stand in one
+// column.
 .ingredient-entry__replaced li > a {
   flex: 1 1 0;
   min-width: 0;
@@ -571,28 +545,13 @@ $replaces-gap: space(5);
   }
 }
 
-// "Similar in the Compendium" only: See All starts where the options' text
-// does, past the radio and its gap, not under the radio (the owner's call,
-// 2026-10-19). The gap is the radio label's own, `space(3)`. In the Compendium
-// has no radios, so its See All stays flush.
-.ingredient-entry__replaces:has(.ingredient-entry__replaced .radio) .ingredient-entry__see-all {
-  padding-inline-start: #{$radio-size + space(3)};
-}
-
-// Link to Selected stands under the list, set off from it by a step.
-.ingredient-entry__link-action {
-  margin: 0;
-  margin-block-start: $replaces-gap;
-}
-
 // "See All N" is the way on to the rest, not one of the entries: a step
 // smaller, underlined and without the chain icon, and set close
 // under the list it belongs to, so it reads as the list's tail, not a fourth.
 .ingredient-entry__see-all {
   margin: 0;
   // Close to the list it belongs to, but a step more than before (the owner's
-  // call, 2026-10-19): still less than the gap below it, which is a step more
-  // than the usual `$replaces-gap` (see the rule after this one).
+  // call, 2026-10-19).
   margin-block-start: space(3);
   font-size: type-size('small');
   // The line the text itself fills, so the hairline under the block, centred
@@ -614,11 +573,6 @@ $replaces-gap: space(5);
       @include focus-ring;
     }
   }
-}
-
-// With See All between them, Link to Selected stands a step further off.
-.ingredient-entry__see-all + .ingredient-entry__link-action {
-  margin-block-start: space(6);
 }
 
 // Every link in the References section (a note's way on to its entry, an
