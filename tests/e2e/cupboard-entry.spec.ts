@@ -124,10 +124,10 @@ test('an own entry with no formal name lists the compendium entries it might be,
   await page.goto(`/coven/${coven.slug}/ingredients/${own.ingredientId}`);
 
   await expect(page.getByRole('heading', { name: 'Similar in the Compendium' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Fixture Similar Wort/ })).toHaveAttribute(
-    'href',
-    `/compendium/ingredients/${slug}`,
-  );
+  // Exact: the entry's own Edit pencil is named "Edit Fixture Similar Wort" and is not this link.
+  await expect(
+    page.getByRole('link', { name: 'Fixture Similar Wort', exact: true }),
+  ).toHaveAttribute('href', `/compendium/ingredients/${slug}`);
   await expect(page.getByRole('heading', { name: 'In the Compendium', exact: true })).toHaveCount(
     0,
   );

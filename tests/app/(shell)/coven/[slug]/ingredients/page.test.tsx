@@ -426,17 +426,21 @@ describe("the coven Ingredients page's details modal", () => {
     expect(covensHoldingEntry).not.toHaveBeenCalled();
   });
 
-  it("gives an owner and a member the Edit menu on the coven's own entry, Edit opening the edit modal over the details", async () => {
+  it("gives an owner and a member Edit and the bin on the coven's own entry, Edit opening the edit modal over the details", async () => {
+    // The window carries its card's controls (the owner's call, 2026-10-20): the pencil, a link,
+    // and the bin, a lone Delete, with no menu between them.
     for (const role of ['owner', 'member']) {
       asRole(role);
       await renderPage({ source: 'local', entry: 'a1' });
-      fireEvent.click(within(details('Testwort')!).getByRole('button', { name: 'Edit Testwort' }));
-      const menu = screen.getByRole('menu', { name: 'Edit Testwort' });
-      expect(within(menu).getByRole('menuitem', { name: 'Edit Ingredient' })).toHaveAttribute(
+      const dialog = details('Testwort')!;
+      expect(within(dialog).getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
         'href',
         `${FILTERED_HREF}&entry=a1&edit=a1`,
       );
-      expect(within(menu).getByRole('menuitem', { name: 'Delete Ingredient' })).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole('button', { name: 'Delete Ingredient Testwort' }),
+      ).toBeInTheDocument();
+      expect(within(dialog).queryByRole('button', { name: /^More for\b/ })).not.toBeInTheDocument();
       cleanup();
     }
   });
@@ -468,7 +472,9 @@ describe("the coven Ingredients page's details modal", () => {
     expect(within(dialog).queryByRole('button', { name: /^Edit\b/ })).not.toBeInTheDocument();
   });
 
-  it("draws the plus in the details of a held compendium entry while another of the member's covens lacks it, and the check once all hold it", async () => {
+  it("draws neither the plus nor the check in the details of a held compendium entry, though another of the member's covens lacks it", async () => {
+    // The window carries its card's controls and a coven's card has no plus (the owner's call,
+    // 2026-10-20), so a coven's window has none; the compendium's and the admin's windows do.
     const other = { id: 'w-other', slug: 'other-coven', name: 'Other Coven' };
     viewerIfSignedIn.mockResolvedValue({
       viewer: { name: 'Fixture Member', canCurate: false },
@@ -483,14 +489,14 @@ describe("the coven Ingredients page's details modal", () => {
     covensHoldingEntry.mockResolvedValue([{ id: COVEN.id, slug: COVEN.slug, name: COVEN.name }]);
     await renderPage({ entry: 'b2' });
 
-    // Why the plus: this coven holds the entry, the other may add and does not.
-    expect(
-      within(details('House Salt')!).getByRole('button', { name: 'Add to My Ingredients' }),
-    ).toBeInTheDocument();
-    expect(
-      within(details('House Salt')!).queryByRole('button', { name: 'In All Covens' }),
-    ).toBeNull();
+    // Why it could have: the window is open on the held entry, with the card's own More in it,
+    // and the other coven, where the member may add, lacks the entry.
+    const dialog = details('House Salt')!;
+    expect(within(dialog).getByRole('button', { name: 'More for House Salt' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: 'In All Covens' })).toBeNull();
 
+    // Nor the check, once every coven holds it.
     cleanup();
     covensHoldingEntry.mockResolvedValue([
       { id: COVEN.id, slug: COVEN.slug, name: COVEN.name },
@@ -499,8 +505,11 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ entry: 'b2' });
 
     expect(
-      within(details('House Salt')!).getByRole('button', { name: 'In All Covens' }),
+      within(details('House Salt')!).getByRole('button', { name: 'More for House Salt' }),
     ).toBeInTheDocument();
+    expect(
+      within(details('House Salt')!).queryByRole('button', { name: 'In All Covens' }),
+    ).toBeNull();
     expect(
       within(details('House Salt')!).queryByRole('button', { name: 'Add to My Ingredients' }),
     ).toBeNull();

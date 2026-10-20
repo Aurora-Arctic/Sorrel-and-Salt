@@ -271,9 +271,12 @@ describe('the coven ingredient page', () => {
     });
     renderPage(await Page(params()));
 
-    fireEvent.click(screen.getByRole('button', { name: /^Edit\b/ }));
+    // Annotate is the main icon and the three dots hold the rest (the owner's call, 2026-10-20).
+    expect(screen.getByRole('link', { name: /^Annotate\b/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^More for\b/ }));
     const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
-    expect(items).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    expect(items).toEqual(['Make It Ours', 'Remove']);
+    expect(edits()).toHaveLength(0);
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();
   });
@@ -382,10 +385,8 @@ describe('the coven ingredient page’s Annotate', () => {
       zodiacSigns: null,
       colors: null,
     });
-  const annotateLink = () => {
-    fireEvent.click(screen.getByRole('button', { name: /^Edit\b/ }));
-    return screen.getByRole('menuitem', { name: 'Annotate' });
-  };
+  // Annotate is the card's main icon, a link, where one coven may annotate (the owner's call, 2026-10-20).
+  const annotateLink = () => screen.getByRole('link', { name: /^Annotate\b/ });
 
   it('links Annotate to this very page with a bare ?annotate, and draws no dialog until asked', async () => {
     held();
