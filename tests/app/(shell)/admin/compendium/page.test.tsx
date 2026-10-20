@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
@@ -8,7 +8,7 @@ import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
-import { mockGraphQLQuery } from '../../../../support/msw/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../../../support/msw/graphql';
 import { offerCategories } from '../../../../support/msw/ingredient-lookups';
 import { openSections } from '../../../../support/ingredient-sections';
 import { sent } from '../../../../support/filter-form';
@@ -675,5 +675,104 @@ describe('the /admin/compendium modal', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+  });
+});
+
+// A name's details modal over the list (M12.5): `?entry=<slug>`, which an Edit
+// inside it opens the edit modal over, `?entry=<slug>&edit=<slug>`, so closing
+// the edit goes back to the details.
+describe('the /admin/compendium details modal', () => {
+  const DETAILS_TESTWORT = 'Ingredient, Testwort, Fixtura testalis';
+  const ON_DETAILS = `${FILTERED_HREF}&entry=${TESTWORT.slug}`;
+  const details = () => screen.getByRole('dialog', { name: DETAILS_TESTWORT });
+
+  it("opens an entry's details on ?entry=, with its full page and an Edit over them", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(within(details()).getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${TESTWORT.slug}`,
+    );
+    expect(within(details()).getByRole('link', { name: 'Edit' })).toHaveAttribute(
+      'href',
+      `${ON_DETAILS}&edit=${TESTWORT.slug}`,
+    );
+    // The details read no form values: only an edit does.
+    expect(entryValues).not.toHaveBeenCalled();
+  });
+
+  it("links each name to its details, keeping the filter, and each row's Edit to no details", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    const row = screen.getAllByRole('row')[1];
+    // The name's href is the entry's page; the press's address is the details'.
+    expect(within(row).getByRole('link', { name: 'Testwort' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${TESTWORT.slug}`,
+    );
+    expect(
+      within(row).getByRole('link', { name: EDITING_TESTWORT.replace(' Ingredient,', '') }),
+    ).toHaveAttribute('href', `${FILTERED_HREF}&edit=${TESTWORT.slug}`);
+  });
+
+  it('closes the details back to the filtered page they opened over', async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+
+    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+  });
+
+  it('opens the edit modal over the details on ?entry= with ?edit=, and its Cancel goes back to them', async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(details()).toBeInTheDocument();
+    const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
+
+    fireEvent.click(within(editing).getByRole('button', { name: 'Cancel' }));
+
+    expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
+  });
+
+  it('closes a stacked edit back to the list, not the details, once it has deleted the entry', async () => {
+    // A delete first asks how many covens hold the entry, to say so.
+    mockGraphQLQuery('CompendiumEntryUsers', () => ({ compendiumEntryUsers: 0 }));
+    mockGraphQLMutation('DeleteCompendiumIngredient', (variables: { id: string }) => ({
+      deleteCompendiumIngredient: variables.id,
+    }));
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
+    const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
+
+    fireEvent.click(within(editing).getByRole('button', { name: 'Delete Ingredient' }));
+    fireEvent.click(await within(editing).findByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF));
+    expect(router.replace).not.toHaveBeenCalledWith(ON_DETAILS);
+  });
+
+  it('sends an old ?entry= slug on to the entry at its new one, keeping the filter and the edit', async () => {
+    resolveCompendiumSlug.mockImplementation(async (slug: string) =>
+      slug === 'testwort-herb'
+        ? { kind: 'moved', slug: TESTWORT.slug }
+        : { kind: 'entry', entry: TESTWORT, movedAway: null },
+    );
+
+    await expect(
+      renderPage({ ...FILTERED, entry: 'testwort-herb', edit: TESTWORT.slug }),
+    ).rejects.toThrow(REDIRECTED);
+
+    expect(redirect).toHaveBeenCalledExactlyOnceWith(`${ON_DETAILS}&edit=${TESTWORT.slug}`);
+  });
+
+  it('says so, and opens nothing, when ?entry= names no entry', async () => {
+    resolveCompendiumSlug.mockRejectedValue(new NotFound('No such compendium entry'));
+
+    await renderPage({ entry: 'gone' });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeVisible();
   });
 });

@@ -131,7 +131,10 @@ describe('CovenCards', () => {
       <Navigating push={router.push}>
         <RouteModalProvider>
           <Cards {...props()} />
-          <RouteModal place={DETAILS_PLACE} closeHref="/coven/fixture-coven/ingredients" />
+          <RouteModal
+            place={DETAILS_PLACE}
+            closeHref={'/coven/fixture-coven/ingredients' as Route}
+          />
         </RouteModalProvider>
       </Navigating>,
     );

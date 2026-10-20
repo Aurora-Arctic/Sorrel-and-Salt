@@ -43,8 +43,17 @@ export default function CompendiumDialog({ place, opened }: CompendiumDialogProp
                 refresh();
               }}
               // The modal's own close, so a delete or Cancel fades it out as Close
-              // does (M5.5).
-              onDeleted={done}
+              // does (M5.5). An edit over an entry's details goes back past them
+              // on a delete, as the entry page's edit does, since they are gone
+              // (M12.5): `done` would close to them.
+              onDeleted={
+                place.entry
+                  ? () => {
+                      navigate(compendiumHref({ ...place, entry: undefined }), { replace: true });
+                      refresh();
+                    }
+                  : done
+              }
               onCancel={done}
               // A near match opens its own modal here, over the same list.
               duplicateHref={(match) => compendiumHref(place, { edit: match.slug })}

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -7,6 +7,8 @@ import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params'
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
 import { detailsHeading } from '../../../../components/IngredientEntry/details';
+import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
+import { single } from '../../../../lib/search-params';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
   CompendiumCategoryChoice,
@@ -29,7 +31,7 @@ import {
 import { readCardCategories } from '../../../compendium-reads';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
-import { readEditPlace, readListPlace } from '../list-page';
+import { readEditPlace, readListPlace, readOrMissing } from '../list-page';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { entryValues } from './entry-values';
@@ -84,21 +86,33 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
 
-  const [page, counts, formIcons, { edited, missing }] = await Promise.all([
+  // The entry whose details are open over the list, `?entry=` (M12.5).
+  const entrySlug = single(params.entry);
+  const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
     readCompendium(variables, after, before),
     readFacets(variables),
     readFormIcons(),
     readEditPlace(place, readEntry),
+    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug)) : undefined,
   ]);
   const facets = compendiumFacetCounts(counts, {
     formIcons,
     deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
     categories: new Map(categories.map((category) => [category.id, category])),
   });
-  const here = { ...filter, after, before };
+  // The list as it stands, no modal over it: where the details close to, and
+  // what each row's Edit and name open over.
+  const list = { ...filter, after, before };
+  // The list with the details open, which an edit modal opens over and closes back to.
+  const here = { ...list, entry: shown ? entrySlug : undefined };
   // An old address opens the entry at its new one, as the public route's
   // redirect does (MB.82).
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
+  if (shown?.kind === 'moved') {
+    const dialog = adding ? 'new' : place.editSlug ? { edit: place.editSlug } : undefined;
+    redirect(compendiumHref({ ...list, entry: shown.slug }, dialog));
+  }
+  const detailed = shown?.kind === 'entry' ? shown.entry : undefined;
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const stamps = await editorStamps(
@@ -116,10 +130,10 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     forms: page.forms[i],
     categories: chipRows[i],
     details: {
-      href: compendiumHref({ ...here, entry: node.slug }),
+      href: compendiumHref({ ...list, entry: node.slug }),
       heading: detailsHeading(node),
     },
-    editHref: compendiumHref(here, { edit: node.slug }),
+    editHref: compendiumHref(list, { edit: node.slug }),
     editHeading: editHeading(node),
   }));
 
@@ -128,12 +142,12 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <PageHeader
         title="Compendium"
         action={
-          <AddAction href={compendiumHref(here, 'new')} heading={ADD_HEADING}>
+          <AddAction href={compendiumHref(list, 'new')} heading={ADD_HEADING}>
             {ADD_TITLE}
           </AddAction>
         }
       />
-      {missing && <MissingNotice noun="compendium entry" />}
+      {(missing || (entrySlug && !shown)) && <MissingNotice noun="compendium entry" />}
       <CompendiumList
         entries={entries}
         filter={filter}
@@ -143,6 +157,21 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         position={page.position}
         total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
+      />
+      {/* The details a name opens, in their own place beneath the edit modal's,
+          so an Edit pressed in them opens over them (M12.5). */}
+      <DetailsDialog
+        closeHref={compendiumHref(list)}
+        opened={
+          detailed && {
+            heading: detailsHeading(detailed),
+            pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
+            editAction: {
+              href: compendiumHref(here, { edit: detailed.slug }),
+              heading: editHeading(detailed),
+            },
+          }
+        }
       />
       {/* One dialog in one place for both, so Save Ingredient's move from ?new
           to ?edit= keeps the modal open rather than fading it out and in; the

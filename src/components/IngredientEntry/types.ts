@@ -1,5 +1,7 @@
 import type { CompendiumValues, CupboardOverrides } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
+import type { ReactNode } from 'react';
+import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
 
@@ -146,4 +148,27 @@ export interface CupboardActionsProps extends CupboardProps {
   overrides: CupboardOverrides;
   /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
   edit?: { href: Route; entry: EditableEntry };
+}
+
+/** What a details modal's address opens over a list (M12.5). */
+export interface IngredientDetailsOpened {
+  /** The entry's name and formal name, under the eyebrow "Ingredient" (`detailsHeading`). */
+  heading: ModalHeading;
+  /** The entry's own page, which Open Full Page reaches. */
+  pageHref: Route;
+  /**
+   * An Edit that opens the edit modal over the details, for whoever may edit
+   * the entry: the admin list's `?edit=`. None for anyone else, and none on a
+   * coven's list until its edit modal (M8.17) gives it one.
+   */
+  editAction?: RouteModalLink;
+  /** The summary, drawn by the server page from the entry page's own sections. */
+  children?: ReactNode;
+}
+
+export interface IngredientDetailsDialogProps {
+  /** The list the modal opened over, its `?entry=` dropped: closing goes back there. */
+  closeHref: Route;
+  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
+  opened?: IngredientDetailsOpened;
 }

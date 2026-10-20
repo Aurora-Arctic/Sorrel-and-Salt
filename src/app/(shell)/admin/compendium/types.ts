@@ -28,6 +28,8 @@ export interface CompendiumSearchParams extends ListSearchParams {
   zodiac?: string | string[];
   planets?: string | string[];
   toxic?: string | string[];
+  /** The entry whose details modal is open over the list, by slug (M12.5). */
+  entry?: string | string[];
 }
 
 /** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */

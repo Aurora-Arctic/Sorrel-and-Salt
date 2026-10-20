@@ -16,7 +16,7 @@ const { DETAILS_PLACE, detailsHeading } = await import('@/components/IngredientE
 // provider still reaches the page (claude-docs/components/ingredient-entry.md,
 // "The details modal").
 
-const PAGE: Route = '/compendium/ingredients/testwort';
+const PAGE = '/compendium/ingredients/testwort' as Route;
 const DETAILS: Route = '/admin/compendium?entry=testwort';
 const heading = detailsHeading({
   name: 'Testwort',
