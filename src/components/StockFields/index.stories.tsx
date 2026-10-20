@@ -47,8 +47,7 @@ interface Jars {
   jars: StockFormValues[];
 }
 
-/** Two jars in one form, as the stock dialog lays its rows: each field named for its form. */
-export const Rows: Story = () => {
+const RowsForm = ({ size }: { size?: 'compact' }): ReactElement => {
   const methods = useForm<Jars>({
     defaultValues: {
       jars: [
@@ -60,9 +59,20 @@ export const Rows: Story = () => {
   return (
     <FormProvider {...methods}>
       <form className="form" noValidate>
-        <StockFields<Jars> prefix="jars.0" form="Flower" />
-        <StockFields<Jars> prefix="jars.1" form="Oil" />
+        <StockFields<Jars> prefix="jars.0" form="Flower" size={size} />
+        <StockFields<Jars> prefix="jars.1" form="Oil" size={size} />
       </form>
     </FormProvider>
   );
 };
+
+/** Two jars in one form, each field named for its form, at the full size. */
+export const Rows: Story = () => <RowsForm />;
+
+/** The same two jars compact, one short row each, as the stock dialog lays them. */
+export const CompactRows: Story = () => <RowsForm size="compact" />;
+export const CompactRowsPhoneDark: Story = () => <RowsForm size="compact" />;
+export const CompactRowsPhoneLight: Story = () => <RowsForm size="compact" />;
+
+CompactRowsPhoneDark.meta = { theme: 'dark', width: 375 };
+CompactRowsPhoneLight.meta = { theme: 'light', width: 375 };

@@ -14,6 +14,10 @@
 // hidden copy all take it.
 $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
+// The same line in a compact field (`.field--compact`, M9.9), off its
+// shorter box.
+$text-height-compact: calc(#{$control-height-compact} - 2px - #{2 * space(1)});
+
 // The least width a text slot keeps in a row: a few letters' room, or beside
 // chips the placeholder's (`--combobox-room`, room.ts), never past the row.
 $room: min(100%, max(6rem, var(--combobox-room, 0px)));
@@ -76,6 +80,22 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   &.is-placeholder {
     color: $text-placeholder;
+  }
+}
+
+// A compact field's box keeps its text on the shorter line, so the box
+// stands at $control-height-compact, level with a compact text field.
+.field--compact {
+  // No block padding: the chevron's button is an icon's height, and with
+  // the full box's padding it would stand the box over the compact height.
+  .input.combobox__control {
+    padding-block: 0;
+  }
+
+  .combobox__value,
+  .combobox__input {
+    min-height: $text-height-compact;
+    line-height: $text-height-compact;
   }
 }
 

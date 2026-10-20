@@ -31,4 +31,10 @@ export interface StockFieldsProps {
   prefix?: string;
   /** The row's form as the screen says it, read after each label out of sight: "Quantity, Flower". */
   form?: string;
+  /**
+   * The three as compact fields on one row (`FieldProps.size`), for a list of
+   * jars: the StockDialog passes it for every row. Left out, three full
+   * fields in the form's column, as the add dialog has them.
+   */
+  size?: 'compact';
 }

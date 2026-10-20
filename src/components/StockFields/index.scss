@@ -1,0 +1,15 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A jar's three amounts as compact fields on one row (StockFields' `size`,
+// M9.9): Quantity, Unit and Low Stock At side by side, each at least a few
+// characters wide, wrapping to fewer columns where the row has no room — at a
+// phone's width the unit drops beneath. The fields start level, so a field
+// with an error beneath it pushes nothing beside it out of line.
+.stock-fields--compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  align-items: start;
+  gap: space(2) space(3);
+  min-width: 0;
+}
