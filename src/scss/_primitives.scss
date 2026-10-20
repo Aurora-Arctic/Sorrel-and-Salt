@@ -513,6 +513,31 @@
     .filter-row > :is(:first-child, .field:has(> .select), .filter-row__choice) {
       flex-basis: 100%;
     }
+
+    // A switch (the coven list's Compact) is a row here, not a column: its
+    // label sits beside its track, `space(2)` apart, the pair a control's
+    // height and centred, so it stands level with the Filters button rather
+    // than a label taller, its word riding above that button's top edge. It
+    // keeps its own width (`flex: none`) and shares the Filters line; with
+    // Clear All showing it wraps beneath, at the line's start (the owner's
+    // call, 2026-10-20). Not a choice or the first child, so the rule above
+    // never matches it.
+    .filter-row > .switch {
+      flex: none;
+      flex-direction: row;
+      align-items: center;
+      gap: space(2);
+      min-block-size: $control-height;
+
+      .field__label {
+        text-align: start;
+        white-space: nowrap;
+      }
+
+      .switch__control {
+        min-block-size: 0;
+      }
+    }
   }
 
   // The row while the list it filters is on its way, greyed as a tabbed

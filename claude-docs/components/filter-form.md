@@ -156,7 +156,7 @@ inside the type-ahead keeps its room while hidden
 **An on-or-off filter is a switch**, `SwitchField` ([`field.md`](field.md)):
 a `.field` like the rest, its label above and the slide toggle beneath it, centred under the label, at
 `$control-height`, so it stands level with the boxes and selects beside it
-at desktop width and in the stacked row, and keeps its own width. The
+at desktop width, and keeps its own width. On a phone it is a row instead, the label beside its track, level with the Filters button on that line; with Clear All showing it wraps beneath, at the line's start (the owner's call, 2026-10-20). The
 owner's call at MB.115's review, over a checkbox with its name beside it,
 which looked out of place in the row.
 

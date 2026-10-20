@@ -21,7 +21,7 @@ The switch has no stylesheet of its own: it is a plain switch control. What it c
 cards. The compact selectors, with the `:not(:root[data-card-density='regular'] *)` guard, are in
 `IngredientCard/index.scss` (the `[data-density='compact']` block, with the `_compact.scss` partial it uses) and `IngredientCardList/index.scss` (the grid).
 
-**On a phone** the switch sits in the coven list's filter row (`CompendiumList/filter.tsx`), and nowhere on the public compendium. The compact grid's narrower column still comes to one card across at 375px.
+**On a phone** the switch sits in the coven list's filter row (`CompendiumList/filter.tsx`), and nowhere on the public compendium. It sits on the Filters line with its label beside it, the pair a control's height and level with the button (the `.filter-row > .switch` rule in `_primitives.scss`, the owner's call at MB.120's review, 2026-10-20); with Clear All showing it wraps to its own line beneath, aligned to the start. The workshop shows both: `CovenRowPhoneDark` and `CovenRowPhoneLight`, `CovenRowFilteredPhoneDark` and `CovenRowFilteredPhoneLight`. The compact grid's narrower column still comes to one card across at 375px.
 
 **Forced colours.** The switch is the `.switch` primitive, whose forced-colours rule paints the thumb in the system's ink ([`styling.md`](../styling.md)).
 
