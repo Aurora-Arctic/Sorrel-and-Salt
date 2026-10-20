@@ -418,7 +418,7 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ source: 'local', entry: 'a1' });
     expect(getIngredient).toHaveBeenCalledWith(session, 'a1', COVEN.id);
     const dialog = details('Testwort')!;
-    expect(within(dialog).getByRole('link', { name: 'View Page' })).toHaveAttribute(
+    expect(within(dialog).getByRole('link', { name: 'See in My Ingredients' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/a1',
     );
@@ -446,7 +446,7 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ entry: 'a1' });
     // The details opened, so Edit's absence is the role's, not a missing dialog.
     const dialog = details('Testwort')!;
-    expect(within(dialog).getByRole('link', { name: 'View Page' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: 'See in My Ingredients' })).toBeInTheDocument();
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
     expect(within(dialog).queryByRole('button', { name: /^Edit\b/ })).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
@@ -459,7 +459,7 @@ describe("the coven Ingredients page's details modal", () => {
       'b2',
     );
     const dialog = details('House Salt')!;
-    expect(within(dialog).getByRole('link', { name: 'View Page' })).toHaveAttribute(
+    expect(within(dialog).getByRole('link', { name: 'See in My Ingredients' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/b2',
     );

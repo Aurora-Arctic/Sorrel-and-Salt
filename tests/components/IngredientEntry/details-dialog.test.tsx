@@ -57,7 +57,10 @@ describe('DetailsDialog', () => {
     );
 
     expect(within(dialog()).getByText('A summary')).toBeInTheDocument();
-    expect(within(dialog()).getByRole('link', { name: 'View Page' })).toHaveAttribute('href', PAGE);
+    expect(within(dialog()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
+      'href',
+      PAGE,
+    );
     // Edit is offered only when the page gives one.
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
     // Only to read, with its links in the header: the body takes its own Tab stop.
@@ -95,7 +98,27 @@ describe('DetailsDialog', () => {
     },
   );
 
-  it('puts View Page after the summary and outside the body that scrolls', () => {
+  it("names the link for where it goes: the compendium's page, or the coven's own", () => {
+    const COVEN_PAGE = '/coven/fixture-coven/ingredients/a1' as Route;
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{
+          heading: detailsHeading(ENTRY),
+          pageHref: COVEN_PAGE,
+          children: <p>A summary</p>,
+        }}
+      />,
+    );
+
+    const link = within(dialog()).getByRole('link', { name: 'See in My Ingredients' });
+    expect(link).toHaveAttribute('href', COVEN_PAGE);
+    expect(
+      within(dialog()).queryByRole('link', { name: 'See in Compendium' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('puts See in Compendium after the summary and outside the body that scrolls', () => {
     render(
       <DetailsDialog
         closeHref={LIST}
@@ -103,7 +126,7 @@ describe('DetailsDialog', () => {
       />,
     );
 
-    const open = within(dialog()).getByRole('link', { name: 'View Page' });
+    const open = within(dialog()).getByRole('link', { name: 'See in Compendium' });
     const summary = within(dialog()).getByText('A summary');
     // Why it could be inside: it was the body's last child, held at the foot by position: sticky,
     // so the body's scrollbar ran down past it. It is the modal's own foot now, under the body.
@@ -114,7 +137,7 @@ describe('DetailsDialog', () => {
     expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("goes to the entry's page on a press of View Page, as the site's link does", async () => {
+  it("goes to the entry's page on a press of See in Compendium, as the site's link does", async () => {
     render(
       <Navigating push={router.push}>
         <DetailsDialog
@@ -125,7 +148,7 @@ describe('DetailsDialog', () => {
     );
 
     await act(async () => {
-      fireEvent.click(within(dialog()).getByRole('link', { name: 'View Page' }));
+      fireEvent.click(within(dialog()).getByRole('link', { name: 'See in Compendium' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(PAGE);

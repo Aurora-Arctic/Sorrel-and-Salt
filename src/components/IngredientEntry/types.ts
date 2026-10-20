@@ -262,7 +262,7 @@ export interface IngredientDetailsOpened {
    * no badge shows.
    */
   marks?: DetailsMarks;
-  /** The entry's own page, which View Page reaches. */
+  /** The entry's own page, which the foot's link (See in Compendium or See in My Ingredients) reaches. */
   pageHref: Route;
   /**
    * An Edit that opens the edit modal over the details, for whoever may edit

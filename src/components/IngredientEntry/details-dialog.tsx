@@ -20,7 +20,7 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
 // arrives as the page's rendered children. Its New or Updated marker and safety badge stand on
 // the top line beside Close, through the modal's `topEnd`, its Edit pencil and plus end the
 // formal name's line through `formalActions` (claude-docs/components/modal.md, "A title with its own
-// end"), and View Page is a bar at its foot.
+// end"), and the link to the entry's page is a bar at its foot.
 
 /**
  * The head's marks and actions (the owner's calls, 2026-10-20). On the top line beside Close, as the
@@ -74,12 +74,16 @@ function headingOf({
 }
 
 /**
- * View Page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body
+ * The link to the entry's page: a bar at the foot of the modal, in its `foot` slot outside the scrolling body
  * (the owner's calls, 2026-10-20), holding the one green button, the
  * site's normal `.btn` size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
-function ViewPageBar({ pageHref }: IngredientDetailsOpened): ReactElement {
+function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
+  // Named by where it goes, not by who is looking (the owner's call, 2026-10-20): the
+  // public compendium's page, or a coven's own page for an entry the coven holds, whether
+  // it made the entry or annotated the compendium's.
+  const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in My Ingredients';
   return (
     <div className="ingredient-details-foot">
       <PendingLink
@@ -87,7 +91,7 @@ function ViewPageBar({ pageHref }: IngredientDetailsOpened): ReactElement {
         href={pageHref}
         navigationTarget={ingredientLinkTarget(pageHref)}
       >
-        View Page
+        {label}
       </PendingLink>
     </div>
   );
@@ -106,7 +110,7 @@ export default function DetailsDialog({
         opened && {
           heading: headingOf(opened),
           body: () => opened.children,
-          foot: <ViewPageBar {...opened} />,
+          foot: <PageLinkBar {...opened} />,
         }
       }
     />

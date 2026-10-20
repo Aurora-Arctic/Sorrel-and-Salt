@@ -318,8 +318,10 @@ test('the Quick Look window has the plus, then the check, for a member only', as
     const opened = async (path: string, by = id) => {
       await page.goto(look(path, by));
       await expect(details()).toBeVisible();
-      // Why a missing plus is not a window still loading: the pencil or View Page is there.
-      await expect(details().getByRole('link', { name: 'View Page' })).toBeVisible();
+      // Why a missing plus is not a window still loading: the pencil or the page link is there.
+      await expect(
+        details().getByRole('link', { name: /^See in (Compendium|My Ingredients)$/ }),
+      ).toBeVisible();
     };
 
     await test.step('a visitor gets neither', async () => {

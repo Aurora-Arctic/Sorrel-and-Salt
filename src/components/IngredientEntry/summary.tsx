@@ -22,7 +22,7 @@ import './summary.scss';
 // the page's own blocks in the page's order, cut to the owner's choice (the
 // description, the caution, then the correspondences, folk names and
 // categories; the description added by the owner's call, 2026-10-20). No
-// forms, substitutes, references or Similar: View Page has those. Shown as the list names the entry, the coven's annotations laid over a
+// forms, substitutes, references or Similar: the entry's own page has those. Shown as the list names the entry, the coven's annotations laid over a
 // held compendium entry as the page lays them. Each form's caution stays on the
 // page's form sections; a line here says which forms carry one (the owner's
 // call, 2026-10-20). An empty block or correspondence row is left out here,
@@ -36,8 +36,8 @@ function formsCarrying(labels: readonly string[]): string {
       ? labels[0]
       : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
   return labels.length === 1
-    ? `The ${named} form carries its own caution; View Page shows it.`
-    : `The ${named} forms carry their own cautions; View Page shows them.`;
+    ? `The ${named} form carries its own caution; the entry's page shows it.`
+    : `The ${named} forms carry their own cautions; the entry's page shows them.`;
 }
 
 export default function IngredientSummary({

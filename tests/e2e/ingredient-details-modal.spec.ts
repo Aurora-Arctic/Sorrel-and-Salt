@@ -95,7 +95,7 @@ test.describe('on the admin Compendium list', () => {
     await expect(
       details.getByRole('region', { name: 'Caution' }).getByText('Fixture admin caution.'),
     ).toBeVisible();
-    await expect(details.getByRole('link', { name: 'View Page' })).toHaveAttribute(
+    await expect(details.getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${slug}`,
     );
@@ -210,14 +210,14 @@ test.describe('on the admin Compendium list', () => {
       .toBeLessThan(whole);
   });
 
-  test('a short entry fits its window: the body overflows on neither axis, with View Page outside it', async ({
+  test('a short entry fits its window: the body overflows on neither axis, with See in Compendium outside it', async ({
     page,
   }) => {
     await page.goto(`${listPath}&entry=${slug}`);
     const details = detailsDialog(page);
     const body = details.locator('.modal-dialog__body');
-    // Why it could overflow: the entry has a View Page foot, which was once the body's last child.
-    await expect(details.getByRole('link', { name: 'View Page' })).toBeVisible();
+    // Why it could overflow: the entry has a See in Compendium foot, which was once the body's last child.
+    await expect(details.getByRole('link', { name: 'See in Compendium' })).toBeVisible();
     // Why it is short: the one caution, nothing near the window's height.
     const room = await body.evaluate((b) => b.clientHeight);
     expect(room).toBeLessThan((page.viewportSize()?.height ?? 0) / 2);
@@ -230,7 +230,7 @@ test.describe('on the admin Compendium list', () => {
     // The scrollbar is the browser's to draw, and only for text that overflows: never forced.
     expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
     // The foot is the modal's own, under the body and out of what scrolls.
-    await expect(body.getByRole('link', { name: 'View Page' })).toHaveCount(0);
+    await expect(body.getByRole('link', { name: 'See in Compendium' })).toHaveCount(0);
   });
 
   test('a description that fits the window once opened leaves the body with nothing to scroll, during the opening and after', async ({
@@ -287,11 +287,11 @@ test.describe('on the admin Compendium list', () => {
     expect(await body.evaluate((b) => getComputedStyle(b).overflowY)).toBe('auto');
   });
 
-  test('View Page is a button in a foot outside the scrolling body, which scrolls the text under its own end', async ({
+  test('See in Compendium is a button in a foot outside the scrolling body, which scrolls the text under its own end', async ({
     page,
   }) => {
     const details = await openLongEntry(page);
-    const open = details.getByRole('link', { name: 'View Page' });
+    const open = details.getByRole('link', { name: 'See in Compendium' });
     const body = details.locator('.modal-dialog__body');
 
     // Why it could scroll: opened whole, the long text is taller than the window the body shows.
@@ -301,7 +301,7 @@ test.describe('on the admin Compendium list', () => {
       .toBeGreaterThan(0);
     // The foot is outside the element that scrolls, so its scrollbar starts under the head and
     // ends above the foot's rule instead of running down past it.
-    await expect(body.getByRole('link', { name: 'View Page' })).toHaveCount(0);
+    await expect(body.getByRole('link', { name: 'See in Compendium' })).toHaveCount(0);
     await expect(open).toBeInViewport();
 
     // Scrolled to the end, the foot is still in view and the last text is readable above it.
@@ -359,7 +359,7 @@ test.describe("on a coven's Ingredients", () => {
       await page.goto(listPath);
       await quickLook(page).click();
       // Why Edit could be there: the details are open, with their other action.
-      await expect(details.getByRole('link', { name: 'View Page' })).toBeVisible();
+      await expect(details.getByRole('link', { name: 'See in My Ingredients' })).toBeVisible();
       await expect(ownMenuIn(details)).toHaveCount(0);
       // The entry's sections, read for the coven.
       await expect(
@@ -525,7 +525,7 @@ test.describe('on the public compendium', () => {
     // An empty block or row is left out here, where the page says "None recorded".
     await expect(details.getByRole('heading', { name: 'Categories' })).toHaveCount(0);
     await expect(details.getByText('None recorded')).toHaveCount(0);
-    await expect(details.getByRole('link', { name: 'View Page' })).toHaveAttribute(
+    await expect(details.getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,
     );

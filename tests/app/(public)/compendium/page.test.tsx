@@ -303,7 +303,7 @@ describe("the public compendium page, with an entry's details open", () => {
     expect(readCompendiumDetails).not.toHaveBeenCalled();
   });
 
-  it('opens a visitor the details over the search on ?entry=<id>, read by the id alone, with View Page and no Edit', async () => {
+  it('opens a visitor the details over the search on ?entry=<id>, read by the id alone, with See in Compendium and no Edit', async () => {
     getSession.mockResolvedValue(null);
     readCompendiumDetails.mockResolvedValue(DETAIL);
     await renderPage({ ...SEARCH, entry: NODE.id });
@@ -314,7 +314,7 @@ describe("the public compendium page, with an entry's details open", () => {
     expect(
       within(within(dialog).getByRole('list', { name: 'Folk Names' })).getByText('Fixture Bane'),
     ).toBeInTheDocument();
-    expect(within(dialog).getByRole('link', { name: 'View Page' })).toHaveAttribute(
+    expect(within(dialog).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${NODE.slug}`,
     );
