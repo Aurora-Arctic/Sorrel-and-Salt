@@ -98,17 +98,15 @@ export interface IngredientEntryProps {
   /**
    * The side column's "Similar in the Compendium" block (M12.22), for an own
    * entry that declares no formal name: the compendium entries sharing its
-   * label, three then See All, in the shape `replaces` has. `convert` is
-   * left out for a role that may not convert (a viewer), and then no
-   * radios and **Link to Selected** show; given, each entry names the coven's
-   * page for it, where a successful conversion goes.
+   * label, three then See All, in the shape `replaces` has. A display only:
+   * nothing here turns the entry into one of them (v1 links one way,
+   * DESIGN.md §13).
    */
   similar?: {
     tip: string;
-    entries: { title: string; href: Route; id: string; thenHref: Route }[];
+    entries: { title: string; href: Route }[];
     total: number;
     allHref?: Route;
-    convert?: { workspaceId: string; localId: string };
   };
   /**
    * The cupboard buttons (M12.17), for a compendium entry seen from a coven:

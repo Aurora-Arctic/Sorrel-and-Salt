@@ -224,7 +224,7 @@ const LOCAL_TIP =
   'The compendium holds an entry with this same formal name. Your coven’s entry and it stay separate; compare them here.';
 
 const SIMILAR_TIP =
-  'Your entry has no formal name, so these compendium entries only share its name. If one is the same ingredient, Link to Selected makes yours that entry.';
+  'Your entry has no formal name, so these compendium entries only share its name.';
 
 const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
@@ -422,10 +422,9 @@ export const LocalReplacingCompendiumEntry: Story = () => (
 
 // Four compendium entries share the formal name: the first three, then See All
 // to the compendium search.
-// An own entry with no formal name: the Similar block, a radio and title in a
-// label beside each entry's chain icon (the link), and one Link to Selected
-// button. The second title is long, to show it wrapping beside its radio with
-// the icon never alone on a line.
+// An own entry with no formal name: the Similar block, a read-only list of the
+// compendium entries it might be. The second title is long, to show it wrapping
+// with the icon never alone on a line.
 export const SimilarInTheCompendium: Story = () => (
   <Entry
     similar={{
@@ -434,19 +433,14 @@ export const SimilarInTheCompendium: Story = () => (
         {
           title: 'Testwort (Fixtura testalis)',
           href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
-          id: 'c1',
-          thenHref: '/coven/fixture-coven/ingredients/c1' as Route,
         },
         {
           title: 'Fixture Wort of the Long Name (Fixtura longissima nominis extensissimi)',
           href: '/compendium/ingredients/fixture-wort-long' as Route,
-          id: 'c2',
-          thenHref: '/coven/fixture-coven/ingredients/c2' as Route,
         },
       ],
       total: 5,
       allHref: '/compendium?query=Fixture%20Wort' as Route,
-      convert: { workspaceId: 'w1', localId: 'l1' },
     }}
   />
 );
