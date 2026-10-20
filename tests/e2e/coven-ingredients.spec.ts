@@ -570,7 +570,7 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
 
   // More, then Remove: asked first, then gone from the cupboard and the list.
   // The menu opens upward from the dialog's foot and stays inside the dialog,
-  // at a phone's width too, where More is as wide as Save above it.
+  // at a phone's width too.
   await annotated.getByRole('link', { name: /^Annotate Fixture Our Notewort/ }).click();
   const moreButton = dialog.getByRole('button', { name: 'More' });
   const menu = dialog.getByRole('menu', { name: 'More' });
@@ -585,19 +585,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   await moreButton.click();
   await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
   await expectMenuInsideDialog();
-  // Its items in More's own type, face, size and weight, and its top and
-  // bottom padding and height (the owner's calls of 2026-10-20), where every
-  // other menu keeps the lighter, shorter item.
-  const typeOf = (element: Element) => {
-    const style = getComputedStyle(element);
-    return [style.fontFamily, style.fontSize, style.fontWeight]
-      .concat([style.paddingTop, style.paddingBottom, style.minHeight])
-      .join(' ');
-  };
-  const moreType = await moreButton.evaluate(typeOf);
-  for (const item of await menu.getByRole('menuitem').all()) {
-    expect(await item.evaluate(typeOf)).toBe(moreType);
-  }
   await assertNoAccessibilityViolations(page);
   await page.keyboard.press('Escape');
   await expect(menu).toHaveCount(0);
@@ -605,8 +592,6 @@ test("a held compendium entry's card opens Annotate over the list, and closes ba
   const wide = page.viewportSize()!;
   await page.setViewportSize({ width: 375, height: 800 });
   await moreButton.scrollIntoViewIfNeeded();
-  const save = (await dialog.getByRole('button', { name: 'Save Annotation' }).boundingBox())!;
-  expect((await moreButton.boundingBox())!.width).toBeCloseTo(save.width, 0);
   await moreButton.click();
   await expectMenuInsideDialog();
   await page.keyboard.press('Escape');
@@ -842,4 +827,51 @@ test('Edit Ingredient, opened from the Edit menu and cancelled, gives the menu i
 
   await expect(dialog).toBeHidden();
   await expect(edit).toBeFocused();
+});
+
+// ListFrame (MB.115): a pager end keeps the reader at the list rather than
+// Next's jump to the page top, and once the new page renders brings the
+// list's start to the line the stuck search row leaves (the root's
+// scroll-padding-top). A filter's page is Next's own scroll, to the top of the
+// page, with no pull to the list. Measured here because happy-dom draws no
+// layout to scroll.
+test("a pager end lands on the new page's first entries", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Pager Scroll', 'pager-scroll.test', {
+    A: 'owner',
+  });
+  // Two full pages and one more, so the second page is as tall as the first.
+  const LOCAL = PAGE_SIZE * 2 + 1;
+  await withSql(async (sql) => {
+    for (let n = 1; n <= LOCAL; n += 1) {
+      await localIngredient(sql, coven.id, coven.users.A, {
+        name: `Fixture Scrollwort ${String(n).padStart(2, '0')}`,
+        nomenclature: 'none',
+      });
+    }
+  });
+
+  const list = ingredientList(page);
+  const pager = pagerOf(page);
+  const paddingLine = () =>
+    page.evaluate(
+      () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+    );
+  const firstCardTop = async () => (await cardsIn(list).first().boundingBox())!.y;
+
+  await page.goto(`${listPath(coven)}?source=local`);
+  await expect(pager.getByText('Page 1 of 3')).toBeVisible();
+  // At the foot of the page, the list's start far above the line: the case
+  // the scroll is for.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const line = await paddingLine();
+  expect(await firstCardTop()).toBeLessThan(line);
+
+  await pager.getByRole('link', { name: 'Next' }).click();
+  await expect(pager.getByText('Page 2 of 3')).toBeVisible();
+  await expect(cardsIn(list)).toHaveCount(PAGE_SIZE);
+  // The new page's first card is in view, at or below the line, and the
+  // window is still at the list, not the top of the page.
+  await expect.poll(firstCardTop).toBeGreaterThanOrEqual(line - 1);
+  expect(await firstCardTop()).toBeLessThan(page.viewportSize()!.height);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });

@@ -109,9 +109,9 @@ row and all, inside its tabbed page, is GroupedValueList's
 ## Testing
 
 `tests/components/ListFrame/index.test.tsx` owns the `page` kind's scroll: the
-push carrying `{ scroll: false }` where the filter's does not, and the body
-brought into view after the transition only when its top is above the padding
-line. Beyond that, no file of its own (claude-docs/testing/layer-ownership.md, "What a test may
+push carrying `{ scroll: false }` where the filter's does not. Bringing the
+body into view after the transition, only when its top is above the padding
+line, needs layout, which happy-dom has none of. Beyond that, no file of its own (claude-docs/testing/layer-ownership.md, "What a test may
 assert", rule 6): the soft filter's skeleton, greyed row, refused second
 press and the list's return are `CompendiumList`'s, and a pager press of
 either kind, the full load's Back from the cache included, `Pager`'s, each

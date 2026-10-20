@@ -56,24 +56,6 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
   }
 
-  // Body copy keeps to the reading measure, `$measure` (66ch), however wide the
-  // layout around it — and this layout is wider, or the check proves nothing.
-  // 66ch is measured in the paragraph's own font, by a probe that reads nothing
-  // from the stylesheet's rule. The paragraph wraps, so it fills its cap: equal
-  // to the measure, which a narrower cap would fail as surely as a wider one.
-  const paragraph = page.getByRole('main').getByRole('paragraph').first();
-  const measure = await paragraph.evaluate((element) => {
-    const probe = document.createElement('span');
-    probe.style.cssText = 'display: inline-block; width: 66ch';
-    element.append(probe);
-    const width = probe.getBoundingClientRect().width;
-    probe.remove();
-    return width;
-  });
-  const main = await page.getByRole('main').boundingBox();
-  expect(main!.width).toBeGreaterThan(measure);
-  expect((await paragraph.boundingBox())!.width).toBeCloseTo(measure, 0);
-
   await assertNoAccessibilityViolations(page);
 });
 

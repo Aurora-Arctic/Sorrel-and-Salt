@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ListFrame, { ListBody, useListNavigation } from '@/components/ListFrame';
 import { Navigating } from '../../support/navigating';
 
@@ -54,26 +54,7 @@ async function pressAndArrive(name: 'Filter' | 'Next') {
 }
 
 describe('ListFrame, paging', () => {
-  const scrollIntoView = vi.fn();
-  beforeEach(() => {
-    router.push.mockReset();
-    scrollIntoView.mockReset();
-    Element.prototype.scrollIntoView = scrollIntoView;
-    // The root's scroll-padding-top is the line the stuck search row leaves.
-    document.documentElement.style.setProperty('scroll-padding-top', '100px');
-  });
-  afterEach(() => {
-    vi.restoreAllMocks();
-    document.documentElement.style.removeProperty('scroll-padding-top');
-  });
-
-  /** Puts the list body's top at `top` px from the viewport's top. */
-  const bodyTopAt = (top: number) =>
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
-      this: Element,
-    ) {
-      return { top: this.classList.contains('list-frame__body') ? top : 0 } as DOMRect;
-    });
+  beforeEach(() => router.push.mockReset());
 
   it("keeps the reader's place on a pager end's push, and leaves a filter's scroll alone", async () => {
     await pressAndArrive('Next');
@@ -83,32 +64,5 @@ describe('ListFrame, paging', () => {
     document.body.innerHTML = '';
     await pressAndArrive('Filter');
     expect(router.push).toHaveBeenCalledWith('/list?q=a');
-  });
-
-  it('brings the list body to the top once the new page renders, when its top is above the padding line', async () => {
-    bodyTopAt(-250);
-
-    await pressAndArrive('Next');
-
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-    expect(scrollIntoView.mock.contexts[0]).toHaveClass('list-frame__body');
-  });
-
-  it('scrolls nothing when the list body starts below the padding line', async () => {
-    bodyTopAt(300);
-
-    await pressAndArrive('Next');
-
-    expect(router.push).toHaveBeenCalled();
-    expect(scrollIntoView).not.toHaveBeenCalled();
-  });
-
-  it("scrolls nothing after a filter's page", async () => {
-    bodyTopAt(-250);
-
-    await pressAndArrive('Filter');
-
-    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 });

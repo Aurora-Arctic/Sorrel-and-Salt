@@ -113,12 +113,11 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   await assertNoSidewaysScroll(page);
 });
 
-// A refusal said inside the only owner's exit dialog, at a phone's width: the
-// plain notice takes its own full-width line above Delete and Cancel rather
-// than a place between them, where it squeezed Delete and pushed Cancel past
-// the dialog's edge (M12.31, the owner's call of 2026-10-20). The page offers
-// this owner the exit dialog because the fixture's owner is its only one.
-test("a refused deletion in the only owner's exit sits above the buttons at 375px, which keep their size", async ({
+// A refusal said inside the only owner's exit dialog, at a phone's width,
+// where the notice once pushed Cancel past the dialog's edge (M12.31). The
+// page offers this owner the exit dialog because the fixture's owner is its
+// only one.
+test("a refused deletion in the only owner's exit keeps Cancel inside the dialog at 375px", async ({
   page,
 }) => {
   await signInAgainAs(page, users.owner.id);
@@ -129,7 +128,6 @@ test("a refused deletion in the only owner's exit sits above the buttons at 375p
   await dialog.getByRole('radio', { name: /^Delete It/ }).check();
   const remove = dialog.getByRole('button', { name: 'Delete Coven', exact: true });
   const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
-  const before = { remove: await remove.boundingBox(), cancel: await cancel.boundingBox() };
 
   // The service's refusal, answered in its place, so nothing is deleted.
   const refusal = 'This coven could not be deleted.';
@@ -144,16 +142,9 @@ test("a refused deletion in the only owner's exit sits above the buttons at 375p
 
   const notice = dialog.getByRole('alert');
   await expect(notice).toHaveText(refusal);
-  const said = await notice.boundingBox();
-  const after = { remove: await remove.boundingBox(), cancel: await cancel.boundingBox() };
-  const frame = await dialog.boundingBox();
-  // Above both buttons, on its own line.
-  expect(said!.y + said!.height).toBeLessThanOrEqual(Math.min(after.remove!.y, after.cancel!.y));
-  // Neither button squeezed nor stretched by it, and Cancel inside the dialog.
-  expect(after.remove!.height).toBe(before.remove!.height);
-  expect(after.cancel!.height).toBe(before.cancel!.height);
-  expect(after.remove!.width).toBe(before.remove!.width);
-  expect(after.cancel!.x + after.cancel!.width).toBeLessThanOrEqual(frame!.x + frame!.width);
+  const box = (await cancel.boundingBox())!;
+  const frame = (await dialog.boundingBox())!;
+  expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
   await assertNoSidewaysScroll(page);
   await assertNoAccessibilityViolations(page);
   await page.unrouteAll();

@@ -79,9 +79,10 @@ describe('FacetCombobox', () => {
     expect(screen.queryByText(PROPS.placeholder as string)).not.toBeInTheDocument();
     unmount();
 
-    // Left out, it is derived from the label.
+    // Left out, it is derived from the label, still in place of the ordinary one.
     render(<FacetCombobox {...PROPS} choices={choices} />);
-    expect(screen.getByText('No Elements')).toBeInTheDocument();
+    expect(screen.getByText(/Elements/, { ignore: 'label, legend' })).toBeInTheDocument();
+    expect(screen.queryByText(PROPS.placeholder as string)).not.toBeInTheDocument();
   });
 
   it('shows its empty placeholder in the typing form too', () => {

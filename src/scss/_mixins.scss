@@ -473,9 +473,7 @@
 //
 // `$align` (`start`, `end`, `center`, or a left offset) is the old way, a bubble
 // pinned to one edge of its anchor, which runs off the screen wherever the
-// anchor moves. Nothing new takes it; it stays only for EntryMarks and
-// IngredientCard until they adopt `useTip`'s placement, and goes with them
-// (tests/guards/tip-placement.test.ts, `PENDING`).
+// anchor moves. Nothing new takes it.
 @mixin tip-above($layer: 1, $capped: true, $align: null) {
   position: fixed;
   top: 0;

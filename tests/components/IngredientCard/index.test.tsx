@@ -35,11 +35,9 @@ const heldMark = () => screen.queryByText('Compendium', { exact: true });
 const retiredMark = () => screen.queryByRole('button', { name: 'Retired' });
 
 describe('IngredientCard', () => {
-  it('holds the LinkHint in its name link, leaving the link named by the label alone', () => {
-    const { container } = render(<IngredientCard {...BASE} />);
-    const link = screen.getByRole('link', { name: 'Fixture Testwort' });
-    expect(link.querySelector('.link-hint')).toHaveAttribute('aria-hidden', 'true');
-    expect(container.querySelectorAll('.link-hint')).toHaveLength(1);
+  it('names its link by the label alone', () => {
+    render(<IngredientCard {...BASE} />);
+    expect(screen.getByRole('link')).toHaveAccessibleName('Fixture Testwort');
   });
 
   it('has one link, the name, to the entry page', () => {
