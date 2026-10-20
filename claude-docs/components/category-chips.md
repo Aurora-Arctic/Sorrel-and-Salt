@@ -24,7 +24,7 @@ The panel is `position: fixed`, placed by Floating UI beneath the chip row (the 
 
 ## Styling
 
-Tokens only, until the section's design review. `CategoryChips/index.scss` styles the chip inside the list (`.category-chips .chip`), the `+N` item (`.category-more-item`) and its button (`.category-more__button`, a `space()` step), the toggletip's fixed panel and its fade (`.category-more__panel`), and the compact size (`.category-chips--compact`). The chip itself is the shared `.chip`
+Tokens only, as signed off in MB.120 (2026-10-20). `CategoryChips/index.scss` styles the chip inside the list (`.category-chips .chip`), the `+N` item (`.category-more-item`) and its button (`.category-more__button`, a `space()` step), the toggletip's fixed panel and its fade (`.category-more__panel`), and the compact size (`.category-chips--compact`). The chip itself is the shared `.chip`
 primitive.
 
 ## Testing

@@ -229,7 +229,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       )}
       {/* A head as the coven pages carry (MB.119): the eyebrow names the section, the lede says
           what it is for. A `header` inside `main` is no banner landmark, and takes the layout's
-          space beneath it. MB.120 builds the recommendation; the owner settles it at sign-off. */}
+          space beneath it (signed off in MB.120, 2026-10-20). */}
       <header className="header">
         <p className="eyebrow">Reference</p>
         <h1>Compendium</h1>

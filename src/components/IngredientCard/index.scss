@@ -6,7 +6,7 @@
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the
 // layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
 // a list item should not (it is not a dialog), and the forms line's spacing.
-// Past the tokens only after the section's design review (MB.84).
+// Tokens only (signed off in MB.120, 2026-10-20).
 .ingredient-card {
   @include modal-surface($shadow-floating);
 

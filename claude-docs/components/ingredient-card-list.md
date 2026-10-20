@@ -21,7 +21,7 @@ The grid every list of ingredient cards uses (M8.14), so the compendium page (M8
 
 ## Styling
 
-Tokens only, until the section's design review. `IngredientCardList/index.scss` is one auto-fill grid
+Tokens only, as signed off in MB.120 (2026-10-20). `IngredientCardList/index.scss` is one auto-fill grid
 whose minimum column is a token: the regular card's, and for `data-density='compact'`
 `$ingredient-card-min-compact` (16rem, in `_variables.scss`) with a `space(3)` gap. The compact
 card's own rules live in `IngredientCard/index.scss`.

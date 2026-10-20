@@ -204,7 +204,7 @@ $badge-palettes: (
     ),
   // A compendium entry the curators retired, still read by a coven that uses
   // it (M12.24): a fact about the entry, not a hazard, so low-stock's muted
-  // tint and its checked inks, until the section's design review.
+  // tint and its checked inks (signed off in MB.120, 2026-10-20).
   'retired': (
       treatment: tinted,
       dark: $chalk-muted,
@@ -234,7 +234,7 @@ $badge-palettes: (
       light: $local-badge-light,
     ),
   // A compendium entry added in the last 30 days (MB.106): last-used's solid accent
-  // inks, already contrast-checked, until the section's design review.
+  // inks, already contrast-checked (signed off in MB.120, 2026-10-20).
   'new': (
       treatment: solid,
       dark: $sorrel-bright,
@@ -576,7 +576,7 @@ $brand-size: 1.375rem;
 // An icon set inline with a line of text and sized to it: the entry page's held
 // check beside its name, which takes the heading's size. In `em` where the type
 // sizes are `rem`, because it is the text's own size it follows, not the page's
-// (proposed for MB.120, consumed by IngredientEntry).
+// (MB.120, consumed by IngredientEntry).
 $inline-mark-size: 0.72em;
 
 // Small optical corrections, each in `em` of the text it sits in so it follows
@@ -763,7 +763,7 @@ $motion-medium: 300ms;
 $drawer-travel: 11px;
 // How far the drawer's body sits in from the slot's sides, and so the band under the
 // face it keeps clear: the drawer is no wider than the slot, with this much each side
-// (M12.44; proposed for MB.120, consumed by IngredientCard).
+// (M12.44 and MB.120, consumed by IngredientCard).
 $drawer-inset: 10px;
 // The drawer's side walls, each this wide, and where the back wall ends and the seam
 // into the floor begins and ends, as shares of the drawer's height (M12.44).
@@ -773,18 +773,18 @@ $drawer-seam-stop: 48%;
 // The slot the face sits in, shaded inward from its top and left, and the shadow the
 // face casts up onto the drawer's rim as it slides down. Black at alpha in both themes,
 // as `$shadow-ink-dark` is the site's shadow ink; they are lists, so a box-shadow
-// takes them whole (proposed for MB.120).
+// takes them whole (MB.120).
 $drawer-slot-shadow:
   inset 0 3px 6px rgba(0, 0, 0, 0.45),
   inset 2px 0 4px rgba(0, 0, 0, 0.3);
 $drawer-rim-shadow: 0 -3px 5px rgba(0, 0, 0, 0.3);
 
 // The bar down a safety note's side (SafetyNote): the heavy rule, so it reads by its
-// weight as well as its colour, where it was a raw 4px (proposed for MB.120).
+// weight as well as its colour (MB.120).
 $safety-bar-width: $rule-heavy;
 // The hairline stroke that fakes a weight above the heading face's 700 on the safety
 // note's heading (the owner's call, 2026-10-17). A stroke is not a border or a rule,
-// and under 1px, so it is no `$rule-*` (proposed for MB.120).
+// and under 1px, so it is no `$rule-*`. MB.120 kept it (the owner, 2026-10-20).
 $text-stroke-hairline: 0.6px;
 
 // A movement the eye should follow, not just register: the details window's

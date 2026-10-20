@@ -263,7 +263,7 @@ from the address and has no control yet; the facet screen (M12.4) draws one.
 
 ## Styling
 
-Tokens only, until the section's design review: the box's submit is drawn
+Tokens only, as signed off in MB.120 (2026-10-20): the box's submit is drawn
 by Combobox inside the box, at its start, and the action sits right-aligned beneath it.
 
 ## Stories

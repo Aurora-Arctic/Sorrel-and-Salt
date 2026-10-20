@@ -2,8 +2,8 @@
 @use '../../scss/mixins' as *;
 
 // A bar with the same measurements as the application shell's (MB.7), so a
-// visitor who signs in meets the same bar; tokens only, until the section's
-// design review. claude-docs/components/public-frame.md.
+// visitor who signs in meets the same bar; tokens only (signed off in MB.120,
+// 2026-10-20). claude-docs/components/public-frame.md.
 
 // Where a page's sticky row holds (the shell sets the same property under its bar): this
 // header scrolls away, so the row sticks at the window's top.

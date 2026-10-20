@@ -37,10 +37,11 @@ import {
 // claude-docs/components/field.md). Each reads its own error out of the form
 // state, so a field re-renders for its own error and not for every other
 // field's. The text and select fields every form shares moved to ../Field in
-// MB.115. What stays here is the ingredient form's own: CupboardEntryForm
-// borrows ListField and MultiSelectField, and SuggestField and ToggleField are
-// the ingredient form's alone. They stay until the section's design review
-// (MB.120) says otherwise.
+// MB.115. These four stayed here, where the ingredient form grew them, though
+// not all are its alone: CupboardEntryForm imports ListField and
+// MultiSelectField, and SuggestField and ToggleField are the ingredient form's
+// only. MB.120 kept them here (the owner, 2026-10-20) rather than move them to
+// ../Field as generic fields.
 
 /**
  * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick

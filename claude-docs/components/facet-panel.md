@@ -87,7 +87,7 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 
 ## Styling
 
-Tokens only, until the section's design review. `FacetPanel/index.scss` is laid out in the order
+Tokens only, as signed off in MB.120 (2026-10-20). `FacetPanel/index.scss` is laid out in the order
 the panel is built: the Filters button and Clear All, the dialog and its slide, the static block
 before script, the rows (`__line`, `__quick`), then the choice chip (`.facet-chip__*`) and the foot. The
 sizes are `space()` steps and tokens. Four measurements stay as named, commented locals because no

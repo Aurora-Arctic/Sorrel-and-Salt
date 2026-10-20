@@ -1,9 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The entry page's body. Spacing and the existing inks only: the section's
-// look is MB.120's design review (claude-docs/styling.md, "Designing a
-// section"); the layout is the owner's, given at M8.19.
+// The entry page's body. Spacing and the existing inks only, as signed off in
+// MB.120 (2026-10-20); the layout is the owner's, given at M8.19.
 // claude-docs/components/ingredient-entry.md, "Layout".
 
 // The menu's top-level links: `$nav-link-size` (PageNav's grouped size), on a stated

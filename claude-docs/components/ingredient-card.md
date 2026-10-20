@@ -127,7 +127,7 @@ Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this compon
 
 ## Styling
 
-Tokens only, until the section's design review (MB.84). `IngredientCard/index.scss` holds the card, the
+Tokens only, as signed off in MB.120 (2026-10-20). `IngredientCard/index.scss` holds the card, the
 slot it hangs in and the drawer that opens under it; the shared `.specimen*` primitives it builds on
 are in `_primitives.scss`. The compact look is the `[data-density='compact']` block of the same file and `_compact.scss`, keyed off the
 list's `data-density` ([`ingredient-card-list.md`](ingredient-card-list.md)).
@@ -158,7 +158,6 @@ specs that place the card, not in jsdom, which has no layout.
 Meaning is carried by words and shape, never colour alone: every badge has its
 text. The page that places the card (M8.18, M9.6) owns the axe run and the
 keyboard walk in its Playwright spec, since the card has no page of its own.
-Styling stops at the tokens until the section's design review (MB.84).
 
 ### A long name
 
