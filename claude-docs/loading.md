@@ -250,7 +250,7 @@ with the value already put back.
   so the Compendium and coven cards both), the admin Compendium list's name
   link, the search box's pick, and the ingredient page's own links (substitutes,
   In the Compendium, Similar, See All, the moved-away link), plus the
-  navigations that follow a Make It Ours, a Link to Selected and a Save in Add
+  navigations that follow a Make It Ours and a Save in Add
   Ingredient. The skeleton always draws the jump menu, though the page draws it
   only for an entry that has forms. A same-page save in the entry dialog, and
   the delete that returns to the list, keep what they had.
