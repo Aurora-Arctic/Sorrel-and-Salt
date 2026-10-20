@@ -1,11 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { useListPosition } from '../Combobox/position';
 import { CheckIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
-import type { MenuButtonItem, MenuButtonProps } from './types';
+import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 
 // A labelled button with a chevron that opens a menu of choices, none of them
@@ -76,16 +84,44 @@ const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
     .filter(Boolean)
     .join(' ');
 
+/**
+ * One section: a group named by its visible label (APG: `role="group"` and `aria-labelledby`), a
+ * separator above every one but the first. The label is text, not a menu item, so the arrows
+ * skip it: the roving reads `[role="menuitem"]` alone, and the sections run on as one list.
+ */
+function MenuGroup({
+  section,
+  first,
+  children,
+}: {
+  section: MenuSection;
+  first: boolean;
+  children: ReactNode;
+}): ReactElement {
+  const labelId = useId();
+  return (
+    <>
+      {!first && <div role="separator" className="menu-button__rule" />}
+      <div role="group" aria-labelledby={labelId} className="menu-button__group">
+        <div id={labelId} className="menu-button__heading">
+          {section.label}
+        </div>
+        {children}
+      </div>
+    </>
+  );
+}
+
 export default function MenuButton({
   label,
   className,
-  items,
   busy = false,
   busyLabel,
   buttonType = false,
   icon,
   ref,
   state,
+  ...choices
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
   // Still drawn: open, or fading out.
@@ -152,6 +188,52 @@ export default function MenuButton({
     } else if (event.key === 'Tab') setOpen(false);
   };
 
+  const drawItem = (item: MenuButtonItem): ReactElement =>
+    item.href !== undefined ? (
+      <Link
+        key={item.key}
+        href={item.href}
+        role="menuitem"
+        tabIndex={-1}
+        className={itemClass(item, chosen === item.key)}
+        onClick={(event) => {
+          setChosen(item.key);
+          setOpen(false);
+          item.onClick?.(event);
+        }}
+      >
+        {item.label}
+      </Link>
+    ) : (
+      <button
+        key={item.key}
+        type="button"
+        role="menuitem"
+        tabIndex={-1}
+        className={itemClass(item, chosen === item.key)}
+        // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
+        // in the roving, read as unavailable. A press runs nothing and the menu stays open.
+        aria-disabled={item.disabled || undefined}
+        // The mark joins the name, since the check that draws it is a glyph and says nothing.
+        aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}
+        onClick={() => {
+          if (item.disabled) return;
+          setChosen(item.key);
+          setOpen(false);
+          item.onSelect();
+        }}
+      >
+        {item.label}
+        {item.mark && (
+          <span className="menu-button__mark">
+            <CheckIcon />
+          </span>
+        )}
+      </button>
+    );
+
+  const sections = 'sections' in choices ? choices.sections : undefined;
+
   return (
     <span ref={root} className="menu-button">
       <button
@@ -216,50 +298,15 @@ export default function MenuButton({
           if (!open && event.target === event.currentTarget) setDrawn(false);
         }}
       >
-        {greenFirst(items).map((item) =>
-          item.href !== undefined ? (
-            <Link
-              key={item.key}
-              href={item.href}
-              role="menuitem"
-              tabIndex={-1}
-              className={itemClass(item, chosen === item.key)}
-              onClick={(event) => {
-                setChosen(item.key);
-                setOpen(false);
-                item.onClick?.(event);
-              }}
-            >
-              {item.label}
-            </Link>
-          ) : (
-            <button
-              key={item.key}
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              className={itemClass(item, chosen === item.key)}
-              // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
-              // in the roving, read as unavailable. A press runs nothing and the menu stays open.
-              aria-disabled={item.disabled || undefined}
-              // The mark joins the name, since the check that draws it is a glyph and says nothing.
-              aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}
-              onClick={() => {
-                if (item.disabled) return;
-                setChosen(item.key);
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.label}
-              {item.mark && (
-                <span className="menu-button__mark">
-                  <CheckIcon />
-                </span>
-              )}
-            </button>
-          ),
-        )}
+        {sections
+          ? sections
+              .filter((section) => section.items.length > 0)
+              .map((section, at) => (
+                <MenuGroup key={section.key} section={section} first={at === 0}>
+                  {greenFirst(section.items).map(drawItem)}
+                </MenuGroup>
+              ))
+          : greenFirst(choices.items ?? []).map(drawItem)}
       </div>
     </span>
   );

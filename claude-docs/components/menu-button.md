@@ -1,6 +1,6 @@
 # MenuButton
 
-`src/components/MenuButton/` is a button with a label and a chevron that opens a menu of choices. None of the choices is the button's own: pressing it only opens the menu. The ingredient entry page uses it as its **Edit** menu, so the title keeps its line however many cupboard choices a member has ([`ingredient-entry.md`](ingredient-entry.md), "Cupboard buttons"; the owner's call, 2026-10-19).
+`src/components/MenuButton/` is a button with a label and a chevron that opens a menu of choices. None of the choices is the button's own: pressing it only opens the menu. The ingredient entry page uses it as the three dots of its icon row, **More**, for the choices that are not an icon of their own ([`ingredient-entry.md`](ingredient-entry.md), "Cupboard buttons"; the owner's calls, 2026-10-19 and 2026-10-20), and the coven cards' foot does the same.
 
 It follows the menu-button pattern of the ARIA Authoring Practices Guide, as the bar's Add Ingredient chevron does ([`app-shell.md`](app-shell.md)). That chevron keeps its own copy of the keys because it has no label and joins a split button.
 
@@ -12,7 +12,8 @@ It follows the menu-button pattern of the ARIA Authoring Practices Guide, as the
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | `label`      | The button's text and accessible name, and the menu's accessible name, in title case: "Edit"                             |
 | `className`  | The button's classes: `btn btn--quiet btn--medium`                                                                       |
-| `items`      | The choices, in order (`MenuButtonItem`)                                                                                 |
+| `items`      | The choices, in order (`MenuButtonItem`), or `sections` instead, never both                                              |
+| `sections`   | The choices in labelled groups (`MenuSection`: `key`, `label`, `items`), in the order to draw them                       |
 | `busy`       | Optional: one of the choices is in flight. The button shows the spinner and is disabled                                  |
 | `busyLabel`  | Optional: the label while busy, "Adding"                                                                                 |
 | `ref`        | Optional: the button, so a caller can give the focus back to it after a dialog a choice opened                           |
@@ -24,6 +25,7 @@ A `MenuButtonItem` has a `key`, a title-case `label` and an optional `destructiv
 
 ## Contracts
 
+- **Sections.** A menu that holds both the compendium's choices and the coven's draws them in two labelled groups, **Compendium** and **Coven**, the viewer's own side first: the compendium's on the public compendium and the admin pages, the coven's on a coven's page (the owner's call, 2026-10-20). The caller says which comes first, by the order of `sections`; the menu reads no address. `sectionsFor(choices, viewing)` in `sections.ts` makes the two, leaving out a side with nothing and so a group that would label nothing, and `choicesFor` hands a menu the sections only when both sides have items, else the plain list: a menu of one kind keeps no heading. It follows the APG menu pattern: each section is a `role="group"` named by its visible heading (`aria-labelledby`), with a `role="separator"` rule between sections and none before the first. The heading is text and not an item: it takes no focus, and the arrows, Home and End run through every section's items as one list. The heading is discreet, small muted caption text in the item's own side padding. `primary` goes first **within its own section**, not above the other section's items: green marks the one action of its group, and lifting it out would break the order the page asked for. A menu given `items` is drawn as it always was. Stories: `SectionedOnACovenPage`, `SectionedOnACompendiumPage`. Tests: `tests/components/MenuButton/index.test.tsx`, "MenuButton sections".
 - **The green item is first.** The item marked `primary` is drawn first, whatever its place in `items`, and the rest keep the caller's order (the owner's call, 2026-10-20: "in any menu-button, the green item should always be first"). It is done where the menu draws, so no caller can put it elsewhere, and the keys follow what is drawn: Home and the first ArrowDown land on it. No caller passes two green items; with two, the stable partition would draw them in the caller's order, ahead of the rest, but that is not a decided rule.
 - **The keys.** Opening, by a press or ArrowDown on the button, puts the focus on the first choice. ArrowDown and ArrowUp move through the choices and wrap at the ends; Home and End go to the first and the last. Escape closes the menu and gives the focus back to the button. Tab and a press outside close it.
 - **Choosing closes first.** A choice closes the menu and then runs its action, or follows its link. A choice that opens a dialog gives the focus back to the button through `ref` once the dialog closes, since the menu item has gone.

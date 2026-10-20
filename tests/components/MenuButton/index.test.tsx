@@ -2,7 +2,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import type { Route } from 'next';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import MenuButton from '@/components/MenuButton';
-import type { MenuButtonItem } from '@/components/MenuButton/types';
+import { choicesFor, sectionsFor } from '@/components/MenuButton/sections';
+import type { MenuButtonItem, MenuSection } from '@/components/MenuButton/types';
 
 // The menu button (claude-docs/components/menu-button.md): a labelled button
 // opening a menu of links and actions, with the APG menu-button keys.
@@ -314,5 +315,150 @@ describe('MenuButton green item first', () => {
     fireEvent.click(within(menu()).getAllByRole('menuitem')[0]!);
 
     expect(onSelect).toHaveBeenCalledOnce();
+  });
+});
+
+// Sections (the owner's call, 2026-10-20): a menu that holds both the compendium's choices and
+// the coven's draws them in labelled groups, the caller putting first the group that belongs to
+// the page the viewer is on. The APG menu pattern: a group named by its visible label, a
+// separator between groups, and the arrows running through every item as one list.
+describe('MenuButton sections', () => {
+  const plain = (key: string, label: string): MenuButtonItem => ({
+    key,
+    label,
+    onSelect: vi.fn(),
+  });
+  const COMPENDIUM: MenuSection = {
+    key: 'compendium',
+    label: 'Compendium',
+    items: [plain('c1', 'Compendium One'), plain('c2', 'Compendium Two')],
+  };
+  const COVEN: MenuSection = {
+    key: 'coven',
+    label: 'Coven',
+    items: [plain('v1', 'Coven One'), plain('v2', 'Coven Two')],
+  };
+
+  function drawSections(sections: MenuSection[]) {
+    return render(<MenuButton label="Edit" className="btn" sections={sections} />);
+  }
+  const names = () =>
+    within(menu())
+      .getAllByRole('menuitem')
+      .map((item) => item.textContent);
+
+  it('draws each section as a group named by its visible label, items inside it', () => {
+    drawSections([COMPENDIUM, COVEN]);
+    fireEvent.click(toggle());
+
+    const groups = within(menu()).getAllByRole('group');
+    expect(groups).toHaveLength(2);
+    expect(within(menu()).getByRole('group', { name: 'Compendium' })).toBe(groups[0]);
+    expect(
+      within(within(menu()).getByRole('group', { name: 'Compendium' }))
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Compendium One', 'Compendium Two']);
+    expect(
+      within(within(menu()).getByRole('group', { name: 'Coven' }))
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Coven One', 'Coven Two']);
+  });
+
+  it('puts a separator between the sections, and none before the first or after the last', () => {
+    drawSections([COMPENDIUM, COVEN]);
+    fireEvent.click(toggle());
+
+    expect(within(menu()).getAllByRole('separator')).toHaveLength(1);
+  });
+
+  it('draws the sections in the order given, so the caller decides which comes first', () => {
+    const view = drawSections([COMPENDIUM, COVEN]);
+    fireEvent.click(toggle());
+    expect(names()).toEqual(['Compendium One', 'Compendium Two', 'Coven One', 'Coven Two']);
+
+    view.unmount();
+    drawSections([COVEN, COMPENDIUM]);
+    fireEvent.click(toggle());
+    expect(names()).toEqual(['Coven One', 'Coven Two', 'Compendium One', 'Compendium Two']);
+    expect(within(menu()).getAllByRole('group')[0]).toBe(
+      within(menu()).getByRole('group', { name: 'Coven' }),
+    );
+  });
+
+  it('roves through every section with the arrows, Home and End, the labels never taking the focus', () => {
+    drawSections([COMPENDIUM, COVEN]);
+    fireEvent.click(toggle());
+    const items = within(menu()).getAllByRole('menuitem');
+    expect(items).toHaveLength(4);
+    expect(items[0]).toHaveFocus();
+
+    items[1]!.focus();
+    fireEvent.keyDown(items[1]!, { key: 'ArrowDown' });
+    expect(items[2]).toHaveFocus();
+    fireEvent.keyDown(items[2]!, { key: 'ArrowUp' });
+    expect(items[1]).toHaveFocus();
+    fireEvent.keyDown(items[1]!, { key: 'End' });
+    expect(items[3]).toHaveFocus();
+    fireEvent.keyDown(items[3]!, { key: 'ArrowDown' });
+    expect(items[0]).toHaveFocus();
+    expect(within(menu()).getAllByRole('menuitem')).toHaveLength(4);
+  });
+
+  it('keeps the green item first within its own section, not above the others', () => {
+    drawSections([
+      COMPENDIUM,
+      {
+        key: 'coven',
+        label: 'Coven',
+        items: [plain('v1', 'Coven One'), { ...plain('v2', 'Coven Two'), primary: true }],
+      },
+    ]);
+    fireEvent.click(toggle());
+
+    expect(names()).toEqual(['Compendium One', 'Compendium Two', 'Coven Two', 'Coven One']);
+  });
+
+  it('draws a menu without sections exactly as before: no group, no separator', () => {
+    draw(actions());
+    fireEvent.click(toggle());
+
+    expect(within(menu()).queryByRole('group')).toBeNull();
+    expect(within(menu()).queryByRole('separator')).toBeNull();
+  });
+
+  it('draws a section that holds nothing as nothing: no empty group, no stray separator', () => {
+    drawSections([COMPENDIUM, { key: 'coven', label: 'Coven', items: [] }]);
+    fireEvent.click(toggle());
+
+    expect(within(menu()).getAllByRole('group')).toHaveLength(1);
+    expect(within(menu()).queryByRole('separator')).toBeNull();
+  });
+
+  describe('sectionsFor', () => {
+    const groups = { compendium: [plain('c', 'Compendium One')], coven: [plain('v', 'Coven One')] };
+
+    it('puts the compendium first on a compendium page and the coven first on a coven page', () => {
+      expect(sectionsFor(groups, 'compendium').map(({ label }) => label)).toEqual([
+        'Compendium',
+        'Coven',
+      ]);
+      expect(sectionsFor(groups, 'coven').map(({ label }) => label)).toEqual([
+        'Coven',
+        'Compendium',
+      ]);
+    });
+
+    it('leaves out a side with nothing, so a menu of one kind is not sectioned', () => {
+      expect(sectionsFor({ ...groups, coven: [] }, 'coven')).toHaveLength(1);
+      expect(sectionsFor({ compendium: [], coven: [] }, 'coven')).toEqual([]);
+    });
+
+    it('hands a menu the sections only when both sides have items, else the plain list', () => {
+      expect(choicesFor(groups, 'coven')).toHaveProperty('sections');
+      expect(choicesFor({ ...groups, compendium: [] }, 'coven')).toEqual({ items: groups.coven });
+      expect(choicesFor({ compendium: [], coven: [] }, 'coven')).toEqual({ items: [] });
+    });
   });
 });

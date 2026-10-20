@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
 import MenuButton from '.';
+import { sectionsFor } from './sections';
 import type { MenuButtonItem } from './types';
 
 // Render-only; the keys and the closing are asserted in
@@ -83,3 +84,28 @@ export const MarkedItem: Story = () => (
     />
   </p>
 );
+
+// Sections (the owner's call, 2026-10-20): a menu holding both the compendium's choices and the
+// coven's draws them under discreet headings, the viewer's own side first. Set on a coven's page
+// (Coven first) and on a compendium page (Compendium first).
+const SECTIONED = {
+  compendium: [{ key: 'edit', label: 'Edit in Compendium', onSelect: () => {} }],
+  coven: [
+    { key: 'own', label: 'Make It Ours', onSelect: () => {} },
+    { key: 'remove', label: 'Remove', destructive: true, onSelect: () => {} },
+  ],
+};
+
+const SectionedRow = ({ viewing }: { viewing: 'compendium' | 'coven' }) => (
+  <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '14rem' }}>
+    <MenuButton
+      label="More"
+      className="btn btn--quiet btn--medium"
+      sections={sectionsFor(SECTIONED, viewing)}
+    />
+  </p>
+);
+
+export const SectionedOnACovenPage: Story = () => <SectionedRow viewing="coven" />;
+
+export const SectionedOnACompendiumPage: Story = () => <SectionedRow viewing="compendium" />;

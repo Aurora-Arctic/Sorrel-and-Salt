@@ -43,17 +43,49 @@ export type MenuButtonItem = {
     }
 );
 
-export interface MenuButtonProps {
+/**
+ * A labelled group of a menu's items, drawn under a small muted heading and set apart from the
+ * next group by a rule: the compendium's choices and the coven's, in an Edit menu that offers
+ * both (the owner's call, 2026-10-20). Generic over the item so the bar's Add Ingredient menu,
+ * which has its own items, draws its groups the same way (`sections.tsx`).
+ */
+export interface MenuSection<Item = MenuButtonItem> {
+  /** Unique within the menu. */
+  key: string;
+  /** The group's visible name and its accessible name, in title case: "Compendium". */
+  label: string;
+  /** The group's items, in order. A group with none is not drawn. */
+  items: readonly Item[];
+}
+
+/** What the menu offers: one flat list, or labelled groups, never both. */
+export type MenuButtonChoices =
+  | {
+      /**
+       * What the menu offers, in order, the green item (`primary`) first
+       * whatever its place here: the menu draws it first and keeps the rest in
+       * this order (the owner's call, 2026-10-20).
+       */
+      items: readonly MenuButtonItem[];
+      sections?: never;
+    }
+  | {
+      /**
+       * The same items in labelled groups, in the order to draw them: the caller puts first the
+       * group that belongs to where the viewer is, the compendium's on a compendium page and the
+       * coven's on a coven page, so the menu itself reads no address (the owner's call,
+       * 2026-10-20). The green item goes first within its own group. The arrows, Home and End
+       * run through every group's items as one list; the headings are not in it.
+       */
+      sections: readonly MenuSection[];
+      items?: never;
+    };
+
+export type MenuButtonProps = MenuButtonChoices & {
   /** The button's text and accessible name, in title case: "Edit". */
   label: string;
   /** The button's classes: `btn btn--quiet btn--medium`. */
   className: string;
-  /**
-   * What the menu offers, in order, the green item (`primary`) first
-   * whatever its place here: the menu draws it first and keeps the rest in
-   * this order (the owner's call, 2026-10-20).
-   */
-  items: readonly MenuButtonItem[];
   /** One of its items is in flight: the button shows the spinner and `busyLabel`, and is disabled. */
   busy?: boolean;
   /** What is happening while busy, in title case: "Adding". */
@@ -78,4 +110,4 @@ export interface MenuButtonProps {
   state?: string;
   /** The button itself, so a caller can hand the focus back to it after a dialog an item opened. */
   ref?: Ref<HTMLButtonElement>;
-}
+};

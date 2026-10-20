@@ -61,6 +61,22 @@
   }
 }
 
+// A section's name, discreet (the owner's call, 2026-10-20): small muted caption text above
+// its items, in the item's own side padding so the two line up, and not an item, so neither the
+// arrows nor a press reach it. The rule between sections is a hairline inset like the items' fill.
+.menu-button__heading {
+  padding: space(1) space(4);
+  color: $text-muted;
+  font-size: type-size('caption');
+  line-height: 1.4;
+}
+
+.menu-button__rule {
+  height: 0;
+  margin: space(1) space(2);
+  border-top: 1px solid $hairline;
+}
+
 .menu-button__item {
   @include button-reset;
 
