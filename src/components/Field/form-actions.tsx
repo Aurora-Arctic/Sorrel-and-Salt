@@ -11,6 +11,7 @@ import type { FormActionsProps } from './types';
  * apart at the far end. `.form__actions` rather than `.modal__actions`: it
  * wraps, so a third button never squeezes the row. What Cancel and Delete do
  * is the form's: Cancel calls its discard guard, Delete asks its question.
+ * `aside` takes Delete's place for a form with other choices to set apart.
  * Save is renamed where the form does something other than save: the admin
  * invitation form's Send Invitation (MB.119).
  */
@@ -28,6 +29,7 @@ export function FormActions({
   holdCancel = false,
   onDelete,
   children,
+  aside,
 }: FormActionsProps): ReactElement {
   return (
     <div className="form__actions">
@@ -61,6 +63,7 @@ export function FormActions({
           {`Delete ${noun}`}
         </button>
       )}
+      {aside && <div className="form__aside">{aside}</div>}
     </div>
   );
 }

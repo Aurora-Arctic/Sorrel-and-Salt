@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import type { Route } from 'next';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import type { CompendiumFacetCounts, CompendiumListFilter } from '../CompendiumList/types';
@@ -59,6 +60,13 @@ const ENTRIES = [
   entry('Fixture Salt', 'fixture-salt', null, []),
 ];
 
+const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
+const SECOND_ID = '00000000-0000-4000-8000-000000000002';
+const COVENS = [
+  { id: WORKSPACE_ID, name: 'Fixture Coven One' },
+  { id: SECOND_ID, name: 'Fixture Coven Two' },
+];
+
 const BASE: CompendiumCardsProps = {
   entries: ENTRIES,
   filter: NO_FILTER,
@@ -69,11 +77,102 @@ const BASE: CompendiumCardsProps = {
   action: 'none',
 };
 
-// Someone who can add: the button is disabled until M9.12 builds its dialog.
-export const CanAdd: Story = () => <CompendiumCards {...BASE} action="add" />;
+// Someone who can add to one coven: the plus at each card's bottom right adds the entry to it
+// directly, until M9.12's dialog asks for a quantity. The workshop serves no /api/graphql,
+// so a press shows its refusal.
+export const CanAdd: Story = () => (
+  <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />
+);
+
+// The coven already holds the first two: a check link in the plus's place, the last still a plus.
+export const Held: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry, at) => (at < 2 ? { ...entry, held: true } : entry))}
+  />
+);
+
+// Someone who may write in two covens: the plus is a menu of both. The first card is in the
+// first coven already, so its menu shows that coven disabled; the last is in both, and shows
+// the check.
+export const InSeveralCovens: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    covens={COVENS}
+    entries={ENTRIES.map((entry, at) => ({
+      ...entry,
+      held: at === ENTRIES.length - 1,
+      heldIn:
+        at === 0 ? [WORKSPACE_ID] : at === ENTRIES.length - 1 ? [WORKSPACE_ID, SECOND_ID] : [],
+    }))}
+  />
+);
+
+// A curator who can add too: the plus, then Edit, side by side at the right of the foot.
+export const CanAddAndEdit: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry) => ({
+      ...entry,
+      editHref: `/compendium?edit=${entry.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
+    }))}
+  />
+);
+
+// A curator who is also a member of a coven that holds the entries: the foot's three icons, the
+// plus (a check where every coven holds it), Edit in Compendium, and the three dots, which hold
+// Annotate, Make It Ours and Remove (the owner's call, 2026-10-20).
+export const CanAddEditAndMore: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry, at) => ({
+      ...entry,
+      held: at === 0,
+      heldIn: at === 0 ? [WORKSPACE_ID] : [],
+      editHref: `/compendium?edit=${entry.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
+      places:
+        at === 0
+          ? [
+              {
+                workspaceId: WORKSPACE_ID,
+                covenSlug: 'fixture-coven',
+                name: 'Fixture Coven',
+                canAnnotate: true,
+                canMakeOurs: true,
+                canRemove: true,
+                annotateHref:
+                  `/compendium/ingredients/${entry.slug}?annotate=fixture-coven` as Route,
+              },
+            ]
+          : undefined,
+    }))}
+  />
+);
 
 // An account that only views, or a visitor with no account (who signs in through the header):
 // nothing beneath the card.
+/** A curator's cards, each with Edit, which opens the compendium's edit dialog (M8.17). */
+export const CuratorCanEdit: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    entries={ENTRIES.map((entry) => ({
+      ...entry,
+      editHref: `/compendium?edit=${entry.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
+    }))}
+  />
+);
+
 export const ViewerOnly: Story = () => <CompendiumCards {...BASE} />;
 
 // A page with a neighbour on each side.
@@ -81,6 +180,7 @@ export const MidList: Story = () => (
   <CompendiumCards
     {...BASE}
     action="add"
+    workspaceId={WORKSPACE_ID}
     position={{ page: 2, pages: 3 }}
     previousHref="/compendium"
     nextHref="/compendium?after=x"

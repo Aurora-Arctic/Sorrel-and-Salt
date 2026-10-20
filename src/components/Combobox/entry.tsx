@@ -79,7 +79,7 @@ export function ComboboxEntry({
   const summary = sortable ? undefined : summarised;
   const opens = useEntrySummary();
   // Asked as the tooltip opens: an open summary keeps it shut, saying more.
-  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(() => {
+  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(() => {
     const element = text.current;
     return (
       !opens.open &&
@@ -147,7 +147,7 @@ export function ComboboxEntry({
       <span
         ref={anchor}
         className="combobox__entry-label"
-        onMouseEnter={show}
+        onMouseEnter={showSoon}
         onMouseLeave={hideSoon}
       >
         {iconMark}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
@@ -14,7 +14,6 @@ import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import { ModalButton } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import ActionFailure, { useActionFailure } from '../ActionFailure';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
@@ -40,25 +39,52 @@ const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElem
   // ModalButton takes the focus back to it however the dialog closes.
   <ModalButton label="Leave Coven" className="btn" title="Leave Coven">
     {(close) => (
-      // Its own failure place, so a refusal shows in the dialog rather than
-      // on the page behind it.
-      <ActionFailure>
-        {successors.length === 0 ? (
-          <SoleMember workspaceId={workspaceId} name={name} onCancel={close} />
-        ) : (
-          <Options workspaceId={workspaceId} name={name} successors={successors} onCancel={close} />
-        )}
-      </ActionFailure>
+      <ExitDialog workspaceId={workspaceId} name={name} successors={successors} onCancel={close} />
     )}
   </ModalButton>
 );
+
+type Report = (message: string | undefined) => void;
+
+/**
+ * The dialog's body, which says Promote and Leave's refusal at its top, a
+ * plain notice inside the dialog rather than a callout over it (M12.31's rule
+ * 6); Delete says its own on a line above the buttons. Its own component, so the
+ * refusal goes when the dialog closes.
+ */
+const ExitDialog = ({
+  workspaceId,
+  name,
+  successors,
+  onCancel,
+}: OwnerExitProps & { onCancel: () => void }): ReactElement => {
+  const [failure, setFailure] = useState<string>();
+  return (
+    <>
+      {failure && <Notice kind="error">{failure}</Notice>}
+      {successors.length === 0 ? (
+        <SoleMember workspaceId={workspaceId} name={name} onCancel={onCancel} />
+      ) : (
+        <Options
+          workspaceId={workspaceId}
+          name={name}
+          successors={successors}
+          onCancel={onCancel}
+          report={setFailure}
+        />
+      )}
+    </>
+  );
+};
 
 /** Nobody else is in the coven, so deleting it is the whole answer. */
 const SoleMember = ({
   workspaceId,
   name,
   onCancel,
-}: Pick<OwnerExitProps, 'workspaceId' | 'name'> & { onCancel: () => void }): ReactElement => (
+}: Pick<OwnerExitProps, 'workspaceId' | 'name'> & {
+  onCancel: () => void;
+}): ReactElement => (
   <>
     <p>
       Leave <strong>{name}</strong>? You are its only member, so leaving would leave it with no one.
@@ -81,9 +107,9 @@ const Options = ({
   name,
   successors,
   onCancel,
-}: OwnerExitProps & { onCancel: () => void }): ReactElement => {
-  const router = useRouter();
-  const failure = useActionFailure();
+  report,
+}: OwnerExitProps & { onCancel: () => void; report: Report }): ReactElement => {
+  const { navigate, refresh } = usePendingNavigation();
   const id = useId();
   const ownerField = fieldDescription({ id: `${id}-owner` });
   // One other member is offered by name, with nothing to search (the owner's
@@ -96,7 +122,7 @@ const Options = ({
   async function handOverAndLeave() {
     if (!picked) return;
     setSending(true);
-    failure?.report(undefined);
+    report(undefined);
     const successor = successors.find(({ userId }) => userId === picked);
     try {
       await graphqlRequest(PromoteSuccessorDocument, {
@@ -106,7 +132,7 @@ const Options = ({
       });
     } catch (error) {
       setSending(false);
-      failure?.report(readGraphqlFailure(error).alert);
+      report(readGraphqlFailure(error).alert);
       return;
     }
     try {
@@ -114,15 +140,15 @@ const Options = ({
     } catch (error) {
       setSending(false);
       // Said plainly: the first half happened and stands.
-      failure?.report(
+      report(
         `${successor?.name ?? 'They'} is now an owner, but you did not leave. ${readGraphqlFailure(error).alert}`,
       );
       return;
     }
     // The coven is closed to this user now, so the page cannot be read again;
     // the refresh brings the switcher's new list in, as Leave's does.
-    router.replace(COVEN_LANDING_PATH);
-    router.refresh();
+    navigate(COVEN_LANDING_PATH, { replace: true });
+    refresh();
   }
 
   return (

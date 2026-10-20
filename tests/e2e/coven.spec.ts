@@ -112,3 +112,40 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
+
+// A refusal said inside the only owner's exit dialog, at a phone's width,
+// where the notice once pushed Cancel past the dialog's edge (M12.31). The
+// page offers this owner the exit dialog because the fixture's owner is its
+// only one.
+test("a refused deletion in the only owner's exit keeps Cancel inside the dialog at 375px", async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.owner.id);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${COVEN_SLUG}`);
+  await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('radio', { name: /^Delete It/ }).check();
+  const remove = dialog.getByRole('button', { name: 'Delete Coven', exact: true });
+  const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
+
+  // The service's refusal, answered in its place, so nothing is deleted.
+  const refusal = 'This coven could not be deleted.';
+  await page.route('**/api/graphql', (route) =>
+    route.request().postData()?.includes('DeleteWorkspace')
+      ? route.fulfill({ json: { data: null, errors: [{ message: refusal }] } })
+      : route.continue(),
+  );
+  await remove.click();
+  const confirmation = page.getByRole('group', { name: /^Delete Fixture Coven/ });
+  await confirmation.getByRole('button', { name: 'Delete Coven', exact: true }).click();
+
+  const notice = dialog.getByRole('alert');
+  await expect(notice).toHaveText(refusal);
+  const box = (await cancel.boundingBox())!;
+  const frame = (await dialog.boundingBox())!;
+  expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
+  await assertNoSidewaysScroll(page);
+  await assertNoAccessibilityViolations(page);
+  await page.unrouteAll();
+});

@@ -1,11 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
+import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
@@ -14,7 +15,8 @@ import './index.scss';
 // page's are: MB.119 decision c): the page reads where the visitor
 // stands, through the accept service's own checks, and this shows it. Accept
 // sends the mutation, which checks again and decides; a refusal is said in
-// the service's words (claude-docs/components/invitation-acceptance.md).
+// the service's words, in a callout from Accept (design F, ClickFeedback)
+// (claude-docs/components/invitation-acceptance.md).
 
 const AcceptInvitationDocument = graphql(`
   mutation AcceptInvitation($token: String!) {
@@ -50,40 +52,44 @@ const Accept = ({
   token,
   landing,
 }: Extract<InvitationAcceptanceProps, { status: 'acceptable' }>): ReactElement => {
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<string>();
+  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Accept Invitation' });
 
   async function accept() {
+    if (sending) return;
     setSending(true);
-    setFailure(undefined);
+    report(undefined);
     try {
       await graphqlRequest(AcceptInvitationDocument, { token });
-      // Busy until the landing replaces this page.
-      router.push(landing);
+      // Busy until the landing replaces this page. A success is the landing
+      // itself, so nothing is announced (the decision record's §5, rule 1).
+      navigate(landing);
     } catch (error) {
       setSending(false);
       // No fields of its own, so the reader always answers with an alert;
       // the fallback only satisfies its type.
-      setFailure(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+      report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
     }
   }
 
+  // A `div`, not the other states' `p`: the callout is a `div`.
   return (
-    <>
-      {failure && <Notice kind="error">{failure}</Notice>}
-      <p className="invitation-acceptance__actions">
-        <BusyButton
-          className="btn btn--solid"
-          disabled={sending}
-          busy={sending}
-          busyLabel="Accepting Invitation"
-          onClick={() => void accept()}
-        >
-          Accept Invitation
-        </BusyButton>
-      </p>
-    </>
+    <div className="invitation-acceptance__actions">
+      {/* `aria-disabled` rather than `disabled` while it sends: a disabled
+          button drops the focus, which a refusal must find still on Accept. */}
+      <BusyButton
+        ref={anchorRef}
+        className="btn btn--solid"
+        aria-disabled={sending || undefined}
+        busy={sending}
+        busyLabel="Accepting Invitation"
+        onClick={() => void accept()}
+      >
+        Accept Invitation
+      </BusyButton>
+      {feedback}
+    </div>
   );
 };
 

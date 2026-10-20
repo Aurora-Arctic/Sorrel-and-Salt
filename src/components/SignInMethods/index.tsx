@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useEffect, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import {
@@ -9,9 +9,12 @@ import {
   signInPath,
   unlinkErrorMessage,
 } from '../../lib/sign-in';
+import { reportLeaving } from '../../lib/navigation';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import BusyButton from '../BusyButton';
+import { useClickFeedback } from '../ClickFeedback';
+import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
 import { ProviderRow } from './provider-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
@@ -36,56 +39,89 @@ const SignInMethods = ({
   // Seeded from the server's list; a removal answers in place rather than
   // reloading the page.
   const [accounts, setAccounts] = useState(linked);
-  // Seeded from the server-rendered callback error, then replaced by a
-  // failure here; a removal's confirmation replaces either.
+  // The server-rendered callback error, which no press here raised, so it is
+  // a `Notice` rather than a click's callout; any press here clears it. A
+  // press's own failure goes in a callout under its control, which each row
+  // keeps (claude-docs/components/click-feedback.md).
   const [alert, setAlert] = useState<SignInMethodError | undefined>(error);
-  const [removed, setRemoved] = useState<string>();
   const [pending, setPending] = useState<string>();
+  const announce = useAnnounce();
+  const signInAgain = useClickFeedback({ name: 'Sign In Again' });
+  // The provider whose link hop is under way: the browser is leaving for it.
+  const [linking, setLinking] = useState<ProviderId>();
   const [signingOut, setSigningOut] = useState(false);
-  const [signOutFailed, setSignOutFailed] = useState(false);
+  // The page is left for the provider's own, so on success `linking` stays set
+  // until the browser goes; a return from the back-forward cache (the page
+  // restored as it was left) clears it, as on /sign-in.
+  useEffect(() => {
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setLinking(undefined);
+    };
+    window.addEventListener('pageshow', restored);
+    return () => window.removeEventListener('pageshow', restored);
+  }, []);
 
-  const handleAdd = async (providerId: ProviderId): Promise<void> => {
-    if (!configured.includes(providerId)) return;
+  // Each answers the failure to say under the row's control, or nothing.
+  const handleAdd = async (providerId: ProviderId): Promise<string | undefined> => {
+    if (!configured.includes(providerId)) return undefined;
     setAlert(undefined);
-    setRemoved(undefined);
-    const result = await linkSocial({
-      provider: providerId,
-      callbackURL: ACCOUNT_PATH,
-      // The provider rides back on the failure, so the page can put the
-      // sentence in this row (claude-docs/components/sign-in-methods.md).
-      errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
-    });
-    if (result?.error) setAlert({ providerId, message: GENERIC_LINK_ERROR });
+    setLinking(providerId);
+    // A dropped connection throws rather than answering `error`; both say so.
+    const result = await (async () => {
+      try {
+        return await linkSocial({
+          provider: providerId,
+          callbackURL: ACCOUNT_PATH,
+          // The provider rides back on the failure, so the page can put the
+          // sentence in this row (claude-docs/components/sign-in-methods.md).
+          errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
+        });
+      } catch (thrown) {
+        return { error: thrown };
+      }
+    })();
+    if (result?.error) {
+      setLinking(undefined);
+      return GENERIC_LINK_ERROR;
+    }
+    // The redirect has started: keep the page bar up until the browser leaves.
+    reportLeaving();
+    return undefined;
   };
 
-  const handleRemove = async (account: LinkedAccount, label: string): Promise<void> => {
+  const handleRemove = async (
+    account: LinkedAccount,
+    label: string,
+  ): Promise<string | undefined> => {
     setAlert(undefined);
-    setRemoved(undefined);
     setPending(account.id);
-    const result = await unlinkAccount({ accountId: account.id });
+    // A refusal answers `error` with a code; a dropped connection throws, and
+    // takes the generic sentence.
+    const result = await unlinkAccount({ accountId: account.id }).catch(() => ({
+      error: { code: undefined },
+    }));
     setPending(undefined);
-    if (result?.error) {
-      // The row survives a refusal, so the sentence goes in it.
-      setAlert({
-        providerId: account.providerId,
-        message: unlinkErrorMessage(result.error.code),
-      });
-      return;
-    }
+    // The row survives a refusal, so the sentence goes under its Remove.
+    if (result?.error) return unlinkErrorMessage(result.error.code);
     setAccounts((current) => current.filter((candidate) => candidate.id !== account.id));
-    setRemoved(label);
+    // Seen as the row turning to Add; said in the page's status region.
+    announce(`${label} was removed from your sign-in methods.`);
+    return undefined;
   };
 
   // Sign out, then sign in again landing back here, which makes the session
   // fresh. The call and its failure are SignOutButton's: a refusal answers
   // `error` and a dropped connection throws, and either says so.
   const handleSignInAgain = async (): Promise<void> => {
+    // `aria-disabled` lets a click through, so a second one is refused here.
+    if (signingOut) return;
     setSigningOut(true);
-    setSignOutFailed(false);
+    setAlert(undefined);
+    signInAgain.report(undefined);
     const { error: failure } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
     if (failure) {
       setSigningOut(false);
-      setSignOutFailed(true);
+      signInAgain.report(GENERIC_FAILURE);
       return;
     }
     window.location.assign(signInPath(ACCOUNT_PATH));
@@ -98,8 +134,6 @@ const SignInMethods = ({
   return (
     <div className="sign-in-methods">
       {listAlert && <Notice kind="error">{listAlert}</Notice>}
-      {/* At the head of the list, not in a row: the row it was is gone. */}
-      {removed && <Notice kind="success">{removed} was removed from your sign-in methods.</Notice>}
       {/* Withheld, not only refused: Better Auth would refuse every Remove
           from this session, so the way to a fresh one is offered instead. */}
       {removal === 'withheld' && (
@@ -107,9 +141,12 @@ const SignInMethods = ({
           <Notice kind="plain" id={freshNoteId}>
             Removing a sign-in method needs a recent sign-in.
           </Notice>
+          {/* `aria-disabled` rather than `disabled`, which would drop the
+              focus to the page, where a failure's callout could not keep it. */}
           <BusyButton
+            ref={signInAgain.anchorRef}
             className="btn"
-            disabled={signingOut}
+            aria-disabled={signingOut || undefined}
             busy={signingOut}
             busyLabel="Signing Out"
             aria-describedby={freshNoteId}
@@ -117,7 +154,7 @@ const SignInMethods = ({
           >
             Sign In Again
           </BusyButton>
-          {signOutFailed && <Notice kind="error">{GENERIC_FAILURE}</Notice>}
+          {signInAgain.feedback}
         </div>
       )}
       <ul className="sign-in-methods__list">
@@ -132,11 +169,10 @@ const SignInMethods = ({
               }
               removal={removal}
               pending={pending !== undefined}
+              busy={account ? pending === account.id : linking === provider.id}
               error={alert?.providerId === provider.id ? alert.message : undefined}
-              onAdd={() => void handleAdd(provider.id)}
-              onRemove={() => {
-                if (account) void handleRemove(account, provider.label);
-              }}
+              onAdd={() => handleAdd(provider.id)}
+              onRemove={async () => (account ? handleRemove(account, provider.label) : undefined)}
             />
           );
         })}

@@ -104,7 +104,10 @@ from … [join …] where …   -- no order, no limit
   so a cursor stays a key.
 - **`findPageCount` counts a `findPage` list** under the same order and
   `where`, `findPageCountInTiers` a `findPageInTiers` one, and
-  `findPageCountInScope` a `findPageInScope` one, the Invitations tab's: the three
+  `findPageCountInScope` a `findPageInScope` one, the Invitations tab's, and
+  `findPageCountInScopeIncludingSoftDeleted` a `findPageInScopeIncludingSoftDeleted`
+  one, the coven Ingredients list's, whose scope admits a retired entry the coven
+  still holds (M12.32; [`soft-delete.md`](soft-delete.md)): the three
   group pages count through it (MB.132), and each vocabulary's own count
   finder, the compendium's, the ledger's and the user list's
   (`findUserCount`, MB.115) call one under their own filter (MB.206).

@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
@@ -11,8 +12,9 @@
 
 .stock-badge--out {
   border-width: 2px;
-  // Keeps the heavier border from making this badge taller than a Low Stock one.
-  padding-block: 0;
+  // Keeps the heavier border from making this badge taller than a Low Stock one;
+  // the top keeps the default size's optical drop (_mixins.scss, badge-padding).
+  padding-block: map.get(map.get($badge-sizes, 'default'), optical-drop) 0;
   font-weight: 700;
 }
 

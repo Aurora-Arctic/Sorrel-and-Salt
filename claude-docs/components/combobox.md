@@ -79,7 +79,7 @@ step in from the row's top and bottom, so each row's reads as its own, with the 
 steps clear of the bar at its widest. The bar widens to 5px on the
 highlighted or hovered row, over 150ms, or at once under reduced motion. It
 is a background image rather than a border, so the widening moves no text
-and the highlight's wash still shows behind it. The colour says which group's chip a
+and the highlight's wash still shows behind it. That wash is `$fill-highlight`, the accent 12% into the card, the one every menu's item wears too (M8.17, the owner's call of 2026-10-20; it was 22%). The dragged chip keeps its own opaque 22%, so it hides the chips it passes over. The colour says which group's chip a
 pick will become; the group's name is still the bucket's heading, so the
 colour is never the only cue.
 
@@ -124,6 +124,11 @@ colour is never the only cue.
   and after them. Each group's heading is keyed by its place, `heading-0`,
   rather than its text, which may hold a space and would split the
   `aria-labelledby` reference. The status region counts the rows as before.
+- **A pending lookup is shown and said.** While `suggestions.pending`, the
+  input carries `aria-busy` and the indicator strip holds a `Spinner` (it
+  shows after `$loading-delay`, so a quick answer never flashes it), beside
+  the status region's "Looking for" line. `CategoryPicker` gets it by passing
+  its `pending` through.
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as
   the rows arrive, the typed row counting as one. A box with no source never
@@ -199,6 +204,11 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   not followed.
 - **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
   clip it.
+- **Shared with MenuButton.** Its menu is placed by the same hook with three
+  options the list leaves at their defaults: `placement: 'bottom-end'`
+  rather than `'bottom-start'`, so it hangs from the button's end edge and
+  flips to `top-end`; `gap: 8` rather than 4; and `matchWidth: false`
+  ([`menu-button.md`](menu-button.md), "Where it opens"; M8.17).
 - **A row never scrolls it sideways**: a word too long for the list, an
   address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
   row, `overflow-x: hidden` on the list).
@@ -303,15 +313,20 @@ changed form to discard (MB.115). With the list shut, Escape reaches the
 modal as ever. The Modal workshop's `WithPickers` story holds both pickers
 in a modal to try it.
 
-| Prop                 | Meaning                                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------------------ |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                  |
-| `label`              | What the box is called, and its list's name, "Classification choices".                                 |
-| `value`/`onChange`   | The chosen value, held by the caller.                                                                  |
-| `choices`            | `{ value, label, icon? }` in order. One whose value is `''` is the choice that clears the set: "None". |
-| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                               |
-| `required`           | `aria-required`, as the field marks it.                                                                |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                     |
+| Prop                 | Meaning                                                                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                                                               |
+| `label`              | What the box is called, and its list's name, "Classification choices".                                                                              |
+| `value`/`onChange`   | The chosen value, held by the caller.                                                                                                               |
+| `choices`            | `{ value, label, icon?, disabled?, note? }` in order. One whose value is `''` is the choice that clears the set: "None".                            |
+| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                                                                            |
+| `required`           | `aria-required`, as the field marks it.                                                                                                             |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                                                                  |
+| `busy`               | A change this box started is on its way (M12.33): `aria-busy="true"` on the box and a `Spinner` in its indicators. The value shown is the caller's. |
+
+A choice that is `disabled` (M9.12) is listed where it stands, `aria-disabled`, and
+stepped over by the arrows and refused a press, with its `note` on a second line
+beneath its name: the coven picker's coven that already holds the entry.
 
 A choice's `icon` (M12.7), a drawn, decorative node such as a form group's
 [`FormIcon`](form-icon.md), shows before its label in its row and in the closed
@@ -805,8 +820,7 @@ their buckets and the typed row, which echoes what was typed and comes first;
 headed rows grouped under their headings in first-seen order, and two
 same-named rows under different headings told apart and counted; a row's
 accessible name carrying its label and note; picking by keyboard and by
-click, and the typed row as `null`; the list opening above the box with no
-room beneath it; the action row last with no typed row, there with a
+click, and the typed row as `null`; the action row last with no typed row, there with a
 blank box and with no suggestions, calling `onSelect` by click or keyboard
 and never `onPick`; the typed row withheld under `offerTyped={false}`, the
 suggestions still shown, Enter still handed to `onCommit`, and the list shut
@@ -821,7 +835,9 @@ in the text, its detail's tooltip on hover
 and on the box's focus, closed by Escape and blur, and closed by a
 printable key and by the list opening, the detail still the box's
 description; the entry's ×, its
-tooltip on a cut-off text and on a detail, and its error read by its ×;
+tooltip on a detail and none on a text that fits without one, and its error
+read by its ×; a cut-off text's tooltip and where the list opens need layout,
+which happy-dom has none of;
 a linked entry's summary (MB.115), opened by its text alone, a typed
 entry having nothing to press, and shut by a second press, by Escape from
 inside it, cancelled and the focus handed back, by a press outside it and

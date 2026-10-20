@@ -12,7 +12,7 @@ import { RedoIcon, UndoIcon } from '../IconTip';
  * did. They read the surrounding form's history from `FormHistoryContext`
  * and draw nothing without one. Small and quiet icon buttons, off while
  * there is nothing to do. In a modal they go into the header's toolbar row,
- * a joined pair at its end, as the ingredient form's Open All goes to its
+ * a pair at its end, a hairline between the two, as the ingredient form's Open All goes to its
  * start; elsewhere they sit in the form's own flow
  * (claude-docs/components/field.md, "Undo and redo").
  */

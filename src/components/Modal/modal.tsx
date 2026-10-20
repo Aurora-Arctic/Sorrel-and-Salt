@@ -14,7 +14,9 @@ import {
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
 import { firstShownField } from './fields';
-import { HeaderSlotContext } from './header-slot';
+import { pageHeading } from './page-heading';
+import { holdPage } from './page-hold';
+import { HeaderNoteContext, HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
 
@@ -43,27 +45,72 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
   return clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom;
 }
 
+/**
+ * Back to what opened the modal, if it is still in the page and not hidden
+ * (an item of a menu since closed is), or else to where
+ * the owner says, or else, with the opener gone and the owner naming nowhere,
+ * as after a row's Remove takes the row away, to the page's heading; and only
+ * if nothing has taken the focus meanwhile, as a page a save opens may. The
+ * dialog is already out of the page, so a focus that was in it is on the body.
+ */
+function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
+  const now = document.activeElement;
+  if (now && now !== document.body) return;
+  const target =
+    opener instanceof HTMLElement && opener.isConnected && !opener.closest('[hidden], [inert]')
+      ? opener
+      : (returnTo?.(opener) ?? pageHeading());
+  target?.focus();
+}
+
 const Modal = ({
   title,
   eyebrow,
   destination,
   qualifier,
+  formalName,
+  topEnd,
+  formalActions,
+  under,
   onClose,
+  returnTo,
   size,
+  readingBody = false,
   loading = false,
+  foot,
   children,
 }: ModalProps): ReactElement => {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const eyebrowId = useId();
   const body = useRef<HTMLDivElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
+  // What held the focus as it opened, taken once, before showModal() moves
+  // it: the focus goes back there as it closes (APG, "Dialog (Modal)"). The
+  // modal does it, rather than each owner, because the owner closes it by
+  // unmounting it, so the dialog element never closes in place and the
+  // browser's own return never runs.
+  const opener = useRef<Element | null>(null);
+  const taken = useRef(false);
+  const fallback = useRef(returnTo);
+  useEffect(() => {
+    fallback.current = returnTo;
+  });
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
     let cancelled = false;
+    let release: (() => void) | undefined;
     if (!dialog.open) {
+      if (!taken.current) {
+        taken.current = true;
+        const active = document.activeElement;
+        opener.current = active === document.body ? null : active;
+      }
+      // Measured before showModal(), while the scrollbar it is to replace is still there.
+      release = holdPage();
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
       // Close, in the header; the person opened the dialog to fill it in, so
@@ -84,6 +131,10 @@ const Modal = ({
     return () => {
       cancelled = true;
       dialog.close();
+      release?.();
+      // Strict Mode's rehearsal leaves the dialog in the page; only a real
+      // unmount takes it out, and only that gives the focus back.
+      if (!dialog.isConnected) giveFocusBack(opener.current, fallback.current);
     };
   }, []);
 
@@ -138,6 +189,7 @@ const Modal = ({
   const [guard] = useState(closeGuardSlot);
   // Held in state, so the contents redraw into it once it is in the page.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+  const [headerNote, setHeaderNote] = useState<HTMLElement | null>(null);
 
   // A question a form asks over itself (ConfirmOverlay, MB.115) is drawn in
   // the layer over the body, and holds the body and the control beside the
@@ -156,6 +208,7 @@ const Modal = ({
     const held = (on: boolean): void => {
       body.current?.toggleAttribute('inert', on);
       slotRef.current?.toggleAttribute('inert', on);
+      footRef.current?.toggleAttribute('inert', on);
     };
     holds.current += 1;
     held(true);
@@ -173,6 +226,10 @@ const Modal = ({
   };
 
   const handleCancel = (event: SyntheticEvent<HTMLDialogElement>): void => {
+    // A dialog's own Escape only: React carries a nested dialog's cancel (a
+    // confirmation opened from inside this one) up its tree to here, and the
+    // browser sends Escape to the topmost dialog alone.
+    if (event.target !== event.currentTarget) return;
     event.preventDefault();
     request();
   };
@@ -191,6 +248,26 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
+  // The hidden comma sits at the heading's end, and the spans beside it are not in the
+  // dialog's name.
+  const titleHeading = (
+    <h2 id={titleId} className="modal-dialog__title">
+      {title}
+      {qualifier && (
+        <>
+          <span className="spoken-separator">,</span>{' '}
+          <span className="modal-dialog__qualifier">{qualifier}</span>
+        </>
+      )}
+    </h2>
+  );
+  // At the dialog's corner; with a top line it stands on that line, in the markup too.
+  const closeButton = (
+    <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
+      <span aria-hidden="true">×</span>
+    </button>
+  );
+
   // The backdrop's click is the pointer's alone; Escape is its keyboard
   // equivalent, handled above.
   // oxlint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
@@ -204,10 +281,13 @@ const Modal = ({
       tabIndex={-1}
       // Named by the eyebrow and the heading together, "Edit Ingredient,
       // Mugwort", or by the heading then where it lands, "Add Ingredient to
-      // Whitethorn Coven".
-      aria-labelledby={
-        eyebrow ? `${eyebrowId} ${titleId}` : destination ? `${titleId} ${eyebrowId}` : titleId
-      }
+      // Whitethorn Coven"; by the heading alone with a formal name over it.
+      aria-labelledby={(eyebrow
+        ? [eyebrowId, titleId]
+        : destination
+          ? [titleId, eyebrowId]
+          : [titleId]
+      ).join(' ')}
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -216,11 +296,22 @@ const Modal = ({
         if (event.target === event.currentTarget) finish();
       }}
     >
-      <div className="modal-dialog__header">
+      <div
+        className={['modal-dialog__header', topEnd !== undefined && 'modal-dialog__header--topped']
+          .filter(Boolean)
+          .join(' ')}
+      >
         {/* An edit dialog's head (MB.115): what it does to what kind, then
             which entry. The hidden commas are for the dialog's name alone,
             which a screen reader would otherwise run together. */}
         <div className="header modal-dialog__heading">
+          {/* The top line, with Close on it, first in the head as it is on screen. */}
+          {topEnd !== undefined && (
+            <div className="modal-dialog__top">
+              {topEnd}
+              {closeButton}
+            </div>
+          )}
           {eyebrow && (
             <p id={eyebrowId} className="eyebrow">
               {eyebrow}
@@ -232,19 +323,26 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
-          <h2 id={titleId} className="modal-dialog__title">
-            {title}
-            {qualifier && (
-              <>
-                <span className="spoken-separator">,</span>{' '}
-                <span className="modal-dialog__qualifier">{qualifier}</span>
-              </>
-            )}
-          </h2>
+          {formalActions !== undefined ? (
+            // The formal name, the title, and the actions at the formal name's end: after the
+            // title in the markup, as the entry page's are, and placed on the formal name's line.
+            <div className="modal-dialog__naming">
+              {formalName}
+              {titleHeading}
+              <div className="modal-dialog__formal-actions">{formalActions}</div>
+            </div>
+          ) : (
+            <>
+              {formalName}
+              {titleHeading}
+            </>
+          )}
+          {under !== undefined && <div className="modal-dialog__under">{under}</div>}
         </div>
-        <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
-          <span aria-hidden="true">×</span>
-        </button>
+        {topEnd === undefined && closeButton}
+        {/* Under the heading, for a sentence the contents put there
+            (HeaderNoteContext), above the row of controls. */}
+        <div ref={setHeaderNote} className="modal-dialog__header-note" />
         {/* Under the heading, for a control the contents put there
             (HeaderSlotContext): after the × in Tab order, as on screen. */}
         <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
@@ -252,16 +350,30 @@ const Modal = ({
       {/* The body scrolls beneath the header, rather than the whole dialog,
           so a question's layer can lie over exactly the part in view. */}
       <div className="modal-dialog__main">
-        <div ref={body} className="modal-dialog__body" aria-busy={loading || undefined}>
+        <div
+          ref={body}
+          className="modal-dialog__body"
+          aria-busy={loading || undefined}
+          // A body only to read takes a Tab stop, so a keyboard can scroll it.
+          tabIndex={readingBody ? 0 : undefined}
+        >
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
-              <ConfirmLayerContext.Provider value={layer}>
-                {typeof children === 'function' ? children(close) : children}
-              </ConfirmLayerContext.Provider>
+              <HeaderNoteContext.Provider value={headerNote}>
+                <ConfirmLayerContext.Provider value={layer}>
+                  {typeof children === 'function' ? children(close) : children}
+                </ConfirmLayerContext.Provider>
+              </HeaderNoteContext.Provider>
             </HeaderSlotContext.Provider>
           </CloseGuardContext.Provider>
         </div>
         <div ref={setLayerHost} className="modal-dialog__layer" />
+        {/* Under the body, outside what scrolls, so the body's scrollbar stops above it. */}
+        {foot != null && foot !== false && (
+          <div ref={footRef} className="modal-dialog__foot">
+            {foot}
+          </div>
+        )}
       </div>
     </dialog>
   );

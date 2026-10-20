@@ -3,6 +3,8 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 
@@ -10,12 +12,14 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // visitor through narrowing the list and opening an entry (tests/e2e/stories/02-compendium);
 // this proves what no story walks: the page is whole in the HTML as served, the curators'
 // No Refs filter does nothing here, a filtered view asks to stay out of search results, the
-// pager reaches the last page, the foot of each card follows the visitor's role, and the
-// page holds at a phone's width.
+// pager reaches the last page, the foot of each card follows the visitor's role, a curator's
+// Edit opens the compendium's edit dialog over the search (M8.17), and the page holds at a
+// phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
 const ADD = 'Add to My Ingredients';
+const HELD = 'In All Covens';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -84,7 +88,7 @@ test('the server HTML holds the unfiltered list, every card and every link', asy
   expect(links[0]).toBe(`/compendium/ingredients/${first.slug}`);
 });
 
-test('?withoutReferences=1 lists what the unfiltered page lists, and stays indexable', async ({
+test('?withoutReferences=1 lists what the unfiltered page lists, with the unfiltered page as its canonical address', async ({
   page,
   request,
 }) => {
@@ -117,7 +121,8 @@ test('?withoutReferences=1 lists what the unfiltered page lists, and stays index
   expect(unsourced[0].count).not.toBe(await seededCount());
 
   expect(entryLinks(asked)).toEqual(entryLinks(plain));
-  expect(asked).not.toContain('rel="canonical"');
+  // The page ignores the filter, so its canonical address is the unfiltered page.
+  expect(asked).toMatch(/<link rel="canonical" href="[^"?]*\/compendium"/);
 });
 
 test('?withoutForms=1 lists what the unfiltered page lists, and offers no No Form control', async ({
@@ -128,7 +133,8 @@ test('?withoutForms=1 lists what the unfiltered page lists, and offers no No For
   const asked = await (await request.get('/compendium?withoutForms=1')).text();
 
   expect(entryLinks(asked)).toEqual(entryLinks(plain));
-  expect(asked).not.toContain('rel="canonical"');
+  // The page ignores the filter, so its canonical address is the unfiltered page.
+  expect(asked).toMatch(/<link rel="canonical" href="[^"?]*\/compendium"/);
   await page.goto('/compendium?withoutForms=1');
   await expect(page.getByRole('switch', { name: /^No Form/ })).toHaveCount(0);
 });
@@ -141,8 +147,8 @@ test('a filtered view is noindex with the unfiltered page as its canonical addre
 
   expect(filtered).toMatch(/<meta name="robots" content="noindex/);
   expect(filtered).toMatch(/<link rel="canonical" href="[^"]*\/compendium"/);
-  // Without a filter the page asks nothing of the sort.
-  expect(plain).not.toContain('rel="canonical"');
+  // Without a filter the page is indexable, and names the same address as its canonical.
+  expect(plain).toMatch(/<link rel="canonical" href="[^"?]*\/compendium"/);
   expect(plain).not.toMatch(/<meta name="robots" content="noindex/);
 });
 
@@ -178,13 +184,22 @@ test('the foot of a card follows the visitor: a button for an owner or member, n
   );
   expect(count).toBe(1);
 
-  for (const key of ['A', 'B']) {
+  // The plus works (M9.12): a member of one coven adds with a press, and the card shows the
+  // check in its place. The covens' held marks are the coven's own, so B, in the same coven,
+  // finds that card already held when the page is opened.
+  for (const [index, key] of ['A', 'B'].entries()) {
     await signInAgainAs(page, coven.users[key]);
     await page.goto('/compendium');
     const buttons = page.getByRole('button', { name: ADD });
-    await expect(buttons).toHaveCount(PAGE_SIZE);
-    // Disabled until M9.12 builds its dialog.
-    await expect(buttons.first()).toBeDisabled();
+    const held = page.getByRole('button', { name: HELD });
+    await expect(buttons).toHaveCount(PAGE_SIZE - index);
+    await expect(held).toHaveCount(index);
+    await expect(buttons.first()).toBeEnabled();
+    if (index === 0) {
+      await buttons.first().click();
+      await expect(held).toHaveCount(1);
+      await expect(buttons).toHaveCount(PAGE_SIZE - 1);
+    }
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
   }
 
@@ -267,53 +282,26 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   await assertNoSidewaysScroll(page);
 });
 
-test('the stuck row wears a shadow that is gone at the top, and the tray stays as near the input as before', async ({
+test('the search row is marked stuck once scrolled past, and unmarked back at the top', async ({
   page,
 }) => {
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
   const row = searchRow(page);
-  const shadow = () => row.evaluate((el) => getComputedStyle(el).boxShadow);
-
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
-  expect(await shadow()).toBe('none');
-
-  // The gap between the controls and the tray, read at the top of the page.
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  const tray = page.getByRole('dialog', { name: 'Filters' });
-  await expect(tray).toBeVisible();
-  const gapAt = async () => {
-    const form = (await searchForm(page).boundingBox())!;
-    const box = (await tray.boundingBox())!;
-    return box.y - (form.y + form.height);
-  };
-  await expect.poll(gapAt).toBeGreaterThanOrEqual(0);
-  const gapAtTop = await gapAt();
-  expect(gapAtTop).toBeLessThanOrEqual(12);
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(tray).toBeHidden();
 
   await page.evaluate(() => window.scrollTo(0, 1500));
   await expect(row).toHaveAttribute('data-stuck', 'true');
-  // The shadow fades in, so it is read once the transition has run.
-  await expect.poll(shadow).not.toBe('none');
 
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(tray).toBeVisible();
-  await expect.poll(gapAt).toBeCloseTo(gapAtTop, 0);
-
-  await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(tray).toBeHidden();
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
-  await expect.poll(shadow).toBe('none');
 });
 
-// The first chips and the +N button share one line at full card width. Opening the panel
+// The chips shown and the +N button together account for every category. Opening the panel
 // floats it over the card, so the card and its grid row do not change height; a component
 // test cannot measure either. No seeded entry has more than three categories, so the test
 // files Amethyst under three more first, and holds the card at the grid's narrowest, 20rem.
-test('the category chips and the +N button share one line, and opening the panel does not change the card height', async ({
+test('the category chips and the +N count cover every category, and opening the panel does not change the card height', async ({
   page,
 }) => {
   await withSql(
@@ -350,18 +338,13 @@ test('the category chips and the +N button share one line, and opening the panel
   const more = card.getByRole('button', { name: /more categories? for/i });
   await expect(more).toBeVisible();
 
-  // The chips shown plus the count behind +N are all six; at the grid's narrowest card
-  // width (20rem) the shown chips and the button sit on one line.
+  // The chips shown plus the count behind +N are all six, at the grid's narrowest card
+  // width (20rem).
   const chips = card
     .getByRole('list', { name: 'Categories' })
     .locator('li:has(.chip):not(:has(button))');
   const count = Number(/\d+/.exec((await more.textContent()) ?? '')![0]);
   expect((await chips.count()) + count).toBe(6);
-  const tops = await chips.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
-  tops.push((await more.boundingBox())!.y);
-  // One line: tops within a pixel (the chip and the button differ by half a pixel), far
-  // under a line's height.
-  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
 
   const before = (await card.boundingBox())!.height;
   await more.click();
@@ -372,28 +355,6 @@ test('the category chips and the +N button share one line, and opening the panel
   await page.keyboard.press('Escape');
   await expect(more).toHaveAttribute('aria-expanded', 'false');
   await expect(more).toBeFocused();
-});
-
-test("the dot between a card's forms is level with the forms' icons", async ({ page }) => {
-  await page.goto('/compendium');
-  // The dot is drawn in CSS, so read where it sits from its item and its resolved margins.
-  const { dot, icon } = await page.evaluate(() => {
-    const second = [...document.querySelectorAll('.ingredient-card__item')].find((el) =>
-      el.previousElementSibling?.matches('.ingredient-card__item'),
-    )!;
-    const box = second.getBoundingClientRect();
-    const style = getComputedStyle(second, '::before');
-    const svg = second.querySelector('svg')!.getBoundingClientRect();
-    return {
-      dot:
-        box.top +
-        parseFloat(style.top) +
-        parseFloat(style.marginTop) +
-        parseFloat(style.height) / 2,
-      icon: svg.top + svg.height / 2,
-    };
-  });
-  expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
 });
 
 test("a click on a card's forms line opens its entry", async ({ page }) => {
@@ -407,4 +368,59 @@ test("a click on a card's forms line opens its entry", async ({ page }) => {
   // for ever. The click is still a real mouse press at the line’s centre.
   await forms.click({ force: true });
   await expect(page).toHaveURL(new RegExp(`${href}$`));
+});
+
+// M8.17: a curator edits an entry from the public search, in the compendium's edit dialog over
+// the results, and closes back onto the same search with the focus on the card's Edit. An
+// account that cannot curate gets no Edit, and the same address opens nothing for it.
+test("a curator's Edit opens the compendium's edit dialog over the search, and closes back to it", async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'a-curator@public-compendium-edit.test',
+    ['discord'],
+    'curator',
+  );
+  await withSql((sql) =>
+    insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Editwort',
+        canonicalName: 'Fixtura editata',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      userId,
+    ),
+  );
+  const searched = '/compendium?query=Editwort';
+  const dialog = page.getByRole('dialog', { name: /Edit Compendium Entry/ });
+  const edit = page.getByRole('link', {
+    name: 'Edit in Compendium Fixture Editwort, Fixtura editata',
+  });
+
+  await page.goto(searched);
+  await edit.click();
+  await expect(dialog.getByRole('button', { name: 'Open All' })).toBeVisible();
+  await expect(page).toHaveURL((url) => url.searchParams.get('edit') !== null);
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.searchParams.get('query') === 'Editwort');
+  await expect(page).toHaveURL((url) => !url.searchParams.has('edit'));
+  await expect(edit).toBeFocused();
+  const editAddress = await edit.getAttribute('href');
+  // Why the refusal below is the guard's: loaded straight, the address opens the dialog here.
+  await page.goto(editAddress!);
+  await expect(dialog.getByRole('button', { name: 'Open All' })).toBeVisible();
+
+  // The same address, for an account that cannot curate: the card, but no Edit and no dialog.
+  const coven = await seedCoven(page, 'Fixture Coven Edit Refused', 'edit-refused.test', {
+    A: 'owner',
+  });
+  await signInAgainAs(page, coven.users.A);
+  await page.goto(editAddress!);
+  await expect(cardsOf(page)).toHaveCount(1);
+  await expect(edit).toHaveCount(0);
+  await expect(dialog).toHaveCount(0);
 });

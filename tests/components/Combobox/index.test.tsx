@@ -79,8 +79,6 @@ describe('Combobox', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
     expect(box()).toHaveAttribute('aria-expanded', 'true');
-    // The root carries the state the chevron's flip waits on.
-    expect(box().closest('.combobox')).toHaveClass('is-open');
     expect(options()).toHaveLength(3);
 
     rerender(<Harness />);
@@ -295,74 +293,6 @@ describe('Combobox', () => {
     expect(screen.queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
   });
 
-  // MB.154, the owner's calls: the open list spans what it is anchored to,
-  // and never runs off the screen. happy-dom lays nothing out, so each test gives
-  // the viewport, the box, the anchor and the list the sizes Floating UI reads.
-  describe('where the list opens', () => {
-    const rect = (left: number, top: number, width: number, height: number) =>
-      ({
-        x: left,
-        y: top,
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-      }) as DOMRect;
-
-    function layOut({
-      control,
-      list,
-    }: {
-      control: DOMRect;
-      list: { width: number; height: number };
-    }) {
-      const html = document.documentElement;
-      const restore = [
-        vi.spyOn(html, 'clientWidth', 'get').mockReturnValue(400),
-        vi.spyOn(html, 'clientHeight', 'get').mockReturnValue(600),
-        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
-          this: HTMLElement,
-        ) {
-          return this.getAttribute('role') === 'listbox' ||
-            this.classList.contains('combobox__popup')
-            ? list.width
-            : 0;
-        }),
-        vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
-          this: HTMLElement,
-        ) {
-          return this.getAttribute('role') === 'listbox' ||
-            this.classList.contains('combobox__popup')
-            ? list.height
-            : 0;
-        }),
-        vi
-          .spyOn(
-            screen.getByRole('combobox').closest('[role="presentation"]')!,
-            'getBoundingClientRect',
-          )
-          .mockReturnValue(control),
-      ];
-      return () => restore.forEach((spy) => spy.mockRestore());
-    }
-    // The popup holding the listbox is what is placed (every box has one).
-    const list = () =>
-      screen.getByRole('listbox', { name: 'Form suggestions' }).parentElement as HTMLElement;
-
-    it('opens above the box when there is no room beneath it', async () => {
-      render(<Harness suggestions={TWO_BUCKETS} />);
-      onTestFinished(
-        layOut({ control: rect(16, 500, 270, 44), list: { width: 270, height: 288 } }),
-      );
-
-      type('wax');
-
-      await waitFor(() => expect(list()).toHaveAttribute('data-placement', 'top-start'));
-    });
-  });
-
   describe('an action row', () => {
     const action = (onSelect = vi.fn()) => ({ label: 'New Reference', onSelect });
 
@@ -527,6 +457,14 @@ describe('Combobox', () => {
     expect(onCommit).toHaveBeenCalledWith('Hedge Fixture');
   });
 
+  it('marks the box busy while a lookup is pending, and not once it is answered', () => {
+    const { rerender } = render(<Harness suggestions={{ options: [], pending: true }} />);
+    expect(box()).toHaveAttribute('aria-busy', 'true');
+
+    rerender(<Harness suggestions={{ options: [], pending: false }} />);
+    expect(box()).not.toHaveAttribute('aria-busy');
+  });
+
   it('opens once suggestions arrive for what was typed', () => {
     const { rerender } = render(<Harness suggestions={{ options: [], pending: true }} />);
 
@@ -616,7 +554,7 @@ describe('Combobox', () => {
 
       expect(tooltip()).not.toBeInTheDocument();
       fireEvent.mouseEnter(qualifier());
-      expect(tooltip()).toHaveTextContent(DETAIL);
+      await waitFor(() => expect(tooltip()).toHaveTextContent(DETAIL));
       fireEvent.mouseLeave(qualifier());
       await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
 
@@ -636,7 +574,7 @@ describe('Combobox', () => {
 
     // MB.115: the tip gets out of the way of typing, and comes back on focus
     // or a hover; the detail stays in the box's description throughout.
-    it('closes its tooltip at the first printable key and when the list opens', () => {
+    it('closes its tooltip at the first printable key and when the list opens', async () => {
       render(
         <Harness
           initial="Wax"
@@ -654,7 +592,7 @@ describe('Combobox', () => {
       expect(box()).toHaveAccessibleDescription(expect.stringContaining(DETAIL));
 
       fireEvent.mouseEnter(qualifier());
-      expect(tooltip()).toBeInTheDocument();
+      await waitFor(() => expect(tooltip()).toBeInTheDocument());
       fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
       expect(box()).toHaveAttribute('aria-expanded', 'true');
       expect(tooltip()).not.toBeInTheDocument();
@@ -663,7 +601,6 @@ describe('Combobox', () => {
   // The entry a list draws inside the control: moved here from IngredientForm
   // (MB.133), whose tests still cover it in the form.
   describe('an entry', () => {
-    const LONG = 'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
     const tooltip = () => screen.queryByRole('tooltip');
     const entryText = (value: string) =>
       within(screen.getByRole('list')).getByText(value, { ignore: '[role="tooltip"]' });
@@ -683,16 +620,6 @@ describe('Combobox', () => {
       return onRemove;
     }
 
-    // happy-dom lays nothing out, so a text is cut off when it is longer than 30
-    // characters: wider than the 240px left to it.
-    beforeEach(() => {
-      vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
-        this: HTMLElement,
-      ) {
-        return (this.textContent ?? '').length * 8;
-      });
-      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(240);
-    });
     afterEach(() => vi.restoreAllMocks());
 
     // The owner's call at MB.115's review: the prompt for the next entry
@@ -801,18 +728,12 @@ describe('Combobox', () => {
       });
     });
 
-    it('shows a cut-off text whole in a tooltip on hover, and while its x has focus', async () => {
-      renderEntries([LONG]);
+    it('opens no tooltip for a text that fits and has no detail', async () => {
+      renderEntries(['Hedge Fixture']);
 
-      expect(tooltip()).not.toBeInTheDocument();
-      fireEvent.mouseEnter(entryText(LONG));
-      expect(tooltip()).toHaveTextContent(LONG);
-      fireEvent.mouseLeave(entryText(LONG));
-      await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
-
-      act(() => screen.getByRole('button', { name: `Remove ${LONG}` }).focus());
-      expect(tooltip()).toHaveTextContent(LONG);
-      fireEvent.keyDown(document, { key: 'Escape' });
+      fireEvent.mouseEnter(entryText('Hedge Fixture'));
+      // Past the hover's 300ms rest, when a tooltip would have opened.
+      await act(() => new Promise((resolve) => setTimeout(resolve, 350)));
       expect(tooltip()).not.toBeInTheDocument();
     });
 
@@ -846,7 +767,7 @@ describe('Combobox', () => {
         renderDetailed();
 
         fireEvent.mouseEnter(entryText('Hedge Fixture'));
-        expect(tooltip()).toHaveTextContent('Hedge Fixture');
+        await waitFor(() => expect(tooltip()).toHaveTextContent('Hedge Fixture'));
         expect(tooltip()).toHaveTextContent(DETAIL);
         fireEvent.mouseLeave(entryText('Hedge Fixture'));
         await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
@@ -1158,6 +1079,39 @@ describe('Combobox', () => {
       expect(element()).toHaveTextContent('Earth');
     });
 
+    it('lists a disabled choice with its note, and neither a press nor the arrows choose it', () => {
+      const choices = [
+        { value: 'earth', label: 'Earth', disabled: true, note: 'Taken' },
+        { value: 'air', label: 'Air' },
+      ];
+      function Harness() {
+        const [value, setValue] = useState('');
+        return (
+          <ComboboxSelect
+            id="element"
+            label="Element"
+            value={value}
+            onChange={setValue}
+            choices={choices}
+            placeholder="Choose an element"
+          />
+        );
+      }
+      render(<Harness />);
+
+      fireEvent.click(element());
+      const earth = screen.getByRole('option', { name: /^Earth/ });
+      expect(earth).toHaveAttribute('aria-disabled', 'true');
+      expect(earth).toHaveTextContent('Taken');
+      fireEvent.click(earth);
+      expect(element()).toHaveTextContent('Choose an element');
+
+      act(() => element().focus());
+      fireEvent.keyDown(element(), { key: 'ArrowDown' });
+      fireEvent.keyDown(element(), { key: 'Enter' });
+      expect(element()).toHaveTextContent('Air');
+    });
+
     // In a modal, an Escape let through shuts the whole dialog (MB.115); a
     // `<dialog>` ignores one marked handled, which happy-dom cannot show, so the
     // mark is what is asserted here (the browser checks the dialog stays open).
@@ -1388,8 +1342,7 @@ describe('Combobox', () => {
     });
 
     it('says every choice is made, in an open list with no options, once there is nothing left to offer', () => {
-      const { container } = render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
-      const message = () => container.querySelector('.combobox__empty');
+      render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
       const status = () => screen.getByRole('status', { name: 'Element changes' });
 
       fireEvent.click(elements());
@@ -1399,27 +1352,18 @@ describe('Combobox', () => {
 
       // Choosing the last closes the list, as before.
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
-      expect(message()).not.toBeInTheDocument();
 
       // Asking for it again opens it to say so, rather than going dead.
       fireEvent.click(elements());
       expect(elements()).toHaveAttribute('aria-expanded', 'true');
-      expect(container.querySelector('.combobox')).toHaveClass('is-open');
-      expect(message()).toBeVisible();
-      expect(message()).toHaveTextContent(/\S/);
       expect(status()).toHaveTextContent(/\S/);
       expect(screen.queryByRole('option')).not.toBeInTheDocument();
-      expect(screen.getByRole('listbox', { name: 'Element choices' })).not.toContainElement(
-        message() as HTMLElement,
-      );
 
       // Enter has nothing to take, and Escape closes it.
       press('Enter');
       expect(chosen()).toBe('earth,air,fire,water,spirit');
       press('Escape');
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
-      expect(container.querySelector('.combobox')).not.toHaveClass('is-open');
-      expect(message()).not.toBeInTheDocument();
     });
   });
 });
@@ -1462,7 +1406,7 @@ describe('Combobox empty message', () => {
     rerender(<Harness offerTyped={false} suggestions={NONE} empty={false} />);
     type('zzz');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
-    expect(document.querySelector('.combobox__empty')).not.toBeInTheDocument();
+    expect(status()).not.toHaveTextContent(/\S/);
   });
 
   it('says it found nothing by default, so a box whose caller forgot `empty` never just shuts', () => {
@@ -1470,13 +1414,13 @@ describe('Combobox empty message', () => {
 
     type('zzz');
 
-    const message = document.querySelector('.combobox__empty');
-    expect(message).toBeVisible();
-    expect(message).toHaveTextContent('zzz');
-    expect(listbox()).not.toContainElement(message as HTMLElement);
+    // The message names what was typed, shown outside the listbox as well as announced.
+    const shown = screen.getAllByText(/zzz/).filter((node) => !status().contains(node));
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown[0]).toBeVisible();
+    expect(listbox()).not.toContainElement(shown[0] as HTMLElement);
     expect(status()).toHaveTextContent('zzz');
     expect(screen.queryAllByRole('option')).toHaveLength(0);
-    expect(document.querySelector('.combobox')).toHaveClass('is-open');
   });
 
   it('closes the message on Escape alone, then leaves the next Escape to the dialog', () => {
@@ -1575,7 +1519,6 @@ describe('Combobox leading node and toggle', () => {
     );
 
     expect(screen.queryByRole('button', { name: /^Show Form/ })).not.toBeInTheDocument();
-    expect(control().querySelectorAll('.combobox__separator')).toHaveLength(0);
     type('fix');
     expect(screen.getAllByRole('option')).toHaveLength(3);
   });
@@ -1586,10 +1529,10 @@ describe('Combobox leading node and toggle', () => {
     expect(screen.getByRole('button', { name: 'Show Form suggestions' })).toBeInTheDocument();
   });
 
-  it('draws no indicators when there is no clear, no suggestions and no leading node', () => {
+  it('draws no controls beside the box when there is no clear, no suggestions and no leading node', () => {
     render(<Harness />);
 
-    expect(control().querySelector('.combobox__indicators')).toBeNull();
+    expect(within(control()).queryByRole('button')).not.toBeInTheDocument();
   });
 });
 

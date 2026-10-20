@@ -46,8 +46,11 @@ export interface ProviderRowProps {
   removal: ProviderRemoval;
   /** A removal is in flight somewhere in the list, so every Remove waits for it. */
   pending: boolean;
-  /** This provider's own failure, shown in its row. */
+  /** This row's own action is in flight: its button shows the spinner and `aria-busy`. */
+  busy: boolean;
+  /** A failed link's callback error for this provider, from the server, shown in its row. */
   error?: string;
-  onAdd: () => void;
-  onRemove: () => void;
+  /** Each answers the failure to say under its control, or nothing on success. */
+  onAdd: () => Promise<string | undefined>;
+  onRemove: () => Promise<string | undefined>;
 }

@@ -97,7 +97,11 @@ const RoleControl = ({
       busy={promoting ? 'Promoting' : 'Demoting'}
       confirmClass={promoting ? 'btn btn--solid' : 'btn btn--destructive'}
       withNote
+      announcement={`${name} is now ${roleLabel(chosen)}.`}
       inModal={inModal}
+      // Beside its fact in the user's modal, not in a button row: a refusal
+      // there is the callout too (the owner's call, 2026-10-20).
+      refusalInModal="callout"
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: chosen, note })}
     />
   );

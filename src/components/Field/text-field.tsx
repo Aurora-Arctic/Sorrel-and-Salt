@@ -2,6 +2,7 @@
 
 import type { FocusEvent, ReactElement } from 'react';
 import { type FieldPath, type FieldValues, type PathValue, useFormContext } from 'react-hook-form';
+import Spinner from '../Spinner';
 import { FieldShell } from './shell';
 import type { TextFieldProps } from './types';
 import { useField } from './use-field';
@@ -79,7 +80,7 @@ export function TextField<V extends FieldValues = FieldValues>({
         // says, so every other text field keeps its bare input.
         <span className="field__control">
           <input className="input" type={type} aria-busy={busy || undefined} {...control} />
-          {busy && <span className="spinner field__busy" aria-hidden="true" />}
+          {busy && <Spinner className="field__busy" />}
         </span>
       )}
     </FieldShell>

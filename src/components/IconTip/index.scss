@@ -1,3 +1,4 @@
+@use 'sass:math';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
@@ -35,11 +36,16 @@
 // A short word, placed by `useTip` on that side and flipped where there is no
 // room, so a table frame's sideways scroll clips nothing: the bubble is fixed.
 // One layer up, over the text it covers. Mounted only while open, so it fades
-// in from its starting style and goes at once.
+// in from its starting style, over `$icon-tip-fade` rather than every other
+// tip's `$tip-fade`. It takes no pointer: the tip is heard on its control
+// alone and closes the moment the pointer leaves, so a bubble that caught the
+// pointer would only cover what is beneath it (the owner's call, 2026-10-20).
 // claude-docs/components/icon-tip.md, "Placement".
 .icon-tip__bubble {
   @include tip-above;
-  @include tip-bubble-open;
+  @include tip-bubble-open($icon-tip-fade);
+
+  pointer-events: none;
 
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
@@ -47,7 +53,7 @@
     transform: translateX(2px);
   }
 
-  // Closed: faded back out the way it came, over `$tip-fade`, before the
+  // Closed: faded back out the way it came, over `$icon-tip-fade`, before the
   // component takes it out of the page.
   &--closing {
     opacity: 0;
@@ -95,5 +101,127 @@
 // link's own focus ring, the accent's, from the typography.
 .icon-tip__edit {
   @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-edit;
+}
+
+// The three dots (a More menu, M8.17) in the ink of the page rather than Edit's green, at rest and
+// pressed alike: white in dark and the body text in light, `$card-more-ink`, wherever it stands
+// (a card's foot, the entry page, the Quick Look window; the owner's call, 2026-10-20), where the
+// pencil and bin beside it keep their green and wax. White vanishes on a light surface.
+.icon-tip__more {
+  &,
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: $card-more-ink;
+  }
+}
+
+// A compendium card's plus (Add to My Ingredients), M9.12: Edit's size and green, since adding
+// is constructive. The spinner a press shows takes the glyph's size, as `svg` does in the mixin.
+.icon-tip__add {
+  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-edit;
+}
+
+// Its check (In All Covens): the same box and green, but a status mark whose press only opens its
+// tip (the owner's calls, 2026-10-20), so no pointer and no wash under it: it acts on nothing.
+.icon-tip__held {
+  @include icon-button($icon-size-large, $glyph-size-large, $cursor: default);
+
+  color: $accent;
+
+  &:hover {
+    background-color: transparent;
+    color: $accent;
+  }
+}
+
+.icon-tip__add .spinner,
+.icon-tip__edit .spinner {
+  width: $glyph-size-large;
+  height: $glyph-size-large;
+}
+
+// The plus after an add (the owner's call, 2026-10-20): the spinner turns into the check, drawn
+// along its stroke, which holds, then cross-fades back to the plus (`returning`); AddIcon
+// sets `data-state` and times the hold. While the check shows, the plus wears the held mark's
+// look, no wash under it and the default cursor, so where the add left every coven holding the
+// entry the page's held mark takes its place with nothing moving. Under reduced motion nothing is
+// drawn or faded: the check and then the plus simply appear.
+.icon-tip__add[data-state] {
+  cursor: default;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    background-color: transparent;
+  }
+}
+
+// The check and the plus stacked in one cell, so one fades into the other in place.
+.icon-tip__glyphs {
+  display: grid;
+
+  > * {
+    display: flex;
+    grid-area: 1 / 1;
+  }
+}
+
+// The check's path, `M3 8.5l3.5 3.5L13 4.5`, is a little under 15 units long (4.95 + 9.92), so a
+// dash of 15 hides it whole and running its offset to nothing draws it from the left end.
+.icon-tip__check path {
+  animation: icon-tip-draw $arrive-duration ease-out both;
+  stroke-dasharray: 15;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+[data-state='returning'] .icon-tip__check {
+  animation: icon-tip-fade-out $arrive-duration ease-in both;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+.icon-tip__plus {
+  @include arrived;
+}
+
+@keyframes icon-tip-draw {
+  from {
+    stroke-dashoffset: 15;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes icon-tip-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+// A list row's lone bin (a coven card's Delete or Remove, M8.17): the same
+// size as the pencil beside it, in the wax a remove control wears.
+.icon-tip__remove {
+  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-remove;
+}
+
+// An entry's Quick Look beside its name in a list (M12.5): Edit's pencil's
+// box and green, round the eye, sitting in the name's line. The eye itself is
+// a third as big again as the pencil, `$glyph-size-large` * 4 / 3, in the same
+// 2rem box, so the foot's height and the eye's line with the pencil stay put
+// (the owner's call, 2026-10-20). `math.div` is that sum, since Sass has
+// dropped `/` for division.
+.icon-tip__look {
+  @include icon-button($icon-size-large, math.div($glyph-size-large * 4, 3));
   @include icon-button-edit;
 }

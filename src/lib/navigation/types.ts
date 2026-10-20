@@ -1,0 +1,47 @@
+/** Where a navigation is headed, so the part of the page that will change can draw its own wait. */
+export type NavigationTarget = {
+  region: 'coven' | 'admin' | 'main';
+  shape: 'table' | 'cards' | 'form' | 'page' | 'contents';
+  /** A `table` or `cards` wait draws the page's heading row above the list. */
+  title?: boolean;
+  /** With `title`: the page has an action (Add) at the heading's end. */
+  action?: boolean;
+  /** A `table` or `cards` wait draws the page's filter row. */
+  filter?: boolean;
+  /** With `title`: the page has a tab row between its heading and its action. */
+  tabs?: boolean;
+  /**
+   * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
+   * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column
+   * with a side menu drawn, on a `page`) or `entry` (the wide column with a side menu, an ingredient's page). None is the standard centred frame.
+   */
+  /**
+   * The head of a `page` or `contents`: `eyebrow` draws an eyebrow above the
+   * title, `title` the title alone; none is a title and a lede.
+   */
+  head?: 'eyebrow' | 'title';
+  frame?: 'wide' | 'narrow' | 'with-nav' | 'entry';
+};
+
+/** What `navigate` takes beyond the address. */
+export type NavigateOptions = {
+  /** Replace the history entry rather than adding one. */
+  replace?: boolean;
+  /** `false` keeps the scroll position, as a filter or pager does. */
+  scroll?: boolean;
+  /** Where the page is headed; read by whatever draws a skeleton for it. */
+  target?: NavigationTarget;
+};
+
+export type PendingNavigation = {
+  /** True while a navigation this caller started is on its way. */
+  pending: boolean;
+  navigate: (href: string, options?: NavigateOptions) => void;
+  refresh: () => void;
+};
+
+/** The site-wide view: any navigation on its way, whoever started it. */
+export type NavigationState = {
+  busy: boolean;
+  target: NavigationTarget | undefined;
+};

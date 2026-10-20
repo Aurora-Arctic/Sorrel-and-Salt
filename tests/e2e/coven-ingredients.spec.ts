@@ -21,6 +21,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { editIngredientDialog } from './stories/ingredient-dialogs';
 
 // The coven's Ingredients page (M9.6), against the built server. Stories 20–27
 // (tests/e2e/stories/03-ingredients) walk a member through the list and its
@@ -29,8 +30,13 @@ import {
 // and its opposite is in place before the page is drawn, the type-ahead offers
 // this coven's cupboard and nothing else, each jar line carries its form's
 // icon and M9.8's badge, a retired compendium entry the coven holds keeps
-// its forms and categories, and the page passes axe at both densities and at a
-// phone's width.
+// its forms and categories and can be annotated and made its own, a held
+// compendium entry's card opens Annotate over the list and closes back to its
+// search (M8.17), a coven's own entry is deleted from its edit dialog over
+// the list (M8.17), a card's More near the window's foot opens above it
+// inside the window (M8.17), an Edit Ingredient dialog opened from the entry
+// page's Edit menu and cancelled gives the menu its focus back (M8.17), and the page passes axe at both densities and at
+// a phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
 const PAGE_SIZE = 24;
@@ -373,60 +379,507 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoSidewaysScroll(page);
 });
 
-test.fixme(
-  'a retired compendium entry the coven still holds keeps its forms and categories on its card',
-  {
-    annotation: {
-      type: 'fixme',
-      description:
-        'the coven list pages live rows only (readableInTiers), so a retired held entry never draws a card',
-    },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
-      A: 'owner',
-    });
-    const A = coven.users.A;
-    const retiring = await withSql(async (sql) => {
-      const ingredientId = await insertIngredient(
-        sql,
-        makeIngredient({
-          name: 'Fixture Retiredwort',
-          canonicalName: 'Fixtura emerita',
-          variants: [makeVariant({ form: 'Herb' })],
-          categories: ['Protection'],
-        }),
-        A,
-      );
-      await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
-      return ingredientId;
-    });
-    const onCompendium = async () => {
-      await page.goto('/compendium');
-      await nameSearch(page).fill('Fixture Retiredwort');
-      await nameSearch(page).press('Enter');
-      await expect(page).toHaveURL(/Retiredwort/);
-      return rowOf(compendiumList(page), 'Fixture Retiredwort');
-    };
-
-    // Live, the entry is the compendium's like any other.
-    await expect(await onCompendium()).toHaveCount(1);
-
-    await withSql((sql) =>
-      sql.begin(async (tx) => {
-        await tx`select set_config('app.current_user_id', ${A}, true)`;
-        await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+// M12.32 turned this on: the coven list reads a retired entry its cupboard
+// still names, so the card draws, marked Retired.
+test('a retired compendium entry the coven still holds keeps its forms and categories on its card', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiring = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Retiredwort',
+        canonicalName: 'Fixtura emerita',
+        variants: [makeVariant({ form: 'Herb' })],
+        categories: ['Protection'],
       }),
+      A,
     );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    return ingredientId;
+  });
+  const onCompendium = async () => {
+    await page.goto('/compendium');
+    await nameSearch(page).fill('Fixture Retiredwort');
+    await nameSearch(page).press('Enter');
+    await expect(page).toHaveURL(/Retiredwort/);
+    return rowOf(compendiumList(page), 'Fixture Retiredwort');
+  };
 
-    // Why the forms and categories could have gone missing: retired, the entry
-    // is gone from the compendium, so a read that filters retired rows finds none.
-    await expect(await onCompendium()).toHaveCount(0);
+  // Live, the entry is the compendium's like any other.
+  await expect(await onCompendium()).toHaveCount(1);
 
-    await page.goto(listPath(coven));
-    const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
-    await expect(card).toHaveCount(1);
-    await expect(card).toContainText('Herb');
-    await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
-  },
-);
+  await withSql((sql) =>
+    sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+    }),
+  );
+
+  // Why the forms and categories could have gone missing: retired, the entry
+  // is gone from the compendium, so a read that filters retired rows finds none.
+  await expect(await onCompendium()).toHaveCount(0);
+
+  await page.goto(listPath(coven));
+  const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
+  await expect(card).toHaveCount(1);
+  // Exact: the card's More (M8.17) is named for the entry, "More for Fixture Retiredwort, …".
+  await expect(card.getByRole('button', { name: 'Retired', exact: true })).toHaveCount(1);
+  await expect(card).toContainText('Herb');
+  await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
+});
+
+// The owner's decision of 2026-10-19, reversing part of M12.24: a coven goes
+// on annotating a retired entry it holds, and may take it as its own or
+// remove it.
+test('a retired compendium entry the coven still holds can be annotated, then made its own', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired Writes', 'gate-retired-w.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiredId = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Lapsedwort',
+        canonicalName: 'Fixtura lapsa',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${ingredientId}`;
+    });
+    return ingredientId;
+  });
+  const heading = (name: string) => page.getByRole('heading', { level: 1, name });
+  // The icons are named for the entry as it is called now (the owner's call, 2026-10-20: the entry's
+  // actions are the cards' icons).
+  const choose = async (name: string, entry = 'Fixture Lapsedwort') => {
+    const main = page.getByRole('main');
+    if (name === 'Annotate')
+      await main.getByRole('link', { name: `Annotate ${entry}`, exact: true }).click();
+    else {
+      await main.getByRole('button', { name: `More for ${entry}`, exact: true }).click();
+      await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
+    }
+  };
+
+  // Why the writes could be refused: the entry is retired, and the coven's
+  // live cupboard row is all that still reaches it.
+  await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
+  await expect(heading('Fixture Lapsedwort')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
+
+  // Annotate is the main icon, and the dots hold Make It Ours and Remove, drawn under the Coven
+  // label, with no bin beside them (the owner's call, 2026-10-20).
+  const main = page.getByRole('main');
+  await expect(main.getByRole('link', { name: 'Annotate Fixture Lapsedwort' })).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Remove Fixture Lapsedwort' })).toHaveCount(0);
+  await main.getByRole('button', { name: 'More for Fixture Lapsedwort', exact: true }).click();
+  await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+  await expect(page.getByRole('menu').getByRole('group', { name: 'Coven' })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await choose('Annotate');
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'Label' }).fill('Fixture Our Lapsedwort');
+  await dialog.getByRole('button', { name: 'Save Annotation' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(
+    page.getByRole('heading', { level: 1, name: /Fixture Our Lapsedwort/ }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
+
+  await choose('Make It Ours', 'Fixture Our Lapsedwort');
+  const ask = page.getByRole('dialog', { name: 'Make It Ours' });
+  await ask.getByRole('button', { name: 'Make It Ours' }).click();
+  await expect(page).toHaveURL(
+    new RegExp(`/coven/${coven.slug}/ingredients/(?!${retiredId})[0-9a-f-]{36}$`),
+  );
+  await expect(page.getByText('Local', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retired' })).toHaveCount(0);
+});
+
+// M8.17: Annotate on the card of a compendium entry the coven holds opens the
+// entry page's dialog over the list, and a close or a save comes back to the
+// list as it was, its search kept and the focus on the card's Annotate. The
+// dialog's More menu, opening upward inside it, removes the entry from the
+// cupboard behind the confirmation dialog, back onto the same search without
+// its card.
+test("a held compendium entry's card opens Annotate over the list, and closes back to its search", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate List Annotate', 'gate-list-ann.test', {
+    A: 'owner',
+    C: 'viewer',
+  });
+  const ingredientId = await withSql(async (sql) => {
+    const id = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Notewort',
+        canonicalName: 'Fixtura notata',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      coven.users.A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId: id }, coven.users.A);
+    return id;
+  });
+  const searched = `${listPath(coven)}?query=Notewort`;
+  const backAtSearch = async () => {
+    await expect(page).toHaveURL((url) => url.searchParams.get('query') === 'Notewort');
+    await expect(page).toHaveURL((url) => !url.searchParams.has('annotate'));
+  };
+  const annotateLink = page.getByRole('link', { name: /^Annotate Fixture/ });
+
+  // A viewer reads the card with no Annotate on it.
+  await signInAgainAs(page, coven.users.C);
+  await page.goto(searched);
+  await expect(rowOf(ingredientList(page), 'Fixture Notewort')).toHaveCount(1);
+  await expect(annotateLink).toHaveCount(0);
+
+  // Why the save could show: the card still carries the compendium's name.
+  await signInAgainAs(page, coven.users.A);
+  await page.goto(searched);
+  const card = rowOf(ingredientList(page), 'Fixture Notewort');
+  await expect(card).toHaveCount(1);
+  await expect(rowOf(ingredientList(page), 'Fixture Our Notewort')).toHaveCount(0);
+  const link = card.getByRole('link', { name: 'Annotate Fixture Notewort, Fixtura notata' });
+
+  await link.click();
+  const dialog = page.getByRole('dialog', { name: 'Annotate This Entry' });
+  await expect(dialog.getByRole('textbox', { name: 'Label' })).toBeVisible();
+  await expect(page).toHaveURL((url) => url.searchParams.has('annotate'));
+
+  // Unchanged, Escape closes it, back onto the search and the card's Annotate.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await backAtSearch();
+  await expect(link).toBeFocused();
+
+  await link.click();
+  await dialog.getByRole('textbox', { name: 'Label' }).fill('Fixture Our Notewort');
+  await dialog.getByRole('button', { name: 'Save Annotation' }).click();
+  await expect(dialog).toHaveCount(0);
+  await backAtSearch();
+  // The save shows as the coven's label; the card wears no Annotated, which is the
+  // entry page's to say (the owner's call, 2026-10-20).
+  const annotated = rowOf(ingredientList(page), 'Fixture Our Notewort');
+  await expect(annotated).toHaveCount(1);
+  await expect(annotated.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
+
+  // More, then Remove: asked first, then gone from the cupboard and the list.
+  // The menu opens upward from the dialog's foot and stays inside the dialog,
+  // at a phone's width too.
+  await annotated.getByRole('link', { name: /^Annotate Fixture Our Notewort/ }).click();
+  const moreButton = dialog.getByRole('button', { name: 'More' });
+  const menu = dialog.getByRole('menu', { name: 'More' });
+  const expectMenuInsideDialog = async () => {
+    const outer = (await dialog.boundingBox())!;
+    const inner = (await menu.boundingBox())!;
+    expect(inner.y).toBeGreaterThanOrEqual(outer.y);
+    expect(inner.x).toBeGreaterThanOrEqual(outer.x);
+    expect(inner.y + inner.height).toBeLessThanOrEqual(outer.y + outer.height);
+    expect(inner.x + inner.width).toBeLessThanOrEqual(outer.x + outer.width);
+  };
+  await moreButton.click();
+  await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+  await expectMenuInsideDialog();
+  await assertNoAccessibilityViolations(page);
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveCount(0);
+
+  const wide = page.viewportSize()!;
+  await page.setViewportSize({ width: 375, height: 800 });
+  await moreButton.scrollIntoViewIfNeeded();
+  await moreButton.click();
+  await expectMenuInsideDialog();
+  await page.keyboard.press('Escape');
+  await page.setViewportSize(wide);
+
+  // The question is the form's own card, over the form in this dialog, as
+  // Delete asks (the owner's call, 2026-10-20): Cancel keeps the
+  // dialog, the focus back on More.
+  const question = dialog.getByRole('group', {
+    name: /^Remove Fixture Our Notewort from your cupboard\?/,
+  });
+  await moreButton.click();
+  await menu.getByRole('menuitem', { name: 'Remove' }).click();
+  await expect(question).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(1);
+  await question.getByRole('button', { name: 'Cancel' }).click();
+  await expect(question).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await expect(moreButton).toBeFocused();
+
+  await moreButton.click();
+  await menu.getByRole('menuitem', { name: 'Remove' }).click();
+  await question.getByRole('button', { name: 'Remove', exact: true }).click();
+
+  await expect(dialog).toHaveCount(0);
+  await backAtSearch();
+  await expect(rowOf(ingredientList(page), 'Fixture Our Notewort')).toHaveCount(0);
+  const held = await withSql(
+    (sql) =>
+      sql`select 1 from workspace_compendium_entries
+           where workspace_id = ${coven.id} and ingredient_id = ${ingredientId} and deleted_at is null`,
+  );
+  expect(held).toHaveLength(0);
+});
+
+// M8.17 (moved from M9.10 by the owner, 2026-10-19): the coven's own entry
+// is deleted from its edit dialog over the list, which closes back onto the
+// list without the row, the focus on the page's heading since the card's Edit
+// went with it.
+test("a coven's own entry is deleted from its edit dialog over the list, back on the list without it", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate List Delete', 'gate-list-del.test', {
+    A: 'owner',
+  });
+  const gone = await withSql(async (sql) => {
+    await localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Keptwort',
+      canonicalName: 'Fixtura servata',
+    });
+    return localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Gonewort',
+      canonicalName: 'Fixtura abiens',
+    });
+  });
+
+  // Why it could stay: the entry is on the list, live, before the delete.
+  await page.goto(listPath(coven));
+  const list = ingredientList(page);
+  await expect(rowOf(list, 'Fixture Gonewort')).toHaveCount(1);
+
+  await rowOf(list, 'Fixture Gonewort')
+    .getByRole('link', { name: 'Edit Fixture Gonewort, Fixtura abiens' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: /Fixture Gonewort/ });
+  await dialog.getByRole('button', { name: 'Delete Ingredient', exact: true }).click();
+  const question = dialog.getByRole('group', { name: /Delete/ });
+  await expect(question).toContainText('Fixture Gonewort');
+  await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL((url) => url.pathname === listPath(coven) && !url.search);
+  await expect(rowOf(list, 'Fixture Gonewort')).toHaveCount(0);
+  await expect(rowOf(list, 'Fixture Keptwort')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
+  const [row] = await withSql(
+    (sql) => sql`select deleted_at from ingredients where id = ${gone.ingredientId}`,
+  );
+  expect(row.deleted_at).not.toBeNull();
+});
+
+// A menu placed by Floating UI (M8.17, as MB.154 places a list): a card's
+// More near the window's foot opens above the button, since there is more room
+// there, and stays inside the window, at a desktop's width and a phone's, where
+// the fixed bottom bar takes the foot.
+test("a card's More opened near the window's foot opens above it, inside the window", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Menu Foot', 'gate-menu-foot.test', {
+    A: 'owner',
+  });
+  // A held compendium entry, whose More holds two choices; a coven's own entry with
+  // Delete alone draws a bin and no More (the owner's call, 2026-10-20).
+  await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Footwort', canonicalName: 'Fixtura pedis' }),
+      coven.users.A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, coven.users.A);
+    await localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Ownwort',
+      canonicalName: 'Fixtura propria',
+    });
+  });
+  await page.goto(listPath(coven));
+  const own = rowOf(ingredientList(page), 'Fixture Ownwort');
+  await expect(own.getByRole('button', { name: /^Delete Ingredient/ })).toBeVisible();
+  await expect(own.getByRole('button', { name: /^More for/ })).toHaveCount(0);
+  const more = rowOf(ingredientList(page), 'Fixture Footwort').getByRole('button', {
+    name: /^More for Fixture Footwort/,
+  });
+  const menu = page.getByRole('menu', { name: /^More for Fixture Footwort/ });
+
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 800 });
+    // The window cut off just beneath More, with the bottom bar's room when
+    // the bar is drawn, so less room is left below it than the menu needs.
+    const bar = await page.evaluate(() => {
+      const nav = [...document.querySelectorAll('nav')].find(
+        (element) => getComputedStyle(element).position === 'fixed',
+      );
+      return nav ? nav.getBoundingClientRect().height : 0;
+    });
+    await more.scrollIntoViewIfNeeded();
+    const button = (await more.boundingBox())!;
+    const height = Math.ceil(button.y + button.height + bar + 16);
+    await page.setViewportSize({ width, height });
+    await more.scrollIntoViewIfNeeded();
+    await more.click();
+    await expect(menu.getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+    const at = (await more.boundingBox())!;
+    const box = (await menu.boundingBox())!;
+    // Why it could have opened below: the room under More is less than the menu.
+    expect(height - bar - (at.y + at.height)).toBeLessThan(box.height);
+    expect(box.y + box.height).toBeLessThanOrEqual(at.y);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(width);
+    await page.keyboard.press('Escape');
+    await expect(more).toBeFocused();
+  }
+});
+
+test('a retired compendium entry the coven still holds can be removed, and leaves its list', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Retired Remove', 'gate-retired-r.test', {
+    A: 'owner',
+  });
+  const A = coven.users.A;
+  const retiredId = await withSql(async (sql) => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Fadedwort',
+        canonicalName: 'Fixtura evanida',
+        variants: [makeVariant({ form: 'Herb' })],
+      }),
+      A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+    // A live entry beside it, so the list still renders once the retired one leaves.
+    const keptId = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Keptwort', canonicalName: 'Fixtura servata' }),
+      A,
+    );
+    await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId: keptId }, A);
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${A}, true)`;
+      await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${ingredientId}`;
+    });
+    return ingredientId;
+  });
+
+  // Why it could stay listed: retired, the entry is still on the coven's list
+  // while its cupboard row names it (M12.32).
+  await page.goto(listPath(coven));
+  await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(1);
+
+  // At a phone width, where the list the remove leads to is checked by axe.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
+  await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
+  await page.getByRole('button', { name: 'More for Fixture Fadedwort', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Remove', exact: true }).click();
+  const ask = page.getByRole('dialog', { name: 'Remove from Cupboard' });
+  await ask.getByRole('button', { name: 'Remove', exact: true }).click();
+
+  // The entry page reads nothing once the row is gone, so the remove leads to
+  // the coven's Ingredients list rather than a 404.
+  await expect(page).toHaveURL(new RegExp(`${listPath(coven)}$`));
+  // The three dots that asked went with the entry page, so the focus lands on
+  // the list's heading rather than falling to the body (the owner's call,
+  // 2026-10-20).
+  await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
+  await expect(rowOf(ingredientList(page), 'Fixture Keptwort')).toHaveCount(1);
+  await expect(rowOf(ingredientList(page), 'Fixture Fadedwort')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
+});
+
+// The entry page's Edit icon (M8.17), the card's: it opens the dialog, and Cancel closes it with
+// the focus back on the icon.
+test('Edit Ingredient, opened from the Edit icon and cancelled, gives the icon its focus back', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Gate Edit Focus', 'gate-edit-focus.test', {
+    A: 'owner',
+    B: 'member',
+  });
+  const own = await withSql((sql) =>
+    localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Testwort',
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+    }),
+  );
+  await signInAgainAs(page, coven.users.B);
+  await page.goto(`${listPath(coven)}/${own.ingredientId}`);
+
+  const edit = page.getByRole('main').getByRole('link', { name: 'Edit Testwort', exact: true });
+  await edit.click();
+  const dialog = editIngredientDialog(page, 'Testwort', 'Fixtura testalis');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(edit).toBeFocused();
+});
+
+// ListFrame (MB.115): a pager end keeps the reader at the list rather than
+// Next's jump to the page top, and once the new page renders brings the
+// list's start to the line the stuck search row leaves (the root's
+// scroll-padding-top). A filter's page is Next's own scroll, to the top of the
+// page, with no pull to the list. Measured here because happy-dom draws no
+// layout to scroll.
+test("a pager end lands on the new page's first entries", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Pager Scroll', 'pager-scroll.test', {
+    A: 'owner',
+  });
+  // Two full pages and one more, so the second page is as tall as the first.
+  const LOCAL = PAGE_SIZE * 2 + 1;
+  await withSql(async (sql) => {
+    for (let n = 1; n <= LOCAL; n += 1) {
+      await localIngredient(sql, coven.id, coven.users.A, {
+        name: `Fixture Scrollwort ${String(n).padStart(2, '0')}`,
+        nomenclature: 'none',
+      });
+    }
+  });
+
+  const list = ingredientList(page);
+  const pager = pagerOf(page);
+  const paddingLine = () =>
+    page.evaluate(
+      () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+    );
+  const firstCardTop = async () => (await cardsIn(list).first().boundingBox())!.y;
+
+  await page.goto(`${listPath(coven)}?source=local`);
+  await expect(pager.getByText('Page 1 of 3')).toBeVisible();
+  // At the foot of the page, the list's start far above the line: the case
+  // the scroll is for.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const line = await paddingLine();
+  expect(await firstCardTop()).toBeLessThan(line);
+
+  await pager.getByRole('link', { name: 'Next' }).click();
+  await expect(pager.getByText('Page 2 of 3')).toBeVisible();
+  await expect(cardsIn(list)).toHaveCount(PAGE_SIZE);
+  // The new page's first card is in view, at or below the line, and the
+  // window is still at the list, not the top of the page.
+  await expect.poll(firstCardTop).toBeGreaterThanOrEqual(line - 1);
+  expect(await firstCardTop()).toBeLessThan(page.viewportSize()!.height);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+});

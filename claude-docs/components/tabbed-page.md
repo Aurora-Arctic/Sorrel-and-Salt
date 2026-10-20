@@ -23,9 +23,9 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
 wrapper), `TabPanel` (the content area) and `useTabSwitch`.
-`swap-panel.tsx` is `SwapPanel`, the keyed swap of content for skeleton that
-`TabPanel` and a list's `ListBody` share. `panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
-shows while a pressed tab is on its way. A tab's `filtered`, set in
+`Skeleton/swap-panel.tsx` is `SwapPanel`, the keyed swap of content for skeleton that
+`TabPanel` and a list's `ListBody` share. `panel-loading.tsx` is `TabPanelLoading`, a thin user of the
+shared [`Skeleton`](skeleton.md) that the content area shows while a pressed tab is on its way. A tab's `filtered`, set in
 `ADMIN_PAGES` on every tab whose list opens with a filter, tells it whether
 to draw a filter row. A list reuses it, with no filter row, while a filter
 or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
@@ -77,13 +77,14 @@ it renders.
   tabs gets the heading, the tabs and the tab's content in the first
   response, with no loading state streamed ahead of them. So the route
   groups have no `loading.tsx`, and the tabbed pages add no other
-  `<Suspense>` boundary.
+  `<Suspense>` boundary (the argument is in [`../loading.md`](../loading.md)).
 - **A pressed tab greys the row and shows the loading state** (the owner's
   call). A plain left click on a tab other than the open one is the tab
   row's own: `tab-links.tsx` stops the browser following the link and
-  calls `router.push` inside a React transition (`useTransition`) the row
-  and the content area share. Next runs its navigation inside the caller's
-  transition, so it stays pending until the new tab has rendered. Until
+  navigates through `usePendingNavigation` (`src/lib/navigation/`), which
+  runs `router.push` inside a React transition the row and the content area
+  share, and puts up the page bar as well. Next runs its navigation inside the
+  caller's transition, so it stays pending until the new tab has rendered. Until
   then the content area shows the pressed tab's skeleton, `TabPanelLoading`,
   in place of the old tab's content, every tab is `aria-disabled` and ignores a press, and the
   action beside the heading is `inert`, out of reach of a press or focus;
@@ -148,12 +149,13 @@ it renders.
   content.
 - **The pills** (MB.7, drawn in its design review; they were a larger
   segmented control until then): one rounded track, `2.25rem` tall, in the
-  quiet fill (`$fill-quiet`) edged by a `$hairline`, with `0.125rem` of padding round the pills; each pill the caption
+  faint grey wash (`$segment-track`, the muted ink 10% over what is behind, fainter than
+  `$fill-quiet`'s 18%) edged by a `$hairline`; the owner tried the green highlight there and found it too close to the open pill (2026-10-20), with `0.125rem` of padding round the pills; each pill the caption
   size at weight 500 with `space(3)` either side of its label, in the muted
   ink, turning to the body ink on hover; the open tab a pill, the accent 18%
   into the card, edged 1px in the accent, its label in the body ink. The
   fill alone sits under WCAG 1.4.11's 3:1 against the track, so the edge
-  carries it. The two mixes are local to the stylesheet;
+  carries it. The pill's and the track's mixes are local to the stylesheet;
   `tests/scss/tokens.test.ts` holds the open label and edge, and the muted
   labels on the track, to their floors in both themes. The pill has no shadow
   now. The row clears the list's marker, indent and item margins itself.
@@ -174,7 +176,10 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   rides on an experimental flag and animates whole-page snapshots, and a
   tab press should move one pill.
 - **Keyboard focus** is the accent ring, drawn 2px inside the pill rather
-  than round it, where the track would clip it.
+  than round it, where the track would clip it: at the shared ring's 66.6%
+  in the dark theme, and at full strength in the light, where any fade takes
+  it under 3:1 on the track and the open pill (2.75 even at 75%;
+  [`styling.md`](../styling.md), "The focus ring").
 - **Pressed**, for as long as a pointer is down on a pill, the pill's fill
   comes under its label at once and the pill sinks a pixel, so a press
   answers before the pill slides over. A tap marks it too, through
@@ -222,10 +227,12 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 - **Its fill** is the muted ink 18% into the card surface, as the combobox's
   quiet fills are, so both themes carry it on the page and on a card; its
   shimmer, a band 7% into the card surface, passes across every shape every
-  1.4s. The fill is the `$fill-quiet` token; the shimmer is the shared
-  `skeleton-shape` mixin (`src/scss/_mixins.scss`, keyframes
-  `skeleton-shimmer` in `_primitives.scss`; M9.18 moved it there, for the
-  modal's skeleton to share), a `color-mix` of existing tokens, and no text sits on either. The filter's
+  `$shimmer-duration` (1.4s). The shapes, fill and shimmer now live in the
+  shared [`Skeleton`](skeleton.md) (`Skeleton/index.scss`): the fill is the
+  `$fill-quiet` token; the shimmer is the shared `skeleton-shape` mixin
+  (`src/scss/_mixins.scss`, keyframes `skeleton-shimmer` in
+  `_primitives.scss`), which takes its motion from `loading-motion`; a
+  `color-mix` of existing tokens, and no text sits on either. The filter's
   bars and the pager's stand at `$control-height`, and the filter's fields
   at `$filter-choice-width`, so the skeleton is as tall and wide as the
   controls that replace it.
@@ -236,8 +243,9 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   shown at once rather than held back a moment, as the spinner it replaced
   was: the press has already removed the old content, so a held-back
   skeleton would leave the panel blank, which is the snap it is there to
-  avoid. Under `prefers-reduced-motion: reduce` there is no shimmer and no
-  fade, only the still shapes.
+  avoid. Under `prefers-reduced-motion: reduce` the shimmer becomes the
+  loading standard's one slow opacity pulse, never still shapes
+  ([`../loading.md`](../loading.md)).
 - **What a screen reader hears.** The shapes are `aria-hidden`. The one
   status is a visually hidden `<output>`, a status by its tag, saying the
   tab is loading, which the shapes already say to the eye.
@@ -286,3 +294,5 @@ and `group-page.test.tsx` find the Add keeping the filter and cursor,
 `(people)/invitations/page.test.tsx` New Invitation and its `?invite`. How
 the layout keeps the heading in place and swaps the slot is Next's, and is
 the e2e suite's to see.
+
+With a single route the pill navigation is left out (MB.106's extra item): one pill to "navigate" between is noise. The heading and the tab's content still render.

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import AdminNav from '../../../components/AdminNav';
+import { adminTarget } from '../../../components/AdminNav/target';
+import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
+import SectionBody from '../../../components/SectionBody';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
@@ -31,14 +33,20 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       {/* The area's name is its home link, as the coven row's switcher leads to the coven. */}
       <ContextRow
         lead={
-          <Link href="/admin" className="context-row__name">
+          <PendingLink
+            href="/admin"
+            className="context-row__name"
+            navigationTarget={adminTarget('/admin')}
+          >
             Admin
-          </Link>
+          </PendingLink>
         }
       >
         <AdminNav managesPeople={role === 'admin'} />
       </ContextRow>
-      <div className="page-column">{children}</div>
+      <SectionBody region="admin" className="page-column">
+        {children}
+      </SectionBody>
     </RouteModalProvider>
   );
 }

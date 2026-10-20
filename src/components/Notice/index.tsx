@@ -10,6 +10,7 @@ import type { NoticeKind, NoticeProps } from './types';
 const MODIFIER: Record<NoticeKind, string> = {
   error: 'notice notice--error',
   warn: 'notice notice--warn',
+  caution: 'notice notice--caution',
   success: 'notice notice--success',
   plain: 'notice',
 };

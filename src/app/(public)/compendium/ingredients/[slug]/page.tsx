@@ -4,9 +4,13 @@ import IngredientEntry from '../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
 import { NotFound } from '../../../../../lib/errors';
+import { entryJsonLd } from '../../../../../lib/json-ld';
+import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
-import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
+import { entryValues } from '@/app/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
+import { publicCupboardOf } from './cupboard';
+import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
 // One compendium entry, at its public address (M8.19; MB.80): readable by
@@ -16,9 +20,12 @@ import type { CompendiumEntryParams } from './types';
 //
 // The entry comes from `readCompendiumEntry`, a cached read that takes no
 // session, so nothing private can reach it. The page itself is drawn per
-// request: it asks `viewerIfSignedIn()`, which never redirects, only to
-// decide whether to offer a curator Edit. A visitor with no session reads
-// the page the same as ever.
+// request: it asks `viewerIfSignedIn()`, which never redirects, to decide
+// whether to offer a curator Edit, and a signed-in person's cupboard choices
+// across the covens they may write in (M9.12, `cupboard.ts`). A visitor with
+// no session reads the page the same as ever. A member whose covens hold the
+// entry sees the In Your Cupboard shelf before its name, read once with the
+// choices (`covensHolding`); the choices change none of the page's other marks.
 //
 // An unknown slug and a coven entry's slug both answer 404, since the read
 // refuses them alike. A slug the entry has moved off answers 308 to its
@@ -35,11 +42,18 @@ async function entryAt(slug: string) {
   }
 }
 
-// Only the title: MB.84 owns the description and the canonical link of this
-// page. A missing or moved address gets none, as it renders no page.
+// Title (the formal name tells two entries with one label apart), description and
+// canonical link. A missing or moved address gets none, as it renders no page.
 export async function generateMetadata({ params }: CompendiumEntryParams): Promise<Metadata> {
   const found = await entryAt((await params).slug);
-  return found?.kind === 'entry' ? { title: pageTitleOf(found.detail.entry) } : {};
+  if (found?.kind !== 'entry') return {};
+  const { entry } = found.detail;
+  const title = pageTitleOf(entry);
+  return publicPageMetadata(
+    title,
+    entryDescription(title, entry.description),
+    addressOf(entry.slug),
+  );
 }
 
 // A coven entry cannot be read here, so a link to one has no page to go to.
@@ -61,26 +75,43 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // curator who asks for them, since they are the longest read the page makes.
   const canEdit = shell?.viewer.canCurate === true;
   const own = addressOf(entry.slug);
+  const search = await searchParams;
   const opened =
-    canEdit && 'edit' in (await searchParams)
-      ? { id: entry.id, values: await entryValues(entry) }
+    canEdit && 'edit' in search
+      ? { id: entry.id, values: await entryValues(entry, null) }
       : undefined;
+  // The covens of the viewer's that hold the entry, read once: the shelf mark before the
+  // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.
+  const holding = shell?.workspaces.length ? await covensHolding(entry.id) : [];
+  const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
 
   return (
-    <IngredientEntry
-      detail={detail}
-      hrefOf={hrefOf}
-      edit={
-        canEdit
-          ? {
-              href: `${own}?edit` as Route,
-              closeHref: own,
-              deletedHref: '/compendium' as Route,
-              opened,
-            }
-          : undefined
-      }
-      movedAway={movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
+        dangerouslySetInnerHTML={{ __html: entryJsonLd({ ...entry, folkNames: detail.folkNames }) }}
+      />
+      <IngredientEntry
+        detail={detail}
+        hrefOf={hrefOf}
+        back={{ href: '/compendium' as Route, label: 'Compendium' }}
+        edit={
+          canEdit
+            ? {
+                href: `${own}?edit` as Route,
+                closeHref: own,
+                deletedHref: '/compendium' as Route,
+                opened,
+              }
+            : undefined
+        }
+        covens={covens}
+        heldInCovens={holding.length > 0}
+        movedAway={
+          movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined
+        }
+      />
+    </>
   );
 }

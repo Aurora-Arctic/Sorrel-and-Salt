@@ -6,6 +6,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import Providers from '@/app/providers';
 import { shouldRetry } from '@/lib/graphql-client';
 
+// `Providers` mounts the navigation provider, which reads the router, and a
+// provider test has no app to give one.
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/navigation')>()),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+}));
+
 const seen: QueryClient[] = [];
 const lastTwo = () => seen.slice(-2);
 

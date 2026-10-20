@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import type { Route } from 'next';
 import CovenCards from '.';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
@@ -54,9 +55,12 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   toxic: false,
   safetyNotes: null,
   kind: 'cupboard',
-  annotated: false,
   retired: false,
   jars: [],
+  details: {
+    href: `/coven/fixture-coven/ingredients?entry=${id}` as Route,
+    heading: { eyebrow: 'Ingredient', title: label },
+  },
   ...over,
 });
 
@@ -76,7 +80,7 @@ const ENTRIES = [
       { id: 'j2', form: 'Oil', icon: 'botanical', quantity: 0.5, unit: 'oz', threshold: 1 },
     ],
   }),
-  entry('named-1', 'House Salt', { annotated: true }),
+  entry('named-1', 'House Salt'),
   entry('named-2', 'Fixture Salt'),
 ];
 
@@ -89,6 +93,7 @@ const BASE: CovenCardsProps = {
   categories: [],
   vocabulary: { deities: [], formIcons: {} },
   total: ENTRIES.length,
+  canAdd: true,
 };
 
 export const Default: Story = () => <CovenCards {...BASE} />;
@@ -103,4 +108,79 @@ export const MidList: Story = () => (
   />
 );
 
+// An empty cupboard: a member is offered the first add, a viewer reads the sentence alone.
 export const Empty: Story = () => <CovenCards {...BASE} entries={[]} total={0} />;
+
+export const EmptyForAViewer: Story = () => (
+  <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />
+);
+
+// A search that matched nothing: the region says only what to do, pointing at the filter row's
+// clears (the search sentence above already names the search), and hands the search to the Compendium.
+export const NoMatches: Story = () => (
+  <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
+);
+
+// A member's view: Edit in the foot of the coven's own entry, none on the compendium's (M8.17).
+export const WithEdit: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+          }
+        : shown,
+    )}
+  />
+);
+
+// A member's view of compendium entries the cupboard holds: Annotate, with its own icon, in
+// each one's foot, and Edit on the coven's own (M8.17).
+export const WithAnnotate: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+          }
+        : { ...shown, annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}` },
+    )}
+  />
+);
+
+// A member's full foot (M8.17): Edit or Annotate, then More, the vertical dots, with Delete
+// on the coven's own entry and Make It Ours and Remove on a compendium entry.
+export const WithMore: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+            mayDelete: true,
+          }
+        : {
+            ...shown,
+            annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}`,
+            mayMakeOurs: true,
+            mayRemove: true,
+          },
+    )}
+  />
+);
+
+// A role that may delete and nothing more: the coven's own entry's only choice is its bin.
+export const WithLoneBin: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) => (shown.kind === 'own' ? { ...shown, mayDelete: true } : shown))}
+  />
+);

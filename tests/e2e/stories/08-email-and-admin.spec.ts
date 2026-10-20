@@ -544,6 +544,10 @@ test.describe('the primary admin', () => {
       await revoking.getByRole('button', { name: 'Demote' }).click();
       await expect(revoking).toHaveCount(0);
       await expect(row.getByRole('alert')).toBeVisible();
+      // Said under the Change Role that opened the dialog, which has the focus back.
+      await expect(
+        row.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
+      ).toBeFocused();
       await assertNoAccessibilityViolations(page);
 
       const reread = await userRow(page, loneEmail);
@@ -963,6 +967,8 @@ test(
     await expect(
       section.getByRole('row', { name: new RegExp(withdrawnEmail.replace(/[.]/g, '\\.')) }),
     ).toHaveCount(0);
+    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     // Still listed: the two that were not withdrawn, the lapsed one until it lapses.
     await expect(
       section.getByRole('row', { name: new RegExp(lapsedEmail.replace(/[.]/g, '\\.')) }),

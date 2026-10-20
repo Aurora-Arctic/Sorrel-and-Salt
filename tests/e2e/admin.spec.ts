@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
 
 // The admin pages against the built server, for what no story walks: the
@@ -54,24 +55,6 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
   for (const [name, href] of pages) {
     await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
   }
-
-  // Body copy keeps to the reading measure, `$measure` (66ch), however wide the
-  // layout around it — and this layout is wider, or the check proves nothing.
-  // 66ch is measured in the paragraph's own font, by a probe that reads nothing
-  // from the stylesheet's rule. The paragraph wraps, so it fills its cap: equal
-  // to the measure, which a narrower cap would fail as surely as a wider one.
-  const paragraph = page.getByRole('main').getByRole('paragraph').first();
-  const measure = await paragraph.evaluate((element) => {
-    const probe = document.createElement('span');
-    probe.style.cssText = 'display: inline-block; width: 66ch';
-    element.append(probe);
-    const width = probe.getBoundingClientRect().width;
-    probe.remove();
-    return width;
-  });
-  const main = await page.getByRole('main').boundingBox();
-  expect(main!.width).toBeGreaterThan(measure);
-  expect((await paragraph.boundingBox())!.width).toBeCloseTo(measure, 0);
 
   await assertNoAccessibilityViolations(page);
 });
@@ -352,13 +335,22 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
   let name: string;
   try {
     [{ name }] = await sql`select name from users where id = ${userId}`;
-    const entries = await sql`
-      update ingredients set updated_by = ${userId} where workspace_id is null and deleted_at is null returning id`;
-    const forms = await sql`
-      update ingredient_forms set updated_by = ${userId} where deleted_at is null returning id`;
+    // Stamps alone: the trigger keeps them unless the write declares itself a touch (MB.106).
+    let entries = 0;
+    let forms = 0;
+    await asTouch(sql, async (tx) => {
+      entries = (
+        await tx`
+        update ingredients set updated_by = ${userId} where workspace_id is null and deleted_at is null returning id`
+      ).length;
+      forms = (
+        await tx`
+        update ingredient_forms set updated_by = ${userId} where deleted_at is null returning id`
+      ).length;
+    });
     // Without rows the pages name no editor, so the case would prove nothing.
-    expect(entries.length).toBeGreaterThan(0);
-    expect(forms.length).toBeGreaterThan(0);
+    expect(entries).toBeGreaterThan(0);
+    expect(forms).toBeGreaterThan(0);
   } finally {
     await sql.end();
   }

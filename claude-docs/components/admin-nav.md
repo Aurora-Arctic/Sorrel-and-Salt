@@ -44,12 +44,27 @@ only too.
   the privilege ledger, the history of what was done to them (MB.200), share
   People. Two sections, Compendium and People. The grouping and the tabs are
   the owner's, at MB.115's design review.
-- **`<Link>`, now that every route exists.** `typedRoutes` refuses an `href`
+- **A link, now that every route exists.** `typedRoutes` refuses an `href`
   for a route the build does not contain, so the list was plain anchors until
   each of its pages had landed. M5.6b's two group pages were the last, and
-  it switched the list to `<Link>`. A soft navigation does not re-run the
+  it switched the list to links; they are now `PendingLink`s, which wrap
+  `next/link` ([`loading.md`](../loading.md)). A soft navigation does not re-run the
   layout, so the layout's guard does not run on a click either, which is why
   every page under `/admin` runs the guard itself.
+- **Each link names what its page draws on the way** (M12.33). `target.ts`
+  holds `adminTarget(href)`, which gives the `admin` region and the parts of the
+  page that arrives, from one table keyed by the page's first-tab address: `page` for
+  `/admin`, which draws its own heading; for every other page a heading row
+  (`title`), its Add or other action (`action`) and its filter row (`filter`), over
+  `cards` for `/admin/compendium` or a `table` for the rest. The tab row is not
+  drawn: there is no tab placeholder. `index.tsx` sets it on each section from the page's first tab, and
+  `AdminContents` passes the same function for its links. The `Admin` lead in
+  the context row is a `PendingLink` to `/admin` that names `admin` and `page`
+  directly. The `admin` region is the `/admin` layout's `SectionBody` (see
+  [`section-body.md`](section-body.md)): it swaps only the page under the
+  context row, so the row and this nav stay while the wait shows. Links into
+  admin from elsewhere (the site bar, the account menu) keep `main`, since
+  there the whole page changes. What a target does is [`loading.md`](../loading.md)'s.
 - **The page you are on is marked.** Its link carries `aria-current="page"`,
   which a screen reader announces, and no other link does. A page is current
   on any of its tabs, so Categories is current on `/admin/category-groups`,
@@ -59,6 +74,7 @@ only too.
   from marking it. `/admin` itself, the index, is in no section and marks
   none. `usePathname()` reads the address, which is why the links are a
   client component (MB.115).
+- **The wait draws the tab row** (M12.33). The index is the `contents` shape, drawn in every route into `/admin` (the lead link, the bar and account menu links, `AdminNav`). `adminTarget` sets `tabs` for the tabbed pages (Categories, Forms, Deities, Celestial Bodies, Users) and not for the Compendium or the index.
 - **A curator sees five tabs, not six** (M11.20). `AdminNav` and `AdminContents` both take `managesPeople`, so the nav and the index leave People out together. The rule below describes the admin's six.
 - **Six tabs, then More, then a bar** (MB.7, the owner's call at the
   navigation review, over the earlier wrapping row and `<details>` jump

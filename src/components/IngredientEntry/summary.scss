@@ -1,0 +1,207 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The details modal's body (M12.5): the description, the caution, then the
+// page's side column of blocks, stacked at every width (the owner's call,
+// 2026-10-20), as the 32rem modal has no room for the page's two columns. One
+// rhythm: each part stands off the next by the side column's own gap.
+.ingredient-summary {
+  @include stack(6);
+}
+
+// A bare `section` carries the document rhythm's margin (_layout.scss), which
+// would add 16px above the caution and below it on top of the stack's gap.
+.ingredient-summary .safety-note {
+  margin: 0;
+}
+
+// The side column's own top margin and grid column are the page's, set
+// against the viewport, which would put 16px under the caution on a phone and
+// none on a desktop; the stack above spaces it instead.
+.ingredient-summary .ingredient-entry__side {
+  grid-column: auto;
+  margin-block-start: 0;
+}
+
+// The covens stand two steps further apart than the entry's other lists, space(3)
+// (12px) over the lists' space(1), so each coven's link reads as its own target (the
+// owner's calls, 2026-10-20). Through the summary, so it outranks .ingredient-entry__list.
+.ingredient-summary .ingredient-summary__covens {
+  gap: space(3);
+}
+
+// In Your Covens: each coven's link led by the In Your Cupboard shelf, the name
+// one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
+// stands at the top of the link, level with the name's first line, so a wrapped
+// name runs on under itself; the link sits at the top of its line box
+// (`vertical-align`), where an inline-flex box would otherwise sit on its first
+// item's synthesised baseline. The shelf is `$icon-size` (24px; the owner's
+// call, 2026-10-20, that 20px was too small): its drawing is 18.4px tall and
+// its bottles about 15px, a little over Lexend's 11.25px cap height at 16px.
+// It centres on the first line's capitals rather than the line box: 0.648em is
+// the capitals' middle measured from the line's top, and 0.5929 is where the
+// drawing's middle sits in its 32-unit box (y 6.7 to 31.24). Negative margins
+// rather than a move: the top one lifts the shelf, the bottom one stops what
+// hangs below from counting, so the row stays one line (20px) high; the ink
+// still ends inside it. Measured 2026-10-20.
+// claude-docs/components/ingredient-entry.md, "The details modal".
+.ingredient-summary__covens a {
+  display: inline-flex;
+  align-items: flex-start;
+  vertical-align: top;
+  gap: space(2);
+  font-weight: 400;
+  // Its colours, focus ring and faded underline are the References links' own
+  // rule (index.scss), so they rest in the body ink (the owner's call, 2026-10-20).
+
+  > svg {
+    flex: none;
+    width: $icon-size;
+    height: $icon-size;
+    margin-block: calc(0.648em - #{$icon-size} * 0.5929) (-$icon-size);
+  }
+}
+
+// The line naming the forms with their own cautions, inside the caution so the
+// two read as one warning, in the muted ink. The section's own gap spaces it
+// from the notes, as it spaces the notes from each other.
+.ingredient-summary__forms-caution {
+  margin: 0;
+  max-width: $measure;
+  color: $text-muted;
+}
+
+// The details modal's foot (the owner's call, 2026-10-20): the bar holding the
+// link to the entry's page, in the Modal's `foot` slot under the body rather than inside it, so the
+// body is the only thing that scrolls and its scrollbar ends above the bar
+// (the owner's report, 2026-10-20: the track ran down past it). It runs to the
+// dialog's edges, on the modal's surface, with a hairline along its top. The
+// link is the site's plain `.btn`, a green outline on a clear ground with the normal size and its own hover and focus, centred in the bar and
+// two thirds of its width, a fraction of the bar rather than a length so it
+// holds at every window width; the bar takes no side padding, so the third is
+// of the bar itself, and the label stands centred in the button.
+.ingredient-details-foot {
+  display: flex;
+  justify-content: center;
+  padding: space(3) 0;
+  border-top: 1px solid $hairline;
+  background: $surface-card;
+  @include theme-transition(background-color, border-color);
+
+  > .btn {
+    width: 66.6%;
+    text-align: center;
+  }
+}
+
+// The description and its Show More bar (the owner's calls, 2026-10-20). The
+// clip box round the paragraph is cut to six lines by the script, which sets
+// its height in pixels (summary-description.tsx); without the script it has
+// none and the whole text shows. The cut text fades out into the modal's
+// surface, and under it stands the bar: one real button the full width of the
+// text, on the modal's own surface with only a hairline along its top, the
+// label in the primary ink and a chevron after it. Opening moves the height
+// and the fade together over the medium motion (300ms, the owner's call) while
+// the chevron turns over with them; the bar stays where it is, under the text, and reads Show Less.
+// Under reduced motion nothing moves and each is at once.
+.ingredient-summary__description {
+  display: flex;
+  flex-direction: column;
+}
+
+.ingredient-summary__description-clip {
+  position: relative;
+  overflow: hidden;
+  transition: height $motion-medium ease-in-out;
+
+  // The fade: the surface the text stands on, in from clear at the top, so the
+  // last lines go into the bar rather than being cut. It lets the pointer through.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 60%;
+    background: linear-gradient(to bottom, transparent, $surface-card);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity $motion-medium ease-in-out;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::after {
+      transition: none;
+    }
+  }
+}
+
+.ingredient-summary__description--cut .ingredient-summary__description-clip::after {
+  opacity: 1;
+}
+
+// The whole bar is the target. No fill and no corners: the modal's surface and
+// the hairline above it. Hover and focus leave the label as it is and grow the
+// chevron (below), and the focus is also the ring, drawn inside the bar. Open,
+// the bar stands further from the text it follows, since the fade that ran
+// under it is gone and the last line would otherwise touch it; collapsed it
+// stays close, so the fade runs under it.
+.ingredient-summary__more {
+  @include button-reset;
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: space(2);
+  width: 100%;
+  margin-top: space(1);
+  padding: space(2) 0;
+  border-top: 1px solid $hairline;
+  background-color: $surface-card;
+  color: $text-primary;
+  font-family: $font-body;
+  font-size: type-size('small');
+  font-weight: 500;
+
+  transition: margin-top $motion-medium ease-in-out;
+
+  &[aria-expanded='true'] {
+    margin-top: space(3);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// The chevron after the label, down while the text is cut and turned over
+// once it is open, in step with the height. Pointed at or focused it grows a
+// quarter in the label's own colour, as the ingredient form's fold chevrons do
+// (`scale: 1.25`, IngredientForm/index.scss); `scale` composes with the
+// turn's `transform`.
+.ingredient-summary__more-chevron {
+  flex: none;
+  transition:
+    transform $motion-medium ease-in-out,
+    scale $motion-short ease-in-out;
+
+  [aria-expanded='true'] > & {
+    transform: rotate(180deg);
+  }
+
+  .ingredient-summary__more:hover > &,
+  .ingredient-summary__more:focus-visible > & {
+    scale: 1.25;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}

@@ -29,13 +29,18 @@ const LockedControl = ({
   reason,
 }: LockedControlProps): ReactElement => {
   const reasonId = useId();
-  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
   const [attempts, setAttempts] = useState(0);
 
   return (
     // Hover on the wrapper, which holds the tip as well as the button, so the
     // pointer can move onto the tip without closing it.
-    <span ref={anchor} className="user-list__locked" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span
+      ref={anchor}
+      className="user-list__locked"
+      onMouseEnter={showSoon}
+      onMouseLeave={hideSoon}
+    >
       <button
         className={className}
         type="button"

@@ -26,6 +26,7 @@ import {
   expectFieldError,
   openAddIngredient,
   openEditIngredient,
+  openEditIngredientFromMenu,
   pickCategoryIn,
   shellAddIngredient,
   shellEditControls,
@@ -33,8 +34,7 @@ import {
 
 // Stories 28–34: the add and edit dialogs of a coven's ingredient. Scaffolds:
 // M8.16 builds the add dialog's coven behaviour and unskips stories 28–32;
-// M8.17 builds the coven edit and unskips 33 and 34, each named in its
-// annotation. M8.16 landed before the coven's list (M9.6), so stories 28–32 open the
+// M8.17 built the coven edit and unskipped 33 and 34. M8.16 landed before the coven's list (M9.6), so stories 28–32 open the
 // dialog from pages that exist now,
 // the coven's home, its members page and /account, and read each save back
 // in SQL. Each story writes its own coven, and its ingredients' invented
@@ -165,6 +165,9 @@ test(
         }
 
         // Untouched, so Escape closes at once, and the focus goes back to the button.
+        // From Cancel, which has no tip: the walk above can end on an ⓘ, whose tip
+        // opens on focus and takes the first Escape for itself (info-tip.md).
+        await dialog.getByRole('button', { name: 'Cancel' }).focus();
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
         await expect(page).not.toHaveURL(/[?&]new/);
@@ -608,15 +611,9 @@ const REFUSED_UPDATE = {
   zodiacSigns: [],
 };
 
-test.fixme(
+test(
   "a member opens an entry's edit pre-filled, from its row and its page, never the shell",
-  {
-    tag: '@story-33',
-    annotation: {
-      type: 'fixme',
-      description: "M8.17 builds the coven edit, after M9.6's list",
-    },
-  },
+  { tag: '@story-33' },
   async ({ page }) => {
     const { coven, ingredientId } = await covenWithTestwort(page, 33);
     const elsewhere = await seedCoven(page, 'Fixture Other Coven Story 33', 'story-33-other.test', {
@@ -678,12 +675,7 @@ test.fixme(
         200,
       );
       await expect(shellEditControls(page)).toHaveCount(0);
-      const dialog = await openEditIngredient(
-        page,
-        page.getByRole('main'),
-        'Testwort',
-        'Fixtura testalis',
-      );
+      const dialog = await openEditIngredientFromMenu(page, 'Testwort', 'Fixtura testalis');
       await expect(nameField(dialog)).toHaveValue('Testwort');
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
@@ -698,8 +690,9 @@ test.fixme(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toHaveCount(0);
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
+      // The page's Edit is an icon of its own (M8.17), which a viewer is not drawn.
       await expect(
-        editIngredientControl(page.getByRole('main'), 'Testwort', 'Fixtura testalis'),
+        page.getByRole('main').getByRole('link', { name: 'Edit Testwort', exact: true }),
       ).toHaveCount(0);
 
       const answer = await graphqlFromPage(page, UPDATE, {
@@ -732,15 +725,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   "a saved edit shows in the list and on the entry's page without a reload",
-  {
-    tag: '@story-34',
-    annotation: {
-      type: 'fixme',
-      description: "M8.17 builds the coven edit, after M9.6's list",
-    },
-  },
+  { tag: '@story-34' },
   async ({ page }) => {
     const { coven, ingredientId } = await covenWithTestwort(page, 34);
     const list = ingredientList(page);
@@ -755,8 +742,7 @@ test.fixme(
         .getByRole('textbox', { name: 'Description', exact: true })
         .fill('Mended by fixture hands.');
       await saveIngredient(dialog).click();
-      // Closed, as M8.16's coven save closes it; the admin edit stays open,
-      // so M8.17 confirms which a coven's edit does.
+      // Closed: a coven's save closes its dialog, where the admin edit stays open (M8.17).
       await expect(dialog).toHaveCount(0);
 
       await expect(rowOf(list, 'Fixture Mendwort', 'Fixtura testalis')).toBeVisible();
@@ -784,12 +770,7 @@ test.fixme(
     await test.step("a save from the entry's page shows on the page, then in the list", async () => {
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await markDocument(page);
-      const dialog = await openEditIngredient(
-        page,
-        page.getByRole('main'),
-        'Fixture Mendwort',
-        'Fixtura testalis',
-      );
+      const dialog = await openEditIngredientFromMenu(page, 'Fixture Mendwort', 'Fixtura testalis');
       await nameField(dialog).fill('Fixture Wardwort');
       await saveIngredient(dialog).click();
       await expect(dialog).toHaveCount(0);

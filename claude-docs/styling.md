@@ -64,18 +64,27 @@ to.
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
-  button, 2.5rem), `$table-stack-width` (the frame width under which a table
+  button, 2rem), `$table-stack-width` (the frame width under which a table
   stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of). A duration with a role of its own is one too: `$motion-short`
   (150ms), a control answering a press with a movement of its own, as the
-  switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
+  switch's thumb slides, `$motion-medium` (300ms), a movement the eye follows,
+  as the details window's description opens under its Show More bar, `$tip-fade` (500ms), a tip bubble's fade, and `$icon-tip-fade`
+  (120ms), IconTip's quicker one.
 - **A mix or a level used in more than one stylesheet is a token** too:
   `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
-  skeleton's bars, the pressed admin menu), `$hairline` (the muted ink 45%
+  skeleton's bars, an entry's targeted section, MenuButton's plain item
+  pointed at, focused or chosen, and the hover of every
+  navigation link, tab and outlined chip), `$fill-highlight` (the accent 12%
+  into whatever is behind: MenuButton's one primary item, and
+  a menu's item and a suggestion list's row in the account menu, the shell's
+  menu and Combobox, pointed at, focused or chosen), `$fill-highlight-field` (the same 12% over the field's
+  ground: a quiet button pointed at), `$hairline` (the muted ink 45%
   into whatever is behind: the ingredient form's section rules, the tab
-  strip's shade) and `$opacity-disabled` (0.55: what is left of a control
+  strip's shade, a quiet button's edge, the tab row's track), `$edge-highlight` (the accent 45%
+  into the hairline: a quiet button's edge pointed at) and `$opacity-disabled` (0.55: what is left of a control
   that is busy or cannot be used).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
@@ -176,8 +185,18 @@ Three variants exist for one use each:
   button barely shows under the pointer; these are larger and more saturated,
   rather than only further from the ground. The label on them measures 13.13:1
   and 6.80:1.
-  Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
-  punched in parchment, so light mode gets a much softer one.
+
+**The warning ochre is the one hue picked for a role**, the owner's pick on
+2026-10-19 for a warning that should not read as an error: `$ochre-deep`
+(`#8a5a00`) on light and `$ochre-bright` (`#d9a441`) on dark, the
+`--warning` token and its `$warning` alias. It draws a warning notice's bar,
+tint and triangle, never text, so it needs 3:1 as a graphic (WCAG 1.4.11),
+and clears more: 4.89 on the light page, 5.44 on the light card, 8.32 and 7.55
+on the dark ones, and over its own tint 4.47 and 4.95 light, 7.35 and 6.57
+dark. `tests/scss/tokens.test.ts` holds those floors.
+
+Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
+punched in parchment, so light mode gets a much softer one.
 
 ## Category-group colours
 
@@ -431,6 +450,8 @@ decides, from its own selector, so one badge reads the same wherever it is rende
 
 The 24px floor is the least a badge with a tip may be as a target.
 
+Each size also lowers its label by an **optical drop**, taken from the top padding and given to the bottom so the height holds (the owner's call, 2026-10-20). Without it every badge's capitals sat above the box's centre: measured in Chromium, the space under the baseline was 1.26px more than the space above the capitals on the card, and up to 1.33px more on the entry page. Chrome rounds a font's ascent and descent to whole pixels, so 12px and 13px Lexend sit differently and each size has its own drop: `default` 0.0125em, `medium` and `small` 0.05em. The card's badges now centre within 0.04px; a `default` badge lands within half a pixel either way, since its baseline snaps to the pixel grid wherever the badge happens to sit. `text-box-trim` would do this from the font's own metrics, but it is past the browser floor. `badge-padding()` and `badge-padding-block()` in `_mixins.scss` apply it; a rule that sets a badge's block padding itself, as Out of Stock's heavier border does, goes through them.
+
 ## Brand colours
 
 A sign-in provider's button wears the provider's colours, not ours:
@@ -452,26 +473,88 @@ held to a floor, which is all but the rows marked "before MB.116" and the
 hover fills on the page, reading the colours from `$brand-palettes` and the
 theme tokens, in one assertion per theme:
 
-| Pair                                                  | Dark page `$soot`                                             | Light page `$parchment` |
-| ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
-| Google edge `#dadce0` (before MB.116)                 | 13.62                                                         | **1.13, fails**         |
-| Google edge `#747775` (Google's current light button) | 4.13                                                          | 3.74                    |
-| Microsoft edge `#8c8c8c` (before MB.116)              | 5.56                                                          | **2.78, fails**         |
-| Microsoft edge `#808080`                              | 4.74                                                          | 3.26                    |
-| Discord / Facebook fill on the page                   | 4.06 / 3.88                                                   | 3.80 / 3.98             |
-| Discord / Facebook hover fill on the page             | 2.91 / 2.85                                                   | 5.30 / 5.43             |
-| Inks on fills (both themes)                           | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
-| Inks on hover fills (both themes)                     | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
-| Focus ring `$text-primary` on the page                | 14.77                                                         | 13.41                   |
-| Muted text `$text-muted` / `--accent` on the page     | 9.67 / 7.97                                                   | 5.99 / 4.65             |
+| Pair                                                    | Dark page `$soot`                                             | Light page `$parchment` |
+| ------------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
+| Google edge `#dadce0` (before MB.116)                   | 13.62                                                         | **1.13, fails**         |
+| Google edge `#747775` (Google's current light button)   | 4.13                                                          | 3.74                    |
+| Microsoft edge `#8c8c8c` (before MB.116)                | 5.56                                                          | **2.78, fails**         |
+| Microsoft edge `#808080`                                | 4.74                                                          | 3.26                    |
+| Discord / Facebook fill on the page                     | 4.06 / 3.88                                                   | 3.80 / 3.98             |
+| Discord / Facebook hover fill on the page               | 2.91 / 2.85                                                   | 5.30 / 5.43             |
+| Inks on fills (both themes)                             | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
+| Inks on hover fills (both themes)                       | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
+| Focus ring, the body ink at 66.6% (M12.45), on the page | 7.00                                                          | 4.94                    |
+| Muted text `$text-muted` / `--accent` on the page       | 9.67 / 7.97                                                   | 5.99 / 4.65             |
 
 **Hover is not held to 3:1.** WCAG 1.4.11 covers what identifies a control
 and its states, and a hover ground is neither: the button is already known
 by its resting fill, and keyboard focus is shown by the focus ring, which
-clears 13:1 in both themes. So Discord's and Facebook's darker hover grounds
+clears 3:1 on every ground it is drawn on in both themes ("The focus ring", below). So Discord's and Facebook's darker hover grounds
 may sit under 3:1 on the dark page. Microsoft keeps its white face in both
 themes, with the darker `#808080` edge that clears 3:1 on the light page: the
 owner's call at MB.116's sign-off, over Microsoft's own dark button.
+
+## The focus ring
+
+Keyboard focus is a 2px outline drawn 2px outside the element by the
+`focus-ring($color, $strength)` mixin in `_mixins.scss`. Its colour is mixed
+towards transparent, `color-mix(in srgb, <colour> <strength>, transparent)`,
+so the ring softens over whatever ground it crosses rather than standing at
+the body ink's full 14:1, which read as harsh. The strength is
+`$focus-ring-strength` in `_variables.scss`, 66.6% in both themes: the
+owner compared 100%, 70%, 66.6%, 55% and 40% in both themes and chose 66.6%
+(M12.45, 2026-10-20). The rings that set their own colour use the same
+number, so Combobox's rings on a coloured chip fade the chip's own ink
+(`currentcolor`) by it too.
+
+Two rings keep another strength:
+
+- **A link's ring** (`_typography.scss`) is the accent, at
+  `$focus-ring-link-strength`, which each theme sets as
+  `--focus-ring-link-strength`: the shared 66.6% in dark, and
+  `$focus-ring-link-strength-light`, 75%, in light. The light accent starts
+  at only 4.65:1 on the page, and 66.6% takes it to 2.61, under the 3:1 floor;
+  75% is the least that clears it, at 3.01 (the owner's call, 2026-10-20).
+  The page row passing by 0.01 is intended: it is the guard on the number.
+- **The tab row's ring** (`TabbedPage/index.scss`) is the accent, drawn
+  inside the pill, at `$focus-ring-tab-strength`, which each theme sets as
+  `--focus-ring-tab-strength`: the shared 66.6% in dark, and
+  `$focus-ring-tab-strength-light`, full strength, in light. On the light
+  track and the open pill the accent starts at only 4.05:1, so 66.6% takes it
+  to 2.42 and even 75% leaves it at 2.75 (the owner's call, 2026-10-20).
+
+The skip link's and the theme toggle's rings are the page's own colour round
+an accent fill, so it is the fill they are told from; faded, the ring sits
+closer to the ground behind it, and the fill is unchanged.
+
+A ring marks a control's state, so it is held to 3:1 (WCAG 1.4.11), laid
+over each ground it is drawn on. `tests/scss/tokens.test.ts` reads every
+strength from the compiled CSS and checks every row below; it fails with
+the shared strength at 40%, with the light link at 66.6%, and with the light
+tab at 75%.
+
+| Ring on                                 | Dark | Light |
+| --------------------------------------- | ---- | ----- |
+| The body-ink ring on the page           | 7.00 | 4.94  |
+| … on a card                             | 6.61 | 5.18  |
+| … on a card pointed at                  | 6.23 | 5.26  |
+| … on the ingredient card's drawer, slot | 7.15 | 3.88  |
+| … on the drawer's side                  | 4.30 | 4.17  |
+| … on the drawer's back                  | 6.87 | 3.41  |
+| A link's accent ring on the page        | 4.14 | 3.01  |
+| … on a card                             | 3.97 | 3.22  |
+| … on a card pointed at                  | 3.72 | 3.31  |
+| A tab's accent ring on the open pill    | 3.18 | 4.05  |
+| … on the track over the page            | 3.77 | 4.05  |
+| … on the track over a card              | 3.49 | 4.49  |
+
+**Not covered: a ring on a coloured chip.** Combobox's ring on a category
+chip is the chip's ink faded over the chip's wash. For the seeded group
+colours it clears 3.53 to 3.91 in dark and 3.17 to 3.31 in light (lowest:
+`#606c2f`, light). The write-time check on a group's colours
+(`src/lib/contrast.ts`) holds the colour itself at 4.5:1 against its theme's
+harder surface, not this faded mix, so a colour an admin adds could put the
+ring under 3:1. Noted, not fixed.
 
 ## Type
 
@@ -610,8 +693,14 @@ Four variants:
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
 - **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
-  The body ink on an edge, so it neither competes with the primary nor reads as
-  destructive — and, unlike the muted ink, not as disabled either.
+  The label in the body ink, so it neither competes with the primary nor reads as
+  destructive — and, unlike the muted ink, not as disabled either. It sits in a
+  field's ground (`$surface-card`, what an input fills with) inside a
+  `$hairline` edge rather than an ink outline, so it stands back beside the
+  primary; pointed at or focused, the ground takes `$fill-highlight-field` and
+  the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
+  call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
+  (`tests/scss/tokens.test.ts`).
 - **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
@@ -699,17 +788,17 @@ scrolls sideways inside its frame rather than widening the page.
 
 The class layer every form is built from, in `_primitives.scss`:
 
-| Class                                            | What it is                                                                                                                                                                                                                                                                                                                               |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same                                                                                                            |
-| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                                                                                                                                     |
-| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                                                                                                                             |
-| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                                                                                                                                       |
-| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                            |
-| `.switch`, `.switch__control`                    | An on-or-off choice as a slide toggle, a `.field` block: its label above, the toggle beneath at `$control-height`. `SwitchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                 |
-| `.search-field`, `__input`, `__submit`           | A list filter's search box, an `.input` box on a flex row holding a borderless text input and, at its end, a magnifier submit named Search, muted until pointed at or focused, then the accent. The box draws the input's focus ring. `SearchField` draws it ([`components/field.md`](components/field.md))                              |
-| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                    |
-| `.notice`, `--error`, `--warn`, `--success`      | A sentence about the whole view rather than one field `--error` and `--warn` lead with a warning triangle, drawn by mask in the box's padding so a link in the text stays inline: in the error's red on an error, and in the error red on a warning's plain box and ink, for what needs attention but does not block (the owner's call). |
+| Class                                                    | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.form`, `.form__actions`                                | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same                                                                                                                                                                                                                                        |
+| `.field`                                                 | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `.field__label`, `.field__hint`, `.field__error`         | The parts around the control                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `.input`, `.textarea`, `.select`                         | The control, one box for all three                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `.checkbox`                                              | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `.switch`, `.switch__control`                            | An on-or-off choice as a slide toggle, a `.field` block: its label above, the toggle beneath at `$control-height`. `SwitchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                                                                                                                                             |
+| `.search-field`, `__input`, `__submit`                   | A list filter's search box, an `.input` box on a flex row holding a borderless text input and, at its end, a magnifier submit named Search, muted until pointed at or focused, then the accent. The box draws the input's focus ring. `SearchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                          |
+| `.fieldset`, `.fieldset__legend`                         | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `.notice`, `--error`, `--warn`, `--caution`, `--success` | A sentence about the whole view rather than one field. No box: a 3px bar down the start edge and a tint of the bar's colour behind the text (`--notice-tint`, 7% light, 8% dark). `--error`, `--warn` and `--caution` lead with a warning triangle, drawn by mask in the padding so a link in the text stays inline. Each kind sets `--notice-bar` and `--notice-icon`; [`components/notice.md`](components/notice.md) has the table (the owner's look, 2026-10-19). |
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
@@ -722,7 +811,10 @@ The class layer every form is built from, in `_primitives.scss`:
   does not say why reads as broken. `IngredientForm` was the first form built
   this way, and the Reason fields of the user list's confirmations and the
   admin invite form took it at MB.115's review; any other form adopts it at
-  its own design review.
+  its own design review. Not every field gets one: a tip earns its place
+  only by stating a rule, a flow or a format with a trap
+  ([`components/info-tip.md`](components/info-tip.md), "When a field gets a
+  tip").
 - **A radio group takes the form's gap, not a margin of its own.**
   `.fieldset.radio-group` (`RadioGroupField`) has a `space(5)` block margin
   that sets it apart from the text around it where nothing else spaces it, as
@@ -1076,11 +1168,10 @@ What each section review (MB.115 to MB.124) designs to:
   ([`components/modal.md`](components/modal.md)). A button that opens a
   dialog from its own page is a `ModalButton`, which takes the focus back to
   it however the dialog closes, since `Modal` restores nothing itself. A
-  refusal from an action on the page is said once, above the controls, by an
-  `ActionFailure` wrapped around them
-  ([`components/action-failure.md`](components/action-failure.md)), not
-  beside the button pressed, where a narrow cell or a phone's card would wrap
-  it. A page's own menu of jump links is a `PageNav`
+  refusal from a click outside a form is said by `useClickFeedback`
+  ([`components/click-feedback.md`](components/click-feedback.md)), in a
+  callout floating under the button pressed, out of the flow so that a
+  narrow cell or a phone's card does not wrap it. A page's own menu of jump links is a `PageNav`
   ([`components/page-nav.md`](components/page-nav.md)), laid out by
   `.page-with-nav`. Each is in `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,
@@ -1093,6 +1184,19 @@ What each section review (MB.115 to MB.124) designs to:
 - **Both themes, and 375px.** A review signs off in the workshop in both, at
   phone width, with every text pairing at 4.5:1 and every edge a control
   depends on at 3:1.
+
+## Smooth scrolling
+
+The root sets `scroll-behavior: smooth` (`src/app/globals.scss`), so a jump to
+a section glides. Next scrolls to the top on a route change too, and it turns
+smooth scrolling off for that jump only if `<html>` carries
+`data-scroll-behavior="smooth"` (`src/app/layout.tsx`). Without the attribute
+the jump glides, then Next's scroll-into-view glides on and stops part-way
+down: 62px at a desktop's width, 40px at a phone's, after a move from an
+admin page to the Compendium. Keep the attribute for as long as the stylesheet
+sets the behaviour. `tests/e2e/route-scroll.spec.ts` proves it, with reduced
+motion switched off for that spec alone, because the suite's default turns
+the smooth scrolling off and hides the bug.
 
 ## Theme resolution
 
@@ -1123,7 +1227,9 @@ heavier than the reverse; light reverts to the browser default.
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
   colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
   width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
-  `$measure`, and the four scales with their accessors — `type-size()`,
+  `$measure`, the loading tokens (`$loading-delay` 100ms, `$spin-duration`
+  0.8s, `$shimmer-duration` 1.4s, `$pulse-duration` 2s, `$arrive-duration`
+  200ms; see [`loading.md`](loading.md)), and the four scales with their accessors — `type-size()`,
   `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
@@ -1153,7 +1259,13 @@ heavier than the reverse; light reverts to the browser default.
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new
-  content comes in with, the one `list-frame-fade-in` keyframe); and
+  content comes in with, the one `list-frame-fade-in` keyframe,
+  `$arrive-duration` by default); `loading-motion($animation, $delay)`
+  (applies a loading animation and, under `reduced-motion`, swaps it for the
+  `loading-pulse` keyframe at `$pulse-duration`: the one slow opacity pulse
+  every wait falls back to; a `$delay` adds `loading-appear`, which holds
+  `visibility: hidden` until then and so survives the pulse; both keyframes
+  are in `_primitives.scss`); and
   `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
   rows; its one-line cells, wrapping again as cards), each emitted once by
   `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`

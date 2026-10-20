@@ -304,13 +304,14 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Heldwort', 'Ownwort']);
   });
 
-  it("leaves out the coven's deleted entry, and a deleted compendium entry it holds", async () => {
+  // A deleted compendium entry the coven still holds stays listed (M12.32):
+  // retired-entry-list.test.ts owns that case.
+  it("leaves out the coven's deleted entry", async () => {
     await add('Covenwort', { workspaceId: WORKSPACE_W_ID });
     const deleted = await add('Deletedwort', { workspaceId: WORKSPACE_W_ID });
-    const retired = await held('Retiredwort');
     await sql`
       update ingredients set deleted_at = now(), deleted_by = ${A.id}
-      where id in ${sql([deleted, retired])}`;
+      where id = ${deleted}`;
 
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
   });

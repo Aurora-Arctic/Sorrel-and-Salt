@@ -34,7 +34,7 @@ import type {
   SubstituteForm,
   UseSuggestions,
 } from './types';
-import { COMPENDIUM_HEADING, YOUR_INGREDIENTS, draftOf, tierOf } from './values';
+import { COMPENDIUM_HEADING, YOUR_INGREDIENTS, draftOf, renamedTo, tierOf } from './values';
 
 // The lookups on the form's boxes: the form and folk names M4.7a serves, and
 // the celestial bodies, signs, deities and substitutes MB.131 adds. Each waits for the
@@ -389,18 +389,30 @@ export const useCompendiumSubstitutes: UseSuggestions = (_workspaceId, text, act
  * and an edit away from the picked name drops the link, the owner's call:
  * what is left is typed. On the compendium the form must be a pick (MB.162),
  * so the box offers the curated rows alone and no typed row.
+ *
+ * A pick an admin has since renamed (M5.6a) asks the member, beneath the box,
+ * to use the new name or keep the text, which unlinks the pick; the resolver
+ * holds the save until one is pressed (M8.17).
  */
 export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactElement {
-  const { control, getValues, setValue } = useFormContext<IngredientFormValues>();
+  const { control, getValues, setValue, clearErrors } = useFormContext<IngredientFormValues>();
   const text = useWatch({ control, name: `${at}.form` });
   const link = useWatch({ control, name: `${at}.formLink` });
   const [active, setActive] = useState(false);
   const suggestions = curatedOnly(useFormSuggestions(workspaceId, text, active), pickOnly);
+  const renamed = renamedTo({ form: text, formLink: link });
+  const settle = (use: boolean) => {
+    // Keep unlinks without `shouldDirty` on the link: react-hook-form 7 throws
+    // diffing a null against the object it was saved as. Dirtying the text
+    // instead has it compare the whole form, which sees the link gone.
+    if (!use) setValue(`${at}.formLink`, null);
+    setValue(`${at}.form`, use && renamed !== undefined ? renamed : text, { shouldDirty: true });
+    clearErrors(`${at}.form`);
+  };
   return (
     <SuggestField
       name={`${at}.form`}
       label="Form"
-      hint="How it comes: dried leaf, whole root, oil."
       placeholder="Add a form"
       suggestions={suggestions}
       onActivate={() => setActive(true)}
@@ -416,6 +428,23 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
       icon={link ? <FormIcon name={link.icon ?? null} /> : undefined}
       typedIcon={<FormIcon name={null} />}
       offerTyped={!pickOnly}
+      note={renamed === undefined ? undefined : `This form is now called "${renamed}".`}
+      after={
+        renamed !== undefined && (
+          <div className="ingredient-form__renamed">
+            <button type="button" className="btn btn--small" onClick={() => settle(true)}>
+              Use &quot;{renamed}&quot;
+            </button>
+            <button
+              type="button"
+              className="btn btn--small btn--quiet"
+              onClick={() => settle(false)}
+            >
+              Keep &quot;{text.trim()}&quot;
+            </button>
+          </div>
+        )
+      }
     />
   );
 }

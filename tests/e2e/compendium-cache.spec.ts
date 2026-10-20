@@ -36,7 +36,9 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   await expect(add).toBeVisible();
 
   // Renamed underneath the cache to a name that sorts first, so a read of
-  // Postgres would put it on the first page.
+  // Postgres would put it on the first page. A row is found by its name link:
+  // its cell also holds the Quick Look eye (M12.5), so the cell reads as more
+  // than the name.
   const renamed = `Aaa Fixture Cached ${run}`;
   await inDatabase(
     (sql) => sql`
@@ -47,12 +49,12 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
 
   await page.reload();
   await expect(add).toBeVisible();
-  await expect(page.getByRole('cell', { name: renamed, exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: renamed, exact: true })).toHaveCount(0);
 
   // The control: a filter never read before misses the cache, so it reads
   // Postgres, which holds the rename.
   await page.goto(`/admin/compendium?query=${encodeURIComponent(renamed)}`);
-  await expect(page.getByRole('cell', { name: renamed, exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
 
 // M8.7: an admin's write expires the tag, so the very next load reads
@@ -65,7 +67,7 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
 
   // The precondition, from the test above: the cached list still hides the rename.
   const renamed = `Aaa Fixture Cached ${run}`;
-  await expect(page.getByRole('cell', { name: renamed, exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: renamed, exact: true })).toHaveCount(0);
 
   // Unlike the rename, so the fuzzy duplicate warning does not stop the save.
   const added = 'Aab Testbloom';
@@ -84,6 +86,6 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
   ).toBeVisible();
 
   await page.goto('/admin/compendium');
-  await expect(page.getByRole('cell', { name: added, exact: true })).toBeVisible();
-  await expect(page.getByRole('cell', { name: renamed, exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: added, exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });

@@ -1,4 +1,7 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { makeQueryClient } from '@/lib/graphql-client';
+import type { ReactElement } from 'react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
@@ -21,14 +24,27 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // The form is its own tests': a stand-in that reports what the dialog hands
 // it, with a button for each way out it can take.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({ entry, onSaved, onDeleted, duplicateHref, entryHref }: IngredientFormProps) => (
+  default: ({
+    entry,
+    workspaceId,
+    mayPromote,
+    onSaved,
+    onDeleted,
+    duplicateHref,
+    entryHref,
+  }: IngredientFormProps) => (
     <form aria-label="Fixture Form">
       <output aria-label="Edited">{entry?.id}</output>
+      <output aria-label="Written To">{workspaceId ?? 'compendium'}</output>
+      <output aria-label="May Promote">{String(Boolean(mayPromote))}</output>
       <output aria-label="Duplicate Address">
-        {duplicateHref({ slug: 'testwort-other' } as never)}
+        {duplicateHref({ id: 'fixture-other-id', slug: 'testwort-other' } as never)}
       </output>
       <output aria-label="Linked Address">
         {entryHref?.({ slug: 'testwort-linked', isGlobal: true })}
+      </output>
+      <output aria-label="Own Linked Address">
+        {entryHref?.({ slug: 'testwort-own', isGlobal: false }) ?? 'none'}
       </output>
       <button
         type="button"
@@ -341,9 +357,48 @@ describe('IngredientEntry', () => {
     expect(headCaution()).toBeNull();
     unmount();
 
-    // Why it can show: the oil form has notes, and the entry has none of its own.
-    renderEntry();
+    // Why it can show: the oil form has notes, and the entry has none of its own. Not
+    // flagged Toxic, which would stand in Caution's place (SafetyMark).
+    renderEntry({
+      detail: detail({
+        variants: [
+          variantRow('testroot'),
+          variantRow('testoil', { safetyNotes: 'Fixture oil caution.' }),
+        ],
+      }),
+    });
     expect(headCaution()).not.toBeNull();
+  });
+
+  // The head's one safety badge rides the back row, after New or Updated, and the name's
+  // row holds the name alone (the owner's call, 2026-10-20).
+  it('draws one safety badge in its head, Toxic over Caution, read after New and before the name', () => {
+    renderEntry({
+      detail: detail({
+        entry: entryRow({ createdAt: new Date(), safetyNotes: 'A fixture caution.' }),
+      }),
+    });
+    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    const toxic = within(head).getAllByText('Toxic', { exact: true });
+    expect(toxic).toHaveLength(1);
+    expect(headCaution()).toBeNull();
+    const recency = within(head).getByText('New', { exact: true });
+    const follows = (a: Element, b: Element) =>
+      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(follows(recency, toxic[0]!)).toBe(true);
+    expect(follows(toxic[0]!, screen.getByRole('heading', { level: 1 }))).toBe(true);
+  });
+
+  it('draws the safety badge with no back link or recency mark to share its row', () => {
+    renderEntry();
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByRole('link', { name: /^Back to/ })).toBeNull();
+    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
+    const toxic = within(head).getByText('Toxic', { exact: true });
+    expect(
+      toxic.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
   });
 
   it('names its folk names, categories and substitutes lists, one item each', () => {
@@ -360,6 +415,23 @@ describe('IngredientEntry', () => {
     expect(
       within(within(details).getByRole('list', { name: 'Substitutes' })).getAllByRole('listitem'),
     ).toHaveLength(3);
+  });
+
+  it('says each empty block and correspondence is empty, where the details modal hides them', () => {
+    renderEntry({
+      detail: detail({
+        entry: entryRow({ elements: null, celestialBodies: null, zodiacSigns: null, colors: null }),
+        folkNames: [],
+        categories: [],
+        deities: [],
+      }),
+    });
+    const details = screen.getByRole('region', { name: 'Details' });
+
+    expect(within(details).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
+    expect(within(details).getAllByText('None recorded')).toHaveLength(5);
+    expect(within(details).getByText('No folk names recorded.')).toBeInTheDocument();
+    expect(within(details).getByText('No categories recorded.')).toBeInTheDocument();
   });
 
   it('sets the correspondences and the three lists in a column of their own, after the text', () => {
@@ -591,53 +663,41 @@ describe('IngredientEntry', () => {
   });
 
   describe('a coven entry with no formal name', () => {
-    const similar = (convert?: {
-      workspaceId: string;
-      localId: string;
-    }): NonNullable<IngredientEntryProps['similar']> => ({
+    const similar: NonNullable<IngredientEntryProps['similar']> = {
       tip: 'Fixture reason the entries are shown.',
       entries: [1, 2, 3].map((at) => ({
-        id: 'id-' + at,
         title: 'Fixture Similar ' + at,
         href: `/compendium/ingredients/fixture-similar-${at}` as Route,
-        thenHref: `/coven/fixture-coven/ingredients/id-${at}` as Route,
       })),
       total: 5,
       allHref: '/compendium?query=Fixture%20Wort' as Route,
-      convert,
-    });
+    };
     const list = () => screen.getByRole('list', { name: 'Similar in the Compendium' });
 
-    it('heads a Similar block with a ⓘ, three entries and See All, and a radio for each with Link to Selected when it may convert', () => {
-      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+    it('heads a Similar block with a ⓘ, three entries and See All, and offers nothing to do with them', () => {
+      renderEntry({ similar });
 
-      expect(within(list()).getAllByRole('link')).toHaveLength(3);
-      expect(within(list()).getAllByRole('radio')).toHaveLength(3);
-      expect(screen.getByRole('button', { name: 'Link to Selected' })).toBeDisabled();
+      expect(
+        within(list())
+          .getAllByRole('link')
+          .map((link) => link.getAttribute('href')),
+      ).toEqual([1, 2, 3].map((at) => `/compendium/ingredients/fixture-similar-${at}`));
       expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
       expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
+      // A display only (M12.42): no radio to choose an entry, no button to link to one.
+      expect(screen.queryByRole('radio')).toBeNull();
+      expect(within(list()).queryByRole('button')).toBeNull();
+      expect(screen.queryByRole('button', { name: /link to/i })).toBeNull();
     });
 
-    it('puts See All directly under the list, before Link to Selected', () => {
-      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+    it('puts See All directly under the list', () => {
+      renderEntry({ similar });
 
       const seeAll = screen.getByRole('link', { name: /^See All 5/ });
-      const linkTo = screen.getByRole('button', { name: 'Link to Selected' });
       expect(
         list().compareDocumentPosition(seeAll) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
-      expect(
-        seeAll.compareDocumentPosition(linkTo) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    });
-
-    it('shows a viewer the entries, no radios and no Link to Selected', () => {
-      renderEntry({ similar: similar() });
-
-      expect(within(list()).getAllByRole('link')).toHaveLength(3);
-      expect(screen.queryByRole('radio')).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Link to Selected' })).toBeNull();
     });
   });
 
@@ -652,6 +712,20 @@ describe('IngredientEntry', () => {
     expect(within(notice).getByRole('link', { name: 'Fixture Movedwort' })).toHaveAttribute(
       'href',
       href,
+    );
+  });
+});
+
+describe('IngredientEntry back link', () => {
+  it('links back to the list it was given, and shows none when it is given none', () => {
+    const { unmount } = renderEntry();
+    expect(screen.queryByRole('link', { name: /^Back to/ })).not.toBeInTheDocument();
+    unmount();
+
+    renderEntry({ back: { href: '/compendium' as Route, label: 'Compendium' } });
+    expect(screen.getByRole('link', { name: /^Back to Compendium/ })).toHaveAttribute(
+      'href',
+      '/compendium',
     );
   });
 });
@@ -932,7 +1006,7 @@ describe('IngredientEntry edit', () => {
     ...overrides,
   });
   const opened = { id: '00000000-0000-4000-8000-000000000001', values: EMPTY_VALUES };
-  const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+  const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
 
   beforeEach(() => {
     router.push.mockReset();
@@ -942,12 +1016,20 @@ describe('IngredientEntry edit', () => {
 
   it('offers Edit only when given where it goes, and never Delete', () => {
     const { unmount } = renderEntry();
-    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
     unmount();
 
+    // A curator in no coven: the compendium's edit is the head's one choice, the pencil named
+    // Edit in Compendium and the entry (the owner's call, 2026-10-20), and no labelled Edit link
+    // is left under the name.
     renderEntry({ edit: edit() });
-    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', `${PUBLIC}?edit`);
+    expect(screen.getByRole('link', { name: 'Edit in Compendium Testwort' })).toHaveAttribute(
+      'href',
+      `${PUBLIC}?edit`,
+    );
+    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /^Edit/ })).toHaveLength(1);
     expect(screen.queryByRole('link', { name: /delete/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
   });
@@ -961,7 +1043,7 @@ describe('IngredientEntry edit', () => {
     expect(dialog()).not.toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('link', { name: 'Edit' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Edit in Compendium Testwort' }));
     });
 
     expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
@@ -1018,6 +1100,83 @@ describe('IngredientEntry edit', () => {
 
     expect(router.replace).toHaveBeenCalledWith('/compendium');
   });
+
+  // A coven's own entry (M8.17): the same dialog, writing to the coven.
+  describe("on a coven's own entry", () => {
+    const OWN = '/coven/fixture-coven/ingredients/00000000-0000-4000-8000-000000000001';
+    const own = () => detail({ entry: entryRow({ workspaceId: COVEN }) });
+    const covenEdit = (
+      coven: Partial<NonNullable<NonNullable<IngredientEntryProps['edit']>['coven']>> = {},
+    ) =>
+      edit({
+        href: `${OWN}?edit` as Route,
+        closeHref: OWN as Route,
+        savedHref: OWN as Route,
+        opened,
+        coven: {
+          workspaceId: COVEN,
+          ingredientsHref: '/coven/fixture-coven/ingredients' as Route,
+          mayPromote: false,
+
+          ...coven,
+        },
+      });
+    const covenDialog = () => screen.getByRole('dialog', { name: /^Edit Ingredient, Testwort/ });
+    const shows = (label: string) => within(covenDialog()).getByRole('status', { name: label });
+    // The page's Edit menu writes through the query client (`own-actions.tsx`).
+    const renderOwn = (ui: ReactElement) =>
+      render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+
+    // The icons the list card has (the owner's call, 2026-10-20): the pencil and the bin.
+    it("draws the page's Edit as the pencil beside the name, named for the entry, with the bin and no menu", () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
+        'href',
+        `${OWN}?edit`,
+      );
+      expect(
+        screen.getByRole('button', { name: 'Delete Ingredient Testwort' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    it("heads the dialog the page's Edit opens as an ingredient's, writing to the coven", () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      expect(dialog()).not.toBeInTheDocument();
+      expect(shows('Written To')).toHaveTextContent(COVEN);
+      expect(shows('May Promote')).toHaveTextContent('false');
+    });
+
+    it('lets a member promote a folk name when the page says the role may', () => {
+      renderOwn(
+        <IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit({ mayPromote: true })} />,
+      );
+
+      expect(shows('May Promote')).toHaveTextContent('true');
+    });
+
+    it('links a near match to its page in the coven, and only a compendium substitute to a page', () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      expect(shows('Duplicate Address')).toHaveTextContent(
+        '/coven/fixture-coven/ingredients/fixture-other-id',
+      );
+      expect(shows('Linked Address')).toHaveTextContent('/compendium/ingredients/testwort-linked');
+      expect(shows('Own Linked Address')).toHaveTextContent('none');
+    });
+
+    it('closes on a save, going back to the page and fetching it again', () => {
+      renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
+
+      fireEvent.click(within(covenDialog()).getByRole('button', { name: 'Fixture Save' }));
+
+      expect(router.replace).toHaveBeenCalledWith(OWN);
+      expect(router.refresh).toHaveBeenCalledTimes(1);
+    });
+  });
 });
 
 // The three kinds of entry on a coven's page (M12.16): the coven's own, the
@@ -1043,7 +1202,7 @@ describe('IngredientEntry on a coven page', () => {
   const rowOf = (term: string): string =>
     screen.getByText(term, { selector: 'dt' }).nextElementSibling!.textContent!;
 
-  it('shows the merged values of an annotated compendium entry, marked from the compendium', () => {
+  it('shows the merged values of an annotated compendium entry, marked Annotated', () => {
     renderEntry({
       detail: detail({
         cupboardEntry: held({
@@ -1064,8 +1223,11 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Planets')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // Annotated stands in for Compendium; a compendium entry is never Local.
+    // Annotated stands in place of Compendium (the owner's call, 2026-10-20); a
+    // compendium entry is never Local. The next test is the precondition: held and
+    // unannotated, it shows Compendium.
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
+    expect(screen.queryByText('Compendium', { exact: true })).toBeNull();
     expect(screen.queryAllByRole('status')).toHaveLength(0);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
@@ -1103,5 +1265,73 @@ describe('IngredientEntry on a coven page', () => {
 
     expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+// The public page's shelf (M9.12): a compendium entry any of the viewer's covens holds carries
+// In Your Cupboard before its name, as it does on the coven's own page.
+describe('IngredientEntry on the public page, held in a coven', () => {
+  const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
+
+  it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
+    renderEntry({ heldInCovens: true });
+
+    const mark = shelf()!;
+    const heading = screen.getByRole('heading', { level: 1, name: 'Testwort' });
+    expect(mark.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
+  // so it shows on touch. A click here focuses nothing, so the press alone opens it.
+  it('opens the In Your Cupboard tip when the shelf is pressed', () => {
+    renderEntry({ heldInCovens: true });
+    const mark = shelf()!;
+    const tips = () =>
+      screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
+    expect(tips()).not.toContain('In Your Cupboard');
+
+    fireEvent.click(mark);
+    expect(mark).not.toHaveFocus();
+    expect(tips()).toContain('In Your Cupboard');
+  });
+
+  it('puts no shelf on a compendium entry no coven of the viewer’s holds', () => {
+    renderEntry({ heldInCovens: false });
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
+    expect(shelf()).toBeNull();
+  });
+});
+
+describe('IngredientEntry recency (MB.106)', () => {
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  it('marks a compendium entry created lately New', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ createdAt: daysAgo(2) }) }) });
+
+    expect(screen.getByText('New', { exact: true })).toBeInTheDocument();
+  });
+
+  it('marks an older compendium entry changed lately Updated', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ updatedAt: daysAgo(2) }) }) });
+
+    expect(screen.getByText('Updated', { exact: true })).toBeInTheDocument();
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+  });
+
+  it('marks neither on an entry unchanged for longer', () => {
+    renderEntry();
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  });
+
+  it("marks neither on a coven's own entry, however new", () => {
+    renderEntry({
+      detail: detail({ entry: entryRow({ workspaceId: COVEN, createdAt: daysAgo(1) }) }),
+    });
+
+    expect(screen.queryByText('New', { exact: true })).toBeNull();
+    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
   });
 });

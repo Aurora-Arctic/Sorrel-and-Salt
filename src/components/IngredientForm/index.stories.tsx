@@ -1,5 +1,5 @@
 import type { Story } from '@ladle/react';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useState } from 'react';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -23,9 +23,12 @@ import type {
 } from '../../gql/graphql';
 import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
+import { ComboboxEntry } from '../Combobox';
 import Modal from '../Modal';
 import IngredientForm from '.';
+import { substituteSummary } from './substitute-summary';
 import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
+import { useHangingFetch } from '../../../.ladle/hanging-fetch';
 import { press } from '../../../.ladle/press';
 import { Reopenable } from '../../../.ladle/reopenable';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
@@ -1439,5 +1442,38 @@ export const PromoteQuestionCoven: Story = () => {
       onKeep={() => undefined}
       onRefused={() => undefined}
     />
+  );
+};
+
+/**
+ * A linked substitute's summary while its read is on the way (M12.33): the
+ * chip pressed open, the request left unanswered, so the `line` skeleton
+ * stands where the facts will be. The ingredient's id is fresh each time, so a
+ * summary another story already read cannot answer from the cache.
+ */
+export const LoadingSubstituteSummary: Story = () => {
+  useHangingFetch('/api/graphql');
+  const id = useId();
+  useEffect(() => {
+    document
+      .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
+      ?.click();
+  }, []);
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <ul className="combobox__entries">
+        <ComboboxEntry
+          value="Mockleaf"
+          summary={substituteSummary(
+            {
+              value: 'Mockleaf',
+              link: { id, canonicalName: null, forms: [], description: null, isGlobal: true },
+            },
+            'Mockleaf',
+            null,
+          )}
+        />
+      </ul>
+    </div>
   );
 };

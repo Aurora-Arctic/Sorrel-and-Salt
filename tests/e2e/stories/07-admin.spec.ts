@@ -283,11 +283,19 @@ async function holdModalRequests(page: Page, path: string, param: string) {
 /** The dialog's contents marked busy: the skeleton, until the form arrives. */
 const busy = (dialog: Locator) => dialog.locator('[aria-busy="true"]');
 
-/** The row whose first cell is `name`, in the list named `table` or the page's one list. */
+/**
+ * The row naming `name`, in the list named `table` or the page's one list: a cell that is
+ * exactly the name, or a link that is. An entry's name cell also holds its Quick Look link
+ * (M12.5), so that cell's whole name is longer than the entry's and only its link matches.
+ */
 const rowOf = (page: Page, table: string | null, name: string) =>
   (table ? page.getByRole('table', { name: table, exact: true }) : page.getByRole('table'))
     .getByRole('row')
-    .filter({ has: page.getByRole('cell', { name, exact: true }) });
+    .filter({
+      has: page
+        .getByRole('cell', { name, exact: true })
+        .or(page.getByRole('link', { name, exact: true })),
+    });
 
 /** Presses a dialog's Delete, then the confirmation's. */
 async function deleteFrom(dialog: Locator, noun: string) {

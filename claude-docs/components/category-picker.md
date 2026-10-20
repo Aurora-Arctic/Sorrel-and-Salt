@@ -17,7 +17,7 @@ Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for 
 | `entry`       | The box's name, "Category": what a pick adds                                                                                           |
 | `placeholder` | A short action shown, muted, while the box is empty: "Add a category"; the box keeps it after the chips ([`combobox.md`](combobox.md)) |
 | `categories`  | Every `PickerCategory` on offer, in any order                                                                                          |
-| `pending`     | The categories are still being read: the box says it is looking                                                                        |
+| `pending`     | The categories are still being read: the box says it is looking and shows the Combobox's spinner with `aria-busy`                      |
 | `loading`     | The counts are still being read: each chip holds a placeholder where its count will be, its x named as it will be                      |
 | `removeNoun`  | Names a chip's x "Remove {Noun}: {Value}", "Remove Category: Testward"; without it, "Remove Testward"                                  |
 | `hideZeros`   | Leaves out the row of a category whose `count` is zero; a pick keeps its chip whatever its count                                       |

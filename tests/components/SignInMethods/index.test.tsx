@@ -1,6 +1,9 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SignInMethods from '@/components/SignInMethods';
+import { GENERIC_FAILURE } from '@/lib/graphql-failure';
 import { GENERIC_LINK_ERROR, GENERIC_UNLINK_ERROR } from '@/lib/sign-in';
 import type { LinkedAccount, ProviderId } from '@/lib/types';
 
@@ -20,6 +23,30 @@ const assignMock = vi.fn();
 const ALL: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };
 const MICROSOFT: LinkedAccount = { id: 'a-microsoft', providerId: 'microsoft' };
+
+// Each press awaited inside act: a failure lands in a promise, and its
+// callout is placed in another (claude-docs/components/click-feedback.md).
+const press = (element: Element) =>
+  act(async () => {
+    fireEvent.click(element);
+  });
+
+/** Drawn under the page's status region, as the root layout mounts it. */
+const renderOnPage = (ui: ReactElement) =>
+  render(<StatusRegionProvider>{ui}</StatusRegionProvider>);
+
+/** A failure said in a callout under the control, the focus left on it, the badge bringing it back. */
+async function expectCalloutUnder(control: HTMLElement, sentence: string, name: string) {
+  expect(await screen.findByRole('alert')).toHaveTextContent(sentence);
+  expect(control).toHaveFocus();
+  expect(control).not.toHaveAttribute('aria-busy');
+  expect(control).toHaveAccessibleDescription(expect.stringContaining(sentence));
+  await press(screen.getByRole('button', { name: 'Dismiss' }));
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(control).toHaveFocus();
+  await press(screen.getByRole('button', { name: `Show the error for ${name}` }));
+  expect(screen.getByRole('alert')).toHaveTextContent(sentence);
+}
 
 /** The list item naming a provider. */
 function row(label: string): HTMLElement {
@@ -50,10 +77,10 @@ describe('SignInMethods', () => {
     }
   });
 
-  it('starts a link with the provider, landing back on the account page either way', () => {
+  it('starts a link with the provider, landing back on the account page either way', async () => {
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add Microsoft' }));
+    await press(screen.getByRole('button', { name: 'Add Microsoft' }));
 
     expect(linkSocialMock).toHaveBeenCalledWith({
       provider: 'microsoft',
@@ -75,13 +102,64 @@ describe('SignInMethods', () => {
     expect(within(row('Google')).queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('shows the generic link sentence when the link fails before any redirect', async () => {
-    linkSocialMock.mockResolvedValue({ error: { status: 500 } });
+  it.each([
+    ['refuses it before any redirect', () => Promise.resolve({ error: { status: 500 } })],
+    ['cannot be reached', () => Promise.reject(new Error('offline'))],
+  ])(
+    'says the generic link sentence under Add when the link %s, freeing the button with the focus kept',
+    async (_how, answer) => {
+      linkSocialMock.mockImplementation(answer);
+      render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+      const add = screen.getByRole('button', { name: 'Add Google' });
+      add.focus();
+
+      await press(add);
+
+      await expectCalloutUnder(add, GENERIC_LINK_ERROR, 'Add Google');
+      expect(within(row('Google')).getByRole('alert')).toBeVisible();
+    },
+  );
+
+  it('clears a failed link at the next press, and a passed-in error with it', async () => {
+    linkSocialMock.mockResolvedValueOnce({ error: { status: 500 } });
+    linkSocialMock.mockReturnValueOnce(new Promise(() => {}));
+    render(
+      <SignInMethods
+        linked={[DISCORD]}
+        configured={ALL}
+        error={{ providerId: 'microsoft', message: GENERIC_LINK_ERROR }}
+      />,
+    );
+    const add = screen.getByRole('button', { name: 'Add Google' });
+    add.focus();
+    await press(add);
+    expect(within(row('Google')).getByRole('alert')).toBeVisible();
+    expect(within(row('Microsoft')).queryByRole('alert')).toBeNull();
+
+    await press(add);
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
+    expect(add).not.toHaveAccessibleDescription();
+  });
+
+  it('frees a link whose page is restored from the back-forward cache', async () => {
+    linkSocialMock.mockResolvedValue({});
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      ),
+    );
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_LINK_ERROR);
+    fireEvent(window, Object.assign(new Event('pageshow'), { persisted: true }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy'),
+    );
   });
 
   // aria-disabled rather than disabled keeps it in the tab order, as on /sign-in.
@@ -138,15 +216,42 @@ describe('SignInMethods', () => {
     expect(target.searchParams.get('next')).toBe('/account');
   });
 
+  it('Sign In Again stays focused while busy and says a failed sign-out under itself', async () => {
+    let fail: (reason: unknown) => void = () => {};
+    signOutMock.mockReturnValue(new Promise((_resolve, reject) => (fail = reject)));
+    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} fresh={false} />);
+    const again = screen.getByRole('button', { name: 'Sign In Again' });
+    again.focus();
+
+    await press(again);
+
+    expect(again).toHaveAttribute('aria-busy', 'true');
+    // `aria-disabled`, not `disabled`, which would drop the focus it holds.
+    expect(again).toHaveAttribute('aria-disabled', 'true');
+    expect(again).toHaveFocus();
+    await press(again);
+    expect(signOutMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => fail(new Error('offline')));
+
+    expect(again).not.toHaveAttribute('aria-disabled');
+    await expectCalloutUnder(again, GENERIC_FAILURE, 'Sign In Again');
+  });
+
   it('offers Remove on each once two are linked, and removes by the account row id', async () => {
     unlinkAccountMock.mockResolvedValue({ data: { status: true }, error: null });
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    const status = screen.getByRole('status');
+    expect(status).toBeEmptyDOMElement();
 
     expect(screen.getByRole('button', { name: 'Remove Discord' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Microsoft' }));
+    await press(screen.getByRole('button', { name: 'Remove Microsoft' }));
 
     expect(unlinkAccountMock).toHaveBeenCalledWith({ accountId: 'a-microsoft' });
-    expect(await screen.findByRole('status')).toHaveTextContent('Microsoft');
+    // Said in the page's status region, and seen in the row that turned to Add.
+    await waitFor(() => expect(status).not.toBeEmptyDOMElement());
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryByRole('alert')).toBeNull();
     expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toBeVisible();
     // Back to one: the survivor's Remove is greyed.
     expect(screen.getByRole('button', { name: 'Remove Discord' })).toHaveAttribute(
@@ -155,30 +260,87 @@ describe('SignInMethods', () => {
     );
   });
 
+  it('marks a removal busy while it is in flight, then frees the list', async () => {
+    let finish: (value: unknown) => void = () => {};
+    unlinkAccountMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
+    remove.focus();
+
+    await press(remove);
+
+    expect(remove).toHaveAttribute('aria-busy', 'true');
+    // The pressed one keeps the focus, so `aria-disabled`; the others wait, disabled.
+    expect(remove).toHaveAttribute('aria-disabled', 'true');
+    expect(remove).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Remove Discord' })).toBeDisabled();
+    await press(remove);
+    expect(unlinkAccountMock).toHaveBeenCalledTimes(1);
+    await act(async () => finish({ data: { status: true }, error: null }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Microsoft'));
+    expect(screen.getByRole('button', { name: 'Add Microsoft' })).not.toHaveAttribute('aria-busy');
+  });
+
+  it('marks a link busy while its hop is under way, and frees it on a failure', async () => {
+    let finish: (value: unknown) => void = () => {};
+    linkSocialMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
+
+    expect(await screen.findByRole('button', { name: 'Add Google' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    finish({ error: { message: 'x' } });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Add Google' })).not.toHaveAttribute('aria-busy'),
+    );
+  });
+
   it('maps a refused removal to a sentence of its own and keeps the provider', async () => {
     unlinkAccountMock.mockResolvedValue({
       data: null,
       error: { status: 403, code: 'SESSION_NOT_FRESH' },
     });
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
+    remove.focus();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Microsoft' }));
+    await press(remove);
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/\S/);
     expect(alert).not.toHaveTextContent(GENERIC_UNLINK_ERROR);
-    expect(
-      within(row('Microsoft')).getByRole('button', { name: 'Remove Microsoft' }),
-    ).toBeVisible();
+    expect(within(row('Microsoft')).getByRole('alert')).toBe(alert);
+    await expectCalloutUnder(remove, alert.textContent ?? '', 'Remove Microsoft');
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('falls back to the generic removal sentence for a refusal with no known code', async () => {
     unlinkAccountMock.mockResolvedValue({ data: null, error: { status: 500 } });
     render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Discord' }));
+    await press(screen.getByRole('button', { name: 'Remove Discord' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(GENERIC_UNLINK_ERROR));
+  });
+
+  it('says the generic removal sentence when the removal cannot be reached, and clears it at the next press', async () => {
+    unlinkAccountMock.mockRejectedValueOnce(new Error('offline'));
+    unlinkAccountMock.mockReturnValueOnce(new Promise(() => {}));
+    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    const remove = screen.getByRole('button', { name: 'Remove Discord' });
+    remove.focus();
+
+    await press(remove);
+    expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_UNLINK_ERROR);
+    expect(remove).toHaveFocus();
+
+    await press(remove);
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
   });
 
   it('shows a passed-in callback error as an alert, and none without one', () => {

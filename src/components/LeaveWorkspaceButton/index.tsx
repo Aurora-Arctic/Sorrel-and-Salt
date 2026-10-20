@@ -1,11 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
-import { useActionFailure } from '../ActionFailure';
 import { LeaveWorkspaceDocument } from './documents';
 import OwnerExit from './owner-exit';
 import type { LeaveWorkspaceButtonProps } from './types';
@@ -13,19 +12,17 @@ import type { LeaveWorkspaceButtonProps } from './types';
 // Leave on the coven index page (M6.15), shown to every role. It asks first,
 // naming the coven, then sends the leave and goes to the coven landing, which the
 // member can no longer read this coven from. The service is the guard: the
-// last owner is refused there and the refusal is said above the page's buttons
-// (`ActionFailure`), or beside this one when the page gives no place for it
-// (claude-docs/components/leave-workspace-button.md). The coven's only owner is
-// given `successors` and gets the guided exit instead (M6.16, `owner-exit.tsx`).
+// last owner is refused there and the refusal is said in a callout under this
+// button (M12.31) (claude-docs/components/leave-workspace-button.md). The
+// coven's only owner is given `successors` and gets the guided exit instead
+// (M6.16, `owner-exit.tsx`).
 
 const LeaveWorkspaceButton = ({
   workspaceId,
   name,
   successors,
 }: LeaveWorkspaceButtonProps): ReactElement => {
-  const router = useRouter();
-  // Said above the page's buttons when it gives a place for that.
-  const failure = useActionFailure();
+  const { navigate, refresh } = usePendingNavigation();
   // The sole owner would be refused, so they are shown the ways out instead.
   if (successors)
     return <OwnerExit workspaceId={workspaceId} name={name} successors={successors} />;
@@ -44,14 +41,13 @@ const LeaveWorkspaceButton = ({
       warning="Your own entries stay with the coven."
       busy="Leaving"
       confirmClass="btn btn--destructive"
-      onFailure={failure?.report}
       send={() => graphqlRequest(LeaveWorkspaceDocument, { workspaceId })}
       // The coven is closed to this user now, so the page cannot be read again:
       // replace it with the landing, and refresh so the shell's switcher stops
       // listing it (a client-side replace does not re-run the layout).
       onSent={() => {
-        router.replace(COVEN_LANDING_PATH);
-        router.refresh();
+        navigate(COVEN_LANDING_PATH, { replace: true });
+        refresh();
       }}
     />
   );

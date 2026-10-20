@@ -10,7 +10,12 @@
   so no required-status-check rename was ever needed. `stories` (M9.1) calls
   `playwright.yml` again with `suite: stories`, on `playwright`'s two images
   and under its own path filter, and is never a required check
-  ([Reusable checks](reusable-checks.md)).
+  ([Reusable checks](reusable-checks.md)). `workshop` (M12.31) runs
+  `npm run e2e:workshop` in the e2e image as a job of its own, Ladle its one
+  server, under its own `workshop` path filter (Ladle's config and stories,
+  `*.stories.tsx`, `src/**`, the workshop specs and their config, the e2e
+  image) as a step-level `if:`; it carries
+  `continue-on-error` and is never a required check.
 - **One concurrency group per PR, and every job in it cancellable.**
   `pr-gate.yml`'s workflow-level group is `PR Gate-<pr number>` with
   `cancel-in-progress: ${{ github.event.action != 'edited' }}`, so a push, a

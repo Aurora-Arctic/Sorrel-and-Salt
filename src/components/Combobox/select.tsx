@@ -3,6 +3,7 @@
 import { useSelect } from 'downshift';
 import { keepEscapeInList } from './escape';
 import type { KeyboardEvent, ReactElement } from 'react';
+import Spinner from '../Spinner';
 import { ChevronIcon, PlusIcon } from './icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
@@ -25,6 +26,7 @@ export function ComboboxSelect({
   placeholder,
   required,
   inputRef,
+  busy,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
 }: ComboboxSelectProps): ReactElement {
@@ -39,6 +41,9 @@ export function ComboboxSelect({
       labelId,
       menuId: `${id}-list`,
       getItemId: (index) => `${id}-row-${index}`,
+      // Shown and read, but stepped over by the arrows and refused a press (a coven that
+      // already holds the entry, in M9.12's picker).
+      isItemDisabled: (choice) => Boolean(choice?.disabled),
       onSelectedItemChange: ({ selectedItem }) => {
         if (selectedItem) onChange(selectedItem.value);
       },
@@ -71,6 +76,7 @@ export function ComboboxSelect({
           'aria-describedby': describedBy,
           'aria-invalid': invalid,
           'aria-required': required,
+          'aria-busy': busy ? true : undefined,
         })}
       >
         <div className="combobox__values">
@@ -88,6 +94,9 @@ export function ComboboxSelect({
           )}
         </div>
         <div className="combobox__indicators">
+          {/* Decorative; the box's `aria-busy` is what is announced. The
+              spinner shows itself only after its own delay. */}
+          {busy && <Spinner />}
           <span className="combobox__indicator" aria-hidden="true">
             <ChevronIcon />
           </span>
@@ -109,6 +118,7 @@ export function ComboboxSelect({
                 'combobox__option',
                 choice.create && 'combobox__option--create',
                 index === highlightedIndex && 'is-highlighted',
+                choice.disabled && 'is-disabled',
               ]
                 .filter(Boolean)
                 .join(' ')}
@@ -123,6 +133,7 @@ export function ComboboxSelect({
                 )}
                 {choice.label}
               </span>
+              {choice.note && <div className="combobox__note">{choice.note}</div>}
             </li>
           ))}
       </ul>

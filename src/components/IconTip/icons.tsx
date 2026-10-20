@@ -37,6 +37,53 @@ export function PlusIcon(): ReactElement {
   );
 }
 
+/** A tick: this is already held. A compendium card's In All Covens (M9.12). */
+export function CheckIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3 8.5l3.5 3.5L13 4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * The mystic eye: look at this without leaving the list (M12.5's Quick
+ * Look). An almond eye whose iris is a tilted waxing crescent, with a small
+ * four-point star in the crescent's open side (the owner's pick, 2026-10-20).
+ */
+export function MysticEyeIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      {/* Stroke 1, not the set's 1.5, on purpose: the owner asked for a thinner outline. */}
+      <path
+        d="M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.1 5.75A2.7 2.7 0 1 0 9.09 10.01A2.7 2.7 0 0 1 6.1 5.75z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <path
+        d="M9.6 5.15L10.1 6.05L11 6.55L10.1 7.05L9.6 7.95L9.1 7.05L8.2 6.55L9.1 6.05z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
 /** Two chain links: this name goes to its own page. Drawn at the text's size by whoever places it. */
 export function LinkIcon(): ReactElement {
   return (
@@ -94,6 +141,66 @@ export function CopyIcon(): ReactElement {
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         d="M5.5 5.5h7v8h-7zM3.5 10.5v-8h7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * An open book with lines on its left page and a pencil over its right:
+ * Annotate (M8.17), which writes the coven's notes over a compendium entry
+ * rather than changing it, so not Edit's bare pencil. The owner's choice
+ * (2026-10-19), drawn at stroke width 1.25 rather than the set's usual 1.5,
+ * also the owner's call, so the book's lines sit apart at 16px; the pencil
+ * is filled, with no stroke. Every Annotate control draws this one function.
+ */
+export function AnnotateIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M8 4.5C6.5 3.5 4.5 3 1.5 3v9.5c3 0 5 .5 6.5 1.5 1.5-1 3.5-1.5 6.5-1.5V9.5M8 4.5V14M3.75 6.5h2.5M3.75 9h2.5" />
+      <path
+        fill="currentColor"
+        stroke="none"
+        d="M9.71 9.04L11.61 8.46 15.83 4.24 14.51 2.92 10.29 7.14z"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Three dots stacked, ⋮: more choices, in a menu. A list card's More (M8.17,
+ * the owner's call, 2026-10-20); a More drawn with words keeps its chevron.
+ */
+export function DotsIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle cx="8" cy="3.25" r="1.25" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.25" fill="currentColor" />
+      <circle cx="8" cy="12.75" r="1.25" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** A bin: delete or remove this. A list card's lone Delete or Remove (M8.17). */
+export function BinIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.75 4.25h10.5M6.25 4.25V2.75h3.5v1.5M4 4.25l.75 9h6.5l.75-9M6.75 6.75v4M9.25 6.75v4"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"

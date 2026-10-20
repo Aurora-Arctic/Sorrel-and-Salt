@@ -7,6 +7,7 @@ import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';
 import { capitalise } from '../../lib/text';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
+import { detailsHeading } from '../IngredientEntry/details';
 import type {
   CompendiumCategoryChoice,
   CompendiumFacetCounts,
@@ -148,6 +149,10 @@ const entry = (
     })),
     updatedBy: 'Fixture Editor',
     updatedAt: new Date('2026-05-06T10:00:00Z'),
+    details: {
+      href: compendiumHref({ entry: slug }),
+      heading: detailsHeading({ name, canonicalName, nomenclature }),
+    },
     editHref: compendiumHref({}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Ingredient', title: name, qualifier: canonicalName ?? undefined },
   };

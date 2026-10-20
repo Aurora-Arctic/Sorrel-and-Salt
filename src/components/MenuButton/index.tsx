@@ -1,8 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import type { MenuButtonItem, MenuButtonProps } from './types';
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
+import { useListPosition } from '../Combobox/position';
+import { CheckIcon } from '../IconTip/icons';
+import Spinner from '../Spinner';
+import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
 
 // A labelled button with a chevron that opens a menu of choices, none of them
@@ -10,10 +21,16 @@ import './index.scss';
 // chevron has it (claude-docs/components/app-shell.md). Opening moves the
 // focus to the first item; the arrows, Home and End rove; Escape closes and
 // hands the focus back; Tab and a press outside close. An item is a link or
-// an action, and choosing either closes the menu first. It fades in and out
+// an action, and choosing either closes the menu first; an action may be disabled, shown and
+// reached but not choosable, with a note saying why. It fades in and out
 // over the short motion (the owner's call, 2026-10-19): a closing menu stays
-// drawn, inert and hidden from assistive technology, until its fade ends.
-// claude-docs/components/menu-button.md.
+// drawn, inert and hidden from assistive technology, until its fade ends. It
+// is placed as a Combobox's list is (MB.154), on Floating UI: hung from the
+// button's end edge, below it, or above it when there is more room there, as
+// at the foot of a dialog or the window, and shifted to stay on the screen,
+// clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip
+// it, and following a scroll or a resize while open. Which side it opens
+// toward is the room's to decide (M8.17). claude-docs/components/menu-button.md.
 
 const Chevron = (): ReactElement => (
   <svg
@@ -35,6 +52,9 @@ const Chevron = (): ReactElement => (
   </svg>
 );
 
+/** The gap between button and menu, space(2), as the stylesheet kept it before Floating UI. */
+const MENU_GAP_PX = 8;
+
 /** Past the fade's own length (index.scss), for a browser that never reports its end. */
 const FADE_LIMIT_MS = 400;
 
@@ -43,29 +63,89 @@ const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const itemClass = (item: MenuButtonItem): string =>
-  item.destructive ? 'menu-button__item menu-button__item--destructive' : 'menu-button__item';
+/**
+ * The items as drawn: the green one, marked `primary`, first,
+ * and the rest in the caller's order (the owner's call, 2026-10-20). Done here
+ * rather than asked of every caller, so no menu can put its green item
+ * elsewhere. The keys read the page, so they follow this order too.
+ */
+const greenFirst = (items: readonly MenuButtonItem[]): MenuButtonItem[] => {
+  const green = (item: MenuButtonItem): boolean => Boolean(item.primary);
+  return [...items.filter(green), ...items.filter((item) => !green(item))];
+};
+
+const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
+  [
+    'menu-button__item',
+    item.destructive && 'menu-button__item--destructive',
+    item.primary && 'menu-button__item--primary',
+    chosen && 'is-chosen',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+/**
+ * One section: a group named by its visible label (APG: `role="group"` and `aria-labelledby`), a
+ * separator above every one but the first. The label is text, not a menu item, so the arrows
+ * skip it: the roving reads `[role="menuitem"]` alone, and the sections run on as one list.
+ */
+function MenuGroup({
+  section,
+  first,
+  children,
+}: {
+  section: MenuSection;
+  first: boolean;
+  children: ReactNode;
+}): ReactElement {
+  const labelId = useId();
+  return (
+    <>
+      {!first && <div role="separator" className="menu-button__rule" />}
+      <div role="group" aria-labelledby={labelId} className="menu-button__group">
+        <div id={labelId} className="menu-button__heading">
+          {section.label}
+        </div>
+        {children}
+      </div>
+    </>
+  );
+}
 
 export default function MenuButton({
   label,
   className,
-  items,
   busy = false,
   busyLabel,
+  buttonType = false,
+  icon,
   ref,
+  state,
+  ...choices
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
   // Still drawn: open, or fading out.
   const [drawn, setDrawn] = useState(false);
+  // The item just chosen, which keeps its hover look while the menu fades: a
+  // closing menu is inert, which drops the hover and would drain the fill in
+  // front of the eye (index.scss).
+  const [chosen, setChosen] = useState<string>();
   const root = useRef<HTMLSpanElement>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const menuId = useId();
+  const { setControl, setList, listStyle } = useListPosition(open, undefined, {
+    matchWidth: false,
+    placement: 'bottom-end',
+    gap: MENU_GAP_PX,
+  });
 
   const setOpen = (next: boolean | ((was: boolean) => boolean)): void => {
     setOpenState((was) => {
       const now = typeof next === 'function' ? next(was) : next;
-      if (now) setDrawn(true);
-      else if (fadesAreOff()) setDrawn(false);
+      if (now) {
+        setDrawn(true);
+        setChosen(undefined);
+      } else if (fadesAreOff()) setDrawn(false);
       return now;
     });
   };
@@ -108,16 +188,64 @@ export default function MenuButton({
     } else if (event.key === 'Tab') setOpen(false);
   };
 
+  const drawItem = (item: MenuButtonItem): ReactElement =>
+    item.href !== undefined ? (
+      <Link
+        key={item.key}
+        href={item.href}
+        role="menuitem"
+        tabIndex={-1}
+        className={itemClass(item, chosen === item.key)}
+        onClick={(event) => {
+          setChosen(item.key);
+          setOpen(false);
+          item.onClick?.(event);
+        }}
+      >
+        {item.label}
+      </Link>
+    ) : (
+      <button
+        key={item.key}
+        type="button"
+        role="menuitem"
+        tabIndex={-1}
+        className={itemClass(item, chosen === item.key)}
+        // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
+        // in the roving, read as unavailable. A press runs nothing and the menu stays open.
+        aria-disabled={item.disabled || undefined}
+        // The mark joins the name, since the check that draws it is a glyph and says nothing.
+        aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}
+        onClick={() => {
+          if (item.disabled) return;
+          setChosen(item.key);
+          setOpen(false);
+          item.onSelect();
+        }}
+      >
+        {item.label}
+        {item.mark && (
+          <span className="menu-button__mark">
+            <CheckIcon />
+          </span>
+        )}
+      </button>
+    );
+
+  const sections = 'sections' in choices ? choices.sections : undefined;
+
   return (
     <span ref={root} className="menu-button">
       <button
         ref={(node) => {
           toggle.current = node;
+          setControl(node);
           if (typeof ref === 'function') ref(node);
           else if (ref) ref.current = node;
         }}
         type="button"
         className={className}
+        data-state={state}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -131,56 +259,55 @@ export default function MenuButton({
           }
         }}
       >
-        {busy && <span className="spinner" aria-hidden="true" />}
-        {busy ? (busyLabel ?? label) : label}
-        {!busy && <Chevron />}
+        {busy && <Spinner />}
+        {icon ? (
+          // An icon alone (a list card's More, M8.17): the words still name the
+          // button, hidden, and no chevron, as the row's other icons have none.
+          <>
+            {!busy && icon}
+            <span className="visually-hidden">{busy ? (busyLabel ?? label) : label}</span>
+          </>
+        ) : (
+          <>
+            {busy ? (busyLabel ?? label) : label}
+            {!busy && <Chevron />}
+          </>
+        )}
       </button>
-      {drawn && (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label={label}
-          aria-hidden={!open || undefined}
-          inert={!open}
-          className={open ? 'menu-button__menu' : 'menu-button__menu is-closing'}
-          onKeyDown={onMenuKey}
-          onAnimationEnd={(event) => {
-            if (!open && event.target === event.currentTarget) setDrawn(false);
-          }}
-        >
-          {items.map((item) =>
-            item.href !== undefined ? (
-              <Link
-                key={item.key}
-                href={item.href}
-                role="menuitem"
-                tabIndex={-1}
-                className={itemClass(item)}
-                onClick={(event) => {
-                  setOpen(false);
-                  item.onClick?.(event);
-                }}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <button
-                key={item.key}
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                className={itemClass(item)}
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect();
-                }}
-              >
-                {item.label}
-              </button>
-            ),
-          )}
-        </div>
-      )}
+      {/* Kept in the page once closed, hidden, so a dialog an item's link opened
+          can find that link when it closes and give the focus to this button
+          (RouteModal's linkTo). */}
+      <div
+        ref={setList}
+        id={menuId}
+        role="menu"
+        aria-label={label}
+        aria-hidden={!open || undefined}
+        inert={!open}
+        hidden={!drawn}
+        style={listStyle}
+        className={[
+          'menu-button__menu',
+          buttonType && 'menu-button__menu--button-type',
+          !open && 'is-closing',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        onKeyDown={onMenuKey}
+        onAnimationEnd={(event) => {
+          if (!open && event.target === event.currentTarget) setDrawn(false);
+        }}
+      >
+        {sections
+          ? sections
+              .filter((section) => section.items.length > 0)
+              .map((section, at) => (
+                <MenuGroup key={section.key} section={section} first={at === 0}>
+                  {greenFirst(section.items).map(drawItem)}
+                </MenuGroup>
+              ))
+          : greenFirst(choices.items ?? []).map(drawItem)}
+      </div>
     </span>
   );
 }

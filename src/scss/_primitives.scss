@@ -41,17 +41,20 @@
     display: inline-flex;
   }
 
-  // Above the plus, its right edge on the plus's: the plus stands at the
-  // heading line's end, at the column's edge, where a centred tip would run
-  // past it. Over the shell's bars, which a tip beneath them would slip under;
+  // Above the plus, its right edge on the plus's (`--tip-placement`, read by
+  // `useTip`, which places the bubble 4px off; nothing here moves it): the
+  // plus stands at the heading line's end, at the column's edge, where a
+  // centred tip would run past it, and to its left the tip would cover the
+  // heading. Over the shell's bars, which a tip beneath them would slip under;
   // the Add's wrapper carries no `translate` for this reason (it would make a
   // stacking context, and the tip's layer would rank only inside it).
+  #{$header} .icon-tip:has(> .add-action) {
+    --tip-placement: top-end;
+  }
+
   #{$header} .icon-tip:has(> .add-action) .icon-tip__bubble {
-    inset: auto 0 100% auto;
     z-index: layer('floating');
     display: block;
-    margin: 0 0 space(1);
-    translate: none;
 
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
     @starting-style {
@@ -112,6 +115,23 @@
     display: flex;
     gap: space(3);
     margin-top: space(4);
+  }
+
+  // A confirmed action's refusal inside a dialog (M12.31's rule 6) is a plain
+  // notice rendered after its button, so in a row of buttons it takes its own
+  // full-width line above them rather than a place between them, where it
+  // squeezed the button and pushed the next past the dialog's edge (the
+  // owner's call, 2026-10-20). `order` rather than moving it in the document:
+  // the same notice stands beside a control outside a button row too.
+  .modal__actions:has(> .notice) {
+    flex-wrap: wrap;
+    row-gap: space(4);
+  }
+
+  .modal__actions > .notice {
+    order: -1;
+    flex-basis: 100%;
+    margin: 0;
   }
 
   // Shape shared by every button in the app, `SignInPanel`'s included
@@ -199,29 +219,7 @@
     padding: space(1) space(4);
   }
 
-  // A save in flight, the owner's call for every Save button (M5.6): a ring
-  // in the button's ink, open on one side so its turn reads, ahead of the
-  // label, the button `aria-busy`. Slowed rather than stopped where motion is
-  // reduced, since a still ring says nothing is happening.
-  .spinner {
-    width: 1em;
-    height: 1em;
-    flex-shrink: 0;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
-    border-radius: radius('pill');
-    animation: spinner-turn 0.8s linear infinite;
-
-    @include reduced-motion {
-      animation-duration: 2.4s;
-    }
-  }
-
-  @keyframes spinner-turn {
-    to {
-      transform: rotate(1turn);
-    }
-  }
+  // The spinner a save in flight shows is `Spinner`'s (src/components/Spinner).
 
   // The side padding is sized for a word, and reads as a gap before a small
   // round mark, so the left side comes in a step while the spinner shows.
@@ -259,17 +257,24 @@
     }
   }
 
-  // Cancel, dismiss, go back: an action that changes nothing, in the body
-  // ink, so it neither competes with the primary nor reads as destructive —
-  // and, unlike the muted ink, not as disabled either.
+  // Cancel, dismiss, go back: an action that changes nothing, its label in the
+  // body ink, so it neither competes with the primary nor reads as
+  // destructive — and, unlike the muted ink, not as disabled either. Set in a
+  // field's ground inside a hairline rather than an ink outline, so it sits
+  // back beside the primary (M8.17, the owner's call of 2026-10-20); pointed
+  // at, the ground takes the highlight and the edge goes partway to the
+  // accent, rather than filling with ink.
   .btn--quiet {
-    border-color: $text-primary;
+    border-color: $hairline;
+    background-color: $surface-card;
     color: $text-primary;
     box-shadow: none;
 
     &:hover,
     &:focus-visible {
-      background-color: $text-primary;
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+      color: $text-primary;
     }
   }
 
@@ -361,17 +366,25 @@
     margin-bottom: space(5);
     container: page-header / inline-size;
 
-    > h1 {
+    > h1,
+    > .page-header__title > h1 {
       margin: 0;
     }
 
     // Brought down to the heading's letters; relative, not a translate, which
     // would make the wrapper a stacking context and hold the Add's tip under
     // the shell's bar.
-    > :not(h1) {
+    > :not(h1, .page-header__title) {
       position: relative;
       top: 0.25rem;
     }
+  }
+
+  // A mark before the heading (`lead`), kept on the heading's line.
+  .page-header__title {
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   // The shared Add (`add-action.tsx`) keeps its label in the page at every
@@ -400,7 +413,8 @@
   // owner's call at MB.7's review, 2026-10-12, which reverses MB.115's
   // review, where the admin area's actions spanned the line.
   @container page-header (max-width: #{$narrow-column}) {
-    .page-header > h1 {
+    .page-header > h1,
+    .page-header > .page-header__title {
       flex-basis: 100%;
     }
   }
@@ -495,13 +509,12 @@
 
   // The row while the list it filters is on its way, greyed as a tabbed
   // page's tabs are (claude-docs/components/filter-form.md): every field,
-  // and Clear, faded to 55% with its colour taken out and the not-allowed
+  // and Clear, faded (`busy-faded`) with its colour taken out and the not-allowed
   // cursor, and hover changing nothing. Here, under `body`, so it outweighs
   // the fields' own hover.
   .filter-row[aria-busy='true'] {
     > * {
-      opacity: 0.55;
-      filter: grayscale(1);
+      @include busy-faded;
     }
 
     *,
@@ -540,6 +553,25 @@
   @keyframes list-frame-fade-in {
     from {
       opacity: 0;
+    }
+  }
+
+  // What `loading-motion` (_mixins.scss) swaps in under reduced motion, and the
+  // step that holds an indicator back until its delay is over.
+  @keyframes loading-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes loading-appear {
+    from {
+      visibility: hidden;
     }
   }
 
@@ -977,63 +1009,99 @@
   // A sentence about the whole view rather than one field: a form's root
   // error, a sent confirmation. The role (`alert`, or `<output>`'s status)
   // is the markup's, since only it knows whether the text arrived late.
+  //
+  // No box: a 3px bar down the start edge and a tint of the bar's colour,
+  // `--notice-tint` of it over whatever holds the notice (7% light, 8% dark,
+  // _mixins.scss), so it sits on the page and on a card alike. The owner's
+  // look and tint, 2026-10-19. Each kind sets only `--notice-bar`, the bar and tint,
+  // and `--notice-icon`, the triangle's colour, plus its text colour where
+  // the text takes the kind's colour; another kind is a few lines.
+  // claude-docs/components/notice.md.
   .notice {
+    --notice-bar: #{$accent};
+    --notice-icon: currentColor;
+
     display: block;
     max-width: $measure;
     margin: 0;
-    padding: space(3) space(4);
-    border: 1px solid $text-muted;
-    border-radius: radius('control');
+    padding: space(2) space(3);
+    border-inline-start: 3px solid var(--notice-bar);
+    background-color: color-mix(in srgb, var(--notice-bar) var(--notice-tint), transparent);
     color: $text-primary;
     font-size: type-size('small');
     // A step over the 300 body weight: coloured text at this size thins out.
     font-weight: 400;
-    @include theme-transition(border-color, color);
+    @include theme-transition(border-color, background-color, color);
 
     @include reduced-motion {
       transition: none;
     }
+
+    // A link takes the notice's own text colour, which each kind has checked
+    // on its tint, and an underline so it does not rely on colour: the plain
+    // sorrel link falls short of 4.5:1 on the success tint in light.
+    a,
+    a:hover {
+      color: inherit;
+      text-decoration: underline;
+    }
   }
 
+  // Plain: the sorrel bar, the body ink. The default above.
+
+  // Error: bar and tint in the wax, with the triangle; the text in the
+  // wax's hover shade, the darker in light and the brighter in dark, since
+  // the plain wax falls short of 4.5:1 on the tint (the owner's pick,
+  // 2026-10-19).
   .notice--error {
+    --notice-bar: #{$secondary};
+
     margin-bottom: 1rem;
-    border-color: $secondary;
-    color: $secondary;
+    color: $secondary-hover;
   }
 
-  // The warning triangle before an error or a warning, the owner's call: in
-  // the notice's padding rather than in a flex row, so a link in the
-  // notice's text stays inline. Drawn by mask, so it takes the notice's ink,
-  // or the error red on a warning.
-  .notice--error,
+  // Warning: bar, tint and triangle in the ochre, the text in the body ink,
+  // for what deserves attention but does not block, such as a colour too near
+  // another group's. The ochre is the owner's pick (2026-10-19).
   .notice--warn {
+    --notice-bar: #{$warning};
+    --notice-icon: #{$warning};
+  }
+
+  // Caution: a quieter warning, for what is worth knowing but asks nothing
+  // of the reader. The bar and tint in the muted ink, the triangle still the
+  // ochre, the text in the body ink (the owner's call, 2026-10-19).
+  .notice--caution {
+    --notice-bar: #{$text-muted};
+    --notice-icon: #{$warning};
+  }
+
+  // Success: bar and tint in the accent, the text in its hover shade, as
+  // the error's is.
+  .notice--success {
+    color: $accent-hover;
+  }
+
+  // The warning triangle before an error, a warning or a caution, the owner's call: in
+  // the notice's padding rather than in a flex row, so a link in the
+  // notice's text stays inline. Drawn by mask in `--notice-icon`.
+  .notice--error,
+  .notice--warn,
+  .notice--caution {
     position: relative;
-    padding-inline-start: calc(#{space(4)} + 1.0125rem + #{space(2)});
+    padding-inline-start: calc(#{space(3)} + 1.0125rem + #{space(2)});
 
     &::before {
       content: '';
       position: absolute;
-      // On the first line of text (the owner's call).
-      inset-block-start: 0.8rem;
-      inset-inline-start: space(4);
+      // On the first line of text (the owner's call): the top padding and
+      // half the line's room over the triangle.
+      inset-block-start: calc(#{space(2)} + 0.05rem);
+      inset-inline-start: space(3);
       inline-size: 1.0125rem;
       block-size: 1.0125rem;
-      background-color: currentColor;
-      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
-        center / contain no-repeat;
+      @include warning-mark(var(--notice-icon));
     }
-  }
-
-  // A warning: the plain notice's box and ink, its triangle in the error red,
-  // for what deserves attention but does not block, such as a colour too near
-  // another group's (the owner's call).
-  .notice--warn::before {
-    background-color: $secondary;
-  }
-
-  .notice--success {
-    border-color: $accent;
-    color: $accent;
   }
 
   // ---------------------------------------------------------------------------
@@ -1068,6 +1136,13 @@
     .form .modal__actions > * {
       margin-inline: 0;
     }
+
+    // What the aside holds stretches too, a menu's button or a lone button
+    // alike (M8.17), as wide as Save and Cancel above it.
+    .form .form__aside {
+      display: flex;
+      flex-direction: column;
+    }
   }
 
   .form__actions {
@@ -1095,19 +1170,26 @@
   }
 
   // A form's Undo and Redo (M12.9): two small quiet buttons joined as one pair
-  // (M12.10): no gap, the second laid over the first's border so the seam is
-  // one line, the inner corners square and the outer ones `.btn`'s. In a
-  // modal the pair sits at the end of the header slot's row, stretched to the
-  // row's height so the icon buttons come out as tall as a text button beside
-  // them; elsewhere, at the start of the form. Each button is wrapped in an
-  // `IconTip`, so the rules reach through it.
+  // (M12.10) with no border round them, only a hairline between the two (the
+  // owner's call, 2026-10-20: the boxed pair read as heavier than the form
+  // it serves). A width of 0 rather than a transparent colour, so neither
+  // the disabled look's dashed edge nor a held modal's can bring one back;
+  // the inner corners square and the outer ones `.btn`'s, for the hover's
+  // fill. In a modal the pair sits at the end of the header slot's row,
+  // stretched to the row's height so the icon buttons come out as tall as a
+  // text button beside them; elsewhere, at the start of the form. Each
+  // button is wrapped in an `IconTip`, so the rules reach through it.
   .form-history {
     display: inline-flex;
     align-self: flex-start;
     margin-inline-start: auto;
 
+    .btn {
+      border-width: 0;
+    }
+
     .icon-tip + .icon-tip {
-      margin-inline-start: -1px;
+      border-inline-start: 1px solid $hairline;
     }
 
     .icon-tip:not(:last-child) .btn {
@@ -1121,7 +1203,7 @@
     }
 
     // A half that is hovered or focused rises over its neighbour, so its
-    // border and focus ring are not cut by the overlap.
+    // focus ring is not painted over by the other half's fill.
     .btn:hover,
     .btn:focus-visible {
       position: relative;
@@ -1568,8 +1650,9 @@
 
   // A text field looking its text up (TextField's `busy`): the `.spinner`
   // inside the box at its right end, in the muted ink, the text kept clear of
-  // it. It fades in after a short wait, as the duplicate warning's shapes do,
-  // so an answer back sooner never flashes it; the turn is the primitive's.
+  // it. The spinner's own wait (`$loading-delay`) and motion, reduced-motion
+  // pulse included, apply: this class sets none, so a lookup answered sooner
+  // never flashes it.
   .field__control {
     position: relative;
     display: block;
@@ -1581,13 +1664,6 @@
     right: space(3);
     color: $text-muted;
     translate: 0 -50%;
-    animation:
-      spinner-turn 0.8s linear infinite,
-      list-frame-fade-in 300ms ease 200ms both;
-
-    @include reduced-motion {
-      animation: spinner-turn 2.4s linear infinite;
-    }
   }
 
   .input[aria-busy='true'] {
@@ -2021,10 +2097,12 @@
     }
   }
 
-  // Right-aligned buttons beneath the jar lines.
+  // Right-aligned buttons beneath the jar lines, each centred on the row: stretched,
+  // a control whose box is fixed would sit at the top of a row a taller item grew.
   .specimen__actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
     gap: space(2);
     margin-top: space(3);

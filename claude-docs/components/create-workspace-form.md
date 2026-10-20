@@ -44,11 +44,12 @@ none. The reading is the shared `readGraphqlFailure(error, ['name'])`.
 
 ## The field
 
-Labelled "Name", marked required, with the placeholder "Add a name". The
-hint behind the ⓘ says the address is made from the name and that everyone
-invited sees it; the same text is given to `FieldShell` to draw and to
-`fieldDescription` to point the input at, because giving it to one alone
-leaves a pointer to nothing (MB.119 found the tip had never been drawn). `autoComplete="off"`, since a browser has nothing useful to
+Labelled "Name", marked required, with the placeholder "Add a name". It
+has no info tip: the one it had restated its label, so it went (the owner's
+call, 2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip").
+Its one extra fact, that the coven's address is made from the name, is not
+put back as a visible `.field__hint` line unless the owner asks for it. The
+input is described by its error alone, through `fieldDescription`. `autoComplete="off"`, since a browser has nothing useful to
 offer for a new coven's name.
 
 ## Styling
@@ -71,7 +72,7 @@ page's real frame, panel and heading.
 
 `tests/components/CreateWorkspaceForm/index.test.tsx` uses role and label
 queries against MSW, which answers in the route's own error shape. It covers
-nothing to create until a name is typed, the create and the address it goes
+the name field drawing no tip, nothing to create until a name is typed, the create and the address it goes
 to, the button held busy until the next page, and both error surfaces. The
 page is `tests/app/(shell)/coven/new/page.test.tsx`: the form for a rights holder and
 a status notice for anyone else. `tests/e2e/coven-create.spec.ts` walks Story

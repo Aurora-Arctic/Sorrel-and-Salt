@@ -81,7 +81,8 @@ passes its discard guard's `request` (claude-docs/components/modal.md,
 "Unsaved changes"), and `holdCancel` makes it wait while a save is in flight,
 as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
 end, is drawn when `onDelete` is given, "Delete Group", and asks the form's
-own question. The row is `.form__actions`, which wraps, so a third button
+own question. `aside` draws whatever it is given in `.form__aside` after
+Delete, at the far end: the Annotate dialog's More menu (M8.17). In a narrow form's stacked foot the aside is a column too, so what it holds runs full width with the rest. The row is `.form__actions`, which wraps, so a third button
 never squeezes it. A form that does something other than save renames its
 submit with `label` and `busyLabel`, in title case: the admin invitation form
 passes "Send Invitation" and "Sending" (MB.119), so it draws this row rather
@@ -154,10 +155,11 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 `TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `action`, `format` (a tidy run
 as the field is left), `autoComplete` and `busy` (its text is being looked up: the
-`.spinner` inside the box at its right end, faded in after 200ms so a quick answer
+[`Spinner`](spinner.md) inside the box at its right end, shown after 100ms so a quick answer
 never flashes it, and the input `aria-busy`; the name's duplicate check, the owner's
 call of 2026-10-18). `SelectField` adds `name`,
-`options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
+`options` (each `{ value, label, icon?, disabled?, note? }`, a disabled one listed and not
+choosable, its `note` saying why), `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a
 set long enough to want a search: `GroupedValueForm`'s group, a category's or
 a form's Group and a deity's Tradition (MB.115). Its text
@@ -397,7 +399,8 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   reads `control._subjects`. A react-hook-form upgrade re-checks both.
 - **The buttons** are small quiet icon buttons in an `IconTip`, labelled Undo and
   Redo and disabled while there is nothing to do, joined as one pair: no gap,
-  one shared border, the inner corners square. In a modal they portal into the
+  no border round either, and one hairline between the two (the owner's call,
+  2026-10-20), the same wherever a pair is drawn. In a modal they portal into the
   header slot's toolbar row, at its end ([`modal.md`](modal.md#a-control-in-the-header));
   elsewhere they sit at the start of the form. `FormHistoryButtons` draws nothing
   without a `FormHistoryContext`. Their `.form-history` row is styled in

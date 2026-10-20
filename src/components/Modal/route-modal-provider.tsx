@@ -1,15 +1,8 @@
 'use client';
 
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import {
-  type MouseEvent,
-  type ReactElement,
-  createContext,
-  useContext,
-  useState,
-  useTransition,
-} from 'react';
+import { type MouseEvent, type ReactElement, createContext, useContext, useState } from 'react';
+import { usePendingNavigation } from '../../lib/navigation';
 import type { ModalHeading, RouteModalOpener, RouteModalProviderProps } from './types';
 
 // A route modal pressed open and on its way (M9.18, the owner's call: a press
@@ -36,14 +29,18 @@ export const RouteModalContext = createContext<RouteModalOpener | null>(null);
  */
 export const RouteModalProvider = ({ children }: RouteModalProviderProps): ReactElement => {
   const outer = useContext(RouteModalContext);
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [opening, setOpening] = useState<ModalHeading>();
+  const { pending, navigate } = usePendingNavigation();
+  const [opening, setOpening] = useState<{ heading: ModalHeading; place?: string }>();
+  // Kept past the close, which reads it as the modal leaves the page.
+  const [opened, setOpened] = useState<Route>();
   const value = outer ?? {
-    loading: pending ? opening : undefined,
-    open: (href, heading) => {
-      setOpening(heading);
-      startTransition(() => router.push(href));
+    loading: pending ? opening?.heading : undefined,
+    loadingPlace: opening?.place,
+    opened,
+    open: (href, heading, place) => {
+      setOpening({ heading, place });
+      setOpened(href);
+      navigate(href);
     },
     cancel: () => setOpening(undefined),
   };
@@ -56,7 +53,8 @@ export function useRouteModalOpener(): RouteModalOpener | undefined {
 }
 
 /**
- * A link's click that opens its route modal at once, under a provider: a
+ * A link's click that opens its route modal at once, in `place` where the
+ * page has more than one (`RouteModalProps.place`), under a provider: a
  * plain press of the main button. A press with a modifier or another button
  * is the browser's, a new tab or window, so it is left to the link, as is
  * every press outside a provider and before the page's script has loaded.
@@ -64,6 +62,7 @@ export function useRouteModalOpener(): RouteModalOpener | undefined {
 export function useOpenModalClick(
   href: Route,
   heading: ModalHeading,
+  place?: string,
 ): ((event: MouseEvent<HTMLAnchorElement>) => void) | undefined {
   const opener = useRouteModalOpener();
   if (!opener) return undefined;
@@ -71,6 +70,6 @@ export function useOpenModalClick(
     const { button, metaKey, ctrlKey, shiftKey, altKey, defaultPrevented } = event;
     if (defaultPrevented || button !== 0 || metaKey || ctrlKey || shiftKey || altKey) return;
     event.preventDefault();
-    opener.open(href, heading);
+    opener.open(href, heading, place);
   };
 }

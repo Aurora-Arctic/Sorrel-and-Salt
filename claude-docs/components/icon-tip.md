@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                               |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                                                                                                                                                  |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient) |
+| File            | What it holds                                                                                                                                                                                                                                                                                                                                      |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                                                                                    |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip; `AnnotateLink`; and `QuickLookLink`, an entry's Quick Look eye                                                                                                                                                                                                       |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `CheckIcon`, a tick for a compendium card's In All Covens (M9.12), `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient), and `MysticEyeIcon` (Quick Look) |
 
 ## The props contract
 
@@ -37,11 +37,30 @@ same dialog ([`modal.md`](modal.md), "Opening at once"). It is still a link:
 a press with a modifier key, a new tab, or one before the script has loaded
 follows `href` as before.
 
+`QuickLookLink` takes `EditLink`'s props and a `place`, the modal place its press shows in ([`modal.md`](modal.md), "Two places on one page"). It is named "Quick Look" and the entry, and opens the entry's details modal over its list (M12.5, [`ingredient-entry.md`](ingredient-entry.md), "The details modal").
+
 ## Where it is used
+
+- **`LinkIcon` inside a link** is drawn through `LinkIconHint`
+  ([`link-hint.md`](link-hint.md)), so the chain turns into the loading ring
+  while the link is pending; the bare `LinkIcon` is the glyph alone.
 
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
+- **The buttons beside them** (`icon-button.tsx`, the owner's calls, 2026-10-20), shared by the coven cards' foot, the entry page's icons and the Quick Look window, so the places cannot differ: `BinButton` (the bin, tipped with its verb, "Delete Ingredient" or "Remove"), `AnnotateButton` (Annotate as a button, where a press asks which coven first) and `MoreMenu` (the three dots, a [`MenuButton`](menu-button.md) taking items or sections, named "More for <entry>"). `CompendiumEditLink` is the pencil for the compendium's own edit on the entry page, named and tipped "Edit in Compendium". Each is named "<verb> <entry>" in hidden text, with the verb as the tip, and takes the entry's name as the card names it (`cardName`, "Name, Formal").
+- **Annotate on a coven's list** (`CovenCards`), through `AnnotateLink`:
+  `AnnotateIcon`, an open book with a filled pencil,
+  drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
+  (M8.17, 2026-10-19).
+- **Add and held on a compendium card** (`CompendiumCards`' `AddIcon` and `HeldMark`, M9.12): `PlusIcon` on a button tipped "Add to My Ingredients", `.icon-tip__add` (Edit's size and green), and `CheckIcon` in `.icon-tip__held`, the same box and green, a status mark named and tipped "In All Covens" on a button that does nothing else when pressed, there so the keyboard reaches its tip (the owner's call of 2026-10-20), and whose press opens the tip (`opensOnPress`, below), at the card's bottom right, ahead of a curator's pencil. The button shows the shared spinner in the plus's place while it works.
+- **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
+  vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
+  "More", where the card holds two or more choices; and, where its one
+  choice is Delete or Remove, `BinIcon` on a button of its own,
+  `.icon-tip__remove`, tipped with its verb (M8.17; the owner's call,
+  2026-10-20).
+- **Quick Look on the lists of entries** (M12.5), through `QuickLookLink`: left of each name on the admin Compendium list, and at each card's bottom left on a coven's Ingredients and the public compendium. `MysticEyeIcon` is an almond eye whose iris is a waxing crescent with a small four-point star, its outline drawn at stroke width 1 rather than the set's 1.5 (the owner's pick, 2026-10-20). It wears `.icon-tip__look`: Edit's large box, 2rem, and accent ink, with the eye drawn a third bigger than the pencil, `$glyph-size-large` * 4 / 3, about 1.667rem (the owner's call, 2026-10-20). The box stays, so a card foot's height and the eye's line with the pencil do not move; the eye leaves about 3px clear of the box on each side.
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),
@@ -57,21 +76,55 @@ follows `href` as before.
 
 ## Behaviour
 
-It follows WCAG 1.4.13, content on hover or focus, through the same
-[`useTip`](info-tip.md) hook as InfoTip:
+It runs on the same [`useTip`](info-tip.md) hook as InfoTip, but comes and
+goes faster:
 
-- **It opens on hover and on the control's focus.** Both are heard on the
-  wrapper, which holds the tip as well as the control; focus bubbles up to
-  it from the control.
-- **It stays while the pointer is over it.** Leaving both closes it after
-  150ms, long enough to cross the small gap onto the tip.
-- **It closes on Escape, blur, or the pointer leaving both.** Escape is
+- **It opens once the pointer has rested on the control for 300ms, and at
+  once on the control's focus.** A pointer passing over a row of pencils on
+  its way somewhere else opens nothing. Both are heard on the wrapper, which
+  is no larger than the control (the bubble is fixed, outside its box);
+  focus bubbles up to it from the control. The wrapper rather than the
+  control, so any control can sit inside without IconTip taking over its
+  props. A focus inside the control's own open menu bubbles there too and is
+  ignored: the menu says what the control does (the owner's call of
+  2026-10-20 put a menu under the three dots).
+- **A status mark's press opens it too** (`opensOnPress`, the owner's call,
+  2026-10-20), as a tap or a click does on InfoTip's ⓘ. The card's In All
+  Covens check and the entry page's In Your Cupboard shelf are buttons that do
+  nothing else, and on touch there is no hover, and a tap focuses no button in
+  Safari, so without it the word would never show there. The click is heard on
+  the wrapper as it bubbles up, and opens rather than toggles: on touch the
+  emulated hover may have opened it already. A control with a press of its own
+  (a pencil, the plus) does not take it, since its press says what it does.
+- **It is shut while the control's menu is open** (the owner's call,
+  2026-10-20). Around a control that opens a menu (a `MenuButton` icon: the
+  card's plus, the entry page's pencil), the wrapper asks whether a button in
+  it says `aria-haspopup` and `aria-expanded="true"`. While one does, a
+  hover or a focus opens nothing (a hover's 300ms wait included: `useTip`'s
+  `canOpen` asks as it opens), and a tip already showing is taken away by a
+  `MutationObserver` on `aria-expanded`, so a menu opened by a press or by
+  ArrowDown with the pointer resting on the control loses it too. It is in the
+  wrapper, not in `MenuButton`, so every caller gets it and `MenuButton`
+  knows nothing of tips. With the menu closed the next hover or focus shows it
+  again; an Escape that closes the menu and hands the focus back does not, the
+  menu still being drawn open at that instant, until the next hover.
+- **It closes the moment the pointer leaves the control**, with no wait,
+  and fades out over `$icon-tip-fade`, 120ms rather than every other tip's
+  500ms.
+- **The bubble cannot be hovered** (`pointer-events: none`): the owner's
+  call, 2026-10-20, against WCAG 1.4.13's clause that hover content be
+  hoverable. The tip repeats one word the control already says to a sighted
+  reader by its shape and to assistive technology by its name, it is
+  `aria-hidden`, and a tip that held on while the pointer crossed onto it
+  covered the row beside the control for no gain. Dismissible (Escape) and
+  persistent (it stays while the pointer rests on the control) still hold.
+- **It closes on Escape, blur, or the pointer leaving.** Escape is
   heard on the document and marked handled while a tip is open, so it
   closes the tip alone: inside a modal, as the ingredient form is, the
   first Escape shuts the tip and the next one reaches the modal.
 - **It is in the page while open and for its fade after**, so an open tip is
   one that exists. It fades in from a starting style and, closed, fades back
-  out over `$tip-fade` (a closing class, and a timer of the same length that
+  out over `$icon-tip-fade` (a closing class, and a timer of the same length that
   then takes it out of the page) rather than vanishing (the owner's call at
   MB.7's review, 2026-10-12).
 
@@ -143,11 +196,16 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   focused or open (`aria-expanded`), a tint of it 20% into the card.
 - **Sizes**: the ingredient form keeps the 24px box and 1rem icon beside
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
-  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem.
+  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem,
+  and so does a list card's lone bin (`.icon-tip__remove`), in the remove
+  answer's colours. The Quick Look eye keeps that box but draws its glyph at 4/3 of the
+  pencil's.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
   cards and the modal) and on its own tint each clear 3:1, a control's floor
   (`tests/scss/tokens.test.ts`, "an Edit pencil").
-- **The bubble** is the `tip-bubble` mixin's, InfoTip's look.
+- **The bubble** is the `tip-bubble` mixin's, InfoTip's look, opened by
+  `tip-bubble-open($icon-tip-fade)` so it fades in and out over 120ms, and
+  takes no pointer.
 - **At phone width** a list's Edit cell carries `.data-table__card-action`,
   which stands it at its card's top right ([`../styling.md`](../styling.md),
   "Tables at phone width").
@@ -165,8 +223,9 @@ ingredient form's stories, and every list's in its own.
 
 ## Testing
 
-`tests/components/IconTip/index.test.tsx` covers hover, the pointer crossing
-onto the tip, focus and blur, Escape closing the tip alone (the key marked
+`tests/components/IconTip/index.test.tsx` covers the 300ms hover wait, a
+passing pointer opening nothing, the close the moment the pointer leaves and
+the 120ms fade, focus opening at once and blur closing, Escape closing the tip alone (the key marked
 handled only while it is open), Escape inside a `Modal` closing the tip first
 and the modal second, the tip kept out of the accessibility tree, and
 `EditLink`'s role and name. Each list's test finds its Edit links by their

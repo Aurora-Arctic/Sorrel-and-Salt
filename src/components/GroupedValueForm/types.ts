@@ -62,8 +62,11 @@ export interface GroupedValueGroupField {
 export interface GroupedValueCopy {
   /** One value in title case, as a button says it: "Save Category", "Delete Form". */
   noun: string;
-  /** What the description is for, behind its info tip: where a reader meets it. */
-  descriptionHint: string;
+  /**
+   * What the description is for, behind its info tip: where a reader meets
+   * it. Only the kinds whose suggestions match the description have one.
+   */
+  descriptionHint?: string;
   /** The Description's placeholder, a one-line prompt for what to write. */
   describe: string;
   /** The group field, for a grouped kind; a flat kind has none. */

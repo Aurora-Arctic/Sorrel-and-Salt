@@ -43,7 +43,7 @@ its three mutation documents, and nothing else:
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
   "Form", "Deity", "Celestial Body", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label`, `placeholder`, what it shows until one is chosen
-  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, where a reader meets the description; `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
+  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, set only on the kinds whose suggestions match the description as well as the name (form, deity, celestial body, zodiac sign), since that is a flow the label does not say, and absent on a category, whose label and placeholder say it (the owner's call, 2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"); `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
   whose rename reaches further than its row (every kind but the category).
 - **Its schema and input**: `schema`, the shared schema the values pass
@@ -255,7 +255,8 @@ The delete question in a modal has its own three, on the category: the form
 inert while it asks and the focus on Keep It, both given back on Keep It, the
 focus on the delete button; Delete deleting from over the form; and Escape
 closing with nothing changed, and with a change asking about it first, Keep
-Editing bringing the delete question back.
+Editing bringing the delete question back. `describe('GroupedValueForm, its Description tip')`
+checks each kind: a tip on the searched kinds, none on a category.
 What only one kind does stays under
 that kind's describe: the category's and the form's create and update with
 their variables, their confirmations and their delete refusals; the form kind's

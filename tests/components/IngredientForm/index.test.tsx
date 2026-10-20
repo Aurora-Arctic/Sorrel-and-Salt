@@ -135,7 +135,14 @@ const CATEGORIES: CategoryNode[] = [
 /** Opens the picker's list and picks the category, once the categories have been read. */
 const pickCategory = async (name: string) => {
   fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-  fireEvent.click(await screen.findByRole('option', { name: new RegExp(`^${name}`) }));
+  // A longer wait than the default 1000ms, here alone: nothing says the categories have
+  // loaded before the list opens, so the options are the only signal. They appear about
+  // 82ms after the click on an idle machine, but a run under full CPU load slows this
+  // file's tests up to about 85 times, past 1000ms. 10s covers that and stays inside
+  // the 20s test timeout.
+  fireEvent.click(
+    await screen.findByRole('option', { name: new RegExp(`^${name}`) }, { timeout: 10_000 }),
+  );
 };
 
 describe('IngredientForm', () => {

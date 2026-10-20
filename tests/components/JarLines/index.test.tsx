@@ -41,20 +41,22 @@ describe('JarLines', () => {
     const [low, out, ok] = lines();
     expect(within(low).getByRole('button', { name: /low stock/i })).toBeInTheDocument();
     expect(within(out).queryByRole('button')).not.toBeInTheDocument();
-    expect(out.querySelector('.stock-badge--out')).not.toBeNull();
+    // The badge's words are the only rendering of an out jar (rule 2's exception).
+    expect(out).toHaveTextContent(/out of stock/i);
     expect(within(ok).queryByRole('button')).not.toBeInTheDocument();
-    expect(ok.querySelector('.stock-badge')).toBeNull();
+    expect(ok).not.toHaveTextContent(/stock/i);
   });
 
   it('keeps a jar held without a quantity, with no badge', () => {
     render(<JarLines jars={[jar({ id: 'a', form: 'resin', quantity: null, unit: null })]} />);
     expect(lines()).toHaveLength(1);
-    expect(lines()[0].querySelector('.stock-badge')).toBeNull();
+    expect(within(lines()[0]).queryByRole('button')).not.toBeInTheDocument();
+    expect(lines()[0]).not.toHaveTextContent(/stock/i);
   });
 
   it('hides the dot from assistive technology and leaves a spoken comma', () => {
     render(<JarLines jars={[jar({ id: 'a', form: 'oil' })]} />);
     expect(lines()[0].querySelector('span[aria-hidden="true"]')).toHaveTextContent('·');
-    expect(lines()[0].querySelector('.spoken-separator')).toHaveTextContent(',');
+    expect(lines()[0]).toHaveTextContent(',');
   });
 });

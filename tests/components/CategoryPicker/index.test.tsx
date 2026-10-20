@@ -162,7 +162,7 @@ describe('CategoryPicker', () => {
     expect(box()).toHaveFocus();
   });
 
-  it('describes each pick by its group and description, its tooltip naming the group', () => {
+  it('describes each pick by its group and description, its tooltip naming the group', async () => {
     renderPicker({ value: ['c-ab', 'c-tw'] });
 
     expect(removeButton('Testward')).toHaveAccessibleDescription(
@@ -173,7 +173,7 @@ describe('CategoryPicker', () => {
     fireEvent.mouseEnter(
       within(entry('Testward')).getByText('Testward', { ignore: '[role="tooltip"]' }),
     );
-    expect(screen.getByRole('tooltip')).toHaveTextContent('Fixture Wards');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Fixture Wards');
   });
 
   // Nothing typed is a category, so Enter adds only the one the text names whole.
@@ -216,6 +216,14 @@ describe('CategoryPicker', () => {
     expect(screen.getByText('The categories could not be loaded.')).toBeInTheDocument();
     expect(box()).toHaveAccessibleDescription('The categories could not be loaded.');
     expect(box()).not.toBeInvalid();
+  });
+
+  it('marks its box busy while the categories are read', () => {
+    const { rerender } = render(<CategoryPicker {...PROPS} categories={[]} pending />);
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-busy', 'true');
+
+    rerender(<CategoryPicker {...PROPS} />);
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-busy');
   });
 
   // An edit's picks arrive before the categories do.

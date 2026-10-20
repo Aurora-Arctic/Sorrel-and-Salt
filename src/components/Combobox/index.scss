@@ -142,6 +142,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
 }
 
+// A lookup in flight: the shared spinner, muted, between the clear and the chevron.
+.combobox__indicators > .spinner {
+  color: $text-muted;
+}
+
 // The text's slot in the row, a one-cell grid: the box takes the rest of the
 // row, as it always has. With a qualifier it is as wide as the text instead,
 // the cell sized by a hidden copy of the value in the box's own font and
@@ -352,7 +357,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: pointer;
 
   &.is-highlighted {
-    background-color: color-mix(in srgb, $accent 22%, $surface-card);
+    background-color: $fill-highlight;
   }
 
   // A category's row marked in its group's colour on the theme's side, as its
@@ -524,8 +529,9 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 
   // The chip being moved, plain to see once picked up, the owner's call
-  // during MB.170: the accent's wash a highlighted row wears, a 2px accent
-  // edge and the floating shadow, lifted over the chips it passes. The edge
+  // during MB.170: the accent 22% into the card, opaque so it hides what it
+  // passes over, a 2px accent edge and the floating shadow, lifted over the
+  // chips it passes. The edge
   // stands in for an error's while it is held; the error's comes back on the
   // drop, and its handle still reads it meanwhile.
   &.is-dragging,
@@ -610,7 +616,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: inherit;
 
     &:focus-visible {
-      outline-color: currentcolor;
+      outline-color: color-mix(in srgb, currentcolor $focus-ring-strength, transparent);
     }
   }
 }
@@ -643,7 +649,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The ring sits on a coloured chip's fill, where only the inverted ink is
   // checked; `:where` keeps the held chip's rule above it.
   :where(.is-coloured) &:focus-visible {
-    outline-color: currentcolor;
+    outline-color: color-mix(in srgb, currentcolor $focus-ring-strength, transparent);
   }
 
   // Held, the chip's accent edge marks it, so the ring around the text
@@ -716,7 +722,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     }
 
     &:focus-visible {
-      outline-color: currentcolor;
+      outline-color: color-mix(in srgb, currentcolor $focus-ring-strength, transparent);
     }
   }
 
@@ -795,7 +801,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // Where the count will be while a search runs. The shape and the shimmer
   // are the list skeleton's (`skeleton-shimmer`, _primitives.scss); the fill
   // is the chip's own ink at low strength, since a chip is a solid colour the
-  // quiet fill would vanish on. Still under reduced motion.
+  // quiet fill would vanish on. Pulses under reduced motion.
   &.is-pending {
     display: inline-block;
     width: 1.75ch;
@@ -809,11 +815,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
       color-mix(in srgb, currentcolor 22%, transparent) 100%
     );
     background-size: 200% 100%;
-    animation: skeleton-shimmer 1.4s ease-in-out infinite;
-
-    @include reduced-motion {
-      animation: none;
-    }
+    @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
   }
 }
 

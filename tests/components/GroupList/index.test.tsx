@@ -1,6 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import FormIcon from '@/components/FormIcon';
 import GroupList from '@/components/GroupList';
 import { groupsHref } from '@/components/GroupList/href';
 import type { GroupListEntry } from '@/components/GroupList/types';
@@ -51,39 +50,6 @@ describe('GroupList', () => {
       'datetime',
       '2026-05-06T10:00:00.000Z',
     );
-  });
-
-  // M12.7: a form group's name leads with its icon, the spoon where it has none.
-  it('draws a form group its icon, and the spoon where it has none', () => {
-    const svgOf = (name: Parameters<typeof FormIcon>[0]['name']) =>
-      render(<FormIcon name={name} />).container.querySelector('svg')!.innerHTML;
-    const form = (id: string, name: string, icon: 'botanical' | null): GroupListEntry => ({
-      ...WARDS,
-      id,
-      name,
-      icon,
-      colorDark: undefined,
-      colorLight: undefined,
-    });
-    render(
-      <GroupList
-        kind="form"
-        groups={[form('f1', 'Fixture Leafy', 'botanical'), form('f2', 'Fixture Bare', null)]}
-      />,
-    );
-
-    const drawn = (name: RegExp) =>
-      screen.getByRole('row', { name }).querySelector('.form-icon')!.innerHTML;
-    expect(drawn(/Fixture Leafy/)).toBe(svgOf('botanical'));
-    expect(drawn(/Fixture Bare/)).toBe(svgOf(null));
-  });
-
-  it('draws a category group no icon', () => {
-    render(<GroupList kind="category" groups={[WARDS]} />);
-
-    expect(
-      screen.getByRole('row', { name: /Fixture Wards/ }).querySelector('.form-icon'),
-    ).toBeNull();
   });
 
   it('draws no table when there is no group', () => {

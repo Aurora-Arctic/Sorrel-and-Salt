@@ -111,10 +111,9 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute('href', `${PATH}?after=x`);
   });
 
-  it('names the box without a visible label and says in its placeholder what the search reads', () => {
+  it('names the box by its one hidden label', () => {
     renderSearch();
 
-    expect(box()).toHaveAttribute('placeholder', 'Search names, forms & descriptions');
     expect(screen.getAllByText('Name', { selector: 'label' })).toHaveLength(1);
     expect(box()).toHaveAccessibleName('Name');
   });
@@ -347,6 +346,7 @@ describe('IngredientSearch', () => {
   });
 
   it('shows the text typed to a field in the filter slot', () => {
+    offer([]);
     renderSearch('wort');
     expect(screen.getByLabelText('Typed')).toHaveTextContent('wort');
 

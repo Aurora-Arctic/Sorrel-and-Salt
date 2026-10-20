@@ -1,11 +1,11 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { usePendingNavigation } from '../../lib/navigation';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 
@@ -27,14 +27,8 @@ const CreateWorkspaceDocument = graphql(`
   }
 `);
 
-// One string for two jobs: the tip's text, and the id `fieldDescription` makes
-// the control point at. Given to only one of them, the control would point at
-// a tip that was never drawn.
-const NAME_HINT =
-  'What the coven is called. Its address is made from it, and everyone you invite sees it.';
-
 const CreateWorkspaceForm = (): ReactElement => {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const [value, setValue] = useState('');
   const [alert, setAlert] = useState<string>();
   const [fieldError, setFieldError] = useState<string>();
@@ -47,10 +41,13 @@ const CreateWorkspaceForm = (): ReactElement => {
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      router.push(`/coven/${slug}`);
+      // The new coven's home replaces the whole of this page, not only a coven body; it has its contents menu.
+      navigate(`/coven/${slug}`, {
+        target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
+      });
       // The shell's switcher lists the viewer's covens from the layout, which
       // a client-side push does not re-run: refresh brings the new one in.
-      router.refresh();
+      refresh();
     },
     onError: (failure) => {
       const { field, alert: message } = readGraphqlFailure(failure, ['name']);
@@ -61,7 +58,6 @@ const CreateWorkspaceForm = (): ReactElement => {
 
   const { aria, ...field } = fieldDescription({
     id: useId(),
-    hint: NAME_HINT,
     error: fieldError,
   });
 
@@ -84,7 +80,8 @@ const CreateWorkspaceForm = (): ReactElement => {
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Name" hint={NAME_HINT} required {...field}>
+        {/* No tip: the label says it (the owner's call, 2026-10-20). */}
+        <FieldShell label="Name" required {...field}>
           <input
             id={field.controlId}
             className="input"

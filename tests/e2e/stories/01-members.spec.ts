@@ -160,6 +160,12 @@ test.describe('removing a member, and leaving', () => {
       await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(dialog).toHaveCount(0);
       await expectRoll(page, { [ASH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      // The Remove that had the focus went with its row: the page's heading
+      // takes it, rather than the page losing it (M8.17).
+      await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
+      await page.setViewportSize({ width: 375, height: 812 });
+      await assertNoAccessibilityViolations(page);
+      await assertNoSidewaysScroll(page);
 
       // A soft removal: Birch's seat is kept, marked, and no other is touched.
       const seats = await withSql(
@@ -227,7 +233,7 @@ test.describe('removing a member, and leaving', () => {
       // Loaded while Birch is an owner, so the page offers Remove on Cedar.
       await signInAgainAs(page, birch);
       await page.goto(`/coven/${coven.slug}/members`);
-      const remove = page.getByRole('button', { name: `Remove ${CEDAR}` });
+      const remove = page.getByRole('button', { name: `Remove ${CEDAR}`, exact: true });
       await expect(remove).toBeVisible();
 
       // Meanwhile Ash makes Birch a member, which the open page cannot know.
@@ -241,6 +247,8 @@ test.describe('removing a member, and leaving', () => {
       await page.getByRole('dialog').getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(refusal(page)).toBeVisible();
       await expect(page.getByRole('dialog')).toHaveCount(0);
+      // Said under the Remove that was pressed, which takes the focus back from the dialog.
+      await expect(remove).toBeFocused();
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({
         [ash]: 'owner',
@@ -260,7 +268,7 @@ test.describe('removing a member, and leaving', () => {
 
 test.describe('the last owner', () => {
   test(
-    'the only owner cannot demote themself or be removed: the refusal is said above the roll, and the roll is unchanged',
+    'the only owner cannot demote themself or be removed: the refusal is said under its control, and nothing moved',
     { tag: '@story-11' },
     async ({ page }) => {
       const { ash, birch, cedar, coven } = await covenOfThree(page, 'sole', {
@@ -281,22 +289,24 @@ test.describe('the last owner', () => {
       await expect(page.getByRole('button', { name: `Remove ${BIRCH}` })).toBeVisible();
       await expect(page.getByRole('button', { name: `Remove ${ASH}` })).toHaveCount(0);
 
-      await page.getByRole('button', { name: `Change Role for ${ASH}` }).click();
+      const control = page.getByRole('button', { name: `Change Role for ${ASH}`, exact: true });
+      const roll = await page.getByRole('table').boundingBox();
+      await control.click();
       const dialog = page.getByRole('dialog');
       await dialog.getByRole('radio', { name: /^Member/ }).check();
       await dialog.getByRole('button', { name: 'Demote', exact: true }).click();
 
       await expect(refusal(page)).toBeVisible();
       await expect(dialog).toHaveCount(0);
-      // Above the roll, not inside a row.
-      const above = await refusal(page).evaluate(
-        (element) =>
-          !!(
-            element.compareDocumentPosition(document.querySelector('table') as Node) &
-            Node.DOCUMENT_POSITION_FOLLOWING
-          ),
-      );
-      expect(above).toBe(true);
+      // Under its own control, which keeps the focus, and nothing moved: the
+      // callout is out of the flow, so the roll sits where it sat.
+      await expect(control).toBeFocused();
+      const button = await control.boundingBox();
+      const said = await refusal(page).boundingBox();
+      expect(said!.y).toBeGreaterThanOrEqual(button!.y + button!.height);
+      expect(said!.x).toBeLessThan(button!.x + button!.width);
+      expect(said!.x + said!.width).toBeGreaterThan(button!.x);
+      expect(await page.getByRole('table').boundingBox()).toEqual(roll);
       await assertNoAccessibilityViolations(page);
       await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
       expect(await seatsOf(coven.id)).toEqual(before);
@@ -382,6 +392,9 @@ test.describe('the last owner', () => {
 
       await confirm.click();
       await expect(refusal(page)).toBeVisible();
+      await expect(
+        page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }),
+      ).toBeFocused();
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}$`));
       await assertNoAccessibilityViolations(page);
       expect(await seatsOf(coven.id)).toEqual({ [ash]: 'owner', [cedar]: 'member' });

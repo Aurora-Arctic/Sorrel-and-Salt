@@ -1,11 +1,10 @@
-import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
+import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import {
   COMPENDIUM_CACHE_PORT,
   CONFIGURED_PROVIDERS_PORT,
-  E2E_SLOTS,
   auditWsEndpoint,
   browserUrl,
-  wsEndpoint,
 } from './tests/e2e/slots';
 import { allServers } from './tests/e2e/servers';
 
@@ -18,6 +17,11 @@ const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 // rather than adding to it, so each project that matches everything under
 // `testDir` lists this itself; `npm run e2e` never runs a story.
 const STORIES_SPECS = /[\\/]stories[\\/]/;
+
+// The workshop specs measure a component in its Ladle story, against the
+// workshop server alone: playwright.workshop.config.ts runs them, `npm run
+// e2e` never does.
+const WORKSHOP_SPECS = /[\\/]workshop[\\/]/;
 
 // The audit (M10.25): the suite in WebKit, Firefox and as a phone, on demand
 // and never on CI, which stays Chromium alone. The three projects exist only
@@ -57,54 +61,23 @@ export const auditProjects = (testIgnore?: RegExp[]) =>
       }))
     : [];
 
-// Every output under .reports/ with the rest of the generated files. The
-// reporter list lives here rather than on CI's command line because a CLI
-// `--reporter` replaces this list and with it the html report's folder.
-export const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
-
-// What the e2e config and the story config (playwright.stories.config.ts) share:
-// where output goes, how many workers, the setup and teardown that reseed the
-// slot databases, and the browser options.
-export const baseConfig = {
-  outputDir: '.reports/test-results',
-  fullyParallel: true,
-  // One per slot server; tests/e2e/slots.ts.
-  workers: E2E_SLOTS,
-  forbidOnly: !!process.env.CI,
-  globalSetup: './tests/e2e/global-setup.ts',
-  globalTeardown: './tests/e2e/global-teardown.ts',
-  // No `baseURL` here: tests/e2e/fixtures.ts gives each worker its own slot's
-  // server wherever a project names none.
-  use: {
-    // On CI a retry filters flake first; locally there is no retry, so the
-    // first failure must carry its own evidence: the trace, which holds a
-    // screenshot and a DOM snapshot per action, and the final screenshot.
-    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
-    screenshot: process.env.CI ? 'off' : 'only-on-failure',
-    // Never a video, locally either (M11.18): recording every test cost a tenth
-    // to a sixth of the summed test time, measured, and was encoded on the
-    // browser server, which shares these cores, for a failure the trace already
-    // shows (claude-docs/testing/e2e.md, "Where a run's time goes").
-    video: 'off',
-    ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {}),
-    // `.btn` transitions its colours; without this an axe scan can sample
-    // one mid-fade — on hover, or as a Save button enables — rather than the
-    // colour a user settles on.
-    reducedMotion: 'reduce',
-  },
-} satisfies PlaywrightTestConfig;
-
 export default defineConfig({
   ...baseConfig,
   testDir: './tests/e2e',
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
+  // Under Claude Code the html report alone prints no failure text, so a dot
+  // line is added and html stays (MB.142, M12.37). CI and the host are unchanged.
+  reporter: process.env.CI
+    ? [['list'], ['json'], ['html', HTML_REPORT]]
+    : process.env.CLAUDECODE
+      ? [['dot'], ['html', HTML_REPORT]]
+      : [['html', HTML_REPORT]],
   // Production build, against the e2e databases rather than the dev one.
   webServer: allServers,
   projects: [
     {
       name: 'chromium',
-      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS],
+      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS, WORKSHOP_SPECS],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -123,6 +96,11 @@ export default defineConfig({
         baseURL: browserUrl(COMPENDIUM_CACHE_PORT),
       },
     },
-    ...auditProjects([CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS]),
+    ...auditProjects([
+      CONFIGURED_PROVIDERS_SPEC,
+      COMPENDIUM_CACHE_SPEC,
+      STORIES_SPECS,
+      WORKSHOP_SPECS,
+    ]),
   ],
 });

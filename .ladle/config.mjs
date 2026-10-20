@@ -61,7 +61,10 @@ export default {
   // With the other generated output rather than Ladle's default `build/`.
   outDir: '.reports/workshop',
   // Pinned so compose can publish the HMR socket, and unmoved between restarts.
-  hmrPort: 61002,
+  // `LADLE_HMR_PORT` moves it for the workshop e2e run alone
+  // (playwright.workshop.config.ts), so a test Ladle never competes with a
+  // review Ladle for it.
+  hmrPort: Number(process.env.LADLE_HMR_PORT) || 61002,
   // Empty, not unset: Ladle's `hmrHost ?? 'localhost'` would bind the socket to
   // the workshop container's loopback, where the published port never arrives.
   // An empty host binds every interface, and the browser connects back to the

@@ -51,7 +51,7 @@ const withUnit = (amount: number, unit: string | null | undefined): string =>
 
 export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
   const tipId = useId();
-  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
   const state = stockState(quantity, threshold);
   if (state === 'ok') return null;
 
@@ -68,7 +68,7 @@ export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): Reac
   return (
     // Hover on the wrapper, which holds the tip as well as the button, so the
     // pointer can move onto the tip without closing it.
-    <span ref={anchor} className="stock-badge-tip" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span ref={anchor} className="stock-badge-tip" onMouseEnter={showSoon} onMouseLeave={hideSoon}>
       {/* A tap opens rather than toggles, as InfoTip's does: on touch the
           emulated hover has already opened it. */}
       <button

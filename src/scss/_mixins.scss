@@ -131,9 +131,33 @@
   }
 }
 
-// Defaults to the body ink, so the ring re-colours with the theme.
-@mixin focus-ring($color: $text-primary) {
-  outline: 2px solid $color;
+// A link's underline faded into what is behind it, so it marks the link
+// without the colour (WCAG 1.4.1) yet reads quieter than the text: the
+// link's own colour at `$rest`, and at `$pointed` when pointed at or
+// focused, so it follows the colour as it changes. 55% and 65% are the
+// lowest mixes that hold 3:1 against the page, the card and the `:target`
+// fill in both themes for a link resting in the body ink and pointed at in
+// `$accent-hover`: the entry page's References and marks, IngredientForm's
+// title links, the details modal's In Your Covens. A link resting in another
+// colour needs its own mixes worked out before it takes these.
+// No token holds a faded underline, so it is a `color-mix`, as `$fill-quiet` is.
+// Chromium draws no underline under 1px, and `auto` is already 1px for the
+// body text, so a fade is what makes an underline lighter, not a thickness.
+@mixin faded-underline($rest: 55%, $pointed: 65%) {
+  text-decoration-color: color-mix(in srgb, currentcolor #{$rest}, transparent);
+
+  &:hover,
+  &:focus-visible,
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    text-decoration-color: color-mix(in srgb, currentcolor #{$pointed}, transparent);
+  }
+}
+
+// Defaults to the body ink, so the ring re-colours with the theme, at the
+// shared strength, mixed towards transparent so it softens over any ground.
+@mixin focus-ring($color: $text-primary, $strength: $focus-ring-strength) {
+  outline: 2px solid color-mix(in srgb, $color $strength, transparent);
   outline-offset: 2px;
 }
 
@@ -247,6 +271,26 @@
   }
 }
 
+// A badge's padding, with the label lowered by its size's optical-drop: the top
+// gains what the bottom loses, so the height holds. Lexend's capitals sit above
+// the centre of its line box, so a centred label read high in every badge, by up
+// to 1.3px (measured 2026-10-20); the owner's call, 2026-10-20, is to centre them
+// optically. Padding rather than text-box-trim, which is past the browser floor.
+// claude-docs/styling.md, "Badge sizes".
+@mixin badge-padding($name) {
+  @include badge-padding-block($name);
+  padding-inline: map.get(map.get($badge-sizes, $name), padding-inline);
+}
+
+// The block half alone, for a rule that must leave a badge's sides to its size.
+@mixin badge-padding-block($name) {
+  $size: map.get($badge-sizes, $name);
+  $block: map.get($size, padding-block);
+  $drop: map.get($size, optical-drop);
+
+  padding-block: calc(#{$block} + #{$drop}) calc(#{$block} - #{$drop});
+}
+
 // Takes a palette key, not a colour, so the two badges cannot swap inks; the
 // palette's own treatment decides the drawing. Square-cornered, unlike a chip.
 @mixin badge($palette) {
@@ -254,7 +298,7 @@
 
   display: inline-flex;
   align-items: center;
-  padding: 0.125rem 0.4375rem;
+  @include badge-padding('default');
   border-radius: radius('sharp');
   font-family: $font-body;
   font-size: type-size('caption');
@@ -292,8 +336,7 @@
   }
 
   font-size: type-size(map.get($size, font-size));
-  padding-block: map.get($size, padding-block);
-  padding-inline: map.get($size, padding-inline);
+  @include badge-padding($name);
 
   @if map.get($size, min-block-size) {
     min-block-size: map.get($size, min-block-size);
@@ -305,7 +348,8 @@
 // size, and faded in and out over 500ms, the owner's pace, rising 2px as it
 // opens. `.is-open` shows it; closed, it takes no pointer once the fade ends.
 // No position or width: InfoTip's and a list entry's tooltip sit differently.
-// `tip-bubble-open` is the open state alone, for a bubble opened another way.
+// `tip-bubble-open` is the open state alone, for a bubble opened another way,
+// fading over `$fade`: IconTip's word passes its quicker `$icon-tip-fade`.
 // claude-docs/components/info-tip.md, "Styling".
 @mixin tip-bubble {
   $fade: $tip-fade;
@@ -337,13 +381,13 @@
 
 // A tip bubble's open state, apart so a bubble opened by something other
 // than `.is-open` — a hover on its mark, say — opens the same way.
-@mixin tip-bubble-open {
+@mixin tip-bubble-open($fade: $tip-fade) {
   opacity: 1;
   visibility: visible;
   transform: none;
   transition:
-    opacity $tip-fade $theme-transition-easing,
-    transform $tip-fade $theme-transition-easing,
+    opacity $fade $theme-transition-easing,
+    transform $fade $theme-transition-easing,
     visibility 0s;
 
   @include reduced-motion {
@@ -366,6 +410,71 @@
   gap: space($step);
 }
 
+// The grid of a page whose jump menu stands to the left of content that fills
+// the rest of the wide column (an ingredient's entry), from a tablet up. The
+// children are the head, the menu, then the sections; the menu spans the last
+// three rows and sticks under the shell bar. The breakpoint and offset are
+// `.page-with-nav`'s (_primitives.scss). One mixin for the page and for its
+// wait (Skeleton), so the two cannot differ in width. The menu's width is that
+// layout's 12rem while the article is wide; below that the content keeps 60rem
+// and the menu gives way first, but never goes narrower than its longest label.
+@mixin entry-nav-grid {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns:
+      minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
+      minmax(0, 1fr);
+    align-content: start;
+
+    > :not(.page-nav) {
+      grid-column: 2;
+    }
+
+    > .page-nav {
+      position: sticky;
+      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      grid-column: 1;
+      grid-row: 2 / span 3;
+      align-self: start;
+    }
+  }
+}
+
+// An ingredient entry's section (Details, or a form): its heading, its text,
+// then its side column, one under the other on a phone. Past a tablet's width
+// the side column stands to the right of the text, the heading across both;
+// not from the menu's breakpoint, where the text would be a few words wide.
+// `$heading` is the selector of the heading. Shared by IngredientEntry and its
+// wait (Skeleton), so the two cannot differ in columns.
+@mixin entry-section($heading: 'h2, h3') {
+  @include stack(4);
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    // A wide gutter between the text and its details (the owner's call).
+    gap: space(4) space(8);
+    align-items: start;
+
+    > #{$heading} {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// The side column of that section: a clear step under the text on a phone,
+// the second column beside it past a tablet's width.
+@mixin entry-side {
+  @include stack(6);
+
+  margin-block-start: space(4);
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    grid-column: 2;
+    margin-block-start: 0;
+  }
+}
+
 // The look of a box that floats over the page, the combobox's list and a
 // linked entry's summary: the card surface and the floating shadow, edged in
 // the muted ink.
@@ -373,6 +482,16 @@
   border: 1px solid $text-muted;
 
   @include modal-surface($shadow-floating);
+}
+
+// The warning triangle, drawn by mask in the element's background colour (by
+// default its ink), at whatever size the caller gives it: an error notice's
+// mark (_primitives.scss), and the click-feedback callout's and badge's
+// (ClickFeedback/index.scss). One drawing, so the three never drift apart.
+@mixin warning-mark($color: currentColor) {
+  background-color: $color;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 // A field's box: the edge, ground, ink, padding and height a text field, a
@@ -398,9 +517,7 @@
 //
 // `$align` (`start`, `end`, `center`, or a left offset) is the old way, a bubble
 // pinned to one edge of its anchor, which runs off the screen wherever the
-// anchor moves. Nothing new takes it; it stays only for EntryMarks and
-// IngredientCard until they adopt `useTip`'s placement, and goes with them
-// (tests/guards/tip-placement.test.ts, `PENDING`).
+// anchor moves. Nothing new takes it.
 @mixin tip-above($layer: 1, $capped: true, $align: null) {
   position: fixed;
   top: 0;
@@ -476,7 +593,7 @@
 // The new content of a list or tab, faded in as it replaces the skeleton
 // that stood in for it (`list-frame-fade-in`, _primitives.scss, the one
 // keyframe); under reduced motion it shows at once.
-@mixin arrived($duration: 200ms) {
+@mixin arrived($duration: $arrive-duration) {
   animation: list-frame-fade-in $duration ease both;
 
   @include reduced-motion {
@@ -484,11 +601,38 @@
   }
 }
 
+// The motion of a piece that says something is loading: its own animation,
+// and under reduced motion the one slow opacity pulse (`loading-pulse`,
+// _primitives.scss) in its place, so no wait is ever a still mark and no piece
+// invents its own fallback. A wait that shows only after `$delay` (an
+// indicator, not a skeleton) is hidden until then by `loading-appear`, which
+// moves `visibility` only, so it holds under the pulse, which moves opacity.
+@mixin loading-motion($animation, $delay: null) {
+  @if $delay {
+    animation:
+      $animation,
+      loading-appear 0s linear $delay both;
+  } @else {
+    animation: $animation;
+  }
+
+  @include reduced-motion {
+    @if $delay {
+      animation:
+        loading-pulse $pulse-duration ease-in-out infinite,
+        loading-appear 0s linear $delay both;
+    } @else {
+      animation: loading-pulse $pulse-duration ease-in-out infinite;
+    }
+  }
+}
+
 // A skeleton's placeholder shape (MB.115, shared since M9.18): a rounded
 // bar of the muted ink a little way into the card surface, as the combobox's
 // quiet fills are, so both themes carry it on the page and on a card, with a
 // lighter step of the same passing across it (`skeleton-shimmer`,
-// _primitives.scss). Still, with no shimmer, where motion is reduced. The
+// _primitives.scss), which becomes the shared pulse where motion is reduced
+// (`loading-motion`). The
 // tab's list skeleton and the route modal's form skeleton draw their shapes
 // with it.
 @mixin skeleton-shape {
@@ -502,11 +646,7 @@
     $fill-quiet 100%
   );
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
 }
 
 // The two row tweaks a data table's owner asks for, each emitted once as a
@@ -757,11 +897,27 @@
   --accent-solid-hover: #{$sorrel-spring};
   --secondary: #{$wax-warm};
   --secondary-hover: #{$wax-glow};
+  --warning: #{$ochre-bright};
+  // How much of its colour a notice's tint takes: more on dark, where a tint
+  // of the same strength reads fainter.
+  --notice-tint: 8%;
+  --focus-ring-link-strength: #{$focus-ring-strength};
+  --focus-ring-tab-strength: #{$focus-ring-strength};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
   // Between floating and elevated: a card that rises under the pointer.
   --shadow-lifted: 0 8px 20px #{$shadow-dark};
   --surface-card-hover: #{$soot-lifted};
+  --drawer-slot: #{$drawer-slot-dark};
+  --drawer-floor: #{$drawer-floor-dark};
+  --drawer-side: #{$drawer-side-dark};
+  --drawer-back: #{$drawer-back-dark};
+  --drawer-seam: #{$drawer-seam-dark};
+  --drawer-shade: #{$drawer-shade-dark};
+  --drawer-shade-fade: #{$drawer-shade-fade-dark};
+  --drawer-shade-edge: #{$drawer-shade-edge-dark};
+  --dismiss-ink: #{$dismiss-ink-dark};
+  --card-more-ink: #{$card-more-ink-dark};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -781,10 +937,24 @@
   --accent-solid-hover: #{$sorrel-rich};
   --secondary: #{$wax-vivid};
   --secondary-hover: #{$wax-deep};
+  --warning: #{$ochre-deep};
+  --notice-tint: 7%;
+  --focus-ring-link-strength: #{$focus-ring-link-strength-light};
+  --focus-ring-tab-strength: #{$focus-ring-tab-strength-light};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
   --shadow-lifted: 0 8px 20px #{$shadow-light};
   --surface-card-hover: #{$parchment-lifted};
+  --drawer-slot: #{$drawer-slot-light};
+  --drawer-floor: #{$drawer-floor-light};
+  --drawer-side: #{$drawer-side-light};
+  --drawer-back: #{$drawer-back-light};
+  --drawer-seam: #{$drawer-seam-light};
+  --drawer-shade: #{$drawer-shade-light};
+  --drawer-shade-fade: #{$drawer-shade-fade-light};
+  --drawer-shade-edge: #{$drawer-shade-edge-light};
+  --dismiss-ink: var(--text-primary);
+  --card-more-ink: #{$iron-gall};
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 

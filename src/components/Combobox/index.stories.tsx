@@ -488,3 +488,43 @@ export const Leading: Story = () => {
     </Labelled>
   );
 };
+
+/** A lookup under way (M12.33): the box is `aria-busy` and the ring turns in the indicator strip, beside the chevron. */
+export const LoadingSearch: Story = () => {
+  const [value, setValue] = useState('moon');
+  return (
+    <Labelled label="Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Name"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          suggestions={{ options: [], pending: true }}
+          placeholder="Search names"
+        />
+      )}
+    </Labelled>
+  );
+};
+
+/** The select-only box while its change is on its way (M12.33): the choice made stays shown, the box is `aria-busy` and carries the ring. */
+export const LoadingSelect: Story = () => {
+  const [value, setValue] = useState('fungal');
+  return (
+    <Labelled label="Classification">
+      {(ids) => (
+        <ComboboxSelect
+          {...ids}
+          label="Classification"
+          value={value}
+          onChange={setValue}
+          choices={KINDS}
+          busy
+          placeholder="Choose a classification"
+        />
+      )}
+    </Labelled>
+  );
+};

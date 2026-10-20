@@ -51,6 +51,13 @@ $wax-glow: color.adjust(
 $wax-vivid: color.adjust($wax, $saturation: 30%, $lightness: 4%); // light secondary
 $wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 
+// The warning ochre: a notice that cautions without blocking, its bar, tint and
+// triangle. Picked rather than derived, the owner's call (2026-10-19), so it
+// reads apart from both the sorrel and the wax. A mark, held to 3:1 on both of
+// its theme's surfaces: 4.89:1 and 5.44:1 light, 8.32:1 and 7.55:1 dark.
+$ochre-deep: #8a5a00; // light warning
+$ochre-bright: #d9a441; // dark warning
+
 // Body ink at lower strength rather than a separate grey, so it still clears
 // 4.5:1. Dark mixes the ink into the ground, which lowers its chroma with its
 // strength; darkening it in HSL kept the saturation and turned it gold.
@@ -74,9 +81,49 @@ $wax-caution-light: color.adjust($wax, $saturation: 15%, $lightness: -4%);
 $soot-lifted: color.adjust($soot-raised, $lightness: 3%);
 $parchment-lifted: color.adjust($parchment-raised, $lightness: 2.5%);
 
+// The ink of the dark shadow, kept as a colour so the drawer's slot can mix with it.
+$shadow-ink-dark: #060503;
+
+// The drawer behind an ingredient card's face (M12.44): each plane is the page's own ink
+// stirred into the page, so none is picked by eye. Light darkens toward iron-gall; dark
+// lifts toward chalk, so the floor and sides come forward of the page and the back wall
+// sits almost on it. The slot's interior is the page under the site's shadow ink in dark
+// (the same ink the shadows use), and iron-gall into parchment in light. The seam is the
+// back wall easing into the floor. Percentages are the owner's; light was lightened from the mock's after review (2026-10-20).
+$drawer-slot-light: color.mix($iron-gall, $parchment, 25%);
+$drawer-floor-light: color.mix($iron-gall, $parchment, 9%);
+$drawer-side-light: color.mix($iron-gall, $parchment, 18%);
+$drawer-back-light: color.mix($iron-gall, $parchment, 35%);
+$drawer-seam-light: color.mix($drawer-back-light, $drawer-floor-light, 55%);
+$drawer-slot-dark: color.mix($soot, $shadow-ink-dark, 50%);
+$drawer-floor-dark: color.mix($chalk, $soot, 17%);
+$drawer-side-dark: color.mix($chalk, $soot, 25%);
+$drawer-back-dark: color.mix($chalk, $soot, 2%);
+$drawer-seam-dark: color.mix($drawer-back-dark, $drawer-floor-dark, 55%);
+
+// The shading over the drawer: the shadow the face casts (a strong stop, then a second just
+// under it where the band begins to fade) and the wash from each side wall. Dark shades with
+// black, as the site's shadows do. Light shades with iron-gall at alpha, so it stays in the
+// palette, and lighter: the dark's strengths laid over a light floor read as a hole, which
+// the owner found too dark (2026-10-20).
+$drawer-shade-dark: rgba(0, 0, 0, 0.5);
+$drawer-shade-fade-dark: rgba(0, 0, 0, 0.45);
+$drawer-shade-edge-dark: rgba(0, 0, 0, 0.22);
+$drawer-shade-light: rgba($iron-gall, 0.22);
+$drawer-shade-fade-light: rgba($iron-gall, 0.2);
+$drawer-shade-edge-light: rgba($iron-gall, 0.12);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
-$shadow-dark: rgba(6, 5, 3, 0.8);
+$shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
+
+// The click-feedback callout's Dismiss cross in the dark theme, pure white
+// over the card where the body text is chalk, as design F has it (M12.31).
+$dismiss-ink-dark: #fff;
+
+// A coven card's More (the three dots) in the dark theme, pure white, the owner's call
+// (2026-10-20); the light theme draws them in $iron-gall, its body text.
+$card-more-ink-dark: #fff;
 
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
@@ -185,6 +232,20 @@ $badge-palettes: (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
+    ),
+  // A compendium entry added in the last 30 days (MB.106): last-used's solid accent
+  // inks, already contrast-checked, until the section's design review.
+  'new': (
+      treatment: solid,
+      dark: $sorrel-bright,
+      light: $sorrel-vivid,
+    ),
+  // A compendium entry changed in the last 30 days (MB.106): Local's tinted inks,
+  // already contrast-checked. Never beside Local, which marks a coven's own entry.
+  'updated': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
     )
 );
 
@@ -192,23 +253,29 @@ $badge-palettes: (
 // badge has everywhere; medium and small are for the ingredient card only (regular and
 // compact), one step down in text. The two smaller sizes hold 24px (1.5rem) tall, the
 // least a tipped badge may be as a target; default needs no floor, its text sets it.
+// optical-drop lowers the label so its capitals centre on the box (the owner's call,
+// 2026-10-20), measured per size because Chrome rounds the font's ascent and descent
+// to whole pixels, so 12px and 13px Lexend sit differently in their line boxes.
 $badge-sizes: (
   'default': (
     font-size: caption,
     padding-block: 0.125rem,
     padding-inline: 0.4375rem,
+    optical-drop: 0.0125em,
     min-block-size: null,
   ),
   'medium': (
     font-size: overline,
     padding-block: 0.125rem,
     padding-inline: 0.4375rem,
+    optical-drop: 0.05em,
     min-block-size: 1.5rem,
   ),
   'small': (
     font-size: overline,
     padding-block: 0.125rem,
     padding-inline: 0.3125rem,
+    optical-drop: 0.05em,
     min-block-size: 1.5rem,
   ),
 );
@@ -338,10 +405,21 @@ $accent-hover: var(--accent-hover);
 $accent-solid-hover: var(--accent-solid-hover);
 $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
+$warning: var(--warning);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
 $surface-card-hover: var(--surface-card-hover);
+$drawer-slot: var(--drawer-slot);
+$drawer-floor: var(--drawer-floor);
+$drawer-side: var(--drawer-side);
+$drawer-back: var(--drawer-back);
+$drawer-seam: var(--drawer-seam);
+$drawer-shade: var(--drawer-shade);
+$drawer-shade-fade: var(--drawer-shade-fade);
+$drawer-shade-edge: var(--drawer-shade-edge);
+$dismiss-ink: var(--dismiss-ink);
+$card-more-ink: var(--card-more-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks
@@ -364,14 +442,49 @@ $text-on-color: var(--surface-page);
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 
 // A quiet fill: the muted ink 18% into the card. A chip's wash, the skeleton's
-// bars and the open nav summary each wrote this mix; the chip's text holds
+// bars, an entry's targeted section, MenuButton's plain item pointed at, and
+// the hover of every navigation link, tab and outlined chip; the chip's text holds
 // 4.5:1 on it (tests/scss/tokens.test.ts).
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
+
+// A highlight: the accent 12% into whatever is behind. MenuButton's one
+// primary item, and the account menu's, the shell's menu's
+// and a suggestion list's row, pointed at, focused or chosen, and the same over the
+// field's ground for a quiet button pointed at (M8.17, the owner's call of
+// 2026-10-20). A wash of the accent rather than of the muted ink, so the row
+// in hand reads as the one about to act; the body and muted inks hold 4.5:1
+// on it (tests/scss/tokens.test.ts).
+$fill-highlight: color-mix(in srgb, $accent 12%, transparent);
+$fill-highlight-field: color-mix(in srgb, $accent 12%, $surface-card);
 
 // A hairline: the muted ink 45% into whatever is behind, so one line reads on
 // the page and on a card alike. The ingredient form's section rules and the
 // tab strip's shade each wrote this mix.
 $hairline: color-mix(in srgb, $text-muted 45%, transparent);
+
+// A quiet button's hairline pointed at: partway from the line to the accent.
+$edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
+
+// The focus ring's strength (M12.45): how much of its colour the ring keeps,
+// mixed towards transparent, so it marks the focus without overpowering the
+// page. One number for both themes, shared by the `focus-ring` mixin and the
+// rings that set their own colour; each clears 3:1 where it is drawn
+// (tests/scss/tokens.test.ts; claude-docs/styling.md, "The focus ring").
+$focus-ring-strength: 66.6%;
+
+// A link's ring, in the accent, at its own strength per theme: the shared one
+// in dark, and more in light, where the accent starts lower against the page
+// and the shared strength would take it under 3:1. Read through
+// `--focus-ring-link-strength`, which each theme sets.
+$focus-ring-link-strength-light: 75%;
+$focus-ring-link-strength: var(--focus-ring-link-strength);
+
+// The tab row's ring, in the accent inside the pill, the same way: the shared
+// strength in dark, and full in light, where the accent sits lower against
+// the track and the pill than against the page. Read through
+// `--focus-ring-tab-strength`, which each theme sets.
+$focus-ring-tab-strength-light: 100%;
+$focus-ring-tab-strength: var(--focus-ring-tab-strength);
 
 // How much of a control remains when it is busy or cannot be used: the
 // switch, the pending tab panel and the busy list frame each wrote 0.55.
@@ -469,6 +582,11 @@ $theme-transition-easing: ease-in-out;
 // (claude-docs/components/info-tip.md, "Styling").
 $tip-fade: 500ms;
 
+// IconTip's one word fades in 120ms instead: it repeats what the control
+// already shows, so it should come and go as quickly as the pointer does
+// (claude-docs/components/icon-tip.md, "Behaviour").
+$icon-tip-fade: 120ms;
+
 // The forms' column: the sign-in panel, the account page's sections, the
 // email form and the invitation. One number where each page restated 28rem;
 // narrower than the measure, since a form's line is a field, not prose.
@@ -546,10 +664,10 @@ $filter-choice-width: 14rem;
 // sooner than the search gives way.
 $filter-search-basis: 16rem;
 
-// The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
-// during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
-// `Modal/index.scss`.
-$close-target: 2.5rem;
+// The dialog's close button: a 2rem × in a 2rem square, set in from the dialog's corner
+// (`Modal/index.scss`); the owner's call during M5.5 made it 2.5rem, and again on
+// 2026-10-20 moved it up and right, where 2rem is still well past WCAG 2.2's 24px minimum.
+$close-target: 2rem;
 
 // The width of its own frame under which a `.data-table--stack` table turns
 // each row into a card (MB.115): a container width, not the screen's, so a
@@ -585,6 +703,29 @@ $switch-width: 2.75rem;
 // switch's thumb sliding (MB.115). Short, so the new state shows before the
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
+// A larger thing moving into place: an ingredient card's face sliding out (M12.44).
+$motion-medium: 300ms;
+// How far a card's face slides down out of its slot, and so how tall the drawer body
+// behind it must be to leave no gap (M12.44).
+$drawer-travel: 11px;
+
+// A movement the eye should follow, not just register: the details window's
+// description opening and closing under its Show More bar (the owner's call,
+// 2026-10-20). Twice `$motion-short`, since a block of text
+// changing height needs longer than a thumb sliding to read as one move.
+$motion-medium: 300ms;
+
+// The loading standard (M12.33; claude-docs/design-decisions/m12.33-plan.md).
+// How long a wait must last before an indicator shows (the spinner, the link
+// dot and the page bar), so an answer that is quick never flashes one;
+// skeletons are not held back. The spinner's turn, the shimmer's pass, the one
+// slow pulse every piece falls back to under reduced motion, and the fade
+// that brings new content in over its skeleton (`arrived`, _mixins.scss).
+$loading-delay: 100ms;
+$spin-duration: 0.8s;
+$shimmer-duration: 1.4s;
+$pulse-duration: 2s;
+$arrive-duration: 200ms;
 
 // The application shell (MB.7, drawn in its design review): the global bar
 // across the top of every signed-in page, the context row beneath it that
@@ -643,12 +784,15 @@ $add-below-width: 21.875rem;
 // or list opened from the shell, over the bars; `dialog` is a non-native
 // overlay, since a <dialog> sits in the browser's top layer above every one. `sticky-row` is a
 // page's own row stuck under the bar: above the cards, below the bar and everything opened from it.
+// `callout` is a click's failure under its control (ClickFeedback): over a
+// popover it may sit beside, under a non-native overlay that covers the page.
 $layers: (
   'sticky-row': 5,
   'shell': 10,
   'banner': 11,
   'toggle': 12,
   'floating': 20,
+  'callout': 25,
   'dialog': 30,
 );
 
@@ -684,6 +828,11 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The width an ingredient entry's side column takes beside its text: room for
+// a row of two or three category chips and a correspondence's list of colours.
+// Shared with the entry's wait (Skeleton) so the two lay out alike.
+$side-column: calc(#{space(8)} * 5);
 
 // The air added to the card's own 12px gap above and below the forms line (chips to
 // forms, forms to the jar rule): one token, so the two stay equal. 16px in all.

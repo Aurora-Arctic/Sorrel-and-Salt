@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
@@ -8,20 +8,31 @@ import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
-import { mockGraphQLQuery } from '../../../../support/msw/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../../../support/msw/graphql';
 import { offerCategories } from '../../../../support/msw/ingredient-lookups';
 import { openSections } from '../../../../support/ingredient-sections';
 import { sent } from '../../../../support/filter-form';
+import { entryDetail } from '../../../../support/entry-detail';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
 // under the address's filter, and the modal its address opens — `?new` empty,
 // `?edit=` an entry by slug, an old slug sent on to the new one. The guard,
 // the services and the entry's values are mocked: what they decide is
 // tests/lib/request-session.test.ts's, the compendium services' tests', and
-// tests/db/admin-compendium-entry-values.test.ts's.
+// tests/db/entry-values.test.ts's.
 
 const requireCuratorSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
+vi.mock('@/lib/request-session', () => ({
+  requireCuratorSession,
+  getSession: async () => ADMIN,
+}));
+
+// The plus beside the details' pencil is for covens the viewer may add in (M9.12), tests/app/plus-covens.test.ts's;
+// an admin in no coven has none, so the details draw neither it nor its check.
+vi.mock('@/lib/viewer', () => ({
+  viewerIfSignedIn: async () => undefined,
+  covenRolesIfSignedIn: async () => undefined,
+}));
 
 // The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
@@ -48,15 +59,22 @@ const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
 const variantsOf = vi.fn();
+// The details modal's sections (M12.5), read uncached with the curator's session.
+const ingredientDetailOf = vi.fn();
 // How many entries each filter's choices would list (M12.4), which also
 // names the forms the Form box offers.
 const compendiumFacets = vi.fn();
+// The curator's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
+const covensHoldingEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   listCompendium,
   countCompendium,
   compendiumFacets,
   resolveCompendiumSlug,
   variantsOf,
+  ingredientDetailOf,
+  covensHoldingEntry,
 }));
 
 // The curated forms, read through the vocabulary module, and the two batches
@@ -83,7 +101,7 @@ vi.mock('@/modules/vocabulary', () => ({
 }));
 
 const entryValues = vi.fn();
-vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+vi.mock('@/app/entry-values', () => ({ entryValues }));
 
 // `redirect` throws in Next, ending the render; so does this one, recognisably.
 const REDIRECTED = 'NEXT_REDIRECT';
@@ -204,6 +222,11 @@ beforeEach(() => {
   countCompendium.mockResolvedValue({ totalCount: 1, countBefore: 0 });
   resolveCompendiumSlug.mockReset();
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: TESTWORT, movedAway: null });
+  ingredientDetailOf.mockReset();
+  ingredientDetailOf.mockResolvedValue({
+    ...entryDetail({ safetyNotes: 'Fixture admin caution.' }),
+    folkNames: ['Fixture Adminbane'],
+  });
   // Every entry listed comes in one form, Herb.
   variantsOf.mockReset();
   variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
@@ -232,6 +255,7 @@ beforeEach(() => {
   categoryGroupsOf.mockImplementation(async (ids: string[]) => ids.map(() => WARDS));
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
+  covensHoldingEntry.mockResolvedValue([]);
   redirect.mockClear();
   router.replace.mockClear();
   // An entry's form asks after near matches of the name it opens with.
@@ -264,7 +288,7 @@ describe('the /admin/compendium page', () => {
     expect(readCardCategories).toHaveBeenCalledExactlyOnceWith([TESTWORT.id]);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
     expect(within(row).getByRole('list', { name: 'Categories' })).toBeInTheDocument();
-    expect(within(row).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
+    expect(within(row).getByRole('link', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Herb' })).toBeInTheDocument();
     expect(
@@ -616,7 +640,7 @@ describe('the /admin/compendium modal', () => {
     await renderPage({ edit: TESTWORT.slug });
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
-    expect(entryValues).toHaveBeenCalledWith(TESTWORT);
+    expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     // An edit opens with its sections closed (MB.115).
     openSections('Identity', 'Variants');
@@ -675,5 +699,143 @@ describe('the /admin/compendium modal', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+  });
+});
+
+// A name's details modal over the list (M12.5): `?entry=<slug>`, which an Edit
+// inside it opens the edit modal over, `?entry=<slug>&edit=<slug>`, so closing
+// the edit goes back to the details.
+describe('the /admin/compendium details modal', () => {
+  const DETAILS_TESTWORT = 'Testwort';
+  const ON_DETAILS = `${FILTERED_HREF}&entry=${TESTWORT.slug}`;
+  const details = () => screen.getByRole('dialog', { name: DETAILS_TESTWORT });
+
+  it("opens an entry's details on ?entry=, with its full page and an Edit over them", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(within(details()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${TESTWORT.slug}`,
+    );
+    expect(within(details()).getByRole('link', { name: /^Edit\b/ })).toHaveAttribute(
+      'href',
+      `${ON_DETAILS}&edit=${TESTWORT.slug}`,
+    );
+    // The details read no form values: only an edit does.
+    expect(entryValues).not.toHaveBeenCalled();
+  });
+
+  it("shows the entry's sections in the details, read with the curator's session", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(ingredientDetailOf).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT);
+    expect(
+      within(within(details()).getByRole('region', { name: 'Caution' })).getByText(
+        'Fixture admin caution.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(within(details()).getByRole('list', { name: 'Folk Names' })).getByText(
+        'Fixture Adminbane',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("reads no entry's sections when no details are open", async () => {
+    await renderPage(FILTERED);
+
+    // Why it could read: the list holds the entry.
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+    expect(ingredientDetailOf).not.toHaveBeenCalled();
+    expect(covensHoldingEntry).not.toHaveBeenCalled();
+  });
+
+  it("lists the curator's own covens that hold the entry in the details, read with the curator's session", async () => {
+    covensHoldingEntry.mockResolvedValue([
+      { id: 'w-fixture', slug: 'fixture-coven', name: 'Fixture Coven' },
+    ]);
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
+    const covens = within(details()).getByRole('list', { name: 'In Your Covens' });
+    expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/coven\/fixture-coven\/ingredients\//),
+    );
+  });
+
+  it("links each name to its details, keeping the filter, and each row's Edit to no details", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    const row = screen.getAllByRole('row')[1];
+    // The name's href is the entry's page; the press's address is the details'.
+    expect(within(row).getByRole('link', { name: 'Testwort' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${TESTWORT.slug}`,
+    );
+    expect(
+      within(row).getByRole('link', { name: EDITING_TESTWORT.replace(' Ingredient,', '') }),
+    ).toHaveAttribute('href', `${FILTERED_HREF}&edit=${TESTWORT.slug}`);
+  });
+
+  it('closes the details back to the filtered page they opened over', async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+
+    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+  });
+
+  it('opens the edit modal over the details on ?entry= with ?edit=, and its Cancel goes back to them', async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(details()).toBeInTheDocument();
+    const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
+
+    fireEvent.click(within(editing).getByRole('button', { name: 'Cancel' }));
+
+    expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
+  });
+
+  it('closes a stacked edit back to the list, not the details, once it has deleted the entry', async () => {
+    // A delete first asks how many covens hold the entry, to say so.
+    mockGraphQLQuery('CompendiumEntryUsers', () => ({ compendiumEntryUsers: 0 }));
+    mockGraphQLMutation('DeleteCompendiumIngredient', (variables: { id: string }) => ({
+      deleteCompendiumIngredient: variables.id,
+    }));
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
+    const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
+
+    fireEvent.click(within(editing).getByRole('button', { name: 'Delete Ingredient' }));
+    fireEvent.click(await within(editing).findByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF));
+    expect(router.replace).not.toHaveBeenCalledWith(ON_DETAILS);
+  });
+
+  it('sends an old ?entry= slug on to the entry at its new one, keeping the filter and the edit', async () => {
+    resolveCompendiumSlug.mockImplementation(async (slug: string) =>
+      slug === 'testwort-herb'
+        ? { kind: 'moved', slug: TESTWORT.slug }
+        : { kind: 'entry', entry: TESTWORT, movedAway: null },
+    );
+
+    await expect(
+      renderPage({ ...FILTERED, entry: 'testwort-herb', edit: TESTWORT.slug }),
+    ).rejects.toThrow(REDIRECTED);
+
+    expect(redirect).toHaveBeenCalledExactlyOnceWith(`${ON_DETAILS}&edit=${TESTWORT.slug}`);
+  });
+
+  it('says so, and opens nothing, when ?entry= names no entry', async () => {
+    resolveCompendiumSlug.mockRejectedValue(new NotFound('No such compendium entry'));
+
+    await renderPage({ entry: 'gone' });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeVisible();
   });
 });

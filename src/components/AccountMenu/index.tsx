@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { isAtPath } from '../../lib/at-path';
+import { PendingLink } from '../../lib/navigation';
+import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import SignOutButton from './sign-out-button';
@@ -34,6 +35,9 @@ const Chevron = (): ReactElement => (
   </svg>
 );
 
+// The account page: its sections beside the jump menu.
+const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
+
 const AccountMenu = ({
   name,
   verified,
@@ -58,23 +62,26 @@ const AccountMenu = ({
   const close = (): void => setOpen(false);
 
   // Open only: a closed menu listens for nothing. Escape is heard on the
-  // document, not the panel, so it works wherever the focus is, and it hands
-  // the focus back to the button the panel came from.
+  // window, not the panel, so it works wherever the focus is, and it hands
+  // the focus back to the button the panel came from. The window rather than
+  // the document, so it hears an Escape after a failed Sign Out's callout,
+  // which listens on the document and takes the one it closes on
+  // (`defaultPrevented`): that Escape leaves the menu open.
   useEffect(() => {
     if (!open) return;
     const closeOnOutsidePress = (event: PointerEvent): void => {
       if (event.target instanceof Node && !root.current?.contains(event.target)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
       setOpen(false);
       button.current?.focus();
     };
     document.addEventListener('pointerdown', closeOnOutsidePress);
-    document.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('keydown', closeOnEscape);
     return () => {
       document.removeEventListener('pointerdown', closeOnOutsidePress);
-      document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('keydown', closeOnEscape);
     };
   }, [open]);
 
@@ -101,29 +108,31 @@ const AccountMenu = ({
       <ul id={panelId} className="account-menu__panel" hidden={!open}>
         {verified && (
           <li className="account-menu__account">
-            <Link
+            <PendingLink
               href={ACCOUNT_PATH}
+              navigationTarget={ACCOUNT_TARGET}
               className={
                 pending ? 'account-menu__item account-menu__item--counted' : 'account-menu__item'
               }
               onClick={close}
             >
               Your Account
-            </Link>
+            </PendingLink>
             {/* A link of its own beside Your Account, not inside it: a press on
                 the count opens the invitations, a press on the rest of the row
                 the account page (the owner's call, M10.32). */}
             {pending && (
               <span className="account-menu__count">
-                <IconTip tip={`You have ${invitations}`} placement="below">
-                  <Link
+                <IconTip tip={`You Have ${invitations}`} placement="below">
+                  <PendingLink
                     href={ACCOUNT_INVITATIONS_PATH}
+                    navigationTarget={ACCOUNT_TARGET}
                     className="account-menu__count-mark"
                     onClick={close}
                   >
                     <span aria-hidden="true">{pendingInvitations}</span>
                     <span className="visually-hidden">{invitations}</span>
-                  </Link>
+                  </PendingLink>
                 </IconTip>
               </span>
             )}
@@ -132,14 +141,15 @@ const AccountMenu = ({
         {verified &&
           links.map(({ label, href, base }) => (
             <li key={label} className="account-menu__link">
-              <Link
+              <PendingLink
                 href={href}
+                navigationTarget={siteLinkTarget(base, href)}
                 className="account-menu__item"
                 onClick={close}
                 aria-current={isAtPath(pathname, base) ? 'page' : undefined}
               >
                 {label}
-              </Link>
+              </PendingLink>
             </li>
           ))}
         <li className="account-menu__signout">

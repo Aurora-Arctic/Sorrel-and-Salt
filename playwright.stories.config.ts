@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import { HTML_REPORT, auditProjects, baseConfig } from './playwright.config';
+import { auditProjects } from './playwright.config';
+import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import { slotServers } from './tests/e2e/servers';
 
 // The story suite (M9.1): one browser flow per user story, under
@@ -19,7 +20,9 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   passWithNoTests: true,
   reporter: [
-    ['list'],
+    // Under Claude Code the per-test lines are dots; PW_REPORTER=list (or any
+    // value) restores them for timings (MB.142, M12.37).
+    [process.env.PW_REPORTER ?? (process.env.CLAUDECODE && !process.env.CI ? 'dot' : 'list')],
     ['./tests/support/story-playwright-reporter.ts', { outputFile: process.env.STORIES_JSON }],
     ...(process.env.CI ? ([['json'], ['html', HTML_REPORT]] as const) : []),
   ],

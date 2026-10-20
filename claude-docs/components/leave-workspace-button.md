@@ -10,9 +10,9 @@ component taking the workspace's `workspaceId` and `name`, and, for the coven's 
   question names the coven in bold and says the member loses access until an owner invites them back.
 - **One GraphQL mutation, `leaveWorkspace(workspaceId)`**, through the same path as every write from
   the browser (CLAUDE.md rule 1). It names no user: the service leaves the caller's own seat and has
-  no argument to name another's. A refusal is said above the page's buttons, once, through
-  `ActionFailure` (`src/components/ActionFailure/`), which the page wraps around the Your Membership
-  and Delete This Coven sections together. Rendered outside it, the button says its refusal beside itself.
+  no argument to name another's. A refusal is said in a callout under the button, which has
+  the focus back ([`click-feedback.md`](click-feedback.md), M12.31). A success announces
+  nothing, since it leaves the page.
 - **The last owner is refused by the service** (M6.8's guard) whatever the page shows; a refusal
   that still reaches the button, such as when the owners changed after the page was drawn, is said
   as it stands. The control stays visible and enabled for every role.
@@ -64,7 +64,12 @@ member, a viewer) gets the plain one, and the page reads nothing for them.
 - **The button is a `ModalButton`** ([`modal.md`](modal.md)), so the focus returns to Leave Coven
   however the dialog closes: Cancel, Escape, Close, or a click outside. `Modal` restores nothing
   itself (MB.119).
-- **A refusal is said inside the dialog,** through its own `ActionFailure`, not behind it on the page.
+- **A refusal is said inside the dialog,** in a plain error `Notice`, not behind it on the page.
+  Promote and Leave's is at the dialog's top: the dialog holds it (`ExitDialog` in
+  `owner-exit.tsx`) and hands the handover a `report`. The in-dialog Delete Coven says its own
+  on a full-width line above the dialog's buttons, as every in-dialog confirmed action does (the
+  owner's calls, 2026-10-20), with no badge: inside the row it squeezed Delete and pushed Cancel
+  past the dialog's edge on a phone. `coven.spec.ts` holds that at 375px.
 - **The service still decides.** Bypassing the dialog, `leaveWorkspace` refuses the only owner.
 
 Why the page and not the refusal: the guard's `LastOwner` carries `remedy` and `promotable`, but
@@ -92,8 +97,9 @@ coven index's, which reads the session and so has no story: it is walked in
 ## Testing
 
 `tests/components/LeaveWorkspaceButton/index.test.tsx`: nothing sent until confirmed, then the
-named coven's id, a replace to the landing and a refresh; a refusal stays on the page; a refusal inside an `ActionFailure`
-is said above the buttons, not beside the one pressed. `owner-exit.test.tsx`: the dialog opens
+named coven's id, a replace to the landing and a refresh; a refusal stays on the page,
+said under the button with the focus on it and the badge bringing it back, and a success
+announces nothing. `owner-exit.test.tsx`: the dialog opens
 with both ways out, the type-ahead and the one-member and no-member shapes, the two requests in
-their order and what each failure leaves, the Delete confirmation, and that the focus returns to
+their order and what each failure leaves, a refused hand-over said at the dialog's top and a refused deletion inside the dialog, the Delete confirmation, and that the focus returns to
 Leave Coven when the dialog closes by Cancel or Escape.

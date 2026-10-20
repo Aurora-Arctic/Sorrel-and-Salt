@@ -2,7 +2,7 @@
 
 // The list inside the account page's Sign-In Methods section, whose frame,
 // heading and intro are the page's own primitives (`.page-frame__section`,
-// `.header`). Its alert or removal notice, then the rows.
+// `.header`). A callback error's notice, then the rows.
 .sign-in-methods {
   display: flex;
   flex-direction: column;

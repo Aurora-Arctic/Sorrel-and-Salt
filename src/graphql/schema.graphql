@@ -179,14 +179,6 @@ type ConvertedCompendium {
   entry: Ingredient!
 }
 
-"""
-An own entry turned into a compendium entry: the cupboard entry written, and what was lost.
-"""
-type ConvertedLocal {
-  dropped: DroppedOnConvert!
-  entry: CupboardEntry!
-}
-
 type CorrespondenceSuggestion {
   curated: Boolean!
   description: String
@@ -271,7 +263,7 @@ input DeityTraditionInput {
 }
 
 """
-What a convert left behind, by name, each list sorted. An own entry made a compendium entry lists what the compendium entry does not carry, whose rows stay on the deleted own entry; a compendium entry made the coven's own lists what its copy could not hold.
+What Make It Ours could not carry onto the coven's new own entry, by name, each list sorted: a folk name its new name took. The other lists stay empty.
 """
 type DroppedOnConvert {
   """The entry's and its forms'."""
@@ -279,7 +271,7 @@ type DroppedOnConvert {
   deities: [String!]!
   folkNames: [String!]!
 
-  """Forms that matched no compendium form and held no jar or spell layer."""
+  """Always empty for a Make It Ours: every form is copied."""
   forms: [String!]!
 
   """The entry's and its forms', each as its bibliography entry reads."""
@@ -731,11 +723,6 @@ type Mutation {
   Makes a compendium entry the coven holds its own: a new own entry from the coven's reading of it, with copies of its forms, folk names, substitutes, categories, references and deities; its jars and spell layers move to the copy's forms of the same name, and the cupboard entry is removed. Works on an entry the compendium has retired. The compendium entry is not changed.
   """
   convertCompendiumEntryToLocal(ingredientId: ID!, workspaceId: ID!): ConvertedCompendium!
-
-  """
-  Turns one of the coven's own entries into the compendium entry it duplicates: its jars and spell layers move to the compendium's forms of the same name, a cupboard entry carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no match, or a jar or a layer would meet one of the compendium's.
-  """
-  convertLocalToCompendiumEntry(compendiumId: ID!, localId: ID!, workspaceId: ID!): ConvertedLocal!
 
   """
   Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.

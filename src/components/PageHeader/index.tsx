@@ -6,9 +6,17 @@ import type { PageHeaderProps } from './types';
 // `.page-header` row and its `h1` were written by hand on nine admin pages
 // until MB.115. No client directive and no hook, so a server page renders it
 // directly; an action that needs the browser is a client component of its own.
-const PageHeader = ({ title, action }: PageHeaderProps): ReactElement => (
+const PageHeader = ({ title, lead, action }: PageHeaderProps): ReactElement => (
   <div className="page-header">
-    <h1>{title}</h1>
+    {lead ? (
+      // Beside the heading, not in it, so the heading reads as the title alone.
+      <div className="page-header__title">
+        {lead}
+        <h1>{title}</h1>
+      </div>
+    ) : (
+      <h1>{title}</h1>
+    )}
     {action}
   </div>
 );

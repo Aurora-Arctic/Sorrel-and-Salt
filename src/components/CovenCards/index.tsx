@@ -1,20 +1,25 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
-import { emptyText } from '../CompendiumList';
+import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
-import type { CovenCardsProps } from './types';
+import { covenCardActions, covenCardName } from './actions';
+import EmptyCupboard from './empty';
+import type { CovenCardEntry, CovenCardsProps } from './types';
 import '../CompendiumList/index.scss';
 
 // A coven's Ingredients list (M9.6), the twin of CompendiumCards: the filter row in its coven
 // mode, one compact card per entry of the cupboard, and the pager. Render-only: the page reads
 // one page and hands it here. Each card links to the entry's page inside the coven, shows the
-// coven's own label, and holds its jars beneath the forms. The foot of a card (Edit, Delete)
-// stays empty until M8.17 and M9.10 fill it. An empty list is plain text until M9.11 builds
-// its empty state. claude-docs/components/coven-cards.md.
+// coven's own label, and holds its jars beneath the forms. The foot of a card holds Edit where
+// the page gives the entry an edit address (M8.17): the coven's own entries, for a role that
+// may update them; and Annotate where it gives an annotate address: the compendium entries the
+// cupboard holds, for the same role. Beside it, the card's More (`card-more.tsx`): Delete on
+// an own entry, Make It Ours and Remove on a compendium one. An empty list is
+// EmptyCupboard's (M9.11). claude-docs/components/coven-cards.md.
 
 const CovenCards = ({
   covenSlug,
@@ -28,6 +33,7 @@ const CovenCards = ({
   nextHref,
   position,
   total,
+  canAdd,
 }: CovenCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -48,7 +54,7 @@ const CovenCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, 'There are no ingredients here yet.')}</p>
+      <EmptyCupboard covenSlug={covenSlug} filter={filter} canAdd={canAdd} />
     ) : (
       <IngredientCardList label="Ingredients" density="compact">
         {entries.map((entry) => (
@@ -63,8 +69,9 @@ const CovenCards = ({
             toxic={entry.toxic}
             safetyNotes={entry.safetyNotes}
             kind={entry.kind}
-            annotated={entry.annotated}
             retired={entry.retired}
+            actions={covenCardActions(entry, workspaceId, covenSlug)}
+            startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
           >
             {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
           </IngredientCard>

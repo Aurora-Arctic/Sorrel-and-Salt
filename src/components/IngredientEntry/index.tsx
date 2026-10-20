@@ -1,8 +1,11 @@
 import type { Route } from 'next';
-import Link from 'next/link';
+import { PendingLink } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
 import type { ReactElement, ReactNode } from 'react';
-import EntryMarks from '../EntryMarks';
+import EntryMarks, { RecencyMark } from '../EntryMarks';
+import { SafetyMark } from '../SafetyNote';
 import FormIcon from '../FormIcon';
+import HeldMark from './held-mark';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../Modal/route-modal-provider';
@@ -10,28 +13,17 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
-import { LinkIcon } from '../IconTip';
-import LinkHint from '../LinkHint';
-import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
-import { chipColors } from '../../lib/chip-colors';
+import FormalName from './formal-name';
+import LinkHint, { LinkIconHint } from '../LinkHint';
+import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { slugify } from '../../lib/slugify';
-import { capitalise } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import {
-  isBinomial,
-  NAMELESS_KIND,
-  type NomenclatureKind,
-} from '@/modules/ingredients/schema/ingredient-enums';
-import type {
-  IngredientRow,
-  CategoryDetail,
-  DeityDetail,
-  SubstituteDetail,
-  VariantDetail,
-} from '@/modules/ingredients';
+import type { SubstituteDetail, VariantDetail } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
-import EditButton from './edit-button';
+import { cupboardFormValues } from '../CupboardEntryForm/entry-values';
+import { EditPencil } from './edit-pencil';
+import { editEyebrow } from './edit-heading';
 import {
   BIBLIOGRAPHY_ID,
   DETAILS,
@@ -40,9 +32,18 @@ import {
   ReferencesSection,
   referenceNotes,
 } from './references';
+import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
-import LinkToCompendium from './link-to-compendium';
+import OwnEntryActions from './own-actions';
 import type { IngredientEntryProps } from './types';
+import {
+  blockOf,
+  categoryItems,
+  CorrespondenceBlock,
+  correspondences,
+  ListBlock,
+  said,
+} from './blocks';
 import './index.scss';
 
 // An ingredient's page body, the same on the public compendium route and a
@@ -53,200 +54,8 @@ import './index.scss';
 // client parts, a link and the modal it opens, which this server component
 // renders. claude-docs/components/ingredient-entry.md.
 
-/** Blank counts as nothing said, as `SafetyNote` counts it. */
-const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
-
-const listed = (values: readonly string[] | null | undefined): string[] =>
-  (values ?? []).filter(said);
-
-/** Each settled nomenclature's formal name, as its label says it. */
-const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
-  botanical: 'Botanical Name',
-  fungal: 'Fungal Name',
-  zoological: 'Zoological Name',
-  mineral: 'Mineral Name',
-  chemical: 'Chemical Name',
-};
-
-/**
- * What the formal name is, said in the tip beside it, since the page shows
- * the name alone (the owner's call): which naming system governs it, as
- * DESIGN.md §5's nomenclature table states each kind.
- */
-const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
-  botanical: 'Its botanical name, under the ICN.',
-  fungal: 'Its fungal name, under the ICN.',
-  zoological: 'Its zoological name, under the ICZN.',
-  mineral: 'Its mineral name: an IMA species or variety, or a rock, mineraloid or natural glass.',
-  chemical: 'Its chemical name, IUPAC\u2019s or the accepted one.',
-};
-const FORMAL_NAME_TIP = 'Its formal name; which naming system it belongs to is not yet settled.';
-const NO_FORMAL_NAME_TIP = 'No naming system names it.';
-
-/** One correspondence row: its label and what it lists, possibly nothing. */
-interface Row {
-  label: string;
-  values: string[];
-}
-
-type Correspondences = Pick<
-  IngredientRow,
-  'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
->;
-
-function correspondences(source: Correspondences, deities?: readonly DeityDetail[]): Row[] {
-  const rows: Row[] = [
-    { label: 'Elements', values: listed(source.elements).map(capitalise) },
-    { label: 'Planets', values: listed(source.celestialBodies) },
-    { label: 'Zodiac Signs', values: listed(source.zodiacSigns) },
-    { label: 'Colours', values: listed(source.colors).map(capitalise) },
-  ];
-  if (deities) {
-    rows.push({
-      label: 'Deities',
-      values: deities.map(({ name, tradition }) => (tradition ? `${name} (${tradition})` : name)),
-    });
-  }
-  return rows;
-}
-
-/**
- * The formal name beside the label, never blank (MB.161): italics only for a
- * binomial; an unsettled kind's name upright and marked unconfirmed; and
- * "None" where there is none, the tip beside it saying why.
- */
-function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
-  const formal = (entry.canonicalName ?? '').trim();
-  const label = NAME_LABELS[entry.nomenclature] ?? 'Formal Name';
-  const tip =
-    entry.nomenclature === NAMELESS_KIND
-      ? NO_FORMAL_NAME_TIP
-      : (NAME_TIPS[entry.nomenclature] ?? FORMAL_NAME_TIP);
-  let value: ReactNode;
-  if (entry.nomenclature === NAMELESS_KIND) {
-    value = <span className="ingredient-entry__empty">None</span>;
-  } else if (formal === '') {
-    value = <span className="ingredient-entry__empty">Not yet looked up</span>;
-  } else if (isBinomial(entry.nomenclature)) {
-    // `i` rather than `em`: a taxonomic name is set apart, not stressed.
-    value = <i className="binomial">{formal}</i>;
-  } else if (NAME_LABELS[entry.nomenclature]) {
-    value = formal;
-  } else {
-    value = (
-      <>
-        {formal} <span className="ingredient-entry__empty">(unconfirmed)</span>
-      </>
-    );
-  }
-  return (
-    // The name alone, as an eyebrow over the heading, with what it is in a
-    // tip beside it (the owner's call). Still a term and its definition, the
-    // term hidden from sight, so a screen reader hears "Botanical Name" first.
-    <dl className="ingredient-entry__formal">
-      <div>
-        <dt>{label}</dt>
-        <dd>
-          <span className="eyebrow">{value}</span>{' '}
-          <InfoTip id="formal-name-tip" label={label}>
-            {tip}
-          </InfoTip>
-        </dd>
-      </div>
-    </dl>
-  );
-}
-
 const substituteLabel = ({ name, form }: SubstituteDetail): string =>
   form ? `${name} (${formLabel(form)})` : name;
-
-/** The ids one block of a section takes: its heading's, and what names its content. */
-interface Block {
-  /** The block's own heading id. */
-  id: string;
-  /** What names the list: the heading alone, or the form's name before it. */
-  labelledBy: string;
-}
-
-function blockOf(prefix: string, key: string, nameId?: string): Block {
-  const id = `${prefix}-${key}`;
-  return { id, labelledBy: nameId ? `${nameId} ${id}` : id };
-}
-
-/** A block's heading level: below Details' h2, or below a form's h3. */
-type BlockLevel = 3 | 4;
-
-function ListBlock({
-  block,
-  title,
-  level,
-  empty,
-  className,
-  children,
-}: {
-  block: Block;
-  title: string;
-  level: BlockLevel;
-  /** Said in place of the list when it holds nothing, so the heading never stands over nothing. */
-  empty?: string;
-  className?: string;
-  children: ReactNode[];
-}): ReactElement {
-  const Heading = `h${level}` as const;
-  return (
-    <div className="ingredient-entry__block">
-      <Heading id={block.id}>{title}</Heading>
-      {children.length > 0 ? (
-        <ul
-          className={className ? `ingredient-entry__list ${className}` : 'ingredient-entry__list'}
-          aria-labelledby={block.labelledBy}
-        >
-          {children}
-        </ul>
-      ) : (
-        empty && <p className="ingredient-entry__empty">{empty}</p>
-      )}
-    </div>
-  );
-}
-
-function CorrespondenceBlock({
-  block,
-  rows,
-  level,
-}: {
-  block: Block;
-  rows: Row[];
-  level: BlockLevel;
-}): ReactElement {
-  const Heading = `h${level}` as const;
-  return (
-    <div className="ingredient-entry__block">
-      <Heading id={block.id}>Correspondences</Heading>
-      <dl className="ingredient-entry__correspondences" aria-labelledby={block.labelledBy}>
-        {rows.map((row) => (
-          <div key={row.label}>
-            <dt>{row.label}</dt>
-            {row.values.length > 0 ? (
-              <dd>{row.values.join(', ')}</dd>
-            ) : (
-              <dd className="ingredient-entry__empty">None recorded</dd>
-            )}
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
-const categoryItems = (categories: readonly CategoryDetail[]): ReactNode[] =>
-  categories.map(({ category, group }) => (
-    <li key={category.id}>
-      <span className="chip" style={chipColors(group)}>
-        {category.name}
-      </span>
-    </li>
-  ));
 
 function substituteItems(
   substitutes: readonly SubstituteDetail[],
@@ -262,9 +71,9 @@ function substituteItems(
       // A typed name may repeat, so its place keys it.
       <li key={`${at}-${label}`}>
         {href ? (
-          <Link href={href}>
+          <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
             {label} <LinkHint />
-          </Link>
+          </PendingLink>
         ) : (
           label
         )}
@@ -372,31 +181,27 @@ function FormSection({
 function ReplacesBlock({
   replaces,
   heading = 'In the Compendium',
-  convert,
 }: {
   replaces: {
     tip: string;
-    entries: { title: string; href: Route; id?: string; thenHref?: Route }[];
+    entries: { title: string; href: Route }[];
     total: number;
     allHref?: Route;
   };
   heading?: string;
-  /** Given for "Similar in the Compendium" to a role that may convert: a radio beside each entry and Link to Selected. `name` is the own entry's, for the question. */
-  convert?: { workspaceId: string; localId: string; name: string };
 }): ReactElement {
   const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
-  // The entries a conversion can name: those with an id and a page in the coven.
-  const convertible = replaces.entries.flatMap(({ title, href, id, thenHref }) =>
-    id && thenHref ? [{ title, href, id, thenHref }] : [],
-  );
-  // Directly under the list, before Link to Selected, in both blocks (the owner's call, 2026-10-19).
+  // Directly under the list, in both blocks (the owner's call, 2026-10-19).
   const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
     <p className="ingredient-entry__see-all">
-      <Link href={replaces.allHref}>
+      <PendingLink
+        href={replaces.allHref}
+        navigationTarget={ingredientLinkTarget(replaces.allHref)}
+      >
         See All {replaces.total}
         <LinkHint />
-      </Link>
+      </PendingLink>
     </p>
   );
   return (
@@ -407,34 +212,21 @@ function ReplacesBlock({
           {replaces.tip}
         </InfoTip>
       </div>
-      {convert ? (
-        <LinkToCompendium
-          workspaceId={convert.workspaceId}
-          localId={convert.localId}
-          name={convert.name}
-          entries={convertible}
-          labelledBy={block.id}
-          describedBy={whyId}
-          seeAll={seeAll}
-        />
-      ) : (
-        <ul
-          className="ingredient-entry__list ingredient-entry__replaced"
-          aria-labelledby={block.id}
-          aria-describedby={whyId}
-        >
-          {replaces.entries.map(({ title, href }) => (
-            <li key={href}>
-              <Link href={href}>
-                <span className="ingredient-entry__entry-title">{title}</span>
-                <LinkIcon />
-                <LinkHint />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      {convert ? null : seeAll}
+      <ul
+        className="ingredient-entry__list ingredient-entry__replaced"
+        aria-labelledby={block.id}
+        aria-describedby={whyId}
+      >
+        {replaces.entries.map(({ title, href }) => (
+          <li key={href}>
+            <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+              <span className="ingredient-entry__entry-title">{title}</span>
+              <LinkIconHint />
+            </PendingLink>
+          </li>
+        ))}
+      </ul>
+      {seeAll}
     </div>
   );
 }
@@ -444,9 +236,12 @@ const IngredientEntry = ({
   hrefOf,
   edit,
   movedAway,
+  back,
   replaces,
   similar,
   cupboard,
+  covens,
+  heldInCovens = false,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
@@ -457,6 +252,10 @@ const IngredientEntry = ({
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
+  // Either page's cupboard choices, which take the curator's Edit into their menu.
+  const choices = cupboard ?? covens;
+  // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
+  const recency = local ? null : entryRecency(entry.createdAt, entry.updatedAt);
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   // Caution as the card counts it (M8.14): notes on the entry, as this coven
   // reads them, or on any form (the owner's call, 2026-10-19).
@@ -485,64 +284,111 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
-        <FormalName entry={entry} />
-        <PageHeader
-          title={shown.name}
-          action={
-            (edit || cupboard) && (
-              <>
-                {edit && !(cupboard && !local) && <EditButton href={edit.href} entry={editable} />}
-                {cupboard && !local && (
-                  <CupboardActions
-                    {...cupboard}
-                    edit={edit ? { href: edit.href, entry: editable } : undefined}
-                    ingredientId={entry.id}
-                    held={held}
-                    compendium={{
-                      name: entry.name,
-                      description: entry.description,
-                      safetyNotes: entry.safetyNotes,
-                      elements: entry.elements ?? [],
-                      celestialBodies: entry.celestialBodies ?? [],
-                      zodiacSigns: entry.zodiacSigns ?? [],
-                      colors: entry.colors ?? [],
-                    }}
-                    overrides={{
-                      label: cupboardEntry?.label ?? null,
-                      description: cupboardEntry?.description ?? null,
-                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
-                      elements: cupboardEntry?.elements ?? null,
-                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
-                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
-                      colors: cupboardEntry?.colors ?? null,
-                    }}
+        {(back || recency || toxic || caution) && (
+          // One row for the way back (left, first for a screen reader), the New / Updated
+          // marker (right: the top right of the text column) and the one safety badge, just
+          // right of the marker or in its place without one (the owner's call, 2026-10-20).
+          // The row stands for the badge alone where there is no way back and no marker.
+          <div className="ingredient-entry__bar">
+            {back && (
+              <PendingLink
+                className="ingredient-entry__back"
+                href={back.href}
+                navigationTarget={ingredientLinkTarget(back.href)}
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  width="1em"
+                  height="1em"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M10 3.5L5.5 8l4.5 4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                )}
-              </>
-            )
-          }
-        />
-        {(local || held || caution || toxic || retired) && (
-          <div className="badges">
-            <EntryMarks
-              kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
-              annotated={held && isAnnotated(cupboardEntry)}
-              retired={retired}
-            />
-            <CautionMark
+                </svg>
+                Back to {back.label} <LinkHint />
+              </PendingLink>
+            )}
+            <RecencyMark recency={recency} />
+            <SafetyMark
+              toxic={entry.toxic}
               safetyNotes={shown.safetyNotes}
               variants={variants.map(({ variant }) => variant)}
             />
-            <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
+          </div>
+        )}
+        {/* The formal name and the name together, so the Edit pencil, read after the
+            heading, can stand at the end of the formal name's line (index.scss). */}
+        <div className="ingredient-entry__naming">
+          <FormalName entry={entry} />
+          <PageHeader
+            title={shown.name}
+            lead={(local || held || heldInCovens) && <HeldMark />}
+            action={
+              (edit || cupboard || covens) && (
+                <>
+                  {edit && !(choices && !local) && edit.coven ? (
+                    // A coven's own entry: Edit and Delete in one menu (M8.17).
+                    <OwnEntryActions edit={edit} entry={editable} />
+                  ) : (
+                    edit &&
+                    !(choices && !local) && (
+                      // Edit alone, as for a curator in no coven: the pencil everyone's Edit is,
+                      // a link straight into the dialog (the owner's call, 2026-10-20).
+                      <EditPencil href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
+                    )
+                  )}
+                  {cupboard && !local && (
+                    <CupboardActions
+                      {...cupboard}
+                      edit={edit ? { href: edit.href, entry: editable } : undefined}
+                      ingredientId={entry.id}
+                      held={held}
+                      {...cupboardFormValues(entry, cupboardEntry)}
+                    />
+                  )}
+                  {/* The public page's (M9.12): the same buttons across the viewer's
+                    covens, the curator's Edit among them, and none of the marks. */}
+                  {covens && !cupboard && !local && (
+                    <CupboardActions
+                      {...covens}
+                      edit={edit ? { href: edit.href, entry: editable } : undefined}
+                      ingredientId={entry.id}
+                      compendium={cupboardFormValues(entry, null).compendium}
+                    />
+                  )}
+                </>
+              )
+            }
+          />
+        </div>
+        {(local || held || cupboard || retired) && (
+          <div className="badges">
+            <EntryMarks
+              kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
+              inCoven={cupboard !== undefined}
+              annotated={held && isAnnotated(cupboardEntry)}
+              retired={retired}
+              safety={false}
+            />
           </div>
         )}
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
             The ingredient that was at this address has been moved to{' '}
-            <Link href={movedAway.href}>
+            <PendingLink
+              href={movedAway.href}
+              navigationTarget={ingredientLinkTarget(movedAway.href)}
+            >
               {movedAway.name} <LinkHint />
-            </Link>
+            </PendingLink>
           </Notice>
         )}
       </header>
@@ -596,13 +442,7 @@ const IngredientEntry = ({
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
           {replaces && <ReplacesBlock replaces={replaces} />}
-          {similar && (
-            <ReplacesBlock
-              replaces={similar}
-              heading="Similar in the Compendium"
-              convert={similar.convert && { ...similar.convert, name: shown.name }}
-            />
-          )}
+          {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(shown, deities)}
@@ -665,7 +505,7 @@ const IngredientEntry = ({
   // dialog (M9.18). The admin layout has one above its pages; these two routes
   // have none, and a provider already above is kept, so this one is safe
   // beneath any. An entry that can be edited, or annotated from a coven, needs it.
-  return edit || cupboard ? (
+  return edit || cupboard || covens ? (
     <RouteModalProvider>
       {page}
       {edit && <EntryDialog entry={editable} edit={edit} />}

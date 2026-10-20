@@ -352,9 +352,8 @@ test(
     await signInAgainAs(page, people.member.id);
     await page.goto(`/coven/${COVEN_SLUG}/members`);
     await expect(rollRow(page, people.member.name)).toBeVisible();
-    const tabs = page.getByRole('navigation', { name: 'Members' });
-    await expect(tabs.getByRole('link', { name: 'Members' })).toBeVisible();
-    await expect(tabs.getByRole('link', { name: 'Invitations' })).toHaveCount(0);
+    // One tab is no choice, so the pill navigation is left out altogether.
+    await expect(page.getByRole('navigation', { name: 'Members' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
 
@@ -449,7 +448,7 @@ test(
     await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
 
     await page.goto(invitedPath);
-    const accept = page.getByRole('button', { name: 'Accept Invitation' });
+    const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
     await expect(accept).toBeVisible();
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
@@ -544,6 +543,8 @@ test(
     await confirm.getByRole('button', { name: 'Revoke', exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await expect(pendingRow(page, gone)).toHaveCount(0);
+    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     await page.reload();
     await expectInvitationsTab(page);
     await expect(pendingRow(page, gone)).toHaveCount(0);
@@ -579,7 +580,26 @@ test(
         sql`update invitations set expires_at = now() - interval '1 hour' where email = ${late}`,
     );
 
+    // The page still open offers Accept, and its press is refused: the
+    // service's sentence in a callout from Accept, which keeps the focus, and
+    // a badge on Accept that brings it back once closed (design F, M12.31).
+    const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
+    await accept.click();
+    const callout = page.getByRole('main').getByRole('alert');
+    await expect(callout).toBeVisible();
+    await expect(accept).toBeFocused();
+    const pressedRefusal = ((await callout.textContent()) ?? '').trim();
+    await expect(accept).toHaveAccessibleDescription(`Last try failed: ${pressedRefusal}`);
+    await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
+    await page.keyboard.press('Escape');
+    await expect(callout).toHaveCount(0);
+    await expect(accept).toBeFocused();
+    await page.getByRole('button', { name: 'Show the error for Accept Invitation' }).click();
+    await expect(page.getByRole('main').getByRole('alert')).toHaveText(pressedRefusal);
+
     const expiredRefusal = await refusalAt(page, path);
+    expect(expiredRefusal.trim()).toBe(pressedRefusal);
     expect(new Set([expiredRefusal, revokedRefusal, usedRefusal]).size).toBe(3);
     await assertNoAccessibilityViolations(page);
     await directAcceptRefused(page, path);

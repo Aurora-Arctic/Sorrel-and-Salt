@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type {
   CompendiumFacets,
+  CompendiumSlugEntry,
   CupboardEntryRow,
   FacetCount,
   IngredientFacets,
@@ -22,6 +23,7 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 // The repository's own, rather than a second `typeof …$inferSelect`.
 export type {
   CompendiumFacets,
+  CompendiumSlugEntry,
   CupboardEntryRow,
   FacetCount,
   IngredientFacets,
@@ -87,13 +89,11 @@ export interface CupboardEntryKey {
 export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
 /**
- * What a convert left behind, by name, each list sorted and without repeats.
- * An own entry becoming a compendium entry (M12.21) lists the forms that
- * matched no compendium form and held nothing, and the folk names,
- * substitutes, categories, references and deities of the entry and its
- * forms, whose rows stay on the soft-deleted entry. A compendium entry
- * becoming the coven's own (M12.23) copies everything, so it lists only what
- * the new entry could not hold: a folk name its new name took.
+ * What Make It Ours (M12.23) could not carry onto the coven's new own entry,
+ * by name, each list sorted and without repeats. It copies everything, so it
+ * lists only what the new entry could not hold: a folk name its new name took.
+ * The other lists stay empty. The reverse direction, an own entry becoming a
+ * compendium entry, is v2 (DESIGN.md §13, "Link to the Compendium").
  */
 export interface DroppedOnConvert {
   forms: string[];
@@ -103,12 +103,6 @@ export interface DroppedOnConvert {
   /** Each as its bibliography entry reads. */
   references: string[];
   deities: string[];
-}
-
-/** What `convertLocalToCompendiumEntry` answers: the cupboard row it wrote, and what the coven lost. */
-export interface ConvertedLocal {
-  entry: CupboardEntryRow;
-  dropped: DroppedOnConvert;
 }
 
 /** What `convertCompendiumEntryToLocal` answers: the own entry it wrote, and what that could not carry. */
@@ -369,12 +363,21 @@ export interface ReplacedCompendiumEntry {
  * The first few compendium entries an own entry is or may be, by name, and how
  * many there are in all (M12.22). `same` shares the entry's formal name's
  * identity, `similar` shares its label when it declares no formal name, and
- * `none` is for a compendium entry. `canConvert` is whether the caller's
- * role may turn the own entry into one of them.
+ * `none` is for a compendium entry. A display only: nothing turns an own
+ * entry into one of them in v1 (DESIGN.md §13, "Link to the Compendium").
  */
 export interface CompendiumMatches {
   kind: 'same' | 'similar' | 'none';
   entries: ReplacedCompendiumEntry[];
   total: number;
-  canConvert: boolean;
+}
+
+/**
+ * One of the viewer's own covens that holds a compendium entry, as the details modal's In Your
+ * Covens block links to it (M12.5): enough to name the coven and build its entry's address.
+ */
+export interface HoldingCoven {
+  id: string;
+  slug: string;
+  name: string;
 }

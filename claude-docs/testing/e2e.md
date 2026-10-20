@@ -36,8 +36,13 @@ story flow proves is deleted, not kept beside it. The story suite shares the
 gate suite's ports (8001 and up) and its lock, `/tmp/sorrel-e2e.lock`, so the
 two never run at once on one machine.
 
-**`assertNoAccessibilityViolations(page)` does not wait** (`tests/e2e/axe.ts`):
-it scans whatever the page holds at that instant. So the last web-first
+**`assertNoAccessibilityViolations(page)` waits for a non-empty title and for
+transitions to finish, and for nothing else** (`tests/e2e/axe.ts`): it scans
+whatever the page holds at that instant. The title wait is there because a soft
+navigation (a filter, a router refresh) removes the `<title>` for a moment and
+puts the next one back, while the new rows are already in the page; measured at
+about 4 ms on a quiet machine and 150 to 360 ms with the CPU throttled 20 to 40
+times (MB.265). So the last web-first
 assertion before each scan must be one that waits for the state being
 scanned — a dialog visible, a Save enabled, a status shown, a URL reached —
 never a negative such as `toHaveCount(0)` on something that was never there,
@@ -108,6 +113,7 @@ worker starts for itself, and one server picking a database per request.
   `baseURL` with the slot's server for any project that sets none, so the
   default `chromium` project reaches its own slot's; there is no top-level
   `use.baseURL`.
+- **`E2E_PORT_BASE` moves the whole port block.** It sets the first slot's port (default 8001); the configured-providers server sits at base + 99 and the cache server at base + 100. It exists because Playwright reuses whatever already answers on a slot's port when not on CI: another session's dev server on 8001 was silently used as slot 0, and its tests failed with sessions that did not take. The value must be a whole number from 1024 to 65435, or `tests/e2e/slots.ts` throws. Workers inherit the runner's environment, so every reader sees the same block.
 - **A further slot costs about half a second and 180 MB**, MB.112's
   measurement of one more `next start` over the built `.next-e2e`; the
   servers start in turn, so the half seconds add to startup.
@@ -477,9 +483,11 @@ time: other sessions' runs shared the cores (load average 9 to 16, and every
 run waited 85 to 123 s for the lock), so these figures run slower than the
 table above and compare with each other, not with it. The warm series also
 included one failure, an axe scan that found a page with no `<title>` on
-`admin.spec.ts`'s zodiac filter test. That test passed in the other five runs
-and the stories run was green, but it was not rerun or investigated, so the
-cause is unknown.
+`admin.spec.ts`'s zodiac filter test. MB.265 explained it: a soft navigation
+leaves the document without a `<title>` for a moment, and a loaded machine let
+the scan run inside that gap. The scan now waits for a title. The same failure
+once seen in story 60 was not reproduced, so its cause is unproven; the same
+wait covers it.
 
 | Wall time, three runs  | Cold (the run builds and boots) | Warm (servers up)             |
 | ---------------------- | ------------------------------- | ----------------------------- |
@@ -537,7 +545,9 @@ one cold run the same day took 99 s for 50 stories (15 more are `fixme`),
 233 s of test work whose even spread on 6 workers would be 39 s, with
 `07-admin.spec.ts` 78 s on one worker and `08-email-and-admin.spec.ts` 60 s
 on another. It writes no HTML report locally, so its per-file sums are read
-from the list reporter's `(2.6s)` suffixes instead; CI's figures for it are
+from the list reporter's `(2.6s)` suffixes instead — run it with
+`PW_REPORTER=list`, because under Claude Code (`CLAUDECODE`) the story config
+prints dots (M12.37); CI's figures for it are
 the runner budget's `stories` row.
 
 **After the serial rule was dropped** (the plan's lever 2, this task's second

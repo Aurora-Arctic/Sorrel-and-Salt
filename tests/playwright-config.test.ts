@@ -114,3 +114,67 @@ describe('browserUrl', () => {
     expect(slots.browserUrl(8001)).toBe('http://localhost:8001');
   });
 });
+
+describe('the e2e port block', () => {
+  async function ports(base: string | undefined) {
+    vi.resetModules();
+    vi.stubEnv('E2E_PORT_BASE', base);
+    return import('./e2e/slots');
+  }
+
+  it('starts at 8001 with the providers server on 8100, the cache server on 8101, the workshop on 8102 and its HMR socket on 8103', async () => {
+    const slots = await ports(undefined);
+    expect(slots.slotPort(0)).toBe(8001);
+    expect(slots.slotPort(3)).toBe(8004);
+    expect(slots.CONFIGURED_PROVIDERS_PORT).toBe(8100);
+    expect(slots.COMPENDIUM_CACHE_PORT).toBe(8101);
+    expect(slots.WORKSHOP_PORT).toBe(8102);
+    expect(slots.WORKSHOP_HMR_PORT).toBe(8103);
+  });
+
+  it('moves them all together when E2E_PORT_BASE moves', async () => {
+    const slots = await ports('8401');
+    expect(slots.slotPort(0)).toBe(8401);
+    expect(slots.slotPort(2)).toBe(8403);
+    expect(slots.CONFIGURED_PROVIDERS_PORT).toBe(8500);
+    expect(slots.COMPENDIUM_CACHE_PORT).toBe(8501);
+    expect(slots.WORKSHOP_PORT).toBe(8502);
+    expect(slots.WORKSHOP_HMR_PORT).toBe(8503);
+  });
+
+  it.each(['abc', '80.5', '', '1023', '0', '65434'])('refuses %j', async (base) => {
+    await expect(ports(base)).rejects.toThrow(/E2E_PORT_BASE/);
+  });
+
+  it('accepts the highest base whose workshop HMR socket still fits under 65535', async () => {
+    const slots = await ports('65433');
+    expect(slots.WORKSHOP_HMR_PORT).toBe(65535);
+  });
+});
+
+// The test Ladle's live-reload socket on a port of the block's rather than
+// the 61002 that .ladle/config.mjs pins for the review workshop, so a test run
+// never competes with a review Ladle (claude-docs/workshop.md, ".ladle/").
+describe('playwright.workshop.config.ts', () => {
+  it("hands Ladle the block's HMR port, which moves with E2E_PORT_BASE", async () => {
+    vi.resetModules();
+    vi.stubEnv('E2E_PORT_BASE', '8401');
+    const { default: config } = await import('../playwright.workshop.config');
+    const server = Array.isArray(config.webServer) ? config.webServer[0] : config.webServer;
+    expect(server?.env?.LADLE_HMR_PORT).toBe('8503');
+    expect(server?.command).toContain('--port 8502');
+  });
+
+  // CI's workshop job has no database and no .env.local, and the config must
+  // still load: it shares nothing with the e2e config that builds the slot
+  // servers' environment, which reads DATABASE_URL as it is imported. The
+  // devcontainer's shell sets DATABASE_URL, so without the stub this case
+  // would pass on a broken config.
+  it('loads with DATABASE_URL unset, as on CI', async () => {
+    vi.resetModules();
+    vi.stubEnv('DATABASE_URL', undefined);
+    expect(process.env.DATABASE_URL).toBeUndefined();
+    const { default: config } = await import('../playwright.workshop.config');
+    expect(config.testDir).toMatch(/workshop/);
+  });
+});

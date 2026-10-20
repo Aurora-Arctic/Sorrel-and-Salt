@@ -23,11 +23,20 @@ panel it opens (MB.7). It is a client component.
   `aria-controls` and shows a list; there is no `role="menu"`, which promises
   arrow-key movement and a type-ahead the panel does not have, and the panel
   holds links and a button. This is the APG disclosure pattern.
-- **Escape closes it and returns the focus to the button.** A press outside it
+- **Escape closes it and returns the focus to the button.** It listens on the
+  window and skips an Escape something else already took (`defaultPrevented`),
+  so with a failed Sign Out's callout open, the first Escape closes the
+  callout, which takes it, and the next closes the menu (M12.31). A press outside it
   closes it, and so does a press on a link in it. The panel is only in the page
   while open.
 - **The name is said once**, on the button. The avatar disc (up to two
   initials, from the first and last words of the name) is `aria-hidden`.
+- **Every link in the panel is a `PendingLink`** ([`loading.md`](../loading.md)):
+  it starts the navigation through the shared hook and sets `aria-busy` while it
+  runs. Your Account and the invitations count both name the `main` region and
+  the `page` shape, since both lead to the account page. The site links name
+  `main` through `siteLinkTarget` (`AppShell/site-target.ts`), the one rule the
+  bar's links share: cards under a title and filter for `/compendium`, a narrow page for `/coven`, a wide page for `/admin` and a page for the rest. The account links name a page with the jump menu.
 - **The panel lists**: Your Account (a link to `/account`, always, not for an
   unverified viewer), at or under `$shell-tablet-width` the site links, then Sign Out
   (`sign-out-button.tsx`, below). **The theme switch is not in the panel.** It stays in the
@@ -64,11 +73,15 @@ panel it opens (MB.7). It is a client component.
   - **A success is a full load of `/`**, so nothing the signed-in page held
     survives it, and a protected page asked for next sends the visitor to sign
     in.
-  - **While it runs** the button is disabled, `aria-busy`, with a spinner and
+  - **While it runs** the button is `aria-disabled` rather than `disabled`,
+    so the focus stays on it, and a second press sends nothing; it is `aria-busy`, with a spinner and
     "Signing Out": a `BusyButton` ([`busy-button.md`](busy-button.md)).
   - **A failure**, a refusal or a connection that drops, says "That didn't
     work. Please try again." (`GENERIC_FAILURE`, `src/lib/graphql-failure.ts`)
-    in an error `Notice` beneath the button, which is offered again. The call
+    in a click-feedback callout beneath the button, with the focus left on it
+    and a badge on its corner that brings the sentence back once dismissed
+    ([`click-feedback.md`](click-feedback.md); M12.31). The next press clears
+    it. The call
     is Better Auth's, not GraphQL's, but it has no more to say about why than a
     lost request does, so it takes the same sentence.
   - **SignInMethods' Sign In Again makes the same call** in the same shape,
@@ -95,7 +108,7 @@ hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, at
 least 13rem wide. Rows are a control tall and run edge to edge of the panel, with no padding
 around them, no gap between them and no rounding; no list markers. Sign Out alone has padding around it (`.account-menu__signout`), and its
 `.btn` keeps its outline, full width of that (`.account-menu__signout-action`;
-the failure stacks beneath it). The current link gets a straight accent
+a failure floats beneath it in a callout, its badge on the button's corner). The current link gets a straight accent
 rule on its left edge and the same weight as the bar's, with no fill, so a hover's wash still shows on it. The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one. The account button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
 
 **The panel no longer clips** (`overflow: hidden` is gone, the owner's call at
@@ -136,8 +149,10 @@ and `href` when invitations wait, and neither when none do or the viewer is
 unverified.
 
 `tests/components/AccountMenu/sign-out-button.test.tsx` covers Sign Out's busy state and
-the full load of `/`, and the failure said beneath it for a refusal and for a
-dropped connection. `tests/db/sign-out.test.ts` signs out through Better
+the full load of `/`, and the failure's callout for a refusal and for a
+dropped connection: the focus kept, the description, Dismiss, the badge and
+the next press clearing it. `index.test.tsx` also checks that Escape closes a
+failed Sign Out's callout before the menu. `tests/db/sign-out.test.ts` signs out through Better
 Auth's real endpoint: the session row goes, and the same cookie then reads as
 no one. `tests/e2e/shell.spec.ts` opens the account menu, routes a refusal of the
 sign-out call, and finds it said beside the button, with axe. The refusal is

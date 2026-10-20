@@ -3,14 +3,17 @@
 
 // The tab row, a group of pills on the heading's line (MB.7, drawn in its
 // design review; claude-docs/components/tabbed-page.md, "Styling"): one
-// rounded track in the quiet fill edged by a hairline, the open tab a pill
-// inside it, the accent thinned into the card and edged in the accent itself,
+// rounded track in a faint grey wash edged by a hairline, fainter than
+// `$fill-quiet` so the green pill stands apart from it (the owner's call of
+// 2026-10-20, M8.17, after a green track sat too close to the pill), the
+// open tab a pill inside it, the accent thinned into the card and edged in the accent itself,
 // since the fill alone sits under WCAG 1.4.11's 3:1 against the track; the
 // others plain muted text. Smaller than a control, so each pill's hit area is
-// padded back invisibly (below). The mixes are this row's alone, so local
+// padded back invisibly (below). The pill's and the track's mixes are this row's alone, so local
 // rather than tokens, as the skeleton shape's are; `tests/scss/tokens.test.ts`
 // holds the open tab's label and edge to their floors.
 $segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
+$segment-track: color-mix(in srgb, $text-muted 10%, transparent);
 $pill-height: 2.25rem;
 // What the track spends on its edge and its padding, so the pills fill it
 // exactly: the 1px edge and 0.125rem of air, each side. The air is the
@@ -47,7 +50,7 @@ $track-inset: calc(1px + 0.125rem);
   translate: 0 0.125rem;
   border: 1px solid $hairline;
   border-radius: radius('pill');
-  background-color: $fill-quiet;
+  background-color: $segment-track;
 }
 
 // The open tab's action, `.page-header`'s last item. A tab with none leaves
@@ -266,7 +269,10 @@ $track-inset: calc(1px + 0.125rem);
 
   // Inside the pill rather than round it, where the track would clip it.
   &:focus-visible {
-    @include focus-ring($accent);
+    // The accent at its own strength per theme: the shared fade in dark, full
+    // in light, where even 75% falls to 2.75:1 on the track
+    // (claude-docs/styling.md, "The focus ring").
+    @include focus-ring($accent, $focus-ring-tab-strength);
 
     outline-offset: -2px;
   }
@@ -342,174 +348,4 @@ $track-inset: calc(1px + 0.125rem);
 // `data-arrived` and shows at once.
 .tabbed-page__panel[data-arrived] {
   @include arrived;
-}
-
-// The skeleton a pressed tab shows while it is on its way (`panel-loading.tsx`),
-// its shapes the shared `skeleton-shape` (_mixins.scss). Shown at once, with a short
-// fade: the press has already taken the old content away, so holding the
-// skeleton back would leave the panel blank, which is the snap it is there
-// to avoid. A size container, so its rows turn to cards under the width the
-// real table stacks at.
-.tab-skeleton {
-  container: tab-skeleton / inline-size;
-  @include arrived($motion-short);
-}
-
-// The filter row, the table and the pager, spaced as the panel spaces a list.
-.tab-skeleton__shapes {
-  @include stack;
-}
-
-// Every shape: a rounded bar, the shimmer passing across it.
-.tab-skeleton__shapes span {
-  @include skeleton-shape;
-}
-
-// The filter row: the search box and a narrower select, a control's height
-// each, wrapping as `.filter-row` does, edge to edge. No button: the real row has
-// none, its search submitting from the magnifier inside its box (MB.115).
-.tab-skeleton__filter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: space(3) space(5);
-
-  > span {
-    height: $control-height;
-  }
-}
-
-.tab-skeleton__field {
-  flex: 1 1 $filter-search-basis;
-}
-
-.tab-skeleton__field--short {
-  flex: 0 1 $filter-choice-width;
-}
-
-// The table: a heading over the muted hairline and six rows, every second
-// one banded on the card surface, as the admin tables are.
-.tab-skeleton__head,
-.tab-skeleton__row {
-  display: grid;
-  grid-template-columns: 2fr 3fr 1fr;
-  gap: space(5);
-  padding: space(3);
-}
-
-.tab-skeleton__head {
-  border-bottom: 1px solid $text-muted;
-
-  > span {
-    width: 60%;
-    height: 0.75rem;
-  }
-}
-
-.tab-skeleton__row:nth-child(odd) {
-  background-color: $surface-card;
-}
-
-// Uneven lengths, so the rows read as text rather than a grid of bricks.
-.tab-skeleton__row > span:nth-child(1) {
-  width: 70%;
-}
-
-.tab-skeleton__row:nth-child(3n) > span:nth-child(1) {
-  width: 50%;
-}
-
-.tab-skeleton__row > span:nth-child(2) {
-  width: 90%;
-}
-
-.tab-skeleton__row:nth-child(even) > span:nth-child(2) {
-  width: 65%;
-}
-
-.tab-skeleton__row > span:nth-child(3) {
-  width: 4rem;
-  justify-self: end;
-}
-
-// The cards variant (a list of ingredient cards): the same grid the real list
-// draws, `$ingredient-card-min` wide at the least, each a card-surface block of
-// a heading bar, a shorter caption bar and a chips bar. Equal in height, as the
-// real cards are.
-.tab-skeleton__cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$ingredient-card-min}), 1fr));
-  gap: space(4);
-}
-
-.tab-skeleton__card {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
-  min-height: 9rem;
-  padding: space(5);
-  border-radius: radius('surface');
-  background-color: $surface-card;
-
-  > span:nth-child(1) {
-    width: 60%;
-    height: 1.25rem;
-  }
-
-  > span:nth-child(2) {
-    width: 40%;
-  }
-
-  > span:nth-child(3) {
-    width: 75%;
-    margin-block-start: auto;
-  }
-}
-
-// Prev and Next, centred beneath the table as the pager is.
-.tab-skeleton__pager {
-  display: flex;
-  justify-content: center;
-  gap: space(3);
-
-  > span {
-    width: 5rem;
-    height: $control-height;
-  }
-}
-
-// Under the width the real table stacks at, each row is a card, as each
-// row of `.data-table--stack` is: no heading, the bars stacked on the card
-// surface, the action across the card's foot.
-@container tab-skeleton (max-width: #{$table-stack-width}) {
-  .tab-skeleton__table {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
-  }
-
-  .tab-skeleton__head {
-    display: none;
-  }
-
-  .tab-skeleton__row {
-    grid-template-columns: 1fr;
-    gap: space(2);
-    border-radius: radius('surface');
-    background-color: $surface-card;
-  }
-
-  .tab-skeleton__row > span:nth-child(3) {
-    width: 100%;
-    height: 2rem;
-    justify-self: stretch;
-  }
-}
-
-// Under the forms' column the filter's fields stack full width, as the real
-// filter's do.
-@container tab-skeleton (max-width: #{$narrow-column}) {
-  .tab-skeleton__filter > span {
-    flex-basis: 100%;
-  }
 }

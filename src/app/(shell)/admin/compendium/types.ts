@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { IngredientFormValues } from '../../../../components/IngredientForm/types';
 import type { CompendiumPlace } from '../../../../components/CompendiumList/types';
 import type { ModalHeading } from '../../../../components/Modal/types';
@@ -28,6 +29,8 @@ export interface CompendiumSearchParams extends ListSearchParams {
   zodiac?: string | string[];
   planets?: string | string[];
   toxic?: string | string[];
+  /** The entry whose details modal is open over the list, by slug (M12.5). */
+  entry?: string | string[];
 }
 
 /** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */
@@ -49,4 +52,9 @@ export interface CompendiumDialogProps {
   place: CompendiumPlace;
   /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
   opened?: OpenedEntry;
+  /**
+   * The list's own address: the admin Compendium's, or the public search's, which opens the
+   * same dialog for a curator (M8.17). The admin's when left out.
+   */
+  path?: Route;
 }

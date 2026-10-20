@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import EntryMarks from '@/components/EntryMarks';
+import EntryMarks, { RecencyMark } from '@/components/EntryMarks';
 
 // The cupboard's three kinds and what each shows (M8.14;
 // claude-docs/components/entry-marks.md). Each mark is found by its exact
@@ -30,12 +30,23 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  it('shows Annotated in place of Compendium once the cupboard row overrides a field', () => {
+  // Annotated wins (the owner's call, 2026-10-20): it already says the entry is the
+  // Compendium's, so the two never show together. The test above is the precondition:
+  // held and unannotated, the same entry shows Compendium.
+  it('shows Annotated alone, without Compendium, once the cupboard row overrides a field', () => {
     render(<EntryMarks kind="cupboard" annotated />);
 
     expect(annotated()).toBeInTheDocument();
     expect(held()).toBeNull();
     expect(statuses()).toHaveLength(0);
+  });
+
+  it('marks a compendium entry the cupboard does not hold when read in a coven', () => {
+    render(<EntryMarks kind="compendium" inCoven />);
+
+    expect(held()).toBeInTheDocument();
+    expect(statuses()).toHaveLength(1);
+    expect(annotated()).toBeNull();
   });
 
   it('shows the retired mark in place of the held one, and Annotated beside it, each a button', () => {
@@ -71,6 +82,24 @@ describe('EntryMarks', () => {
     },
   );
 
+  // The card's switch (the owner's call, 2026-10-20): Compendium and Annotated
+  // say where a held entry came from, which the entry page says and a card does not.
+  it('leaves Compendium and Annotated off without provenance, keeping Local and Retired', () => {
+    const card = render(<EntryMarks kind="cupboard" annotated provenance={false} />);
+    expect(held()).toBeNull();
+    expect(annotated()).toBeNull();
+    expect(card.container).toBeEmptyDOMElement();
+    card.unmount();
+
+    const retiredCard = render(<EntryMarks kind="cupboard" retired annotated provenance={false} />);
+    expect(retired()).toBeInTheDocument();
+    expect(annotated()).toBeNull();
+    retiredCard.unmount();
+
+    render(<EntryMarks kind="own" provenance={false} />);
+    expect(local()).toBeInTheDocument();
+  });
+
   it('shows nothing for a compendium entry the cupboard does not hold', () => {
     const { container } = render(<EntryMarks kind="compendium" />);
 
@@ -86,4 +115,115 @@ describe('EntryMarks', () => {
     const bare = render(<EntryMarks kind="compendium" annotated />);
     expect(bare.container).toBeEmptyDOMElement();
   });
+});
+
+// Green first, red last, on every badge row (the owner's call, 2026-10-20):
+// EntryMarks draws the whole row, the safety mark included, so the order
+// holds in one place. Asserted by document order, never by class or copy.
+describe('EntryMarks badge order', () => {
+  const precedes = (first: Element | null, second: Element | null): boolean =>
+    first !== null &&
+    second !== null &&
+    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const caution = () => screen.queryByText('Caution', { exact: true });
+  const toxic = () => screen.queryByText('Toxic', { exact: true });
+
+  it('draws a green mark first, ahead of a neutral one built before it', () => {
+    render(<EntryMarks kind="cupboard" retired annotated />);
+
+    expect(precedes(annotated(), retired())).toBe(true);
+  });
+
+  it('draws Local ahead of the safety mark', () => {
+    render(<EntryMarks kind="own" toxic />);
+    expect(precedes(local(), toxic())).toBe(true);
+  });
+
+  it('draws the safety mark last', () => {
+    render(<EntryMarks kind="cupboard" retired annotated safetyNotes="Fixture caution." />);
+
+    for (const mark of [annotated(), retired()]) {
+      expect(precedes(mark, caution())).toBe(true);
+    }
+  });
+
+  // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
+  it('shows Toxic alone when the entry is toxic and has notes', () => {
+    render(<EntryMarks kind="cupboard" toxic safetyNotes="Fixture caution." />);
+
+    expect(toxic()).toBeInTheDocument();
+    expect(caution()).toBeNull();
+  });
+
+  it('reads Toxic over Caution from a form as well as the ingredient', () => {
+    render(
+      <EntryMarks
+        kind="compendium"
+        variants={[{ form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true }]}
+      />,
+    );
+
+    expect(toxic()).toBeInTheDocument();
+    expect(caution()).toBeNull();
+  });
+
+  it('leaves the safety mark to its caller when told to', () => {
+    render(<EntryMarks kind="own" safety={false} toxic safetyNotes="Fixture caution." />);
+
+    expect(local()).toBeInTheDocument();
+    expect(toxic()).toBeNull();
+    expect(caution()).toBeNull();
+  });
+
+  // New or Updated comes before every badge, in reading order and on screen (the owner's
+  // call, 2026-10-20), whichever row it shares with them.
+  it('draws New or Updated ahead of every badge', () => {
+    render(
+      <EntryMarks kind="own" retired recency="updated" safetyNotes="Fixture entry caution." />,
+    );
+    const updated = screen.getByText('Updated', { exact: true });
+
+    for (const badge of [local(), retired(), caution()]) {
+      expect(precedes(updated, badge)).toBe(true);
+    }
+  });
+
+  it('draws no recency mark without one', () => {
+    render(<EntryMarks kind="own" />);
+
+    expect(screen.queryByText(/^(New|Updated)$/)).toBeNull();
+  });
+});
+
+describe('RecencyMark (MB.106)', () => {
+  it.each([
+    ['new', 'New', 'Updated'],
+    ['updated', 'Updated', 'New'],
+  ] as const)('shows %s as text, and not the other', (recency, shown, other) => {
+    render(<RecencyMark recency={recency} />);
+
+    expect(screen.getByText(shown, { exact: true })).toBeInTheDocument();
+    expect(screen.queryByText(other, { exact: true })).toBeNull();
+  });
+
+  it('hides its drawing from assistive technology', () => {
+    const { container } = render(<RecencyMark recency="new" />);
+
+    for (const drawing of container.querySelectorAll('svg')) {
+      expect(drawing).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
+
+  it('shows neither once the 30 days have passed', () => {
+    const { container } = render(<RecencyMark recency={null} />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+it('EntryMarks no longer draws New or Updated: the marker is its own component', () => {
+  render(<EntryMarks kind="cupboard" />);
+
+  expect(screen.queryByText('New', { exact: true })).toBeNull();
+  expect(screen.queryByText('Updated', { exact: true })).toBeNull();
 });

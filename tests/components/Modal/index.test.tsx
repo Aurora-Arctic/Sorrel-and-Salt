@@ -141,12 +141,55 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: 'Revoke Admin' })).toHaveFocus();
   });
 
+  // axe's scrollable-region-focusable: a body with no field must be reachable
+  // by Tab, or a keyboard cannot scroll it. A form's body is reached by its fields.
+  it("gives a body only to read a Tab stop of its own, and a form's body none", async () => {
+    const { unmount } = render(
+      <Modal title="Testwort" onClose={vi.fn()} readingBody>
+        <p>Fixture reading.</p>
+      </Modal>,
+    );
+    await settle();
+    const reading = screen.getByText('Fixture reading.').parentElement!;
+    expect(reading.tabIndex).toBe(0);
+    // The dialog still takes the focus as it opens, not the body.
+    expect(screen.getByRole('dialog', { name: 'Testwort' })).toHaveFocus();
+    unmount();
+
+    renderModal();
+    expect(
+      screen.getByRole('textbox', { name: 'Name' }).closest('[tabindex]:not(dialog)'),
+    ).toBeNull();
+  });
+
   it('asks its owner to close it from the Close button', () => {
     const onClose = renderModal();
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes from the Close button on its top line, with the top line empty or full', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Modal title="Edit Category" topEnd={<></>} onClose={onClose}>
+        <input aria-label="Name" />
+      </Modal>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <Modal title="Edit Category" topEnd={<output>Marked</output>} onClose={onClose}>
+        <input aria-label="Name" />
+      </Modal>,
+    );
+    const mark = screen.getByText('Marked');
+    const close = screen.getByRole('button', { name: 'Close' });
+    // The marks first, as on screen, and neither is in the dialog's name.
+    expect(mark.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Edit Category' })).toBeInTheDocument();
   });
 
   // The owner decides: a URL-driven modal closes by navigating, and the
@@ -168,6 +211,28 @@ describe('Modal', () => {
   // the point; happy-dom lays nothing out, so every point is outside the box and
   // what is tested is where the press began and ended. Its own padding is
   // inside the box, which only a real layout shows (tests/e2e/admin-compendium.spec.ts).
+  // A confirmation opened from inside a dialog (M8.17's Annotate dialog) is a
+  // second Modal in the first's contents. React carries the inner dialog's
+  // cancel up its tree to the outer dialog's handler, so Escape closed both.
+  it("closes only the innermost of two nested dialogs on Escape, leaving the outer's owner unasked", () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    render(
+      <Modal title="Annotate This Entry" onClose={outer}>
+        <Modal title="Remove from Cupboard" onClose={inner}>
+          <p>Remove it?</p>
+        </Modal>
+      </Modal>,
+    );
+    const asked = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    expect(asked).toHaveAttribute('open');
+
+    fireEvent(asked, new Event('cancel', { cancelable: true }));
+
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+  });
+
   it('asks its owner to close it for a press and release on the backdrop, and for nothing else', () => {
     const onClose = renderModal();
     const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
@@ -185,6 +250,175 @@ describe('Modal', () => {
     fireEvent.mouseDown(dialog, at);
     fireEvent.click(dialog, at);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  // The focus goes back to what opened the dialog, however it closes, unless
+  // that is gone: then to where the owner says (claude-docs/components/modal.md,
+  // "Giving the focus back"; the owner's call, 2026-10-19).
+  describe('giving the focus back', () => {
+    /** A page with an opener button and the modal its state opens. */
+    function Page({ returnTo }: { returnTo?: () => HTMLElement | null }): ReactElement {
+      const [open, setOpen] = useState(false);
+      const [opener, setOpener] = useState(true);
+      return (
+        <>
+          {opener && (
+            <button type="button" onClick={() => setOpen(true)}>
+              Open
+            </button>
+          )}
+          <button type="button">Elsewhere</button>
+          {open && (
+            <Modal title="Edit Category" onClose={() => setOpen(false)} returnTo={returnTo}>
+              {(done) => (
+                <>
+                  <label>
+                    Name <input />
+                  </label>
+                  <button type="button" onClick={() => setOpener(false)}>
+                    Drop Opener
+                  </button>
+                  <button type="button" onClick={done}>
+                    Cancel
+                  </button>
+                </>
+              )}
+            </Modal>
+          )}
+        </>
+      );
+    }
+    const button = (name: string) => screen.getByRole('button', { name });
+    const openFrom = async (name = 'Open') => {
+      button(name).focus();
+      fireEvent.click(button(name));
+      await settle();
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+    };
+
+    it('gives the focus back to its opener on Escape', async () => {
+      render(<Page />);
+      await openFrom();
+
+      fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(button('Open')).toHaveFocus();
+    });
+
+    it('gives the focus back to its opener on Cancel', async () => {
+      render(<Page />);
+      await openFrom();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(button('Open')).toHaveFocus();
+    });
+
+    // A modal opened by its address is shut by the address changing, the
+    // owner unmounting it with no close of its own.
+    it('gives the focus back to its opener when its owner unmounts it', async () => {
+      function Owned({ open }: { open: boolean }): ReactElement {
+        return (
+          <>
+            <button type="button">Open</button>
+            {open && (
+              <Modal title="Edit Category" onClose={vi.fn()}>
+                <label>
+                  Name <input />
+                </label>
+              </Modal>
+            )}
+          </>
+        );
+      }
+      const view = render(<Owned open={false} />);
+      button('Open').focus();
+      view.rerender(<Owned open />);
+      await settle();
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+
+      view.rerender(<Owned open={false} />);
+
+      expect(button('Open')).toHaveFocus();
+    });
+
+    it('gives the focus to where its owner says once its opener is gone', async () => {
+      render(<Page returnTo={() => button('Elsewhere')} />);
+      await openFrom();
+
+      fireEvent.click(button('Drop Opener'));
+      fireEvent.click(button('Cancel'));
+
+      expect(screen.queryByRole('button', { name: 'Open' })).toBeNull();
+      expect(button('Elsewhere')).toHaveFocus();
+    });
+
+    // A click on a button in WebKit leaves the focus on the page, so nothing opened it.
+    it('gives the focus to where its owner says when nothing held the focus as it opened', async () => {
+      render(<Page returnTo={() => button('Elsewhere')} />);
+      fireEvent.click(button('Open'));
+      await settle();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(button('Elsewhere')).toHaveFocus();
+    });
+
+    // A row's own control removes the row: the opener goes with the modal, and
+    // the owner's place with them, so the page's heading takes the focus
+    // rather than the page losing it (M8.17, after M12.31's follow-up 5).
+    it("gives the focus to the page's heading when its opener goes with it and its owner names nowhere", async () => {
+      function Row(): ReactElement {
+        const [open, setOpen] = useState(false);
+        return (
+          <li>
+            <button type="button" onClick={() => setOpen(true)}>
+              Remove Testwort
+            </button>
+            {open && (
+              <Modal title="Remove Testwort" onClose={vi.fn()} returnTo={() => null}>
+                <button type="button">Remove</button>
+              </Modal>
+            )}
+          </li>
+        );
+      }
+      function List({ present }: { present: boolean }): ReactElement {
+        return (
+          <main>
+            <h1>Members</h1>
+            <ul>{present && <Row />}</ul>
+          </main>
+        );
+      }
+      const view = render(<List present />);
+      button('Remove Testwort').focus();
+      fireEvent.click(button('Remove Testwort'));
+      await settle();
+      expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement);
+
+      view.rerender(<List present={false} />);
+
+      const heading = screen.getByRole('heading', { level: 1, name: 'Members' });
+      expect(heading).toHaveFocus();
+      // Focusable by script alone, so Tab never stops on it.
+      expect(heading).toHaveAttribute('tabindex', '-1');
+    });
+
+    it('gives the focus back to its opener through a Strict Mode remount', async () => {
+      render(
+        <StrictMode>
+          <Page returnTo={() => button('Elsewhere')} />
+        </StrictMode>,
+      );
+      await openFrom();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(button('Open')).toHaveFocus();
+    });
   });
 
   // The owner's call during M5.5: it fades in and out. In is CSS alone. Out
@@ -403,6 +637,34 @@ describe('Modal', () => {
       expect(button('Open All').closest('[inert]')).toBeNull();
     });
 
+    it('keeps a foot outside the body that scrolls, and makes it inert while asking', () => {
+      render(
+        <Modal
+          title="Edit Category"
+          onClose={vi.fn()}
+          foot={
+            <button type="button" onClick={() => undefined}>
+              Open Page
+            </button>
+          }
+        >
+          {(done) => <GuardedForm close={done} />}
+        </Modal>,
+      );
+      // Why it could be inside: it is passed beside the children, which the body wraps.
+      const foot = button('Open Page');
+      expect(foot.closest('.modal-dialog__body')).toBeNull();
+      expect(field('Name').closest('.modal-dialog__body')).not.toBeNull();
+      change('Name', 'Testwort');
+      expect(foot.closest('[inert]')).toBeNull();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(foot.closest('[inert]')).not.toBeNull();
+      fireEvent.click(button('Keep Editing'));
+      expect(foot.closest('[inert]')).toBeNull();
+    });
+
     it.each([
       ['the Close button', () => fireEvent.click(button('Close'))],
       ['Escape', escape],
@@ -560,5 +822,79 @@ describe('Modal', () => {
       expect(asking()).not.toBeInTheDocument();
       expect(onClose).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+// While a modal is open the root's scroll is hidden, and the scrollbar's room
+// is given back as padding (Modal/page-hold.ts): the width is published as
+// `--scrollbar-width` only where the page had a scrollbar, and only until the
+// last modal closes. The padding itself is presentation, measured by hand.
+describe('Modal holding the page', () => {
+  const root = document.documentElement;
+  const widthOf = () => root.style.getPropertyValue('--scrollbar-width');
+
+  // happy-dom lays nothing out, so the root's width is set to say whether
+  // the page has a scrollbar: narrower than the window means it has one.
+  function pageWithScrollbar(scrollbar: number) {
+    Object.defineProperty(root, 'clientWidth', {
+      configurable: true,
+      get: () => window.innerWidth - scrollbar,
+    });
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(root, 'clientWidth');
+  });
+
+  it('gives the room back while open where the page has a scrollbar, and takes it back on close', () => {
+    pageWithScrollbar(15);
+    expect(widthOf()).toBe('');
+
+    const { unmount } = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(widthOf()).toBe('15px');
+
+    unmount();
+    expect(widthOf()).toBe('');
+  });
+
+  it('sets nothing where the page has no scrollbar', () => {
+    pageWithScrollbar(0);
+
+    const { unmount } = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Edit Category' })).toHaveAttribute('open');
+    expect(widthOf()).toBe('');
+    unmount();
+  });
+
+  // A second modal opens once the scrollbar is already gone, so it must not
+  // measure again, and the first closing must not give the room back early.
+  it('keeps the room until the last of two open modals closes', () => {
+    pageWithScrollbar(15);
+    const first = render(
+      <Modal title="Edit Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    pageWithScrollbar(0);
+    const second = render(
+      <Modal title="Delete Category" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+    expect(widthOf()).toBe('15px');
+
+    first.unmount();
+    expect(widthOf()).toBe('15px');
+
+    second.unmount();
+    expect(widthOf()).toBe('');
   });
 });

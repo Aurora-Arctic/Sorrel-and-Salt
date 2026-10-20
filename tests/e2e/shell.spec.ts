@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import postgres from 'postgres';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
@@ -131,19 +131,30 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   // Sign Out, refused: the refusal is routed rather than awaited from Better
   // Auth, as tests/e2e/account.spec.ts once did beside the page's heading,
   // since whether it refuses depends on the origin the browser reaches the
-  // server on. The panel stays open and says so beside the button.
+  // server on. The panel stays open and says so in a callout under the
+  // button, the focus left on it (claude-docs/components/click-feedback.md).
   await page.route('**/api/auth/sign-out', (route) =>
     route.fulfill({ status: 403, json: { code: 'INVALID_ORIGIN', message: 'Invalid origin' } }),
   );
   const signOut = banner.getByRole('button', { name: 'Sign Out', exact: true });
   await expect(signOut).toBeEnabled();
-  await signOut.click();
-  await expect(banner.getByRole('alert')).toBeVisible();
+  await signOut.focus();
+  await page.keyboard.press('Enter');
+  const failure = banner.getByRole('alert');
+  await expect(failure).toBeVisible();
   await expect(signOut).toBeEnabled();
+  await expect(signOut).toBeFocused();
+  await expect(banner.getByRole('button', { name: 'Show the error for Sign Out' })).toBeVisible();
   await settleTransitions(page);
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 
+  // The callout takes the first Escape and the menu stays open; the next
+  // closes the menu.
+  await page.keyboard.press('Escape');
+  await expect(failure).toHaveCount(0);
+  await expect(account).toHaveAttribute('aria-expanded', 'true');
+  await expect(signOut).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(account).toHaveAttribute('aria-expanded', 'false');
   await expect(banner.getByRole('link', { name: 'Your Account' })).toHaveCount(0);
@@ -185,24 +196,6 @@ test('an admin sees both site links, the admin nav and no switcher', async ({ pa
     'page',
   );
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
-});
-
-test('a tabbed page holds its pills in the page header line', async ({ page }) => {
-  await signInAgainAs(page, users.admin.id);
-  await page.setViewportSize(DESKTOP);
-  await page.goto('/admin/categories');
-
-  const pills = page.getByRole('navigation', { name: 'Categories', exact: true });
-  await expect(pills.getByRole('link', { name: 'Categories', exact: true })).toBeVisible();
-  await expect(pills.getByRole('link', { name: 'Groups', exact: true })).toBeVisible();
-
-  const heading = await page
-    .getByRole('main')
-    .getByRole('heading', { level: 1, name: 'Categories' })
-    .boundingBox();
-  const row = await pills.boundingBox();
-  expect(row!.y).toBeGreaterThanOrEqual(heading!.y - 1);
-  expect(row!.y).toBeLessThanOrEqual(heading!.y + heading!.height);
 });
 
 test('a signed-in non-admin meets the 403 inside the shell', async ({ page }) => {
@@ -341,6 +334,94 @@ for (const width of [642, 768, 882]) {
     expect(fits).toBe(true);
   });
 }
+
+// Wider than the phone the row shows the leading tabs that fit and puts the
+// rest behind More (SectionNav's measured fit, MB.7's review). These measure
+// what a component test can only stand widths in for: which tabs are drawn
+// in the row, which control carries the current page, and whether the row
+// overflows its own box. A tab hidden behind More is drawn but not visible,
+// so the row's links are its visible ones.
+const rowLinks = (nav: Locator) => nav.getByRole('link').filter({ visible: true });
+
+/** The admin nav once the script has fitted its row. */
+async function fittedAdminNav(page: Page): Promise<Locator> {
+  const nav = page.getByRole('navigation', { name: 'Admin' });
+  await expect(nav).toHaveAttribute('data-fit', '');
+  return nav;
+}
+
+/** Whether the row's tabs and More overflow the list that holds them. */
+const rowOverflows = (nav: Locator) =>
+  nav
+    .getByRole('list')
+    .first()
+    .evaluate((list) => list.scrollWidth > list.clientWidth + 1);
+
+test('at a tablet width, More carries the current page when its tab is hidden behind it', async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.admin.id);
+  await page.setViewportSize({ width: 768, height: 800 });
+
+  // Why More could carry it: on a page whose tab is in the row it does not.
+  await page.goto('/admin');
+  let nav = await fittedAdminNav(page);
+  const more = nav.getByRole('button', { name: /More/ });
+  await expect(more).toBeVisible();
+  await expect(more).not.toHaveAttribute('aria-current');
+
+  await page.goto('/admin/users');
+  nav = await fittedAdminNav(page);
+  await expect(rowLinks(nav).filter({ hasText: 'People' })).toHaveCount(0);
+  await expect(nav.getByRole('button', { name: /People/ })).toHaveAttribute('aria-current', 'page');
+});
+
+// The current tab is set at a heavier weight, so it is wider: the row is
+// fitted afresh on each navigation, not kept from the page before. At 681px
+// Forms current fits three tabs and More where Compendium current fits two
+// (measured in the remote browser's fonts), so a fit kept from Forms would
+// overflow on Compendium. At another width the test still holds, with less
+// to prove.
+test('at a tablet width, a navigation fits the row afresh for the new current tab', async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.admin.id);
+  // A width where the bolder current tab tips the count: the compendium
+  // page, loaded fresh, fits one tab fewer than the forms page does.
+  await page.setViewportSize({ width: 681, height: 800 });
+  await page.goto('/admin/compendium');
+  const fresh = await rowLinks(await fittedAdminNav(page)).count();
+
+  await page.goto('/admin/forms');
+  const nav = await fittedAdminNav(page);
+  // Why it could have kept the old count: the forms page fits a different one.
+  expect(await rowLinks(nav).count()).not.toBe(fresh);
+  const compendium = rowLinks(nav).filter({ hasText: 'Compendium' });
+  await expect(compendium).toHaveCount(1);
+
+  await compendium.click();
+  await expect(page).toHaveURL(/\/admin\/compendium$/);
+  await expect(nav.getByRole('link', { name: 'Compendium', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect.poll(() => rowLinks(nav).count()).toBe(fresh);
+  expect(await rowOverflows(nav)).toBe(false);
+  await assertNoSidewaysScroll(page);
+});
+
+test('at a desktop width, once fitted, the admin row shows every tab and draws no More', async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.admin.id);
+  await page.setViewportSize(DESKTOP);
+  await page.goto('/admin');
+
+  const nav = await fittedAdminNav(page);
+  await expect(rowLinks(nav)).toHaveCount(6);
+  await expect(nav.getByRole('button')).toHaveCount(0);
+  expect(await rowOverflows(nav)).toBe(false);
+});
 
 // MB.264: the server cannot know the window's width, so it draws the phone's
 // four tabs and More. Wider than the phone the stylesheet must show every tab

@@ -3,7 +3,7 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { stopImpersonating } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
-import Notice from '../Notice';
+import { useClickFeedback } from '../ClickFeedback';
 import type { ImpersonationBannerProps } from './types';
 import './index.scss';
 
@@ -15,6 +15,8 @@ import './index.scss';
 // admin's again, and every server component must read it afresh.
 const RETURN_TO = '/admin/users';
 
+const STOP_FAILED = "Impersonation didn't stop. Please try again, or sign out to end it.";
+
 // The banner's height, published on the root for the top inset, which counts
 // it only on a touch screen, where the banner sits in the page's flow
 // (index.scss; claude-docs/styling.md, "The top inset").
@@ -24,6 +26,7 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const banner = useRef<HTMLElement>(null);
+  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Stop Impersonating' });
 
   useEffect(() => {
     const element = banner.current;
@@ -44,10 +47,14 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
     if (pending) return;
     setPending(true);
     setFailed(false);
-    const { error } = await stopImpersonating();
+    report(undefined);
+    // A refusal answers `error`; a dropped connection throws. Either says so.
+    const { error } = await stopImpersonating().catch((thrown: unknown) => ({ error: thrown }));
     if (error) {
       setPending(false);
       setFailed(true);
+      // In a callout under the button (claude-docs/components/click-feedback.md).
+      report(STOP_FAILED);
       return;
     }
     window.location.assign(RETURN_TO);
@@ -67,6 +74,7 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
           owner asked for). `aria-disabled` rather than `disabled`, which
           would drop the focus to the page and leave a keyboard nowhere. */}
       <BusyButton
+        ref={anchorRef}
         className="btn btn--quiet btn--small"
         aria-disabled={pending || undefined}
         busy={pending}
@@ -75,11 +83,7 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
       >
         Stop Impersonating
       </BusyButton>
-      {failed && (
-        <Notice kind="error">
-          Impersonation didn't stop. Please try again, or sign out to end it.
-        </Notice>
-      )}
+      {feedback}
     </aside>
   );
 };

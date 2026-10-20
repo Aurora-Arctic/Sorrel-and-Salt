@@ -1,14 +1,18 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
+import { ingredientLinkTarget } from './site-target';
 import type { Route } from 'next';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { type ReactElement, Suspense, useEffect, useRef, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { type ReactElement, Suspense, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
+import { sectionsFor } from '../MenuButton/sections';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
+import { NEW, closedHref, openHref } from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 
@@ -29,8 +33,6 @@ import type { AddDestination, AddIngredientButtonProps } from './types';
 // claude-docs/components/modal.md, "Add Ingredient".
 
 const LABEL = 'Add Ingredient';
-/** The address parameter that opens a coven's dialog. */
-const NEW = 'new';
 // The solid green at the medium size (the owner's call, M8.16): the bar's one
 // action, taller than a small button and shorter than a field.
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
@@ -91,7 +93,12 @@ function destinationsOf(
   viewer: AddIngredientButtonProps['viewer'],
   workspaces: AddIngredientButtonProps['workspaces'],
   pathname: string,
-): { all: AddDestination[]; initial: AddDestination | undefined } {
+): {
+  all: AddDestination[];
+  compendium: AddDestination[];
+  covens: AddDestination[];
+  initial: AddDestination | undefined;
+} {
   const covens: AddDestination[] = workspaces
     .filter(({ canWrite }) => canWrite)
     .map((workspace) => ({
@@ -107,23 +114,12 @@ function destinationsOf(
   const slug = covenSlugOf(pathname);
   const named = covens.find((d) => d.kind === 'coven' && d.workspace.slug === slug);
   const onAdmin = pathname.startsWith('/admin') && compendium.length > 0;
-  return { all, initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]) };
-}
-
-/** The address with `?new`, or `?new=<slug>` for a coven other than the default, over its other parameters. */
-function openHref(pathname: string, params: URLSearchParams, slug?: string): string {
-  const rest = new URLSearchParams(params);
-  rest.delete(NEW);
-  const lead = rest.toString();
-  return `${pathname}?${lead ? `${lead}&` : ''}${NEW}${slug ? `=${encodeURIComponent(slug)}` : ''}`;
-}
-
-/** The address with `?new` dropped. */
-function closedHref(pathname: string, params: URLSearchParams): string {
-  const rest = new URLSearchParams(params);
-  rest.delete(NEW);
-  const lead = rest.toString();
-  return lead ? `${pathname}?${lead}` : pathname;
+  return {
+    all,
+    compendium,
+    covens,
+    initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]),
+  };
 }
 
 const AddIngredientButton = ({
@@ -132,16 +128,20 @@ const AddIngredientButton = ({
 }: AddIngredientButtonProps): ReactElement | null => {
   const pathname = usePathname();
   const params = useSearchParams();
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const [saved, setSaved] = useState<string | null>(null);
   const main = useRef<HTMLButtonElement>(null);
-  // Set by a close only, so Back and a first render take no focus.
-  const returning = useRef(false);
   // Set by a save that opens the new entry's page: the dialog then closes on
   // that navigation, and the close must not write the address under it.
   const leaving = useRef(false);
 
-  const { all, initial } = destinationsOf(viewer, workspaces, pathname);
+  const { all, compendium, covens, initial } = destinationsOf(viewer, workspaces, pathname);
+  // The menu's groups, the side the viewer is on first: a coven's page the covens, any
+  // other page the compendium, as the bar has always led with it.
+  const sections = sectionsFor(
+    { compendium, coven: covens },
+    covenSlugOf(pathname) ? 'coven' : 'compendium',
+  );
   const onAdmin = pathname.startsWith('/admin');
   // The coven whose dialog the address opens: `?new` the default coven,
   // `?new=<slug>` that coven, and nothing for a slug the viewer cannot write
@@ -158,13 +158,6 @@ const AddIngredientButton = ({
               d.kind === 'coven' && d.workspace.slug === asked,
           )?.workspace ?? null);
 
-  useEffect(() => {
-    if (!adding && returning.current) {
-      returning.current = false;
-      main.current?.focus();
-    }
-  }, [adding]);
-
   if (!viewer.verified) return null;
   if (!initial) return null;
 
@@ -173,9 +166,9 @@ const AddIngredientButton = ({
     // request: the route-modal provider that would open it at once sits below
     // the shell.
     if (destination.kind === 'compendium') {
-      router.push('/admin/compendium?new');
+      navigate('/admin/compendium?new');
     } else if (onAdmin) {
-      router.push(`/coven/${destination.workspace.slug}?${NEW}` as Route);
+      navigate(`/coven/${destination.workspace.slug}?${NEW}` as Route);
     } else {
       const slug =
         destination.workspace.id === defaultCoven?.id ? undefined : destination.workspace.slug;
@@ -185,7 +178,6 @@ const AddIngredientButton = ({
   };
 
   const close = () => {
-    returning.current = true;
     // Replacing, so Back does not open it again, as RouteModal closes. A save
     // is on its way to the new entry's page, and a replace here would land
     // under that push and keep the page where it was.
@@ -202,7 +194,7 @@ const AddIngredientButton = ({
           {LABEL}
         </button>
         {all.length > 1 && (
-          <AddIngredientMenu destinations={all} className={MORE_CLASSES} onChoose={go} />
+          <AddIngredientMenu sections={sections} className={MORE_CLASSES} onChoose={go} />
         )}
       </span>
       {adding && (
@@ -214,6 +206,9 @@ const AddIngredientButton = ({
           destination={adding.name}
           title={LABEL}
           onClose={close}
+          // Back to the bar's main part when what opened it, the menu's
+          // item, is gone with the menu.
+          returnTo={() => main.current}
         >
           {(done) => (
             <AddIngredientBody
@@ -224,7 +219,8 @@ const AddIngredientButton = ({
                 // Save Ingredient opens the new ingredient's page, an address
                 // without `?new`, which closes the dialog.
                 leaving.current = true;
-                router.push(`/coven/${adding.slug}/ingredients/${ingredient.id}` as Route);
+                const href = `/coven/${adding.slug}/ingredients/${ingredient.id}`;
+                navigate(href as Route, { target: ingredientLinkTarget(href, !onAdmin) });
               }}
             />
           )}

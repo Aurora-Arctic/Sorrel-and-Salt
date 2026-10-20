@@ -1,0 +1,502 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The shared loading skeleton (M12.33), of the shapes the site waits on:
+// `table`, `cards`, `form` and `page`. It was the tab panel's skeleton
+// (MB.115) and the route modal's (M9.18); both now draw it. Each shape is
+// the shared `skeleton-shape` (_mixins.scss), a quiet fill with a lighter
+// band passing across it, and a single slow pulse where motion is reduced.
+
+// Shown at once, with a short
+// fade: the press has already taken the old content away, so holding the
+// skeleton back would leave the panel blank, which is the snap it is there
+// to avoid. A size container, so its rows turn to cards under the width the
+// real table stacks at.
+.skeleton {
+  container: skeleton / inline-size;
+  @include arrived($motion-short);
+}
+
+// A `main` wait in the standard or the forms' frame (MainBody): the frame's
+// centring and window-tall minimum are for a page that fills the window, and a
+// placeholder is drawn from the top. Outranks the primitives' frame rules,
+// the context row's `:has()` one included.
+.app-shell__main main.page-frame.skeleton-frame {
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+// The filter row, the table and the pager, spaced as the panel spaces a list.
+.skeleton__shapes {
+  @include stack;
+}
+
+// Every shape: a rounded bar, the shimmer passing across it.
+.skeleton__shapes span {
+  @include skeleton-shape;
+}
+
+// A list page's heading row, laid out by `.page-header` as the page lays its
+// own: the heading bar, and where the page has an Add a button-sized block at
+// the end (the title bar is the page shape's). `.page-header` brings every
+// child but the h1 down 0.25rem for a button; the heading bar sits level.
+.skeleton__shapes .skeleton__header > .skeleton__title {
+  top: 0;
+  height: calc(heading-size(1) * 1.1);
+}
+
+.skeleton__shapes .skeleton__action {
+  width: 8rem;
+  height: $control-height;
+}
+
+// A tabbed page's heading row: the tab track follows the heading, as
+// `.tabbed-page` lays it, and the action is pushed to the end. The track is
+// the pill height of TabbedPage's own, cancelling the header's nudge as its
+// track does.
+.skeleton__header:has(> .skeleton__tabs) {
+  justify-content: flex-start;
+
+  > .skeleton__action {
+    margin-inline-start: auto;
+  }
+}
+
+.skeleton__shapes .skeleton__tabs {
+  top: 0;
+  width: 11rem;
+  height: 2.25rem;
+  border-radius: radius('pill');
+}
+
+// The filter row: the search box and a narrower select, a control's height
+// each, wrapping as `.filter-row` does, edge to edge. No button: the real row has
+// none, its search submitting from the magnifier inside its box (MB.115).
+.skeleton__filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: space(3) space(5);
+
+  > span {
+    height: $control-height;
+  }
+}
+
+.skeleton__field {
+  flex: 1 1 $filter-search-basis;
+}
+
+.skeleton__field--short {
+  flex: 0 1 $filter-choice-width;
+}
+
+// The cards' second control is the Filters button, a button wide (the table's
+// is a select, `--short`).
+.skeleton__field--button {
+  flex: 0 0 5.75rem;
+}
+
+// The count line ("9 ingredients") between the filter row and the cards, a body
+// line tall as the real one is, its bar sat in the line.
+.skeleton__count {
+  padding-block: calc((type-size('body') * 1.65 - 1rem) / 2);
+
+  > span {
+    width: 7rem;
+    height: 1rem;
+  }
+}
+
+// The table: a heading over the muted hairline and six rows, every second
+// one banded on the card surface, as the admin tables are.
+.skeleton__head,
+.skeleton__row {
+  display: grid;
+  grid-template-columns: 2fr 3fr 1fr;
+  gap: space(5);
+  padding: space(3);
+}
+
+.skeleton__head {
+  border-bottom: 1px solid $text-muted;
+
+  > span {
+    width: 60%;
+    height: 0.75rem;
+  }
+}
+
+.skeleton__row:nth-child(odd) {
+  background-color: $surface-card;
+}
+
+// Uneven lengths, so the rows read as text rather than a grid of bricks.
+.skeleton__row > span:nth-child(1) {
+  width: 70%;
+}
+
+.skeleton__row:nth-child(3n) > span:nth-child(1) {
+  width: 50%;
+}
+
+.skeleton__row > span:nth-child(2) {
+  width: 90%;
+}
+
+.skeleton__row:nth-child(even) > span:nth-child(2) {
+  width: 65%;
+}
+
+.skeleton__row > span:nth-child(3) {
+  width: 4rem;
+  justify-self: end;
+}
+
+// The cards variant (a list of ingredient cards): the same grid the real list
+// draws, `$ingredient-card-min` wide at the least, each a card-surface block of
+// a heading bar, a shorter caption bar and a chips bar. Equal in height, as the
+// real cards are.
+.skeleton__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$ingredient-card-min}), 1fr));
+  gap: space(4);
+}
+
+.skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  min-height: 11.25rem;
+  padding: space(4);
+  border-radius: radius('surface');
+  background-color: $surface-card;
+
+  > span:nth-child(1) {
+    width: 60%;
+    height: 1.25rem;
+  }
+
+  > span:nth-child(2) {
+    width: 40%;
+  }
+
+  > span:nth-child(3) {
+    width: 75%;
+    margin-block-start: auto;
+  }
+}
+
+// Prev and Next, centred beneath the table as the pager is.
+.skeleton__pager {
+  display: flex;
+  justify-content: center;
+  gap: space(3);
+
+  > span {
+    width: 5rem;
+    height: $control-height;
+  }
+}
+
+// Under the width the real table stacks at, each row is a card, as each
+// row of `.data-table--stack` is: no heading, the bars stacked on the card
+// surface, the action across the card's foot.
+@container skeleton (max-width: #{$table-stack-width}) {
+  .skeleton__table {
+    display: flex;
+    flex-direction: column;
+    gap: space(3);
+  }
+
+  .skeleton__head {
+    display: none;
+  }
+
+  .skeleton__row {
+    grid-template-columns: 1fr;
+    gap: space(2);
+    border-radius: radius('surface');
+    background-color: $surface-card;
+  }
+
+  .skeleton__row > span:nth-child(3) {
+    width: 100%;
+    height: 2rem;
+    justify-self: stretch;
+  }
+}
+
+// Under the forms' column the filter's fields stack full width, as the real
+// filter's do.
+@container skeleton (max-width: #{$narrow-column}) {
+  .skeleton__filter > span {
+    flex-basis: 100%;
+  }
+}
+
+// The form shape (a route modal's, Create Coven's): label-and-box pairs
+// spaced as a form's fields, and its buttons at the end of the last line.
+.skeleton__form-field {
+  @include stack(2);
+}
+
+.skeleton__label {
+  width: 7rem;
+}
+
+.skeleton__shapes .skeleton__box {
+  height: $control-height;
+}
+
+.skeleton__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: space(3);
+
+  > span {
+    width: 6rem;
+    height: $control-height;
+  }
+}
+
+// The page shape: a heading bar and a line beneath it, then blocks of the
+// card surface, as the sections of a page are.
+.skeleton__shapes .skeleton__title {
+  width: 40%;
+  height: 1.75rem;
+}
+
+// A lede that wraps to two lines, as the pages' do: each line a body line
+// (1.65, typography-base) tall, a bar of 1rem sat in it, so the head is the
+// real one's height. The second line stops short, as a last line does.
+.skeleton__lede {
+  display: flex;
+  flex-direction: column;
+  gap: calc(type-size('body') * 1.65 - 1rem);
+  max-width: $measure;
+  padding-block: calc((type-size('body') * 1.65 - 1rem) / 2);
+
+  > span:nth-child(2) {
+    width: 60%;
+  }
+}
+
+.skeleton__plain {
+  @include stack;
+}
+
+// A page's head, the heading bar and the line, closer than the sections, as
+// the pages' `.header` column holds them.
+.skeleton__intro {
+  @include stack(2);
+}
+
+// The head's bars take the line box of what they stand in for (an h1's at
+// 1.1, an eyebrow's at body's 1.65), the eyebrow's bar sat in its box.
+.skeleton__shapes .skeleton__intro > .skeleton__title {
+  width: 40%;
+  height: calc(heading-size(1) * 1.1);
+}
+
+.skeleton__shapes .skeleton__eyebrow {
+  width: 20%;
+  height: type-size('overline');
+  margin-block: calc((type-size('overline') * 1.65 - type-size('overline')) / 2);
+}
+
+// An ingredient's head as the page sets it (.ingredient-entry__head): the same
+// padding above and the same gap between its rows, so the title lands where
+// the real one does.
+.skeleton__intro--entry {
+  @include stack(3);
+
+  padding-block-start: space(4);
+}
+
+// Under the title the real head holds one row of badges, as tall as a tip's
+// button, not a lede of two lines.
+.skeleton__intro--entry > .skeleton__lede {
+  padding-block: calc((#{$icon-size} - 1rem) / 2);
+}
+
+// The way back an ingredient's page shows above its heading (both the
+// Compendium's and a coven's always do): a short bar in the line of its small
+// text (1.3, as the real row's line), lifted by the head's padding as the real
+// row is, then the room that row's bottom margin adds to the head's gap.
+.skeleton__shapes .skeleton__entry-bar {
+  position: relative;
+  top: calc(-1 * #{space(4)});
+  width: 12%;
+  height: type-size('small');
+  margin-block: calc((type-size('small') * 1.3 - type-size('small')) / 2)
+    calc(space(3) + (type-size('small') * 1.3 - type-size('small')) / 2);
+}
+
+// The formal name's eyebrow sits in a line as tall as the tip's button beside
+// it (`$icon-size`), which is what sets the real row's height.
+.skeleton__shapes .skeleton__intro--entry > .skeleton__eyebrow {
+  margin-block: calc((#{$icon-size} - type-size('overline')) / 2);
+}
+
+// A page with a side menu (the account's jump menu, the coven home's
+// contents) is laid out by the page's own `.page-with-nav` and `.page-nav`
+// (_primitives.scss): the menu beside the sections from a tablet up, held
+// under the bar, and stacked after the head at a phone's width. Only its
+// bars are drawn here. The real menu's entries are set to the end of its
+// column from a tablet up.
+.skeleton__menu {
+  @include stack(3);
+
+  padding: space(3) 0;
+
+  > span {
+    width: 80%;
+    height: 1.25rem;
+  }
+}
+
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .skeleton__menu > span {
+    margin-inline-start: auto;
+  }
+}
+
+// An ingredient's entry fills the wide column beside its menu, not the coven
+// home's narrow one: the entry's own grid (the mixin both share), so the wait
+// is as wide as the page. Written here as well as in IngredientEntry's
+// stylesheet, since a route loads a component's stylesheet only when it draws
+// the component.
+.skeleton__shapes .ingredient-entry--with-nav {
+  @include stack(6);
+  @include entry-nav-grid;
+
+  > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+}
+
+// An ingredient's page below its head: the entry's own section and side
+// column (the mixins both share), so the wait has the real page's columns.
+// Bare bars, no card surface; the heading bar takes an h2's line box.
+.skeleton__entry-section {
+  @include entry-section('.skeleton__heading');
+}
+
+.skeleton__entry-forms {
+  @include stack(6);
+}
+
+.skeleton__shapes .skeleton__heading {
+  width: 30%;
+  height: calc(heading-size(2) * 1.15);
+}
+
+.skeleton__entry-text {
+  @include stack(4);
+
+  > span:nth-child(1) {
+    width: 100%;
+  }
+
+  > span:nth-child(2) {
+    width: 90%;
+  }
+
+  > span:nth-child(3) {
+    width: 60%;
+  }
+}
+
+.skeleton__entry-side {
+  @include entry-side;
+}
+
+.skeleton__entry-block {
+  @include stack(2);
+
+  > span:nth-child(1) {
+    width: 40%;
+    height: 1.25rem;
+  }
+
+  > span:nth-child(2) {
+    width: 80%;
+  }
+}
+
+// The contents shape: sections of a heading over a list, each entry a link
+// bar over a shorter line, as `.admin-contents` spaces them.
+.skeleton__section {
+  @include stack(3);
+}
+
+.skeleton__section > .skeleton__label {
+  height: 1.25rem;
+}
+
+.skeleton__list {
+  @include stack(3);
+}
+
+.skeleton__entry {
+  @include stack(1);
+
+  > span:nth-child(1) {
+    width: 12rem;
+    max-width: 50%;
+  }
+
+  > span:nth-child(2) {
+    width: 55%;
+  }
+}
+
+.skeleton__block {
+  @include stack(3);
+
+  padding: space(5);
+  border-radius: radius('surface');
+  background-color: $surface-card;
+
+  > span:nth-child(1) {
+    width: 30%;
+    height: 1.25rem;
+  }
+
+  > span:nth-child(2) {
+    width: 90%;
+  }
+
+  > span:nth-child(3) {
+    width: 70%;
+  }
+}
+
+// The line shape: one bar the height of a line of text, for a sentence that
+// loads in place (the substitute summary's), so it does not jump when the
+// text arrives.
+.skeleton__shapes .skeleton__line {
+  width: 70%;
+}
+
+// The admin index head is a bare h1 and a line (no `.header` column), so its
+// heading keeps the h1 own bottom margin, which the line sits under.
+.skeleton__shapes .skeleton__intro--loose > .skeleton__title {
+  margin-block-end: space(2);
+}
+
+// A jump-menu page below its head (the coven home's sections, the account's
+// panels): the page's own `.page-frame__section` and `.panel` lay them out;
+// only the bars are drawn here. A section's line is one body line tall, a
+// button is a control tall.
+.skeleton__shapes .skeleton__line-bar {
+  width: 70%;
+  max-width: $measure;
+}
+
+.skeleton__shapes .skeleton__button {
+  width: 8rem;
+  height: $control-height;
+}

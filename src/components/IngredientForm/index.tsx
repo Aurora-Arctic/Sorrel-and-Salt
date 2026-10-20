@@ -6,11 +6,15 @@ import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
 import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
-import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
+import type {
+  CompendiumIngredientInput,
+  CompendiumIngredientUpdateInput,
+  IngredientUpdateInput,
+} from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { ConfirmQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
+import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import { DiscardAskingContext } from './remove-question';
 import {
@@ -22,6 +26,7 @@ import {
 import { PromoteIcon } from './icons';
 import { DeleteUsers } from './delete-users';
 import Notice from '../Notice';
+import { COMPENDIUM_EDIT_NOTICE } from './compendium-notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
@@ -83,8 +88,8 @@ import './index.scss';
 // Every property of an ingredient, validated by the shared schema before the
 // mutation is sent, and by the service again after. An error from either side
 // lands beside the field its path names, through the same element; one naming
-// no field lands above them all. A coven's new ingredient, or a compendium
-// entry, new or given to edit (M5.5).
+// no field lands above them all. A coven's ingredient, new or its own given to
+// edit (M8.17), or a compendium entry, new or given to edit (M5.5).
 // See claude-docs/components/ingredient-form.md.
 
 const CreateWorkspaceIngredientDocument = graphql(`
@@ -100,6 +105,19 @@ const CreateWorkspaceIngredientDocument = graphql(`
           form
         }
       }
+    }
+  }
+`);
+
+// A coven's own entry saved over (M8.17). The update takes the whole entry,
+// every field present (MB.159), and reads back what the create does but the
+// jars, which a save has not moved since M12.27.
+const UpdateWorkspaceIngredientDocument = graphql(`
+  mutation UpdateWorkspaceIngredient($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
+    updateIngredient(workspaceId: $workspaceId, id: $id, input: $input) {
+      id
+      name
+      slug
     }
   }
 `);
@@ -144,6 +162,14 @@ const UpdateCompendiumIngredientDocument = graphql(`
 const DeleteCompendiumIngredientDocument = graphql(`
   mutation DeleteCompendiumIngredient($id: ID!) {
     deleteCompendiumIngredient(id: $id)
+  }
+`);
+
+// A coven's own entry is deleted from its edit dialog too (M8.17, moved from
+// M9.10): from this coven alone, a spell holding it still reaching it (M5.3).
+const DeleteWorkspaceIngredientDocument = graphql(`
+  mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {
+    deleteIngredient(id: $id, workspaceId: $workspaceId)
   }
 `);
 
@@ -305,6 +331,8 @@ const IngredientForm = ({
   // cannot be used reads as one, rather than faded with the form behind.
   const anyOpen = open.size > 0;
   const headerSlot = useModalHeaderSlot();
+  const headerNote = useModalHeaderNote();
+  const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
   const foldAll = (
     <button
       type="button"
@@ -364,6 +392,16 @@ const IngredientForm = ({
 
   const mutation = useMutation({
     mutationFn: async ({ input, endRedirect }: IngredientSend): Promise<SavedIngredient> => {
+      if (workspaceId !== null && entry) {
+        // A saved entry always holds a classification, and the select offers no
+        // way back to none, so the whole input the update needs is what is sent.
+        const answer = await graphqlRequest(UpdateWorkspaceIngredientDocument, {
+          workspaceId,
+          id: entry.id,
+          input: input as IngredientUpdateInput,
+        });
+        return answer.updateIngredient;
+      }
       if (workspaceId !== null) {
         const answer = await graphqlRequest(CreateWorkspaceIngredientDocument, {
           workspaceId,
@@ -392,7 +430,12 @@ const IngredientForm = ({
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => graphqlRequest(DeleteCompendiumIngredientDocument, { id }),
+    // Each tier answers with its own field, and nothing reads the answer: a
+    // refusal throws, and success is the entry gone.
+    mutationFn: async (id: string): Promise<void> => {
+      if (workspaceId === null) await graphqlRequest(DeleteCompendiumIngredientDocument, { id });
+      else await graphqlRequest(DeleteWorkspaceIngredientDocument, { id, workspaceId });
+    },
   });
 
   /** Sends the input, and says what came of it: saved, asked about, or refused beside its fields. */
@@ -544,6 +587,13 @@ const IngredientForm = ({
               {/* Where each linked substitute's summary links its entry, read by
           the chips however deep their list sits (MB.115). */}
               <EntryHrefContext.Provider value={entryHref}>
+                {/* An edit of the compendium says so (M8.17), drawn here so every
+          dialog that opens it shows it once: under a modal's title, above
+          its Open All row (the owner's call, 2026-10-19), or outside a modal
+          above the form. */}
+                {compendium &&
+                  editing &&
+                  (headerNote ? createPortal(compendiumNotice, headerNote) : compendiumNotice)}
                 {/* `noValidate`: every refusal is the schema's, worded and placed like
           the rest, rather than the browser's own bubble. */}
                 <form
@@ -611,7 +661,6 @@ const IngredientForm = ({
                       <TextField<IngredientFormValues>
                         name="canonicalName"
                         label="Formal Name"
-                        hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
                         placeholder="Add formal name"
                         note={
                           kind === NAMELESS_KIND
@@ -643,7 +692,6 @@ const IngredientForm = ({
                         }}
                         legend="Folk Names"
                         entry="Folk Name"
-                        hint="Other names it goes by. A search finds it by any of them."
                         placeholder="Add a folk name"
                       />
                     </CollapsibleSection>
@@ -663,16 +711,11 @@ const IngredientForm = ({
                       <TextField<IngredientFormValues>
                         name="safetyNotes"
                         label="Safety Notes"
-                        hint="Toxicity, allergies, and anything to take care over when handling or burning it."
                         placeholder="Add safety notes"
                         multiline
                       />
                       {/* Its own flag: a toxic form says so on its own (M11.21). */}
-                      <ToggleField
-                        name="toxic"
-                        label="Toxic"
-                        hint="On if any part of it is poisonous."
-                      />
+                      <ToggleField name="toxic" label="Toxic" />
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Correspondences"
@@ -705,7 +748,6 @@ const IngredientForm = ({
                         pickOnly={compendium}
                         legend="Celestial Bodies"
                         entry="Celestial Body"
-                        hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
                         placeholder="Add a body"
                       />
                       <LookupListField
@@ -716,7 +758,6 @@ const IngredientForm = ({
                         pickOnly={compendium}
                         legend="Zodiac Signs"
                         entry="Zodiac Sign"
-                        hint="The signs it answers to."
                         placeholder="Add a sign"
                       />
                       <ListField
@@ -735,7 +776,6 @@ const IngredientForm = ({
                         pickOnly={compendium}
                         legend="Deities"
                         entry="Deity"
-                        hint="The gods and spirits it is sacred to."
                         placeholder="Add a deity"
                       />
                     </CollapsibleSection>
@@ -758,7 +798,6 @@ const IngredientForm = ({
                         name="substitutes"
                         legend="Substitute Ingredients"
                         entry="Substitute Ingredient"
-                        hint="Other ingredients to use in its place when this one is not to hand."
                         placeholder="Add a substitute"
                       />
                       {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
@@ -782,7 +821,7 @@ const IngredientForm = ({
               default Enter presses, opens what it made; Save & Add Another
               clears the form for the next. The one pressed says so, the
               owner's call during MB.131. An edit has the first alone, and
-              Delete apart at the far end. */}
+              Delete apart at the far end, in either tier (M8.17). */}
                   <FormActions
                     noun="Ingredient"
                     dirty={isDirty}
@@ -853,8 +892,9 @@ const IngredientForm = ({
                       asked={deleting}
                       question={
                         <>
-                          Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any
-                          spell that uses it keeps it.
+                          Delete &quot;{entry?.values.name}&quot;? It leaves the{' '}
+                          {compendium ? 'compendium' : 'coven'}, but any spell that uses it keeps
+                          it.
                         </>
                       }
                       details={compendium && entry ? <DeleteUsers id={entry.id} /> : undefined}

@@ -16,6 +16,7 @@ import {
   ENTRY_ID,
   WORKSPACE_ID,
   acceptCompendiumCreate,
+  acceptCovenUpdate,
   acceptCreate,
   acceptUpdate,
   offerForms,
@@ -79,9 +80,7 @@ const SUBSTITUTES = [
   substitute(OILWORT_ID, 'Oilwort', [{ id: OILWORT_OIL_ID, form: ' OIL', formChoice: null }]),
 ];
 
-function renderForm(
-  props: { workspaceId: string } | { workspaceId: null; values?: IngredientFormValues },
-) {
+function renderForm(props: { workspaceId: string | null; values?: IngredientFormValues }) {
   offerNothing();
   const onSaved = vi.fn();
   const form =
@@ -97,12 +96,13 @@ function renderForm(
         duplicateHref={duplicateHref}
         workspaceId={props.workspaceId}
         onSaved={onSaved}
+        entry={props.values && { id: ENTRY_ID, values: props.values }}
       />
     );
   renderWithClient(form);
   // An edit opens with every section closed (MB.115): its variants are what
   // these tests work in.
-  if (props.workspaceId === null && props.values) openSections('Variants');
+  if (props.values) openSections('Variants');
   return onSaved;
 }
 
@@ -689,6 +689,99 @@ describe('IngredientForm’s variants', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
       expect(openIn(variant('Oil'))).toEqual(VARIANT_SECTIONS);
       expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
+    });
+  });
+
+  // M5.6a: an admin's rename rewrites nothing of a coven's, so a coven's
+  // variant can open holding "Wax" beside a pick now called "Beeswax", a pair
+  // the service refuses at `form` (MB.167). The member settles it (M8.17).
+  describe('a form an admin has renamed', () => {
+    const WAX_ID = '0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e';
+    const renamed = {
+      ...EMPTY_VALUES,
+      name: 'Testwort',
+      nomenclature: 'none' as const,
+      variants: [
+        {
+          ...EMPTY_VARIANT,
+          variantId: HERB_VARIANT_ID,
+          form: 'Wax',
+          formLink: { id: WAX_ID, name: 'Beeswax', group: 'Animal', icon: null, description: null },
+          description: 'Melted from the fixture.',
+        },
+      ],
+    };
+    const openWax = () => {
+      const card = openVariant('Wax');
+      openSectionsIn(card, 'Identity');
+      return card;
+    };
+    const choice = (card: HTMLElement, name: string) => within(card).getByRole('button', { name });
+
+    it('refuses a save at the Form field until the member settles it, sending nothing', async () => {
+      const calls = acceptCovenUpdate();
+      renderForm({ workspaceId: WORKSPACE_ID, values: renamed });
+
+      const card = openWax();
+      expect(choice(card, 'Use "Beeswax"')).toBeInTheDocument();
+      expect(choice(card, 'Keep "Wax"')).toBeInTheDocument();
+
+      type(card, 'Description', 'Poured from the fixture.');
+      save();
+
+      await waitFor(() => expect(control(card, 'Form')).toBeInvalid());
+      expect(control(card, 'Form')).toHaveAccessibleDescription(/Beeswax/);
+      expect(calls).toHaveLength(0);
+    });
+
+    it('takes the new name on Use, and sends it with its pick', async () => {
+      const calls = acceptCovenUpdate();
+      renderForm({ workspaceId: WORKSPACE_ID, values: renamed });
+
+      const card = openWax();
+      fireEvent.click(choice(card, 'Use "Beeswax"'));
+
+      expect(control(card, 'Form')).toHaveValue('Beeswax');
+      expect(within(card).queryByRole('button', { name: 'Keep "Wax"' })).toBeNull();
+      save();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants).toEqual([
+        expect.objectContaining({ id: HERB_VARIANT_ID, form: 'Beeswax', formId: WAX_ID }),
+      ]);
+    });
+
+    it('keeps the text as typed on Keep, and sends it with no pick', async () => {
+      const calls = acceptCovenUpdate();
+      renderForm({ workspaceId: WORKSPACE_ID, values: renamed });
+
+      const card = openWax();
+      fireEvent.click(choice(card, 'Keep "Wax"'));
+
+      expect(control(card, 'Form')).toHaveValue('Wax');
+      expect(within(card).queryByRole('button', { name: 'Use "Beeswax"' })).toBeNull();
+      save();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants).toEqual([
+        expect.objectContaining({ id: HERB_VARIANT_ID, form: 'Wax', formId: '' }),
+      ]);
+    });
+
+    it('clears the refusal once settled, and saves', async () => {
+      const calls = acceptCovenUpdate();
+      renderForm({ workspaceId: WORKSPACE_ID, values: renamed });
+
+      const card = openWax();
+      type(card, 'Description', 'Poured from the fixture.');
+      save();
+      await waitFor(() => expect(control(card, 'Form')).toBeInvalid());
+
+      fireEvent.click(choice(card, 'Keep "Wax"'));
+
+      expect(control(card, 'Form')).toBeValid();
+      save();
+      await waitFor(() => expect(calls).toHaveLength(1));
     });
   });
 

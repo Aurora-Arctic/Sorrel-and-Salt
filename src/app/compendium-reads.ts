@@ -6,6 +6,7 @@ import type {
 } from '../components/CompendiumList/types';
 import type { CardCategory } from '../components/IngredientCard/types';
 import type { SafetyVariant } from '../components/SafetyNote/types';
+import { NotFound } from '../lib/errors';
 import { readNumberedPage } from '../lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
 import type { Session } from '../lib/session';
@@ -14,7 +15,9 @@ import {
   compendiumFacets,
   categoriesOf,
   countCompendium,
+  getIngredient,
   listCompendium,
+  readCompendiumEntry,
   variantsOf,
 } from '@/modules/ingredients';
 import {
@@ -26,7 +29,7 @@ import {
   listDeityTraditions,
   listIngredientFormValues,
 } from '@/modules/vocabulary';
-import type { IngredientKey } from '@/modules/ingredients';
+import type { IngredientDetail, IngredientKey } from '@/modules/ingredients';
 import type { CovenMembership } from '@/modules/coven';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
@@ -221,3 +224,23 @@ export function readCardCategories(ids: readonly string[]): Promise<CardCategory
     ids.map((id) => ({ id, workspaceId: null })),
   );
 }
+
+/**
+ * The details a card's Quick Look opens over the public cards, `?entry=<id>` (M12.5): the
+ * entry as its public page reads it, through that page's cached read, so every viewer sees
+ * the compendium alike and no session is asked for (rule 6). The id is read first, with no
+ * session, which names a live compendium entry alone. Undefined for an id that names none, a
+ * coven's own entry included, since its existence is private: the page then opens nothing.
+ */
+export const readCompendiumDetails = cache(
+  async (id: string): Promise<IngredientDetail | undefined> => {
+    try {
+      const { slug } = await getIngredient(null, id);
+      const page = await readCompendiumEntry(slug);
+      return page.kind === 'entry' ? page.detail : undefined;
+    } catch (error) {
+      if (error instanceof NotFound) return undefined;
+      throw error;
+    }
+  },
+);

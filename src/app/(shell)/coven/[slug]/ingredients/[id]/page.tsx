@@ -4,11 +4,14 @@ import { cache } from 'react';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
+import { entryDescription } from '../../../../../../lib/page-metadata';
+import { siteUrl } from '../../../../../../lib/site';
 import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
-import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
+import { entryValues } from '@/app/entry-values';
+import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
@@ -44,7 +47,7 @@ const ANNOTATED_TIP =
   'This page is an annotated version of the compendium’s page. The link opens the original version.';
 const SAME_TIP = 'This is the compendium entry that names the same thing. Compare them here.';
 const SIMILAR_TIP =
-  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. If one of them is the same thing, Link to Selected moves your jars and spell layers to it and removes this entry.';
+  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. Any of them might be the same thing. This page does not change your entry; the links open the compendium\u2019s pages.';
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -69,20 +72,27 @@ const cupboardOf = cache(async (slug: string, id: string) => {
 });
 
 // A compendium entry names its public page as canonical, since that is the
-// address a search engine should index. The path is relative: the origin
-// varies by deployment, and MB.84 owns the public page's metadata. A retired
-// entry has no public page left to name (M12.24).
+// address a search engine should index, on the one origin (src/lib/site.ts). A
+// retired entry has no public page left to name (M12.24). The page is behind
+// sign-in and robots closes it, so it carries a description for the tab and
+// history alone, and no structured data or previews.
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { entry } = await entryOf(slug, id);
-  if (entry.workspaceId !== null) return { title: pageTitleOf(entry) };
+  if (entry.workspaceId !== null) {
+    return {
+      title: pageTitleOf(entry),
+      description: entryDescription(pageTitleOf(entry), entry.description),
+    };
+  }
   // The tab says what the page heading says: the coven's label when its
   // cupboard entry sets one (M12.16). The canonical address stays the
   // compendium's public page, whatever the coven calls the entry.
   const title = pageTitleOf(applyCupboardEntry(entry, await cupboardOf(slug, id)));
+  const description = entryDescription(title, entry.description);
   return isRetired(entry)
-    ? { title }
-    : { title, alternates: { canonical: publicAddress(entry.slug) } };
+    ? { title, description }
+    : { title, description, alternates: { canonical: siteUrl(publicAddress(entry.slug)) } };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
@@ -109,22 +119,37 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // no longer holds it: no public page to link, and nothing for a curator to
   // edit, since the compendium's screens no longer read it.
   const inCompendium = entry.workspaceId === null && !detail.retired;
+  // Whether this coven's cupboard names the entry, retired or not: `detail`
+  // carries the cupboard entry the retired-entry read found, where
+  // `cupboardEntry` reads live entries only.
+  const held = entry.workspaceId === null && detail.cupboardEntry != null;
+  // The plus beside the pencil (M9.12; the owner's call, 2026-10-20): every coven the viewer may
+  // add in, this one first where it may, and which of them hold the entry, from the one held
+  // read. A compendium entry only: a coven's own entry and a retired one take no plus.
+  const plus = inCompendium
+    ? await plusCovensOf(await covensHolding(entry.id), workspace.id)
+    : undefined;
 
-  // A compendium entry offers Edit to a curator, opening the compendium's edit modal
-  // over this page (M8.19). A coven's own entry gets no Edit until M8.17's modal. The form's values are
-  // read only for a curator who asks for them with a bare `?edit`.
+  // Edit opens a dialog over this page from a bare `?edit`, and the form's
+  // values are read only when it is asked for. A compendium entry offers it
+  // to a curator, as the compendium's edit (M8.19); the coven's own entry to
+  // a member whose role may update it, as the coven's (M8.17), its values
+  // read as that member so the coven's proof is checked.
   const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
-  const canEdit = inCompendium && viewer.canCurate;
+  const ingredientsHref = `/coven/${workspace.slug}/ingredients` as Route;
+  const isOwn = entry.workspaceId !== null;
+  const canEdit = isOwn
+    ? rolePermits(role, { ingredient: ['update'] })
+    : inCompendium && viewer.canCurate;
   const opened =
     canEdit && 'edit' in (await searchParams)
-      ? { id: entry.id, values: await entryValues(entry) }
+      ? { id: entry.id, values: await entryValues(entry, isOwn ? session : null) }
       : undefined;
 
   // Annotate opens its dialog from the address the same way, but only for a
   // member who may annotate in a coven that holds the entry; any other asking
   // for `?annotate` is ignored.
-  const mayAnnotate =
-    inCompendium && cupboardEntry != null && rolePermits(role, { ingredient: ['update'] });
+  const mayAnnotate = held && rolePermits(role, { ingredient: ['update'] });
   const annotating = mayAnnotate && 'annotate' in (await searchParams);
 
   const hrefOf = ({ id, slug, workspaceId }: LinkedIngredient): Route | undefined => {
@@ -138,35 +163,58 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}
+        back={{ href: ingredientsHref, label: 'Ingredients' }}
         edit={
-          canEdit
+          canEdit && isOwn
             ? {
                 href: `${own}?edit` as Route,
                 closeHref: own,
-                // The coven has no ingredients list yet, and this entry is a
-                // compendium one, so a delete leaves to the compendium's.
-                deletedHref: '/compendium' as Route,
-                // The address names the entry's id, which a save leaves be.
-                savedHref: `${own}?edit` as Route,
+                // A delete from the dialog (M8.17) leaves for the coven's
+                // Ingredients, this page being gone.
+                deletedHref: ingredientsHref,
+                // A save closes the dialog back onto this page, whose address
+                // names the id a save leaves be.
+                savedHref: own,
                 opened,
+                coven: {
+                  workspaceId: workspace.id,
+                  ingredientsHref,
+                  mayPromote: rolePermits(role, { ingredient: ['update'] }),
+                },
               }
-            : undefined
+            : canEdit
+              ? {
+                  href: `${own}?edit` as Route,
+                  closeHref: own,
+                  // A compendium entry's delete leaves to the compendium's list.
+                  deletedHref: '/compendium' as Route,
+                  // The address names the entry's id, which a save leaves be.
+                  savedHref: `${own}?edit` as Route,
+                  opened,
+                }
+              : undefined
         }
         // The buttons a member's role permits over a compendium entry; the
         // services refuse the rest whatever is drawn (M12.17). A retired one
-        // (M12.24) offers Make It Ours alone (M12.23): the cupboard services
-        // no longer find its row, and taking it as the coven's own is the way
-        // out of it. Make It Ours reads the permission its service asserts.
+        // the coven holds (M12.24) offers Annotate, Make It Ours (M12.23) and
+        // Remove, by the owner's decision of 2026-10-19, but no Add: the
+        // compendium no longer offers it, so a coven that removes it cannot
+        // take it back. Make It Ours reads the permission its service asserts.
         cupboard={
-          entry.workspaceId === null && (inCompendium || cupboardEntry != null)
+          entry.workspaceId === null && (inCompendium || held)
             ? {
                 workspaceId: workspace.id,
                 covenSlug: workspace.slug,
                 canAdd: inCompendium && rolePermits(role, { ingredient: ['create'] }),
-                canAnnotate: inCompendium && rolePermits(role, { ingredient: ['update'] }),
-                canRemove: inCompendium && rolePermits(role, { ingredient: ['delete'] }),
+                canAnnotate: rolePermits(role, { ingredient: ['update'] }),
+                canRemove: rolePermits(role, { ingredient: ['delete'] }),
                 canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
+                plus,
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
+                // A retired entry's page reads nothing once its row is gone.
+                removedHref: detail.retired
+                  ? (`/coven/${workspace.slug}/ingredients` as Route)
+                  : undefined,
               }
             : undefined
         }
@@ -201,17 +249,11 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
             ? {
                 tip: SIMILAR_TIP,
                 entries: matches.entries.map((match) => ({
-                  id: match.id,
                   title: pageTitleOf(match),
                   href: publicAddress(match.slug),
-                  // The coven's page for the compendium entry, which a convert lands on.
-                  thenHref: `/coven/${workspace.slug}/ingredients/${match.id}` as Route,
                 })),
                 total: matches.total,
                 allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
-                convert: matches.canConvert
-                  ? { workspaceId: workspace.id, localId: entry.id }
-                  : undefined,
               }
             : undefined
         }

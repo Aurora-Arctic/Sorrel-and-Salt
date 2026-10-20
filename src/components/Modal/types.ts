@@ -32,6 +32,29 @@ export interface ModalHeading {
    * nomenclature.
    */
   qualifier?: ReactNode;
+  /**
+   * The entry's formal name over the title, in the eyebrow's place (the owner's call,
+   * 2026-10-20): the entry page's own (`FormalName`), with its tip and its states, built by
+   * the caller. Never with an eyebrow, and not in the dialog's name, which is the title's
+   * alone: the name is read in the body, first, with its term.
+   */
+  formalName?: ReactNode;
+  /**
+   * The head's top line, beside the Close button, over everything else in the head: the marks
+   * the entry page's own top bar carries, New or Updated and the safety badge (the owner's
+   * call, 2026-10-20). Its presence, even empty, gives the head that line to itself, with Close
+   * on it, so what stands under it, a formal name's actions, is clear of Close. Without it
+   * Close stands at the corner beside the head's first line. Not in the dialog's name.
+   */
+  topEnd?: ReactNode;
+  /**
+   * The title's controls: a pencil, a plus. At the end of the formal name's line, over the
+   * title, as the entry page has them (the owner's call, 2026-10-20), and after the title in
+   * the markup. The formal name wraps short of them. Not in the dialog's name.
+   */
+  formalActions?: ReactNode;
+  /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
+  under?: ReactNode;
 }
 
 export interface ModalProps extends ModalHeading {
@@ -43,15 +66,35 @@ export interface ModalProps extends ModalHeading {
    */
   onClose: () => void;
   /**
+   * Where the focus goes as the modal closes when what opened it is gone, or
+   * nothing held the focus as it opened: a click in WebKit focuses no button.
+   * Handed what opened it, already out of the page, or null. The modal gives
+   * the focus back to its opener itself whenever the opener is still there
+   * (claude-docs/components/modal.md, "Giving the focus back").
+   */
+  returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
+  /**
    * The width: 32rem by default, for a short form or a confirmation; `wide`,
    * 48rem, for a long form such as the compendium entry's (M5.5).
    */
   size?: 'wide';
   /**
+   * A body that holds nothing to fill in, only to read (M12.5's details): Tab
+   * stops on the body itself, so a keyboard can scroll it. Off by default,
+   * since a form's fields already let a keyboard reach every part of it.
+   */
+  readingBody?: boolean;
+  /**
    * Its contents are on their way (M9.18): the body is marked busy, and when
    * they arrive the focus moves from the dialog to their first field.
    */
   loading?: boolean;
+  /**
+   * A bar under the body rather than in it (the details' See in Compendium or See in My Ingredients): outside the
+   * element that scrolls, so the body's scrollbar ends above it and the bar never
+   * moves. Held inert while a question is asked, as the body is.
+   */
+  foot?: ReactNode;
   /**
    * What it holds; or a function of the modal's own close, for contents that
    * close it themselves — a form after its save — so that fades out too.
@@ -89,6 +132,8 @@ export interface RouteModalContent {
    * delete, so the modal fades out before the page goes back.
    */
   body: (done: () => void) => ReactNode;
+  /** A bar under the body, outside its scroll (`ModalProps.foot`). */
+  foot?: ReactNode;
 }
 
 /**
@@ -99,8 +144,22 @@ export interface RouteModalProps {
   /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
   closeHref: Route;
   size?: ModalProps['size'];
+  readingBody?: ModalProps['readingBody'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
+  /**
+   * Which of a page's modal places this is, where it has more than one: a
+   * press shows only in the place it names, so a list whose names open a
+   * details modal and whose Edit opens the edit modal over it draws each in
+   * its own (M12.5). Unnamed, as every page with one place leaves it.
+   */
+  place?: string;
+  /**
+   * Where the focus goes as it closes when neither what opened it nor a link
+   * to the address it opened is in the page, before the page's heading: a
+   * menu's button, when the link pressed was one of the menu's items.
+   */
+  returnTo?: () => HTMLElement | null | undefined;
 }
 
 /**
@@ -110,10 +169,17 @@ export interface RouteModalProps {
 export interface RouteModalOpener {
   /** The head of the modal on its way, while its navigation is pending; undefined otherwise. */
   loading: ModalHeading | undefined;
-  /** Opens the modal at once with `heading`, and navigates to `href` for its contents. */
-  open: (href: Route, heading: ModalHeading) => void;
+  /** The place the modal on its way shows in (`RouteModalProps.place`); undefined for the unnamed one. */
+  loadingPlace?: string;
+  /** Opens the modal at once with `heading` in `place`, and navigates to `href` for its contents. */
+  open: (href: Route, heading: ModalHeading, place?: string) => void;
   /** Forgets the modal on its way, which a close while it loads asks for. */
   cancel: () => void;
+  /**
+   * The address the last press opened, which a link drawn afresh shares: the
+   * focus goes back to it as the modal closes. Absent in the workshop's stub.
+   */
+  opened?: Route;
 }
 
 export interface RouteModalProviderProps {
@@ -241,4 +307,14 @@ export interface ConfirmQuestionProps {
   onKeep: () => void;
   /** Told a refused action's sentence, for the form's alert; the form closes the question. */
   onRefused?: (message: string) => void;
+}
+
+/**
+ * A route modal a control opens: its address, and the head a press shows at
+ * once while that address is on its way (M9.18). An ingredient name's
+ * details modal is one (M12.5), and so is the Edit a page hands down.
+ */
+export interface RouteModalLink {
+  href: Route;
+  heading: ModalHeading;
 }

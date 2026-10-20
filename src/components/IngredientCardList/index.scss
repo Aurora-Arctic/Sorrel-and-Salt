@@ -4,7 +4,7 @@
 // As many columns as fit at `$ingredient-card-min` each, the width shared out
 // evenly (`1fr`), so a phone gets one card across and a desktop three or four.
 // `min(100%, ...)` keeps one column from overflowing a container narrower than
-// the minimum. The same grid draws the loading skeleton (`.tab-skeleton__cards`).
+// the minimum. The same grid draws the loading skeleton (`.skeleton__cards`).
 .ingredient-card-list {
   @include list-reset;
 

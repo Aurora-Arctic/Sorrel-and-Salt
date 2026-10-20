@@ -229,6 +229,75 @@ describe('AddIngredientButton', () => {
       ).toEqual(['to Fixture Coven', 'to Testwort Circle']);
     });
 
+    // Where the viewer may add to the compendium and to a coven the places are two named groups,
+    // the side they are on first (the owner's call, 2026-10-20).
+    const groups = () =>
+      within(menuOf())
+        .getAllByRole('group')
+        .map((group) => [
+          group.getAttribute('aria-labelledby') &&
+            document.getElementById(group.getAttribute('aria-labelledby')!)?.textContent,
+          within(group)
+            .getAllByRole('menuitem')
+            .map((item) => item.textContent),
+        ]);
+
+    it.each([
+      [
+        '/compendium',
+        [
+          ['Compendium', ['to Compendium']],
+          ['Coven', ['to Fixture Coven']],
+        ],
+      ],
+      [
+        '/admin/users',
+        [
+          ['Compendium', ['to Compendium']],
+          ['Coven', ['to Fixture Coven']],
+        ],
+      ],
+      [
+        '/coven/fixture-coven',
+        [
+          ['Coven', ['to Fixture Coven']],
+          ['Compendium', ['to Compendium']],
+        ],
+      ],
+    ] as const)(
+      'groups a curator’s places, the side they are on first, on %s',
+      (path, expected) => {
+        pathname.mockReturnValue(path);
+        draw(ADMIN, [FIXTURE]);
+        fireEvent.click(chevron());
+
+        expect(groups()).toEqual(expected);
+        expect(within(menuOf()).getAllByRole('separator')).toHaveLength(1);
+      },
+    );
+
+    it('draws a plain list, with no group, where there is one kind of place', () => {
+      draw(MEMBER, [FIXTURE, TESTWORT]);
+      fireEvent.click(chevron());
+
+      // Why it could have grouped: the menu is open with several places in it.
+      expect(within(menuOf()).getAllByRole('menuitem')).toHaveLength(2);
+      expect(within(menuOf()).queryByRole('group')).toBeNull();
+      expect(within(menuOf()).queryByRole('separator')).toBeNull();
+    });
+
+    it('roves through the groups as one list, never stopping on a heading', () => {
+      pathname.mockReturnValue('/compendium');
+      draw(ADMIN, [FIXTURE]);
+      fireEvent.click(chevron());
+      const [first, second] = within(menuOf()).getAllByRole('menuitem');
+      expect(first).toHaveFocus();
+
+      fireEvent.keyDown(first!, { key: 'ArrowDown' });
+      expect(second).toHaveFocus();
+      expect(second).toHaveTextContent('to Fixture Coven');
+    });
+
     it('roves with the arrow keys', () => {
       draw(MEMBER, [FIXTURE, TESTWORT]);
       fireEvent.click(chevron());

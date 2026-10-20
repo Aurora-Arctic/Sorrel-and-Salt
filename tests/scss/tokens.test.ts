@@ -1,4 +1,5 @@
-import { compileString } from 'sass';
+import { readFileSync } from 'node:fs';
+import { compile as compileFile, compileString } from 'sass';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
@@ -79,6 +80,13 @@ function mixed(a: string, b: string, weight: number): string {
 }
 
 /** Every brand's parts, each read through `brand-color()`, as brand → part → value. */
+/** The weight a `color-mix()` gives `token`, as a fraction: the mix the contrast rows compute. */
+function weightOf(mix: string | undefined, token: string): number {
+  const found = new RegExp(`var\\(${token}\\) (\\d+(?:\\.\\d+)?)%`).exec(mix ?? '');
+  if (!found) throw new Error(`no ${token} weight in ${mix}`);
+  return Number(found[1]) / 100;
+}
+
 function brands(): Record<string, Record<string, string>> {
   const parts = declarations(
     compile(`@use 'variables' as v;
@@ -132,14 +140,28 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
     // The tab row's pills (TabbedPage/index.scss): the open tab's label on its
     // pill, the accent 18% into the card, and the pill's accent edge against
-    // the track, the quiet fill (the muted ink 18% into the card), the line
-    // that marks which tab is open, since the fill alone sits under 3:1
-    // against the track. The other labels are the muted ink on that track.
+    // the track, a grey wash of the muted ink, fainter than `$fill-quiet`'s
+    // 18% so the green pill stands apart from it (the owner's call of
+    // 2026-10-20), over the page or a card: the edge is the line that marks
+    // which tab is open, since the fill alone sits under 3:1 against the
+    // track. The other labels are the muted ink on that track. The track's
+    // mix is the stylesheet's own `$segment-track`, read from it here.
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
-    const track = mixed(toHex(tokens['--text-muted'], theme), card, 0.18);
-    row('--text-muted on the tab track', tokens['--text-muted'], track, 4.5);
-    row("the open tab's edge on the track", accent, track, 3);
+    const trackMix =
+      /\$segment-track: color-mix\(in srgb, \$text-muted (\d+)%, transparent\);/.exec(
+        readFileSync(fromRoot('src/components/TabbedPage/index.scss'), 'utf8'),
+      );
+    expect(trackMix, 'TabbedPage/index.scss declares $segment-track as a grey mix').not.toBeNull();
+    const trackWeight = Number(trackMix![1]) / 100;
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      const track = mixed(toHex(tokens['--text-muted'], theme), under, trackWeight);
+      row(`--text-muted on the tab track on the ${ground}`, tokens['--text-muted'], track, 4.5);
+      row(`the open tab's edge on the track on the ${ground}`, accent, track, 3);
+    }
     // Every Edit pencil (the `icon-button-edit` mixin, _mixins.scss), a
     // control, so 3:1: the accent on the grounds it sits on — a list's
     // unbanded row on the page; a banded row, a stacked card and the modal's
@@ -172,25 +194,157 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     // and the linked chip pointed at, its text and mark in the accent's
     // hover, at 4.5:1. The accent itself is held to 3:1 alone, so the text
     // keeps the body ink and its underline until pointed at.
-    // `$fill-quiet` (_variables.scss) names this wash once, so it must be the 18% mix.
+    // `$fill-quiet` (_variables.scss) names this wash once; its weight is read from it.
     const named = declarations(
-      compile(
-        `@use 'variables' as v; .probe { --wash: #{v.$fill-quiet}; --edge: #{v.$hairline}; }`,
-      ),
+      compile(`@use 'variables' as v; .probe { --wash: #{v.$fill-quiet}; }`),
       '.probe',
     );
-    expect(named['--wash']).toContain('var(--text-muted) 18%, var(--surface-card)');
-    expect(named['--edge']).toContain('var(--text-muted) 45%, transparent');
-    const wash = mixed(toHex(tokens['--text-muted'], theme), card, 0.18);
+    const wash = mixed(
+      toHex(tokens['--text-muted'], theme),
+      card,
+      weightOf(named['--wash'], '--text-muted'),
+    );
     row("a chip's text on its wash", tokens['--text-primary'], wash, 4.5);
     row("a linked chip's mark on its wash", tokens['--accent'], wash, 3);
     row('a linked chip pointed at on its wash', tokens['--accent-hover'], wash, 4.5);
+
+    // A list's highlighted row and a quiet button pointed at (M8.17, the
+    // owner's call of 2026-10-20): the accent 12% into what is behind, the
+    // card a menu or a suggestion list sits on and the field a quiet button
+    // fills with. Text on it, the body ink and the muted ink a row's
+    // qualifier wears, holds 4.5:1. `$fill-highlight` and
+    // `$fill-highlight-field` name the two mixes once; the weight is read from them.
+    const highlight = declarations(
+      compile(
+        `@use 'variables' as v; .probe { --on-any: #{v.$fill-highlight}; --on-field: #{v.$fill-highlight-field}; }`,
+      ),
+      '.probe',
+    );
+    const lit = mixed(accent, card, weightOf(highlight['--on-any'], '--accent'));
+    const litField = mixed(accent, card, weightOf(highlight['--on-field'], '--accent'));
+    row('a highlighted row’s text', tokens['--text-primary'], lit, 4.5);
+    row('a highlighted row’s muted text', tokens['--text-muted'], lit, 4.5);
+    row('a quiet button’s label pointed at', tokens['--text-primary'], litField, 4.5);
 
     // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
     // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is
     // not yet an answer (WCAG 1.4.3).
     const placeholder = mixed(toHex(tokens['--text-muted'], theme), card, 0.85);
     row('the placeholder on the field', placeholder, card, 4.5);
+
+    // A notice (`.notice`, _primitives.scss): a bar down its start edge and a
+    // tint of the bar's colour, `--notice-tint` of it over whatever holds the
+    // notice, the page or a card. The bar and the warning's triangle are
+    // marks, so 3:1 against the ground and the tint; the text is text, so
+    // 4.5:1 on the tint: the error's and the success's in the hover shade of
+    // their own colour, over that colour's tint, and the body ink in the plain
+    // notice's accent, the warning's ochre and the caution's muted ink (the owner's look, and the hover
+    // shades and the tint the owner's pick, 2026-10-19). The error's triangle
+    // is drawn in its text colour, so its text row covers it.
+    const tint = parseFloat(tokens['--notice-tint']) / 100;
+    const warning = toHex(tokens['--warning'], theme);
+    const ink = toHex(tokens['--text-primary'], theme);
+    const muted = toHex(tokens['--text-muted'], theme);
+    const waxText = toHex(tokens['--secondary-hover'], theme);
+    const accentText = toHex(tokens['--accent-hover'], theme);
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      row(`the warning's bar on the ${ground}`, warning, under, 3);
+      row(
+        `the warning's triangle on its tint on the ${ground}`,
+        warning,
+        mixed(warning, under, tint),
+        3,
+      );
+      row(`the plain notice's bar on the ${ground}`, accent, under, 3);
+      row(`the error's bar on the ${ground}`, wax, under, 3);
+      row(`the caution's bar on the ${ground}`, muted, under, 3);
+      row(
+        `the caution's triangle on its tint on the ${ground}`,
+        warning,
+        mixed(muted, under, tint),
+        3,
+      );
+      row(`a caution's text on its tint on the ${ground}`, ink, mixed(muted, under, tint), 4.5);
+      row(`a warning's text on its tint on the ${ground}`, ink, mixed(warning, under, tint), 4.5);
+      row(
+        `a plain notice's text on its tint on the ${ground}`,
+        ink,
+        mixed(accent, under, tint),
+        4.5,
+      );
+      row(`an error's text on its tint on the ${ground}`, waxText, mixed(wax, under, tint), 4.5);
+      row(
+        `a success's text on its tint on the ${ground}`,
+        accentText,
+        mixed(accent, under, tint),
+        4.5,
+      );
+    }
+
+    // The focus ring (M12.45, the owner's call of 2026-10-20), which marks a
+    // control's state, so 3:1 (WCAG 1.4.11). Its colour is mixed towards
+    // transparent, so what shows is that colour laid over the ground behind
+    // it. The shared ring, in the body ink, against the page, a card, a card
+    // pointed at, and the three parts of the ingredient card's drawer that
+    // the ring round a card crosses; a link's ring, in the accent at its own
+    // per-theme strength, against the page and the cards a link sits on. The
+    // strengths are read from the compiled mixin and the link's rule, so it
+    // is the stylesheet that is checked.
+    const ring = (css: string, selector: string) => {
+      const found =
+        /color-mix\(in srgb, var\((--[\w-]+)\) (?:var\((--[\w-]+)\)|(\d+(?:\.\d+)?%)), transparent\)/.exec(
+          declarations(css, selector).outline ?? '',
+        );
+      if (!found) throw new Error(`No faded ring in ${selector}`);
+      const [, color, strengthToken, strength] = found;
+      const weight = strengthToken ? tokens[strengthToken] : strength;
+      expect(weight, `${strengthToken} in the ${theme} theme`).toMatch(/^\d+(\.\d+)?%$/);
+      return { ink: toHex(tokens[color], theme), weight: parseFloat(weight) / 100 };
+    };
+    const shared = ring(compile(`@use 'mixins' as m; .probe { @include m.focus-ring; }`), '.probe');
+    const link = ring(
+      compile(`@use 'typography' as t; .probe { @include t.typography-base; }`),
+      '.probe a:focus-visible',
+    );
+    const grounds = {
+      page,
+      card,
+      'card pointed at': toHex(tokens['--surface-card-hover'], theme),
+      "drawer's slot": toHex(tokens['--drawer-slot'], theme),
+      "drawer's side": toHex(tokens['--drawer-side'], theme),
+      "drawer's back": toHex(tokens['--drawer-back'], theme),
+    };
+    for (const [ground, under] of Object.entries(grounds)) {
+      row(`the focus ring on the ${ground}`, mixed(shared.ink, under, shared.weight), under, 3);
+    }
+    for (const ground of ['page', 'card', 'card pointed at'] as const) {
+      const under = grounds[ground];
+      row(`a link's focus ring on the ${ground}`, mixed(link.ink, under, link.weight), under, 3);
+    }
+    // The tab row's ring, the accent at its own per-theme strength, drawn
+    // inside the pill, so on the open pill or on the track behind the others,
+    // over the page or a card.
+    const tab = ring(
+      compileFile(fromRoot('src/components/TabbedPage/index.scss')).css,
+      '.tabbed-page__row a:focus-visible',
+    );
+    const pill = mixed(accent, card, 0.18);
+    row("a tab's focus ring on the open pill", mixed(tab.ink, pill, tab.weight), pill, 3);
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      const track = mixed(toHex(tokens['--text-muted'], theme), under, trackWeight);
+      row(
+        `a tab's focus ring on the track on the ${ground}`,
+        mixed(tab.ink, track, tab.weight),
+        track,
+        3,
+      );
+    }
 
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });

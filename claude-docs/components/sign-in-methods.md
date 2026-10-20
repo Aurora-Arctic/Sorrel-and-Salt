@@ -45,13 +45,21 @@ is still in the button's accessible name, as an `aria-label` beginning with
 the visible word, so a screen reader hears "Add Microsoft" and the tests
 locate it by that name.
 
-`ProviderRow` takes `{ provider, state, removal, pending, error, onAdd,
+`ProviderRow` takes `{ provider, state, removal, pending, busy, error, onAdd,
 onRemove }` (`ProviderRowProps`, `types.ts`). `removal` (`ProviderRemoval`)
 is whether a linked row offers Remove: `offered` while another method is
 left and the session is fresh, `last` for the only method, and `withheld`
 from a stale session. `pending` is whether a removal is in flight anywhere
-in the list; `error` is this provider's own failure. The list works out each row's
-state and hands it down; the row holds no state of its own.
+in the list; `busy` is whether this row's own action (its Remove, or the hop
+of its Add) is in flight: its button is a `BusyButton` with the spinner and
+`aria-busy` ("Removing", "Adding"; the `aria-label` keeps the name). A link that
+starts the redirect calls `reportLeaving()` so the page bar stays up until the
+browser leaves. `error` is this provider's failed link from the callback.
+`onAdd` and `onRemove` answer the sentence a failed press should say, or
+nothing. The list works out each row's state and hands it down; the row's
+one state of its own is its click feedback, the callout and badge of its
+last failed press ([`click-feedback.md`](click-feedback.md)), named for its
+control: "Show the error for Remove Discord".
 
 ## Adding one leaves the page
 
@@ -62,7 +70,8 @@ assigns `window.location.href` to the provider, and the callback lands back
 here. A failure adds `?error=` to the error callback, so the page gets both
 the code and the provider it was for, and the sentence shows in that
 provider's row. A failure before any redirect, such as a network error or an
-unregistered provider, shows `GENERIC_LINK_ERROR` in the row too.
+unregistered provider, says `GENERIC_LINK_ERROR` in a callout under that
+row's Add, the focus left on it.
 
 An unconfigured provider's Add is `aria-disabled`, names the "This sign-in
 method isn't available right now." note (`ProviderUnavailableNote`,
@@ -78,15 +87,18 @@ the session is fresh. Better Auth refuses the last one anyway
 (`allowUnlinkingAll` is pinned off), so the rule only keeps the page honest,
 and the last row's greyed Remove says why in its description. It calls
 `unlinkAccount({ accountId })`. On success the row leaves the component's own
-copy of the list, a success notice at the head of the list says
-"&lt;Provider&gt; was removed from your sign-in methods.", and the provider's
-Add returns. There is no reload, so a list changed in another tab shows only
+copy of the list and the provider's Add returns, which is what is seen; the
+page's status region says "&lt;Provider&gt; was removed from your sign-in
+methods." (`announce`, [`click-feedback.md`](click-feedback.md), M12.31). There is no reload, so a list changed in another tab shows only
 after one. On a refusal the error's `code` goes through
 `unlinkErrorMessage()`: `FAILED_TO_UNLINK_LAST_ACCOUNT` (two tabs racing),
 `SESSION_NOT_FRESH` (the session grew stale while the page was open, or in
-another tab: sign in again), or the generic sentence. The
-refusal shows in the row that stayed. While a removal is in flight every
-Remove is `disabled`, so two cannot race to leave none. `.btn` greys out under
+another tab: sign in again), or the generic sentence, which a dropped
+connection also takes. The refusal is a callout under the Remove that
+stayed, the focus left on it. While a removal is in flight every other
+Remove is `disabled`, so two cannot race to leave none; the pressed one is
+`aria-disabled` instead, so it keeps the focus, and refuses a second press
+itself. `.btn` greys out under
 `disabled` as under `aria-disabled`, so the component adds no styling of its
 own for it.
 
@@ -116,9 +128,10 @@ explaining it:
    SignOutButton does, busy as "Signing Out" meanwhile
    ([`account-menu.md`](account-menu.md), "Contracts"). Its success is a full load
    of `signInPath('/account')` (`/sign-in?next=%2Faccount`), so the sign-in
-   lands back here with a new, fresh session. Its failure, a refusal or a
-   dropped connection, is `GENERIC_FAILURE` in an error `Notice` beneath the
-   button, which is offered again.
+   lands back here with a new, fresh session. While it runs the button is
+   `aria-disabled`, not `disabled`, so it keeps the focus. Its failure, a
+   refusal or a dropped connection, is `GENERIC_FAILURE` in a callout under
+   the button, which is offered again.
 
 The refusal stays mapped all the same. Freshness is read when the page
 renders, so a page left open past the day, or a second tab, can still press
@@ -128,18 +141,21 @@ remove, so no fresh sign-in is offered.
 
 ## Where a message shows
 
-- **A failure about one provider** — a failed link, from the callback or
-  before the redirect, or a refused removal — is an error `Notice` inside
-  that provider's row, beneath its controls.
-- **A failure with no provider** — a callback with no `?provider=`, or one
-  that names a provider not on the roster — is an error `Notice` at the head
-  of the list.
-- **A removal's success** is a success `Notice` at the head of the list,
-  since the row it was about has changed.
+- **A press's failure** — Add failing before the redirect, a refused or
+  unreachable removal, a failed Sign In Again — is a click-feedback callout
+  under the control pressed, the focus left on it, with a badge on the
+  control that brings it back once dismissed; the next press of that
+  control clears it ([`click-feedback.md`](click-feedback.md); M12.31).
+- **A failed link's callback**, which the server seeds from `?error=` and no
+  press here raised, is an error `Notice` inside that provider's row,
+  beneath its controls; one with no `?provider=`, or naming a provider not
+  on the roster, is an error `Notice` at the head of the list. Any press
+  here clears it.
+- **A removal's success** is said in the page's status region and seen as
+  the row turning to Add; there is no success `Notice`.
 
-One message shows at a time: a new action clears the last, and neither
-element exists in the DOM without a message. The `Notice` component
-([`notice.md`](notice.md)) gives each its role.
+The `Notice` component ([`notice.md`](notice.md)) gives a callback error
+its role, and no `Notice` element exists in the DOM without a message.
 
 ## Provider marks
 
@@ -179,7 +195,9 @@ next, so no rule is drawn between them (the owner's call, MB.116).
 each inside the page's real frame, section, panel and head: `OneLinked`,
 `TwoLinked`, `StaleSession` (the same two from a stale session), `WithError`
 (a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
-copied sentence), `SomeUnavailable`, and `WholePage`, the whole `/account`
+copied sentence), `SomeUnavailable`, `FailedRemove` (Remove Microsoft
+pressed on mount, failing into its callout, since the workshop serves no
+`/api/auth`), and `WholePage`, the whole `/account`
 page composed with fixture props, since the page is a server component.
 It is composed as `src/app/(shell)/account/page.tsx` composes it: a bare
 heading, `PageNav` with the same four entries, the Invitations section with
@@ -194,12 +212,16 @@ titled "Account / Sign-In Methods".
 - `tests/components/SignInMethods/index.test.tsx`: role and label queries
   only, with `@/lib/auth-client` mocked as in SignInPanel's test. It covers
   the four rows and Add on the unlinked ones, the link call's arguments, a
-  failed link's alert in its provider's row, the generic link failure, an
+  failed link's alert in its provider's row, the generic link failure's
+  callout under Add (focus, description, Dismiss, badge, cleared at the next
+  press, with a callback error), an
   unconfigured Add, no Remove with one linked and the row's reason line,
-  removal by row id and its message, the survivor losing its Remove, a mapped
-  and an unmapped refusal, Remove withheld and Sign In Again offered from a
+  removal by row id and its sentence in the status region (drawn under
+  `StatusRegionProvider`), the pressed Remove keeping the focus while busy,
+  the survivor losing its Remove, a mapped and an unmapped refusal and an
+  unreachable removal, each a callout under its Remove, Remove withheld and Sign In Again offered from a
   stale session, and Sign In Again signing out to `/sign-in` with
-  `next=/account`.
+  `next=/account`, and its failure's callout with the focus kept while busy.
 - `tests/app/(shell)/account/page.test.tsx`: the page's nav reaches each section.
 - `tests/e2e/account.spec.ts`: `/account` signed in through
   `tests/e2e/session.ts`, axe-scanned with one provider in both themes and

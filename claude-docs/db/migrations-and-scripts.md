@@ -47,6 +47,7 @@
   independently of it. Hand-editing the SQL is safe here because `db:generate`
   diffs the `meta/` snapshots rather than the statements, so the keyword
   changes nothing a later generate sees.
+- **`0079_updated-at-skips-no-op.sql`** (MB.106) replaces the body of `set_updated_at()` so an `UPDATE` that changed nothing keeps both `updated_at` and `updated_by`; same name and signature, so no trigger is touched, and nothing is dropped, so no acknowledgement. See [`updated-at.md`](updated-at.md).
 - **`0016_updated-at-trigger.sql`** (M1.18) is the third hand-written one,
   again via `generate --custom`: it adds the `set_updated_at()` trigger
   function and attaches it to every audited table, neither of which schema
