@@ -13,6 +13,7 @@ import {
   ListBlock,
   said,
 } from './blocks';
+import { ShelfIcon } from './held-mark';
 // The page's own stylesheet, for its blocks: a list page draws no entry page to load it.
 import './index.scss';
 import './summary.scss';
@@ -61,11 +62,21 @@ export default function IngredientSummary({
   const holding = detail.entry.workspaceId === null ? covens : [];
   // Where the viewer holds the entry, last (the owner's call, 2026-10-20). Not
   // something recorded of the entry, so it never stands in for the line below.
+  // Each coven's link leads with the In Your Cupboard shelf, as the coven's page
+  // of the entry heads its name with it (the owner's call, 2026-10-20).
   const inYourCovens = holding.length > 0 && (
-    <ListBlock block={blockOf('summary', 'covens')} title="In Your Covens" level={3}>
+    <ListBlock
+      block={blockOf('summary', 'covens')}
+      title="In Your Covens"
+      level={3}
+      className="ingredient-summary__covens"
+    >
       {holding.map(({ id, slug, name }) => (
         <li key={id}>
-          <Link href={`/coven/${slug}/ingredients/${detail.entry.id}`}>{name}</Link>
+          <Link href={`/coven/${slug}/ingredients/${detail.entry.id}`}>
+            <ShelfIcon />
+            <span>{name}</span>
+          </Link>
         </li>
       ))}
     </ListBlock>
