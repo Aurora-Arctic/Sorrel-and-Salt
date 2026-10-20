@@ -712,8 +712,12 @@ back, so a column keeps the content width it had.
 **The page behind does not scroll while it is open** (M5.5, the owner's
 call). `showModal()` makes the page inert, but a wheel over the backdrop
 still scrolled it. `:root:has(.modal-dialog:modal)` sets `overflow: hidden`,
-in CSS so no listener can leave the page locked, with `scrollbar-gutter:
-stable` so nothing shifts sideways as the scrollbar goes; the body's own
+in CSS so no listener can leave the page locked. Nothing behind it shifts
+sideways as the scrollbar goes: every page keeps the scrollbar's room,
+scrolling or not (`scrollbar-gutter: stable` on `html`, `globals.scss`),
+so that nothing behind a modal moves (the owner's call, 2026-10-20). It used
+to be set only while a modal was open, so a page with no scrollbar gained the
+room as one opened and moved by half of it, 7.5px in Chromium. The body's own
 scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
 out of reach.
 
