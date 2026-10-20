@@ -26,10 +26,9 @@ import type { CardMoreProps } from './types';
 // Remove is its own bin instead of a menu of one. A lone Link or Make It Ours
 // stays a menu of one: each needs the delete permission too, so no role
 // reaches either alone today, and no icon is built for a case that cannot
-// happen. A write that
-// takes the card away reads the list again, and the focus then goes to the
-// page's heading, the card's More having gone with it; a refusal gives More
-// the focus back. claude-docs/components/coven-cards.md.
+// happen. A write that takes the card away reads the list again, and the
+// focus then goes to the page's heading, the card's More having gone with it;
+// a refusal gives More the focus back. claude-docs/components/coven-cards.md.
 
 type Asking = 'delete' | 'makeOurs' | 'remove';
 

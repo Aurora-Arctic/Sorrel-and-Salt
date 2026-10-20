@@ -11,7 +11,7 @@ import LinkConfirm from './link-confirm';
 // The list of "Similar in the Compendium" (M12.22) for a role that may
 // convert: a radio beside each entry's link, and one Link to Selected below
 // them. The button asks in a dialog (`link-confirm.tsx`, shared with the
-// edit dialog's search, M8.17), then turns the coven's own entry into the
+// edit dialog's More, M8.17), then turns the coven's own entry into the
 // chosen compendium entry through M12.21's conversion and goes to that
 // entry's page in the coven. The page
 // passes this only to a role the conversion permits. It is a client file that
