@@ -26,6 +26,7 @@ import {
   expectFieldError,
   openAddIngredient,
   openEditIngredient,
+  openEditIngredientFromMenu,
   pickCategoryIn,
   shellAddIngredient,
   shellEditControls,
@@ -671,12 +672,7 @@ test(
         200,
       );
       await expect(shellEditControls(page)).toHaveCount(0);
-      const dialog = await openEditIngredient(
-        page,
-        page.getByRole('main'),
-        'Testwort',
-        'Fixtura testalis',
-      );
+      const dialog = await openEditIngredientFromMenu(page, 'Testwort', 'Fixtura testalis');
       await expect(nameField(dialog)).toHaveValue('Testwort');
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
@@ -691,8 +687,9 @@ test(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toHaveCount(0);
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
+      // The page's Edit is a menu (M8.17), which a viewer is not drawn.
       await expect(
-        editIngredientControl(page.getByRole('main'), 'Testwort', 'Fixtura testalis'),
+        page.getByRole('main').getByRole('button', { name: 'Edit', exact: true }),
       ).toHaveCount(0);
 
       const answer = await graphqlFromPage(page, UPDATE, {
@@ -770,12 +767,7 @@ test(
     await test.step("a save from the entry's page shows on the page, then in the list", async () => {
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await markDocument(page);
-      const dialog = await openEditIngredient(
-        page,
-        page.getByRole('main'),
-        'Fixture Mendwort',
-        'Fixtura testalis',
-      );
+      const dialog = await openEditIngredientFromMenu(page, 'Fixture Mendwort', 'Fixtura testalis');
       await nameField(dialog).fill('Fixture Wardwort');
       await saveIngredient(dialog).click();
       await expect(dialog).toHaveCount(0);
