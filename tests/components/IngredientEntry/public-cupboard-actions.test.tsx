@@ -74,14 +74,14 @@ function show(p: PublicCupboardActionsProps) {
 
 /** The Edit menu's choices, in order, after opening it. */
 function choices(): string[] {
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  return within(screen.getByRole('menu', { name: 'Edit' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
+  return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
     .getAllByRole('menuitem')
     .map((item) => item.textContent ?? '');
 }
 
 function choose(name: string): void {
-  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
 
@@ -119,6 +119,36 @@ describe('CupboardActions on the public page', () => {
 
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  // The pencil at the end of the name's row (the owner's call, 2026-10-20), for a curator here too.
+  it("is a curator's pencil, a menu button named Edit and the entry, with the Edit tip", () => {
+    show(
+      props([place(1)], {
+        edit: {
+          href: `${PAGE}?edit` as Route,
+          entry: { id: 'fixture', name: 'Testwort', canonicalName: null, nomenclature: 'unknown' },
+        },
+      }),
+    );
+
+    const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
+    expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    fireEvent.mouseEnter(pencil);
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    fireEvent.mouseLeave(pencil);
+    expect(choices()).toEqual(['Add to Cupboard', 'Edit Compendium Entry']);
+  });
+
+  // Add alone is not the Edit menu, so it keeps its words and no pencil shows.
+  it('keeps the lone Add to Cupboard menu a labelled button, not the pencil', () => {
+    show(props([place(1), place(2)]));
+
+    expect(screen.getByRole('button', { name: 'Add to Cupboard' })).toHaveTextContent(
+      'Add to Cupboard',
+    );
+    expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
   });
 
   it('adds at once to the one coven, with no picker', async () => {

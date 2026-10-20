@@ -119,7 +119,8 @@
   }
 }
 
-.icon-tip__add .spinner {
+.icon-tip__add .spinner,
+.icon-tip__edit .spinner {
   width: $glyph-size-large;
   height: $glyph-size-large;
 }

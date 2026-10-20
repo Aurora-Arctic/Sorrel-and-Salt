@@ -192,12 +192,10 @@ describe('MenuButton', () => {
 });
 
 // Where the menu hangs from (claude-docs/components/menu-button.md, "Where it
-// opens"): the button's end edge by default, and with `placement="auto"` its
-// start edge when the button sits in the start half of the window, so the
-// ingredient page's Edit, dropped to the left of a wrapped header, does not
-// open leftwards off the screen's edge. Floating UI turns the placement into
-// the menu's `translate(x, y)`; the rects are stated, since happy-dom lays
-// nothing out.
+// opens"): the button's end edge, wherever the button sits, since every caller
+// puts it at the end of its row. Floating UI turns the placement into the
+// menu's `translate(x, y)`; the rects are stated, since happy-dom lays nothing
+// out.
 describe('MenuButton placement', () => {
   const WINDOW_WIDTH = 1000;
   const BUTTON_WIDTH = 80;
@@ -250,37 +248,9 @@ describe('MenuButton placement', () => {
     return Number.parseFloat(/translate\((-?[\d.]+)px/.exec(menu().style.transform)![1]!);
   };
 
-  const drawn = (placement?: 'auto' | 'end') =>
-    render(<MenuButton label="Edit" className="btn" items={actions()} placement={placement} />);
+  const drawn = () => render(<MenuButton label="Edit" className="btn" items={actions()} />);
 
-  it("auto: hangs from the button's start edge when the button is in the start half", async () => {
-    layOut(100);
-    drawn('auto');
-
-    expect(await menuLeft()).toBe(100);
-  });
-
-  it("auto: hangs from the button's end edge when the button is in the end half", async () => {
-    layOut(700);
-    drawn('auto');
-
-    // The button's right edge less the menu's width.
-    expect(await menuLeft()).toBe(700 + BUTTON_WIDTH - MENU_WIDTH);
-  });
-
-  it('auto: chooses again at every opening, from where the button is then', async () => {
-    layOut(100);
-    drawn('auto');
-    expect(await menuLeft()).toBe(100);
-    fireEvent.keyDown(within(menu()).getAllByRole('menuitem')[0]!, { key: 'Escape' });
-
-    vi.restoreAllMocks();
-    layOut(700);
-
-    expect(await menuLeft()).toBe(700 + BUTTON_WIDTH - MENU_WIDTH);
-  });
-
-  it("the default stays the button's end edge, even in the start half", async () => {
+  it("hangs from the button's end edge, even in the start half of the window", async () => {
     layOut(100);
     drawn();
 

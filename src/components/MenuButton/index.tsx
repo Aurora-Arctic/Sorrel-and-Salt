@@ -21,10 +21,7 @@ import './index.scss';
 // at the foot of a dialog or the window, and shifted to stay on the screen,
 // clear of the phone's bottom bar; fixed, so a scrolling dialog cannot clip
 // it, and following a scroll or a resize while open. Which side it opens
-// toward is the room's to decide (M8.17), bar one choice the caller makes:
-// `placement="auto"` hangs it from the button's start edge when the button
-// sits in the start half of the window, where a header wrapped it under its
-// title, and the end edge otherwise. claude-docs/components/menu-button.md.
+// toward is the room's to decide (M8.17). claude-docs/components/menu-button.md.
 
 const Chevron = (): ReactElement => (
   <svg
@@ -58,17 +55,6 @@ const fadesAreOff = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * The edge to hang a menu from: the button's start edge when its centre is in
- * the start half of the window, so the menu opens toward the room, else the end
- * edge. Read when the menu opens, since a header's wrapping moves the button.
- */
-const edgeFor = (button: HTMLElement | null): 'bottom-start' | 'bottom-end' => {
-  if (!button) return 'bottom-end';
-  const { left, width } = button.getBoundingClientRect();
-  return left + width / 2 < window.innerWidth / 2 ? 'bottom-start' : 'bottom-end';
-};
-
-/**
  * The items as drawn: the green one, marked `primary` or `constructive`, first,
  * and the rest in the caller's order (the owner's call, 2026-10-20). Done here
  * rather than asked of every caller, so no menu can put its green item
@@ -98,7 +84,6 @@ export default function MenuButton({
   busyLabel,
   buttonType = false,
   icon,
-  placement = 'end',
   ref,
   state,
 }: MenuButtonProps): ReactElement {
@@ -112,12 +97,9 @@ export default function MenuButton({
   const root = useRef<HTMLSpanElement>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const menuId = useId();
-  // The edge the menu hangs from, chosen as it opens (`placement="auto"`) and
-  // held while it is open and fading, so it does not jump if the page moves.
-  const [edge, setEdge] = useState<'bottom-start' | 'bottom-end'>('bottom-end');
   const { setControl, setList, listStyle } = useListPosition(open, undefined, {
     matchWidth: false,
-    placement: edge,
+    placement: 'bottom-end',
     gap: MENU_GAP_PX,
   });
 
@@ -125,7 +107,6 @@ export default function MenuButton({
     setOpenState((was) => {
       const now = typeof next === 'function' ? next(was) : next;
       if (now) {
-        setEdge(placement === 'auto' ? edgeFor(toggle.current) : 'bottom-end');
         setDrawn(true);
         setChosen(undefined);
       } else if (fadesAreOff()) setDrawn(false);

@@ -461,8 +461,9 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
     return ingredientId;
   });
   const heading = (name: string) => page.getByRole('heading', { level: 1, name });
-  const choose = async (name: string) => {
-    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  // The pencil is named for the entry as it is called now.
+  const choose = async (name: string, entry = 'Fixture Lapsedwort') => {
+    await page.getByRole('button', { name: `Edit ${entry}`, exact: true }).click();
     await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
   };
 
@@ -473,7 +474,7 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
   await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit Fixture Lapsedwort', exact: true }).click();
   await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText([
     'Annotate',
     'Make It Ours',
@@ -493,7 +494,7 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
   await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
 
-  await choose('Make It Ours');
+  await choose('Make It Ours', 'Fixture Our Lapsedwort');
   const ask = page.getByRole('dialog', { name: 'Make It Ours' });
   await ask.getByRole('button', { name: 'Make It Ours' }).click();
   await expect(page).toHaveURL(
@@ -796,7 +797,7 @@ test('a retired compendium entry the coven still holds can be removed, and leave
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
-  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit Fixture Fadedwort', exact: true }).click();
   await page.getByRole('menu').getByRole('menuitem', { name: 'Remove', exact: true }).click();
   const ask = page.getByRole('dialog', { name: 'Remove from Cupboard' });
   await ask.getByRole('button', { name: 'Remove', exact: true }).click();
@@ -834,10 +835,10 @@ test('Edit Ingredient, opened from the Edit menu and cancelled, gives the menu i
   await signInAgainAs(page, coven.users.B);
   await page.goto(`${listPath(coven)}/${own.ingredientId}`);
 
-  const edit = page.getByRole('main').getByRole('button', { name: 'Edit', exact: true });
+  const edit = page.getByRole('main').getByRole('button', { name: 'Edit Testwort', exact: true });
   await edit.click();
   await page
-    .getByRole('menu', { name: 'Edit' })
+    .getByRole('menu', { name: 'Edit Testwort' })
     .getByRole('menuitem', { name: 'Edit Ingredient' })
     .click();
   const dialog = editIngredientDialog(page, 'Testwort', 'Fixtura testalis');

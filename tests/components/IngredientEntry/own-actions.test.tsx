@@ -49,11 +49,11 @@ function renderOnPage(edit?: IngredientEntryEdit) {
   return render(onPage(edit));
 }
 
-const menuButton = () => screen.getByRole('button', { name: 'Edit' });
+const menuButton = () => screen.getByRole('button', { name: 'Edit Testwort' });
 
 function choices(): string[] {
   fireEvent.click(menuButton());
-  return within(screen.getByRole('menu', { name: 'Edit' }))
+  return within(screen.getByRole('menu', { name: 'Edit Testwort' }))
     .getAllByRole('menuitem')
     .map((item) => item.textContent ?? '');
 }
@@ -79,6 +79,20 @@ describe('OwnEntryActions', () => {
   beforeEach(() => {
     router.replace.mockClear();
     router.push.mockClear();
+  });
+
+  // The pencil at the end of the name's row (the owner's call, 2026-10-20): MenuButton's icon
+  // form, named for the entry as the modal's pencil is, with the Edit tip and no word of its own.
+  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', () => {
+    renderOnPage();
+
+    const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
+    expect(pencil).toHaveAttribute('aria-haspopup', 'menu');
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    fireEvent.mouseEnter(pencil);
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
+    fireEvent.mouseLeave(pencil);
+    expect(choices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
   });
 
   it('offers Edit and Delete in one Edit menu, Edit at its address', () => {

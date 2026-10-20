@@ -162,6 +162,30 @@ $jump-link-line: 1.25;
   }
 }
 
+// The Edit menu as the pencil at the end of the name's row (the owner's call, 2026-10-20): it
+// stays on the name's first line at every width, the name wrapping before it, where a labelled
+// action drops under a long name or a narrow header. Centred on that first line: the h1's line
+// box (`heading-size(1)` at the 1.1 line height _typography.scss gives it) less the pencil's box.
+// `:has()` is Baseline Widely Available, so the header needs no class of its own for it.
+.ingredient-entry__head .page-header:has(> .ingredient-entry__cupboard--pencil) {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  column-gap: space(2);
+
+  // Also undoes the narrow header's `flex-basis: 100%`, which would push the pencil under.
+  > h1,
+  > .page-header__title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  > .ingredient-entry__cupboard--pencil {
+    flex: none;
+    margin-block-end: 0;
+    top: calc((#{heading-size(1)} * 1.1 - #{$icon-size-large}) / 2);
+  }
+}
+
 // In Your Cupboard: the shelf before the name, at the heading's size and in
 // the muted ink, so it reads as a mark on the name and not part of it (the
 // owner's mock-up, 2026-10-19). A button only to carry its tip (held-mark.tsx).
