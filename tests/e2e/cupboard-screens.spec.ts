@@ -57,9 +57,33 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(heading('Fixture Screens Wort')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Add to Cupboard' }).click();
+  // A refusal is a callout under the button, which floats: the heading does
+  // not move (M12.31). The write is answered in its place, so nothing is added.
+  const before = await heading('Fixture Screens Wort').boundingBox();
+  await page.route('**/api/graphql', (route) =>
+    route.request().postData()?.includes('AddCupboardEntry')
+      ? route.fulfill({
+          json: { data: null, errors: [{ message: 'This entry could not be added.' }] },
+        })
+      : route.continue(),
+  );
+  await page.getByRole('button', { name: 'Add to Cupboard', exact: true }).click();
+  const refusal = page.getByRole('alert').filter({ hasText: 'This entry could not be added.' });
+  await expect(refusal).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Show the error for Add to Cupboard' }),
+  ).toBeVisible();
+  expect(await heading('Fixture Screens Wort').boundingBox()).toEqual(before);
+  await refusal.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(refusal).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Add to Cupboard', exact: true })).toBeFocused();
+  await page.unrouteAll();
+
+  await page.getByRole('button', { name: 'Add to Cupboard', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Add to Cupboard' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Add to Cupboard', exact: true })).toHaveCount(0);
+  // The failed try's badge went with the button it belonged to.
+  await expect(page.getByRole('button', { name: /^Show the error for / })).toHaveCount(0);
 
   await choose('Annotate');
   // The dialog is the address's: a reload would open it again.
@@ -95,7 +119,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
 
   await choose('Remove');
   await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Add to Cupboard' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Add to Cupboard', exact: true })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   // The confirmation stays until the re-read drops the entry, then closes onto
   // the page's heading: Remove went with the menu, and the button left offers

@@ -323,7 +323,8 @@ export const Annotated: Story = () => (
 );
 
 // The cupboard choices beside the title (M12.17). The workshop has no API, so
-// a press answers with the generic error. A member sees Add to Cupboard while
+// a press answers with the generic error, which shows in the failure callout
+// under the button (M12.31). A member sees Add to Cupboard while
 // the coven does not hold the entry; an Edit menu of Annotate, Make It Ours
 // (M12.23) and Remove once it does; a viewer sees none.
 const CUPBOARD = {

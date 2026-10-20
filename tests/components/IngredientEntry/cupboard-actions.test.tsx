@@ -354,6 +354,8 @@ describe('CupboardActions', () => {
     // The entry stays held, so the focus goes back to its menu, not the heading.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(button('Edit')).toHaveFocus();
+    // The refusal is the menu's callout, which can be brought back by its badge.
+    expect(button('Show the error for Edit')).toBeInTheDocument();
   });
 
   it('asks before making it ours, in a dialog, and changes nothing on the way out', async () => {
@@ -411,5 +413,82 @@ describe('CupboardActions', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
     expect(button('Edit')).toBeInTheDocument();
+    expect(button('Show the error for Edit')).toBeInTheDocument();
+  });
+
+  it('shares one callout between the writes: a later refusal replaces the first, and the next press clears it', async () => {
+    mockGraphQLError('MakeItOurs', {
+      code: 'FORBIDDEN',
+      message: 'Fixture refusal: the name is taken',
+    });
+    mockGraphQLError('RemoveCupboardEntry', {
+      code: 'FORBIDDEN',
+      message: 'Fixture refusal: a jar is held',
+    });
+    renderActions({ held: true });
+
+    choose('Make It Ours');
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Make It Ours' }));
+    await screen.findByRole('alert');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    choose('Remove');
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('a jar is held'));
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Show the error for Edit' })).toHaveLength(1);
+
+    // Opening a question again forgets the last refusal.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    choose('Make It Ours');
+    await waitFor(() => expect(button('Show the error for Edit')).not.toBeInTheDocument());
+  });
+
+  it("shows Add to Cupboard's refusal under the Edit menu when Add is a menu item, and it can be dismissed", async () => {
+    mockGraphQLError('AddCupboardEntry', {
+      code: 'FORBIDDEN',
+      message: 'Fixture refusal: not in the Compendium',
+    });
+    renderActions({
+      edit: {
+        href: '/coven/fixture-coven/ingredients/fixture?edit' as Route,
+        entry: { id: 'fixture', name: 'Testwort', canonicalName: null, nomenclature: 'unknown' },
+      },
+    });
+
+    choose('Add to Cupboard');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('not in the Compendium');
+    expect(button('Show the error for Edit')).toBeInTheDocument();
+    expect(button('Edit')).toHaveAccessibleDescription(/not in the Compendium/);
+
+    press('Dismiss');
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    expect(button('Edit')).toHaveFocus();
+  });
+
+  it("shows Add to Cupboard's refusal under the button itself when it stands alone, and a new press clears it", async () => {
+    mockGraphQLError('AddCupboardEntry', {
+      code: 'FORBIDDEN',
+      message: 'Fixture refusal: not in the Compendium',
+    });
+    renderActions();
+
+    press('Add to Cupboard');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('not in the Compendium');
+    expect(button('Show the error for Add to Cupboard')).toBeInTheDocument();
+    expect(button('Add to Cupboard')).toHaveFocus();
+
+    mockGraphQLMutation<AddCupboardEntryMutation, Record<string, unknown>>(
+      'AddCupboardEntry',
+      () => ({ addCupboardEntry: { id: 'fixture' } }),
+    );
+    press('Add to Cupboard');
+
+    await waitFor(() =>
+      expect(button('Show the error for Add to Cupboard')).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
