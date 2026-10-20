@@ -174,6 +174,30 @@ test.describe('on the admin Compendium list', () => {
       .toBeLessThan(whole);
   });
 
+  test('a short entry fits its window: the body overflows on neither axis, and the bar still runs edge to edge', async ({
+    page,
+  }) => {
+    await page.goto(`${listPath}&entry=${slug}`);
+    const details = detailsDialog(page);
+    const body = details.locator('.modal-dialog__body');
+    // Why it could overflow: the foot bar is in the body, with the margins that take it to the edges.
+    const bar = details.locator('.ingredient-details-foot');
+    await expect(bar).toBeVisible();
+    // Why it is short: the one caution, nothing near the window's height.
+    const room = await body.evaluate((b) => b.clientHeight);
+    expect(room).toBeLessThan((page.viewportSize()?.height ?? 0) / 2);
+    const overflow = () =>
+      body.evaluate((b) => ({
+        y: b.scrollHeight - b.clientHeight,
+        x: b.scrollWidth - b.clientWidth,
+      }));
+    await expect.poll(overflow).toEqual({ y: 0, x: 0 });
+    // Edge to edge: the bar is as wide as the dialog.
+    const dialogBox = await details.boundingBox();
+    const barBox = await bar.boundingBox();
+    expect(Math.abs((barBox?.width ?? 0) - (dialogBox?.width ?? 1))).toBeLessThan(2);
+  });
+
   test('Open Full Page is a full-width bar fixed to the foot of the window, with the text scrolling under it', async ({
     page,
   }) => {

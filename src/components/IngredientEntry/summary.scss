@@ -50,19 +50,33 @@
 
 // The details modal's foot (the owner's call, 2026-10-20): the bar holding Open
 // Full Page, the last child of the scrolling body and fixed to the foot of the
-// window, so the text scrolls under it. It runs to the dialog's edges (the
-// body's own padding taken back), on the modal's surface so the text passes
-// behind it unseen, with only a hairline along its top; sticky rather than a
-// slot of the Modal's own, as no other modal has a foot. Its place in the flow
-// is the end of the text, so the last line scrolls clear of it by the bar's
-// own top padding. The button is the site's green, medium, the bar's width.
+// window, so the text scrolls under it. It runs to the dialog's edges, on the
+// modal's surface so the text passes behind it unseen, with only a hairline
+// along its top; sticky rather than a slot of the Modal's own, as no other modal
+// has a foot. Its place in the flow is the end of the text, so the last line
+// scrolls clear of it by the bar's own top margin. The button is the site's
+// green, medium, the bar's width.
+//
+// The edges are reached by taking the body's own side and bottom padding off and
+// giving the text its side margin instead, not by pulling the bar out over that
+// padding with negative margins and a negative `bottom` (the first version,
+// 632ca318): a box stuck or margined past its scroller's padding is the kind that
+// can overflow it by a pixel in some engines, and a window whose text fits
+// showed a scrollbar. Here nothing is wider or lower than the body's own box.
+.modal-dialog__body:has(> .ingredient-details-foot) {
+  padding-inline: 0;
+  padding-block-end: 0;
+
+  > :not(.ingredient-details-foot) {
+    margin-inline: space(5);
+  }
+}
+
 .ingredient-details-foot {
   position: sticky;
-  // Negative: a sticky box stops at the body's padding, and this one is to
-  // stand at the dialog's edge, over it.
-  bottom: calc(-1 * #{space(5)});
+  bottom: 0;
   z-index: 1;
-  margin: space(5) calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
+  margin-block-start: space(5);
   padding: space(3) space(5);
   border-top: 1px solid $hairline;
   background: $surface-card;
