@@ -41,7 +41,6 @@ const ConfirmedAction = ({
   onSent,
   refusal,
   announcement,
-  onFailure,
   choices,
   closeOnSent = false,
   inModal = false,
@@ -82,13 +81,11 @@ const ConfirmedAction = ({
     }
   }, [step, inModal]);
 
-  // Outside a modal, a callout under the control. Inside one, a notice
-  // beside it, or wherever a caller that takes `onFailure` puts it (the
-  // owner's exit, at the top of its dialog).
+  // Outside a modal, a callout under the control. Inside one, a plain notice
+  // beside it, in that dialog (the owner's call).
   function report(message: string | undefined) {
-    if (!inModal) feedback.report(message);
-    else if (onFailure) onFailure(message);
-    else setFailure(message);
+    if (inModal) setFailure(message);
+    else feedback.report(message);
   }
 
   async function confirm() {

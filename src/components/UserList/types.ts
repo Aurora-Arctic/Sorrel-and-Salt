@@ -126,15 +126,10 @@ export interface ConfirmedActionProps {
   /** Close the modal on success, for a control the re-read does not replace. */
   closeOnSent?: boolean;
   /**
-   * In a modal only: takes the refusal's sentence (and `undefined` when a new
-   * attempt starts) for the caller to show elsewhere in the dialog; absent,
-   * it shows beside the control. Outside a modal the refusal is always the
-   * control's own callout.
-   */
-  onFailure?: (message: string | undefined) => void;
-  /**
    * Drawn inside a modal already, the user's (M9.19): asks over that modal's
-   * body through its confirm layer rather than opening a second modal on top.
+   * body through its confirm layer rather than opening a second modal on top,
+   * and says a refusal in a plain notice beside the control, inside that
+   * dialog, rather than in a callout over it (M12.31's rule 6).
    */
   inModal?: boolean;
 }

@@ -22,10 +22,9 @@ component taking the workspace's `workspaceId` and `name`.
 
 The optional `inModal` prop asks the confirmation over the dialog the button sits in rather than
 opening a second modal on top, and `onlyOwner` leaves "other owners included" out of the question,
-since there are none. With `inModal`, a refusal goes to the optional `onFailure` when one is
-passed, and otherwise to a `Notice` beside the button inside the dialog. The only owner's guided exit (M6.16,
-[`leave-workspace-button.md`](leave-workspace-button.md)) passes both, and an `onFailure` that shows
-the refusal at the dialog's top.
+since there are none. With `inModal`, a refusal is a plain error `Notice` beside the button,
+inside the dialog, with no badge (the owner's call, 2026-10-20). The only owner's guided exit
+(M6.16, [`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
 
 ## Styling
 
