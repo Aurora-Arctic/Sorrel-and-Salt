@@ -247,6 +247,26 @@
   }
 }
 
+// A badge's padding, with the label lowered by its size's optical-drop: the top
+// gains what the bottom loses, so the height holds. Lexend's capitals sit above
+// the centre of its line box, so a centred label read high in every badge, by up
+// to 1.3px (measured 2026-10-20); the owner's call, 2026-10-20, is to centre them
+// optically. Padding rather than text-box-trim, which is past the browser floor.
+// claude-docs/styling.md, "Badge sizes".
+@mixin badge-padding($name) {
+  @include badge-padding-block($name);
+  padding-inline: map.get(map.get($badge-sizes, $name), padding-inline);
+}
+
+// The block half alone, for a rule that must leave a badge's sides to its size.
+@mixin badge-padding-block($name) {
+  $size: map.get($badge-sizes, $name);
+  $block: map.get($size, padding-block);
+  $drop: map.get($size, optical-drop);
+
+  padding-block: calc(#{$block} + #{$drop}) calc(#{$block} - #{$drop});
+}
+
 // Takes a palette key, not a colour, so the two badges cannot swap inks; the
 // palette's own treatment decides the drawing. Square-cornered, unlike a chip.
 @mixin badge($palette) {
@@ -254,7 +274,7 @@
 
   display: inline-flex;
   align-items: center;
-  padding: 0.125rem 0.4375rem;
+  @include badge-padding('default');
   border-radius: radius('sharp');
   font-family: $font-body;
   font-size: type-size('caption');
@@ -292,8 +312,7 @@
   }
 
   font-size: type-size(map.get($size, font-size));
-  padding-block: map.get($size, padding-block);
-  padding-inline: map.get($size, padding-inline);
+  @include badge-padding($name);
 
   @if map.get($size, min-block-size) {
     min-block-size: map.get($size, min-block-size);

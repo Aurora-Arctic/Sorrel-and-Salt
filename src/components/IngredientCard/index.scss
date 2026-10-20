@@ -194,7 +194,7 @@
 // The values are the badge mixin's own, so both come out the same height.
 .ingredient-card .specimen__stock .stock-badge--out {
   border-width: 1px;
-  padding-block: 0.125rem;
+  @include badge-padding-block('medium');
   font-weight: 500;
 }
 
