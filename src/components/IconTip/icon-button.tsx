@@ -58,8 +58,9 @@ export const AnnotateButton = ({
 /**
  * The three dots: a menu of the entry's further choices, in the ink of the page rather than the
  * green of Edit, as the card has it. Only where there are more choices than the icons beside it
- * already offer, drawn in Compendium and Coven sections where it holds both kinds (the owner's
- * call, 2026-10-20). The entry's Delete or Remove is the bin beside it, not one of its choices.
+ * already offer, always drawn in labelled Compendium and Coven sections through `choicesFor`, even
+ * where it holds only one kind (the owner's call, 2026-10-20). A lone Delete or Remove is not a
+ * menu of one: the caller draws it as the bin instead and does not render this.
  */
 export const MoreMenu = ({
   name,

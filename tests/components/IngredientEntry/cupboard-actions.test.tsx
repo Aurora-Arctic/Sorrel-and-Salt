@@ -22,8 +22,9 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // claude-docs/components/ingredient-entry.md): the page decides from the
 // member's permissions, the choices follow whether the coven holds the entry, and they are drawn
 // as the list cards draw them (the owner's call, 2026-10-20): a main icon (Annotate on a
-// coven's page, Edit in Compendium on the compendium's), the three dots for what is further, and
-// the bin for Remove.
+// coven's page, Edit in Compendium on the compendium's) and the three dots for what is further,
+// Remove among it beside Make It Ours (the owner's call, 2026-10-20), the bin only where Remove is
+// the one choice left.
 
 const ANNOTATE = {
   href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
@@ -99,9 +100,9 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** The bin for Remove, or an item of the three dots' menu for anything else. */
+/** The bin where Remove is the one choice left, else an item of the three dots' menu. */
 function choose(name: string): void {
-  if (name === 'Remove') {
+  if (name === 'Remove' && button('Remove Testwort')) {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
     return;
   }
@@ -114,8 +115,8 @@ describe('CupboardActions', () => {
 
   // The icons at the end of the name's row (the owner's call, 2026-10-20), the cards' own: on a
   // coven's page the main one is Annotate, a link to the page's `?annotate`, named for the entry
-  // with its tip; then the three dots, a menu; then the bin. No plain Annotate or Edit.
-  it('draws Annotate as the main icon, a link named for the entry with its tip, then the three dots and the bin', async () => {
+  // with its tip; then the three dots, a menu. No plain Annotate or Edit.
+  it('draws Annotate as the main icon, a link named for the entry with its tip, then the three dots', async () => {
     renderActions({ held: true });
 
     const annotate = screen.getByRole('link', { name: 'Annotate Testwort' });
@@ -134,11 +135,9 @@ describe('CupboardActions', () => {
     await act(async () => {
       fireEvent.click(more);
     });
-    expect(shownChoices()).toEqual(['Make It Ours']);
-    // Remove is the bin, its own icon and not in the menu.
-    expect(screen.getByRole('button', { name: 'Remove Testwort' })).not.toHaveAttribute(
-      'aria-haspopup',
-    );
+    expect(shownChoices()).toEqual(['Make It Ours', 'Remove']);
+    // Remove is in the menu, so there is no bin beside it.
+    expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
   // Adding is the plus's alone (the owner's call, 2026-10-20): the old Add to Cupboard is gone.
@@ -150,11 +149,29 @@ describe('CupboardActions', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('puts Make It Ours in the three dots and Remove in the bin, not Add, once the coven holds it', () => {
+  // The dots draw the labelled section even though every choice is the coven's (the owner's call,
+  // 2026-10-20): the lone Coven section, and no Compendium one for an empty side.
+  it('puts Make It Ours and Remove in the three dots, in a Coven section, not Add, once the coven holds it', () => {
     renderActions({ held: true });
 
-    expect(choices()).toEqual(['Make It Ours']);
+    expect(choices()).toEqual(['Make It Ours', 'Remove']);
+    const menu = screen.getByRole('menu', { name: 'More for Testwort' });
+    expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
+      within(menu).getByRole('menuitem', { name: 'Remove' }),
+    );
+    expect(within(menu).queryByRole('group', { name: 'Compendium' })).not.toBeInTheDocument();
+    expect(button('Remove Testwort')).not.toBeInTheDocument();
+  });
+
+  // A lone choice is its own icon (the owner's call, 2026-10-20), so a member who may remove but
+  // not make it ours has the bin, and no menu of one.
+  it('draws Remove as the bin, with no three dots, where it is the one choice left', () => {
+    // Why the dots could have shown: with Make It Ours permitted too they do (the test above).
+    expect(BASE.canMakeOurs).toBe(true);
+    renderActions({ held: true, canMakeOurs: false });
+
     expect(button('Remove Testwort')).toBeInTheDocument();
+    expect(button('More for Testwort')).not.toBeInTheDocument();
   });
 
   describe("a curator's Edit in Compendium", () => {
@@ -169,7 +186,7 @@ describe('CupboardActions', () => {
       // Annotate is the main icon here, so the menu holds the other two, in two sections with the
       // viewer's side, the coven's, first.
       expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toBeInTheDocument();
-      expect(choices()).toEqual(['Make It Ours', 'Edit in Compendium']);
+      expect(choices()).toEqual(['Make It Ours', 'Remove', 'Edit in Compendium']);
       const menu = screen.getByRole('menu', { name: 'More for Testwort' });
       expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
         within(menu).getByRole('menuitem', { name: 'Make It Ours' }),
@@ -196,6 +213,7 @@ describe('CupboardActions', () => {
     renderActions({ held: true, canAnnotate: false, canRemove: false });
 
     expect(choices()).toEqual(['Make It Ours']);
+    expect(screen.getByRole('group', { name: 'Coven' })).toBeInTheDocument();
     // No main icon without a right behind it, and no bin.
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(button('Remove Testwort')).not.toBeInTheDocument();
@@ -297,7 +315,7 @@ describe('CupboardActions', () => {
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    await waitFor(() => expect(button('Remove Testwort')).toHaveFocus());
+    await waitFor(() => expect(button('More for Testwort')).toHaveFocus());
   });
 
   // The entry's page heading takes the focus once the re-read says the coven no
@@ -415,10 +433,26 @@ describe('CupboardActions', () => {
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    // The entry stays held, so the focus goes back to the bin, not the heading.
+    // The entry stays held, so the focus goes back to the three dots, not the heading.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(button('More for Testwort')).toHaveFocus();
+    // The refusal is the dots' callout, which can be brought back by its badge.
+    expect(button('Show the error for More for Testwort')).toBeInTheDocument();
+  });
+
+  it('anchors a Remove refusal on the bin where Remove is the one choice, so the callout follows it', async () => {
+    mockGraphQLError('RemoveCupboardEntry', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['ingredientId'], message: 'Fixture refusal: a jar is held' }],
+    });
+    renderActions({ held: true, canMakeOurs: false });
+
+    choose('Remove');
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(button('Remove Testwort')).toHaveFocus();
-    // The refusal is the bin's callout, which can be brought back by its badge.
     expect(button('Show the error for Remove Testwort')).toBeInTheDocument();
   });
 
@@ -537,7 +571,7 @@ describe('CupboardActions', () => {
       expect(
         plus.compareDocumentPosition(annotate) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
-      expect(choices()).toEqual(['Make It Ours']);
+      expect(choices()).toEqual(['Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 
       fireEvent.click(plus);

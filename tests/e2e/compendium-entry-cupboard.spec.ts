@@ -8,8 +8,8 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 
 // The coven's cupboard choices on the public entry page (M9.12): a member of one coven adds the
 // entry there with the card's plus, and the three dots then offer what the coven's own copy of
-// the page offers beyond its icons, Add never among them, the bin beside them being the Remove,
-// which leaves the viewer on the public page. A viewer is offered nothing. The In Your Cupboard shelf
+// the page offers beyond its icons, Add never among them, Remove among them (the owner's call,
+// 2026-10-20), which leaves the viewer on the public page. A viewer is offered nothing. The In Your Cupboard shelf
 // before the name shows whoever's coven holds the entry, a viewer's included, and no visitor or
 // member whose covens do not. A member of two covens chooses which from the plus's menu, the
 // holding coven shown there disabled, on the public page and a coven's own page of the entry
@@ -28,7 +28,7 @@ const HELD_MARK = 'in My Ingredients';
 const NAME = 'Fixture Shelfwort';
 const HELD = 'In All Covens';
 
-test('a member adds the entry from its public page, and the bin then offers its removal', async ({
+test('a member adds the entry from its public page, and the three dots then offer its removal', async ({
   page,
   browser,
   baseURL,
@@ -71,6 +71,7 @@ test('a member adds the entry from its public page, and the bin then offers its 
   const add = () => page.getByRole('main').getByRole('button', { name: ADD });
   const menu = () => page.getByRole('button', { name: `More for ${NAME}`, exact: true });
   const bin = () => page.getByRole('button', { name: `Remove ${NAME}`, exact: true });
+  const remove = () => page.getByRole('menuitem', { name: 'Remove', exact: true });
   const shelf = () => page.getByRole('button', { name: SHELF });
   const check = () => page.getByRole('main').getByRole('button', { name: HELD });
 
@@ -86,7 +87,7 @@ test('a member adds the entry from its public page, and the bin then offers its 
     await expect(shelf()).toHaveCount(0);
   });
 
-  await test.step('the member presses the plus, which adds at once, and the three dots, the bin and the shelf come', async () => {
+  await test.step('the member presses the plus, which adds at once, and the three dots and the shelf come, with no bin beside them', async () => {
     await signInAgainAs(page, coven.users.B);
     await open();
     await expect(menu()).toHaveCount(0);
@@ -96,7 +97,8 @@ test('a member adds the entry from its public page, and the bin then offers its 
       page.getByRole('status').filter({ hasText: 'Added to Fixture Coven Shelf.' }),
     ).toHaveCount(1);
     await expect(menu()).toBeVisible();
-    await expect(bin()).toBeVisible();
+    // Remove is among the dots, not its own bin, beside two other choices.
+    await expect(bin()).toHaveCount(0);
     // Every coven of the member's holds it now, so the card's check stands where the plus was
     // (the owner's call, 2026-10-20).
     await expect(add()).toHaveCount(0);
@@ -109,7 +111,7 @@ test('a member adds the entry from its public page, and the bin then offers its 
   await test.step('the menu offers what the coven’s copy offers, Add not among them, and stays after a reload', async () => {
     await open();
     await menu().click();
-    await expect(page.getByRole('menuitem')).toHaveText(['Annotate', 'Make It Ours']);
+    await expect(page.getByRole('menuitem')).toHaveText(['Annotate', 'Make It Ours', 'Remove']);
     await page.keyboard.press('Escape');
   });
 
@@ -134,7 +136,8 @@ test('a member adds the entry from its public page, and the bin then offers its 
   });
 
   await test.step('Remove asks, removes the coven’s entry, and leaves the member on this page', async () => {
-    await bin().click();
+    await menu().click();
+    await remove().click();
     const dialog = page.getByRole('dialog', { name: 'Remove from Cupboard' });
     await expect(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Remove', exact: true }).click();

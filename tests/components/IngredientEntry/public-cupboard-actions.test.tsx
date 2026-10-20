@@ -87,9 +87,9 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** The bin for Remove, or an item of the three dots' menu for anything else. */
+/** The bin where Remove is the one choice left, else an item of the three dots' menu. */
 function choose(name: string): void {
-  if (name === 'Remove') {
+  if (name === 'Remove' && screen.queryByRole('button', { name: 'Remove Testwort' })) {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
     return;
   }
@@ -135,7 +135,7 @@ describe('CupboardActions on the public page', () => {
 
   // The compendium's Edit is the page's main icon for a curator (the owner's call, 2026-10-20):
   // its own link, named for the compendium it changes, never folded into the three dots.
-  it("draws a curator's Edit in Compendium as the main icon, a link with its tip, the other choices in the dots and the bin", async () => {
+  it("draws a curator's Edit in Compendium as the main icon, a link with its tip, the other choices in the dots", async () => {
     show(props([place(1, { held: true })], { edit: EDIT }));
 
     const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
@@ -152,10 +152,13 @@ describe('CupboardActions on the public page', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
     });
-    // Only the coven's choices are left, so the menu is one flat list and carries no headings.
-    expect(shownChoices()).toEqual(['Annotate', 'Make It Ours']);
-    expect(screen.queryByRole('group')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove Testwort' })).toBeInTheDocument();
+    // Only the coven's choices are left, in the one Coven section the dots always draw (the
+    // owner's call, 2026-10-20), Remove among them and so no bin.
+    expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    const menu = screen.getByRole('menu', { name: 'More for Testwort' });
+    expect(within(menu).getByRole('group', { name: 'Coven' })).toBeInTheDocument();
+    expect(within(menu).queryByRole('group', { name: 'Compendium' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove Testwort' })).not.toBeInTheDocument();
   });
 
   // The same icon alone: no dots or bin, since the one coven permits nothing there.
@@ -181,8 +184,7 @@ describe('CupboardActions on the public page', () => {
     show(props([place(1, { held: true })]));
 
     expect(screen.queryByRole('link')).toBeNull();
-    expect(choices()).toEqual(['Annotate', 'Make It Ours']);
-    expect(screen.getByRole('button', { name: 'Remove Testwort' })).toBeInTheDocument();
+    expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
   it('draws no main icon where the coven may only annotate nothing, the viewer of a coven', () => {
@@ -208,7 +210,7 @@ describe('CupboardActions on the public page', () => {
       const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
       // The plus first, then the icons.
       expect(plus.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(choices()).toEqual(['Annotate', 'Make It Ours']);
+      expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
 
       fireEvent.click(plus);
@@ -264,12 +266,12 @@ describe('CupboardActions on the public page', () => {
     });
     show(props([place(1), place(2, { held: true })]));
 
-    expect(choices()).toEqual(['Annotate', 'Make It Ours']);
+    expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
     expect(screen.getByRole('menuitem', { name: 'Annotate' })).toHaveAttribute(
       'href',
       place(2).annotateHref,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Remove' }));
     const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
     // One coven holds it, so nothing to ask.
     expect(within(dialog).queryByRole('combobox')).toBeNull();
@@ -331,7 +333,7 @@ describe('CupboardActions on the public page', () => {
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
 
     // The re-read: the first coven no longer holds it, so its confirmation closes.
-    // The close hands the focus back to the bin, which opens its tip a step later (IconTip):
+    // The close hands the focus back to the three dots, which open their tip a step later (IconTip):
     // inside an async act, so that update is awaited rather than left outside it.
     await act(async () => {
       rendered.rerender(view(props([place(1), place(2, { held: true })])));
@@ -342,7 +344,7 @@ describe('CupboardActions on the public page', () => {
     expect(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }),
     ).toBeEnabled();
-    // The bin's tip, shown by the focus the first close handed it, fades out as the dialog
+    // The dots' tip, shown by the focus the first close handed them, fades out as the dialog
     // takes the focus: its fade timer ends inside an act, not after the test.
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 200));

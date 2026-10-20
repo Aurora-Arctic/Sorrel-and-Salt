@@ -455,10 +455,15 @@ describe('MenuButton sections', () => {
       expect(sectionsFor({ compendium: [], coven: [] }, 'coven')).toEqual([]);
     });
 
-    it('hands a menu the sections only when both sides have items, else the plain list', () => {
-      expect(choicesFor(groups, 'coven')).toHaveProperty('sections');
-      expect(choicesFor({ ...groups, compendium: [] }, 'coven')).toEqual({ items: groups.coven });
-      expect(choicesFor({ compendium: [], coven: [] }, 'coven')).toEqual({ items: [] });
+    // A More menu always draws its labelled section, even for one kind of choice (the owner's
+    // call, 2026-10-20), and an empty side is left out.
+    it('hands a More menu the sections even where only one side has items', () => {
+      expect(choicesFor(groups, 'coven').sections).toHaveLength(2);
+      const lone = choicesFor({ ...groups, compendium: [] }, 'coven');
+      expect(lone.sections?.map(({ label, items }) => [label, items])).toEqual([
+        ['Coven', groups.coven],
+      ]);
+      expect(lone.items).toBeUndefined();
     });
   });
 });

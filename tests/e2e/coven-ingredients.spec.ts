@@ -467,8 +467,6 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
     const main = page.getByRole('main');
     if (name === 'Annotate')
       await main.getByRole('link', { name: `Annotate ${entry}`, exact: true }).click();
-    else if (name === 'Remove')
-      await main.getByRole('button', { name: `Remove ${entry}`, exact: true }).click();
     else {
       await main.getByRole('button', { name: `More for ${entry}`, exact: true }).click();
       await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
@@ -482,12 +480,14 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
   await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
 
-  // Annotate is the main icon, Remove the bin, and Make It Ours the one choice left for the dots.
+  // Annotate is the main icon, and the dots hold Make It Ours and Remove, drawn under the Coven
+  // label, with no bin beside them (the owner's call, 2026-10-20).
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: 'Annotate Fixture Lapsedwort' })).toBeVisible();
-  await expect(main.getByRole('button', { name: 'Remove Fixture Lapsedwort' })).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Remove Fixture Lapsedwort' })).toHaveCount(0);
   await main.getByRole('button', { name: 'More for Fixture Lapsedwort', exact: true }).click();
-  await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText(['Make It Ours']);
+  await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+  await expect(page.getByRole('menu').getByRole('group', { name: 'Coven' })).toBeVisible();
   await page.keyboard.press('Escape');
 
   await choose('Annotate');
@@ -790,14 +790,15 @@ test('a retired compendium entry the coven still holds can be removed, and leave
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto(`/coven/${coven.slug}/ingredients/${retiredId}`);
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
-  await page.getByRole('button', { name: 'Remove Fixture Fadedwort', exact: true }).click();
+  await page.getByRole('button', { name: 'More for Fixture Fadedwort', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Remove', exact: true }).click();
   const ask = page.getByRole('dialog', { name: 'Remove from Cupboard' });
   await ask.getByRole('button', { name: 'Remove', exact: true }).click();
 
   // The entry page reads nothing once the row is gone, so the remove leads to
   // the coven's Ingredients list rather than a 404.
   await expect(page).toHaveURL(new RegExp(`${listPath(coven)}$`));
-  // The bin that asked went with the entry page, so the focus lands on
+  // The three dots that asked went with the entry page, so the focus lands on
   // the list's heading rather than falling to the body (the owner's call,
   // 2026-10-20).
   await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();

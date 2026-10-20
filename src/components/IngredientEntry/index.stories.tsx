@@ -347,8 +347,18 @@ const CUPBOARD = {
   },
 };
 
+// Annotate is the icon; Make It Ours and Remove are in the three dots, under the one Coven label
+// (the owner's call, 2026-10-20).
 export const AnnotateOrRemove: Story = () => (
   <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
+);
+
+// Remove the one choice left: no Make It Ours, no Annotate, so it is the bin and there are no dots.
+export const RemoveIsTheBin: Story = () => (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={{ ...CUPBOARD, canAnnotate: false, canMakeOurs: false }}
+  />
 );
 
 // The head's three lines (the owner's call, 2026-10-20): the way back with New, the safety
@@ -460,8 +470,8 @@ export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_C
 // public link nor Edit, since the compendium no longer holds it.
 export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
 
-// The same, to a member: the icons offer Annotate, Make It Ours (M12.23) and
-// Remove, and no Add, since the compendium no longer offers the entry (the
+// The same, to a member: the icons offer Annotate and, in the three dots, Make It Ours
+// (M12.23) and Remove, and no Add, since the compendium no longer offers the entry (the
 // owner's decision, 2026-10-19).
 export const RetiredOffersMakeItOurs: Story = () => (
   <Entry

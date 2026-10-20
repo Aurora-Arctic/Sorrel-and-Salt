@@ -1,4 +1,4 @@
-import type { MenuButtonChoices, MenuButtonItem, MenuSection } from './types';
+import type { MenuButtonItem, MenuSection } from './types';
 
 /** Where the viewer is, which decides the section that comes first: the compendium's or the coven's. */
 export type Viewing = 'compendium' | 'coven';
@@ -8,7 +8,7 @@ export type Viewing = 'compendium' | 'coven';
  * (the owner's call, 2026-10-20), the viewer's own side first: the compendium's on the public
  * compendium and the admin pages, the coven's on a coven's. The caller says where the viewer is
  * (`viewing`), since the menu reads no address. A side with nothing to offer is left out, so a
- * menu of one kind has one section, which the caller then draws flat. Generic over the item so
+ * menu of one kind has one section: a More menu draws it labelled (`choicesFor`), and the bar's Add Ingredient menu draws it flat. Generic over the item so
  * the entry page's More and the bar's Add Ingredient menu, with items of their own, share it.
  */
 export function sectionsFor<Item>(
@@ -23,15 +23,16 @@ export function sectionsFor<Item>(
 }
 
 /**
- * What a MenuButton is given for items of both kinds: the two sections where both have items,
- * the viewer's side first, and the plain list where only one does, since a heading over the
- * only group would label nothing. A menu that mixes today only for a curator who is also a
- * coven's member (the compendium's Edit among the coven's choices).
+ * What a More menu is given for its items of both kinds: always the labelled sections, the
+ * viewer's side first, even where only one side has items (the owner's call, 2026-10-20), so a
+ * card's dots, whose choices are all the coven's, still show a lone "Coven" section under its
+ * discreet label, and an empty side is left out. The rule that a menu never holds a single choice
+ * stands: a caller whose one choice is a Remove or Delete draws the bin instead and does not come
+ * here. Not for the bar's Add Ingredient menu, which keeps a plain list for one kind of place.
  */
 export function choicesFor(
   choices: { compendium: readonly MenuButtonItem[]; coven: readonly MenuButtonItem[] },
   viewing: Viewing,
-): MenuButtonChoices {
-  const sections = sectionsFor(choices, viewing);
-  return sections.length > 1 ? { sections } : { items: sections[0]?.items ?? [] };
+): { sections: MenuSection[]; items?: never } {
+  return { sections: sectionsFor(choices, viewing) };
 }

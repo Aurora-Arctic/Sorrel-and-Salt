@@ -77,6 +77,13 @@ describe('CompendiumCardMore', () => {
   it('holds Annotate, Make It Ours and Remove for a member of the coven that holds the entry', () => {
     renderMore(props([place()]));
     expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    // Every choice is the coven's, and the dots still draw the labelled section (the owner's call,
+    // 2026-10-20), with no empty Compendium one.
+    const menu = screen.getByRole('menu', { name: 'More for House Salt' });
+    expect(within(menu).getAllByRole('group')).toHaveLength(1);
+    expect(
+      within(within(menu).getByRole('group', { name: 'Coven' })).getAllByRole('menuitem'),
+    ).toHaveLength(3);
   });
 
   it("holds only what the role permits, and Annotate leads to that coven's dialog", () => {

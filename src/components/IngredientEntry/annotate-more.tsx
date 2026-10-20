@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import { type ReactElement, useRef, useState } from 'react';
 import MenuButton from '../MenuButton';
+import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { ConfirmQuestion, UNSAVED_CHANGES_LOST } from '../Modal';
 import Notice from '../Notice';
@@ -18,7 +19,8 @@ import type { AnnotateMoreProps } from './types';
 // The Annotate dialog's Make It Ours and Remove (M8.17), set apart at the
 // form's foot in Delete's place, each offered on the member's permission. With
 // both, a More menu (the owner's call of 2026-10-19), drawn as every menu is,
-// with Remove in its destructive item style and both items in the button's
+// with Remove in its destructive item style, both in the one Coven section every More draws
+// (the owner's call, 2026-10-20), and both items in the button's
 // own type (the owner's call of 2026-10-20), opening above the button at the
 // dialog's foot, where the room is (MenuButton); with one, that one as a
 // button of its own, Remove destructive, so a menu never holds a single choice. Either asks in the
@@ -92,7 +94,7 @@ export default function AnnotateMore({
           ref={trigger}
           label={CUPBOARD_MENU_LABEL}
           className="btn btn--quiet"
-          items={items}
+          {...choicesFor({ compendium: [], coven: items }, 'coven')}
           buttonType
         />
       ) : (

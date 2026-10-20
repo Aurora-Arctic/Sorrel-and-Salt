@@ -42,12 +42,15 @@ import type {
 //    on the compendium's page. If the page's own main has no right behind it but the other side's
 //    edit does (a curator in a coven that holds the entry, who may not annotate), the edit takes
 //    the place, so a lone choice is never a menu of one.
-// 2. More, the three dots, only when there is more than that: Make It Ours, and whichever of
-//    Annotate and Edit in Compendium is not the main icon. It holds both kinds only for a curator
-//    who is also a coven's member, and then it is in two sections, the viewer's own side first,
-//    by the page and not by the address (`sectionsFor`, claude-docs/components/menu-button.md).
-// 3. The bin, Remove, for a coven that holds the entry and lets the viewer remove it. Always its
-//    own icon, where the cards put a Remove beside Make It Ours into More (the owner's brief).
+// 2. More, the three dots, only when there is more than that: Make It Ours, Remove, and
+//    whichever of Annotate and Edit in Compendium is not the main icon. Remove sits beside Make
+//    It Ours as the coven card's CardMore has it (the owner's call, 2026-10-20). It always draws
+//    its labelled sections (`choicesFor`): the coven's alone for a member, and for a curator who
+//    is also a coven's member the compendium's too, the viewer's own side first, by the page and
+//    not by the address (claude-docs/components/menu-button.md).
+// 3. The bin, Remove, only where Remove is the one choice left and so would be a menu of one: a
+//    member who may remove but not make it ours. A lone choice is its own icon (the owner's call,
+//    2026-10-20), as the card's CardMore draws it.
 //
 // The plus is the compendium card's (AddIcon), just before them, and never one of the choices.
 // Make It Ours leads to the own entry it writes, since the compendium entry's page is no longer
@@ -56,8 +59,8 @@ import type {
 // door, and the service is the guard. Every write goes through /api/graphql. Make It Ours and
 // Remove are `cupboard-writes.tsx`'s, shared with the Annotate dialog's More menu (M8.17). A
 // refusal is one callout under the control that keeps the focus (M12.31's design F,
-// `useClickFeedback`): the bin's for Remove, the More's for Make It Ours; it floats rather than
-// taking room beside the title.
+// `useClickFeedback`): the More's, or the bin's for a Remove that has the bin; it floats rather
+// than taking room beside the title.
 //
 // The public entry page offers the same (M9.12), across every coven the viewer may write in,
 // acting at once where one coven permits and asking which where several do. Make It Ours and
@@ -164,8 +167,9 @@ export default function CupboardActions(
   const annotateControl = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
   const moreControl = useRef<HTMLButtonElement | null>(null);
   const binControl = useRef<HTMLButtonElement | null>(null);
-  // A refusal is a callout under the control the write came from: the bin's Remove, or the
-  // three dots' Make It Ours; one press at a time can fail, so `lastAsked` says which.
+  // A refusal is a callout under the control the write came from: the three dots', or the
+  // bin's where Remove is its own icon (`binOnly`, below, read as the refusal arrives).
+  const binOnly = useRef(false);
   const binFeedback = useClickFeedback({ name: `Remove ${name}` });
   const moreFeedback = useClickFeedback({ name: `More for ${name}` });
   const lastAsked = useRef<Asking>(undefined);
@@ -194,7 +198,9 @@ export default function CupboardActions(
     return controls.map(({ current }) => current).find((node) => node?.isConnected) ?? null;
   };
   const reportRefusal = (message: string | undefined): void =>
-    (lastAsked.current === 'remove' ? binFeedback : moreFeedback).report(message);
+    (lastAsked.current === 'remove' && binOnly.current ? binFeedback : moreFeedback).report(
+      message,
+    );
   // The remove's confirmation stays, busy, until the re-read drops the entry
   // from its coven; it closes in that render (below), and the choice is
   // forgotten here.
@@ -275,19 +281,32 @@ export default function CupboardActions(
     owners.length > 0
       ? { key: 'own', label: 'Make It Ours', onSelect: ask('own', owners, writes.makeOurs) }
       : undefined;
-  // Compendium and Coven sections, where More holds both (`choicesFor` leaves a lone kind flat).
+  const removeItem: MenuButtonItem | undefined =
+    removers.length > 0
+      ? {
+          key: 'remove',
+          label: 'Remove',
+          destructive: true,
+          onSelect: ask('remove', removers, writes.remove),
+        }
+      : undefined;
+  const covenItems = [annotateItem, ownItem, removeItem].filter(
+    (item): item is MenuButtonItem => item !== undefined,
+  );
+  // Remove is the one choice left in More: a lone choice is its own icon, so it is the bin.
+  const bin = removeItem !== undefined && covenItems.length === 1 && editItem === undefined;
+  useLayoutEffect(() => {
+    binOnly.current = bin;
+  }, [bin]);
+  // Always labelled sections, the Coven one alone for a member (`choicesFor`).
   const moreChoices = choicesFor(
-    {
-      compendium: editItem ? [editItem] : [],
-      coven: [annotateItem, ownItem].filter((item): item is MenuButtonItem => item !== undefined),
-    },
+    { compendium: editItem ? [editItem] : [], coven: bin ? [] : covenItems },
     viewing,
   );
-  const more = (moreChoices.items ?? moreChoices.sections).length > 0;
+  const more = moreChoices.sections.length > 0;
   // The plus while some coven that may add lacks the entry, and the check once all hold it
   // (PlusMark), where Add is not one of the choices.
   const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} /> : null;
-  const bin = removers.length > 0;
   const icons = (plusMark ? 1 : 0) + (main ? 1 : 0) + (more ? 1 : 0) + (bin ? 1 : 0);
   if (icons === 0) return null;
   const openedPlace =
@@ -352,7 +371,7 @@ export default function CupboardActions(
           name={name}
           write={writes.remove}
           onClose={settle}
-          returnTo={() => back(binControl)}
+          returnTo={() => back(binControl, moreControl)}
           covens={choiceOf(removers)}
         />
       )}

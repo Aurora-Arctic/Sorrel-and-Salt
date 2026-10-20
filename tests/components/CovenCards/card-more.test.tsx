@@ -104,6 +104,13 @@ describe('CardMore', () => {
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
     renderOnPage(HELD);
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
+    // The dots draw their labelled section though every choice is the coven's (the owner's call,
+    // 2026-10-20).
+    const menu = screen.getByRole('menu', { name: 'More for House Salt' });
+    expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
+      within(menu).getByRole('menuitem', { name: 'Remove' }),
+    );
+    expect(within(menu).queryByRole('group', { name: 'Compendium' })).not.toBeInTheDocument();
   });
 
   it('keeps a lone Make It Ours in the menu', () => {

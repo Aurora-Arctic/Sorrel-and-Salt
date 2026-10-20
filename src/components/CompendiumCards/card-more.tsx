@@ -22,9 +22,9 @@ import type { CompendiumCardMoreProps, CompendiumCardPlace } from './types';
 // question of which coven where two or more may), Make It Ours and Remove, each asked in the
 // dialogs the entry page shares, so the card and the page cannot differ. Add is the plus, and
 // Edit in Compendium its own icon, so neither is in here; the Compendium section `choicesFor`
-// would put first therefore has nothing in it today, and the menu is the one flat list of the
-// coven's choices, the section mechanism being in place for a compendium-side choice that
-// arrives. Drawn only when it holds a choice, so a visitor, a viewer and a coven without the
+// would put first therefore has nothing in it today and is left out, and the menu draws the
+// coven's choices under the one "Coven" section label every More draws, though they are all the
+// coven's (the owner's call, 2026-10-20). Drawn only when it holds a choice, so a visitor, a viewer and a coven without the
 // entry see no dots. The Quick Look window made from the same component carries `leaveHref`,
 // where a remove leads to close it. claude-docs/components/compendium-cards.md.
 

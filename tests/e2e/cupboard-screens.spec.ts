@@ -7,7 +7,7 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
 // The three cupboard screens on a compendium entry seen from a coven (M12.17):
-// the plus beside the pencil (Add), then Annotate and Remove from the Edit menu. One walk:
+// the plus beside the pencil (Add), then Annotate, and Remove from the three dots. One walk:
 // the owner adds the entry, annotates its label, hands the label back to the
 // Compendium, and removes the entry.
 
@@ -45,14 +45,13 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   }
   const entryPage = `/coven/${coven.slug}/ingredients/${ingredientId}`;
   const heading = (name: string) => page.getByRole('heading', { level: 1, name });
-  // A choice among the entry's icons: Annotate, the bin's Remove, or a choice in the three dots,
-  // each named for the entry as it is called now.
+  // A choice among the entry's icons (Annotate) or in the three dots (Make It Ours, Remove, the
+  // bin only where Remove is the one choice left; the owner's call, 2026-10-20), each named for
+  // the entry as it is called now.
   const choose = async (name: string, entry = 'Fixture Screens Wort') => {
     const main = page.getByRole('main');
     if (name === 'Annotate')
       await main.getByRole('link', { name: `Annotate ${entry}`, exact: true }).click();
-    else if (name === 'Remove')
-      await main.getByRole('button', { name: `Remove ${entry}`, exact: true }).click();
     else {
       await main.getByRole('button', { name: `More for ${entry}`, exact: true }).click();
       await page.getByRole('menu').getByRole('menuitem', { name, exact: true }).click();
@@ -137,7 +136,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(plus()).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   // The confirmation stays until the re-read drops the entry, then closes onto
-  // the page's heading: Remove went with the menu, and the button left offers
+  // the page's heading: Remove went with the entry, and the button left offers
   // something else (M8.17).
   await expect(dialog).toBeHidden();
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();

@@ -8,6 +8,7 @@ import {
   useCupboardWrites,
 } from '../IngredientEntry/cupboard-writes';
 import { DeleteDialog, useDeleteEntry } from '../IngredientEntry/delete-entry';
+import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import Notice from '../Notice';
 import type { CardMoreProps } from './types';
@@ -23,7 +24,9 @@ import type { CardMoreProps } from './types';
 // one press can do. That is the coven's own entry now that Link to the
 // Compendium has gone from the card (a v2 feature). A lone Make It Ours stays
 // a menu: it needs the delete permission too, so no role reaches it alone,
-// and no icon is built for a case that cannot happen. A write that takes the
+// and no icon is built for a case that cannot happen. The menu draws its
+// choices under the one "Coven" section label, as every More does though all
+// its choices are the coven's (the owner's call, 2026-10-20). A write that takes the
 // card away reads the list again, and the focus then goes to the page's
 // heading, the card's More (or bin) having gone with it; a refusal gives that
 // control the focus back. claude-docs/components/coven-cards.md.
@@ -92,7 +95,11 @@ export default function CardMore({
       onClick={only.href === undefined ? only.onSelect : () => {}}
     />
   ) : (
-    <MoreMenu ref={trigger} name={name} items={items} />
+    <MoreMenu
+      ref={trigger}
+      name={name}
+      {...choicesFor({ compendium: [], coven: items }, 'coven')}
+    />
   );
 
   const close = () => setAsking(undefined);
