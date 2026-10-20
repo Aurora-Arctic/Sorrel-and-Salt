@@ -314,6 +314,7 @@ const IngredientEntry = ({
   replaces,
   similar,
   cupboard,
+  covens,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
@@ -324,6 +325,8 @@ const IngredientEntry = ({
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
+  // Either page's cupboard choices, which take the curator's Edit into their menu.
+  const choices = cupboard ?? covens;
   // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
   const recency = local ? null : entryRecency(entry.createdAt, entry.updatedAt);
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
@@ -391,14 +394,14 @@ const IngredientEntry = ({
           title={shown.name}
           lead={(local || held) && <HeldMark />}
           action={
-            (edit || cupboard) && (
+            (edit || cupboard || covens) && (
               <>
-                {edit && !(cupboard && !local) && edit.coven ? (
+                {edit && !(choices && !local) && edit.coven ? (
                   // A coven's own entry: Edit and Delete in one menu (M8.17).
                   <OwnEntryActions edit={edit} entry={editable} />
                 ) : (
                   edit &&
-                  !(cupboard && !local) && (
+                  !(choices && !local) && (
                     <EditButton href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
                   )
                 )}
@@ -409,6 +412,16 @@ const IngredientEntry = ({
                     ingredientId={entry.id}
                     held={held}
                     {...cupboardFormValues(entry, cupboardEntry)}
+                  />
+                )}
+                {/* The public page's (M9.12): the same buttons across the viewer's
+                    covens, the curator's Edit among them, and none of the marks. */}
+                {covens && !cupboard && !local && (
+                  <CupboardActions
+                    {...covens}
+                    edit={edit ? { href: edit.href, entry: editable } : undefined}
+                    ingredientId={entry.id}
+                    compendium={cupboardFormValues(entry, null).compendium}
                   />
                 )}
               </>
@@ -556,7 +569,7 @@ const IngredientEntry = ({
   // dialog (M9.18). The admin layout has one above its pages; these two routes
   // have none, and a provider already above is kept, so this one is safe
   // beneath any. An entry that can be edited, or annotated from a coven, needs it.
-  return edit || cupboard ? (
+  return edit || cupboard || covens ? (
     <RouteModalProvider>
       {page}
       {edit && <EntryDialog entry={editable} edit={edit} />}

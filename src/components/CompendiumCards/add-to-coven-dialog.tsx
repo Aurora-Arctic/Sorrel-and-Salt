@@ -18,7 +18,8 @@ import type { AddToCovenDialogProps } from './types';
 // already holds the entry is listed, so the viewer sees where it is, and cannot be chosen. It
 // starts on the coven Add Ingredient would choose, or the first that can still be chosen where
 // that one holds the entry. A refusal is said in the modal, which stays open; a success closes
-// it and hands the page's re-read back to the plus. claude-docs/components/compendium-cards.md.
+// it and hands the page's re-read back to the plus. The public entry page's Add to Cupboard
+// asks the same, under its own button's name (M9.12). claude-docs/components/compendium-cards.md.
 
 const TITLE = 'Add to My Ingredients';
 
@@ -27,6 +28,7 @@ const AddToCovenDialog = ({
   covens,
   heldIn,
   workspaceId,
+  title = TITLE,
   onClose,
   onAdded,
 }: AddToCovenDialogProps): ReactElement => {
@@ -45,7 +47,7 @@ const AddToCovenDialog = ({
   });
 
   return (
-    <Modal title={TITLE} onClose={onClose}>
+    <Modal title={title} onClose={onClose}>
       {(close) => (
         <FormProvider {...form}>
           {/* The .form stack, as the Invite dialog spaces its one field: a clear gap round the

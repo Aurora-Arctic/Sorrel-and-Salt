@@ -26,7 +26,14 @@ import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-wr
 import { ANNOTATE_HEADING } from './annotate-heading';
 import EditButton from './edit-button';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
-import type { CupboardActionsProps } from './types';
+import AddToCovenDialog from '../CompendiumCards/add-to-coven-dialog';
+import AnnotatePicker from './annotate-picker';
+import type {
+  CupboardActionsProps,
+  CupboardPlace,
+  CupboardWrite,
+  PublicCupboardActionsProps,
+} from './types';
 
 // What a compendium entry offers a coven's member beside its title (M12.17):
 // Add to Cupboard while the coven does not hold it; Annotate, Make It Ours
@@ -43,6 +50,15 @@ import type { CupboardActionsProps } from './types';
 // button that keeps the focus, the Edit menu's or the lone button (M12.31's
 // design F, `useClickFeedback`), which floats rather than taking room beside the
 // title; the three share it, since one press at a time can fail.
+//
+// The public entry page offers the same (M9.12), across every coven the viewer
+// may write in: Add while any of them lacks the entry, asking which in Add's
+// picker where two or more may add; and each held choice while one of the
+// covens holding the entry permits it, acting at once where one does and asking
+// which where several do. Make It Ours and Remove ask in their own
+// confirmation, the dropdown above the question; Annotate asks in a picker of
+// its own, then opens that coven's `?annotate=<covenSlug>`. A coven's page is
+// the one-place case of the same list.
 
 const PLAIN = 'btn btn--quiet btn--medium';
 
@@ -54,6 +70,57 @@ const LABEL = {
   remove: 'Remove',
 } as const;
 
+type Asking = 'remove' | 'own' | 'add' | 'annotate';
+
+/** The covens a choice may act in: Add in those that lack the entry, the rest in those that hold it. */
+const placesFor = {
+  add: (places: readonly CupboardPlace[]) => places.filter(({ canAdd }) => canAdd),
+  annotate: (places: readonly CupboardPlace[]) =>
+    places.filter(({ held, canAnnotate }) => held && canAnnotate),
+  own: (places: readonly CupboardPlace[]) =>
+    places.filter(({ held, canMakeOurs }) => held && canMakeOurs),
+  remove: (places: readonly CupboardPlace[]) =>
+    places.filter(({ held, canRemove }) => held && canRemove),
+};
+
+/** The two shapes' props as one: the coven page's single place, or the public page's covens. */
+function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
+  if ('covens' in props) {
+    const { opened } = props.annotate;
+    return {
+      places: props.covens,
+      defaultWorkspaceId: props.defaultWorkspaceId,
+      closeHref: props.annotate.closeHref,
+      opened,
+      // No coven's label: the public page is the compendium's.
+      name: props.compendium.name,
+      removedHref: undefined,
+    };
+  }
+  const { workspaceId, covenSlug, held, canAdd, canAnnotate, canRemove, canMakeOurs } = props;
+  return {
+    places: [
+      {
+        workspaceId,
+        covenSlug,
+        name: '',
+        held,
+        canAdd,
+        canAnnotate,
+        canRemove,
+        canMakeOurs,
+        annotateHref: props.annotate.href,
+      },
+    ],
+    defaultWorkspaceId: workspaceId,
+    closeHref: props.annotate.closeHref,
+    opened: props.annotate.opened ? { workspaceId, overrides: props.overrides } : undefined,
+    // The entry as the coven calls it, for the two confirmations.
+    name: props.overrides.label ?? props.compendium.name,
+    removedHref: props.removedHref,
+  };
+}
+
 /**
  * What the failure badge calls the button that keeps the focus: the menu's
  * "Edit" when two or more choices share it, the lone button's own label
@@ -61,42 +128,37 @@ const LABEL = {
  * them, since the hook that draws the badge is called before the choices'
  * handlers exist.
  */
-function feedbackName(
-  p: Pick<CupboardActionsProps, 'held' | 'canAdd' | 'canAnnotate' | 'canMakeOurs' | 'canRemove'> & {
-    edit: boolean;
-  },
-): string {
+function feedbackName(places: readonly CupboardPlace[], edit: boolean): string {
   const keys = (
     [
-      p.edit && 'edit',
-      !p.held && p.canAdd && 'add',
-      p.held && p.canAnnotate && 'annotate',
-      p.held && p.canMakeOurs && 'own',
-      p.held && p.canRemove && 'remove',
+      edit && 'edit',
+      placesFor.add(places).some(({ held }) => !held) && 'add',
+      placesFor.annotate(places).length > 0 && 'annotate',
+      placesFor.own(places).length > 0 && 'own',
+      placesFor.remove(places).length > 0 && 'remove',
     ] as const
   ).filter((key): key is keyof typeof LABEL => key !== false);
   return keys.length === 1 ? LABEL[keys[0]] : 'Edit';
 }
 
-export default function CupboardActions({
-  workspaceId,
-  covenSlug,
-  ingredientId,
-  held,
-  canAdd,
-  canAnnotate,
-  canRemove,
-  canMakeOurs,
-  compendium,
-  overrides,
-  annotate,
-  removedHref,
-  edit,
-}: CupboardActionsProps): ReactElement | null {
+/** The coven a confirmation starts on: the default where it may, else the first that may. */
+const startOn = (places: readonly CupboardPlace[], defaultWorkspaceId: string): string =>
+  (places.find(({ workspaceId }) => workspaceId === defaultWorkspaceId) ?? places[0]).workspaceId;
+
+export default function CupboardActions(
+  props: CupboardActionsProps | PublicCupboardActionsProps,
+): ReactElement | null {
+  const { ingredientId, compendium, edit } = props;
+  const { places, defaultWorkspaceId, closeHref, opened, name, removedHref } = normalise(props);
   const { refresh } = usePendingNavigation();
-  // Which of the two confirmations is open, one at a time. The Annotate dialog
-  // is the address's instead (`annotate.opened`), as the curator's Edit is.
-  const [asking, setAsking] = useState<'remove' | 'own'>();
+  // Which question is open, one at a time. The Annotate dialog is the
+  // address's instead (`opened`), as the curator's Edit is.
+  const [asking, setAsking] = useState<Asking>();
+  // The coven Make It Ours or Remove acts in: one coven alone, or the
+  // confirmation's choice where several hold the entry.
+  const [target, setTarget] = useState(defaultWorkspaceId);
+  const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
+  const anyHeld = places.some(({ held }) => held);
   // The menu's button, or the one plain button: where the focus goes back to
   // once a confirmation or the dialog closes, since the menu item that opened
   // it is gone with the menu. Modal gives it there itself. Once a remove has
@@ -107,9 +169,7 @@ export default function CupboardActions({
   const trigger = useRef<HTMLButtonElement | null>(null);
   // The callout hangs from the same button, named as the badge says it: the
   // menu's "Edit", or the lone button's own label.
-  const feedback = useClickFeedback({
-    name: feedbackName({ edit: !!edit, held, canAdd, canAnnotate, canMakeOurs, canRemove }),
-  });
+  const feedback = useClickFeedback({ name: feedbackName(places, !!edit) });
   const { anchorRef } = feedback;
   const triggerRef = useCallback(
     (node: HTMLButtonElement | null) => {
@@ -119,16 +179,18 @@ export default function CupboardActions({
     [anchorRef],
   );
   const link = useRef<HTMLAnchorElement>(null);
-  const heldNow = useRef(held);
+  const heldNow = useRef(anyHeld);
   useLayoutEffect(() => {
-    heldNow.current = held;
-  }, [held]);
+    heldNow.current = anyHeld;
+  }, [anyHeld]);
   const back = () => (heldNow.current ? (trigger.current ?? link.current) : null);
-  // The remove's confirmation stays, busy, until the re-read drops the entry;
-  // it closes in that render (below), and the choice is forgotten here.
+  // The remove's confirmation stays, busy, until the re-read drops the entry
+  // from its coven; it closes in that render (below), and the choice is
+  // forgotten here.
+  const targetHeld = targetPlace.held;
   useEffect(() => {
-    if (!held) setAsking(undefined);
-  }, [held]);
+    if (!targetHeld) setAsking((was) => (was === 'remove' || was === 'own' ? undefined : was));
+  }, [targetHeld]);
   const openEdit = useOpenModalClick(
     edit?.href ?? ('' as Route),
     editHeading(
@@ -137,38 +199,55 @@ export default function CupboardActions({
     ),
   );
 
-  const openAnnotate = useOpenModalClick(annotate.href, ANNOTATE_HEADING);
+  const adders = placesFor.add(places);
+  const annotators = placesFor.annotate(places);
+  const owners = placesFor.own(places);
+  const removers = placesFor.remove(places);
+  // One coven that may annotate: a link to its `?annotate`, as the coven page has it.
+  const annotateHref = annotators.length === 1 ? annotators[0].annotateHref : ('' as Route);
+  const openAnnotate = useOpenModalClick(annotateHref, ANNOTATE_HEADING);
 
   const settle = (): void => setAsking(undefined);
-
-  // The entry as the coven calls it, for the two confirmations.
-  const name = overrides.label ?? compendium.name;
+  const added = (): void => {
+    refresh();
+    feedback.announce(`Added ${name} to your cupboard.`);
+  };
 
   const add = useMutation({
-    mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
-    onSuccess: () => {
-      refresh();
-      feedback.announce(`Added ${name} to your cupboard.`);
-    },
+    mutationFn: (workspaceId: string) =>
+      graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
+    onSuccess: added,
     onError: (error) => feedback.report(readGraphqlFailure(error).alert),
   });
-  // Make It Ours and Remove, shared with the Annotate dialog's More menu.
+  // Make It Ours and Remove, shared with the Annotate dialog's More menu, in the target coven.
   const writes = useCupboardWrites({
-    workspaceId,
-    covenSlug,
+    workspaceId: targetPlace.workspaceId,
+    covenSlug: targetPlace.covenSlug,
     ingredientId,
     removedHref,
     onSettle: settle,
     onRefused: feedback.report,
   });
 
-  const ask = (what: 'remove' | 'own') => () => {
+  const ask = (what: Asking, among: readonly CupboardPlace[], write?: CupboardWrite) => () => {
     feedback.report(undefined);
+    write?.reset?.();
+    setTarget(startOn(among, defaultWorkspaceId));
     setAsking(what);
   };
+  /** Which coven, asked above a confirmation's question where two or more may. */
+  const choiceOf = (among: readonly CupboardPlace[]) =>
+    among.length > 1
+      ? {
+          options: among.map(({ workspaceId, name: coven }) => ({ id: workspaceId, name: coven })),
+          chosen: targetPlace.workspaceId,
+          onChoose: setTarget,
+        }
+      : undefined;
+
   const items: MenuButtonItem[] = [
     ...(edit ? [{ key: 'edit', label: LABEL.edit, href: edit.href, onClick: openEdit }] : []),
-    ...(!held && canAdd
+    ...(adders.some(({ held }) => !held)
       ? [
           {
             key: 'add',
@@ -176,23 +255,37 @@ export default function CupboardActions({
             constructive: true,
             onSelect: () => {
               feedback.report(undefined);
-              add.mutate();
+              if (adders.length > 1) setAsking('add');
+              else add.mutate(adders[0].workspaceId);
             },
           },
         ]
       : []),
-    ...(held && canAnnotate
-      ? [{ key: 'annotate', label: LABEL.annotate, href: annotate.href, onClick: openAnnotate }]
+    ...(annotators.length === 1
+      ? [{ key: 'annotate', label: LABEL.annotate, href: annotateHref, onClick: openAnnotate }]
+      : annotators.length > 1
+        ? [{ key: 'annotate', label: LABEL.annotate, onSelect: ask('annotate', annotators) }]
+        : []),
+    ...(owners.length > 0
+      ? [{ key: 'own', label: LABEL.own, onSelect: ask('own', owners, writes.makeOurs) }]
       : []),
-    ...(held && canMakeOurs ? [{ key: 'own', label: LABEL.own, onSelect: ask('own') }] : []),
-    ...(held && canRemove
-      ? [{ key: 'remove', label: LABEL.remove, destructive: true, onSelect: ask('remove') }]
+    ...(removers.length > 0
+      ? [
+          {
+            key: 'remove',
+            label: LABEL.remove,
+            destructive: true,
+            onSelect: ask('remove', removers, writes.remove),
+          },
+        ]
       : []),
   ];
   if (items.length === 0) return null;
 
   // One choice is a plain button, as Add Ingredient is with one place to go.
   const only = items.length === 1 ? items[0] : undefined;
+  const openedPlace =
+    opened && places.find(({ workspaceId }) => workspaceId === opened.workspaceId);
 
   return (
     <div className="ingredient-entry__cupboard">
@@ -218,8 +311,8 @@ export default function CupboardActions({
         >
           {only.label}
         </BusyButton>
-      ) : only.key === 'annotate' ? (
-        <Link ref={link} className={PLAIN} href={annotate.href} onClick={openAnnotate}>
+      ) : only.key === 'annotate' && only.href !== undefined ? (
+        <Link ref={link} className={PLAIN} href={only.href} onClick={openAnnotate}>
           {only.label}
         </Link>
       ) : (
@@ -235,17 +328,62 @@ export default function CupboardActions({
       {/* Asked in a dialog over the page, as Leave Coven asks (the owner's
           call, 2026-10-19), rather than in the title's row. */}
       {feedback.feedback}
-      {asking === 'own' && (
-        <MakeItOursDialog name={name} write={writes.makeOurs} onClose={settle} returnTo={back} />
+      {asking === 'add' && (
+        <AddToCovenDialog
+          title={LABEL.add}
+          ingredientId={ingredientId}
+          workspaceId={defaultWorkspaceId}
+          covens={adders.map(({ workspaceId, name: coven }) => ({ id: workspaceId, name: coven }))}
+          heldIn={adders.filter(({ held }) => held).map(({ workspaceId }) => workspaceId)}
+          onClose={settle}
+          onAdded={added}
+        />
       )}
-      {asking === 'remove' && held && (
-        <RemoveDialog name={name} write={writes.remove} onClose={settle} returnTo={back} />
+      {asking === 'annotate' && (
+        <AnnotatePicker
+          places={annotators}
+          defaultWorkspaceId={defaultWorkspaceId}
+          onClose={settle}
+          returnTo={back}
+        />
+      )}
+      {asking === 'own' && targetPlace.held && (
+        <MakeItOursDialog
+          name={name}
+          write={writes.makeOurs}
+          onClose={settle}
+          returnTo={back}
+          covens={choiceOf(owners)}
+        />
+      )}
+      {asking === 'remove' && targetPlace.held && (
+        <RemoveDialog
+          name={name}
+          write={writes.remove}
+          onClose={settle}
+          returnTo={back}
+          covens={choiceOf(removers)}
+        />
       )}
       <AnnotateDialog
-        closeHref={annotate.closeHref}
+        closeHref={closeHref}
         returnTo={back}
-        opened={annotate.opened ? { workspaceId, ingredientId, compendium, overrides } : undefined}
-        more={{ covenSlug, canMakeOurs, canRemove, removedHref }}
+        opened={
+          openedPlace && opened
+            ? {
+                workspaceId: openedPlace.workspaceId,
+                ingredientId,
+                compendium,
+                overrides: opened.overrides,
+              }
+            : undefined
+        }
+        more={{
+          covenSlug: (openedPlace ?? targetPlace).covenSlug,
+          canMakeOurs: (openedPlace ?? targetPlace).canMakeOurs,
+          canRemove: (openedPlace ?? targetPlace).canRemove,
+          removedHref,
+        }}
       />
     </div>
   );

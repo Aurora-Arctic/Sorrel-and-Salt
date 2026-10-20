@@ -9,6 +9,7 @@ import { entryDescription, publicPageMetadata } from '../../../../../lib/page-me
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
 import { entryValues } from '@/app/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
+import { publicCupboardOf } from './cupboard';
 import type { CompendiumEntryParams } from './types';
 
 // One compendium entry, at its public address (M8.19; MB.80): readable by
@@ -18,9 +19,11 @@ import type { CompendiumEntryParams } from './types';
 //
 // The entry comes from `readCompendiumEntry`, a cached read that takes no
 // session, so nothing private can reach it. The page itself is drawn per
-// request: it asks `viewerIfSignedIn()`, which never redirects, only to
-// decide whether to offer a curator Edit. A visitor with no session reads
-// the page the same as ever.
+// request: it asks `viewerIfSignedIn()`, which never redirects, to decide
+// whether to offer a curator Edit, and a signed-in person's cupboard choices
+// across the covens they may write in (M9.12, `cupboard.ts`). A visitor with
+// no session reads the page the same as ever, and the choices change none of
+// the page's marks.
 //
 // An unknown slug and a coven entry's slug both answer 404, since the read
 // refuses them alike. A slug the entry has moved off answers 308 to its
@@ -70,10 +73,12 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // curator who asks for them, since they are the longest read the page makes.
   const canEdit = shell?.viewer.canCurate === true;
   const own = addressOf(entry.slug);
+  const search = await searchParams;
   const opened =
-    canEdit && 'edit' in (await searchParams)
+    canEdit && 'edit' in search
       ? { id: entry.id, values: await entryValues(entry, null) }
       : undefined;
+  const covens = shell ? await publicCupboardOf(entry, own, search) : undefined;
 
   return (
     <>
@@ -96,6 +101,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
               }
             : undefined
         }
+        covens={covens}
         movedAway={
           movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined
         }

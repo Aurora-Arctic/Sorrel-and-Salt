@@ -117,6 +117,55 @@ export interface IngredientEntryProps {
    * the public page and for a coven's own entry.
    */
   cupboard?: CupboardProps;
+  /**
+   * The same buttons on the public page (M9.12), for a signed-in person with a
+   * coven they may write in: each of those covens, with whether it holds the
+   * entry and what the person's role there permits. Left out for a visitor, for
+   * someone with no such coven, and where no coven offers a choice. Unlike
+   * `cupboard`, it changes none of the page's marks: the public page is the
+   * compendium's, and says nothing of any coven's.
+   */
+  covens?: PublicCupboardProps;
+}
+
+/** One of the viewer's writable covens, as the public page's cupboard choices name it (M9.12). */
+export interface CupboardPlace {
+  workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
+  /** What a choice of coven lists it as. */
+  name: string;
+  /** This coven holds the entry now. */
+  held: boolean;
+  /** The role's answers in this coven, read as `CupboardProps` reads them. */
+  canAdd: boolean;
+  canAnnotate: boolean;
+  canRemove: boolean;
+  canMakeOurs: boolean;
+  /** The public page with `?annotate=<covenSlug>`: opens this coven's Annotate dialog over it. */
+  annotateHref: Route;
+}
+
+/** The public page's cupboard choices (M9.12): the viewer's writable covens, and the dialog the address opens. */
+export interface PublicCupboardProps {
+  /** The writable covens, the default first. */
+  covens: CupboardPlace[];
+  /** The coven Add Ingredient would choose: the confirmations start on it where it may. */
+  defaultWorkspaceId: string;
+  /**
+   * Where the Annotate dialog closes to, the page's own address; and, when the
+   * address names a holding coven the viewer may annotate in, that coven and
+   * its annotations. The page ignores any other `?annotate`.
+   */
+  annotate: { closeHref: Route; opened?: { workspaceId: string; overrides: CupboardOverrides } };
+}
+
+/** What the client buttons need on the public page: the covens, and the compendium's side of the form. */
+export interface PublicCupboardActionsProps extends PublicCupboardProps {
+  ingredientId: string;
+  compendium: CompendiumValues;
+  /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
+  edit?: { href: Route; entry: EditableEntry };
 }
 
 /**
@@ -232,6 +281,11 @@ export interface DeleteEntryOptions {
 export interface CupboardWrite {
   run: () => void;
   pending: boolean;
+  /**
+   * Forgets the last write's outcome before it is asked again: a remove stays
+   * busy past its success, so a second confirmation would open busy without it.
+   */
+  reset?: () => void;
 }
 
 export interface CupboardWrites {
@@ -248,6 +302,19 @@ export interface CupboardQuestionProps {
   onClose: () => void;
   /** Where the focus goes back to, the menu item that opened it having gone with the menu. */
   returnTo: () => HTMLElement | null | undefined;
+  /**
+   * Which coven, asked above the question where two or more of the viewer's
+   * covens hold the entry and permit the write (M9.12, the public page): the
+   * covens that do, the one chosen, and the choice changing it.
+   */
+  covens?: CovenChoiceProps;
+}
+
+/** A dropdown of the viewer's covens, as Add's picker asks (M9.12). */
+export interface CovenChoiceProps {
+  options: readonly { id: string; name: string }[];
+  chosen: string;
+  onChoose: (workspaceId: string) => void;
 }
 
 /**

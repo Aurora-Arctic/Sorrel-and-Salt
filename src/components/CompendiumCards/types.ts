@@ -106,6 +106,8 @@ export interface AddIconProps {
 
 /** The picker the plus opens when the viewer may write in several covens. */
 export interface AddToCovenDialogProps extends AddIconProps {
+  /** The dialog's title: the card's "Add to My Ingredients" by default; the entry page's button says "Add to Cupboard" (M9.12). */
+  title?: string;
   onClose: () => void;
   /** The add succeeded and the modal is closing: the page is to be read again. */
   onAdded: () => void;
