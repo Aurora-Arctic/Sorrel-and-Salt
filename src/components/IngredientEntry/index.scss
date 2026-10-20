@@ -93,14 +93,12 @@ $jump-link-line: 1.25;
   margin-inline-start: auto;
 }
 
-// With New or Updated there, the safety badge stands just right of it and New keeps its place at
-// the text column's right end, the badge past it (the owner's call, 2026-10-20): placed, so it
-// takes no room from the row. Centred on the row's line, as New is.
+// With New or Updated there, the two are one pair that ends flush with the pencil at the text
+// column's right end, the badge last, so New moves left by the badge's width and the gap (the
+// owner's call, 2026-10-20). In flow, not placed, so nothing passes the column and clips at 390.
+// The pair sits closer than the row's gap, as on the card's corner.
 .ingredient-entry__bar > .recency-mark + .badge {
-  position: absolute;
-  inset-inline-start: calc(100% + #{space(2)});
-  top: 50%;
-  translate: 0 -50%;
+  margin-inline-start: calc(#{space(2)} - #{space(3)});
 }
 
 .ingredient-entry__back {
