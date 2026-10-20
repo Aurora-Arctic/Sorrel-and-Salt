@@ -29,14 +29,7 @@ export default function JarLines({ jars, edit }: JarLinesProps): ReactElement {
           {edit && (
             <EditStock
               workspaceId={edit.workspaceId}
-              jar={{
-                id: jar.id,
-                ingredient: edit.ingredient,
-                form: jar.form,
-                quantity: jar.quantity,
-                unit: jar.unit,
-                threshold: jar.threshold,
-              }}
+              jar={{ ...jar, ingredient: edit.ingredient }}
             />
           )}
         </li>
