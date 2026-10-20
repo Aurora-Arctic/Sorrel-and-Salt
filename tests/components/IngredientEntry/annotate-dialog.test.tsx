@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
 import { CUPBOARD_MENU_LABEL } from '@/components/IngredientEntry/cupboard-writes';
-import { UNSAVED_CHANGES_NOT_KEPT } from '@/components/IngredientEntry/link-confirm';
+import { UNSAVED_CHANGES_LOST } from '@/components/IngredientEntry/link-confirm';
 import type { AnnotateDialogProps } from '@/components/IngredientEntry/types';
 import type { MakeItOursMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -212,18 +212,18 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
 
   // Make It Ours copies the saved annotations, so the form's unsaved ones are
   // lost with the dialog: the question says so, as Link to the Compendium's does.
-  it('warns that unsaved changes are not kept only while the form holds some', () => {
+  it('warns that unsaved changes are lost only while the form holds some', () => {
     renderDialog();
 
     choose('Make It Ours');
-    expect(within(asked(OURS)).queryByText(UNSAVED_CHANGES_NOT_KEPT)).toBeNull();
+    expect(within(asked(OURS)).queryByRole('alert')).toBeNull();
     press(within(asked(OURS)).getByRole('button', { name: 'Cancel' }));
 
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Description' }), {
       target: { value: 'Fixture unsaved note' },
     });
     choose('Make It Ours');
-    expect(within(asked(OURS)).getByText(UNSAVED_CHANGES_NOT_KEPT)).toBeInTheDocument();
+    expect(within(asked(OURS)).getByRole('alert')).toHaveTextContent(UNSAVED_CHANGES_LOST);
   });
 
   // The form's unsaved-changes question is drawn in the same place: while it

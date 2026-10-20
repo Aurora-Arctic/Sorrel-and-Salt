@@ -22,15 +22,15 @@ import Notice from '../Notice';
 //
 // On the page it is a dialog of its own. Inside the edit dialog it is a card
 // over the form, as the form's own confirmations are (MB.115), rather than a
-// second dialog stacked on the first, and it adds that the form's unsaved
-// changes are not kept, since the page they were typed over goes.
+// second dialog stacked on the first, and it warns that the form's unsaved
+// changes are lost, since the page they were typed over goes.
 
 /**
- * Said in a confirmation shown over a form whose page goes with the answer: Link
- * to the Compendium's over the edit dialog, and Make It Ours's over the
- * Annotate dialog (M8.17).
+ * Said, as a warning notice, in a confirmation shown over a form whose page goes
+ * with the answer: Link to the Compendium's over the edit dialog, and Make It
+ * Ours's over the Annotate dialog (M8.17; the owner's words, 2026-10-20).
  */
-export const UNSAVED_CHANGES_NOT_KEPT = 'Changes you have not saved here are not kept.';
+export const UNSAVED_CHANGES_LOST = 'Changes you have not saved are lost.';
 
 const ConvertLocalDocument = graphql(`
   mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {
@@ -100,7 +100,7 @@ export default function LinkConfirm({
   const body = (close: () => void) => (
     <>
       <p>Your jars and spells move to the compendium’s entry, and your own entry is removed.</p>
-      {over === 'form' && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
+      {over === 'form' && <Notice kind="warn">{UNSAVED_CHANGES_LOST}</Notice>}
       {failure && <Notice kind="error">{failure}</Notice>}
       <div className="modal__actions">
         <BusyButton

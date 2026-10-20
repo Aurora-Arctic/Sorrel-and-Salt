@@ -5,6 +5,7 @@ import { type ReactElement, useRef, useState } from 'react';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { ConfirmQuestion } from '../Modal';
+import Notice from '../Notice';
 import {
   CUPBOARD_MENU_LABEL,
   MAKE_IT_OURS_DETAILS,
@@ -12,7 +13,7 @@ import {
   RemoveQuestion,
   useCupboardWrites,
 } from './cupboard-writes';
-import { UNSAVED_CHANGES_NOT_KEPT } from './link-confirm';
+import { UNSAVED_CHANGES_LOST } from './link-confirm';
 import type { AnnotateMoreProps } from './types';
 
 // The Annotate dialog's Make It Ours and Remove (M8.17), set apart at the
@@ -113,7 +114,7 @@ export default function AnnotateMore({
         details={
           <>
             <p>{MAKE_IT_OURS_DETAILS}</p>
-            {dirty && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
+            {dirty && <Notice kind="warn">{UNSAVED_CHANGES_LOST}</Notice>}
           </>
         }
         tone="solid"

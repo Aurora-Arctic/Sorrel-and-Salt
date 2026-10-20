@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import EditMore from '@/components/IngredientEntry/edit-more';
-import { UNSAVED_CHANGES_NOT_KEPT } from '@/components/IngredientEntry/link-confirm';
+import { UNSAVED_CHANGES_LOST } from '@/components/IngredientEntry/link-confirm';
 import { press } from '../../support/interact';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -73,7 +73,7 @@ describe('EditMore', () => {
 
     choose('Link to the Compendium');
     const asked = screen.getByRole('group', { name: QUESTION });
-    expect(within(asked).queryByText(UNSAVED_CHANGES_NOT_KEPT)).toBeNull();
+    expect(within(asked).queryByRole('alert')).toBeNull();
     press(within(asked).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('group', { name: QUESTION })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
@@ -88,14 +88,14 @@ describe('EditMore', () => {
     expect(router.replace).toHaveBeenCalledWith(LINK);
   });
 
-  it('says unsaved changes are not kept while the form holds some', () => {
+  it('warns that unsaved changes are lost while the form holds some', () => {
     renderMore({ dirty: true });
 
     choose('Link to the Compendium');
 
     expect(
-      within(screen.getByRole('group', { name: QUESTION })).getByText(UNSAVED_CHANGES_NOT_KEPT),
-    ).toBeInTheDocument();
+      within(screen.getByRole('group', { name: QUESTION })).getByRole('alert'),
+    ).toHaveTextContent(UNSAVED_CHANGES_LOST);
   });
 
   it("steps aside while the form's unsaved-changes confirmation asks", () => {

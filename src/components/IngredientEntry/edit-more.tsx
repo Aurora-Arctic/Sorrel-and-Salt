@@ -6,8 +6,9 @@ import { usePendingNavigation } from '../../lib/navigation';
 import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { ConfirmQuestion } from '../Modal';
+import Notice from '../Notice';
 import { CUPBOARD_MENU_LABEL } from './cupboard-writes';
-import { UNSAVED_CHANGES_NOT_KEPT } from './link-confirm';
+import { UNSAVED_CHANGES_LOST } from './link-confirm';
 
 // The coven edit dialog's foot (M8.17): Link to the Compendium and Delete
 // Ingredient, set apart in Delete's place, in a More menu drawn as the
@@ -16,8 +17,8 @@ import { UNSAVED_CHANGES_NOT_KEPT } from './link-confirm';
 // never holds a single choice. Delete asks the form's own confirmation. Link
 // asks in the same card, then replaces this dialog with the Link dialog at
 // its address, as Make It Ours replaces the Annotate dialog, so its
-// confirmation says the form's unsaved changes are not kept while it holds
-// some (the owner's call, 2026-10-20).
+// confirmation warns, in a warning notice, that the form's unsaved changes
+// are lost while it holds some (the owner's calls, 2026-10-20).
 
 interface EditMoreProps {
   /** The entry as the coven calls it, for Link's confirmation. */
@@ -99,7 +100,7 @@ export default function EditMore({
               <p>
                 Next, choose the compendium entries it becomes. Nothing moves until you press Link.
               </p>
-              {dirty && <p>{UNSAVED_CHANGES_NOT_KEPT}</p>}
+              {dirty && <Notice kind="warn">{UNSAVED_CHANGES_LOST}</Notice>}
             </>
           }
           tone="solid"
