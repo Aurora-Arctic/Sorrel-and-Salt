@@ -66,9 +66,15 @@ $stuck-pad: space(4);
 // On a phone the row is two lines (the MB.120 review, item 6; the owner's call, 2026-10-20): the
 // search box on the first, the Filters button and Clear All sharing the second (the primitive's
 // narrow-row rule, in `_primitives.scss`), and the two lines stick together as the desktop row
-// does. Clear All is pushed to the second line's end, as the primitive does Clear for the other
-// filter rows. The container query is that rule's own, so the two agree on what narrow means.
+// does. The Filters button grows to fill the second line (the owner's call, 2026-10-20), taking
+// all of it when Clear All is not drawn, and Clear All is pushed to the line's end, as the
+// primitive does Clear for the other filter rows. Scoped here, so those rows are unchanged. The
+// container query is that rule's own, so the two agree on what narrow means.
 @container filter-row (max-width: #{$narrow-column}) {
+  .ingredient-search .facet-panel__button {
+    flex: 1 1 auto;
+  }
+
   .ingredient-search .facet-panel__clear {
     margin-inline-start: auto;
   }

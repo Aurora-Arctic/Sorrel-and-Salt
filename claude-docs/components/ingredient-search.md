@@ -90,8 +90,8 @@ in the filter slot to carry.
 - **On a phone the row is two lines, and both stick** (the MB.120 review, item 6; the
   owner's call, 2026-10-20). Under the narrow column (`$narrow-column`, tested as the
   filter row's own container width) the search box takes the first line, and the Filters
-  button and Clear All share the second, the button at its start and Clear All at its
-  end. The `<search>` stays the one sticky box at every width, so the two lines stick
+  button and Clear All share the second, the button filling the line (all of it while
+  Clear All is not drawn) and Clear All at its end. The `<search>` stays the one sticky box at every width, so the two lines stick
   together as the desktop row does. The primitive's narrow-row rule
   (`_primitives.scss`, "On a phone's narrow row") gives the first child and each choice
   a whole line and leaves the rest at their own width, so the compendium's button and
