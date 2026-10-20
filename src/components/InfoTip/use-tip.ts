@@ -3,6 +3,7 @@
 import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react-dom';
 import type { Placement } from '@floating-ui/react-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { TIP_OPEN_DELAY_MS } from './constants';
 import type { Tip, TipTiming } from './types';
 
 // A tip's open state as WCAG 1.4.13 asks it to behave: shown on hover, focus
@@ -24,10 +25,6 @@ import type { Tip, TipTiming } from './types';
 // `position: fixed` at the origin keeps it out of the flow, invisible as ever
 // and its text still in the page (claude-docs/components/info-tip.md,
 // "Placement").
-
-// How long a pointer rests on a control before its tip opens: the owner's call
-// (claude-docs/components/info-tip.md, "Behaviour").
-const OPEN_DELAY_MS = 300;
 
 // Long enough to cross from the control onto the tip.
 const CLOSE_DELAY_MS = 150;
@@ -98,7 +95,7 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
 export function useTip(
   canOpen: () => boolean = ALWAYS,
   placement: Placement = 'top',
-  { openDelayMs = OPEN_DELAY_MS, closeDelayMs = CLOSE_DELAY_MS }: TipTiming = {},
+  { openDelayMs = TIP_OPEN_DELAY_MS, closeDelayMs = CLOSE_DELAY_MS }: TipTiming = {},
 ): Tip {
   const [open, setOpen] = useState(false);
   const [side, setSide] = useState<Placement>(placement);

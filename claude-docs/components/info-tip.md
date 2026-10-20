@@ -25,7 +25,9 @@ It follows WCAG 1.4.13, content on hover or focus:
   open every tip it passed; now a tip opens only once the pointer rests on
   its control, and a pointer that leaves sooner opens nothing. Focus and a
   tap are asked for on purpose, so they open at once. This holds for every
-  tip built on `useTip`, below.
+  tip built on `useTip`, below, and for CategoryChips' +N panel, which
+  places itself and keeps its own open state but waits the same
+  `TIP_OPEN_DELAY_MS` (`InfoTip/constants.ts`; [`category-chips.md`](category-chips.md)).
 - **Never on the field's own focus**, the owner's call in MB.133, reversing
   M5.9: a tip opening on every field entered cluttered the form for little
   value. The cost is a sighted keyboard user in Safari, or Firefox on
