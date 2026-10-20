@@ -12,11 +12,16 @@ import BusyButton from '../BusyButton';
 import Combobox from '../Combobox';
 import { FieldShell, fieldDescription } from '../Field';
 import IconTip, { InfoIcon } from '../IconTip';
+import InfoTip from '../InfoTip';
 import { RemoveIcon } from '../IngredientForm/icons';
 import { SubstituteSummary } from '../IngredientForm/substitute-summary';
 import { useCompendiumSubstitutes } from '../IngredientForm/suggestions';
 import Notice from '../Notice';
 import type { LinkFormProps, LinkPick } from './types';
+
+/** Why a form with no jars, no spells and no pick that has it goes nowhere. */
+const NOTHING_MOVES =
+  'This form holds no jars or spells, and none of the picked entries has it, so nothing moves.';
 
 // The Link dialog's body (M8.17): a search of the compendium whose picks list
 // as rows beneath it, as References' do, each with its summary behind ⓘ, then
@@ -250,7 +255,17 @@ export default function LinkForm({
                       ) : row.holds ? (
                         <span className="link-form__unchosen">No picked entry has this form</span>
                       ) : (
-                        <span className="link-form__dropped">Not kept</span>
+                        // A dash rather than words, the reason in the tip
+                        // beside it and in the dash's own name (the owner's
+                        // call, 2026-10-20).
+                        <span className="link-form__dropped">
+                          <span role="img" aria-label={NOTHING_MOVES}>
+                            —
+                          </span>{' '}
+                          <InfoTip id={`${id}-${row.formId}-moves`} label={label}>
+                            {NOTHING_MOVES}
+                          </InfoTip>
+                        </span>
                       )}
                     </td>
                   </tr>

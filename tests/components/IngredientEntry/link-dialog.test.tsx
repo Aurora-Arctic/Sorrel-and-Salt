@@ -106,6 +106,17 @@ describe('LinkForm', () => {
     expect(await within(picks()!).findByRole('alert')).toHaveTextContent('No such ingredient');
   });
 
+  it('marks a form that holds nothing and no pick has as moving nothing, with a tip saying why', async () => {
+    show([BARK]);
+    await pick('Splitwort');
+
+    const cell = goesTo('Barkform');
+    expect(within(cell).getByRole('img', { name: /nothing moves/i })).toBeInTheDocument();
+    expect(within(cell).getByRole('button', { name: 'About Barkform' })).toBeInTheDocument();
+    // Nothing to place, so Link is not held for it.
+    expect(link()).toBeEnabled();
+  });
+
   it('sends a form one pick has there, and asks where a form two picks share goes', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('SplitLocalIntoCompendiumEntries', (variables) => {
