@@ -71,8 +71,13 @@
   }
 }
 
+// The column's space(3) gap (0.75rem) plus this margin (0.75rem) gives the
+// form map space(5), 1.5rem, above and below: two steps more than the rows
+// around it, so the table reads as its own block (the owner's calls,
+// 2026-10-20).
 .link-form__map {
   overflow-x: auto;
+  margin-block: space(3);
 
   table {
     width: 100%;
