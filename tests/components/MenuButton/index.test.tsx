@@ -236,3 +236,71 @@ describe('MenuButton placement', () => {
     expect(await menuLeft()).toBe(100 + BUTTON_WIDTH - MENU_WIDTH);
   });
 });
+
+// The green item goes first (the owner's call, 2026-10-20): whatever place a
+// caller gives the item marked `primary` or `constructive`, the menu draws it
+// first and leaves the rest in the caller's order, and the keys follow what is
+// drawn.
+describe('MenuButton green item first', () => {
+  const names = (): (string | null)[] =>
+    within(menu())
+      .getAllByRole('menuitem')
+      .map((item) => item.textContent);
+  const plain = (key: string, label: string): MenuButtonItem => ({
+    key,
+    label,
+    onSelect: vi.fn(),
+  });
+
+  it('draws a primary item first among plain ones, the rest in the order given, and Home lands on it', () => {
+    draw([
+      plain('one', 'First Choice'),
+      { key: 'two', label: 'Second Choice', primary: true, onSelect: vi.fn() },
+      plain('three', 'Third Choice'),
+    ]);
+    fireEvent.click(toggle());
+
+    expect(names()).toEqual(['Second Choice', 'First Choice', 'Third Choice']);
+    // The opening focus is the first item drawn, the green one.
+    const [green, , last] = within(menu()).getAllByRole('menuitem');
+    expect(green).toHaveFocus();
+    fireEvent.keyDown(green!, { key: 'End' });
+    expect(last).toHaveFocus();
+    fireEvent.keyDown(last!, { key: 'Home' });
+    expect(green).toHaveFocus();
+  });
+
+  it('draws a constructive item first too, after a link and an action', () => {
+    draw([
+      { key: 'edit', label: 'Edit Entry', href: '/fixture?edit' as Route },
+      plain('one', 'First Choice'),
+      { key: 'add', label: 'Add to Cupboard', constructive: true, onSelect: vi.fn() },
+    ]);
+    fireEvent.click(toggle());
+
+    expect(names()).toEqual(['Add to Cupboard', 'Edit Entry', 'First Choice']);
+  });
+
+  it('keeps the order given when no item is green', () => {
+    draw([
+      plain('one', 'First Choice'),
+      { key: 'two', label: 'Second Choice', destructive: true, onSelect: vi.fn() },
+      plain('three', 'Third Choice'),
+    ]);
+    fireEvent.click(toggle());
+
+    expect(names()).toEqual(['First Choice', 'Second Choice', 'Third Choice']);
+  });
+
+  it('still runs the green item it moved, not the one that took its place', () => {
+    const onSelect = vi.fn();
+    draw([
+      plain('one', 'First Choice'),
+      { key: 'two', label: 'Second Choice', primary: true, onSelect },
+    ]);
+    fireEvent.click(toggle());
+    fireEvent.click(within(menu()).getAllByRole('menuitem')[0]!);
+
+    expect(onSelect).toHaveBeenCalledOnce();
+  });
+});

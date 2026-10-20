@@ -146,7 +146,7 @@ describe('CupboardActions on the public page', () => {
     expect(calls).toEqual([{ workspaceId: place(2).workspaceId, ingredientId: INGREDIENT }]);
   });
 
-  it("puts a curator's Edit Compendium Entry first in the menu", () => {
+  it("puts Add to Cupboard first, then a curator's Edit Compendium Entry", () => {
     show(
       props([place(1)], {
         edit: {
@@ -156,7 +156,7 @@ describe('CupboardActions on the public page', () => {
       }),
     );
 
-    expect(choices()).toEqual(['Edit Compendium Entry', 'Add to Cupboard']);
+    expect(choices()).toEqual(['Add to Cupboard', 'Edit Compendium Entry']);
   });
 
   it('shows the menu where only the non-default coven holds the entry, and acts on that coven', async () => {
