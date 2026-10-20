@@ -310,11 +310,22 @@
 
     // The search row sticks (IngredientSearch), so the tray opens under a row that may be at
     // the window's top: taller than the room below it, it scrolls inside itself rather than
-    // running off the window. Only once open, so the slide's short box never scrolls.
+    // running off the window. Only once open: the class arrives as the slide starts, and a
+    // short box with `auto` shows a scrollbar for the whole opening, so the animation holds
+    // the clip for the slide's length and the scroll comes after it (a browser that cannot
+    // animate `overflow` shows the bar through the slide, as it did).
     .facet-panel__clip--open > .facet-panel__inner {
       max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(6)});
       overflow: auto;
+      animation: facet-panel-rolling var(--slide-ms, 350ms) step-end;
     }
+  }
+}
+
+@keyframes facet-panel-rolling {
+  from,
+  to {
+    overflow: clip;
   }
 }
 
@@ -418,6 +429,11 @@ $sheet-slide: 250ms ease-out;
 @include reduced-motion {
   .facet-panel__clip {
     transition: none;
+  }
+
+  // No slide, so nothing to wait out.
+  .facet-panel:not(.facet-panel--static) .facet-panel__clip--open > .facet-panel__inner {
+    animation: none;
   }
 }
 

@@ -15,6 +15,8 @@ export interface FilterFormProps {
   shown: readonly FilterValue[];
   /** Draw Clear while a filter is shown. Default true; a row with its own Clear All turns it off. */
   clear?: boolean;
+  /** Draw the layer a sticky row fills itself with, so the corner sorrel shows through it (IngredientSearch). Default false. */
+  sorrel?: boolean;
   /** Joins the form's class: a row whose panel anchors under it sets `position: relative`. */
   className?: string;
   /** The filter's fields, a `SearchField` first, each carrying the `name` the page reads. */

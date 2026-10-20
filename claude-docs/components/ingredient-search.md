@@ -70,21 +70,35 @@ in the filter slot to carry.
   inside the form and travels with it. `IngredientSearch` marks its root
   `.ingredient-search`, and its `<search>` is `position: sticky` there (the form
   inside would stop at its own end; the sticky box's parent must span the
-  results), with an opaque page background and the `sticky-row` layer, above the
+  results), opaque through its fill layer (below) and the `sticky-row` layer, above the
   cards and below the bar, tips and dialogs. The offset is one custom property,
   `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
   PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
   above, cancelled at rest by an equal negative margin so the page lays out as
-  before, and `space(2)` below, real space between the row and the cards with no
-  cancelling margin (changed 2026-10-19, back to what it was). The search sentence
-  under the row takes that `space(2)` back from the frame's gap, so it sits a gap
-  from the input as the cards sit a gap from it. The tray hangs from the form
-  inside, so the padding never moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  before. Below, `space(2)` separates the row from the cards: while the tray is
+  shut it is a margin outside the box, so a stuck row ends at the bottom of its
+  controls with no empty strip under them; as the tray opens it rolls into the box as
+  padding and the margin shrinks by as much (so nothing on the page moves), and as the
+  tray closes it rolls back. It follows the tray's edge, not its 350ms clock: it opens in
+  12ms (on `ease`, a ~400px tray's edge has moved 8px by then; 250 to 550px: 10 to 17ms) and
+  on closing waits 286ms, then rolls up in 64ms on `ease-out` (the edge is within 8px of the
+  row for the last 55 to 79ms). The open rule times the way in, the base rule the way
+  back (a transition takes the timing of the state it ends in). None under reduced
+  motion. The search sentence under the row takes that `space(2)` back from the
+  frame's gap, so it sits a gap from the input as the cards sit a gap from it. The
+  tray hangs from the form inside, so none of this moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
   IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
-  Without the API (past the browser floor) the row simply has no shadow. The
-  root's `scroll-padding-top` leaves room for the stuck row, padding included,
+  Without the API (past the browser floor) the row simply has no shadow.
+  The fill is not the row's own background but `.filter-sorrel`, a decorative
+  `aria-hidden` child `FilterForm` draws for `IngredientSearchForm` (its `sorrel`
+  prop), clipped to the row and the page's side gutter either side (so a card's
+  shadow under the row does not show beside it), and holding a copy of the corner sorrel, so the
+  sorrel shows through the stuck row while the cards under it stay hidden
+  (M12.46; [`backdrop.md`](backdrop.md), "The copy in the search row"). It is
+  hidden with the sorrel under `prefers-contrast: more`, and the row stays opaque. The
+  root's `scroll-padding-top` leaves room for the stuck row and the gap under it,
   when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
 - **On a phone the row is two lines, and both stick** (the MB.120 review, item 6; the
@@ -277,8 +291,8 @@ results.) and `NoMatches`. Each stubs `window.fetch` for `/api/graphql`.
 `tests/components/IngredientSearch/index.test.tsx` asserts the requests the box
 makes (once after the debounce, never before focus or under the floor, first 25
 and no cursor), the action row and empty message, that a pick opens the match
-without applying the text, that the clear empties the box and applies the empty search, and that Enter
-applies the trimmed text.
+without applying the text, that the clear empties the box and applies the empty search, that Enter
+applies the trimmed text, and that the row's sorrel layer is hidden from assistive technology.
 
 ## The search sentence
 

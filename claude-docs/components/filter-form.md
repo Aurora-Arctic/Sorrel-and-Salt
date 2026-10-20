@@ -123,7 +123,9 @@ already above them.
 
 ## Styling
 
-None of its own: the form is `.filter-row` ([`styling.md`](../styling.md),
+The `sorrel` prop (default off; `IngredientSearchForm` turns it on) draws `.filter-sorrel`, an `aria-hidden` layer as the first child of the `<search>`, styled by [`ingredient-search.md`](ingredient-search.md) and [`backdrop.md`](backdrop.md), "The copy in the search row".
+
+Otherwise none of its own: the form is `.filter-row` ([`styling.md`](../styling.md),
 "Form fields"), the row the five lists' `__search` rules were, and the
 fields are the primitives'. The row runs edge to edge with the table
 beneath it, the owner's call at MB.115's review, so its boxes reach the

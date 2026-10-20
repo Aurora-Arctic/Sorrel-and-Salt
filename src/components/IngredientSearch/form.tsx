@@ -40,6 +40,7 @@ export const IngredientSearchForm = ({
         searchHref={() => searchHref(text.trim())}
         shown={shown}
         clear={clear}
+        sorrel
         className={className}
       >
         <IngredientSearchBox
