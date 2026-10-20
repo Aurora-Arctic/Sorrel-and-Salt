@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../Backdrop/sorrel' as *;
 
 // Tokens and primitives only until the section's design review: the action
 // beneath the filter row takes the row's own spacing
@@ -15,12 +16,21 @@
 // button, Clear All and the tray, which opens inside the form and so travels with it. The
 // sticky box is the `<search>`, whose parent `.list-frame` spans the results; the form
 // inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
-// Opaque so the cards do not show through. The padding above is the row's own air when stuck;
+// Opaque so the cards do not show through: the fill is the sorrel layer below, not this box. The padding above is the row's own air when stuck;
 // the negative margin of the same size cancels it at rest, so the page lays out as without it.
-// The padding below, `space(2)`, is real space between the row and the cards, as it always was. The tray is anchored to the form inside, not to this box, so the padding
-// never moves it from the input. While stuck (`data-stuck`, set by StuckMark) the row wears
-// the floating shadow, faded in and out.
+// Below the controls the row's box ends at the controls while the tray is shut, and the
+// `space(2)` between the row and the cards is a margin outside it. Opening the tray rolls that
+// space into the box as padding (the margin shrinks by as much, so the page does not move), under
+// the tray's own slide, and closing rolls it back; the stuck row thus never shows an empty strip
+// under its controls. The tray is anchored to the form inside, not to this box, so none of it
+// moves the tray from the input. While stuck (`data-stuck`, set by StuckMark) the row wears the
+// floating shadow, faded in and out.
 $stuck-pad: space(4);
+
+// The page's side gutter, the same from a phone up and in the shell and the public frame: the
+// layer below reaches across it, so a card scrolled under the row does not show its shadow
+// beside the row. No wider, or the page would scroll sideways.
+$page-gutter: space(4);
 
 .ingredient-search {
   // The sentinel's anchor.
@@ -32,13 +42,39 @@ $stuck-pad: space(4);
   // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
   top: var(--sticky-top, 0px);
   z-index: layer('sticky-row');
-  margin-block-start: calc(-1 * #{$stuck-pad});
-  padding-block: $stuck-pad space(2);
-  background-color: $surface-page;
-  transition: box-shadow $modal-fade;
+  margin-block: calc(-1 * #{$stuck-pad}) space(2);
+  padding-block: $stuck-pad 0;
+  // The 8px under the row follows the tray's edge, not its clock. The tray (FacetPanel's
+  // `.facet-panel__clip`, `--slide-ms`, set on the clip inside and so unreadable here) slides
+  // 350ms on `ease`, and its edge covers hundreds of px; 8px rolling over all 350ms looked slow
+  // beside it. On `ease` a ~400px tray's edge has moved 8px by 12ms (250 to 550px: 10 to 17ms),
+  // so it opens in 12ms. Closing, the edge is within 8px of the row for the last ~64ms (55 to
+  // 79ms over the same heights), so the space waits 350 - 64 = 286ms and rolls up then, on
+  // `ease-out`, the shape of that tail. This rule times the way back to closed, the open rule
+  // below the way out of it (a transition takes the timing of the state it ends in).
+  transition:
+    box-shadow $modal-fade,
+    padding-block-end 64ms ease-out 286ms,
+    margin-block-end 64ms ease-out 286ms;
 
   @include reduced-motion {
     transition: none;
+  }
+
+  // `--open` is on the clip from just after the tray starts to open until it starts to close,
+  // the same two moments its rows grow and shrink in (useSlide). Before the script the tray is
+  // in the flow with the class, so the space is already inside the box.
+  &:has(.facet-panel__clip--open) {
+    margin-block-end: 0;
+    padding-block-end: space(2);
+    transition:
+      box-shadow $modal-fade,
+      padding-block-end 12ms ease,
+      margin-block-end 12ms ease;
+
+    @include reduced-motion {
+      transition: none;
+    }
   }
 
   &[data-stuck] {
@@ -46,7 +82,50 @@ $stuck-pad: space(4);
   }
 }
 
-// The search sentence under the row: the row's padding below is already part of the air, so
+// The row's fill, and the sorrel the fill would otherwise hide. A sticky box is its own
+// stacking context, so no z-index can put the real sorrel between the fill and the controls;
+// the row draws a copy instead (claude-docs/components/backdrop.md, "The copy in the search
+// row"). A direct child of the `<search>`, not of the form, whose `container-type` would
+// become the containing block of the fixed copies. `z-index: -1` paints it above the box's
+// own background and beneath the controls. A solid `mask-image` cuts the fixed copies to the row
+// and makes the layer a stacking context, so they blend with its page colour, as the real one
+// does with the page's. A mask, not a `clip-path`: a clip's edge is anti-aliased at a half pixel
+// (an odd-width window centres the page on one), and there the copies drew a lighter one-pixel line
+// over the real sorrel; the mask's edge matches it. It is on this layer and never on the `<search>`, which would cut
+// off the stuck shadow and the tray. It reaches a gutter past the row either side, so a card
+// under the row (its hover shadow carries 20px) shows no shadow beside it.
+.ingredient-search > search > .filter-sorrel {
+  position: absolute;
+  inset: 0 calc(-1 * #{$page-gutter});
+  z-index: -1;
+  pointer-events: none;
+  mask-image: linear-gradient($surface-page, $surface-page);
+  background-color: $surface-page;
+
+  &::before,
+  &::after {
+    content: '';
+    @include sorrel-shape;
+  }
+
+  &::before {
+    @include sorrel-blend(screen, $ornament-screen);
+  }
+
+  &::after {
+    @include sorrel-blend(multiply, $ornament-multiply);
+  }
+
+  // As the sorrel goes, the row stays opaque.
+  @media (prefers-contrast: more) {
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+}
+
+// The search sentence under the row: the row's margin below is already part of the air, so
 // the sentence takes back the same amount from the stack's gap, and sits a gap from the
 // input as the cards sit a gap from it.
 .ingredient-search > search + .search-sentence {
@@ -65,7 +144,9 @@ $stuck-pad: space(4);
 
 // A focus or a jump that scrolls a control into view lands it below the stuck row, not
 // under it: the bar (the shell's alone), the row's own height, and a step of air. The root
-// is the scroll container, which cannot read the frames' `--sticky-top`, set below it.
+// is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The
+// first `space(2)` is the gap under the row, a margin when the tray is shut and padding when
+// it is open, so a jump lands in the same place either way.
 html:has(.app-shell .ingredient-search) {
   scroll-padding-top: calc(
     #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} +
