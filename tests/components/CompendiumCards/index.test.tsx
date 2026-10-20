@@ -157,6 +157,30 @@ describe('CompendiumCards', () => {
     expect(screen.queryAllByRole('link', { name: /^Edit / })).toHaveLength(0);
   });
 
+  // M12.5: the Quick Look eye, at each card's foot, for everyone, a visitor included.
+  it('draws Quick Look, named for the entry, on each card the page gives a details address', () => {
+    const looked = ENTRIES.map((one) => ({
+      ...one,
+      details: {
+        href: `/compendium?entry=${one.id}` as Route,
+        heading: { eyebrow: 'Ingredient', title: one.name },
+      },
+    }));
+    render(<Cards {...props({ entries: looked })} />);
+    const hrefs = screen
+      .getAllByRole('link', { name: /^Quick Look / })
+      .map((link) => link.getAttribute('href'));
+    expect(hrefs).toEqual(looked.map(({ details }) => details.href));
+    expect(
+      screen.getByRole('link', { name: 'Quick Look Testwort, Fixtura alteralis' }),
+    ).toBeInTheDocument();
+  });
+
+  it('draws no Quick Look where the page gives no details address', () => {
+    render(<Cards {...props()} />);
+    expect(screen.queryAllByRole('link', { name: /^Quick Look / })).toHaveLength(0);
+  });
+
   it('holds neither for an account that only views', () => {
     render(<Cards {...props({ action: 'none' })} />);
     expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();

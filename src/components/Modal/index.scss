@@ -71,6 +71,14 @@ $modal-padding: space(5) * 2;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the dialog moves the page behind it, not yet Baseline
   overscroll-behavior: contain;
   isolation: isolate;
+
+  // A body only to read takes a Tab stop (readingBody), so it shows where the
+  // keyboard is: inset, as the header above and the dialog's edge would clip it.
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
 }
 
 // Where a question is drawn (ConfirmOverlay): no box of its own, so the

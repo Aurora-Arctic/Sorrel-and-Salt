@@ -17,13 +17,14 @@ import { discardQuestion, editIngredientDialog } from './stories/ingredient-dial
 
 // M12.5: an entry's details in a modal over its list, opened by the Quick Look
 // eye, left of the name on the admin Compendium list and at the card's foot on
-// a coven's Ingredients (claude-docs/components/ingredient-entry.md, "The details modal"). This
+// a coven's Ingredients and the public compendium (claude-docs/components/ingredient-entry.md, "The details modal"). This
 // proves what no story walks: the eye opens the details and every close gives
 // it the focus back, the name itself still reaches the entry's page, Edit
 // opens the edit modal over the details and closes back to them, a coven's
 // Edit is an owner's and a member's and not a viewer's, a save there shows in
 // the details and the list, an unsaved close asks first, and the open details
-// pass axe and hold at a phone's width.
+// pass axe and hold at a phone's width. On the public compendium a visitor with no
+// account opens them too, and reads the entry's sections there.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -202,5 +203,67 @@ test.describe("on a coven's Ingredients", () => {
 
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page);
+  });
+});
+
+test.describe('on the public compendium', () => {
+  const PUBLIC_NAME = 'Fixture Peerwort';
+  const PUBLIC_FORMAL = 'Fixtura publica';
+  const PUBLIC_ENTRY = `${PUBLIC_NAME}, ${PUBLIC_FORMAL}`;
+
+  test("a visitor with no account opens Quick Look and reads the entry's sections", async ({
+    page,
+  }, testInfo) => {
+    // An admin stamps the seeded entry, then signs out: the rest is a visitor's.
+    const { userId } = await signInAs(
+      page,
+      `admin-${testInfo.testId}@details-public.test`,
+      ['discord'],
+      'admin',
+    );
+    await withSql((sql) =>
+      insertIngredient(
+        sql,
+        makeIngredient({
+          name: PUBLIC_NAME,
+          canonicalName: PUBLIC_FORMAL,
+          safetyNotes: 'Fixture public caution.',
+          folkNames: ['Fixture Peerbane'],
+        }),
+        userId,
+      ),
+    );
+    // The session rides a header or a cookie (holdSession); both go.
+    await page.context().setExtraHTTPHeaders({});
+    await page.context().clearCookies();
+    await page.goto(`/compendium?query=${encodeURIComponent(PUBLIC_NAME)}`);
+    // Why it is a visitor's: the header offers Sign In.
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toBeVisible();
+
+    const eye = quickLook(page, PUBLIC_ENTRY);
+    await eye.click();
+    const details = detailsDialog(page, PUBLIC_ENTRY);
+    await expect(details).toBeVisible();
+    await expect(page).toHaveURL(/[?&]entry=/);
+
+    await expect(
+      details.getByRole('region', { name: 'Caution' }).getByText('Fixture public caution.'),
+    ).toBeVisible();
+    await expect(
+      details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Peerbane'),
+    ).toBeVisible();
+    await expect(details.getByRole('heading', { name: 'Categories' })).toBeVisible();
+    await expect(details.getByRole('heading', { name: 'Correspondences' })).toBeVisible();
+    await expect(details.getByRole('link', { name: 'Open Full Page' })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,
+    );
+    await expect(editIn(details)).toHaveCount(0);
+    await assertNoAccessibilityViolations(page);
+
+    await page.keyboard.press('Escape');
+    await expect(details).toHaveCount(0);
+    await expect(page).not.toHaveURL(/entry=/);
+    await expect(eye).toBeFocused();
   });
 });

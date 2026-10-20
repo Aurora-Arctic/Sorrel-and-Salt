@@ -5,6 +5,7 @@ import { emptyText } from '../CompendiumList';
 import { EditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
+import DetailsLink from '../IngredientEntry/details-link';
 import IngredientSearch from '../IngredientSearch';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import '../CompendiumList/index.scss';
@@ -93,6 +94,10 @@ const CompendiumCards = ({
             kind="compendium"
             recency={entry.recency}
             actions={actionsOf(entry, action)}
+            startActions={
+              // The Quick Look eye at the card's bottom left (M12.5), for everyone.
+              entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
+            }
           />
         ))}
       </IngredientCardList>
