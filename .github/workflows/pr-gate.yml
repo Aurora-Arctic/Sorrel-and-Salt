@@ -320,6 +320,41 @@ jobs:
       # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
 
+  # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
+  # its Ladle story, `npm run e2e:workshop`. In the e2e image, as playwright.yml
+  # runs, for its browser; Ladle is the one server, so no database and no
+  # build. Never a required check: `continue-on-error`, so a red run shows
+  # without blocking a merge. Filtered as `playwright` is, by a step-level `if:`
+  # (see the header).
+  workshop:
+    needs: [build-e2e-image, changes, gitflow]
+    concurrency:
+      group: pr-gate-workshop-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    continue-on-error: true
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ needs.build-e2e-image.outputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # As playwright.yml: Chromium crashes on the default 64 MB /dev/shm.
+      options: --ipc=host
+    defaults:
+      run:
+        working-directory: /app
+        shell: bash
+    env:
+      # playwright.workshop.config.ts starts a fresh Ladle and retries under it.
+      CI: true
+    steps:
+      - name: Checkout into /app
+        if: needs.changes.outputs.playwright == 'true'
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+      - name: Run the workshop specs
+        if: needs.changes.outputs.playwright == 'true'
+        run: npm run e2e:workshop
+
   # Every check job `needs: gitflow`, so a wrong source branch burns no CI time.
   gitflow:
     needs: [changes]
