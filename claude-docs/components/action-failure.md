@@ -7,7 +7,7 @@ a sentence beside its button, and two buttons side by side would each need
 room for one. Added by MB.119, from the two copies the coven index (M6.15)
 and the member list (M6.13) each carried.
 
-_See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md): how a click outside a form says its result and its failure. The owner chose a floating callout, Design F, on 2026-10-20, for a control that stands alone. Whether it replaces this wrapper above a table is still open; the record recommends that this wrapper stays.
+**Being removed.** Design F replaces this component everywhere, and M12.31 removes it: the component, its story, its test and the three pages that use it move to the floating callout, and this doc is deleted in a later lane of that task. Until then the wrapper works as described below. A failure inside a dialog stays in the dialog, as a plain [`Notice`](notice.md). See [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md), section 5, for the callout and the owner's decision of 2026-10-20.
 
 ## Props
 
