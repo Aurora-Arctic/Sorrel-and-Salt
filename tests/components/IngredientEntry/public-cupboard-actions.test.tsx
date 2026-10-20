@@ -122,7 +122,7 @@ describe('CupboardActions on the public page', () => {
   });
 
   // The pencil at the end of the name's row (the owner's call, 2026-10-20), for a curator here too.
-  it("is a curator's pencil, a menu button named Edit and the entry, with the Edit tip", () => {
+  it("is a curator's pencil, a menu button named Edit and the entry, with the Edit tip", async () => {
     show(
       props([place(1)], {
         edit: {
@@ -138,7 +138,10 @@ describe('CupboardActions on the public page', () => {
     fireEvent.mouseEnter(pencil);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
-    expect(choices()).toEqual(['Add to Cupboard', 'Edit Compendium Entry']);
+    const items = choices();
+    // The open menu takes the tip, still showing, away; IconTip's watcher sets that state after the press.
+    await act(async () => {});
+    expect(items).toEqual(['Add to Cupboard', 'Edit Compendium Entry']);
   });
 
   // Add alone is not the Edit menu, so it keeps its words and no pencil shows.

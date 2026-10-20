@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OwnEntryActions from '@/components/IngredientEntry/own-actions';
@@ -83,7 +83,7 @@ describe('OwnEntryActions', () => {
 
   // The pencil at the end of the name's row (the owner's call, 2026-10-20): MenuButton's icon
   // form, named for the entry as the modal's pencil is, with the Edit tip and no word of its own.
-  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', () => {
+  it('is the pencil, a menu button named Edit and the entry, with the Edit tip, and no plain Edit', async () => {
     renderOnPage();
 
     const pencil = screen.getByRole('button', { name: 'Edit Testwort' });
@@ -92,7 +92,10 @@ describe('OwnEntryActions', () => {
     fireEvent.mouseEnter(pencil);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Edit');
     fireEvent.mouseLeave(pencil);
-    expect(choices()).toEqual(['Edit Ingredient', 'Delete Ingredient']);
+    const items = choices();
+    // The open menu takes the tip, still showing, away; IconTip's watcher sets that state after the press.
+    await act(async () => {});
+    expect(items).toEqual(['Edit Ingredient', 'Delete Ingredient']);
   });
 
   it('offers Edit and Delete in one Edit menu, Edit at its address', () => {
