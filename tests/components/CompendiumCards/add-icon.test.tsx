@@ -224,7 +224,9 @@ describe('the add icon among several covens', () => {
 
     const busy = await screen.findByRole('button', { name: 'Adding' });
     expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-disabled', 'true');
+    // Not `disabled`, which would drop the focus to the body (MB.120).
+    expect(busy).not.toHaveAttribute('disabled');
     expect(router.refresh).not.toHaveBeenCalled();
     await act(async () => answer());
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
@@ -241,7 +243,7 @@ describe('the add icon among several covens', () => {
 
     const plus = await screen.findByRole('button', PLUS);
     expect(await expectRefusalUnder(plus, PLUS.name)).toContain('Viewers cannot add ingredients.');
-    expect(plus).toBeEnabled();
+    expect(plus).not.toHaveAttribute('aria-disabled');
     expect(plus).not.toHaveAttribute('aria-busy');
     expect(router.refresh).not.toHaveBeenCalled();
   });

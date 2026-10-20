@@ -74,8 +74,9 @@ const Glyph = ({
  * holds the entry is shown disabled, with a green check after its name, and is named "<coven>, in
  * My Ingredients" (the owner’s call, 2026-10-20); the plus's own check says when every one holds
  * it. A refusal is said in a callout under the plus (M12.31), and the focus is given back to the
- * plus for it, since the chosen item went with the menu. The lone plus is `aria-disabled` and not `disabled` while it works, so the focus stays
- * on it; the menu’s button is disabled while busy, as MenuButton has it.
+ * plus for it, since the chosen item went with the menu. The plus is `aria-disabled` and not
+ * `disabled` while it works, the lone plus here and the menu's button in MenuButton, so the focus
+ * stays on it (MB.120).
  */
 const AddIcon = ({ workspaceId, ingredientId, covens, heldIn }: AddIconProps): ReactElement => {
   const { pending, refresh } = usePendingNavigation();

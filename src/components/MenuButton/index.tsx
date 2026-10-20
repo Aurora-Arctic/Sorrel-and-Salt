@@ -250,10 +250,15 @@ export default function MenuButton({
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         aria-busy={busy || undefined}
-        disabled={busy}
-        onClick={() => setOpen((was) => !was)}
+        // `aria-disabled`, not `disabled`, while busy (MB.120): a browser drops the focus of a
+        // control disabled under it to the body, so the keyboard would lose its place while an
+        // add runs. Read as unavailable all the same, and the press and ArrowDown refuse here.
+        aria-disabled={busy || undefined}
+        onClick={() => {
+          if (!busy) setOpen((was) => !was);
+        }}
         onKeyDown={(event) => {
-          if (event.key === 'ArrowDown' && !open) {
+          if (event.key === 'ArrowDown' && !open && !busy) {
             event.preventDefault();
             setOpen(true);
           }
