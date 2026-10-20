@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { HTML_REPORT, baseConfig } from './playwright.config';
-import { WORKSHOP_PORT, browserUrl, serverUrl } from './tests/e2e/slots';
+import { WORKSHOP_HMR_PORT, WORKSHOP_PORT, browserUrl, serverUrl } from './tests/e2e/slots';
 
 // The workshop specs, tests/e2e/workshop/: a component measured in its Ladle
 // story, for a layout fact no page shows yet because no page uses the
@@ -22,6 +22,11 @@ export default defineConfig({
       : [['html', HTML_REPORT]],
   webServer: {
     command: `npx ladle serve --host 0.0.0.0 --port ${WORKSHOP_PORT}`,
+    // Its live-reload socket on the block's port rather than the review
+    // workshop's pinned 61002, read by .ladle/config.mjs. Not turned off
+    // (`--noWatch`): in middleware mode Vite would still bind its default
+    // 24678 for the socket, so the clash would only move.
+    env: { LADLE_HMR_PORT: String(WORKSHOP_HMR_PORT) },
     url: serverUrl(WORKSHOP_PORT),
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

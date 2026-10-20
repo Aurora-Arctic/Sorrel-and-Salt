@@ -170,6 +170,7 @@ going back) never waits for the fade.
 The workshop specs run in their own Playwright config against Ladle, with no
 database: `npm run e2e:workshop`. Its server takes the slot block's next port
 (`WORKSHOP_PORT` in `tests/e2e/slots.ts`, 8102 by default, `E2E_PORT_BASE`
-plus 101); `npm run e2e` leaves them out.
+plus 101), and its live-reload socket the one after (`WORKSHOP_HMR_PORT`,
+8103), not the review workshop's 61002; `npm run e2e` leaves them out.
 
 Not verified: a real screen reader, and any browser but Chromium.

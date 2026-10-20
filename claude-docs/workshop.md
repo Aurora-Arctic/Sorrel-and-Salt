@@ -77,7 +77,11 @@ without a page routed to it.
   must stay a self-contained function, since Ladle serializes it with
   `.toString()`. `hmrPort` is pinned so the HMR socket lands on a known port
   that compose can publish, rather than a random free one, and it does not
-  move between restarts.
+  move between restarts. `LADLE_HMR_PORT` moves it, and only
+  `npm run e2e:workshop` sets it: `playwright.workshop.config.ts` hands its
+  Ladle the slot block's `WORKSHOP_HMR_PORT` (8103 by default, one above the
+  workshop's 8102), so a test run never competes with a review Ladle holding 61002. It is moved rather than turned off (`--noWatch`) because in
+  middleware mode Vite still binds a socket on its default 24678 with HMR off.
   - **`hmrHost: ''`** is what makes that socket reachable. Ladle runs Vite in
     middleware mode, so the HMR socket is a standalone server bound to
     `hmrHost ?? 'localhost'`; left unset, it listens on loopback only (`::1`),
