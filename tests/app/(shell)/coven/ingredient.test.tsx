@@ -74,7 +74,7 @@ const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-
 // Edit, a plain link when it is the only choice, or Edit Compendium Entry in the Edit menu
 // beside the cupboard's choices (the owner's call, 2026-10-19), opened here.
 const edits = () => {
-  const menu = screen.queryByRole('button', { name: 'Edit', expanded: false });
+  const menu = screen.queryByRole('button', { name: /^Edit\b/, expanded: false });
   if (menu) fireEvent.click(menu);
   return [
     ...screen.queryAllByRole('link', { name: /edit/i }),
@@ -263,7 +263,7 @@ describe('the coven ingredient page', () => {
     });
     renderPage(await Page(params()));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Edit\b/ }));
     const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
     expect(items).toEqual(['Annotate', 'Make It Ours', 'Remove']);
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
@@ -318,7 +318,7 @@ describe('the coven ingredient page’s Annotate', () => {
       colors: null,
     });
   const annotateLink = () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Edit\b/ }));
     return screen.getByRole('menuitem', { name: 'Annotate' });
   };
 
