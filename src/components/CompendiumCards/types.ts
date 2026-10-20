@@ -30,6 +30,10 @@ export interface CompendiumCardEntry {
   editHref?: Route;
   /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads. */
   editHeading?: ModalHeading;
+  /** The switcher's coven already holds this entry (M9.12): its card shows the check, not the plus. */
+  held?: boolean;
+  /** Where the check leads: the entry as the coven holds it. Left out, a held card shows neither mark. */
+  heldHref?: Route;
 }
 
 /**
@@ -53,6 +57,23 @@ export interface CompendiumCardsProps extends Pick<
   entries: readonly CompendiumCardEntry[];
   /** What the foot of each card holds. */
   action: CompendiumCardsAction;
+  /**
+   * The coven the switcher has chosen, which the plus adds to (M9.12). With `action` `add` and
+   * no coven, the cards show no plus and no check.
+   */
+  workspaceId?: string;
+}
+
+/** The plus at a card's bottom left: add this entry to the coven. */
+export interface AddIconProps {
+  workspaceId: string;
+  /** The compendium entry's id. */
+  ingredientId: string;
+}
+
+/** The check at a card's bottom left: this entry is held, and the link leads to it. */
+export interface HeldLinkProps {
+  href: Route;
 }
 
 export type { CompendiumListFilter };

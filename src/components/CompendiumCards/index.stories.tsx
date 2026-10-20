@@ -60,6 +60,8 @@ const ENTRIES = [
   entry('Fixture Salt', 'fixture-salt', null, []),
 ];
 
+const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
+
 const BASE: CompendiumCardsProps = {
   entries: ENTRIES,
   filter: NO_FILTER,
@@ -70,8 +72,44 @@ const BASE: CompendiumCardsProps = {
   action: 'none',
 };
 
-// Someone who can add: the button is disabled until M9.12 builds its dialog.
-export const CanAdd: Story = () => <CompendiumCards {...BASE} action="add" />;
+// Someone who can add: the plus at each card's bottom left adds the entry to the coven
+// directly, until M9.12's dialog asks for a quantity. The workshop serves no /api/graphql,
+// so a press shows its refusal.
+export const CanAdd: Story = () => (
+  <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />
+);
+
+// The coven already holds the first two: a check link in the plus's place, the last still a plus.
+export const Held: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry, at) =>
+      at < 2
+        ? {
+            ...entry,
+            held: true,
+            heldHref: `/coven/fixture-coven/ingredients/${entry.slug}` as Route,
+          }
+        : entry,
+    )}
+  />
+);
+
+// A curator who can add too: the plus at the left, Edit at the right of the same foot.
+export const CanAddAndEdit: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry) => ({
+      ...entry,
+      editHref: `/compendium?edit=${entry.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
+    }))}
+  />
+);
 
 // An account that only views, or a visitor with no account (who signs in through the header):
 // nothing beneath the card.
@@ -94,6 +132,7 @@ export const MidList: Story = () => (
   <CompendiumCards
     {...BASE}
     action="add"
+    workspaceId={WORKSPACE_ID}
     position={{ page: 2, pages: 3 }}
     previousHref="/compendium"
     nextHref="/compendium?after=x"

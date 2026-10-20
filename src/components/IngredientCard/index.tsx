@@ -36,6 +36,7 @@ const IngredientCard = ({
   recency,
   level = 2,
   actions,
+  startActions,
   children,
 }: IngredientCardProps): ReactElement => {
   const Heading = `h${level}` as const;
@@ -53,6 +54,7 @@ const IngredientCard = ({
 
   const jars = children != null && children !== false;
   const hasActions = actions != null && actions !== false;
+  const hasStart = startActions != null && startActions !== false;
 
   return (
     <article className="ingredient-card specimen">
@@ -118,12 +120,18 @@ const IngredientCard = ({
           ))}
         </p>
       )}
-      {(jars || hasActions) && (
-        // The foot: the jar lines, then the actions. Pushed to the card's bottom edge
-        // (`margin-top: auto`), so cards in one grid row end on the same line.
+      {(jars || hasActions || hasStart) && (
+        // The foot: the jar lines, then the actions row, whose start controls (M9.12) sit at its
+        // left end. Pushed to the card's bottom edge (`margin-top: auto`), so cards in one grid
+        // row end on the same line.
         <div className="specimen__foot">
           {jars && <div className="specimen__stock">{children}</div>}
-          {hasActions && <div className="specimen__actions">{actions}</div>}
+          {(hasActions || hasStart) && (
+            <div className="specimen__actions">
+              {hasStart && <span className="specimen__actions-start">{startActions}</span>}
+              {actions}
+            </div>
+          )}
         </div>
       )}
     </article>

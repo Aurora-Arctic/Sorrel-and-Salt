@@ -5,7 +5,6 @@ import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
@@ -14,6 +13,7 @@ import MenuButton from '../MenuButton';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
+import { AddCupboardEntryDocument } from './add-cupboard-entry';
 import AnnotateDialog from './annotate-dialog';
 import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-writes';
 import { ANNOTATE_HEADING } from './annotate-heading';
@@ -32,14 +32,6 @@ import type { CupboardActionsProps } from './types';
 // each is only the door, and the service is the guard. Every write goes
 // through /api/graphql. Make It Ours and Remove are `cupboard-writes.tsx`'s,
 // shared with the Annotate dialog's More menu, which the page passes on (M8.17).
-
-const AddCupboardEntryDocument = graphql(`
-  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
-    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {
-      id
-    }
-  }
-`);
 
 const PLAIN = 'btn btn--quiet btn--medium';
 

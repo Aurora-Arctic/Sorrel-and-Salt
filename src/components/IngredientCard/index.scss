@@ -162,6 +162,14 @@
   z-index: 1;
 }
 
+// The start controls (M9.12) sit at the row's left end: the auto end margin takes the row's
+// spare room, which pushes `actions` to the right as the row's `flex-end` had it.
+.ingredient-card .specimen__actions-start {
+  display: inline-flex;
+  gap: space(2);
+  margin-inline-end: auto;
+}
+
 // The badges (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
 // badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
 .ingredient-card .badge {
