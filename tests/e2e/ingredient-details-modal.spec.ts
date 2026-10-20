@@ -42,7 +42,9 @@ const quickLook = (scope: Locator | Page, entry = ENTRY) =>
 const detailsDialog = (page: Page, entry = ENTRY) =>
   page.getByRole('dialog', { name: `Ingredient, ${entry}`, exact: true });
 
-const editIn = (dialog: Locator) => dialog.getByRole('link', { name: 'Edit', exact: true });
+/** The details' Edit: the cards' pencil, named for the entry it edits. */
+const editIn = (dialog: Locator, name = NAME) =>
+  dialog.getByRole('link', { name: `Edit ${name}`, exact: true });
 
 test.describe('on the admin Compendium list', () => {
   const slug = ingredientSlug(NAME, FORMAL);
@@ -193,7 +195,7 @@ test.describe("on a coven's Ingredients", () => {
     });
 
     await test.step('closing an edit with a change asks before discarding it', async () => {
-      await editIn(renamedDetails).click();
+      await editIn(renamedDetails, RENAMED).click();
       const editing = editIngredientDialog(page, RENAMED, FORMAL);
       await expect(editing).toBeVisible();
       await editing.getByRole('button', { name: 'Open All' }).click();
