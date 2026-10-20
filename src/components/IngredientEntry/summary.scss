@@ -39,7 +39,10 @@
 // along its top; sticky rather than a slot of the Modal's own, as no other modal
 // has a foot. Its place in the flow is the end of the text, so the last line
 // scrolls clear of it by the bar's own top margin. The button is the site's
-// green, the normal `.btn` size, centred in the bar and as wide as its label.
+// green, the normal `.btn` size, centred in the bar and two thirds of its width
+// (the owner's call, 2026-10-20), a fraction of the bar rather than a length
+// so it holds at every window width; the bar takes no side padding, so the
+// third is of the bar itself, and the label stands centred in the button.
 //
 // The edges are reached by taking the body's own side and bottom padding off and
 // giving the text its side margin instead, not by pulling the bar out over that
@@ -63,10 +66,17 @@
   margin-block-start: space(5);
   display: flex;
   justify-content: center;
-  padding: space(3) space(5);
+  padding: space(3) 0;
   border-top: 1px solid $hairline;
   background: $surface-card;
   @include theme-transition(background-color, border-color);
+
+  > .btn {
+    box-sizing: border-box;
+    width: 66.6%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 // The description and its Show More bar (the owner's calls, 2026-10-20). The

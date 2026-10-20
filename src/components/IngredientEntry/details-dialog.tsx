@@ -42,7 +42,7 @@ function headingOf({ heading, marks, editAction }: IngredientDetailsOpened): Mod
 /**
  * View Page: a bar fixed to the foot of the modal while the body scrolls
  * under it (the owner's call, 2026-10-20), holding the one green button, the
- * site's normal `.btn` size, centred. Still a link, to the entry's page,
+ * site's normal `.btn` size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
 function ViewPageBar({ pageHref }: IngredientDetailsOpened): ReactElement {
