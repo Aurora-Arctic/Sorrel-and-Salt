@@ -1,18 +1,26 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicFrame from '@/components/PublicFrame';
+import { Navigating } from '../../support/navigating';
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => router }));
 
 // The frame round a public page for a signed-out visitor (MB.83): the
-// landmarks, the skip link that reaches the page, and the way in.
+// landmarks, the skip link that reaches the page, the way in, and the wait a
+// move between public pages draws (M12.47). The page brings its own `main`,
+// as the (public) layout gives it one.
 
 const frame = () =>
   render(
-    <PublicFrame>
-      <h1>The page</h1>
-    </PublicFrame>,
+    <Navigating push={router.push}>
+      <PublicFrame>
+        <main>
+          <h1>The page</h1>
+        </main>
+      </PublicFrame>
+    </Navigating>,
   );
 
 const compendiumLink = () =>
@@ -25,13 +33,36 @@ describe('PublicFrame', () => {
     pathname.mockReturnValue('/compendium');
   });
 
-  it('holds the page in main#main, which the skip link names', () => {
+  it('holds the page just after the empty target the skip link names', () => {
     frame();
 
-    const main = screen.getByRole('main');
-    expect(main).toHaveAttribute('id', 'main');
-    expect(within(main).getByRole('heading', { name: 'The page' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute('href', '#main');
+    const skip = screen.getByRole('link', { name: 'Skip to Content' });
+    const target = document.getElementById(skip.getAttribute('href')?.slice(1) ?? '');
+    // Focusable by script only, and wrapping nothing, so a click on the page
+    // never lands on it (M12.48).
+    expect(target).toHaveAttribute('tabindex', '-1');
+    expect(target).toBeEmptyDOMElement();
+    expect(target!.nextElementSibling).toContainElement(screen.getByRole('main'));
+    expect(
+      within(screen.getByRole('main')).getByRole('heading', { name: 'The page' }),
+    ).toBeInTheDocument();
+  });
+
+  it('swaps the page for one status in one main under the bar, when the Compendium link is pressed', async () => {
+    pathname.mockReturnValue('/compendium/ingredients/testwort');
+    frame();
+    // Why the page could have stayed: nothing is on its way yet.
+    expect(screen.queryByRole('status')).toBeNull();
+
+    await act(async () => fireEvent.click(compendiumLink()));
+
+    expect(screen.queryByRole('heading', { name: 'The page' })).toBeNull();
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(within(screen.getByRole('main')).getAllByRole('status')).toHaveLength(1);
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getByRole('banner')).toContainElement(compendiumLink());
+    expect(compendiumLink()).toHaveAttribute('aria-busy', 'true');
   });
 
   it('puts the skip link before everything else', () => {

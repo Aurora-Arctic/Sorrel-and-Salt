@@ -84,10 +84,15 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           </div>
         </div>
       </header>
-      {/* The skip link's target: a wrapper, since the page inside owns its
-          own `main` and there is no one place a page could be asked to put an
-          id. Focusable by script only, so the link moves focus here. */}
-      <div id="main" className="app-shell__main" tabIndex={-1}>
+      {/* The skip link's target: an empty span just before the page, which owns
+          its own `main`, so there is no one element a page could be asked to
+          name. It is focusable by script only (tabIndex -1), so the link moves
+          focus here and the next Tab reaches the page's first control. It is
+          not the wrapper below: a click on plain text focuses the nearest
+          focusable ancestor, so a focusable wrapper would take every such
+          click, and the next Tab would restart at the top of the page. */}
+      <span id="main" className="skip-target" tabIndex={-1} />
+      <div className="app-shell__main">
         <MainBody>{children}</MainBody>
       </div>
     </div>

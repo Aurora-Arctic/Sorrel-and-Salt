@@ -62,6 +62,51 @@
   }
 }
 
+// The ◆ list marker, for an item's `::before`: a diamond drawn as a shape,
+// not the ◆ glyph, so its centre is where it is put rather than where a font
+// sets the glyph in its line (a glyph nudged by a fixed offset drifts with
+// every size and line height). Centred `$centre` down from the item's top,
+// by default the middle of its first line (`lh`, Baseline Widely Available),
+// and on the gutter where typography-base's 1.25rem indent puts it. The size
+// is the ◆ glyph's ink in Lexend. Being empty, it is no "black diamond" to a
+// screen reader either. Forced colours would paint the background away, so
+// there it is drawn in the text colour.
+@mixin list-marker($centre: 0.5lh) {
+  content: '';
+  position: absolute;
+  top: $centre;
+  left: calc(-1.25rem + 0.5em);
+  inline-size: 0.57em;
+  block-size: 0.64em;
+  background-color: $accent;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  transform: translate(-50%, -50%);
+
+  @include forced-colors {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: without it the browser forces the background to the canvas and the ◆ goes, as a list without one would read, not yet Baseline
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+}
+
+// For an item's own `::before` in a list typography-base marks (a hairline, a
+// fillet): clears what `list-marker` sets there that the drawing does not set
+// itself, so the ◆'s size, clip and shift do not reach it. A glyph marker
+// leaked only its offsets; a drawn one leaks its shape. Include it before the
+// drawing's own declarations, which then win where they overlap.
+@mixin list-marker-cleared {
+  inline-size: auto;
+  block-size: auto;
+  background-color: transparent;
+  clip-path: none;
+  transform: none;
+
+  @include forced-colors {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: undoes the ◆'s own, where it is understood at all, not yet Baseline
+    forced-color-adjust: auto;
+  }
+}
+
 // One line of text cut off with an ellipsis where its box ends. The box must
 // have a width of its own to cut at: a flex item needs `min-width: 0`.
 @mixin truncate {

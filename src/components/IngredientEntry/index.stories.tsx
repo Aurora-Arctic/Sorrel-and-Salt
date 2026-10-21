@@ -325,7 +325,7 @@ export const FromTheCompendium: Story = () => (
 );
 
 // The same, annotated: the coven's label heads the page with the compendium's
-// name beneath it, its own description stands, the planets are cleared on
+// name beneath it, its own description stands, the celestial bodies are cleared on
 // purpose, and the rest is the compendium's.
 export const Annotated: Story = () => (
   <Entry

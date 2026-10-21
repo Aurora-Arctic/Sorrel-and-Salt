@@ -152,7 +152,7 @@ export default function FacetPanel({
     filter.forms,
     filter.deities,
     filter.zodiac,
-    filter.planets,
+    filter.celestialBodies,
     filter.elements,
   ].reduce((total, list) => total + list.length, 0);
   const count =
@@ -544,14 +544,14 @@ export default function FacetPanel({
               <div className="facet-panel__line">
                 <div className="facet-panel__grow">
                   <FacetCombobox
-                    label="Planets"
-                    name="planets"
-                    placeholder="Add Planet"
-                    removeNoun="Planet"
+                    label="Celestial Bodies"
+                    name="celestialBodies"
+                    placeholder="Add Celestial Body"
+                    removeNoun="Celestial Body"
                     loading={loading}
-                    choices={facets.planets}
-                    values={filter.planets}
-                    onChange={(planets) => onChange({ planets })}
+                    choices={facets.celestialBodies}
+                    values={filter.celestialBodies}
+                    onChange={(celestialBodies) => onChange({ celestialBodies })}
                   />
                 </div>
                 <div className="facet-panel__grow">

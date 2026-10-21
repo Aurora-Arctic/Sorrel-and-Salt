@@ -76,9 +76,9 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   // name, which the compendium read folds. Free text like forms: the sign
   // vocabulary is an autofill, so a name no one has curated is still valid.
   zodiac: textListParam('zodiac', 'zodiacSigns'),
-  // Entries listing any of these planets or other celestial bodies,
-  // `?planets=Sun`, by name, as zodiac is.
-  planets: textListParam('planets', 'celestialBodies'),
+  // Entries listing any of these celestial bodies,
+  // `?celestialBodies=Sun`, by name, as zodiac is.
+  celestialBodies: textListParam('celestialBodies', 'celestialBodies'),
   // Toxic entries, or entries that are not: `?toxic=not_toxic`. Left out for
   // either, so `any` and a junk value read as no filter.
   toxic: choiceParam('toxic', TOXIC_SETTINGS, 'toxic'),

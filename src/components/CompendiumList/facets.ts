@@ -108,7 +108,7 @@ export function compendiumFacetCounts(
       })
       .sort(byCountThenLabel),
     zodiac: facets.zodiacSigns.map(named),
-    planets: facets.celestialBodies.map(named),
+    celestialBodies: facets.celestialBodies.map(named),
     elements: facets.elements.map(({ value, count }) => ({
       value,
       label: capitalise(value),

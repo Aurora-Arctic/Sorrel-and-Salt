@@ -173,12 +173,18 @@ describe('AppShell', () => {
     expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
   });
 
-  it('starts with a skip link to the page, which sits in the element it names', () => {
+  it('starts with a skip link to an empty target just before the page', () => {
     shell(MEMBER);
 
     const skip = screen.getByRole('link', { name: 'Skip to Content' });
     const target = document.getElementById(skip.getAttribute('href')?.slice(1) ?? '');
-    expect(target).toContainElement(screen.getByRole('main'));
+    // Focusable by script only, and wrapping nothing, so a click on the page
+    // never lands on it (M12.48).
+    expect(target).toHaveAttribute('tabindex', '-1');
+    expect(target).toBeEmptyDOMElement();
+    expect(target!.compareDocumentPosition(screen.getByRole('main'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     expect(skip.compareDocumentPosition(screen.getByRole('banner'))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );

@@ -35,7 +35,38 @@ export const Plain: Story = () => (
   <Notice kind="plain">Nothing has changed since you last saved.</Notice>
 );
 
-// All five at a phone's width, in each theme.
+// The block form: a sentence with a list and a button beneath it, as the
+// duplicates warning holds, in a warning and an error.
+const BlockContent = () => (
+  <>
+    <p>Did you mean one of these?</p>
+    <ul>
+      <li>
+        <a href="#testwort">Testwort (Fixtura vulgaris)</a>
+      </li>
+      <li>
+        <a href="#mockleaf">Mockleaf</a>
+      </li>
+    </ul>
+    <button type="button" className="btn btn--medium">
+      Create Anyway
+    </button>
+  </>
+);
+
+export const BlockWarning: Story = () => (
+  <Notice kind="warn" block>
+    <BlockContent />
+  </Notice>
+);
+
+export const BlockFailure: Story = () => (
+  <Notice kind="error" block>
+    <BlockContent />
+  </Notice>
+);
+
+// All five, and the block form's two, at a phone's width, in each theme.
 const AllKinds = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
     <Failure />
@@ -43,6 +74,8 @@ const AllKinds = () => (
     <Caution />
     <Success />
     <Plain />
+    <BlockWarning />
+    <BlockFailure />
   </div>
 );
 

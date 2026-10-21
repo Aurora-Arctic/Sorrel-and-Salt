@@ -11,7 +11,6 @@ import type { PageRequest } from '@/lib/types';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../../../support/msw/graphql';
 import { offerCategories } from '../../../../support/msw/ingredient-lookups';
 import { openSections } from '../../../../support/ingredient-sections';
-import { sent } from '../../../../support/filter-form';
 import { entryDetail } from '../../../../support/entry-detail';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
@@ -397,8 +396,8 @@ describe('the /admin/compendium filter', () => {
     expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ deityIds: ['d-ro'] });
   });
 
-  it('reads ?zodiac=, ?planets= and ?toxic= into the variables the query takes', async () => {
-    await renderPage({ zodiac: ['Aries', 'Leo'], planets: 'Mars', toxic: 'not_toxic' });
+  it('reads ?zodiac=, ?celestialBodies= and ?toxic= into the variables the query takes', async () => {
+    await renderPage({ zodiac: ['Aries', 'Leo'], celestialBodies: 'Mars', toxic: 'not_toxic' });
 
     expect(lastFilter()).toEqual({
       zodiacSigns: ['Aries', 'Leo'],
@@ -798,6 +797,29 @@ describe('the /admin/compendium details modal', () => {
     fireEvent.click(within(editing).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
+  });
+
+  // A form's duplicates warning opens a match's details over the form (M12.48).
+  it('opens the details over an add form on ?entry= with ?new, closing back to the form, with no Edit', async () => {
+    await renderPage({ ...FILTERED, new: '', entry: TESTWORT.slug });
+
+    // Why it could have an Edit: the details alone carry one.
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new`);
+  });
+
+  it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: 'fixture-other' });
+
+    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`);
   });
 
   it('closes a stacked edit back to the list, not the details, once it has deleted the entry', async () => {

@@ -110,7 +110,7 @@ const NO_FILTER: CompendiumListFilter = {
   categoryMode: 'all',
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   toxic: '',
 };
 
@@ -125,7 +125,7 @@ const SHOWN: CompendiumListFilter = {
   categoryMode: 'all',
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   toxic: '',
 };
 
@@ -152,7 +152,7 @@ const FACETS: CompendiumFacetCounts = {
     group,
   })),
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   elements: [],
   toxic: [],
   withoutReferences: 0,
@@ -1009,6 +1009,101 @@ describe('CompendiumList filter', () => {
       expect(router.push).toHaveBeenCalledTimes(1);
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
       expect(typing()).toBe(true);
+    });
+
+    // The line typed out while the search is on its way: the first line of the hidden sentence.
+    const typedLine = () =>
+      screen
+        .getAllByRole('group', { hidden: true })
+        .find(
+          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
+        )!
+        .querySelector('summary')!.textContent;
+
+    // The search is applied from the name just typed, not yet from the address, so the filter the
+    // page still shows is the previous search: the typed line must name the new term, not that one.
+    it('names the term being searched, not the previous one, while the search is on its way', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
+        </Navigating>,
+      );
+      typeIn(nameBox(), 'newwort');
+      await act(async () => {
+        fireEvent.submit(row());
+      });
+
+      expect(pushed().get('query')).toBe('newwort');
+      expect(typing()).toBe(true);
+      expect(typedLine()).toContain('newwort');
+      expect(typedLine()).not.toContain('oldwort');
+    });
+
+    it('drops the previous term from the typed line when the search is cleared', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
+        </Navigating>,
+      );
+      typeIn(nameBox(), '');
+      await act(async () => {
+        fireEvent.submit(row());
+      });
+
+      expect(pushed().has('query')).toBe(false);
+      expect(typing()).toBe(true);
+      expect(typedLine()).not.toContain('oldwort');
+    });
+
+    // The whole typed sentence while a search is on its way: the first line and the clauses
+    // beneath it, typed or still to type.
+    const typedSentence = () =>
+      screen
+        .getAllByRole('group', { hidden: true })
+        .find(
+          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
+        )!.textContent;
+
+    // A facet changed in the panel is on the address being opened, not on the page being left.
+    it('names the facets being searched with while the search is on its way', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: SEARCHED })} />
+        </Navigating>,
+      );
+      openPanel();
+      fireEvent.click(unsourcedSwitch());
+      await act(async () => {
+        applyFilters();
+      });
+
+      expect(pushed().get('withoutReferences')).toBe('1');
+      expect(typing()).toBe(true);
+      expect(typedSentence()).toContain('without references');
+      expect(typedSentence()).toContain('testcraft');
+    });
+
+    it('drops a facet being removed from the typed sentence, and names the new term and facet', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
+        </Navigating>,
+      );
+      typeIn(nameBox(), 'newwort');
+      openPanel();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Category: Testcraft' }));
+      fireEvent.click(unsourcedSwitch());
+      await act(async () => {
+        applyFilters();
+      });
+
+      expect(pushed().get('query')).toBe('newwort');
+      expect(pushed().has('categories')).toBe(false);
+      expect(typing()).toBe(true);
+      expect(typedSentence()).toContain('newwort');
+      expect(typedSentence()).toContain('without references');
+      expect(typedSentence()).not.toContain('oldwort');
+      expect(typedSentence()).not.toContain('testcraft');
     });
 
     it('holds no link, so a chosen value is removed in the panel alone', () => {

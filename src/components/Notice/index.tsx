@@ -15,13 +15,34 @@ const MODIFIER: Record<NoticeKind, string> = {
   plain: 'notice',
 };
 
-const Notice = ({ kind, quiet = false, id, className, children }: NoticeProps): ReactElement => {
+const Notice = ({
+  kind,
+  quiet = false,
+  block = false,
+  inRegion = false,
+  id,
+  className,
+  children,
+}: NoticeProps): ReactElement => {
   const classes = className ? `${MODIFIER[kind]} ${className}` : MODIFIER[kind];
+  // A quiet error or warning is a status too: present from the start, found
+  // by its role, and never announced over what the reader is doing.
+  const status = kind === 'success' || (quiet && kind !== 'plain');
+  // The region round it announces it, so a role of its own would say it twice.
+  const role = inRegion || kind === 'plain' ? undefined : status ? 'status' : 'alert';
 
-  if (kind === 'success' || (quiet && kind !== 'plain')) {
-    // `output` carries the status role itself, so it takes no `role`. A quiet
-    // error or warning takes it too: present from the start, found by its
-    // role, and never announced over what the reader is doing.
+  if (block) {
+    // A `<div>` with the role written out: a `<p>` cannot hold a list or a
+    // button, nor an `<output>` anything but phrasing content.
+    return (
+      <div id={id} className={classes} role={role}>
+        {children}
+      </div>
+    );
+  }
+
+  if (role === 'status') {
+    // `output` carries the status role itself, so it takes no `role`.
     return (
       <output id={id} className={classes}>
         {children}
@@ -30,7 +51,7 @@ const Notice = ({ kind, quiet = false, id, className, children }: NoticeProps): 
   }
 
   return (
-    <p id={id} className={classes} role={kind === 'plain' ? undefined : 'alert'}>
+    <p id={id} className={classes} role={role}>
       {children}
     </p>
   );

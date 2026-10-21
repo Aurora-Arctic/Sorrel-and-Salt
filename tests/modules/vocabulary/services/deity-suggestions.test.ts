@@ -27,6 +27,7 @@ beforeAll(() => {
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   await sql`delete from deities where slug like 'test-%'`;
+  await sql`delete from deity_traditions where slug like 'test-%'`;
   // The seed soft-deletes nothing, so every row live is the seeded state.
   await sql`update deities set deleted_at = null, deleted_by = null where deleted_at is not null`;
   await sql`update deity_traditions set deleted_at = null, deleted_by = null where deleted_at is not null`;
@@ -47,6 +48,15 @@ async function addDeity(name: string, tradition: string): Promise<void> {
       'Written by the test.', id, ${A.id}, ${A.id}
     from deity_traditions where name = ${tradition}
   `;
+}
+
+/** A live tradition of this file's, with a deity under it for each name given. */
+async function addTradition(tradition: string, names: string[]): Promise<void> {
+  await sql`
+    insert into deity_traditions (name, slug, description, created_by, updated_by)
+    values (${tradition}, ${`test-${tradition.toLowerCase()}`}, 'Written by the test.', ${A.id}, ${A.id})
+  `;
+  for (const name of names) await addDeity(name, tradition);
 }
 
 async function retire(table: 'deities' | 'deity_traditions', name: string) {
@@ -250,6 +260,42 @@ describe('suggestDeities', () => {
       await retire('deity_traditions', 'Greek');
 
       expect(valuesOf(await all(asUser(B), 'hecate'))).not.toContain('Hecate');
+    });
+  });
+
+  // The tradition is a heading the field's rows are known by, so typing its
+  // name lists its deities: the same case-folded substring an admin list uses.
+  describe('by tradition', () => {
+    it('offers every deity of a tradition whose name holds the text, whatever the case', async () => {
+      await addTradition('Testish', ['Aldrin', 'Borrowen']);
+      await addTradition('Otherish', ['Cormac']);
+
+      for (const query of ['testish', 'TESTISH', ' estish ']) {
+        const suggestions = await all(asUser(B), query);
+        expect(valuesOf(suggestions)).toEqual(['Aldrin', 'Borrowen']);
+        expect(suggestions.map((s) => s.tradition)).toEqual(['Testish', 'Testish']);
+        expect(suggestions.every((s) => s.curated)).toBe(true);
+      }
+    });
+
+    it('offers nothing under a soft-deleted tradition, though its deities are live', async () => {
+      await addTradition('Testish', ['Aldrin']);
+      const before = await all(asUser(B), 'testish');
+      expect(valuesOf(before)).toEqual(['Aldrin']);
+      await retire('deity_traditions', 'Testish');
+      const [deity] = await sql`select deleted_at from deities where name = 'Aldrin'`;
+      expect(deity.deleted_at).toBeNull();
+
+      expect(await all(asUser(B), 'testish')).toEqual([]);
+    });
+
+    it("keeps the in-use values to the caller's scope when a tradition is typed", async () => {
+      await addTradition('Testish', ['Aldrin']);
+      await addIngredient({ workspaceId: WORKSPACE_X_ID, deities: ['Testish Hermit'] });
+
+      // Why it could have shown: the value holds the text, in another workspace.
+      expect(valuesOf(await all(asUser(D), 'testish', WORKSPACE_X_ID))).toContain('Testish Hermit');
+      expect(valuesOf(await all(asUser(B), 'testish'))).toEqual(['Aldrin']);
     });
   });
 

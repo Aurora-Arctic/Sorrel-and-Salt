@@ -40,7 +40,7 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'test-crab', label: 'Test Crab', count: 7 },
     { value: 'test-scales', label: 'Test Scales', count: 0 },
   ],
-  planets: [
+  celestialBodies: [
     { value: 'test-sun', label: 'Test Sun', count: 10 },
     { value: 'test-moon', label: 'Test Moon', count: 6 },
   ],
@@ -74,7 +74,7 @@ const NONE: FacetPanelFilter = {
   forms: [],
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   elements: [],
   toxic: '',
   withoutReferences: false,
@@ -177,7 +177,7 @@ export const AllZeroFacet: Story = () => (
   <Panel
     facets={{
       ...FACETS,
-      planets: FACETS.planets.map((choice) => ({ ...choice, count: 0 })),
+      celestialBodies: FACETS.celestialBodies.map((choice) => ({ ...choice, count: 0 })),
     }}
   />
 );

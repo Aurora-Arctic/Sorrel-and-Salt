@@ -91,7 +91,9 @@ export function offerDuplicates(nodes: DuplicateNode[]) {
       calls.push(variables);
       return {
         possibleDuplicates: {
-          edges: nodes.map((node) => ({ node: { isGlobal: false, inCupboard: false, ...node } })),
+          edges: nodes.map((node) => ({
+            node: { isGlobal: false, inCupboard: false, nomenclature: 'unknown', ...node },
+          })),
         },
       };
     },
@@ -112,7 +114,7 @@ export function offerCompendiumMatches(nodes: DuplicateNode[]) {
       return {
         compendiumMatches: {
           edges: nodes.map((node) => ({
-            node: { isGlobal: true, inCupboard: false, ...node },
+            node: { isGlobal: true, inCupboard: false, nomenclature: 'unknown', ...node },
           })),
         },
       };

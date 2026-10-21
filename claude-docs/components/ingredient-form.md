@@ -42,11 +42,13 @@ foot, as the compendium's does ([`ingredient-entry.md`](ingredient-entry.md), "E
 | Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                                                                                                                                                                                                                                 |
+| `workspaceName` | With a coven's id only: the coven's name, said in "Added to <coven>." after the duplicate warning's + adds an entry. Left out, the sentence says "My Ingredients".                                                                                                                                                                                                                                                                                                                         |
 | `entry`         | The entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`: a compendium entry with a null `workspaceId`, or the coven's own with a coven's id (M8.17). Left out, the form creates.                                                                                                                                                                                                                                                                   |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                                        |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
+| `quickLookOf`   | Given, each near match in the duplicate warning offers its Quick Look, opening the details `{ href, heading }` it names over the form ("Quick Look in the warning", under ["The duplicate warning"](#the-duplicate-warning)). The admin compendium's form passes it; the public search's and the coven's leave it out.                                                                                                                                                                     |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
 | `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true, and a coven's edit when the member's role may promote (M8.17). It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                            |
 
@@ -1001,8 +1003,8 @@ says as much.
   link must name a form: the announcement adds how many, "Skipped 1 with
   no Oil form", and a notice beneath the list names them.
 - **The skipped notice** (`SkippedNotice` and `useSkippedCopy`, the
-  owner's call). A `.notice--warn` inside an `output` labelled
-  "Substitute Ingredients skipped", always in the page, as a live region
+  owner's call). A block `Notice` of the `warn` kind, taking no role, inside a
+  status region labelled "Substitute Ingredients skipped", always in the page, as a live region
   must be to be heard (the duplicate warning's pattern), and empty, its gap
   cancelled, until a copy skips something. It names what was skipped, "No
   Oil form to link, so not copied: Mockwort.", beside a small quiet **Copy
@@ -1099,16 +1101,38 @@ below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
-The warning sits beneath the field, a `.notice--warn`, the ochre bar and
+The warning sits beneath the field, a block `Notice` of the `warn` kind
+([`notice.md`](notice.md), "The block form"; M12.48), the ochre bar and
 tint with the ochre triangle: "Did you mean one of these?" and a list beneath it, one
 match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
 2026-10-18, which took it off MB.115's quiet style). The rows' title links
 wear the body ink and the faded underline of the entry page's links, with
-typography-base's ◆ centred on the row. While another name's answer is on
+a ◆ centred on the row: the `list-marker` shape (`_mixins.scss`), not
+typography-base's glyph, whose box sat its top rather than its middle on a
+centre line (M12.48).
+
+**In a coven's form the matches come in two groups** (M12.48, the owner's
+call), each under its own heading: **In This Coven**, the coven's own entries
+and the compendium entries its cupboard already holds (`!isGlobal`, or
+`inCupboard`), then **In the Compendium**, the compendium entries it does
+not hold. Each keeps the answer's order. A group with no rows is not drawn,
+but a lone group keeps its heading, so the reader always knows which kind a
+match is. The headings are `h4`s, under the modal's `h2` and the Identity
+section's `h3`, set as a fieldset's legend is (`.fieldset__legend`): Lexend at the
+small size and 500, in the notice's own ink rather than the muted one (the
+owner's call, 2026-10-21); each list is a
+`<ul>` named by its heading through `aria-labelledby`. Each group slides
+its own rows (`useSlidingRows`, once per list) and opens and closes by
+height round them, 0fr to 1fr as the region does, so a heading never stands
+over an emptied list. The sentence above both is unchanged, and the region's
+`aria-describedby` still covers the whole block. The compendium's form has
+no coven, so it draws one plain list with no headings. An add by the + moves
+its row from In the Compendium to In This Coven, by these same slides ("The +
+in the duplicate warning" below). While another name's answer is on
 its way, each row stands as the skeleton's shape (`skeleton-shape`,
-`_mixins.scss`, as a tab's list does), a bar for the title and one in the
-small button's own size where the row had a Use It, so the box keeps its
+`_mixins.scss`, as a tab's list does), a bar for the title and an icon's box where
+the row had a + or a Quick Look, so the box keeps its
 height and nothing jumps when the answer lands (the owner's call over a
 spinner, 2026-10-18). Row and shapes both stay mounted and cross-fade: the
 shapes wait 200ms before fading in over 300ms, so an answer back sooner never
@@ -1138,8 +1162,8 @@ the facet panel opens, while the notice fades in, and closes the same way
 round the last rows as they fade, so neither the first warning nor the last
 lands or leaves outright (the owner's calls). A list rather than a
 sentence, since the owner found the sentence with buttons run into it
-unreadable at the cupboard review (2026-10-18); a compendium match's Use It
-or Open It (below) sits at the right of its row. Each match is a link named
+unreadable at the cupboard review (2026-10-18); a compendium match's +
+or Quick Look eye (below) sits at the right of its row. Each match is a link named
 by its label and its formal name, since the label alone can name five
 plants; one with no formal name shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and the shell's add button to
@@ -1159,29 +1183,134 @@ compendium entries bearing the typed name exactly, case aside, on the formal
 name too. If any come back that the person has not set aside, the save waits
 and the notice reads "The compendium already has an entry of this name."
 ("entries", with several), over the same list: each row the entry's link
-with **Use It** at its right, or **Open It**, a link to its coven page, where
-the cupboard already holds it, and one **Create Anyway** beneath the list (the
+with a **+** at its right (M12.48, the owner's call, in place of M12.20's Use
+It button): an icon button in the card's plus's look (`add-icon`,
+[`add-icon.md`](add-icon.md)), named "Add to My Ingredients: " and the
+entry's label and formal name, as the card's plus is, which adds the entry to
+the coven the form is adding to, with no menu of covens. Or the **Quick Look** eye
+where the cupboard already holds it (M12.48, in place of M12.20's Open It;
+"Quick Look in the warning" below), and one **Create Anyway** beneath the list (the
 owner's word for both lists, 2026-10-18; M12.20 had named the question's Add
 Our Own). The
 block's id, the sentence and the list together, is what the button and the
 field are described by, so a focus landing on it still hears the names. It sets
 the entries aside and takes the focus the way the warning's does, so the next
-Save makes the coven's own entry as before. Use It calls `addCupboardEntry`
-(no jar, no form) and sends the typed name as `label` only when it differs
-from the entry's own name, string for string, plus whichever of the
-description, safety notes, elements, celestial bodies, zodiac signs and
-colours were filled as the coven's overrides. It then reports the entry
-through `onSaved` as `'open'`, so the modal closes and the page routes to the
-entry's coven page; a refused label lands beside Name. A near match in the
-did-you-mean list gets the same Use It or Open It at the right of its row when
-it is a compendium entry (`isGlobal`), and none when it is the coven's own
-(the owner's call, 2026-10-18). Both need `onUse`, which the compendium's
+Save makes the coven's own entry as before. The + calls `addCupboardEntry`
+(no jar, no form) and adds the entry under its own name: the typed name is never
+sent as a `label` (M12.48, the owner's call, in place of M12.20's "with the typed
+label"). The typed name was the search that found the entry, and sent as a label
+it could clash with a label the coven already gives another entry, which refused
+the add: "rosemary" pressed on Rose, where the coven calls its Daisy Rosemary. The
+entry can be relabelled on its page. It sends whichever of the description,
+safety notes, elements, celestial bodies, zodiac signs and colours were filled
+as the coven's overrides, and then reports the entry, by its own name, through
+`onSaved` as `'another'`, so the modal stays open with what was typed ("The +
+in the duplicate warning" below). A refusal is said at the form's head. Once the add lands, both
+lookups, `possibleDuplicates` and `compendiumMatches`, are asked again for every
+name (`added` on `useDuplicateWarning`), and a held save's exact matches mark the
+entry held: their cached answers would otherwise say the coven still lacks it for
+the cache's stale time, so the form opened again on that name listed it under In
+the Compendium with its + (the owner's report, M12.48). A near match in the
+did-you-mean list gets the same + or eye at the right of its row when
+it is a compendium entry (`isGlobal`); the coven's own entry, which the
+cupboard holds by being the coven's, gets the eye and never a + (the owner's
+calls, 2026-10-18 and M12.48). Both need `onUse`, which the compendium's
 form leaves out, since it has no cupboard. Viewers never reach the modal.
+
+**The + in the duplicate warning** (M12.48, the owner's calls, 2026-10-21).
+This replaces navigating to the entry's page after the add: the form stays open,
+and the + turns into the entry's Quick Look eye where it stands.
+
+- **While the add is sent**, the + shows the spinner, and is `aria-busy` and
+  `aria-disabled` rather than `disabled`, so the focus stays on it.
+- **Once it has worked**, the + shows AddIcon's check (`data-state="added"`,
+  drawn along its stroke) for `ADDED_HOLD_MS` (1000 ms,
+  [`add-icon.md`](add-icon.md)). It keeps its name, "Add to My Ingredients: "
+  and the entry, and stays `aria-disabled`.
+- **Then the check turns into the eye**: the same button, now named "Quick Look"
+  and the entry's label and formal name, which opens the details over the form.
+  With motion, the check fades out over the eye arriving (`data-state="returning"`,
+  the stack AddIcon fades back to its plus with; `.add-icon__eye` arrives as
+  `.add-icon__plus` does). Under reduced motion the check is still shown for
+  the whole hold; the eye then takes its place at once, with no fade or motion.
+- **Only once the eye is in** is the cache refreshed (`added` on
+  `useDuplicateWarning`, above), and the row then slides from In the
+  Compendium to In This Coven. The duplicates region is `aria-busy` from the
+  refresh's start until the rows have stopped sliding.
+- **The focus follows**: if it was on the + when the move began, it goes to the
+  eye in the row under In This Coven. If the person had moved it elsewhere, it
+  stays there.
+- **"Added to <coven>." is said once, through the page's status region**
+  (`useAnnounce`, [`click-feedback.md`](click-feedback.md), "The status
+  region"). The form shows no Saved notice for it. The coven's name comes from
+  the `workspaceName` prop, which the shell's add button passes; without it
+  the sentence says "My Ingredients".
+- **The modal stays open** with everything typed, since `onSaved` is called with
+  `'another'`, which the shell's add button ignores. The coven page beneath
+  the modal is not refreshed until the next navigation, as with Save & Add
+  Another.
+- **A refusal** is said at the form's head, as before; the + shows no check and
+  is back to an idle +.
+
+In a coven's form, the warning's Quick Look eyes, the one a + turns into
+included, are in the add's green (`$accent`, the colour of the check), not
+the cards' ink (`$card-more-ink`), in every state (the owner's call). On hover
+and focus the green wash under them is `icon-button-edit`'s, as under the +.
+The rule is scoped to `.ingredient-form__group`, which only the coven's form
+draws, so the admin form's eyes keep the cards' ink. The eye's contrast, as a
+non-text control (WCAG 1.4.11 asks at least 3:1), on the notice's tint over
+the surface the form sits on:
+
+| Theme | Surface | On the `warn` tint | On the `error` tint | On the hover wash |
+| ----- | ------- | ------------------ | ------------------- | ----------------- |
+| Dark  | Card    | 6.29:1             | 6.55:1              | 4.97:1            |
+| Dark  | Page    | 7.05:1             | 7.30:1              | n/a               |
+| Light | Card    | 4.74:1             | 4.67:1              | 3.96:1            |
+| Light | Page    | 4.28:1             | 4.22:1              | n/a               |
+
+The tint is the notice's bar colour (`$warning` or `$secondary`) at
+`--notice-tint` (8% dark, 7% light) over the surface; the wash is
+`$accent` at 20% over the card surface.
 
 **An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
 entry makes nothing new, so on an edit the warning names its matches and
 links them as above, but offers no Create Anyway and never holds Save: the
 form skips `check`, and `NameField` takes `holds={false}`.
+
+**Quick Look in the warning** (the owner's call, M12.48). In the admin
+compendium's form every match is a compendium entry, so each row gets the
+Quick Look eye (`DetailsLink`, [`ingredient-entry.md`](ingredient-entry.md))
+at its right, named "Quick Look" and the entry's label and formal name, as a
+list row's eye is. Its name still links the entry in a new tab, and there is
+no +. The form takes `quickLookOf`, which `CompendiumDialog` builds when
+the page passes `lookUnder`, the open form's `?new` or `?edit=<slug>`: the
+address is the list with `?entry=<slug>` and that form's parameter, so the
+details open over the form in their own modal place and close back to it. The
+form stays mounted beneath, keyed as before, so what was typed survives.
+Modals stack in the browser's top layer, so Escape closes the details alone,
+and the focus goes back to the eye. Details opened over another entry's form
+offer no Edit, which would replace that form and its typing; details under
+their own entry's edit, M12.5's way round, keep it. A reload of such an
+address draws the form over the details, since the order of the two in the
+address is not kept. The public search's form opens details by id, not
+slug, and offers no Quick Look.
+
+In the coven's form, the shell's Add Ingredient dialog, the eye sits on each
+row the coven holds, its own entries and the compendium entries in its
+cupboard, and is a button (`QuickLookButton`,
+[`icon-tip.md`](icon-tip.md)) rather than a link: that dialog opens over
+any shell page by `?new`, and most of those pages have no details modal to
+route to. Its press opens `DuplicateQuickLook` (`quick-look.tsx`), the
+details modal over the form, which reads the entry in the page through the
+existing `ingredient(id, workspaceId)` query, nothing new on the server.
+It opens at once, `aria-busy` with the modal skeleton (M12.33), under the
+head the details will have, the row's name with its formal name over it, as
+a route modal's press opens under the head its opener names, so nothing in
+the head moves when the details arrive. The head and body are then the
+details modal's own (`headingOf`, `detailsHeading`, `IngredientSummary`),
+and its foot's See in Your Cupboard opens the entry's page in a new tab, so
+the form and what is typed in it stay. A failed read says so in the modal,
+with Try Again. Escape closes it alone and hands the focus back to the eye.
 
 **The warning has to be answered before the form saves**, the owner's call,
 which corrects the issue's "does not block submission". While it is only
@@ -1190,7 +1319,7 @@ passes validation asks about the very name it is sending, through the query
 client's `fetchQuery`: the cached answer when the typing had settled, asked
 there and then when it had not, so a save inside the debounce cannot slip past
 the warning. If a match not yet set aside comes back, nothing is sent: the
-notice turns to `.notice--error` and its sentence to "Your save is on hold, as
+notice turns to the `error` kind and its sentence to "Your save is on hold, as
 these entries have a similar name" (colour alone must not say it), the name is marked invalid and described by
 it, and the focus goes to Create Anyway, which the warning describes, so the
 focus says why it moved. A second save stops the same way. A failed check
@@ -1212,10 +1341,15 @@ takes the focus before the button goes, through the button's form rather than
 react-hook-form's `setFocus`, which waits a tick with the focus on the body,
 and the name's error goes with the warning.
 
-A screen reader hears it two ways. The warning is inside an `<output>`
+A screen reader hears it two ways. The warning is inside a status region
+(`<div role="status">`, since an `<output>` holds phrasing content alone)
 named "Possible duplicates", always in the page, so it is announced as it
 arrives; and the sentence is in the name field's `aria-describedby` while it
-shows, so it is read with the field, as the hint is.
+shows, so it is read with the field, as the hint is. The notice inside the
+region takes no role of its own (`inRegion`), so it is announced once,
+whether a warning or, held, an error ([`notice.md`](notice.md), "Inside a
+live region, a notice takes no role", for why the region holds the notice
+rather than being it).
 
 **A save shows it is busy**, from the press to the answer, the duplicate
 check included: both saves disabled, and the one pressed marked `aria-busy`
@@ -1637,12 +1771,11 @@ of the column with their label and hint, as the fields above them do, rather
 than centred under the label as the switch primitive draws it for a filter
 bar (`.ingredient-form .switch`; the owner's call, 2026-10-16).
 
-**The duplicates notice is an `<output>`, so its classes are hand-written.**
-The region holds block content (a sentence, a list, a button), which a Notice
-cannot go inside, so `duplicates.tsx` writes `notice notice--warn` or
-`notice notice--error` itself, picked in the one function `noticeClasses`.
-The block Notice that would replace them is M12.48, minted from MB.120; when it
-lands it swaps that function alone. Colour must not be the only sign of a held
+**The duplicates notice is a block `Notice`** (M12.48), of the `warn` kind
+while the name is typed against and the `error` kind once a save is held,
+since it holds a sentence, a list and a button, which an inline notice's
+`<p>` cannot. The skipped-copy notice is one too. Neither writes a `notice`
+class by hand. Colour must not be the only sign of a held
 save, so the sentence changes with the state too: "Did you mean one of these?"
 while the name is typed against, "Your save is on hold, as these entries have a
 similar name. Check them, or create this one anyway." once Save has been pressed
