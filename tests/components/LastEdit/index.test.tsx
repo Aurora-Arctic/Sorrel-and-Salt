@@ -1,39 +1,70 @@
-import { render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import LastEdit from '@/components/LastEdit';
 import { relativePhrase } from '@/components/LastEdit/relative';
 
-// M6.18: the date is the server's, the relative phrase the browser's, and the `<time>`
-// element holds the moment either way.
+// M6.18: the line is compact. Its visible text is the short date on the server and the relative
+// phrase once hydrated; the full sentence is the tip, which the button describes.
 
 const AT = '2026-09-01T10:30:00.000Z';
 
 describe('LastEdit', () => {
-  it('holds the moment in the time element and names the editor', () => {
+  it('holds the moment in the time element, inside a button a keyboard can reach', () => {
     const { container } = render(<LastEdit by="Fixture A" at={AT} />);
-    const time = container.querySelector('time');
-    expect(time).toHaveAttribute('datetime', AT);
-    expect(container).toHaveTextContent('Fixture A');
+    expect(container.querySelector('time')).toHaveAttribute('datetime', AT);
+    expect(screen.getByRole('button', { name: /^Edited/ })).toBeInTheDocument();
   });
 
-  it('shows the relative phrase beside the date once the page has loaded', () => {
-    const { container } = render(<LastEdit by="Fixture A" at={AT} />);
-    const time = container.querySelector('time')!;
-    expect(time.textContent).toMatch(/1 September 2026/);
-    expect(time.textContent).toMatch(/ago\)$/);
+  it('gives a screen reader the full sentence as the description, and opens it on focus', () => {
+    render(<LastEdit by="Fixture A" at={AT} />);
+    const button = screen.getByRole('button', { name: /^Edited/ });
+    expect(button).toHaveAccessibleDescription('Last edited by Fixture A on 1 September 2026');
+    const tip = screen.getByRole('tooltip', { hidden: true });
+    expect(tip).toHaveAttribute('aria-hidden', 'true');
+
+    fireEvent.focus(button);
+    expect(screen.getByRole('tooltip')).toHaveAttribute('aria-hidden', 'false');
   });
 
-  it('sends only the absolute date in the server HTML, so the two never disagree', () => {
+  it('opens on hover once the pointer has rested, and closes when it leaves', () => {
+    vi.useFakeTimers();
+    try {
+      render(<LastEdit by="Fixture A" at={AT} />);
+      const button = screen.getByRole('button', { name: /^Edited/ });
+
+      fireEvent.mouseEnter(button);
+      act(() => vi.advanceTimersByTime(299));
+      expect(screen.getByRole('tooltip', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        'Last edited by Fixture A on 1 September 2026',
+      );
+
+      fireEvent.mouseLeave(button);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByRole('tooltip', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows the relative phrase once the page has loaded', () => {
+    const { container } = render(<LastEdit by="Fixture A" at={AT} />);
+    expect(container.querySelector('time')!.textContent).toMatch(/ago$/);
+  });
+
+  it('sends only the short date in the server HTML, so the two never disagree', () => {
     const html = renderToString(<LastEdit by="Fixture A" at={AT} />);
-    expect(html).toContain('1 September 2026');
-    expect(html).not.toMatch(/ago|just now/);
+    expect(html).toContain('1 Sept 2026');
+    expect(html).not.toMatch(/ ago|just now/);
   });
 
   it('keeps the time when the editor cannot be named, and leaves the name out', () => {
-    const { container } = render(<LastEdit by={null} at={AT} />);
-    expect(container.querySelector('time')).toHaveAttribute('datetime', AT);
-    expect(container).not.toHaveTextContent(/\bby\b/);
+    render(<LastEdit by={null} at={AT} />);
+    expect(screen.getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
+      'Last edited on 1 September 2026',
+    );
   });
 
   it('draws nothing for a moment that is not a date', () => {

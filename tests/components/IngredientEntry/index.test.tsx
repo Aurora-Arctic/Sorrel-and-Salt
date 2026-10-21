@@ -247,6 +247,19 @@ const precedes = (a: Node, b: Node): boolean =>
   (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 
 describe('IngredientEntry', () => {
+  it('draws the latest edit when given one, and none when not', () => {
+    const { unmount } = renderEntry({
+      lastEdit: { by: 'Fixture A', at: '2026-09-01T10:30:00.000Z' },
+    });
+    expect(screen.getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
+      /Fixture A/,
+    );
+    unmount();
+
+    renderEntry({ lastEdit: null });
+    expect(screen.queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
+  });
+
   it('heads the page with the entry name', () => {
     renderEntry();
 

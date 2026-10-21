@@ -304,9 +304,8 @@ test(
 /**
  * The card's `<time>` stands for `at`, the jar's own `updated_at`, to the
  * second: the attribute may drop the database's microseconds. The server's
- * HTML holds the absolute date alone, which stays visible, and the browser
- * adds the relative phrase beside it once the page has loaded (M6.18): the
- * shown text holds the server's and is longer than it. The server's HTML is
+ * HTML holds the short absolute date alone, and the browser swaps it for the
+ * relative phrase once the page has loaded (M6.18); the full sentence is the tip. The server's HTML is
  * fetched from inside the page, so the request carries the page's session.
  */
 async function expectEditedAt(row: Locator, at: Date) {
@@ -324,8 +323,6 @@ async function expectEditedAt(row: Locator, at: Date) {
   expect(served).toContain(String(at.getUTCFullYear()));
   expect(served).toContain(String(at.getUTCDate()));
   await expect(time).toBeVisible();
-  await expect(time).toContainText(served ?? '');
-  await expect
-    .poll(async () => (await time.textContent())?.trim().length ?? 0)
-    .toBeGreaterThan((served ?? '').trim().length);
+  // Once the page has loaded the visible text is the relative phrase, in place of the date.
+  await expect(time).toHaveText(/ ago$|^just now$/);
 }

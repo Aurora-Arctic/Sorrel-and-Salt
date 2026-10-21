@@ -15,6 +15,11 @@ const countWorkspaceIngredients = vi.fn();
 const stockOf = vi.fn();
 const lastEditsOf = vi.fn();
 const variantsOf = vi.fn();
+const getIngredient = vi.fn();
+const heldCompendiumEntry = vi.fn();
+const ingredientDetailOf = vi.fn();
+const covenJarsOf = vi.fn();
+const covensHolding = vi.fn();
 const workspaceIngredientFacets = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   listWorkspaceIngredients,
@@ -23,7 +28,15 @@ vi.mock('@/modules/ingredients', () => ({
   lastEditsOf,
   variantsOf,
   workspaceIngredientFacets,
+  getIngredient,
+  heldCompendiumEntry,
+  ingredientDetailOf,
+  applyCupboardEntry: (entry: unknown) => entry,
+  isRetired: () => false,
 }));
+vi.mock('@/app/coven-stock', () => ({ covenJarsOf }));
+vi.mock('@/app/plus-covens', () => ({ covensHolding }));
+vi.mock('@/app/entry-values', () => ({ entryValues: vi.fn() }));
 
 const readCardCategoriesOf = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
@@ -31,7 +44,7 @@ vi.mock('@/app/compendium-reads', () => ({
   readFormIcons: async () => new Map([['fixture herb', 'leaf']]),
 }));
 
-const { readCovenIngredients, readCovenFacets } =
+const { readCovenIngredients, readCovenFacets, readViewedEntry } =
   await import('@/app/(shell)/coven/[slug]/ingredients/reads');
 
 const own = { id: 'a1', workspaceId: COVEN };
@@ -142,5 +155,35 @@ describe('readCovenFacets', () => {
     await readCovenFacets(COVEN, '{"inStock":true}');
 
     expect(workspaceIngredientFacets).toHaveBeenCalledWith(session, COVEN, { inStock: true });
+  });
+});
+
+describe('readViewedEntry', () => {
+  const edit = { by: 'Fixture Name', at: '2026-01-01T00:00:00.000Z' };
+  const proof = { workspaceId: COVEN, role: 'member' } as never;
+
+  beforeEach(() => {
+    ingredientDetailOf.mockResolvedValue({ cupboardEntry: null });
+    covenJarsOf.mockResolvedValue([]);
+    covensHolding.mockResolvedValue([]);
+    lastEditsOf.mockResolvedValue([edit]);
+  });
+
+  it("reads the coven's own entry's last edit as the cards do, for that one entry", async () => {
+    getIngredient.mockResolvedValue(own);
+    const read = await readViewedEntry(proof, 'a1');
+
+    expect(lastEditsOf).toHaveBeenCalledWith(session, COVEN, [own]);
+    expect(read?.lastEdit).toEqual(edit);
+  });
+
+  it('reads it for a held compendium entry too, and returns null when there is none', async () => {
+    getIngredient.mockResolvedValue(held);
+    heldCompendiumEntry.mockResolvedValue({ entry: held, cupboardEntry: null });
+    lastEditsOf.mockResolvedValue([null]);
+    const read = await readViewedEntry(proof, 'b2');
+
+    expect(lastEditsOf).toHaveBeenCalledWith(session, COVEN, [held]);
+    expect(read?.lastEdit).toBeNull();
   });
 });

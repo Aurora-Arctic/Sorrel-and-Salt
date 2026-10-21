@@ -423,6 +423,18 @@ describe("the coven Ingredients page's details modal", () => {
     expect(details('Testwort')).toBeInTheDocument();
   });
 
+  it("reads the opened entry's last edit for Quick Look, from the same service as the cards", async () => {
+    lastEditsOf.mockResolvedValue([{ by: 'Fixture Editor', at: '2026-03-04T05:06:07.000Z' }]);
+    await renderPage({ source: 'local', entry: 'a1' });
+    const dialog = details('Testwort')!;
+    expect(lastEditsOf).toHaveBeenCalledWith(session, COVEN.id, [
+      expect.objectContaining({ id: 'a1' }),
+    ]);
+    expect(within(dialog).getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
+      /Fixture Editor/,
+    );
+  });
+
   it("opens the coven's own entry under ?entry=<id>, read as the member, with its full page in the coven", async () => {
     await renderPage({ source: 'local', entry: 'a1' });
     expect(getIngredient).toHaveBeenCalledWith(session, 'a1', COVEN.id);
