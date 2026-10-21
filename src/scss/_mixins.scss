@@ -83,8 +83,27 @@
   transform: translate(-50%, -50%);
 
   @include forced-colors {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: without it the browser forces the background to the canvas and the ◆ goes, as a list without one would read, not yet Baseline
     forced-color-adjust: none;
     background-color: CanvasText;
+  }
+}
+
+// For an item's own `::before` in a list typography-base marks (a hairline, a
+// fillet): clears what `list-marker` sets there that the drawing does not set
+// itself, so the ◆'s size, clip and shift do not reach it. A glyph marker
+// leaked only its offsets; a drawn one leaks its shape. Include it before the
+// drawing's own declarations, which then win where they overlap.
+@mixin list-marker-cleared {
+  inline-size: auto;
+  block-size: auto;
+  background-color: transparent;
+  clip-path: none;
+  transform: none;
+
+  @include forced-colors {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: undoes the ◆'s own, where it is understood at all, not yet Baseline
+    forced-color-adjust: auto;
   }
 }
 

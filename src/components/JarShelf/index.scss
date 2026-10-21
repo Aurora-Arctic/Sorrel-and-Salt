@@ -65,8 +65,12 @@ $-shake-duration: 500ms;
   // Each cell draws its brackets' halves just OUTSIDE its own edges (the left half of the
   // bracket on its right, the right half of the one on its left), so the half at a row's
   // end falls outside the shelf and is clipped (`.jar-shelf`), with no row-counting.
+  // The fillets, not typography-base's ◆: its shape cleared first, in this
+  // rule, so the sizes below win over the clearing. (The ::after has none to clear.)
   &::before,
   &::after {
+    @include list-marker-cleared;
+
     content: '';
     position: absolute;
     top: calc(#{$-top} + #{$-drawing-height});

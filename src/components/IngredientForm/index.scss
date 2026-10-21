@@ -520,7 +520,7 @@ $skeleton-fade: 300ms;
     // after the first row starts space(1) down (the rule above), so the
     // centre moves down half that.
     li::before {
-      @include list-marker(50%);
+      top: 50%;
       @include theme-transition(background-color);
     }
 
