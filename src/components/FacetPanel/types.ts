@@ -13,7 +13,7 @@ export interface FacetPanelFilter {
   forms: readonly string[];
   deities: readonly string[];
   zodiac: readonly string[];
-  planets: readonly string[];
+  celestialBodies: readonly string[];
   elements: readonly string[];
   /** `''` for either, as the address leaves it blank. */
   toxic: '' | 'toxic' | 'not_toxic';

@@ -67,7 +67,7 @@ const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
   forms: filter.forms,
   deities: filter.deities,
   zodiac: filter.zodiac,
-  planets: filter.planets,
+  celestialBodies: filter.celestialBodies,
   elements: filter.elements,
   toxic: filter.toxic ?? '',
   withoutReferences: filter.withoutReferences,
@@ -86,7 +86,7 @@ const noFacets = (coven: boolean): FacetPanelFilter => ({
   forms: [],
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   elements: [],
   toxic: '',
   withoutReferences: false,
@@ -100,7 +100,7 @@ const changeOf = (panel: FacetPanelFilter) => ({
   forms: [...panel.forms],
   deities: [...panel.deities],
   zodiac: [...panel.zodiac],
-  planets: [...panel.planets],
+  celestialBodies: [...panel.celestialBodies],
   elements: panel.elements.flatMap(
     (each) => INGREDIENT_ELEMENTS.find((element) => element === each) ?? [],
   ),
@@ -285,6 +285,18 @@ function labelsOf({
   };
 }
 
+/**
+ * The filter an address holds, read as the page reads it from the same parameter table: the
+ * term and every facet, a parameter the address lacks being no filter. `shown` supplies what
+ * the table does not carry.
+ */
+function filterOf(href: string, shown: Held, coven: boolean): Held {
+  const params: Record<string, string[]> = {};
+  const { searchParams } = new URL(href, 'http://localhost');
+  for (const key of new Set(searchParams.keys())) params[key] = searchParams.getAll(key);
+  return { ...shown, ...(coven ? COVEN_PARAMS : COMPENDIUM_PARAMS).read(params) };
+}
+
 const CompendiumListFilterWithSentence = ({
   filter,
   facets,
@@ -296,22 +308,28 @@ const CompendiumListFilterWithSentence = ({
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
-  const { searching } = useListNavigation();
+  const { searching, target } = useListNavigation();
+  // The page still shows the previous search while the new one is read, so the sentence names the
+  // term and the facets of the address the navigation is opening, not those of `filter`.
+  const searched =
+    searching && target !== undefined
+      ? filterOf(target, filter, whereOf({ audience, covenSlug }).covenSlug !== undefined)
+      : filter;
   const sentence = useMemo(
     () =>
       buildSearchSentence({
         filter: {
-          ...filter,
-          toxic: filter.toxic || null,
-          source: filter.source || null,
-          inStock: filter.inStock ?? false,
-          lowStockOnly: filter.lowStockOnly ?? false,
+          ...searched,
+          toxic: searched.toxic || null,
+          source: searched.source || null,
+          inStock: searched.inStock ?? false,
+          lowStockOnly: searched.lowStockOnly ?? false,
         },
         labels: labelsOf({ facets, categories }),
         total,
         admin: audience === 'admin',
       }),
-    [filter, facets, categories, total, audience],
+    [searched, facets, categories, total, audience],
   );
   return (
     <>
@@ -326,7 +344,7 @@ const CompendiumListFilterWithSentence = ({
         covenSlug={covenSlug}
         workspaceId={workspaceId}
       />
-      <SearchSentence sentence={sentence} query={filter.query} pending={searching} />
+      <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
     </>
   );
 };

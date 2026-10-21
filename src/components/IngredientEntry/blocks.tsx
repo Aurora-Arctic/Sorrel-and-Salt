@@ -30,7 +30,7 @@ type Correspondences = Pick<
 export function correspondences(source: Correspondences, deities?: readonly DeityDetail[]): Row[] {
   const rows: Row[] = [
     { label: 'Elements', values: listed(source.elements).map(capitalise) },
-    { label: 'Planets', values: listed(source.celestialBodies) },
+    { label: 'Celestial Bodies', values: listed(source.celestialBodies) },
     { label: 'Zodiac Signs', values: listed(source.zodiacSigns) },
     { label: 'Colours', values: listed(source.colors).map(capitalise) },
   ];

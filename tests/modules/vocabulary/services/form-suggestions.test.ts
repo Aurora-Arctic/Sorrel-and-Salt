@@ -32,6 +32,7 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   // A test adds its own same-named form; the seed's slugs are all it keeps.
   await sql`delete from ingredient_forms where slug like 'test-%'`;
+  await sql`delete from ingredient_form_groups where slug like 'test-%'`;
   // The seed soft-deletes nothing, so every row live is the seeded state.
   await sql`update ingredient_forms set deleted_at = null, deleted_by = null where deleted_at is not null`;
   await sql`update ingredient_form_groups set deleted_at = null, deleted_by = null where deleted_at is not null`;
@@ -64,6 +65,15 @@ async function addForm(name: string, group: string): Promise<string> {
     returning id
   `;
   return row.id as string;
+}
+
+/** A live group of this file's, with a form under it for each name given. */
+async function addGroup(group: string, names: string[]): Promise<void> {
+  await sql`
+    insert into ingredient_form_groups (name, slug, description, created_by, updated_by)
+    values (${group}, ${`test-${group.toLowerCase()}`}, 'Written by the test.', ${A.id}, ${A.id})
+  `;
+  for (const name of names) await addForm(name, group);
 }
 
 async function retire(table: 'ingredient_forms' | 'ingredient_form_groups', name: string) {
@@ -345,6 +355,41 @@ describe('suggestForms', () => {
       const seenFromW = find(await all(asUser(B), 'root'), 'Root');
 
       expect(seenFromW.claimants).toEqual([{ name: 'Testwort Root', canonicalName: null }]);
+    });
+  });
+
+  // The group is a heading the field's rows are known by, so typing its
+  // name lists its forms: the same case-folded substring an admin list uses.
+  describe('by group', () => {
+    it('offers every form of a group whose name holds the text, whatever the case', async () => {
+      await addGroup('Testery', ['Zanthic', 'Yarrowy']);
+      await addGroup('Otherly', ['Xylic']);
+
+      for (const query of ['testery', 'TESTERY', ' ester ']) {
+        const suggestions = await all(asUser(B), query);
+        expect(valuesOf(suggestions)).toEqual(['Yarrowy', 'Zanthic']);
+        expect(suggestions.map((s) => s.group)).toEqual(['Testery', 'Testery']);
+        expect(suggestions.every((s) => s.curated)).toBe(true);
+      }
+    });
+
+    it('offers nothing under a soft-deleted group, though its forms are live', async () => {
+      await addGroup('Testery', ['Zanthic']);
+      expect(valuesOf(await all(asUser(B), 'testery'))).toEqual(['Zanthic']);
+      await retire('ingredient_form_groups', 'Testery');
+      const [form] = await sql`select deleted_at from ingredient_forms where name = 'Zanthic'`;
+      expect(form.deleted_at).toBeNull();
+
+      expect(await all(asUser(B), 'testery')).toEqual([]);
+    });
+
+    it("keeps the in-use values to the caller's scope when a group is typed", async () => {
+      await addGroup('Testery', ['Zanthic']);
+      await addIngredient({ workspaceId: WORKSPACE_X_ID, form: 'testery cut' });
+
+      // Why it could have shown: the value holds the text, in another workspace.
+      expect(valuesOf(await all(asUser(D), 'testery', WORKSPACE_X_ID))).toContain('testery cut');
+      expect(valuesOf(await all(asUser(B), 'testery'))).toEqual(['Zanthic']);
     });
   });
 

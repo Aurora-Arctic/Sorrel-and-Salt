@@ -101,7 +101,7 @@ describe('IngredientSummary', () => {
     expect(
       within(screen.getByRole('list', { name: 'Folk Names' })).getByText('Fixture Bane'),
     ).toBeInTheDocument();
-    expect(rowOf('Planets')).toBe('Fixture Moon');
+    expect(rowOf('Celestial Bodies')).toBe('Fixture Moon');
     expect(rowOf('Deities')).toBe('Fixtura (Fixture Pantheon)');
   });
 
@@ -218,7 +218,7 @@ describe('IngredientSummary', () => {
     const caution = screen.getByRole('region', { name: 'Caution' });
     expect(within(caution).getByText('Fixture coven caution.')).toBeInTheDocument();
     expect(within(caution).queryByText('Fixture entry caution.')).not.toBeInTheDocument();
-    expect(rowOf('Planets')).toBe('Fixture Sun');
+    expect(rowOf('Celestial Bodies')).toBe('Fixture Sun');
   });
 
   it("draws no caution and no empty block for a sparse entry: no 'None recorded', no empty heading", () => {
@@ -284,10 +284,10 @@ describe('IngredientSummary', () => {
   it("keeps a block's filled rows and drops its empty ones", () => {
     render(<IngredientSummary detail={full({ folkNames: [], deities: [] })} />);
 
-    // Why the rows could show: the entry has elements and planets, and the
+    // Why the rows could show: the entry has elements and celestial bodies, and the
     // block draws those two.
     expect(rowOf('Elements')).toBe('Fire');
-    expect(rowOf('Planets')).toBe('Fixture Moon');
+    expect(rowOf('Celestial Bodies')).toBe('Fixture Moon');
     for (const term of ['Zodiac Signs', 'Colours', 'Deities']) {
       expect(screen.queryByText(term, { selector: 'dt' })).not.toBeInTheDocument();
     }

@@ -56,7 +56,7 @@ const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE 
 // wide modal over the list does the writing, opened by the address — `?new`,
 // or `?edit=<slug>` — so it can be linked to and Back closes it, as on the
 // categories page. The list narrows by name, by forms, deities, zodiac
-// signs, planets, elements, toxic and categories, and to the entries citing
+// signs, celestial bodies, elements, toxic and categories, and to the entries citing
 // nothing, the admin's to-do list; each filter offers its choices with how
 // many entries each would list (M12.4).
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {

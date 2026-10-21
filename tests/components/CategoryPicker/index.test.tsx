@@ -22,7 +22,7 @@ const fixtureWard: PickerGroup = {
 // A group no code names: the picker knows groups only from the rows.
 const zanthic: PickerGroup = {
   id: 'g-zanthic',
-  name: 'Zanthic Testery',
+  name: 'Zanthic Oddments',
   colorDark: '#8e7bd1',
   colorLight: '#5a3fa8',
 };
@@ -101,7 +101,7 @@ describe('CategoryPicker', () => {
     ).toEqual([
       expect.stringContaining('Ashen Fixtures'),
       expect.stringContaining('Fixture Wards'),
-      expect.stringContaining('Zanthic Testery'),
+      expect.stringContaining('Zanthic Oddments'),
     ]);
     expect(
       within(screen.getByRole('group', { name: 'Fixture Wards' }))
@@ -123,6 +123,22 @@ describe('CategoryPicker', () => {
       expect.stringMatching(/^Testward/),
     ]);
     expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
+  });
+
+  it('lists every category of a group whose name is typed, whatever the case', () => {
+    renderPicker();
+
+    open();
+    type('fixture WARDS');
+
+    expect(screen.getAllByRole('option').map((row) => row.textContent)).toEqual([
+      expect.stringMatching(/^Testcraft/),
+      expect.stringMatching(/^Testward/),
+    ]);
+    expect(
+      within(screen.getByRole('group', { name: 'Fixture Wards' })).getAllByRole('option'),
+    ).toHaveLength(2);
+    expect(screen.queryByRole('group', { name: 'Zanthic Oddments' })).not.toBeInTheDocument();
   });
 
   it('adds a pick after the others, empties the box, announces it, and offers it no more', () => {
@@ -169,7 +185,7 @@ describe('CategoryPicker', () => {
       'Fixture Wards Guards nothing in particular.',
     );
     // No description: the group alone.
-    expect(removeButton('Ablefix')).toHaveAccessibleDescription('Zanthic Testery');
+    expect(removeButton('Ablefix')).toHaveAccessibleDescription('Zanthic Oddments');
     fireEvent.mouseEnter(
       within(entry('Testward')).getByText('Testward', { ignore: '[role="tooltip"]' }),
     );

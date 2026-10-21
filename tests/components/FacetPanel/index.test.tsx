@@ -26,7 +26,7 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'mending', label: 'Testmending', count: 6, group: GROUP },
   ],
   zodiac: [{ value: 'test-ram', label: 'Test Ram', count: 2 }],
-  planets: [{ value: 'test-sun', label: 'Test Sun', count: 3 }],
+  celestialBodies: [{ value: 'test-sun', label: 'Test Sun', count: 3 }],
   elements: [
     { value: 'water', label: 'Water', count: 7 },
     { value: 'fire', label: 'Fire', count: 0 },
@@ -45,7 +45,7 @@ const NONE: FacetPanelFilter = {
   forms: [],
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   elements: [],
   toxic: '',
   withoutReferences: false,
@@ -121,7 +121,7 @@ describe('FacetPanel', () => {
     const { rerender } = render(<FacetPanel {...props()} />);
     expect(screen.queryByRole('link', { name: 'Clear All' })).toBeNull();
 
-    rerender(<FacetPanel {...props({ planets: ['test-sun'] })} />);
+    rerender(<FacetPanel {...props({ celestialBodies: ['test-sun'] })} />);
     expect(screen.getByRole('link', { name: 'Clear All' })).toHaveAttribute('href', '/compendium');
   });
 
@@ -274,7 +274,7 @@ describe('FacetPanel', () => {
           forms: ['test-oil', 'test-leaf'],
           deities: ['testa-fixtura'],
           zodiac: ['test-ram'],
-          planets: ['test-sun'],
+          celestialBodies: ['test-sun'],
           elements: ['water'],
           toxic: 'not_toxic',
         })}
@@ -289,7 +289,7 @@ describe('FacetPanel', () => {
     expect(sent('forms')).toEqual(['test-oil', 'test-leaf']);
     expect(sent('deities')).toEqual(['testa-fixtura']);
     expect(sent('zodiac')).toEqual(['test-ram']);
-    expect(sent('planets')).toEqual(['test-sun']);
+    expect(sent('celestialBodies')).toEqual(['test-sun']);
     expect(sent('elements')).toEqual(['water']);
     expect(sent('toxic')).toEqual(['not_toxic']);
     expect(sent('categoryMode')).toEqual(['any']);

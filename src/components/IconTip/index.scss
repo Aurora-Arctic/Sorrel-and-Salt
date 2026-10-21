@@ -122,7 +122,11 @@
 // pressed alike: white in dark and the body text in light, `$card-more-ink`, wherever it stands
 // (a card's foot, the entry page, the Quick Look window; the owner's call, 2026-10-20), where the
 // pencil and bin beside it keep their green and wax. White vanishes on a light surface.
-.icon-tip__more {
+// The compendium card's Edit in Compendium wears the same ink (`icon-tip__edit--ink`, the owner's
+// call, 2026-10-21); its hover and focus tint stays the edit pencil's green, as the plain Edit
+// has it, and the focus ring is the link's own.
+.icon-tip__more,
+.icon-tip__edit--ink {
   &,
   &:hover,
   &:focus-visible,
@@ -152,6 +156,15 @@
 .icon-tip__look {
   @include icon-button($icon-size-large, math.div($glyph-size-large * 4, 3));
   @include icon-button-edit;
+
+  // The eye in the same white-in-dark ink as the three dots (`$card-more-ink`, the owner's call,
+  // 2026-10-21), set after the green above so it wins; the green tint under it stays.
+  &,
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: $card-more-ink;
+  }
 }
 
 // The action icons of a card's foot, an entry page's head and the Quick Look window's head, 13%
