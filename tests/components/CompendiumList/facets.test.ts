@@ -102,7 +102,10 @@ describe('the facet counts as the list takes them', () => {
     ]);
   });
 
-  it('orders forms, deities and categories by most entries, then by label, zeros last', () => {
+  // M12.52: the service sorts every list in SQL, so the list keeps the order
+  // it is given. Each input below is in neither count order nor label order,
+  // so a re-sort by either would read differently.
+  it('keeps forms, deities and categories in the order given, whatever their counts and labels', () => {
     const counts = compendiumFacetCounts(
       {
         ...EMPTY,
@@ -114,7 +117,8 @@ describe('the facet counts as the list takes them', () => {
         ],
         deities: [
           { value: 'd-1', count: 1 },
-          { value: 'd-3', count: 1 },
+          { value: 'd-2', count: 4 },
+          { value: 'd-3', count: 2 },
         ],
         categories: [
           { value: 'c-1', count: 1 },
@@ -123,9 +127,13 @@ describe('the facet counts as the list takes them', () => {
       },
       VOCABULARIES,
     );
-    expect(counts.forms.map(({ value }) => value)).toEqual(['Gamma', 'Alpha', 'Beta', 'Zed']);
-    expect(counts.deities.map(({ value }) => value)).toEqual(['fixtura-greek', 'testa-greek']);
-    expect(counts.categories.map(({ value }) => value)).toEqual(['testcraft', 'testward']);
+    expect(counts.forms.map(({ value }) => value)).toEqual(['Zed', 'Beta', 'Alpha', 'Gamma']);
+    expect(counts.deities.map(({ value }) => value)).toEqual([
+      'testa-greek',
+      'testa-roman',
+      'fixtura-greek',
+    ]);
+    expect(counts.categories.map(({ value }) => value)).toEqual(['testward', 'testcraft']);
   });
 
   it('drops a deity or category the vocabulary no longer holds, and keeps the rest', () => {

@@ -51,7 +51,7 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
   yet picked whose name or whose group's name holds the text, case set
   aside (typing a group lists all its categories), under its group's
   heading — the Combobox's `heading` on each row — the groups and the names
-  both alphabetical by `localeCompare`. No code names a group, so one an
+  both in the order the read gives them (alphabetical in SQL, M12.52), which the picker keeps without sorting. No code names a group, so one an
   admin adds is a heading without a change here. A category's description
   reads beneath its row, and each row is marked by a bar in its group's
   colour, the Combobox option's `colors` (the owner's call, M5.6b), so the colour
@@ -84,7 +84,7 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
   While `loading`, a chip draws a placeholder in the count's place, hidden
   from assistive technology, and its x is named by `removeNoun` the same
   whether or not the count has arrived. Without `hideZeros`, zero rows stay
-  under their group, in alphabetical place: the headings already order the list.
+  under their group, in the order given: the read already sorts them alphabetically.
 
 ## Styling
 
@@ -110,7 +110,7 @@ placeholder.
 ## Testing
 
 `tests/components/CategoryPicker/index.test.tsx`: the group and its box;
-every category under its group, both alphabetical, with a novel group; the
+every category under its group in the order given, with a novel group; the
 rows narrowed by the text and no typed row; a pick added after the others,
 the box emptied, announced, and the pick offered no more; the picks reported
 in order as one is added, removed, taken by Backspace or cleared; each entry described by its group and description, its tooltip

@@ -285,14 +285,20 @@ rules:
   ones already chosen: it says how many entries picking it as well would leave.
   Under `any` the categories are counted like every other kind.
 - **The fixed vocabularies come back whole.** Every live curated zodiac sign
-  and celestial body, by name, every element in `INGREDIENT_ELEMENTS`' order,
+  and celestial body, by `position` with nulls last, then by name (a curator's addition has none, so follows the seeded ones; M12.52), every element in `INGREDIENT_ELEMENTS`' order,
   and `toxic` then `not_toxic`, zeros included, so the panel can list them
   all.
 - **The open-ended kinds list only what counts.** Forms, deities and
   categories list each value some entry carries, plus every chosen value at
   zero if nothing carries it, so a choice never vanishes from the panel. They
-  sort most entries first, then by value in character-code order, the same
-  on every server. Deities and categories are named by id.
+  sort alphabetically in SQL under the natural-language collation
+  `"en-US-x-icu"`, never by count (M12.52; the record is
+  `claude-docs/design-decisions/m12.52-facet-sort-order.md`): a category by
+  group name then name, a deity by tradition name then name, both read in the
+  query itself, and a chosen value at zero in its alphabetical place. Forms
+  sort by the same rule in JavaScript with `Intl.Collator('en-US')`, since a
+  form's spelling is only known after its group is read and the read has no
+  query to spare. Deities and categories are named by id.
 - **A form is spelled as its curated row,** when a live curated form folds
   to the same text, else as most of its counted variants spell it, ties going
   alphabetically. Forms are grouped by the same case- and space-folding the

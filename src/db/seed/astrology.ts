@@ -11,20 +11,57 @@ import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types'
 // Moon, Rahu, Serpentarius (claude-docs/db/astrology-vocabulary-seed.md, "The
 // astrology vocabulary seed").
 
+// `position` is where a facet lists the row (M12.52): the calendar for signs,
+// Ophiuchus after Pisces, and the Sun outward for the bodies. The rest have none,
+// as a curator's additions have none, and sort after by name.
+
 /** The luminaries, the planets outward from the Sun, then the other bodies modern practice reads. */
 export const CELESTIAL_BODIES: SeedAstrologyValue[] = [
-  { name: 'Sun', description: 'The luminary of the day, Sol - vitality, success, the self.' },
-  { name: 'Moon', description: 'The luminary of the night, Luna - dreams, intuition, cycles.' },
-  { name: 'Mercury', description: 'The messenger - speech, travel, trade, cunning.' },
-  { name: 'Venus', description: 'The morning and evening star - love, beauty, pleasure.' },
-  { name: 'Earth', description: 'The ground underfoot - the body, stability, home.' },
-  { name: 'Mars', description: 'The red planet - courage, conflict, protection, drive.' },
-  { name: 'Jupiter', description: 'The greater benefic - luck, abundance, expansion, law.' },
-  { name: 'Saturn', description: 'The greater malefic - limits, time, binding, endurance.' },
-  { name: 'Uranus', description: 'The awakener - upheaval, invention, sudden change.' },
-  { name: 'Neptune', description: 'The planet of the sea - illusion, mysticism, psychic sight.' },
+  {
+    name: 'Sun',
+    position: 1,
+    description: 'The luminary of the day, Sol - vitality, success, the self.',
+  },
+  {
+    name: 'Moon',
+    position: 2,
+    description: 'The luminary of the night, Luna - dreams, intuition, cycles.',
+  },
+  { name: 'Mercury', position: 3, description: 'The messenger - speech, travel, trade, cunning.' },
+  {
+    name: 'Venus',
+    position: 4,
+    description: 'The morning and evening star - love, beauty, pleasure.',
+  },
+  { name: 'Earth', position: 5, description: 'The ground underfoot - the body, stability, home.' },
+  {
+    name: 'Mars',
+    position: 6,
+    description: 'The red planet - courage, conflict, protection, drive.',
+  },
+  {
+    name: 'Jupiter',
+    position: 7,
+    description: 'The greater benefic - luck, abundance, expansion, law.',
+  },
+  {
+    name: 'Saturn',
+    position: 8,
+    description: 'The greater malefic - limits, time, binding, endurance.',
+  },
+  {
+    name: 'Uranus',
+    position: 9,
+    description: 'The awakener - upheaval, invention, sudden change.',
+  },
+  {
+    name: 'Neptune',
+    position: 10,
+    description: 'The planet of the sea - illusion, mysticism, psychic sight.',
+  },
   {
     name: 'Pluto',
+    position: 11,
     description: 'The planet of the underworld - death, rebirth, hidden power.',
   },
   {
@@ -60,28 +97,71 @@ export const CELESTIAL_BODIES: SeedAstrologyValue[] = [
 
 /** Ophiuchus sits where the sidereal thirteen-sign zodiac puts it. */
 export const ZODIAC_SIGNS: SeedAstrologyValue[] = [
-  { name: 'Aries', description: 'The Ram, cardinal fire - courage, beginnings, drive.' },
-  { name: 'Taurus', description: 'The Bull, fixed earth - stability, sensuality, abundance.' },
-  { name: 'Gemini', description: 'The Twins, mutable air - communication, curiosity, duality.' },
-  { name: 'Cancer', description: 'The Crab, cardinal water - home, nurture, protection.' },
-  { name: 'Leo', description: 'The Lion, fixed fire - confidence, creativity, pride.' },
-  { name: 'Virgo', description: 'The Maiden, mutable earth - service, health, discernment.' },
-  { name: 'Libra', description: 'The Scales, cardinal air - balance, justice, partnership.' },
-  { name: 'Scorpio', description: 'The Scorpion, fixed water - passion, secrets, transformation.' },
+  {
+    name: 'Aries',
+    position: 1,
+    description: 'The Ram, cardinal fire - courage, beginnings, drive.',
+  },
+  {
+    name: 'Taurus',
+    position: 2,
+    description: 'The Bull, fixed earth - stability, sensuality, abundance.',
+  },
+  {
+    name: 'Gemini',
+    position: 3,
+    description: 'The Twins, mutable air - communication, curiosity, duality.',
+  },
+  {
+    name: 'Cancer',
+    position: 4,
+    description: 'The Crab, cardinal water - home, nurture, protection.',
+  },
+  {
+    name: 'Leo',
+    position: 5,
+    description: 'The Lion, fixed fire - confidence, creativity, pride.',
+  },
+  {
+    name: 'Virgo',
+    position: 6,
+    description: 'The Maiden, mutable earth - service, health, discernment.',
+  },
+  {
+    name: 'Libra',
+    position: 7,
+    description: 'The Scales, cardinal air - balance, justice, partnership.',
+  },
+  {
+    name: 'Scorpio',
+    position: 8,
+    description: 'The Scorpion, fixed water - passion, secrets, transformation.',
+  },
   {
     name: 'Ophiuchus',
+    position: 13,
     description: 'The Serpent Bearer, Serpentarius - healing, medicine, hidden knowledge, rebirth.',
   },
-  { name: 'Sagittarius', description: 'The Archer, mutable fire - adventure, wisdom, freedom.' },
+  {
+    name: 'Sagittarius',
+    position: 9,
+    description: 'The Archer, mutable fire - adventure, wisdom, freedom.',
+  },
   {
     name: 'Capricorn',
+    position: 10,
     description: 'The Sea-Goat, cardinal earth - ambition, discipline, endurance.',
   },
   {
     name: 'Aquarius',
+    position: 11,
     description: 'The Water Bearer, fixed air - innovation, friendship, independence.',
   },
-  { name: 'Pisces', description: 'The Fishes, mutable water - dreams, compassion, intuition.' },
+  {
+    name: 'Pisces',
+    position: 12,
+    description: 'The Fishes, mutable water - dreams, compassion, intuition.',
+  },
 ];
 
 /**

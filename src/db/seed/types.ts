@@ -185,7 +185,10 @@ export type SeedDeity = Pick<typeof deities.$inferInsert, 'name' | 'description'
   tradition: string;
 };
 
-export type SeedAstrologyValue = Pick<FlatTable['$inferInsert'], 'name' | 'description'>;
+export type SeedAstrologyValue = Pick<
+  FlatTable['$inferInsert'],
+  'name' | 'description' | 'position'
+>;
 
 /** A link from a seeded source to a deity, with where in the work it points. */
 export interface SeedSourceDeity {

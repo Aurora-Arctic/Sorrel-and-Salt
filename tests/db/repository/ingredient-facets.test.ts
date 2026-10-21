@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import {
   findCompendiumCount,
@@ -102,6 +102,296 @@ function only(base: IngredientFilter, kind: Kind, value: string): IngredientFilt
 function counts(facets: IngredientFacets, kind: Kind): Record<string, number> {
   return Object.fromEntries(facets[kind].map(({ value, count }) => [value, count]));
 }
+
+// M12.52: the order of each kind's values, the same on the compendium's read
+// and a coven's. Every list of names sorts alphabetically in natural-language
+// order (case set aside, an accented letter beside its plain one), a category
+// under its group and a deity under its tradition; signs and bodies by their
+// curated position, then the unpositioned by name; never by count
+// (claude-docs/design-decisions/m12.52-facet-sort-order.md). Every name below
+// is invented, and each list's counts run against its alphabetical order, so
+// a count order and a code-unit order would each read differently.
+describe("the order of each kind's values (M12.52)", () => {
+  /** Ids of the invented curated rows, by name. */
+  const ids = new Map<string, string>();
+  const idsOf = (...names: string[]) => names.map((name) => ids.get(name) as string);
+
+  beforeAll(async () => {
+    const stamps = { description: 'Invented', created_by: A.id, updated_by: A.id };
+    const colours = { color_dark: '#8b5cf6', color_light: '#5b21b6' };
+    const slug = (name: string) =>
+      `m1252-${name.normalize('NFD').replace(/\W/g, '').toLowerCase()}`;
+    const groups = await sql`
+      insert into category_groups ${sql(
+        ['Mossward', 'Éventail', 'alderkin'].map((name) => ({
+          name,
+          slug: slug(name),
+          ...colours,
+          ...stamps,
+        })),
+      )} returning id, name`;
+    const groupId = new Map(groups.map((row) => [row.name as string, row.id as string]));
+    const categoryRows = await sql`
+      insert into categories ${sql(
+        [
+          ['Ashmark', 'Mossward'],
+          ['émbermark', 'Mossward'],
+          ['Corvmark', 'Mossward'],
+          ['quillmark', 'Éventail'],
+          ['Brackenmark', 'Éventail'],
+          ['Zestmark', 'alderkin'],
+        ].map(([name, group]) => ({
+          name,
+          slug: slug(name),
+          group_id: groupId.get(group) as string,
+          ...stamps,
+        })),
+      )} returning id, name`;
+    const traditions = await sql`
+      insert into deity_traditions ${sql(
+        ['Quorran', 'Ébrani', 'aldish'].map((name) => ({ name, slug: slug(name), ...stamps })),
+      )} returning id, name`;
+    const traditionId = new Map(traditions.map((row) => [row.name as string, row.id as string]));
+    const deityRows = await sql`
+      insert into deities ${sql(
+        [
+          ['Dunmar', 'Quorran'],
+          ['Céleth', 'Quorran'],
+          ['bellith', 'Ébrani'],
+          ['Bryndel', 'Ébrani'],
+          ['Annoch', 'Ébrani'],
+          ['Yorrow', 'aldish'],
+        ].map(([name, tradition]) => ({
+          name,
+          slug: slug(name),
+          tradition_id: traditionId.get(tradition) as string,
+          ...stamps,
+        })),
+      )} returning id, name`;
+    for (const row of [...categoryRows, ...deityRows])
+      ids.set(row.name as string, row.id as string);
+    // Curated with no position, as a curator's addition is: each sorts after
+    // the positioned rows, among the other unpositioned ones by name.
+    await sql`
+      insert into zodiac_signs ${sql(
+        ['Zuvsign', 'ébsign', 'Aardsign'].map((name) => ({ name, slug: slug(name), ...stamps })),
+      )}`;
+    await sql`
+      insert into celestial_bodies ${sql(
+        ['Zuvbody', 'éstrabody', 'Aldmoon'].map((name) => ({ name, slug: slug(name), ...stamps })),
+      )}`;
+  });
+
+  const reads = [
+    {
+      read: "the compendium's",
+      workspaceId: undefined,
+      facets: (filter: IngredientFilter): Promise<IngredientFacets> => findCompendiumFacets(filter),
+    },
+    {
+      read: "a coven's",
+      workspaceId: WORKSPACE_W_ID,
+      facets: async (filter: IngredientFilter): Promise<IngredientFacets> =>
+        findWorkspaceIngredientFacets(
+          await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] }),
+          filter,
+        ),
+    },
+  ];
+
+  describe.each(reads)('on $read read', ({ workspaceId, facets }) => {
+    /**
+     * Six entries, the first carrying every value and each later one fewer,
+     * so the counts fall as the names rise: zedform on all six, Alphaform on
+     * one; Ashmark on five, Zestmark on one; Dunmar on five, Yorrow on one;
+     * Pisces and Vesta on all six.
+     */
+    async function seedEntries(): Promise<void> {
+      const forms = [
+        'zedform',
+        'Fimbleform',
+        'Ecluseform',
+        'Éclatform',
+        'Eclatform',
+        'Cetaform',
+        'betaform',
+        'Alphaform',
+      ];
+      const formsOn = [8, 6, 5, 3, 2, 1];
+      const categoryNames = ['Ashmark', 'émbermark', 'quillmark', 'Brackenmark', 'Zestmark'];
+      const deityNames = ['Dunmar', 'Céleth', 'bellith', 'Annoch', 'Yorrow'];
+      const names = ['Alphawort', 'Betawort', 'Gammawort', 'Deltawort', 'Epsilonwort', 'Zetawort'];
+      for (const [index, name] of names.entries()) {
+        const kept = Math.max(names.length - 1 - index, 0);
+        const entry = await add(name, {
+          workspaceId: workspaceId ?? null,
+          variants: forms.slice(0, formsOn[index]).map((form) => makeVariant({ form })),
+          categories: categoryNames.slice(0, kept),
+          zodiacSigns: ['Pisces'],
+          celestialBodies: ['Vesta'],
+        });
+        for (const [position, deityId] of idsOf(...deityNames.slice(0, kept)).entries()) {
+          await insertDeityLink(sql, entry, deityId, position, A.id);
+        }
+      }
+    }
+
+    it('orders forms by name, case set aside and an accent beside its plain letter, whatever the counts', async () => {
+      await seedEntries();
+
+      const read = await facets({});
+
+      expect(read.forms.map(({ value }) => value)).toEqual([
+        'Alphaform',
+        'betaform',
+        'Cetaform',
+        'Eclatform',
+        'Éclatform',
+        'Ecluseform',
+        'Fimbleform',
+        'zedform',
+      ]);
+      // Why a count order would have read otherwise: the counts fall as the names rise.
+      expect(counts(read, 'forms')).toEqual({
+        zedform: 6,
+        Fimbleform: 5,
+        Ecluseform: 4,
+        Éclatform: 3,
+        Eclatform: 3,
+        Cetaform: 2,
+        betaform: 1,
+        Alphaform: 1,
+      });
+    });
+
+    it('orders categories by group name, then by name, both alphabetical', async () => {
+      await seedEntries();
+
+      const read = await facets({});
+
+      expect(read.categories.map(({ value }) => value)).toEqual(
+        idsOf('Zestmark', 'Brackenmark', 'quillmark', 'Ashmark', 'émbermark'),
+      );
+      // Why a count order, or a flat name order, would have read otherwise.
+      expect(read.categories.map(({ count }) => count)).toEqual([1, 2, 3, 5, 4]);
+    });
+
+    it('orders deities by tradition name, then by name, both alphabetical', async () => {
+      await seedEntries();
+
+      const read = await facets({});
+
+      expect(read.deities.map(({ value }) => value)).toEqual(
+        idsOf('Yorrow', 'Annoch', 'bellith', 'Céleth', 'Dunmar'),
+      );
+      expect(read.deities.map(({ count }) => count)).toEqual([1, 2, 3, 4, 5]);
+    });
+
+    it('keeps each list in the same order when a narrowing changes the counts', async () => {
+      await seedEntries();
+      const whole = await facets({});
+      const narrowed = await facets({ categoryIds: idsOf('Brackenmark') });
+      // Why the order could have moved: the narrowing changed the counts.
+      expect(counts(narrowed, 'forms')).not.toEqual(counts(whole, 'forms'));
+
+      for (const kind of ['forms', 'categories', 'deities'] as const) {
+        const listed = new Set(narrowed[kind].map(({ value }) => value));
+        expect({ kind, order: narrowed[kind].map(({ value }) => value) }).toEqual({
+          kind,
+          order: whole[kind].map(({ value }) => value).filter((value) => listed.has(value)),
+        });
+      }
+    });
+
+    it('lists a chosen form, deity or category counting nothing in its alphabetical place, not last', async () => {
+      await seedEntries();
+
+      const forms = await facets({ forms: ['Dovetailform'] });
+      const deityRead = await facets({ deityIds: idsOf('Bryndel') });
+      const categoryRead = await facets({ categoryIds: idsOf('Corvmark'), categoryMode: 'any' });
+
+      expect(forms.forms.map(({ value, count }) => [value, count])).toEqual([
+        ['Alphaform', 1],
+        ['betaform', 1],
+        ['Cetaform', 2],
+        ['Dovetailform', 0],
+        ['Eclatform', 3],
+        ['Éclatform', 3],
+        ['Ecluseform', 4],
+        ['Fimbleform', 5],
+        ['zedform', 6],
+      ]);
+      expect(deityRead.deities.map(({ value, count }) => [value, count])).toEqual([
+        [ids.get('Yorrow'), 1],
+        [ids.get('Annoch'), 2],
+        [ids.get('bellith'), 3],
+        [ids.get('Bryndel'), 0],
+        [ids.get('Céleth'), 4],
+        [ids.get('Dunmar'), 5],
+      ]);
+      expect(categoryRead.categories.map(({ value, count }) => [value, count])).toEqual([
+        [ids.get('Zestmark'), 1],
+        [ids.get('Brackenmark'), 2],
+        [ids.get('quillmark'), 3],
+        [ids.get('Ashmark'), 5],
+        [ids.get('Corvmark'), 0],
+        [ids.get('émbermark'), 4],
+      ]);
+    });
+
+    it('orders signs in calendar order and bodies in solar-system order, then the unpositioned by name', async () => {
+      await seedEntries();
+
+      const read = await facets({});
+
+      expect(read.zodiacSigns.map(({ value }) => value)).toEqual([
+        'Aries',
+        'Taurus',
+        'Gemini',
+        'Cancer',
+        'Leo',
+        'Virgo',
+        'Libra',
+        'Scorpio',
+        'Sagittarius',
+        'Capricorn',
+        'Aquarius',
+        'Pisces',
+        'Ophiuchus',
+        'Aardsign',
+        'ébsign',
+        'Zuvsign',
+      ]);
+      expect(read.celestialBodies.map(({ value }) => value)).toEqual([
+        'Sun',
+        'Moon',
+        'Mercury',
+        'Venus',
+        'Earth',
+        'Mars',
+        'Jupiter',
+        'Saturn',
+        'Uranus',
+        'Neptune',
+        'Pluto',
+        'Aldmoon',
+        'Ceres',
+        'Chiron',
+        'éstrabody',
+        'Juno',
+        'Lilith',
+        'North Node',
+        'Pallas',
+        'South Node',
+        'Vesta',
+        'Zuvbody',
+      ]);
+      // Why a count order would have read otherwise: Pisces and Vesta count six, the rest none.
+      expect(counts(read, 'zodiacSigns')).toMatchObject({ Pisces: 6, Aries: 0 });
+      expect(counts(read, 'celestialBodies')).toMatchObject({ Vesta: 6, Sun: 0 });
+    });
+  });
+});
 
 describe('findCompendiumFacets', () => {
   let protection: string;
@@ -230,25 +520,31 @@ describe('findCompendiumFacets', () => {
     expect(any.categories).toEqual(unchosen.categories);
   });
 
-  it('orders a dynamic kind by count, most first, then by value', async () => {
+  it('orders a dynamic kind by value, whatever the counts (M12.52)', async () => {
     await seedEntries();
 
     const facets = await findCompendiumFacets({});
 
-    expect(facets.forms.map(({ value }) => value)).toEqual(['Resin', 'Root', 'Bark', 'Testform']);
+    expect(facets.forms.map(({ value }) => value)).toEqual(['Bark', 'Resin', 'Root', 'Testform']);
   });
 
-  it('lists every live sign and body, by name, every element and both toxic settings, zeros included', async () => {
+  it('lists every live sign and body, every element and both toxic settings, zeros included', async () => {
     await add('Alphawort', { zodiacSigns: ['Leo'] });
-    const signs =
-      await sql`select name from zodiac_signs where deleted_at is null order by name, id`;
+    const signs = await sql`select name from zodiac_signs where deleted_at is null`;
     const bodies = await sql`
-      select name from celestial_bodies where deleted_at is null order by name, id`;
+      select name from celestial_bodies where deleted_at is null`;
 
     const facets = await findCompendiumFacets({});
 
-    expect(facets.zodiacSigns.map(({ value }) => value)).toEqual(signs.map((row) => row.name));
-    expect(facets.celestialBodies).toEqual(bodies.map((row) => ({ value: row.name, count: 0 })));
+    // The order is the M12.52 block's subject; here only the membership.
+    expect(facets.zodiacSigns.map(({ value }) => value).sort()).toEqual(
+      signs.map((row) => row.name as string).sort(),
+    );
+    expect([...facets.celestialBodies].sort((a, b) => (a.value < b.value ? -1 : 1))).toEqual(
+      bodies
+        .map((row) => ({ value: row.name as string, count: 0 }))
+        .sort((a, b) => (a.value < b.value ? -1 : 1)),
+    );
     expect(counts(facets, 'zodiacSigns')).toMatchObject({ Leo: 1, Aries: 0 });
     expect(facets.elements).toEqual(
       ['earth', 'air', 'fire', 'water', 'spirit'].map((value) => ({ value, count: 0 })),
