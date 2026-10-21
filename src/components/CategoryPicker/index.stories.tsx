@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import CategoryPicker from '.';
 import type { CategoryPickerProps, PickerCategory } from './types';
@@ -7,9 +7,11 @@ import type { CategoryPickerProps, PickerCategory } from './types';
 // of the seed's groups with their colour pairs, copied from
 // src/db/seed/category-groups.ts, which a component may not import (CLAUDE.md
 // rule 1); the categories under them are invented, two or three to a group.
-export default {
-  title: 'Admin / Category Picker',
-};
+const meta = {
+  title: 'Ingredients / Category Picker',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const INVENTED = ['Testward', 'Fixture Mending', 'Testcraft'];
 
@@ -56,31 +58,35 @@ function Stateful({
 
 // Focus the box to list every category under its group, or type to narrow
 // them; a pick is a chip in its group's colour.
-export const NothingPicked: Story = () => <Stateful />;
+export const Default: Story = { render: () => <Stateful /> };
 
-export const SomePicked: Story = () => (
-  <Stateful initial={[idOf('Testward 1'), idOf('Testcraft 2'), idOf('Fixture Mending 2')]} />
-);
+export const SomePicked: Story = {
+  render: () => (
+    <Stateful initial={[idOf('Testward 1'), idOf('Testcraft 2'), idOf('Fixture Mending 2')]} />
+  ),
+};
 
 // The entry the error names is edged, and its x reads the error.
-export const AnInvalidEntry: Story = () => (
-  <Stateful
-    initial={[idOf('Testward 1'), idOf('Testcraft 4')]}
-    invalid={[idOf('Testcraft 4')]}
-    errorId="story-error"
-    error={
-      <p id="story-error" className="field__error">
-        Testcraft 4: No such category
-      </p>
-    }
-  />
-);
+export const AnInvalidEntry: Story = {
+  render: () => (
+    <Stateful
+      initial={[idOf('Testward 1'), idOf('Testcraft 4')]}
+      invalid={[idOf('Testcraft 4')]}
+      errorId="story-error"
+      error={
+        <p id="story-error" className="field__error">
+          Testcraft 4: No such category
+        </p>
+      }
+    />
+  ),
+};
 
-export const Loading: Story = () => <Stateful categories={[]} pending />;
+export const Loading: Story = { render: () => <Stateful categories={[]} pending /> };
 
-export const CouldNotLoad: Story = () => (
-  <Stateful categories={[]} status="The categories could not be loaded." />
-);
+export const Failed: Story = {
+  render: () => <Stateful categories={[]} status="The categories could not be loaded." />,
+};
 
 // The filter's reading (M12.4): each row and chip carries how many entries it
 // would leave, a zero row is left out, and a chip whose count is
@@ -90,10 +96,14 @@ const counted = CATEGORIES.map((category, index) => ({
   count: index % 3 === 0 ? 0 : index * 2,
 }));
 
-export const WithCounts: Story = () => (
-  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" hideZeros />
-);
+export const WithCounts: Story = {
+  render: () => (
+    <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" hideZeros />
+  ),
+};
 
-export const CountsLoading: Story = () => (
-  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
-);
+export const CountsLoading: Story = {
+  render: () => (
+    <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
+  ),
+};

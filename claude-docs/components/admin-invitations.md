@@ -147,18 +147,15 @@ alert (MB.116).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
-`Admin / Admin Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
+`Admin / Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
 page with its Invitations tab open and New Invitation beside the heading:
-`Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
-applied, Clear offered, one invitation left), `NoMatch` (the
-empty state naming the filter), `OnePageOfSeveral` (a middle page of 25,
-both pager ends live and "Page 2 of 3" between them) with its phone pair
-`OnePageOfSeveralPhoneDark`/`OnePageOfSeveralPhoneLight`, where the pager's
-row wraps Next beneath Prev and the position, `Inviting` (the form open, its Reason's
-hint in a tip), `Paused` (both controls locked with the pause's reason),
-`PhoneDark`/`PhoneLight`, New Invitation across the line beneath the
-heading, the filter row stacked and the invitations as cards at 375px, and
-`FilteredPhoneDark`/`FilteredPhoneLight`, the filter applied at 375px. Invite and Revoke reach the network only when sent, so a send in the workshop
+`Default`, `Empty`, `Filtered` (an Email and Expires in 24 Hrs
+applied, Clear offered, one invitation left), `NoMatches` (the
+empty state naming the filter), `MiddlePage` (a middle page of 25,
+both pager ends live and "Page 2 of 3" between them) (at 375px, from the toolbar viewport menu, the pager's
+row wraps Next beneath Prev and the position), `Inviting` (the form open, its Reason's
+hint in a tip), `Paused` (both controls locked with the pause's reason). The toolbar viewport menu shows any of them at 375px, where New Invitation sits across the line beneath the
+heading, the filter row stacks and the invitations are cards. Invite and Revoke reach the network only when sent, so a send in the workshop
 fails into its alert. Render-only, no test ids, no snapshots.
 
 ## Tests

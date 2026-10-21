@@ -75,11 +75,10 @@ All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Coven Nav", render-only, on the coven index:
+`index.stories.tsx`, titled "Coven / Nav", render-only, on the coven index (the toolbar viewport menu shows the nav at 375px, the bar along the foot of the screen):
 
 - `Default`: as a member sees it, Overview current, Ingredients and Members beside it.
 - `Viewer`: as a viewer sees it, Overview and Ingredients.
-- `Phone`: a member's nav at 375px, the bar along the foot of the screen.
 
 The shapes the nav takes by width are `SectionNav`'s stories; the nav in its
 row is `ContextRow`'s `Coven` story and the workshop's shell frame.

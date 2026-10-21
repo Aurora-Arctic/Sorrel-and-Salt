@@ -794,19 +794,18 @@ Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`]
 sits in the top layer ([`workshop.md`](../workshop.md)); each owner keeps an
 Open button to bring it back after Close or Escape.
 
-- `WithAForm`, the default column around a small form, and `Wide`, the wide
+- `Default`, the default column around a small form, and `Wide`, the wide
   size around a longer one.
 - `Editing`, an edit dialog's head: the eyebrow, a long title and a binomial
-  as the qualifier. `EditingDark`, `EditingLight`, `EditingPhoneDark` and
-  `EditingPhoneLight` pin its theme and, on a phone, its 375px width.
+  as the qualifier.
 - `OpenedByItsAddress`, a `RouteModal` with `content`, as an address opens it.
-  `Loading`, with `LoadingPhoneDark` and `LoadingPhoneLight`, shows the
+  `Loading` shows the
   pressed row's head over the skeleton, through a `RouteModalContext` value
   whose navigation never arrives.
 - `OpenedByAButton` shows `ModalButton`: tab to the button, open it, close
   it any way, and the focus ring is back on the button. `OpenedByAButtonOpen`
   is the same, pressed open as it mounts, so the dialog itself can be looked at.
-- `AskingToDiscardChanges`, with `PhoneDark` and `PhoneLight`, the discard
+- `AskingToDiscardChanges`, the discard
   question over a form with a change; Escape or Close there flashes it.
   `AskingToConfirm` shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
   once pressed.
@@ -847,7 +846,7 @@ through `tests/support/discard-guard.tsx`: `expectGuardedWaysOut` for the
 unsaved changes, and `expectAskingOver` and `expectAnswered` for a Delete
 question in a modal (the form inert, the question a named group, the focus
 on the safe answer; then gone, the form live). The `AskingToDiscardChanges`
-story, and its `PhoneDark` and `PhoneLight` pair, show the question over a
+story shows the question over a
 short form; pressing Escape or Close there flashes it. `AskingToConfirm`
 shows `ConfirmQuestion`'s Delete and Keep It, Delete busy once pressed. The
 forms' own tests cover `ConfirmQuestion` through their Delete questions.

@@ -93,11 +93,22 @@ no Neon connection and no host Node-version juggling.
     "Delivery").
   - **`workshop`** — behind the **`workshop` compose profile**, so a bare
     `make docker-up` does not start it. Same build stage; runs
-    `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
-    otherwise) and publishes **61000** (serve) and **61002** (pinned HMR socket).
-    `--host` reaches the page server only; the HMR socket binds every interface
-    because `.ladle/config.mjs` sets `hmrHost: ''` (`claude-docs/workshop.md`,
-    "`.ladle/`"). Does not depend on `postgres`.
+    `npm run workshop` (Storybook, which the script already binds to every
+    interface with `--host 0.0.0.0`) and publishes **61000** alone: the live-reload
+    socket shares that port, so no second port is published. A browser on the host
+    reaches it as `localhost:61000`, a name Vite always accepts; the Playwright
+    browser reaches it as `devcontainer`, which `.storybook/main.ts` allows.
+    The service sets `GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_0` and
+    `GIT_CONFIG_VALUE_0` so git trusts `/app` (`safe.directory`) in this container
+    only: the container's user does not own the host-mounted `/app`, git refuses it
+    ("dubious ownership"), and Storybook's change detection (`git rev-parse`)
+    would fail. No config file is written.
+    No file-watch polling is set; if edits on the host stop
+    showing up, set `CHOKIDAR_USEPOLLING=1` on the service. Does not depend on
+    `postgres`. **After the move to Storybook
+    (M12.53) the container needs a rebuilt image and a fresh
+    `node_modules_workshop` volume** (below, and `workshop.md`, "Rebuilding the
+    workshop container").
   - **`studio`** (MB.21) — behind the **`studio` compose profile**, same
     build stage; runs `npm run db:studio` (`drizzle-kit studio --host
 0.0.0.0 --port 4983`, reading `drizzle.config.ts`) and publishes
@@ -152,8 +163,8 @@ no Neon connection and no host Node-version juggling.
       `mkdir` + `chown node:node` in `Docker/Dockerfile.node`.** A fresh named
       volume mounts root-owned while `next dev` runs as `node`, so adding one
       (a `.next` volume, say) without that fails silently.
-  - **Ladle's preview port 61001 is deliberately not published** — only 61000
-    (serve) and 61002 (HMR) are.
+  - **The workshop publishes 61000 only.** Storybook's page and live-reload
+    socket share it (M12.53); the old Ladle ports (61001, 61002) are gone.
   - **`Docker/Dockerfile.e2e`** has two stages as of MB.23:
     `e2e` (named, previously the file's only stage — `node:26.6.0-bookworm-slim`
     plus `npm ci` and Chromium's headless shell, headless, what CI and

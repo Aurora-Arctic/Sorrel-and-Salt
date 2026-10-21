@@ -117,11 +117,10 @@ frame, the `.page-column` primitive (`styling.md`, "The page column").
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx),
-`Admin / Admin Nav`: `Default`, the row; `Phone` at 375px, the bottom bar; and
-`IndexPage` with `IndexPagePhone`, the `/admin` index under the nav, its
+`Admin / Nav`: `Default`, the row; `IndexPage`, the `/admin` index under the nav, its
 heading and lede copied from the page and `AdminContents` real. `Curator` and `IndexPageCurator` show the same for a curator, with no People (M11.20). Each sits in
 the admin layout as it is, through the workshop's `AdminFrame`
-([`workshop.md`](../workshop.md), ".ladle/"): the context row led by "Admin"
+([`workshop.md`](../workshop.md), ".storybook/"): the context row led by "Admin"
 with the nav in it, above the `.page-column` column that holds the page. The
 tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. The
 workshop's `usePathname` stub answers `/admin/users`, the People page's Users

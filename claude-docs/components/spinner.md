@@ -29,7 +29,7 @@ it; nothing else should draw its own.
 
 ## Stories
 
-`Feedback / Loading / Spinner`: `Default` and `Larger`.
+`Feedback / Spinner`: `Default` and `Larger`.
 
 ## Testing
 

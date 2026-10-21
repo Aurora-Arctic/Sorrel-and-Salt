@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect, useRef, useState } from 'react';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
@@ -10,9 +10,11 @@ import type { FacetPanelFilter } from './types';
 // counts themselves do not follow the choices; they are fixed here. A value counting
 // nothing is left out of its list unless chosen. Narrow the preview below the tablet
 // width for the modal sheet.
-export default {
-  title: 'Admin / Facet Panel',
-};
+const meta = {
+  title: 'Ingredients / Facet Panel',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const WARDING = { id: 'g1', name: 'Protective', colorDark: '#2f6b4f', colorLight: '#b7dfc9' };
 const MENDING = { id: 'g2', name: 'Restorative', colorDark: '#7a4b8f', colorLight: '#dcc6e8' };
@@ -141,114 +143,134 @@ function Panel({
 }
 
 // Nothing chosen: Filters alone, no Clear All.
-export const Empty: Story = () => <Panel open={false} />;
+export const Default: Story = { render: () => <Panel open={false} /> };
 
 // The public compendium's panel: Categories with Match at its right, Forms with Toxic, and no
 // Source, In Stock or No Refs. Open on desktop.
-export const Public: Story = () => <Panel />;
+export const Public: Story = { render: () => <Panel /> };
 
 // Chosen values: the count on the button (every chosen value, so seven here; Match counts
 // none), Clear All beside it, Match with its hint for two categories.
-export const Chosen: Story = () => (
-  <Panel
-    start={{
-      ...NONE,
-      categories: ['warding', 'mending'],
-      forms: ['test-oil', 'test-resin'],
-      deities: ['testa-fixtura'],
-      elements: ['water'],
-      toxic: 'not_toxic',
-    }}
-  />
-);
+export const Chosen: Story = {
+  render: () => (
+    <Panel
+      start={{
+        ...NONE,
+        categories: ['warding', 'mending'],
+        forms: ['test-oil', 'test-resin'],
+        deities: ['testa-fixtura'],
+        elements: ['water'],
+        toxic: 'not_toxic',
+      }}
+    />
+  ),
+};
 
 // Two forms and Toxic: the Filters button reads 3, one for each chosen value.
-export const FormsAndToxic: Story = () => (
-  <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />
-);
+export const FormsAndToxic: Story = {
+  render: () => <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />,
+};
 
 // Two categories alone: Match appears, with its hint, and adds nothing to the Filters count.
-export const MatchShown: Story = () => (
-  <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
-);
+export const MatchShown: Story = {
+  render: () => (
+    <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
+  ),
+};
 
 // A facet whose every value counts nothing keeps its field, with an empty list.
-export const AllZeroFacet: Story = () => (
-  <Panel
-    facets={{
-      ...FACETS,
-      celestialBodies: FACETS.celestialBodies.map((choice) => ({ ...choice, count: 0 })),
-    }}
-  />
-);
+export const AllZeroFacet: Story = {
+  render: () => (
+    <Panel
+      facets={{
+        ...FACETS,
+        celestialBodies: FACETS.celestialBodies.map((choice) => ({ ...choice, count: 0 })),
+      }}
+    />
+  ),
+};
 
 // Fewer than two categories: the Match chip stays, on All, disabled and dashed, its hint saying
 // when it applies.
-export const MatchStuck: Story = () => <Panel start={{ ...NONE, categories: ['warding'] }} />;
+export const MatchStuck: Story = {
+  render: () => <Panel start={{ ...NONE, categories: ['warding'] }} />,
+};
 
 // Either Toxic value counting nothing: every matching entry shares one toxicity, so the
 // chip rests on Any, is disabled, and says why in its hint.
-export const ToxicStuck: Story = () => (
-  <Panel
-    start={{ ...NONE, toxic: 'toxic' }}
-    facets={{
-      ...FACETS,
-      toxic: [
-        { value: 'toxic', label: 'Toxic', count: 0 },
-        { value: 'not_toxic', label: 'Not Toxic', count: 21 },
-      ],
-    }}
-  />
-);
+export const ToxicStuck: Story = {
+  render: () => (
+    <Panel
+      start={{ ...NONE, toxic: 'toxic' }}
+      facets={{
+        ...FACETS,
+        toxic: [
+          { value: 'toxic', label: 'Toxic', count: 0 },
+          { value: 'not_toxic', label: 'Not Toxic', count: 21 },
+        ],
+      }}
+    />
+  ),
+};
 
 // Either source counting nothing: every matching entry comes from the other, so the chip rests
 // on All, is disabled, and says why when the pointer or focus is on it.
-export const SourceStuck: Story = () => (
-  <Panel
-    facets={{
-      ...COVEN_FACETS,
-      source: [
-        { value: 'local', label: 'Local', count: 18 },
-        { value: 'compendium', label: 'Compendium', count: 0 },
-      ],
-    }}
-    start={{ ...NONE, source: 'local', inStock: false }}
-  />
-);
+export const SourceStuck: Story = {
+  render: () => (
+    <Panel
+      facets={{
+        ...COVEN_FACETS,
+        source: [
+          { value: 'local', label: 'Local', count: 18 },
+          { value: 'compendium', label: 'Compendium', count: 0 },
+        ],
+      }}
+      start={{ ...NONE, source: 'local', inStock: false }}
+    />
+  ),
+};
 
 // The admin list also has the No Refs switch, after Toxic on the Forms row.
-export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
+export const Admin: Story = {
+  render: () => <Panel admin start={{ ...NONE, withoutReferences: true }} />,
+};
 
 // The coven's list also has a Source chip, the In Stock switch and the Low Stock Only switch, on the Forms row beside Toxic.
 // Their values count on the Filters button, so the three chosen here make 3.
-export const Coven: Story = () => (
-  <Panel
-    facets={COVEN_FACETS}
-    start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
-  />
-);
+export const Coven: Story = {
+  render: () => (
+    <Panel
+      facets={COVEN_FACETS}
+      start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
+    />
+  ),
+};
 
 // The coven's controls with nothing chosen: Source rests on All and the switch is off.
-export const CovenEmpty: Story = () => (
-  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
-);
+export const CovenEmpty: Story = {
+  render: () => <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />,
+};
 
 // The Match chip open, two categories chosen: the menu of radios fades in under the chip.
-export const MatchMenu: Story = () => (
-  <Panel
-    menu="Match"
-    start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }}
-  />
-);
+export const MatchMenu: Story = {
+  render: () => (
+    <Panel
+      menu="Match"
+      start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }}
+    />
+  ),
+};
 
 // The coven's Source chip open: Local and Compendium with their counts, no brackets.
-export const SourceMenu: Story = () => (
-  <Panel
-    menu="Source"
-    facets={COVEN_FACETS}
-    start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
-  />
-);
+export const SourceMenu: Story = {
+  render: () => (
+    <Panel
+      menu="Source"
+      facets={COVEN_FACETS}
+      start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
+    />
+  ),
+};
 
 // The admin's Toxic chip open, with No Refs on the same row.
-export const ToxicMenu: Story = () => <Panel menu="Toxic" admin start={NONE} />;
+export const ToxicMenu: Story = { render: () => <Panel menu="Toxic" admin start={NONE} /> };

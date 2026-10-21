@@ -1,13 +1,15 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import NameForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/NameForm. The
 // component talks to the network only on submit, so nothing is mocked — a
 // submit in the workshop fails into the alert region. The TanStack Query
-// client comes from the workshop's global provider (.ladle/components.tsx).
-export default {
+// client comes from the workshop's global provider (.storybook/components.tsx).
+const meta = {
   title: 'Account / Name Form',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // Inside the account page's frame and section, on its panel, as
 // src/app/(shell)/account/page.tsx writes them, so the workshop shows what the page
@@ -25,16 +27,9 @@ const Section = ({ name }: { name: string }) => (
 );
 
 // The usual visit: the name the provider gave, nothing to save until edited.
-export const Prefilled: Story = () => <Section name="Ada Fixture" />;
+export const Default: Story = { render: () => <Section name="Ada Fixture" /> };
 
 // A long name, to see the field hold it.
-export const LongName: Story = () => (
-  <Section name="Adelheid Wilhelmina Fixture-Testwort of the Lower Fixture Coven" />
-);
-
-// At a phone's width, in each theme.
-export const PhoneDark: Story = () => <Section name="Ada Fixture" />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Section name="Ada Fixture" />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const LongName: Story = {
+  render: () => <Section name="Adelheid Wilhelmina Fixture-Testwort of the Lower Fixture Coven" />,
+};

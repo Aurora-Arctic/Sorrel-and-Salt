@@ -283,7 +283,7 @@ by Combobox inside the box, at its start, and the action sits right-aligned bene
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IngredientSearch/index.stories.tsx),
-under `Lists / Ingredient Search`: `FewMatches`, `ManyMatches` (See all
+under `Ingredients / Ingredient Search`: `Default`, `ManyMatches` (See all
 results.) and `NoMatches`. Each stubs `window.fetch` for `/api/graphql`.
 
 ## Testing

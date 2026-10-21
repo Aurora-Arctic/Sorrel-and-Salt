@@ -132,18 +132,16 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `NothingRecorded`: every empty state, and a form that adds nothing.
 - `CovenEntry`: a coven's own entry, badged Local.
 - `FromTheCompendium`, `Annotated`: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared celestial bodies.
-- `NewWithBack`, `LongNames`, `NoFormalNameWithEdit`: the head's three lines (the owner's call, 2026-10-20): the way back with New and the safety badge after it, the pair ending flush with the pencil; long names wrapping with the pencil on the formal name's first line and Updated; and the pencil on the None line. `LongNamesPublic` is the long names on the public page, with no cupboard. At 390 the name wraps inside the column (the owner's call, 2026-10-20): the `h1` is capped at the column and breaks a word (`overflow-wrap: break-word`) only when the word cannot fit a line of its own; until then a word wider than the column ran 11px past its right edge.
+- `NewWithBack`, `LongNames`, `NoFormalName`: the head's three lines (the owner's call, 2026-10-20): the way back with New and the safety badge after it, the pair ending flush with the pencil; long names wrapping with the pencil on the formal name's first line and Updated; and the pencil on the None line. `LongNamesPublic` is the long names on the public page, with no cupboard. At 390 the name wraps inside the column (the owner's call, 2026-10-20): the `h1` is capped at the column and breaks a word (`overflow-wrap: break-word`) only when the word cannot fit a line of its own; until then a word wider than the column ran 11px past its right edge.
 - `RetiredInCoven`: a retired compendium entry a coven still uses, marked Retired.
 - `CompendiumEntryForCurator`: Edit, and the link to the public page.
 - `MovedAway`: the notice for the entry that left this address.
 - `FormAddsNothing`: two forms adding nothing, one of them toxic.
-- `PhoneDark`, `PhoneLight`: the full entry at 375px.
 - `DetailsFromCovenList`, `DetailsFromCompendium`, `DetailsFromCompendiumForCurator`: the details modal (M12.5) over a coven's list with Edit, over `/compendium` with See in Compendium alone, and the same for a curator with Edit. Each opens in its own frame, and Open Again brings it back after it closes.
 - `DetailsInYourCupboards`: the details modal over `/compendium` for a member of four covens that hold the entry, with the In Your Cupboards links last, each led by the shelf, one name long enough to wrap. `DetailsInOneCoven` is the same for one coven.
 - `DetailsLongDescription`: a long description cut to its first six lines, fading into the Show More bar; the sparse story's short one has no toggle.
 - `DetailsLongName`, `DetailsLongWord`, `DetailsNoFormalName`, `DetailsNewAndCautioned`: the head with a name that wraps, a word longer than the line (the one case that breaks a word), no formal name, and a new cautioned entry.
 - `DetailsSparse`, `DetailsNothingRecorded`, `DetailsToxic`: the details modal's body with only what is recorded, with nothing ("Nothing recorded yet."), and a toxic entry's caution naming two cautioned forms.
-- `DetailsPhoneDark`, `DetailsPhoneLight`: the coven's details modal at 375px.
 
 ## Testing
 

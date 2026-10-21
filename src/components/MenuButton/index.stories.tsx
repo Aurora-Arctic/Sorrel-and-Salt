@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import MenuButton from '.';
 import { sectionsFor } from './sections';
@@ -8,9 +8,11 @@ import type { MenuButtonItem } from './types';
 // tests/components/MenuButton/index.test.tsx. The entry page's More menu, a
 // link first and the destructive choice last; the button busy; and the
 // Annotate dialog's More, opening above from a dialog's foot (M8.17).
-export default {
+const meta = {
   title: 'Forms / Menu Button',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const ITEMS: MenuButtonItem[] = [
   {
@@ -36,15 +38,9 @@ const Row = ({ busy = false }: { busy?: boolean }) => (
   </p>
 );
 
-export const EditMenu: Story = () => <Row />;
+export const Default: Story = { render: () => <Row /> };
 
-export const Busy: Story = () => <Row busy />;
-
-export const PhoneDark: Story = () => <Row />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Row />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const Pending: Story = { render: () => <Row busy /> };
 
 // At a dialog's foot, as the Annotate dialog's More is, its items in the
 // button's type: set at the window's foot, where the room is above, so the
@@ -62,28 +58,30 @@ const Foot = () => (
   </p>
 );
 
-export const OpensAbove: Story = () => <Foot />;
+export const OpensAbove: Story = { render: () => <Foot /> };
 
 // The plus's menu of covens (M9.12): a coven that holds the entry is disabled, its name followed
 // by the green check (`mark`) and named "Fixture Coven Two, in its cupboard".
-export const MarkedItem: Story = () => (
-  <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
-    <MenuButton
-      label="Add to My Ingredients"
-      className="btn btn--quiet btn--medium"
-      items={[
-        { key: 'one', label: 'Fixture Coven One', onSelect: () => {} },
-        {
-          key: 'two',
-          label: 'Fixture Coven Two',
-          onSelect: () => {},
-          disabled: true,
-          mark: 'in its cupboard',
-        },
-      ]}
-    />
-  </p>
-);
+export const MarkedItem: Story = {
+  render: () => (
+    <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
+      <MenuButton
+        label="Add to My Ingredients"
+        className="btn btn--quiet btn--medium"
+        items={[
+          { key: 'one', label: 'Fixture Coven One', onSelect: () => {} },
+          {
+            key: 'two',
+            label: 'Fixture Coven Two',
+            onSelect: () => {},
+            disabled: true,
+            mark: 'in its cupboard',
+          },
+        ]}
+      />
+    </p>
+  ),
+};
 
 // Sections (the owner's call, 2026-10-20): a menu holding both the compendium's choices and the
 // coven's draws them under discreet headings, the viewer's own side first. Set on a coven's page
@@ -106,6 +104,8 @@ const SectionedRow = ({ viewing }: { viewing: 'compendium' | 'coven' }) => (
   </p>
 );
 
-export const SectionedOnACovenPage: Story = () => <SectionedRow viewing="coven" />;
+export const SectionedOnACovenPage: Story = { render: () => <SectionedRow viewing="coven" /> };
 
-export const SectionedOnACompendiumPage: Story = () => <SectionedRow viewing="compendium" />;
+export const SectionedOnACompendiumPage: Story = {
+  render: () => <SectionedRow viewing="compendium" />,
+};

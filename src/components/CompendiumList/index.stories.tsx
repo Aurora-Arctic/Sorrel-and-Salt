@@ -1,6 +1,8 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
-import { AdminFrame } from '../../../.ladle/admin-frame';
+import { NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { FIXTURE_EDIT } from '../../../.storybook/fixtures';
+import { AdminFrame } from '../../../.storybook/admin-frame';
 import AddAction from '../../app/(shell)/admin/add-action';
 import CompendiumList from '.';
 import PageHeader from '../PageHeader';
@@ -13,7 +15,6 @@ import type {
   CompendiumFacetCounts,
   CompendiumFacetVocabulary,
   CompendiumListEntry,
-  CompendiumListFilter,
 } from './types';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 import {
@@ -26,9 +27,11 @@ import {
 // story is the page as `src/app/(shell)/admin/compendium/page.tsx` draws it,
 // in the admin layout's frame (`AdminFrame`), at its width: a `main` holding
 // the page header with Add Ingredient, then the list.
-export default {
-  title: 'Admin / Compendium List',
-};
+const meta = {
+  title: 'Ingredients / Compendium List',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // The page around the list: the layout's frame, then `main` with the heading
 // and its Add, as the route draws them.
@@ -47,20 +50,6 @@ const Page = ({ children }: { children: ReactNode }): ReactElement => (
     </main>
   </AdminFrame>
 );
-
-const NO_FILTER: CompendiumListFilter = {
-  query: '',
-  forms: [],
-  withoutReferences: false,
-  withoutForms: false,
-  elements: [],
-  categories: [],
-  categoryMode: 'all',
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  toxic: '',
-};
 
 // The categories the Categories box offers, under two groups in their colours.
 const WARDS = { id: 'g-ward', name: 'Fixture Wards', colorDark: '#4e8bc2', colorLight: '#0c5393' };
@@ -147,8 +136,7 @@ const entry = (
       category: { id: `${slug}-${i}`, name },
       group: GROUP,
     })),
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
+    ...FIXTURE_EDIT,
     details: {
       href: compendiumHref({ entry: slug }),
       heading: detailsHeading({ name, canonicalName, nomenclature }),
@@ -182,27 +170,29 @@ const PageOfSeveral = (): ReactElement => (
   </Page>
 );
 
-export const OnePageOfSeveral: Story = () => <PageOfSeveral />;
+export const Default: Story = { render: () => <PageOfSeveral /> };
 
 // Next alone still sits at the right, where it is on every other page.
-export const FirstPage: Story = () => (
-  <Page>
-    <CompendiumList
-      entries={ENTRIES.slice(0, 2)}
-      filter={NO_FILTER}
-      facets={FACETS}
-      categories={CATEGORIES}
-      vocabulary={VOCABULARY}
-      nextHref={compendiumHref({ after: 'cursor' })}
-      total={ENTRIES.length}
-    />
-  </Page>
-);
+export const FirstPage: Story = {
+  render: () => (
+    <Page>
+      <CompendiumList
+        entries={ENTRIES.slice(0, 2)}
+        filter={NO_FILTER}
+        facets={FACETS}
+        categories={CATEGORIES}
+        vocabulary={VOCABULARY}
+        nextHref={compendiumHref({ after: 'cursor' })}
+        total={ENTRIES.length}
+      />
+    </Page>
+  ),
+};
 
 // The admin's two to-do lists at once, the unknown kind and the unsourced,
 // narrowed to one form, a deity, two elements and two categories, the Filters button counting
 // them and the sentence above the results saying so.
-export const Filtered: Story = () => (
+const FilteredView = () => (
   <Page>
     <CompendiumList
       entries={[entry('Fixture Salt', 'unknown', null, ['Powder'])]}
@@ -210,6 +200,7 @@ export const Filtered: Story = () => (
         query: '',
         forms: ['Powder'],
         withoutReferences: true,
+        withoutForms: false,
         elements: ['fire', 'earth'],
         categories: ['testward', 'testcraft'],
         categoryMode: 'any',
@@ -226,67 +217,62 @@ export const Filtered: Story = () => (
   </Page>
 );
 
+export const Filtered: Story = { render: FilteredView };
+
 // Two forms and Toxic: the Filters button reads 3, one for each chosen value.
-export const ChosenValuesCounted: Story = () => (
-  <Page>
-    <CompendiumList
-      entries={[entry('Mockroot', 'none', null, ['Powder'])]}
-      filter={{ ...NO_FILTER, forms: ['Oil', 'Powder'], toxic: 'not_toxic' }}
-      facets={FACETS}
-      categories={CATEGORIES}
-      vocabulary={VOCABULARY}
-      total={1}
-    />
-  </Page>
-);
+export const ChosenValuesCounted: Story = {
+  render: () => (
+    <Page>
+      <CompendiumList
+        entries={[entry('Mockroot', 'none', null, ['Powder'])]}
+        filter={{ ...NO_FILTER, forms: ['Oil', 'Powder'], toxic: 'not_toxic' }}
+        facets={FACETS}
+        categories={CATEGORIES}
+        vocabulary={VOCABULARY}
+        total={1}
+      />
+    </Page>
+  ),
+};
 
-export const NoMatch: Story = () => (
-  <Page>
-    <CompendiumList
-      entries={[]}
-      filter={{
-        query: 'nothing',
-        forms: ['Oil'],
-        withoutReferences: false,
-        elements: [],
-        categories: ['testbane'],
-        categoryMode: 'all',
-        deities: [],
-        zodiac: [],
-        celestialBodies: [],
-        toxic: '',
-      }}
-      facets={FACETS}
-      categories={CATEGORIES}
-      vocabulary={VOCABULARY}
-      total={0}
-    />
-  </Page>
-);
+export const NoMatches: Story = {
+  render: () => (
+    <Page>
+      <CompendiumList
+        entries={[]}
+        filter={{
+          query: 'nothing',
+          forms: ['Oil'],
+          withoutReferences: false,
+          withoutForms: false,
+          elements: [],
+          categories: ['testbane'],
+          categoryMode: 'all',
+          deities: [],
+          zodiac: [],
+          celestialBodies: [],
+          toxic: '',
+        }}
+        facets={FACETS}
+        categories={CATEGORIES}
+        vocabulary={VOCABULARY}
+        total={0}
+      />
+    </Page>
+  ),
+};
 
-export const Empty: Story = () => (
-  <Page>
-    <CompendiumList
-      entries={[]}
-      filter={NO_FILTER}
-      facets={FACETS}
-      categories={CATEGORIES}
-      vocabulary={VOCABULARY}
-      total={0}
-    />
-  </Page>
-);
-
-// A phone's width, in each theme: every row a card.
-export const PhoneDark: Story = () => <PageOfSeveral />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <PageOfSeveral />;
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// The filtered list at a phone's width, the row stacked and Clear All beside the Filters button.
-export const FilteredPhoneDark: Story = () => <Filtered />;
-FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const FilteredPhoneLight: Story = () => <Filtered />;
-FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+export const Empty: Story = {
+  render: () => (
+    <Page>
+      <CompendiumList
+        entries={[]}
+        filter={NO_FILTER}
+        facets={FACETS}
+        categories={CATEGORIES}
+        vocabulary={VOCABULARY}
+        total={0}
+      />
+    </Page>
+  ),
+};

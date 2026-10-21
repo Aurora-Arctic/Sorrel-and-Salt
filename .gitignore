@@ -13,7 +13,7 @@ dist
 public/workshop
 
 # Generated reports and builds, all under one directory: Vitest coverage and
-# json, Playwright's report, traces and e2e coverage, the Ladle workshop build.
+# json, Playwright's report, traces and e2e coverage, the Storybook workshop build.
 # `tsc`'s incremental state is under node_modules/.cache (tsconfig.json).
 .reports
 blob-report

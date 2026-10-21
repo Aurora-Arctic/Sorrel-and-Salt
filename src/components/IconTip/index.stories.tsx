@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
@@ -19,9 +19,11 @@ import {
 // focus a pencil to open its tip; Escape closes it. The rows are a list's
 // banded table, so the pencil shows on both of its grounds, the page and the
 // card. The ingredient form's smaller pencils are drawn in its own stories.
-export default {
-  title: 'Layout / Icon Tip',
-};
+const meta = {
+  title: 'Forms / Icon Tip',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'].map((name) => ({
   name,
@@ -68,21 +70,16 @@ const Rows = (): ReactElement => (
 // Every glyph the wrapper's icons file draws, at the icon button's glyph size:
 // the history pair, Restore Original and Copy From Ingredient use undo, redo
 // and copy, and Quick Look the eye.
-export const Glyphs: Story = () => (
-  <p style={{ display: 'flex', gap: '1rem', fontSize: '1rem' }}>
-    {[CopyIcon, LinkIcon, MysticEyeIcon, PencilIcon, PlusIcon, RedoIcon, UndoIcon].map(
-      (Glyph, at) => (
-        <Glyph key={at} />
-      ),
-    )}
-  </p>
-);
+export const Default: Story = {
+  render: () => (
+    <p style={{ display: 'flex', gap: '1rem', fontSize: '1rem' }}>
+      {[CopyIcon, LinkIcon, MysticEyeIcon, PencilIcon, PlusIcon, RedoIcon, UndoIcon].map(
+        (Glyph, at) => (
+          <Glyph key={at} />
+        ),
+      )}
+    </p>
+  ),
+};
 
-export const InAListRow: Story = () => <Rows />;
-
-// A phone's width, in each theme: each row a card, the pencil at its top right.
-export const PhoneDark: Story = () => <Rows />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Rows />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const InAListRow: Story = { render: () => <Rows /> };

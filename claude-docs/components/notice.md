@@ -123,11 +123,10 @@ at 4.5:1 over its own tint on the page and on a card, are rows in
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Notice/index.stories.tsx), under
-`Surfaces / Notice`: `Failure` (an error), `Warning`, `QuietWarning` (a
+`Feedback / Notice`: `Failed` (an error), `Warning`, `QuietWarning` (a
 warning as a status), `Caution`, `Success` and `Plain`, one for each look and role in
 the table above, and `BlockWarning` and `BlockFailure`, the block form with a
-sentence, a list of links and a button. `PhoneDark` and `PhoneLight` stack
-the five kinds and the two block notices at 375px in each theme.
+sentence, a list of links and a button. The toolbar viewport menu shows them at 375px.
 
 ## Testing
 
@@ -135,5 +134,5 @@ the five kinds and the two block notices at 375px in each theme.
 row per kind, and that a quiet warning or caution is a status; that the block
 form holds a sentence, a list and a button in every kind, with the same roles
 and no list or button inside a paragraph or an `<output>`; and that a notice
-`inRegion` takes no role, so the region round it is the one thing announced. The look is the story's (`Surfaces / Notice`, both themes at
+`inRegion` takes no role, so the region round it is the one thing announced. The look is the story's (`Feedback / Notice`, both themes at
 375px) and axe's on every page that shows one.

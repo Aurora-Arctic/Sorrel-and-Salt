@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import JarShelf from '.';
 import type { StockForm, StockJar } from '../StockDialog/types';
 import type { ShelfForm } from './types';
@@ -6,9 +6,11 @@ import type { ShelfForm } from './types';
 // Render-only; the vessel pick and the level are asserted in tests/components/JarShelf, and
 // the press in tests/components/IngredientEntry. In the workshop the dialog a press opens
 // reaches no server. Every name is invented.
-export default {
+const meta = {
   title: 'Ingredients / Jar Shelf',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const INGREDIENT = '00000000-0000-4000-8000-000000000002';
@@ -52,10 +54,10 @@ const edit = {
 };
 
 /** A role that may not edit: plain figures, no buttons. */
-export const Viewer: Story = () => <JarShelf forms={FORMS} seed={SEED} />;
+export const Viewer: Story = { render: () => <JarShelf forms={FORMS} seed={SEED} /> };
 
 /** A role that may edit: each jar, the empty one too, opens Edit Stock on its form. */
-export const Editable: Story = () => <JarShelf forms={FORMS} seed={SEED} edit={edit} />;
+export const Default: Story = { render: () => <JarShelf forms={FORMS} seed={SEED} edit={edit} /> };
 
 /** One form alone, as an entry with a single variant has. */
-export const OneForm: Story = () => <JarShelf forms={FORMS.slice(0, 1)} seed={SEED} />;
+export const OneForm: Story = { render: () => <JarShelf forms={FORMS.slice(0, 1)} seed={SEED} /> };

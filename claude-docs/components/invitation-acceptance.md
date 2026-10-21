@@ -82,10 +82,7 @@ the failed accept.
   refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
   `DifferentAddress` and `Paused`. The refusal sentences are copied from the service's `MESSAGES`,
   as a story cannot import a server-only module.
-- **Phone and both themes:** `SignedOut`, `AcceptableCoven`, `Unverified` and `DeletedCoven` each
-  have `PhoneDark` and `PhoneLight` (375px), covering a sentence and a button, an alert and a
-  button, and an alert alone.
-- **A failed accept:** `AcceptRefused`, with `PhoneDark` and `PhoneLight`, presses Accept on mount
+- **A failed accept:** `AcceptRefused` presses Accept on mount
   (`usePressOnMount`); the workshop has no API, so the request fails and the callout says
   `GENERIC_FAILURE` under the button.
 

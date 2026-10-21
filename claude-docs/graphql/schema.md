@@ -1270,7 +1270,7 @@ services on navigation (rule 1), and `ingredientFormGroups` already answers
 the browser.
 
 - **Two inputs, each for both of its writes.** `CategoryGroupInput` is
-  `name`, `description`, `colorDark` and `colorLight`, all required;
+  `name`, `description`, `color`, all required;
   `IngredientFormGroupInput` is `name` and `description`. No slug, which
   follows the name.
 - **`createCategoryGroup`, `updateCategoryGroup` and `deleteCategoryGroup`;

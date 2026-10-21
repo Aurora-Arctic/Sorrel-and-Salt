@@ -3,6 +3,6 @@
 
 @use '../src/scss/primitives' as *;
 
-:where(.ladle-story-frame) {
+:where(.workshop-story-frame) {
   @include primitives-base;
 }

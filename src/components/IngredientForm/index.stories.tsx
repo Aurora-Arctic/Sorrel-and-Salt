@@ -1,4 +1,5 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useEffect, useId, useLayoutEffect, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import type {
@@ -30,10 +31,15 @@ import IngredientForm from '.';
 import { NameField } from './duplicates';
 import { substituteSummary } from './substitute-summary';
 import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
-import { useHangingFetch } from '../../../.ladle/hanging-fetch';
-import { press } from '../../../.ladle/press';
-import { Reopenable } from '../../../.ladle/reopenable';
-import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
+import { useHangingFetch } from '../../../.storybook/hanging-fetch';
+import { press, setInputValue } from '../../../.storybook/press';
+import { Reopenable } from '../../../.storybook/reopenable';
+import type {
+  AfterSave,
+  IngredientFormProps,
+  IngredientFormValues,
+  SavedIngredient,
+} from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
 // Render-only; behaviour is asserted in tests/components/IngredientForm. The
@@ -44,10 +50,24 @@ import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 // typed, and a save is answered after a pause long enough to watch Save wait.
 // None of it leaves the page. "What to try" above the form says what to type
 // for each state. The TanStack Query client comes from the workshop's global provider
-// (.ladle/components.tsx), as it does from the app's root layout.
-export default {
-  title: 'Admin / Ingredient Form',
-};
+// (.storybook/preview.tsx), as it does from the app's root layout.
+const meta = {
+  title: 'Ingredients / Ingredient Form',
+  // Every story but the ones that bring their own fetch stand-in (`cannedApi: false`)
+  // is answered from the rows below.
+  decorators: [
+    (Story, { parameters }) =>
+      parameters.cannedApi === false ? (
+        <Story />
+      ) : (
+        <CannedApi>
+          <Story />
+        </CannedApi>
+      ),
+  ],
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
 
@@ -56,7 +76,7 @@ const matches = (query: string, ...texts: (string | null)[]) =>
   texts.some((text) => text?.toLowerCase().includes(query.trim().toLowerCase()));
 
 // A curated row carries the id a pick sends (MB.169); one only in use has none.
-const FORMS = [
+const FORMS: FormSuggestionsQuery['formSuggestions']['edges'][number]['node'][] = [
   {
     id: '00000000-0000-4000-8000-000000000101',
     value: 'Wax',
@@ -253,6 +273,7 @@ const SUMMARIES = Object.fromEntries(
         celestialBodies: form === 'Oil' ? ['Venus'] : null,
         zodiacSigns: null,
         colors: null,
+        formChoice: null,
       })),
     },
   ]),
@@ -310,11 +331,12 @@ const SOURCES = [
 
 // One of each place a match can be, so a coven's form shows both groups:
 // a compendium entry the coven holds, one it does not, and the coven's own.
-const CATS_CLAW = [
+const CATS_CLAW: PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'][] = [
   {
     id: 'claw-1',
     name: "Cat's Claw",
     canonicalName: 'Uncaria tomentosa',
+    nomenclature: 'botanical',
     slug: 'cats-claw-uncaria-tomentosa',
     isGlobal: true,
     inCupboard: true,
@@ -323,6 +345,7 @@ const CATS_CLAW = [
     id: 'claw-2',
     name: "Cat's Claw",
     canonicalName: 'Felis catus',
+    nomenclature: 'zoological',
     slug: 'cats-claw-felis-catus',
     isGlobal: true,
     inCupboard: false,
@@ -331,6 +354,7 @@ const CATS_CLAW = [
     id: 'claw-3',
     name: "Cat's Claw",
     canonicalName: null,
+    nomenclature: 'unknown',
     slug: 'cats-claw',
     isGlobal: false,
     inCupboard: false,
@@ -415,10 +439,14 @@ function answer(operation: string, variables: Record<string, unknown>): object |
       } satisfies DeitySuggestionsQuery;
     case 'IngredientSuggestions':
       return {
-        ingredientSuggestions: page(
-          INGREDIENTS.filter((row) => matches(query, row.name, row.canonicalName)),
-          first,
-        ),
+        ingredientSuggestions: {
+          edges: INGREDIENTS.filter((row) => matches(query, row.name, row.canonicalName))
+            .slice(0, first)
+            .map((row) => ({
+              group: row.isGlobal ? ('compendium' as const) : ('yours' as const),
+              node: { ...row, cupboardEntry: null },
+            })),
+        },
       } satisfies IngredientSuggestionsQuery;
     case 'CompendiumSubstitutes':
       // The compendium's own entries alone, as `compendium(query)` answers.
@@ -501,7 +529,10 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           !query.toLowerCase().includes('cat')
             ? []
             : variables.workspaceId == null
-              ? CATS_CLAW.filter((row) => row.isGlobal).map((row) => ({ ...row, inCupboard: null }))
+              ? CATS_CLAW.filter((row) => row.isGlobal).map((row) => ({
+                  ...row,
+                  inCupboard: false,
+                }))
               : CATS_CLAW,
           first,
         ),
@@ -513,6 +544,7 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           id: crypto.randomUUID(),
           name: input?.name ?? '',
           slug: 'new',
+          stock: [],
         },
       } satisfies CreateWorkspaceIngredientMutation;
     }
@@ -687,6 +719,31 @@ function useCannedApi(): void {
   }, []);
 }
 
+/** Installs the canned API around a story, for the `decorators` of `meta`. */
+function CannedApi({ children }: { children: ReactNode }) {
+  useCannedApi();
+  return children;
+}
+
+type CompendiumFormProps =
+  Extract<IngredientFormProps, { workspaceId: null }> extends infer P
+    ? Omit<P, 'workspaceId' | 'workspaceName' | 'duplicateHref'> & {
+        duplicateHref?: typeof compendiumDuplicateHref;
+      }
+    : never;
+
+/** The form as the admin draws it over a compendium entry: no coven, so every lookup asks the compendium alone. */
+function CompendiumForm(props: CompendiumFormProps) {
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      onCancel={() => undefined}
+      {...props}
+    />
+  );
+}
+
 /** What to type for each state the form can be in, beside it in the workshop. */
 function WhatToTry() {
   return (
@@ -811,29 +868,30 @@ function WhatToTry() {
  * Every lookup answered and the save faked, with what to type for each state
  * beside it. Unframed: the form takes its width from whatever holds it.
  */
-export const Blank: Story = () => {
-  useCannedApi();
-  // Where Save Ingredient would go: the page holding the form navigates on
-  // 'open', and the workshop has no page to go to, so it says so instead.
-  const [opens, setOpens] = useState<string | null>(null);
-  const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
-    setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
-  return (
-    <>
-      <WhatToTry />
-      <IngredientForm
-        workspaceId={WORKSPACE_ID}
-        duplicateHref={covenDuplicateHref}
-        onSaved={onSaved}
-      />
-      {opens !== null && (
-        // `output` carries the status role itself, so no `role` attribute.
-        <output className="story-note">
-          Save Ingredient would now open <code>{opens}</code>, the new ingredient&rsquo;s page.
-        </output>
-      )}
-    </>
-  );
+export const Default: Story = {
+  render: () => {
+    // Where Save Ingredient would go: the page holding the form navigates on
+    // 'open', and the workshop has no page to go to, so it says so instead.
+    const [opens, setOpens] = useState<string | null>(null);
+    const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
+      setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
+    return (
+      <>
+        <WhatToTry />
+        <IngredientForm
+          workspaceId={WORKSPACE_ID}
+          duplicateHref={covenDuplicateHref}
+          onSaved={onSaved}
+        />
+        {opens !== null && (
+          // `output` carries the status role itself, so no `role` attribute.
+          <output className="story-note">
+            Save Ingredient would now open <code>{opens}</code>, the new ingredient&rsquo;s page.
+          </output>
+        )}
+      </>
+    );
+  },
 };
 
 /** One of INGREDIENTS as a substitute's link, as an edit reads it back. */
@@ -1007,49 +1065,35 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
 }
 
 /** The admin's form for a new compendium entry (M5.5): no coven, so every lookup asks the compendium alone. */
-export const Compendium: Story = () => {
-  useCannedApi();
-  return (
-    <>
-      <WhatToTryOnTheCompendium editing={false} />
-      <IngredientForm
-        workspaceId={null}
-        duplicateHref={compendiumDuplicateHref}
-        onCancel={() => undefined}
-      />
-    </>
-  );
+export const Compendium: Story = {
+  render: () => {
+    return (
+      <>
+        <WhatToTryOnTheCompendium editing={false} />
+        <CompendiumForm />
+      </>
+    );
+  },
 };
 
 /** The admin's form over an existing compendium entry: one save, and a delete. */
-export const CompendiumEntry: Story = () => {
-  useCannedApi();
-  return (
-    <>
-      <WhatToTryOnTheCompendium editing />
-      <IngredientForm
-        workspaceId={null}
-        duplicateHref={compendiumDuplicateHref}
-        entry={ENTRY}
-        entryHref={entryHref}
-        onCancel={() => undefined}
-      />
-    </>
-  );
+export const CompendiumEntry: Story = {
+  render: () => {
+    return (
+      <>
+        <WhatToTryOnTheCompendium editing />
+        <CompendiumForm entry={ENTRY} entryHref={entryHref} />
+      </>
+    );
+  },
 };
 
 /** The same entry with its Correspondences open, the other sections summarised. */
-export const CompendiumEntrySectionOpen: Story = () => {
-  useCannedApi();
-  useEffect(() => openSection('Correspondences'), []);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={ENTRY}
-      onCancel={() => undefined}
-    />
-  );
+export const CompendiumEntrySectionOpen: Story = {
+  render: () => {
+    useEffect(() => openSection('Correspondences'), []);
+    return <CompendiumForm entry={ENTRY} />;
+  },
 };
 
 /**
@@ -1057,34 +1101,32 @@ export const CompendiumEntrySectionOpen: Story = () => {
  * text, and Correspondences, closed, opens on the error, flagged, the box
  * focused (MB.115). Submitted once drawn, Save being off until a change.
  */
-export const CompendiumEntrySaveError: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    document.querySelector<HTMLFormElement>('form.ingredient-form')?.requestSubmit();
-  }, []);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={{
-        ...ENTRY,
-        // Without its links: the stand-in's ids are no ids the schema
-        // takes, so a save would refuse each, and the colour is the one error.
-        values: {
-          ...ENTRY.values,
-          substitutes: [],
-          references: [],
-          variants: ENTRY.values.variants.map((variant) => ({
-            ...variant,
+export const CompendiumEntrySaveError: Story = {
+  render: () => {
+    useEffect(() => {
+      document.querySelector<HTMLFormElement>('form.ingredient-form')?.requestSubmit();
+    }, []);
+    return (
+      <CompendiumForm
+        entry={{
+          ...ENTRY,
+          // Without its links: the stand-in's ids are no ids the schema
+          // takes, so a save would refuse each, and the colour is the one error.
+          values: {
+            ...ENTRY.values,
             substitutes: [],
             references: [],
-          })),
-          drafts: { ...ENTRY.values.drafts, colors: 'Fixture Red' },
-        },
-      }}
-      onCancel={() => undefined}
-    />
-  );
+            variants: ENTRY.values.variants.map((variant) => ({
+              ...variant,
+              substitutes: [],
+              references: [],
+            })),
+            drafts: { ...ENTRY.values.drafts, colors: 'Fixture Red' },
+          },
+        }}
+      />
+    );
+  },
 };
 
 /**
@@ -1092,46 +1134,27 @@ export const CompendiumEntrySaveError: Story = () => {
  * own sections closed, as an edit's are, each summarising what it holds
  * (MB.115).
  */
-export const CompendiumEntryVariantOpen: Story = () => {
-  useCannedApi();
-  // Pressed once it is drawn: which form is open is the form's own state.
-  useEffect(() => {
-    openSection('Variants');
-    openDriedLeaf();
-  }, []);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={ENTRY}
-      onCancel={() => undefined}
-    />
-  );
+export const CompendiumEntryVariantOpen: Story = {
+  render: () => {
+    // Pressed once it is drawn: which form is open is the form's own state.
+    useEffect(() => {
+      openSection('Variants');
+      openDriedLeaf();
+    }, []);
+    return <CompendiumForm entry={ENTRY} />;
+  },
 };
 
-// The open form at a phone's width, in each theme.
-export const VariantOpenPhoneDark: Story = () => <CompendiumEntryVariantOpen />;
-VariantOpenPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const VariantOpenPhoneLight: Story = () => <CompendiumEntryVariantOpen />;
-VariantOpenPhoneLight.meta = { theme: 'light', width: 375 };
-
 /** The same form open, with its own Correspondences opened by its heading, the rest summarised. */
-export const CompendiumEntryVariantSectionOpen: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    openSection('Variants');
-    const card = openDriedLeaf();
-    if (card) openSection('Correspondences', card);
-  }, []);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={ENTRY}
-      onCancel={() => undefined}
-    />
-  );
+export const CompendiumEntryVariantSectionOpen: Story = {
+  render: () => {
+    useEffect(() => {
+      openSection('Variants');
+      const card = openDriedLeaf();
+      if (card) openSection('Correspondences', card);
+    }, []);
+    return <CompendiumForm entry={ENTRY} />;
+  },
 };
 
 /**
@@ -1139,21 +1162,20 @@ export const CompendiumEntryVariantSectionOpen: Story = () => {
  * opens first of the cards with every one of its sections open, as a new
  * entry's are (MB.115). Typed and added once drawn, as a person would.
  */
-export const VariantAdded: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    const box = document.querySelector<HTMLInputElement>('input[name="drafts.variants"]');
-    if (!box) return;
-    // React reads a typed value through the input's own setter, not the property.
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(box, 'Oil');
-    box.dispatchEvent(new Event('input', { bubbles: true }));
-    // Once the typed text has reached the form, as a press after typing would.
-    const timer = setTimeout(() =>
-      document.querySelector<HTMLButtonElement>('button[aria-label="Add Variant"]')?.click(),
-    );
-    return () => clearTimeout(timer);
-  }, []);
-  return <IngredientForm workspaceId={WORKSPACE_ID} duplicateHref={covenDuplicateHref} />;
+export const VariantAdded: Story = {
+  render: () => {
+    useEffect(() => {
+      const box = document.querySelector<HTMLInputElement>('input[name="drafts.variants"]');
+      if (!box) return;
+      setInputValue(box, 'Oil');
+      // Once the typed text has reached the form, as a press after typing would.
+      const timer = setTimeout(() =>
+        document.querySelector<HTMLButtonElement>('button[aria-label="Add Variant"]')?.click(),
+      );
+      return () => clearTimeout(timer);
+    }, []);
+    return <IngredientForm workspaceId={WORKSPACE_ID} duplicateHref={covenDuplicateHref} />;
+  },
 };
 
 /**
@@ -1163,108 +1185,76 @@ export const VariantAdded: Story = () => {
  * beneath the list names Mockleaf, skipped, with Copy Anyway. Pressed once
  * drawn, as a person would.
  */
-export const CompendiumEntryCopySkipped: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    openSection('Variants');
-    const card = openDriedLeaf();
-    if (card) openSection('Relations', card);
-    const timer = setTimeout(() =>
-      document
-        .querySelector<HTMLButtonElement>(
-          'button[aria-label="Copy From Ingredient: Substitute Ingredients"]',
-        )
-        ?.click(),
-    );
-    return () => clearTimeout(timer);
-  }, []);
-  const values = {
-    ...ENTRY.values,
-    substitutes: [...ENTRY.values.substitutes, { value: 'Mockleaf', link: linkOf(INGREDIENTS[3]) }],
-  };
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={{ ...ENTRY, values }}
-      onCancel={() => undefined}
-    />
-  );
+export const CompendiumEntryCopySkipped: Story = {
+  render: () => {
+    useEffect(() => {
+      openSection('Variants');
+      const card = openDriedLeaf();
+      if (card) openSection('Relations', card);
+      const timer = setTimeout(() =>
+        document
+          .querySelector<HTMLButtonElement>(
+            'button[aria-label="Copy From Ingredient: Substitute Ingredients"]',
+          )
+          ?.click(),
+      );
+      return () => clearTimeout(timer);
+    }, []);
+    const values = {
+      ...ENTRY.values,
+      substitutes: [
+        ...ENTRY.values.substitutes,
+        { value: 'Mockleaf', link: linkOf(INGREDIENTS[3]) },
+      ],
+    };
+    return <CompendiumForm entry={{ ...ENTRY, values }} />;
+  },
 };
-
-// The notice at a phone's width, in each theme.
-export const CopySkippedPhoneDark: Story = () => <CompendiumEntryCopySkipped />;
-CopySkippedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const CopySkippedPhoneLight: Story = () => <CompendiumEntryCopySkipped />;
-CopySkippedPhoneLight.meta = { theme: 'light', width: 375 };
 
 /** The same entry with its first source open and its Edit Source pressed: the panel prefilled. */
-export const CompendiumEntryEditSource: Story = () => {
-  useCannedApi();
-  // Pressed once drawn: the pencil opens the row, then Edit Source opens the panel.
-  useEffect(() => {
-    openSection('Sources');
-    document
-      .querySelector<HTMLButtonElement>('button[aria-label="Edit Fixture, Testwort Herbal"]')
-      ?.click();
-    const timer = setTimeout(() =>
+export const CompendiumEntryEditSource: Story = {
+  render: () => {
+    // Pressed once drawn: the pencil opens the row, then Edit Source opens the panel.
+    useEffect(() => {
+      openSection('Sources');
       document
-        .querySelector<HTMLButtonElement>(
-          'button[aria-label="Edit Source Fixture, Testwort Herbal"]',
-        )
-        ?.click(),
-    );
-    return () => clearTimeout(timer);
-  }, []);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={ENTRY}
-      onCancel={() => undefined}
-    />
-  );
+        .querySelector<HTMLButtonElement>('button[aria-label="Edit Fixture, Testwort Herbal"]')
+        ?.click();
+      const timer = setTimeout(() =>
+        document
+          .querySelector<HTMLButtonElement>(
+            'button[aria-label="Edit Source Fixture, Testwort Herbal"]',
+          )
+          ?.click(),
+      );
+      return () => clearTimeout(timer);
+    }, []);
+    return <CompendiumForm entry={ENTRY} />;
+  },
 };
-
-// The edit panel at a phone's width, in each theme.
-export const EditSourcePhoneDark: Story = () => <CompendiumEntryEditSource />;
-EditSourcePhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const EditSourcePhoneLight: Story = () => <CompendiumEntryEditSource />;
-EditSourcePhoneLight.meta = { theme: 'light', width: 375 };
 
 /**
  * The same entry with its first linked substitute's summary open (MB.115):
  * pressed once it is drawn, the summary being the chip's own state.
  */
-export const CompendiumEntrySubstituteSummary: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    openSection('Relations');
-    document
-      .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
-      ?.click();
-  }, []);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={ENTRY}
-      entryHref={entryHref}
-      onCancel={() => undefined}
-    />
-  );
+export const CompendiumEntrySubstituteSummary: Story = {
+  render: () => {
+    useEffect(() => {
+      openSection('Relations');
+      document
+        .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
+        ?.click();
+    }, []);
+    return <CompendiumForm entry={ENTRY} entryHref={entryHref} />;
+  },
 };
 
-// A phone's width, in each theme: the admin's edit, bare, its sections closed, as at desktop.
 /**
  * The edit in its modal, as the admin compendium opens it: the eyebrow over
  * the entry's saved name and formal name, Open All / Close All beside them, and the header staying at the top as the form
  * scrolls beneath it (MB.115).
  */
-export const CompendiumEntryInModal: Story = () => {
-  useCannedApi();
+const CompendiumEntryInModalForm = () => {
   return (
     <Reopenable>
       {(close) => (
@@ -1274,18 +1264,14 @@ export const CompendiumEntryInModal: Story = () => {
           qualifier={<span className="binomial">Fixtura testalis</span>}
           onClose={close}
         >
-          <IngredientForm
-            workspaceId={null}
-            duplicateHref={compendiumDuplicateHref}
-            entry={ENTRY}
-            entryHref={entryHref}
-            onCancel={() => undefined}
-          />
+          <CompendiumForm entry={ENTRY} entryHref={entryHref} />
         </Modal>
       )}
     </Reopenable>
   );
 };
+
+export const CompendiumEntryInModal: Story = { render: () => <CompendiumEntryInModalForm /> };
 
 /** Scrolls the modal's body to this share of the way down, 0 the top and 1 the foot. */
 function scrollBody(share: number): void {
@@ -1298,18 +1284,19 @@ function scrollBody(share: number): void {
  * Delete Ingredient is, and pressed: the question over the long form,
  * centred in the part in view, the form dimmed and held beneath it (MB.115).
  */
-export const AskingToDeleteInModal: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    press('Open All');
-    // Once the opened sections are laid out, as a person scrolls after opening.
-    const later = requestAnimationFrame(() => {
-      scrollBody(1);
-      press('Delete Ingredient');
-    });
-    return () => cancelAnimationFrame(later);
-  }, []);
-  return <CompendiumEntryInModal />;
+export const AskingToDeleteInModal: Story = {
+  render: () => {
+    useEffect(() => {
+      press('Open All');
+      // Once the opened sections are laid out, as a person scrolls after opening.
+      const later = requestAnimationFrame(() => {
+        scrollBody(1);
+        press('Delete Ingredient');
+      });
+      return () => cancelAnimationFrame(later);
+    }, []);
+    return <CompendiumEntryInModalForm />;
+  },
 };
 
 /**
@@ -1318,61 +1305,23 @@ export const AskingToDeleteInModal: Story = () => {
  * form, centred where the person had scrolled to (MB.115). Close again
  * flashes it.
  */
-export const AskingToDiscardInModal: Story = () => {
-  useCannedApi();
-  useEffect(() => {
-    const name = document.querySelector<HTMLInputElement>('input[name="name"]');
-    if (name) {
-      // React reads a typed value through the input's own setter, not the property.
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
-        name,
-        `${name.value} Renamed`,
-      );
-      name.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    press('Open All');
-    const later = requestAnimationFrame(() => {
-      scrollBody(0.5);
-      press('Close');
-    });
-    return () => cancelAnimationFrame(later);
-  }, []);
-  return <CompendiumEntryInModal />;
+export const AskingToDiscardInModal: Story = {
+  render: () => {
+    useEffect(() => {
+      const name = document.querySelector<HTMLInputElement>('input[name="name"]');
+      if (name) {
+        setInputValue(name, `${name.value} Renamed`);
+      }
+      press('Open All');
+      const later = requestAnimationFrame(() => {
+        scrollBody(0.5);
+        press('Close');
+      });
+      return () => cancelAnimationFrame(later);
+    }, []);
+    return <CompendiumEntryInModalForm />;
+  },
 };
-
-// Both at a phone's width, in each theme: the card fills the width in view,
-// its buttons stacked.
-export const AskingToDeletePhoneDark: Story = () => <AskingToDeleteInModal />;
-AskingToDeletePhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const AskingToDeletePhoneLight: Story = () => <AskingToDeleteInModal />;
-AskingToDeletePhoneLight.meta = { theme: 'light', width: 375 };
-
-export const AskingToDiscardPhoneDark: Story = () => <AskingToDiscardInModal />;
-AskingToDiscardPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const AskingToDiscardPhoneLight: Story = () => <AskingToDiscardInModal />;
-AskingToDiscardPhoneLight.meta = { theme: 'light', width: 375 };
-
-// The edit's head in each theme, at a desktop's width and a phone's: the
-// eyebrow, then the name and its formal name, which wrap on a phone (MB.115).
-export const InModalDark: Story = () => <CompendiumEntryInModal />;
-InModalDark.meta = { theme: 'dark' };
-
-export const InModalLight: Story = () => <CompendiumEntryInModal />;
-InModalLight.meta = { theme: 'light' };
-
-export const InModalPhoneDark: Story = () => <CompendiumEntryInModal />;
-InModalPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const InModalPhoneLight: Story = () => <CompendiumEntryInModal />;
-InModalPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const PhoneDark: Story = () => <CompendiumEntry />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <CompendiumEntry />;
-PhoneLight.meta = { theme: 'light', width: 375 };
 
 // Promoting a folk name (M12.1): the arrow on a saved folk name's chip, and the
 // question it always asks.
@@ -1391,17 +1340,12 @@ const PROMOTABLE = {
 
 /** The promotable entry's form, its Identity open, optionally with the question asked and a change made first. */
 function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolean }) {
-  useCannedApi();
   useEffect(() => {
     openSection('Identity');
     if (changed) {
       const name = document.querySelector<HTMLInputElement>('input[name="name"]');
       if (name) {
-        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
-          name,
-          'Testwort Edited',
-        );
-        name.dispatchEvent(new Event('input', { bubbles: true }));
+        setInputValue(name, 'Testwort Edited');
       }
     }
     if (asking) {
@@ -1417,55 +1361,45 @@ function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolea
       );
     }
   }, [asking, changed]);
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      entry={PROMOTABLE}
-      entryHref={entryHref}
-      mayPromote
-      onCancel={() => undefined}
-    />
-  );
+  return <CompendiumForm entry={PROMOTABLE} entryHref={entryHref} mayPromote />;
 }
 
 /** A compendium entry's folk names, each saved one with its arrow ahead of the ×. */
-export const PromoteControl: Story = () => <PromotableEntry asking={false} changed={false} />;
+export const PromoteControl: Story = {
+  render: () => <PromotableEntry asking={false} changed={false} />,
+};
 
 /** The question over a form with nothing to save: Promote and Cancel. */
-export const PromoteQuestion: Story = () => <PromotableEntry asking changed={false} />;
+export const PromoteQuestion: Story = { render: () => <PromotableEntry asking changed={false} /> };
 
 /** The question over a form with a change: Save & Promote, Discard & Promote, and Cancel. */
-export const PromoteQuestionWithChanges: Story = () => <PromotableEntry asking changed />;
-
-export const PromoteQuestionPhoneDark: Story = () => <PromotableEntry asking changed />;
-PromoteQuestionPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PromoteQuestionPhoneLight: Story = () => <PromotableEntry asking changed />;
-PromoteQuestionPhoneLight.meta = { theme: 'light', width: 375 };
+export const PromoteQuestionWithChanges: Story = {
+  render: () => <PromotableEntry asking changed />,
+};
 
 /**
  * A coven's ingredient: the question without the compendium's note that the
  * swap is global. The coven's form does not edit yet (M8.17), so the question
  * stands alone, open over nothing.
  */
-export const PromoteQuestionCoven: Story = () => {
-  useCannedApi();
-  const promotion = usePromoteFolkName(WORKSPACE_ID, PROMOTABLE.id);
-  return (
-    <PromoteFolkNameQuestion
-      promotion={promotion}
-      folkName={{ id: '00000000-0000-4000-8000-000000000401', value: 'Hedge Fixture' }}
-      displayName="Testwort"
-      tier="coven"
-      dirty={false}
-      saveFirst={async () => true}
-      discardFirst={() => undefined}
-      onPromoted={() => undefined}
-      onKeep={() => undefined}
-      onRefused={() => undefined}
-    />
-  );
+export const PromoteQuestionCoven: Story = {
+  render: () => {
+    const promotion = usePromoteFolkName(WORKSPACE_ID, PROMOTABLE.id);
+    return (
+      <PromoteFolkNameQuestion
+        promotion={promotion}
+        folkName={{ id: '00000000-0000-4000-8000-000000000401', value: 'Hedge Fixture' }}
+        displayName="Testwort"
+        tier="coven"
+        dirty={false}
+        saveFirst={async () => true}
+        discardFirst={() => undefined}
+        onPromoted={() => undefined}
+        onKeep={() => undefined}
+        onRefused={() => undefined}
+      />
+    );
+  },
 };
 
 /**
@@ -1474,31 +1408,35 @@ export const PromoteQuestionCoven: Story = () => {
  * stands where the facts will be. The ingredient's id is fresh each time, so a
  * summary another story already read cannot answer from the cache.
  */
-export const LoadingSubstituteSummary: Story = () => {
-  useHangingFetch('/api/graphql');
-  const id = useId();
-  useEffect(() => {
-    document
-      .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
-      ?.click();
-  }, []);
-  return (
-    <div className="form" style={{ maxWidth: '32rem' }}>
-      <ul className="combobox__entries">
-        <ComboboxEntry
-          value="Mockleaf"
-          summary={substituteSummary(
-            {
-              value: 'Mockleaf',
-              link: { id, canonicalName: null, forms: [], description: null, isGlobal: true },
-            },
-            'Mockleaf',
-            null,
-          )}
-        />
-      </ul>
-    </div>
-  );
+export const LoadingSubstituteSummary: Story = {
+  parameters: { cannedApi: false },
+  render: () => {
+    useHangingFetch('/api/graphql');
+    const id = useId();
+    useEffect(() => {
+      document
+        .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
+        ?.click();
+    }, []);
+    return (
+      <div className="form" style={{ maxWidth: '32rem' }}>
+        <ul className="combobox__entries">
+          <ComboboxEntry
+            value="Mockleaf"
+            onRemove={() => undefined}
+            summary={substituteSummary(
+              {
+                value: 'Mockleaf',
+                link: { id, canonicalName: null, forms: [], description: null, isGlobal: true },
+              },
+              'Mockleaf',
+              null,
+            )}
+          />
+        </ul>
+      </div>
+    );
+  },
 };
 
 // The duplicates notice in its two states: the warning while a name is typed
@@ -1528,6 +1466,7 @@ function HeldNameField({ blocking }: { blocking: boolean }) {
             exact: [],
             check: noop,
             dismiss: () => undefined,
+            added: async () => undefined,
           }}
           hrefOf={covenDuplicateHref}
           onUse={async () => false}
@@ -1549,10 +1488,4 @@ function Duplicates() {
   );
 }
 
-export const DuplicatesNotice: Story = () => <Duplicates />;
-
-export const DuplicatesNoticePhoneDark: Story = () => <Duplicates />;
-DuplicatesNoticePhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const DuplicatesNoticePhoneLight: Story = () => <Duplicates />;
-DuplicatesNoticePhoneLight.meta = { theme: 'light', width: 375 };
+export const DuplicatesNotice: Story = { render: () => <Duplicates /> };

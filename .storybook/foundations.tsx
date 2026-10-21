@@ -16,13 +16,15 @@ import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
 import '../src/components/SignInPanel/index.scss';
 import type { SeedCategoryGroup } from '../src/db/seed/types';
 import type { ListNavigation } from '../src/components/ListFrame/types';
+import type { SafetyVariant } from '../src/components/SafetyNote/types';
 import type { ProviderId } from '../src/lib/types';
+import { route } from './route';
 import './foundations.scss';
 
 // Every shared token and primitive at shipping size, in either theme, with no
 // value re-typed: colours, lengths and their labels all come from the app's
 // own .scss. A reference for what the sections are built from, not a layout.
-// claude-docs/workshop.md, ".ladle/".
+// claude-docs/workshop.md, ".storybook/".
 
 // A seeded group by name, for the specimen's chips: its colour pair is what
 // the row carries, as a page's chip would read it.
@@ -38,7 +40,7 @@ function seededGroup(name: string): SeedCategoryGroup {
 const SPECIMEN_CATEGORIES = ['Protection & Defense', 'Mind & Spirit', 'Craft & Change'].map(
   (name, i) => ({ category: { id: `specimen-${i}`, name }, group: seededGroup(name) }),
 );
-const SPECIMEN_FORMS = [
+const SPECIMEN_FORMS: SafetyVariant[] = [
   { form: 'dried leaf', formChoice: { group: { icon: 'botanical' } }, safetyNotes: '' },
   { form: 'whole root', safetyNotes: '' },
   { form: 'oil', formChoice: { group: { icon: 'fluid' } }, safetyNotes: '' },
@@ -70,7 +72,7 @@ const RUNTIME_TOKENS: readonly (readonly [token: string, purpose: string])[] = [
 ];
 
 // The Pager section's list: nothing on its way, and a press going nowhere.
-const STILL_LIST: ListNavigation = { pending: false, go: () => {} };
+const STILL_LIST: ListNavigation = { pending: false, searching: false, go: () => {} };
 
 // Keys only: each value, and the label beside it, is printed by
 // foundations.scss from the map in _variables.scss.
@@ -425,8 +427,7 @@ export default function Foundations(): ReactElement {
           Palette, type, spacing and every shared primitive, each rendered from the same{' '}
           <code>_variables.scss</code>, <code>_mixins.scss</code>, <code>_typography.scss</code> and{' '}
           <code>_primitives.scss</code> the components use. Switch the toolbar theme to see all of
-          it move together; the <strong>Light</strong>, <strong>Dark</strong> and{' '}
-          <strong>Phone</strong> stories pin a theme and a width.
+          it move together; the toolbar's viewport menu sets the width.
         </p>
       </header>
 
@@ -892,7 +893,7 @@ export default function Foundations(): ReactElement {
         </SectionHead>
         <div className="fd-stage">
           <IngredientCard
-            href="/compendium/ingredients/testwort-testalis"
+            href={route('/compendium/ingredients/testwort-testalis')}
             label="Testwort"
             formalName="Fixtura testalis"
             nomenclature="botanical"

@@ -255,17 +255,14 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Layout / Tabbed Page`: the People page in the admin layout's frame, the nav in
 its context row above, with its Invitations tab open and the pills beside the heading, New Invitation at the
-end of the line, as `/admin/invitations` draws it. `Default`; `PhoneDark` and
-`PhoneLight` at 375px, the pills under the heading and New Invitation at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
-tab, with no action; and `LoadingState` with `LoadingPhoneDark` and
-`LoadingPhoneLight`, Users on its way: the action and the row greyed out, the
-pill moved to Users in its pending look, over its skeleton with the filter row,
-the rows as cards at 375px; and `LoadingUnfiltered`, the skeleton without the
+end of the line, as `/admin/invitations` draws it. `Default`; `PrivilegeChangesTab`, on Privilege Changes, the last
+tab, with no action; and `LoadingState`, Users on its way: the action and the row greyed out, the
+pill moved to Users in its pending look, over its skeleton with the filter row; and `LoadingUnfiltered`, the skeleton without the
 filter row. Hover, focus and the pressed look are real input, so no story
 holds them. The workshop's stub router goes nowhere, so those stories provide
 `TabSwitchContext` above the page, holding a tab on its way; the stub
 `usePathname` says which address is open ([`workshop.md`](../workshop.md),
-".ladle/"). The admin lists' own stories (`UserList`, `AdminInvitations`,
+".storybook/"). The admin lists' own stories (`UserList`, `AdminInvitations`,
 `PrivilegeLedger`, `GroupedValueList`'s phone pair) sit in their tabbed page
 too, each with its tab's action.
 

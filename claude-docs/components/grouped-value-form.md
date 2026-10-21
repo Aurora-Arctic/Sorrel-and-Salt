@@ -234,11 +234,6 @@ save answers with the generic error.
 - `AskingToDelete`: the category's edit with Delete pressed once drawn, the
   question over the form, which is dimmed and held beneath it until Delete or
   Keep It answers.
-- `PhoneDark` and `PhoneLight`: the category's edit at 375px in each theme,
-  where the buttons stack and the type-ahead Group opens inside the modal.
-- `EditingADeityDark`, `EditingADeityLight`, `EditingADeityPhoneDark` and
-  `EditingADeityPhoneLight`: a deity's edit head in each theme, at the
-  workshop's width and at 375px.
 
 ## Testing
 

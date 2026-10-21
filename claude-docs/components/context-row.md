@@ -63,9 +63,7 @@ The row is a named region (`section`, labelled "Context"), so its lead sits insi
 - `Admin`: "Admin" as the lead, with `AdminNav` beside it.
 - `Coven`: the coven switcher as the lead, with `CovenNav` beside it as a
   member sees it (Overview and Members).
-- `Phone`: the coven row at 375px, where the nav has left for the bottom bar
-  and the lead has the row.
-- `PhoneLongName`: a coven name long enough to wrap to two lines at 375px.
+- `LongWorkspaceName`: a coven name long enough to wrap to two lines at 375px, where the nav has left for the bottom bar and the lead has the row.
 
 ## Testing
 

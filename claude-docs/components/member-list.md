@@ -95,8 +95,7 @@ used: `space()`, `type-size('caption')`, `$text-muted`, `$table-stack-width`.
 `Coven / Member List`: `ReadOnly`, a member's view with no controls;
 `WithActions`, an owner's, with plain buttons standing in for the page's
 controls and the Email column; and `SoleOwner`, the owner's page composition, addresses included, with the sole-owner note
-inside a `ListFrame` ahead of the list, with `SoleOwnerPhoneDark` and
-`SoleOwnerPhoneLight` at 375px.
+inside a `ListFrame` ahead of the list.
 
 ## Tests
 

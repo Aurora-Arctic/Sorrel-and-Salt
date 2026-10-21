@@ -134,10 +134,7 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
 
 [`index.stories.tsx`](../../src/components/SectionNav/index.stories.tsx),
 titled "Navigation / Section Nav":
-`Coven` and `Admin` at the workshop's width; `AdminTablet` and
-`AdminOnAHiddenPage` at 700px (More, and More carrying People);
-`AdminPhoneDark`, `AdminPhoneLight` and `AdminPhoneOnAHiddenPage` at 375px;
-`CovenPhone`. Each sits in a stand-in for the context row; on a phone the nav
+`Coven` and `Admin` at the workshop's width; `AdminOnAHiddenPage` pinned at 700px (More carrying People). The toolbar viewport menu shows any of them at 375px. Each sits in a stand-in for the context row; on a phone the nav
 leaves it for the foot of the window. Hover, focus and the keyboard are real
 input, so no story holds them.
 

@@ -50,3 +50,18 @@ export const INVITATIONS: AdminInvitationEntry[] = [
     expiresAt: new Date('2026-10-16T09:00:00Z'),
   },
 ];
+
+/** Who last edited a row and when, for every list row the stories draw. */
+export const FIXTURE_EDIT = {
+  updatedBy: 'Fixture Editor',
+  updatedAt: new Date('2026-05-06T10:00:00Z'),
+} as const;
+
+/** The coven the coven-area stories open: its name, and its slug as the URL gives it. */
+export const FIXTURE_COVEN = { name: 'Fixture Coven', slug: 'fixture-coven' } as const;
+
+/** The id of the group the group and grouped-value form stories edit. */
+export const FIXTURE_GROUP_ID = '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a';
+
+/** The id the coven-area stories give the fixture coven, where a story needs a workspace id. */
+export const FIXTURE_WORKSPACE_ID = '00000000-0000-4000-8000-0000000000c1';

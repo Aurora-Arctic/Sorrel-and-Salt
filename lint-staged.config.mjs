@@ -14,7 +14,7 @@ export default {
   '*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}': 'oxlint',
 
   // The same scope as `lint:css`; any other .scss is not linted there either.
-  '{src,.ladle}/**/*.scss': 'stylelint --allow-empty-input',
+  '{src,.storybook}/**/*.scss': 'stylelint --allow-empty-input',
 
   // Prettier still honours .prettierignore for a path passed by name, so the
   // generated files it skips stay skipped; --ignore-unknown drops what it

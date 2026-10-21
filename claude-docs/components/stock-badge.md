@@ -86,7 +86,7 @@ The inks were checked as text on both surfaces of both themes, and clear 4.5:1: 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/StockBadge/index.stories.tsx), under
-`Surfaces / Stock Badge`: `Low`, `Out`, and `PhoneDark` and `PhoneLight` showing a jar line of each state at 375px.
+`Ingredients / Stock Badge`: `Default` (low) and `Out`.
 
 ## Testing
 

@@ -106,7 +106,7 @@ exported from `index.tsx`, and a test guards it against the Sass `$shell-tablet-
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/FacetPanel/index.stories.tsx), under `Admin / Facet Panel`:
+[`index.stories.tsx`](../../src/components/FacetPanel/index.stories.tsx), under `Ingredients / Facet Panel`:
 `Empty`, `Public`, `Chosen`, `FormsAndToxic`, `Admin`, `Coven` and `CovenEmpty`; the counts
 (`MatchShown`, `AllZeroFacet`); each choice chip stuck on a value (`MatchStuck`, `ToxicStuck`,
 `SourceStuck`); and each chip's menu open (`MatchMenu`, `SourceMenu`, `ToxicMenu`).

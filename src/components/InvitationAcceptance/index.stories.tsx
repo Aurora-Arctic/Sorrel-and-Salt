@@ -1,6 +1,6 @@
 import type { Route } from 'next';
-import type { Story } from '@ladle/react';
-import { usePressOnMount } from '../../../.ladle/press';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { usePressOnMount } from '../../../.storybook/press';
 import InvitationAcceptance from '.';
 import type { InvitationAcceptanceProps } from './types';
 
@@ -8,9 +8,11 @@ import type { InvitationAcceptanceProps } from './types';
 // Accept talks to the network only on a click, so nothing is mocked: the
 // workshop has no server, so a click fails into the callout under Accept
 // (ClickFeedback), which is itself a state worth seeing.
-export default {
+const meta = {
   title: 'Pages / Invitation Acceptance',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // Inside the page's own frame, so the workshop shows what the page shows.
 const Page = (props: InvitationAcceptanceProps) => (
@@ -40,24 +42,32 @@ const UNVERIFIED =
 const PAUSED =
   "Admin changes are paused, so this invitation can't be accepted until they are resumed.";
 
-export const SignedOut: Story = () => <Page status="signed-out" signInHref={SIGN_IN} />;
+const SignedOutView = () => <Page status="signed-out" signInHref={SIGN_IN} />;
 
-export const Acceptable: Story = () => (
+export const SignedOut: Story = { render: SignedOutView };
+
+const AcceptableView = () => (
   <Page status="acceptable" token="workshop" tier="site" siteRole="admin" landing="/admin" />
 );
 
-export const AcceptableCurator: Story = () => (
-  <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
-);
+export const Default: Story = { render: AcceptableView };
+
+export const AcceptableCurator: Story = {
+  render: () => (
+    <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
+  ),
+};
 
 // Accept pressed and refused: the workshop's request finds no server, so the
 // callout says the generic sentence, with the badge on Accept's corner.
-export const AcceptRefused: Story = () => {
+const AcceptRefusedView = () => {
   usePressOnMount('Accept Invitation');
-  return <Acceptable />;
+  return <AcceptableView />;
 };
 
-export const AcceptableCoven: Story = () => (
+export const AcceptRefused: Story = { render: AcceptRefusedView };
+
+const AcceptableCovenView = () => (
   <Page
     status="acceptable"
     token="workshop"
@@ -67,57 +77,29 @@ export const AcceptableCoven: Story = () => (
   />
 );
 
-export const Unverified: Story = () => (
-  <Page status="refused" message={UNVERIFIED} emailHref={EMAIL_PAGE} />
-);
+export const AcceptableCoven: Story = { render: AcceptableCovenView };
 
-export const Invalid: Story = () => <Page status="refused" message={INVALID} />;
+const UnverifiedView = () => <Page status="refused" message={UNVERIFIED} emailHref={EMAIL_PAGE} />;
 
-export const Accepted: Story = () => <Page status="refused" message={ACCEPTED} />;
+export const Unverified: Story = { render: UnverifiedView };
 
-export const Revoked: Story = () => <Page status="refused" message={REVOKED} />;
+export const Invalid: Story = { render: () => <Page status="refused" message={INVALID} /> };
 
-export const Expired: Story = () => <Page status="refused" message={EXPIRED} />;
+export const Accepted: Story = { render: () => <Page status="refused" message={ACCEPTED} /> };
 
-export const Declined: Story = () => <Page status="refused" message={DECLINED} />;
+export const Revoked: Story = { render: () => <Page status="refused" message={REVOKED} /> };
+
+export const Expired: Story = { render: () => <Page status="refused" message={EXPIRED} /> };
+
+export const Declined: Story = { render: () => <Page status="refused" message={DECLINED} /> };
 
 // A link into a deleted coven (MB.119 decision f): its own reason, `closed`.
-export const DeletedCoven: Story = () => <Page status="refused" message={CLOSED} />;
+const DeletedCovenView = () => <Page status="refused" message={CLOSED} />;
 
-export const DifferentAddress: Story = () => <Page status="refused" message={DIFFERENT_ADDRESS} />;
+export const DeletedCoven: Story = { render: DeletedCovenView };
 
-export const Paused: Story = () => <Page status="refused" message={PAUSED} />;
+export const DifferentAddress: Story = {
+  render: () => <Page status="refused" message={DIFFERENT_ADDRESS} />,
+};
 
-// Phone and both themes, for the states that differ in shape: the signed-out
-// and acceptable ones (a sentence and a button), a refused Accept (a button
-// and its callout), the unverified one (an alert and a button) and a refusal
-// (an alert alone).
-export const SignedOutPhoneDark: Story = () => <SignedOut />;
-SignedOutPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const SignedOutPhoneLight: Story = () => <SignedOut />;
-SignedOutPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const AcceptableCovenPhoneDark: Story = () => <AcceptableCoven />;
-AcceptableCovenPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const AcceptableCovenPhoneLight: Story = () => <AcceptableCoven />;
-AcceptableCovenPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const AcceptRefusedPhoneDark: Story = () => <AcceptRefused />;
-AcceptRefusedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const AcceptRefusedPhoneLight: Story = () => <AcceptRefused />;
-AcceptRefusedPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const UnverifiedPhoneDark: Story = () => <Unverified />;
-UnverifiedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const UnverifiedPhoneLight: Story = () => <Unverified />;
-UnverifiedPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const DeletedCovenPhoneDark: Story = () => <DeletedCoven />;
-DeletedCovenPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const DeletedCovenPhoneLight: Story = () => <DeletedCoven />;
-DeletedCovenPhoneLight.meta = { theme: 'light', width: 375 };
+export const Paused: Story = { render: () => <Page status="refused" message={PAUSED} /> };

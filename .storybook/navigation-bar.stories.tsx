@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react';
 import { BAR_FADE_MS, LOADING_DELAY_MS } from '../src/lib/navigation/timing';
 import '../src/lib/navigation/navigation-bar.scss';
@@ -13,9 +13,11 @@ import { ShellFrame } from './shell-frame';
 // (`meta.reducedMotion`) does not reach a CSS media query, so to see it turn on
 // the OS "reduce motion" setting, or emulate `prefers-reduced-motion: reduce`
 // in devtools (Rendering tab). The theme follows the workshop's toolbar switch.
-export default {
-  title: 'Feedback / Loading / Navigation Bar',
-};
+const meta = {
+  title: 'Feedback / Navigation Bar',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // The bar is `position: fixed` against the window, but the frame pads the shell
 // in from the window's edge. A transformed box makes it the bar's containing
@@ -29,18 +31,22 @@ const BarFrame = ({ children }: { children: ReactNode }): ReactElement => (
   </div>
 );
 
-export const Shown: Story = () => (
-  <BarFrame>
-    <div className="navigation-bar" aria-hidden="true" />
-  </BarFrame>
-);
+export const Default: Story = {
+  render: () => (
+    <BarFrame>
+      <div className="navigation-bar" aria-hidden="true" />
+    </BarFrame>
+  ),
+};
 
 // `hidden` and `data-leaving` together, the fade-out; reload to see it.
-export const Leaving: Story = () => (
-  <BarFrame>
-    <div className="navigation-bar" aria-hidden="true" hidden data-leaving="" />
-  </BarFrame>
-);
+export const Leaving: Story = {
+  render: () => (
+    <BarFrame>
+      <div className="navigation-bar" aria-hidden="true" hidden data-leaving="" />
+    </BarFrame>
+  ),
+};
 
 type Step = 'idle' | 'waiting' | 'shown' | 'leaving';
 
@@ -86,8 +92,10 @@ const Looping = (): ReactElement => {
   );
 };
 
-export const Navigating: Story = () => (
-  <BarFrame>
-    <Looping />
-  </BarFrame>
-);
+export const Navigating: Story = {
+  render: () => (
+    <BarFrame>
+      <Looping />
+    </BarFrame>
+  ),
+};

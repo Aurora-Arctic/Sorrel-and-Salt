@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, useEffect, useLayoutEffect, useRef } from 'react';
 import StockDialog from '.';
 import type { StockForm, StockJar } from './types';
@@ -7,9 +7,11 @@ import type { StockForm, StockJar } from './types';
 // workshop the call reaches no server: OpenRefused and OpenFailed each
 // answer it with a canned refusal the real server can send. Every name is
 // invented.
-export default {
+const meta = {
   title: 'Ingredients / Stock Dialog',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const INGREDIENT = '00000000-0000-4000-8000-000000000002';
@@ -52,7 +54,7 @@ const Dialog = ({ jars }: { jars: StockJar[] }): ReactElement => (
   />
 );
 
-export const Default: Story = () => <Dialog jars={[LEAF, OIL]} />;
+export const Default: Story = { render: () => <Dialog jars={[LEAF, OIL]} /> };
 
 /** Sets a box's value as typing would, so react-hook-form hears it. */
 function type(box: HTMLInputElement | null | undefined, value: string): void {
@@ -194,24 +196,12 @@ const Pressed = ({
   );
 };
 
-export const Open: Story = () => <Pressed jars={[LEAF, OIL]} />;
-export const OpenNoneHeld: Story = () => <Pressed jars={[]} />;
-export const OpenAllHeld: Story = () => <Pressed jars={[LEAF, OIL, RESIN]} />;
-export const OpenRefused: Story = () => <Pressed jars={[LEAF, OIL, RESIN]} refuse />;
-export const OpenFailed: Story = () => <Pressed jars={[LEAF, OIL]} save />;
-export const OpenRemoving: Story = () => <Pressed jars={[LEAF, OIL]} remove />;
-export const OpenPhoneDark: Story = () => <Pressed jars={[LEAF, OIL]} />;
-export const OpenPhoneLight: Story = () => <Pressed jars={[LEAF, OIL]} />;
-export const OpenPhoneNoneHeld: Story = () => <Pressed jars={[]} />;
+export const Open: Story = { render: () => <Pressed jars={[LEAF, OIL]} /> };
+export const OpenNoneHeld: Story = { render: () => <Pressed jars={[]} /> };
+export const OpenAllHeld: Story = { render: () => <Pressed jars={[LEAF, OIL, RESIN]} /> };
+export const OpenRefused: Story = { render: () => <Pressed jars={[LEAF, OIL, RESIN]} refuse /> };
+export const OpenFailed: Story = { render: () => <Pressed jars={[LEAF, OIL]} save /> };
+export const OpenRemoving: Story = { render: () => <Pressed jars={[LEAF, OIL]} remove /> };
 
 // A modal draws in the page's own document, so its stories sit in a frame of
 // their own (claude-docs/workshop.md).
-Open.meta = { iframed: true };
-OpenNoneHeld.meta = { iframed: true };
-OpenAllHeld.meta = { iframed: true };
-OpenRefused.meta = { iframed: true };
-OpenFailed.meta = { iframed: true };
-OpenRemoving.meta = { iframed: true };
-OpenPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-OpenPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
-OpenPhoneNoneHeld.meta = { iframed: true, theme: 'dark', width: 375 };

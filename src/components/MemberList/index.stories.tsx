@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import MemberList from '.';
 import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
@@ -8,9 +8,11 @@ import type { MemberListEntry } from './types';
 // member's view leaves the addresses out; an owner's draws them (M11.19). The
 // controls are plain buttons standing in for the page's own, styled as the
 // admin user table styles its own: Change Role quiet, Remove destructive.
-export default {
+const meta = {
   title: 'Coven / Member List',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const MEMBERS: readonly MemberListEntry[] = [
   {
@@ -45,27 +47,31 @@ const MEMBERS: readonly MemberListEntry[] = [
   },
 ];
 
-export const ReadOnly: Story = () => <MemberList members={MEMBERS} currentUserId="u-bo" />;
+export const Default: Story = {
+  render: () => <MemberList members={MEMBERS} currentUserId="u-bo" />,
+};
 
-export const WithActions: Story = () => (
-  <MemberList
-    members={MEMBERS}
-    currentUserId="u-ada"
-    showEmail
-    roleAction={() => (
-      <button type="button" className="btn btn--small btn--quiet">
-        Change Role
-      </button>
-    )}
-    removeAction={(member) =>
-      member.role === 'owner' ? null : (
-        <button type="button" className="btn btn--small btn--destructive">
-          Remove
+export const WithActions: Story = {
+  render: () => (
+    <MemberList
+      members={MEMBERS}
+      currentUserId="u-ada"
+      showEmail
+      roleAction={() => (
+        <button type="button" className="btn btn--small btn--quiet">
+          Change Role
         </button>
-      )
-    }
-  />
-);
+      )}
+      removeAction={(member) =>
+        member.role === 'owner' ? null : (
+          <button type="button" className="btn btn--small btn--destructive">
+            Remove
+          </button>
+        )
+      }
+    />
+  ),
+};
 
 // The page's composition: the sole-owner note inside the list frame, ahead of
 // the list, so the frame's gap spaces it (MB.119; src/app/(shell)/coven/[slug]/
@@ -98,10 +104,4 @@ const SoleOwnerPage = () => (
   </ListFrame>
 );
 
-export const SoleOwner: Story = () => <SoleOwnerPage />;
-
-export const SoleOwnerPhoneDark: Story = () => <SoleOwnerPage />;
-SoleOwnerPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const SoleOwnerPhoneLight: Story = () => <SoleOwnerPage />;
-SoleOwnerPhoneLight.meta = { theme: 'light', width: 375 };
+export const SoleOwner: Story = { render: () => <SoleOwnerPage /> };

@@ -1,14 +1,16 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
 import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
 import FormIcon from '.';
 
 // Render-only; which icon a name draws is asserted in tests/components/FormIcon.
 // The owner's review of the six group icons happens here: all seven marks
-// at the three sizes a list row, a heading and a card head set, in each theme.
-export default {
+// at the three sizes a list row, a heading and a card head set.
+const meta = {
   title: 'Surfaces / Form Icon',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const NAMES = [...FORM_GROUP_ICONS, null] as const;
 const SIZES = ['1rem', '1.25rem', '1.5rem'] as const;
@@ -53,9 +55,5 @@ const Sheet = (): ReactElement => (
   </table>
 );
 
-// The seven marks at 1rem, 1.25rem and 1.5rem, in each theme.
-export const Default: Story = () => <Sheet />;
-Default.meta = { theme: 'dark' };
-
-export const Light: Story = () => <Sheet />;
-Light.meta = { theme: 'light' };
+// The seven marks at 1rem, 1.25rem and 1.5rem. The toolbar's theme control shows each theme.
+export const Default: Story = { render: () => <Sheet /> };

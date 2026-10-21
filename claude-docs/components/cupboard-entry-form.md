@@ -36,7 +36,7 @@ Seven, in this order: Label, Description, Safety Notes, Elements, Celestial Bodi
 
 ## Stories
 
-`Unannotated` and `Annotated`. The workshop has no API, so a save answers with the generic error.
+`Default` and `Annotated`. The workshop has no API, so a save answers with the generic error.
 
 ## Testing
 

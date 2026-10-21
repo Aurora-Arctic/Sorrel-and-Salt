@@ -54,9 +54,8 @@ the admin area's actions spanned the line ([`styling.md`](../styling.md),
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PageHeader/index.stories.tsx),
-`Layout / Page Header`: `WithAnAction` and `HeadingAlone`, the compendium's
-heading, and `PhoneDark` and
-`PhoneLight` with a longer heading, Deity Traditions, at 375px, the Add as a plus beside it. Each
+`Layout / Page Header`: `Default` and `HeadingAlone`, the compendium's
+heading, and `LongHeadingWithAction` with a longer heading, Deity Traditions (at 375px, from the toolbar viewport menu, the Add is a plus beside it). Each
 sits in the admin layout as it is, through the workshop's `AdminFrame`: the
 context row and nav above the `.page-column` column, the header in a `main`
 as the compendium page draws it, with its own Add Ingredient.

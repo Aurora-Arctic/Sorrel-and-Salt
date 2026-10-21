@@ -211,7 +211,7 @@ and its target) in React context, so the bar and the regions can follow a
 navigation that a button elsewhere in the tree started.
 `useNavigationState()` joins it with the one thing React cannot see, the
 `leaving` flag of a small external store, set by `reportLeaving()` and cleared
-only by a restored page. Outside the provider (a Ladle story, a component test)
+only by a restored page. Outside the provider (a Storybook story, a component test)
 `usePendingNavigation` makes a plain router call in a transition and shows no
 wait.
 
@@ -359,16 +359,16 @@ More examples:
 ## Stories
 
 Search "loading" in the workshop to find every one; they all sit under
-`Feedback / Loading / ...`. The two below are not components of their own,
-so their stories live in `.ladle/`:
+`Feedback`. The two below are not components of their own,
+so their stories live in `.storybook/`:
 
-- `Main Body` (`.ladle/main-body.stories.tsx`): `AtRest` shows a page inside the shell;
+- `Main Body` (`.storybook/main-body.stories.tsx`): `Default` shows a page inside the shell;
   `LoadingPage` opens with its link already pressed, so the page has gone and the
   `page` skeleton stands in its `main`, under the page bar.
-- `Pending Link` (`.ladle/pending-link.stories.tsx`): `AtRest` is a link with its
-  hint; `LoadingLink` opens pressed, with the dot showing and `aria-busy` set.
+- `Pending Link` (`.storybook/pending-link.stories.tsx`): `Default` is a link with its
+  hint; `Pending` opens pressed, with the dot showing and `aria-busy` set.
 
-Both run the real `NavigationProvider`. `.ladle/navigating.tsx` keeps the
+Both run the real `NavigationProvider`. `.storybook/navigating.tsx` keeps the
 router call pending for good, as the App Router does until a page renders; its
 "Start Over" button ends the wait.
 

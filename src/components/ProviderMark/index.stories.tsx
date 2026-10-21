@@ -1,13 +1,15 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import ProviderMark from '.';
 import { ProviderUnavailableNote } from './unavailable-note';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 
 // Render-only, and presentation alone: the marks are checked by eye here and
 // by axe on the pages that show them.
-export default {
-  title: 'Surfaces / Provider Mark',
-};
+const meta = {
+  title: 'Sign In / Provider Mark',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const Marks = () => (
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.5rem' }}>
@@ -20,14 +22,11 @@ const Marks = () => (
   </div>
 );
 
-export const Default: Story = () => <Marks />;
-
-export const Light: Story = () => <Marks />;
-Light.meta = { theme: 'light' };
+export const Default: Story = { render: () => <Marks /> };
 
 // Facebook's mark as a brand button draws it, on its blue chip.
-export const FacebookChip: Story = () => <ProviderMark id="facebook" chip />;
+export const FacebookChip: Story = { render: () => <ProviderMark id="facebook" chip /> };
 
-export const UnavailableNote: Story = () => (
-  <ProviderUnavailableNote id="provider-mark-story-note" />
-);
+export const UnavailableNote: Story = {
+  render: () => <ProviderUnavailableNote id="provider-mark-story-note" />,
+};

@@ -21,3 +21,13 @@ export function press(name: string): void {
 export function usePressOnMount(name: string): void {
   useEffect(() => press(name), [name]);
 }
+
+/**
+ * Types `value` into `input` so React sees it: React tracks an input's value
+ * itself, and only the native setter, followed by an `input` event, reaches its
+ * `onChange`. Setting `input.value` directly changes nothing React hears.
+ */
+export function setInputValue(input: HTMLInputElement, value: string): void {
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}

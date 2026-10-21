@@ -95,7 +95,7 @@ Updated's ink is New's in the dark theme and darker in the light one (`#274b0c`)
 
 ## Stories
 
-`index.stories.tsx`: `Own`, `InCupboard`, `InCupboardAnnotated`, `Retired`, `NotInCupboard` and `Recency`, one per kind and mark.
+`index.stories.tsx`: `Default`, `InCupboard`, `InCupboardAnnotated`, `Retired`, `NotInCupboard` and `Recency`, one per kind and mark.
 
 ## Testing
 

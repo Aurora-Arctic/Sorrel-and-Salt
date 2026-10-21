@@ -42,6 +42,6 @@
 
 ## Stories and tests
 
-Stories ([`index.stories.tsx`](../../src/components/AddIcon/index.stories.tsx), `Surfaces / Add Icon`): `OneCoven`, `SeveralCovens`, `Busy`, `Added`, `Returning` and `Held`. Busy, Added and Returning are the plus's markup in those states, since only a press reaches them and the workshop serves no `/api/graphql`.
+Stories ([`index.stories.tsx`](../../src/components/AddIcon/index.stories.tsx), `Surfaces / Add Icon`): `Default`, `SeveralCovens`, `Pending`, `Added`, `Returning` and `Held`. Busy, Added and Returning are the plus's markup in those states, since only a press reaches them and the workshop serves no `/api/graphql`.
 
 Tests: `tests/components/AddIcon/index.test.tsx` (the names and tips) and `tests/components/CompendiumCards/add-icon.test.tsx` (the add, the menu, busy, the check and the refusal). E2e: `tests/e2e/compendium-add.spec.ts`.

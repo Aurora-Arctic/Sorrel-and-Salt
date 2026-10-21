@@ -46,7 +46,7 @@ transition runs (`ListFrame`, `TabbedPage`).
 
 ## Stories
 
-`Feedback / Loading / Skeleton`: `Table`, `TableWithFilter`, `TableWithTitleAndFilter`, `Cards`, `CardsWithFilter`, `CardsWithTitleAndFilter`,
+`Feedback / Skeleton`: `Default` (a table), `TableWithFilter`, `TableWithTitleAndFilter`, `Cards`, `CardsWithFilter`, `CardsWithTitleAndFilter`,
 `Form`, `Page` and `Line`. `line` is one bar the height of a line of text, for a sentence
 that loads in place (the substitute summary's); it ignores `count`.
 

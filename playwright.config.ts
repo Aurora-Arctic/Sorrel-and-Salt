@@ -18,7 +18,7 @@ const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 // `testDir` lists this itself; `npm run e2e` never runs a story.
 const STORIES_SPECS = /[\\/]stories[\\/]/;
 
-// The workshop specs measure a component in its Ladle story, against the
+// The workshop specs measure a component in its Storybook story, against the
 // workshop server alone: playwright.workshop.config.ts runs them, `npm run
 // e2e` never does.
 const WORKSHOP_SPECS = /[\\/]workshop[\\/]/;

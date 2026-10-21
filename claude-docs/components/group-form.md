@@ -8,13 +8,13 @@ It is [`GroupedValueForm`](grouped-value-form.md)'s shape, and everything that p
 
 `GroupFormProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                                                                                                                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `kind`        | `'category'`, `'form'` or `'tradition'`: which mutations, whether to ask for colours, and the nouns for the group and the rows it holds                                                                                                                      |
-| `group`       | The group to edit, as `{ id, name, description, colorDark, colorLight, icon }`, the colours `''` for a form group or a tradition, `icon` a icon name or `''` for none                                                                                        |
-| `groups`      | Every live group of the kind, `{ id, name }`, for a category group `colorDark` and `colorLight`, for a form group its `icon`, alphabetical (MB.35); the move offers every one but `group`, and each colour picker warns of a colour too near another group's |
-| `memberCount` | How many live categories, forms or deities `group` holds, which a delete must move; 0 by default                                                                                                                                                             |
-| `onDone`      | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it                                                                                                                                               |
+| Prop          | What it is                                                                                                                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`        | `'category'`, `'form'` or `'tradition'`: which mutations, whether to ask for colours, and the nouns for the group and the rows it holds                                                                                                 |
+| `group`       | The group to edit, as `{ id, name, description, colorDark, colorLight, icon }`, the colours `''` for a form group or a tradition, `icon` a icon name or `''` for none                                                                   |
+| `groups`      | Every live group of the kind, `{ id, name }`, for a category group `color`, for a form group its `icon`, alphabetical (MB.35); the move offers every one but `group`, and each colour picker warns of a colour too near another group's |
+| `memberCount` | How many live categories, forms or deities `group` holds, which a delete must move; 0 by default                                                                                                                                        |
+| `onDone`      | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it                                                                                                                          |
 
 Without `group`, the form adds one.
 
@@ -24,7 +24,7 @@ Everything that tells one kind from another is its entry in `index.tsx`'s `KINDS
 
 ## Contracts
 
-- **The shared schema runs first, the contrast floor included.** react-hook-form runs `CategoryGroupInput`, `IngredientFormGroupInput` or `DeityTraditionInput` (`src/modules/vocabulary/validation/`) through the Zod resolver. A category group's colour under 4.5:1 on its own ground is refused beside its own picker before any request, in the service's words: "The dark theme colour reads 2.16:1 on the dark card — it needs at least 4.5:1" (MB.36, MB.43; [`../styling.md`](../styling.md), "Chips, badges and the solid-fill rule"). The form group's and the tradition's schemas drop the two empty colours, so their mutations never receive them. A `VALIDATION` error's `fieldErrors` land beside `name`, `description`, `colorDark`, `colorLight` or `icon`. Anything else renders above the fields in a `role="alert"` notice.
+- **The shared schema runs first, the contrast floor included.** react-hook-form runs `CategoryGroupInput`, `IngredientFormGroupInput` or `DeityTraditionInput` (`src/modules/vocabulary/validation/`) through the Zod resolver. A category group's colour under 4.5:1 on its own ground is refused beside its own picker before any request, in the service's words: "The dark theme colour reads 2.16:1 on the dark card — it needs at least 4.5:1" (MB.36, MB.43; [`../styling.md`](../styling.md), "Chips, badges and the solid-fill rule"). The form group's and the tradition's schemas drop the two empty colours, so their mutations never receive them. A `VALIDATION` error's `fieldErrors` land beside `name`, `description`, `color` or `icon`. Anything else renders above the fields in a `role="alert"` notice.
 - **A group holding rows is deleted only once they have somewhere to go.** This is the owner's call ([`m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)). The delete runs in two steps, each a question asked over the form, which is dimmed and held until it is answered (MB.115, the owner's call; [`modal.md`](modal.md), "Asking over the form"):
   1. Delete Group asks with a `ComboboxSelect` labelled, in title case as every label is, "Move Its N Categories To" (or "Forms", or "Deities"; "Move Its 1 Category To" for one), offering every other live group, beside Continue and Keep It; the picker's label names the question. For forms each choice draws its group's icon before its name, the generic spoon where the group has none, as the chosen value does (M12.7); the other kinds draw none. Continue stays disabled until a group is chosen. Keep It takes the focus.
   2. Continue asks the admin to confirm the move it names: `Move N categories to "<target>" and delete "<group>"? Each category keeps its name, its address and the entries filed under it.` For forms the sentence ends: `Each form keeps its name and takes its new group's address.` For deities: `Each deity keeps its name and takes its new tradition's address.` A category's slug is its name alone, so a moved category keeps its address. A form's slug carries its group's name and a deity's its tradition's, so each moved row is re-slugged ([`mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)). Move and Delete sends the delete with `moveTo`. Back, which takes the focus, returns to the choice, still chosen. Each step is its own question, keyed by its step, so each takes the focus on its own safe answer; Keep It puts the delete away and the focus back on Delete Group.
@@ -83,8 +83,6 @@ there is none.
 - `AskingWhereToMove`: the category group's edit with Delete Group pressed
   once drawn, the first step of the delete over the form, which is dimmed and
   held beneath it.
-- `PhoneDark` and `PhoneLight`: the category group's edit at 375px in each
-  theme.
 
 ## Testing
 

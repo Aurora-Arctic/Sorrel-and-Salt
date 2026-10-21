@@ -1,12 +1,14 @@
-import type { Story } from '@ladle/react';
-import { WorkshopPathname } from '../../../.ladle/navigation';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { WorkshopPathname } from '../../../.storybook/navigation';
 import WorkspaceSwitcher from '.';
 
 // Render-only; behaviour is asserted in tests/components/WorkspaceSwitcher.
 // The workshop's router goes nowhere, so a choice only closes the list.
-export default {
+const meta = {
   title: 'Coven / Coven Switcher',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const WORKSPACES = [
   { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
@@ -15,25 +17,28 @@ const WORKSPACES = [
 ];
 
 // In a workspace: its name is the value.
-export const InWorkspace: Story = () => (
+const InWorkspaceView = () => (
   <WorkshopPathname.Provider value="/coven/testwort-circle/ingredients">
     <WorkspaceSwitcher workspaces={WORKSPACES} />
   </WorkshopPathname.Provider>
 );
 
+export const Default: Story = { render: InWorkspaceView };
+
 // Outside any workspace, on the account page: nothing chosen yet.
-export const OutsideWorkspace: Story = () => (
-  <WorkshopPathname.Provider value="/account">
-    <WorkspaceSwitcher workspaces={WORKSPACES} />
-  </WorkshopPathname.Provider>
-);
+export const OutsideWorkspace: Story = {
+  render: () => (
+    <WorkshopPathname.Provider value="/account">
+      <WorkspaceSwitcher workspaces={WORKSPACES} />
+    </WorkshopPathname.Provider>
+  ),
+};
 
 // A viewer holding creation rights: the list ends with Create Coven (M9.16).
-export const CanCreate: Story = () => (
-  <WorkshopPathname.Provider value="/coven/testwort-circle">
-    <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />
-  </WorkshopPathname.Provider>
-);
-
-export const Phone: Story = () => <InWorkspace />;
-Phone.meta = { width: 375 };
+export const CanCreate: Story = {
+  render: () => (
+    <WorkshopPathname.Provider value="/coven/testwort-circle">
+      <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />
+    </WorkshopPathname.Provider>
+  ),
+};

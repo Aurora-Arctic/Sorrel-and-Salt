@@ -1,30 +1,31 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
-import { AdminFrame as Frame } from '../../../.ladle/admin-frame';
+import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
 import { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
 // one prop, `managesPeople`: an admin sees every page, a curator all but
 // People (M11.20). The workshop's `usePathname`
-// stub answers `/admin/users` (.ladle/navigation.ts), the People page's
+// stub answers `/admin/users` (.storybook/navigation.ts), the People page's
 // Users tab, so People is the current page in every story. Each sits in the
 // admin layout as it is (`AdminFrame`): the nav in the context row led by
 // "Admin", above the `.page-column` column that holds the page.
-export default {
-  title: 'Admin / Admin Nav',
-};
+const meta = {
+  title: 'Admin / Nav',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // Wider than a tablet: six tabs along the row, People set apart by a hairline
 // and marked by weight and the heavy rule. The narrower shapes are
 // SectionNav's stories.
-export const Default: Story = () => <Frame />;
-
-export const Phone: Story = () => <Frame />;
-Phone.meta = { width: 375 };
+export const Default: Story = { render: () => <Frame /> };
 
 // A curator's nav: the five curation pages, and no People. Opened on the
 // compendium, since a curator never reaches the People page.
-export const Curator: Story = () => <Frame open="/admin/compendium" managesPeople={false} />;
+export const Curator: Story = {
+  render: () => <Frame open="/admin/compendium" managesPeople={false} />,
+};
 
 // The `/admin` index under the nav: a lede, then the table of contents in
 // the nav's sections. The page is a server component behind the guard, so
@@ -43,10 +44,7 @@ const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElem
   </Frame>
 );
 
-export const IndexPage: Story = () => <Index />;
-
-export const IndexPagePhone: Story = () => <Index />;
-IndexPagePhone.meta = { width: 375 };
+export const IndexPage: Story = { render: () => <Index /> };
 
 // The index as a curator reads it: the Compendium section alone.
-export const IndexPageCurator: Story = () => <Index managesPeople={false} />;
+export const IndexPageCurator: Story = { render: () => <Index managesPeople={false} /> };

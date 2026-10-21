@@ -1,13 +1,15 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import PageNav from '.';
 
 // Render-only; behaviour is asserted in tests/components/PageNav. With no
 // sections on the page the first entry stays current.
-export default {
+const meta = {
   title: 'Navigation / Page Nav',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = () => (
+const DefaultView = () => (
   <PageNav
     label="On This Page"
     entries={[
@@ -18,9 +20,11 @@ export const Default: Story = () => (
   />
 );
 
+export const Default: Story = { render: DefaultView };
+
 // A run of entries under a group's label, as the ingredient page puts its
 // forms under Forms (M8.19).
-export const Grouped: Story = () => (
+const GroupedView = () => (
   <PageNav
     label="On This Page"
     entries={[
@@ -32,9 +36,11 @@ export const Grouped: Story = () => (
   />
 );
 
+export const Grouped: Story = { render: GroupedView };
+
 // A group set apart by its first entry, as References is when the page has
 // notes: the break and the short rule halfway through it.
-export const GroupedApart: Story = () => (
+const GroupedApartView = () => (
   <PageNav
     label="On This Page"
     entries={[
@@ -47,18 +53,4 @@ export const GroupedApart: Story = () => (
   />
 );
 
-export const GroupedApartPhone: Story = () => <GroupedApart />;
-GroupedApartPhone.meta = { width: 375 };
-
-export const GroupedPhone: Story = () => <Grouped />;
-GroupedPhone.meta = { width: 375 };
-
-// A phone's width: the bar on the left, the text left-aligned.
-export const Phone: Story = () => <Default />;
-Phone.meta = { width: 375 };
-
-export const PhoneDark: Story = () => <Default />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Default />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const GroupedApart: Story = { render: GroupedApartView };

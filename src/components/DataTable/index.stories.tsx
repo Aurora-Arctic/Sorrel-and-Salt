@@ -1,7 +1,7 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 
-import { asOptions, GROUP_NAMES } from '../../../.ladle/fixtures';
+import { asOptions, GROUP_NAMES } from '../../../.storybook/fixtures';
 import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import type { ListBodyProps } from '../ListFrame/types';
@@ -11,9 +11,11 @@ import type { StackColumn } from './types';
 // Render-only; the lists that hold it assert its behaviour, each in its own
 // test. A table sits in its list's ListFrame, as every admin list holds it;
 // narrow the window under 40rem to see the rows turn into cards.
-export default {
+const meta = {
   title: 'Layout / Data Table',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const PAIRS = [
   { colorDark: '#7fb38a', colorLight: '#2f6b3c' },
@@ -47,45 +49,37 @@ const Frame = ({ children }: ListBodyProps) => (
   </ListFrame>
 );
 
-export const Default: Story = () => (
-  <Frame>
-    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
-  </Frame>
-);
+export const Default: Story = {
+  render: () => (
+    <Frame>
+      <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
+    </Frame>
+  ),
+};
 
-export const Roomy: Story = () => (
-  <Frame>
-    <StackTable
-      columns={COLUMNS}
-      rows={ROWS}
-      rowKey={(row) => row.id}
-      empty=""
-      className="data-table--roomy"
-    />
-  </Frame>
-);
+export const Roomy: Story = {
+  render: () => (
+    <Frame>
+      <StackTable
+        columns={COLUMNS}
+        rows={ROWS}
+        rowKey={(row) => row.id}
+        empty=""
+        className="data-table--roomy"
+      />
+    </Frame>
+  ),
+};
 
-export const Empty: Story = () => (
-  <Frame>
-    <StackTable
-      columns={COLUMNS}
-      rows={[]}
-      rowKey={(row) => row.id}
-      empty="There are no groups yet. Add one with Add Group."
-    />
-  </Frame>
-);
-
-export const PhoneDark: Story = () => (
-  <Frame>
-    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
-  </Frame>
-);
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => (
-  <Frame>
-    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
-  </Frame>
-);
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const Empty: Story = {
+  render: () => (
+    <Frame>
+      <StackTable
+        columns={COLUMNS}
+        rows={[]}
+        rowKey={(row) => row.id}
+        empty="There are no groups yet. Add one with Add Group."
+      />
+    </Frame>
+  ),
+};

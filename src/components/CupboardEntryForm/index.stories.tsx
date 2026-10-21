@@ -1,5 +1,5 @@
-import type { Story } from '@ladle/react';
-import { Reopenable } from '../../../.ladle/reopenable';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Reopenable } from '../../../.storybook/reopenable';
 import Modal from '../Modal';
 import CupboardEntryForm from '.';
 import type { CompendiumValues, CupboardOverrides } from './types';
@@ -7,9 +7,11 @@ import type { CompendiumValues, CupboardOverrides } from './types';
 // Render-only; behaviour is asserted in tests/components/CupboardEntryForm.
 // The workshop has no API, so a save answers with the form's generic error.
 // Shown in the modal Annotate This Entry opens it in. Every name is invented.
-export default {
+const meta = {
   title: 'Ingredients / Cupboard Entry Form',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const COMPENDIUM: CompendiumValues = {
   name: 'Testwort',
@@ -50,17 +52,19 @@ const Shown = ({ overrides }: { overrides: CupboardOverrides }) => (
 
 // Nothing annotated yet: every field shows the Compendium's value, and no
 // Restore Original control.
-export const Unannotated: Story = () => <Shown overrides={NONE} />;
+export const Default: Story = { render: () => <Shown overrides={NONE} /> };
 
 // The coven's own label and description, and its celestial bodies cleared on purpose:
 // each changed field shows the Restore Original icon button at its label's end.
-export const Annotated: Story = () => (
-  <Shown
-    overrides={{
-      ...NONE,
-      label: 'Hedgewort',
-      description: 'What our coven makes of it.',
-      celestialBodies: [],
-    }}
-  />
-);
+export const Annotated: Story = {
+  render: () => (
+    <Shown
+      overrides={{
+        ...NONE,
+        label: 'Hedgewort',
+        description: 'What our coven makes of it.',
+        celestialBodies: [],
+      }}
+    />
+  ),
+};

@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import Modal from '../Modal';
 import UserDetail from '.';
@@ -7,9 +7,11 @@ import type { UserCoven, UserDetailUser } from './types';
 // Render-only; behaviour is asserted in tests/components/UserDetail.
 // Impersonate reaches Better Auth, which the workshop does not serve: the
 // question can be seen, its answer cannot.
-export default {
+const meta = {
   title: 'Admin / User Detail',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const FACTS = {
   emailVerified: true,
@@ -73,36 +75,49 @@ const COVENS: readonly UserCoven[] = [
   },
 ];
 
-export const WithCovens: Story = () => <UserDetail user={BO} memberships={COVENS} canImpersonate />;
+export const Default: Story = {
+  render: () => <UserDetail user={BO} memberships={COVENS} canImpersonate />,
+};
 
-export const NoCovens: Story = () => <UserDetail user={BO} memberships={[]} canImpersonate />;
+export const NoCovens: Story = {
+  render: () => <UserDetail user={BO} memberships={[]} canImpersonate />,
+};
 
 // Several providers and an unverified address.
-export const SeveralProviders: Story = () => <UserDetail user={MANY} memberships={COVENS} />;
+export const SeveralProviders: Story = {
+  render: () => <UserDetail user={MANY} memberships={COVENS} />,
+};
 
 // The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one (MB.53).
-export const Admin: Story = () => <UserDetail user={ADA} memberships={COVENS} canImpersonate />;
+export const Admin: Story = {
+  render: () => <UserDetail user={ADA} memberships={COVENS} canImpersonate />,
+};
 
-export const Curator: Story = () => <UserDetail user={DEE} memberships={[]} canImpersonate />;
+export const Curator: Story = {
+  render: () => <UserDetail user={DEE} memberships={[]} canImpersonate />,
+};
 
-export const WithoutImpersonation: Story = () => <UserDetail user={BO} memberships={COVENS} />;
+export const WithoutImpersonation: Story = {
+  render: () => <UserDetail user={BO} memberships={COVENS} />,
+};
 
 // Press Impersonate to see the question over the modal.
-export const InAModal: Story = () => {
-  const [open, setOpen] = useState(true);
-  return (
-    <>
-      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-        Open
-      </button>
-      {open && (
-        <Modal title={BO.name} onClose={() => setOpen(false)}>
-          <UserDetail user={BO} memberships={COVENS} canImpersonate />
-        </Modal>
-      )}
-    </>
-  );
+export const InAModal: Story = {
+  render: () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+          Open
+        </button>
+        {open && (
+          <Modal title={BO.name} onClose={() => setOpen(false)}>
+            <UserDetail user={BO} memberships={COVENS} canImpersonate />
+          </Modal>
+        )}
+      </>
+    );
+  },
 };
 
 // In its own iframe: `showModal()` puts the dialog in the top layer.
-InAModal.meta = { iframed: true };

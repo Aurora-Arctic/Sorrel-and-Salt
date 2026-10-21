@@ -43,7 +43,7 @@ What it looks like is the owner's calls. The area has a crosshair cursor. The ve
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/ChipColorField/index.stories.tsx) has six stories: `DarkTheme` and `LightTheme` on a seeded pair, `UnderTheFloor` (a hex fit for the light page, read on the dark card), `NearAnotherGroup`, a shade off another group's colour, and `PhoneDark` and `PhoneLight`, the dark-theme field at 375px in each page theme, its captions down to single letters.
+[`index.stories.tsx`](../../src/components/ChipColorField/index.stories.tsx) has four stories: `Default` (dark colour) and `LightColour` on a seeded pair, `UnderTheFloor` (a hex fit for the light page, read on the dark card), `NearAnotherGroup`, a shade off another group's colour.
 
 ## Testing
 

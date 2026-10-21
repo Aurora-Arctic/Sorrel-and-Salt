@@ -17,7 +17,7 @@ import './index.scss';
 
 /**
  * The control's own document, which its listeners go on and its events are
- * raised on: in a story Ladle draws into an iframe the script runs in the page
+ * raised on: in a story Storybook draws into an iframe the script runs in the page
  * around the frame, so the global `document` is not the one a key or a press
  * in the story reaches.
  */

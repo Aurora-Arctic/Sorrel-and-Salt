@@ -1,6 +1,6 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
-import { usePressOnMount } from '../../../.ladle/press';
+import { usePressOnMount } from '../../../.storybook/press';
 import InfoTip from '.';
 
 // Render-only; behaviour is asserted in tests/components/InfoTip. Each story
@@ -8,9 +8,11 @@ import InfoTip from '.';
 // again once it closes. The tip places itself above its nearest positioned
 // ancestor, a form field's `.field__label-row`, so the story gives it one,
 // with room above for the tip to open into.
-export default {
+const meta = {
   title: 'Forms / Info Tip',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const Field = (): ReactElement => {
   usePressOnMount('About Classification');
@@ -30,11 +32,4 @@ const Field = (): ReactElement => {
   );
 };
 
-export const BesideALabel: Story = () => <Field />;
-
-// A phone's width, in each theme: the tip capped at the window.
-export const PhoneDark: Story = () => <Field />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Field />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const Default: Story = { render: () => <Field /> };

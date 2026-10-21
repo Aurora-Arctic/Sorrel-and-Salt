@@ -1,7 +1,7 @@
 # The local development stack; claude-docs/docker.md is the walkthrough.
 #
 #   make docker-up        app + Postgres, migrated and seeded first
-#   make docker-workshop  also the Ladle workshop (profile: workshop)
+#   make docker-workshop  also the Storybook workshop (profile: workshop)
 #   make docker-studio    also Drizzle Studio (profile: studio)
 #   make docker-e2e       run the Playwright suite once (profile: e2e)
 #   make playwright-audit-up  the WebKit/Firefox/phone audit's browsers (profile: audit)
@@ -150,12 +150,23 @@ services:
     init: true
     tty: true
     ports:
-      - '61000:61000' # ladle serve (.ladle/config.mjs)
-      - '61002:61002' # ladle HMR socket (.ladle/config.mjs)
+      # Storybook serves the page and its live-reload socket on this one port.
+      - '61000:61000' # storybook dev (npm run workshop)
     environment:
       NODE_ENV: development
-    # `ladle serve` binds localhost without `--host 0.0.0.0`.
-    command: ['npm', 'run', 'workshop', '--', '--host', '0.0.0.0']
+      # The container's user does not own the host-mounted /app, so git refuses
+      # the repo ("dubious ownership"), and Storybook's change detection, which
+      # runs `git rev-parse` to mark changed stories, then fails. These three
+      # variables trust /app for this container's git only; no config file is written.
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /app
+    # `npm run workshop` already passes `--host 0.0.0.0`, which Storybook needs to
+    # be reachable from the host; the Vite dev server under it reloads the page
+    # over a websocket on the same port. No file-watch polling is set; the bind
+    # mount has not needed it. If edits on the host stop showing up, set
+    # CHOKIDAR_USEPOLLING=1 here.
+    command: ['npm', 'run', 'workshop']
 
   studio:
     # Opt-in: `make docker-studio`. Serves data only — the UI at

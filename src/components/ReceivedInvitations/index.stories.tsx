@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
@@ -6,9 +6,11 @@ import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types'
 // Each story sits in the account page's Invitations section as the page writes
 // it, a panel in the narrow frame under its head: the list's stacked rows
 // depend on the panel's width.
-export default {
-  title: 'Account / Received Invitations',
-};
+const meta = {
+  title: 'Account / Invitations Received',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const ONE: ReceivedInvitationEntry = {
   id: 'i-1',
@@ -54,26 +56,15 @@ const Page = ({ invitations, ...rest }: ReceivedInvitationsProps) => (
   </main>
 );
 
-export const OneInvitation: Story = () => <Page invitations={[ONE]} />;
+export const OneInvitation: Story = { render: () => <Page invitations={[ONE]} /> };
 
-export const SeveralInvitations: Story = () => <Page invitations={SEVERAL} />;
+export const Default: Story = { render: () => <Page invitations={SEVERAL} /> };
 
 // The section is always on the account page, so an empty list is drawn too.
-export const NoInvitations: Story = () => <Page invitations={[]} />;
+export const Empty: Story = { render: () => <Page invitations={[]} /> };
 
-export const SecondPage: Story = () => (
-  <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
-);
-
-// At a phone's width, in each theme, where the rows stack.
-export const OnePhoneDark: Story = () => <Page invitations={[ONE]} />;
-OnePhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const OnePhoneLight: Story = () => <Page invitations={[ONE]} />;
-OnePhoneLight.meta = { theme: 'light', width: 375 };
-
-export const SeveralPhoneDark: Story = () => <Page invitations={SEVERAL} />;
-SeveralPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const SeveralPhoneLight: Story = () => <Page invitations={SEVERAL} />;
-SeveralPhoneLight.meta = { theme: 'light', width: 375 };
+export const LastPage: Story = {
+  render: () => (
+    <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
+  ),
+};

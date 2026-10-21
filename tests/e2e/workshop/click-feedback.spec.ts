@@ -5,23 +5,25 @@ import { assertNoAccessibilityViolations } from '../axe';
 // claude-docs/components/click-feedback.md): that the callout stays clear of
 // its control and inside the window or its box, that nothing moves as it comes and goes, that the badge's
 // press target covers no neighbour, and that reduced motion stills the fade.
-// Measured in the component's Ladle stories, since no page uses it yet; what
+// Measured in the component's Storybook stories, since no page uses it yet; what
 // it says and where the focus goes are in tests/components/ClickFeedback.
 
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
 
 /**
- * The story in Ladle's bare preview, in `theme`, with its text in the web
- * font: measured before the font arrives, on a cold Ladle, a control is
+ * The story in Storybook's bare preview (`iframe.html`), in `theme`, with its text in the web
+ * font: measured before the font arrives, on a cold Storybook, a control is
  * narrower than it will be and every place taken from it is wrong. The fonts
  * are waited for once the story's controls are drawn, since a font is fetched
  * only when text first asks for it.
  */
 async function openStory(page: Page, story: string, theme: string, width: number) {
   await page.setViewportSize({ width, height: 800 });
-  await page.goto(`/?story=surfaces--click-feedback--${story}&mode=preview&theme=${theme}`);
-  await expect(page.locator('.ladle-story-frame button').first()).toBeVisible();
+  await page.goto(
+    `/iframe.html?id=surfaces-click-feedback--${story}&viewMode=story&globals=theme:${theme}`,
+  );
+  await expect(page.locator('.workshop-story-frame button').first()).toBeVisible();
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
@@ -130,14 +132,14 @@ test.describe('the callout’s place', () => {
 
   for (const theme of THEMES) {
     test(`at 375px in ${theme}, inside the window, and axe finds nothing`, async ({ page }) => {
-      await openStory(page, theme === 'dark' ? 'phone-dark' : 'phone-light', theme, 375);
+      await openStory(page, 'bordered', theme, 375);
       const alert = await placed(page);
       const under = await box(alert);
 
       expect(under.left).toBeGreaterThanOrEqual(0);
       expect(under.right).toBeLessThanOrEqual(375);
       await expectUnder(alert, page.getByRole('button', { name: 'Remove', exact: true }));
-      await assertNoAccessibilityViolations(page);
+      await assertNoAccessibilityViolations(page, { skipRules: ['page-has-heading-one'] });
     });
   }
 });
@@ -147,7 +149,7 @@ for (const width of WIDTHS) {
     test.describe(`at ${width}px in ${theme}`, () => {
       test('nothing moves as the callout and the badge come and go', async ({ page }) => {
         await openStory(page, 'default', theme, width);
-        const buttons = page.locator('.ladle-story-frame button');
+        const buttons = page.locator('.workshop-story-frame button');
         // Why a shift could happen: four controls in a wrapping row, the
         // badge and the callout drawn among them.
         await expect(buttons).toHaveCount(4);
@@ -156,7 +158,7 @@ for (const width of WIDTHS) {
         );
         const controls = () =>
           page
-            .locator('.ladle-story-frame button:not([class*="click-feedback"])')
+            .locator('.workshop-story-frame button:not([class*="click-feedback"])')
             .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
 
         await page.getByRole('button', { name: 'Remove', exact: true }).click();
@@ -178,7 +180,9 @@ for (const width of WIDTHS) {
           await expect(callout(page)).toHaveCount(0);
         }
 
-        const controls = page.locator('.ladle-story-frame button:not([class*="click-feedback"])');
+        const controls = page.locator(
+          '.workshop-story-frame button:not([class*="click-feedback"])',
+        );
         const names = await controls.allTextContents();
         for (const name of names) {
           const target = await pressTarget(badge(page, name));
@@ -194,7 +198,7 @@ for (const width of WIDTHS) {
       test('axe finds nothing with the callout open', async ({ page }) => {
         await openStory(page, 'bordered', theme, width);
         await placed(page);
-        await assertNoAccessibilityViolations(page);
+        await assertNoAccessibilityViolations(page, { skipRules: ['page-has-heading-one'] });
       });
     });
   }

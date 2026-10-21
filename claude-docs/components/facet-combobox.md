@@ -82,14 +82,14 @@ Tokens only.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/FacetCombobox/index.stories.tsx),
-under "Admin / Facet Combobox": `NothingChosen`, its list open with every count;
+under "Ingredients / Facet Combobox": `Default`, its list open with every count;
 `SomeChosen`, two elements chosen, the list open on the rest, the zero value
 left out; `CountsLoading`, chips holding the placeholder; `ChosenWithNothingBehindIt`,
 a chosen value with a count of 0, still removable; `WithFormIcons`, icons on
 rows and chips; `Narrow`, the box in a 16rem column, where chips stack; `Typeahead`, the Forms
 filter with typing; and `Grouped`, the Deities filter with tradition headings.
 Story ids use a double dash between the group and the name, for example
-`admin--facet-combobox--some-chosen`.
+`ingredients-facet-combobox--some-chosen`.
 
 ## Testing
 

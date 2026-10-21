@@ -192,8 +192,8 @@ next, so no rule is drawn between them (the owner's call, MB.116).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SignInMethods/index.stories.tsx),
-each inside the page's real frame, section, panel and head: `OneLinked`,
-`TwoLinked`, `StaleSession` (the same two from a stale session), `WithError`
+each inside the page's real frame, section, panel and head: `Default`,
+`TwoLinked`, `StaleSession` (the same two from a stale session), `Failed`
 (a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
 copied sentence), `SomeUnavailable`, `FailedRemove` (Remove Microsoft
 pressed on mount, failing into its callout, since the workshop serves no
@@ -203,9 +203,9 @@ It is composed as `src/app/(shell)/account/page.tsx` composes it: a bare
 heading, `PageNav` with the same four entries, the Invitations section with
 none waiting, the `page-with-nav` class on the `main` so the wide two-column
 layout shows, and no Sign Out, which since
-MB.7 sits only in the account menu. `PhoneDark` and `PhoneLight` show the
-whole page at 375px in each theme, with every row state. The stories are
-titled "Account / Sign-In Methods".
+MB.7 sits only in the account menu. `EveryRowState` shows the
+whole page with every row state. The stories are
+titled "Sign In / Sign-In Methods".
 
 ## Tests
 

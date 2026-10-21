@@ -1,13 +1,15 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import ChipColorField from '.';
 import type { ChipColorFieldProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/ChipColorField. Each
 // field previews its colour on its own ground whatever the workshop's theme.
-export default {
+const meta = {
   title: 'Admin / Chip Colour Field',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const Field = ({
   column,
@@ -39,26 +41,22 @@ const Field = ({
   );
 };
 
-export const DarkTheme: Story = () => <Field column="colorDark" initial="#5d8ab1" />;
+export const Default: Story = { render: () => <Field column="colorDark" initial="#5d8ab1" /> };
 
-export const LightTheme: Story = () => <Field column="colorLight" initial="#286ba6" />;
+export const LightColour: Story = { render: () => <Field column="colorLight" initial="#286ba6" /> };
 
 // Too dark for the dark card: the ratio says so before any save.
-export const UnderTheFloor: Story = () => <Field column="colorDark" initial="#0c5393" />;
+export const UnderTheFloor: Story = {
+  render: () => <Field column="colorDark" initial="#0c5393" />,
+};
 
 // A shade off another group's colour in the same theme: the warning names it.
-export const NearAnotherGroup: Story = () => (
-  <Field
-    column="colorDark"
-    initial="#5f8cb3"
-    others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
-  />
-);
-
-// The dark theme's field at a phone's width, in each page theme: the
-// controls close up and the captions drop to single letters.
-export const PhoneDark: Story = () => <Field column="colorDark" initial="#5d8ab1" />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Field column="colorDark" initial="#5d8ab1" />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const NearAnotherGroup: Story = {
+  render: () => (
+    <Field
+      column="colorDark"
+      initial="#5f8cb3"
+      others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
+    />
+  ),
+};

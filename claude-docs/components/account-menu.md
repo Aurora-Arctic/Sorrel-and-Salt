@@ -129,11 +129,9 @@ rows beneath it.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx),
-titled "Shell / Account Menu": `Closed`, `Open`, `OpenUnverified` (Sign Out
-alone), `OpenPhone` (the links, at 375px), `OpenAtSevenHundred` (the links in
-the panel at 700px), `ClosedWithInvitations` (the dot), `OpenWithInvitations`
-and `OpenWithInvitationsPhone` (the count beside Your Account, at a phone's
-width as well). Every open story draws Sign Out as its last row; there is no
+titled "Shell / Account Menu": `Default`, `Open`, `OpenUnverified` (Sign Out
+alone), `ClosedWithInvitations` (the dot) and `OpenWithInvitations`
+(the count beside Your Account). The toolbar viewport menu shows any of them at a phone's width. Every open story draws Sign Out as its last row; there is no
 story of the button alone, since the app never draws it elsewhere, and in the
 workshop a click shows the failure, as the call reaches no auth server. Each sits at the right, since the panel hangs from the
 button's right edge. The wrapper holds the menu at its top and is tall enough

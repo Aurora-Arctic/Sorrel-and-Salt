@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import { type ReactElement, useLayoutEffect } from 'react';
 import IngredientSearch, { IngredientSearchForm } from '.';
@@ -7,11 +7,13 @@ import type { IngredientSearchMatch } from './types';
 // Render-only; behaviour is asserted in tests/components/IngredientSearch. The
 // dropdown asks `/api/graphql`, which the workshop does not serve, so each
 // story stubs `window.fetch` for as long as it is mounted. Names are invented.
-export default {
-  title: 'Lists / Ingredient Search',
-};
+const meta = {
+  title: 'Ingredients / Ingredient Search',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-const PATH = '/compendium' as Route;
+const PATH: Route = '/compendium';
 
 const matches = (count: number): IngredientSearchMatch[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -19,6 +21,7 @@ const matches = (count: number): IngredientSearchMatch[] =>
     slug: `testwort-${index + 1}`,
     name: index === 0 ? 'Testwort' : `Testwort ${index + 1}`,
     canonicalName: index % 2 === 0 ? 'Fixtura testalis' : null,
+    nomenclature: index % 2 === 0 ? 'botanical' : 'none',
   }));
 
 /** Answers the dropdown's lookup with `rows`; the original `fetch` is put back on unmount. */
@@ -85,10 +88,10 @@ const Shell = ({
 };
 
 /** Type "wort": a few matches, no action row. */
-export const FewMatches: Story = () => <Shell rows={matches(4)} hasNextPage={false} />;
+export const Default: Story = { render: () => <Shell rows={matches(4)} hasNextPage={false} /> };
 
 /** Type "wort": a full dropdown ending in the See all results. row. */
-export const ManyMatches: Story = () => <Shell rows={matches(25)} hasNextPage />;
+export const ManyMatches: Story = { render: () => <Shell rows={matches(25)} hasNextPage /> };
 
 /** Type "wort": nothing matches, so the dropdown says so. */
-export const NoMatches: Story = () => <Shell rows={[]} hasNextPage={false} />;
+export const NoMatches: Story = { render: () => <Shell rows={[]} hasNextPage={false} /> };

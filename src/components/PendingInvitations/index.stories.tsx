@@ -1,11 +1,13 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import PendingInvitations from '.';
 import type { PendingInvitationEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/PendingInvitations.
-export default {
-  title: 'Coven / Pending Invitations',
-};
+const meta = {
+  title: 'Coven / Invitations Sent',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const INVITATIONS: readonly PendingInvitationEntry[] = [
   {
@@ -24,9 +26,11 @@ const INVITATIONS: readonly PendingInvitationEntry[] = [
   },
 ];
 
-export const Listed: Story = () => <PendingInvitations workspaceId="w" invitations={INVITATIONS} />;
+export const Default: Story = {
+  render: () => <PendingInvitations workspaceId="w" invitations={INVITATIONS} />,
+};
 
-export const WithDeclined: Story = () => (
+const WithDeclinedView = () => (
   <PendingInvitations
     workspaceId="w"
     invitations={[
@@ -42,12 +46,8 @@ export const WithDeclined: Story = () => (
   />
 );
 
-export const Empty: Story = () => <PendingInvitations workspaceId="w" invitations={[]} />;
+export const WithDeclined: Story = { render: WithDeclinedView };
 
-// A declined row among the pending ones, at phone width: the row drawn as a
-// card, "Declined" in its badge, Remove in place of Revoke.
-export const WithDeclinedPhoneDark: Story = () => <WithDeclined />;
-WithDeclinedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const WithDeclinedPhoneLight: Story = () => <WithDeclined />;
-WithDeclinedPhoneLight.meta = { theme: 'light', width: 375 };
+export const Empty: Story = {
+  render: () => <PendingInvitations workspaceId="w" invitations={[]} />,
+};

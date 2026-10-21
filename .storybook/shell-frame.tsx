@@ -27,12 +27,20 @@ export const FIXTURE_VIEWER: ShellViewer = {
 // reads it: a member of the first two, so the nav offers Members; a viewer of
 // the third, so a switch to it from a people page lands on its index.
 export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
-  { id: 'w1', slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canWrite: true },
+  {
+    id: 'w1',
+    slug: 'fixture-coven',
+    name: 'Fixture Coven',
+    canReadMembers: true,
+    canInvite: true,
+    canWrite: true,
+  },
   {
     id: 'w2',
     slug: 'testwort-circle',
     name: 'Testwort Circle',
     canReadMembers: true,
+    canInvite: true,
     canWrite: true,
   },
   {
@@ -40,6 +48,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     slug: 'a-long-named-circle-of-fixture-herbalists',
     name: 'A Long Named Circle of Fixture Herbalists',
     canReadMembers: false,
+    canInvite: false,
     canWrite: false,
   },
 ];
@@ -81,7 +90,7 @@ export const ShellFrame = ({
         {area === 'admin' && (
           <>
             <ContextRow lead={<span className="context-row__name">Admin</span>}>
-              <AdminNav />
+              <AdminNav managesPeople />
             </ContextRow>
             <div className="page-column">{children}</div>
           </>

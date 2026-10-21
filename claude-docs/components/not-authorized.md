@@ -42,7 +42,7 @@ Function used: `space()`.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/NotAuthorized/index.stories.tsx) —
-`Default`, and `PhoneDark` and `PhoneLight` at 375px, each inside
+`Default`, inside
 `forbidden.tsx`'s real `main.page-frame` ([`workshop.md`](../workshop.md)).
 Render-only, no test ids, no snapshots.
 

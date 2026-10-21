@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect, useRef, useState } from 'react';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import SearchSentence from '.';
@@ -6,9 +6,11 @@ import SearchSentence from '.';
 // Render-only; behaviour is asserted in tests/components/SearchSentence. Invented
 // values (M12.4). The search buttons stand in for a list's navigation: `pending` is
 // true until the "results" come back.
-export default {
-  title: 'Admin / Search Sentence',
-};
+const meta = {
+  title: 'Ingredients / Search Sentence',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const FULL = (query: string) =>
   buildSearchSentence({
@@ -69,13 +71,13 @@ function Searching({ wait, filtered = true }: { wait: number; filtered?: boolean
 }
 
 // Settled: one closed line; press it to open the clauses.
-export const Settled: Story = () => <Searching wait={600} />;
+export const Default: Story = { render: () => <Searching wait={600} /> };
 
 // New Search types the sentence out; the results come back after four seconds.
-export const SlowSearch: Story = () => <Searching wait={4000} />;
+export const SlowSearch: Story = { render: () => <Searching wait={4000} /> };
 
 // The results come back before the clauses are typed: they finish at a faster pace.
-export const FastSearch: Story = () => <Searching wait={600} />;
+export const FastSearch: Story = { render: () => <Searching wait={600} /> };
 
 // A search term and no filter: nothing to open, so a plain line.
-export const NothingToOpen: Story = () => <Searching wait={1500} filtered={false} />;
+export const NothingToOpen: Story = { render: () => <Searching wait={1500} filtered={false} /> };

@@ -802,14 +802,12 @@ an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an 
 traditions, the value shown beneath it; and
 `MultiSelect`, the multi-select box with two elements chosen (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
 `CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
-box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
-375px; and `QualifierInForm`, the ingredient form's Form box under a Name
+box each time it is picked; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose
-tooltip opens on focus or hover above the box from the qualifier's left edge, with
-`QualifierInFormPhone` at 375px. The suggestions are fixed, so typing
+tooltip opens on focus or hover above the box from the qualifier's left edge. The suggestions are fixed, so typing
 filters nothing. Each story's box sits in a field of its own, its label above it as
 a form draws one, and the stories that open a list do it by pressing the
-chevron on mount, as a person would (`.ladle/press.ts`).
+chevron on mount, as a person would (`.storybook/press.ts`).
 
 ## Testing
 

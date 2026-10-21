@@ -82,8 +82,8 @@ badge ([`click-feedback.md`](click-feedback.md)).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ImpersonationBanner/index.stories.tsx),
-`Layout / Impersonation Banner`: `Default`, the banner alone, and `PhoneDark` and `PhoneLight`,
-the banner over the shell (`ShellFrame`, `.ladle/shell-frame.tsx`) at 375px,
+`Layout / Impersonation Banner`: `Default`, the banner alone, and `OverTheShell`,
+the banner over the shell (`ShellFrame`, `.storybook/shell-frame.tsx`),
 where the app puts it: first in the body, above the shell's bar. A desktop browser can hover, so it shows the
 banner tucked; the review screenshots emulate a touch screen
 (`scripts/review-screenshots.mjs`), where `(hover: none)` holds and the

@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// The Combobox's layout facts, measured in its Ladle stories against the real
+// The Combobox's layout facts, measured in its Storybook stories against the real
 // component, since happy-dom draws no layout: the list opens above the box
 // when there is no room beneath it (Floating UI's flip), it follows the box
 // as the page scrolls (autoUpdate), and an entry's tooltip opens only when
@@ -11,7 +11,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 const LONG = 'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
 
 /**
- * The story in Ladle's bare preview, with `css` in the page before the story
+ * The story in Storybook's bare preview (`iframe.html`), with `css` in the page before the story
  * mounts, so a list opened on mount is placed in the page as `css` lays it
  * out rather than moved there afterwards.
  */
@@ -26,7 +26,7 @@ async function openStory(page: Page, story: string, css = '') {
       });
     }, css);
   }
-  await page.goto(`/?story=forms--combobox--${story}&mode=preview&theme=dark`);
+  await page.goto(`/iframe.html?id=forms-combobox--${story}&viewMode=story&globals=theme:dark`);
   await expect(page.getByRole('combobox').first()).toBeVisible();
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -49,13 +49,13 @@ test('the list opens above the box when there is no room beneath it, inside the 
   page,
 }) => {
   // The field pushed near the window's foot, the room above it ample. Pushed
-  // inside Ladle's story frame rather than by the body: the frame clips its
+  // inside the workshop's story frame rather than by the body: the frame clips its
   // overflow, so moving the frame itself down would leave the room beneath
   // the field inside the frame unchanged, and nothing to flip from.
   await openStory(
     page,
     'two-buckets',
-    '.ladle-story-frame { padding-top: calc(100vh - 200px); box-sizing: border-box; }',
+    '.workshop-story-frame { padding-top: calc(100vh - 200px); box-sizing: border-box; }',
   );
   const input = page.getByRole('combobox', { name: 'Form' });
   const list = page.getByRole('listbox', { name: 'Form suggestions' });
@@ -75,13 +75,13 @@ test('the list opens above the box when there is no room beneath it, inside the 
 });
 
 test('an open list follows its box as the page scrolls', async ({ page }) => {
-  // Ladle's story frame carries a transform, which would make it the fixed
+  // The workshop's story frame carries a transform, which would make it the fixed
   // list's containing block and carry the list along with no placement at
   // all; without it the list is fixed to the window, as in the app.
   await openStory(
     page,
     'two-buckets',
-    'body { padding-top: 300px; min-height: 300vh; } .ladle-story-frame { transform: none !important; }',
+    'body { padding-top: 300px; min-height: 300vh; } .workshop-story-frame { transform: none !important; }',
   );
   const input = page.getByRole('combobox', { name: 'Form' });
   const list = page.getByRole('listbox', { name: 'Form suggestions' });
@@ -111,7 +111,7 @@ test.describe('an entry’s tooltip', () => {
   const tooltip = (page: Page) => page.getByRole('tooltip');
 
   test.beforeEach(async ({ page }) => {
-    await openStory(page, 'list');
+    await openStory(page, 'default');
     // The list opens on mount; closed, so it covers nothing hovered below.
     await page.getByRole('combobox', { name: 'Folk Name' }).press('Escape');
     await expect(page.getByRole('listbox')).toBeHidden();

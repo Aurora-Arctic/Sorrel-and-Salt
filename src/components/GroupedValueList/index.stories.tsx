@@ -1,10 +1,10 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import Link from 'next/link';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
-import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
-import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
+import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { FIXTURE_EDIT, GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
 import { ListNavigationContext } from '../ListFrame';
 import { groupedValuesHref } from './href';
 import type { GroupedValueListFilter } from './types';
@@ -12,9 +12,11 @@ import type { GroupedValueListFilter } from './types';
 // Render-only; behaviour is asserted in tests/components/GroupedValueList.
 // The filter reaches the admin pages (`/admin/categories` and the rest),
 // which the workshop does not serve.
-export default {
+const meta = {
   title: 'Admin / Grouped Value List',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const NO_FILTER: GroupedValueListFilter = { query: '', group: '' };
 
@@ -38,8 +40,7 @@ const category = (name: string, groupName: string, description: string) => {
     description,
     groupName,
     groupColors: COLORS[groupName],
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
+    ...FIXTURE_EDIT,
     editHref: groupedValuesHref('category', {}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Category', title: name },
   };
@@ -62,8 +63,7 @@ const form = (name: string, groupName: string, description: string) => {
     description,
     groupName,
     groupIcon: GLYPHS[groupName] ?? null,
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
+    ...FIXTURE_EDIT,
     editHref: groupedValuesHref('form', {}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Form', title: name },
   };
@@ -79,45 +79,67 @@ const deity = (name: string, groupName: string, description: string) => {
     slug,
     description,
     groupName,
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
+    ...FIXTURE_EDIT,
     editHref: groupedValuesHref('deity', {}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Deity', title: name, qualifier: groupName },
   };
 };
 
-export const CategoriesOnePageOfSeveral: Story = () => (
-  <GroupedValueList
-    kind="category"
-    values={[
-      category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
-      category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
-      category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
-    ]}
-    filter={NO_FILTER}
-    groups={CATEGORY_GROUPS}
-    previousHref={groupedValuesHref('category', { before: 'cursor' })}
-    nextHref={groupedValuesHref('category', { after: 'cursor' })}
-    position={{ page: 2, pages: 3 }}
-  />
-);
+// The paging, narrowing, no-match and empty states are the list's own and are
+// the same for every kind, so only the categories show them; the other kinds
+// show what differs: the form's icon, the deity's tradition filter, the flat
+// kinds' missing group column and filter.
+export const Default: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="category"
+      values={[
+        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+        category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
+        category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
+      ]}
+      filter={NO_FILTER}
+      groups={CATEGORY_GROUPS}
+    />
+  ),
+};
 
 // Next alone still sits at the right, where it is on every other page.
-export const CategoriesFirstPage: Story = () => (
-  <GroupedValueList
-    kind="category"
-    values={[
-      category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
-    ]}
-    filter={NO_FILTER}
-    groups={CATEGORY_GROUPS}
-    nextHref={groupedValuesHref('category', { after: 'cursor' })}
-    position={{ page: 1, pages: 2 }}
-  />
-);
+export const FirstPage: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="category"
+      values={[
+        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+      ]}
+      filter={NO_FILTER}
+      groups={CATEGORY_GROUPS}
+      nextHref={groupedValuesHref('category', { after: 'cursor' })}
+      position={{ page: 1, pages: 2 }}
+    />
+  ),
+};
+
+export const MiddlePage: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="category"
+      values={[
+        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+        category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
+        category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
+      ]}
+      filter={NO_FILTER}
+      groups={CATEGORY_GROUPS}
+      previousHref={groupedValuesHref('category', { before: 'cursor' })}
+      nextHref={groupedValuesHref('category', { after: 'cursor' })}
+      position={{ page: 2, pages: 3 }}
+    />
+  ),
+};
 
 // Narrowed by part of a name and by a group (MB.178): the form shows both.
-export const CategoriesFiltered: Story = () => (
+const FilteredView = () => (
   <GroupedValueList
     kind="category"
     values={[
@@ -129,125 +151,59 @@ export const CategoriesFiltered: Story = () => (
   />
 );
 
-export const CategoriesNoMatch: Story = () => (
-  <GroupedValueList
-    kind="category"
-    values={[]}
-    filter={{ query: 'nothing', group: 'fixture-healing' }}
-    groups={CATEGORY_GROUPS}
-  />
-);
+export const Filtered: Story = { render: FilteredView };
 
-export const CategoriesEmpty: Story = () => (
-  <GroupedValueList kind="category" values={[]} filter={NO_FILTER} groups={CATEGORY_GROUPS} />
-);
+export const NoMatches: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="category"
+      values={[]}
+      filter={{ query: 'nothing', group: 'fixture-healing' }}
+      groups={CATEGORY_GROUPS}
+    />
+  ),
+};
 
-export const FormsOnePageOfSeveral: Story = () => (
-  <GroupedValueList
-    kind="form"
-    values={[
-      form('Testwort Shard', 'Fixture Mineral', 'An invented form, for the workshop.'),
-      form('Testwort Sliver', 'Fixture Substance', 'Another, thinner than the first.'),
-      form('Fixture Flake', 'Fixture Mineral', 'Invented too.'),
-    ]}
-    filter={NO_FILTER}
-    groups={FORM_GROUPS}
-    previousHref={groupedValuesHref('form', { before: 'cursor' })}
-    nextHref={groupedValuesHref('form', { after: 'cursor' })}
-    position={{ page: 2, pages: 3 }}
-  />
-);
+export const Empty: Story = {
+  render: () => (
+    <GroupedValueList kind="category" values={[]} filter={NO_FILTER} groups={CATEGORY_GROUPS} />
+  ),
+};
 
-export const FormsFirstPage: Story = () => (
-  <GroupedValueList
-    kind="form"
-    values={[form('Testwort Shard', 'Fixture Mineral', 'An invented form, for the workshop.')]}
-    filter={NO_FILTER}
-    groups={FORM_GROUPS}
-    nextHref={groupedValuesHref('form', { after: 'cursor' })}
-    position={{ page: 1, pages: 2 }}
-  />
-);
-
-export const FormsFiltered: Story = () => (
-  <GroupedValueList
-    kind="form"
-    values={[
-      form('Testwort Shard', 'Fixture Mineral', 'An invented form, for the workshop.'),
-      form('Fixture Shard', 'Fixture Mineral', 'Invented too.'),
-    ]}
-    filter={{ query: 'shard', group: 'fixture-mineral' }}
-    groups={FORM_GROUPS}
-  />
-);
-
-export const FormsNoMatch: Story = () => (
-  <GroupedValueList
-    kind="form"
-    values={[]}
-    filter={{ query: 'nothing', group: 'fixture-substance' }}
-    groups={FORM_GROUPS}
-  />
-);
-
-export const FormsEmpty: Story = () => (
-  <GroupedValueList kind="form" values={[]} filter={NO_FILTER} groups={FORM_GROUPS} />
-);
+// A form's row draws its group's icon.
+export const Forms: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="form"
+      values={[
+        form('Testwort Shard', 'Fixture Mineral', 'An invented form, for the workshop.'),
+        form('Testwort Sliver', 'Fixture Substance', 'Another, thinner than the first.'),
+        form('Fixture Flake', 'Fixture Mineral', 'Invented too.'),
+      ]}
+      filter={NO_FILTER}
+      groups={FORM_GROUPS}
+    />
+  ),
+};
 
 // By tradition then name, as the service reads them.
-export const DeitiesOnePageOfSeveral: Story = () => (
-  <GroupedValueList
-    kind="deity"
-    values={[
-      deity('Fixturo', 'Fixtural', 'Another, keeper of nothing in particular.'),
-      deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
-      deity('Mockra', 'Mockish', 'Invented too.'),
-    ]}
-    filter={NO_FILTER}
-    groups={TRADITIONS}
-    previousHref={groupedValuesHref('deity', { before: 'cursor' })}
-    nextHref={groupedValuesHref('deity', { after: 'cursor' })}
-    position={{ page: 2, pages: 3 }}
-  />
-);
+export const Deities: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="deity"
+      values={[
+        deity('Fixturo', 'Fixtural', 'Another, keeper of nothing in particular.'),
+        deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
+        deity('Mockra', 'Mockish', 'Invented too.'),
+      ]}
+      filter={NO_FILTER}
+      groups={TRADITIONS}
+    />
+  ),
+};
 
-export const DeitiesFirstPage: Story = () => (
-  <GroupedValueList
-    kind="deity"
-    values={[deity('Testra', 'Fixtural', 'An invented deity, for the workshop.')]}
-    filter={NO_FILTER}
-    groups={TRADITIONS}
-    nextHref={groupedValuesHref('deity', { after: 'cursor' })}
-    position={{ page: 1, pages: 2 }}
-  />
-);
-
-export const DeitiesFiltered: Story = () => (
-  <GroupedValueList
-    kind="deity"
-    values={[
-      deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
-      deity('Fixtra', 'Fixtural', 'Invented too.'),
-    ]}
-    filter={{ query: 'tra', group: 'fixtural' }}
-    groups={TRADITIONS}
-  />
-);
-
-export const DeitiesNoMatch: Story = () => (
-  <GroupedValueList
-    kind="deity"
-    values={[]}
-    filter={{ query: 'nothing', group: 'mockish' }}
-    groups={TRADITIONS}
-  />
-);
-
-export const DeitiesEmpty: Story = () => (
-  <GroupedValueList kind="deity" values={[]} filter={NO_FILTER} groups={TRADITIONS} />
-);
-
-// The flat kinds (MB.95): no group column and no group filter.
+// The flat kinds (MB.95), here the celestial bodies: no group column and no
+// group filter. The zodiac signs draw the same.
 const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: string) => {
   const slug = slugify(name);
   return {
@@ -256,57 +212,28 @@ const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: s
     slug,
     description,
     groupName: '',
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
+    ...FIXTURE_EDIT,
     editHref: groupedValuesHref(kind, {}, { edit: slug }),
     editHeading: { title: name },
   };
 };
 
-export const CelestialBodiesOnePageOfSeveral: Story = () => (
-  <GroupedValueList
-    kind="celestialBody"
-    values={[
-      flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.'),
-      flat('celestialBody', 'Fixture Comet', 'Another, with a longer tail than the first.'),
-      flat('celestialBody', 'Fixture Moonlet', 'Invented too.'),
-    ]}
-    filter={NO_FILTER}
-    previousHref={groupedValuesHref('celestialBody', { before: 'cursor' })}
-    nextHref={groupedValuesHref('celestialBody', { after: 'cursor' })}
-    position={{ page: 2, pages: 3 }}
-  />
-);
-
-export const Signs: Story = () => (
-  <GroupedValueList
-    kind="zodiacSign"
-    values={[
-      flat('zodiacSign', 'Fixture Ram', 'An invented sign, for the workshop.'),
-      flat('zodiacSign', 'Fixture Scales', 'Invented too.'),
-    ]}
-    filter={NO_FILTER}
-  />
-);
-
-export const CelestialBodiesFiltered: Story = () => (
-  <GroupedValueList
-    kind="celestialBody"
-    values={[flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.')]}
-    filter={{ query: 'star', group: '' }}
-  />
-);
-
-export const CelestialBodiesNoMatch: Story = () => (
-  <GroupedValueList kind="celestialBody" values={[]} filter={{ query: 'nothing', group: '' }} />
-);
-
-export const CelestialBodiesEmpty: Story = () => (
-  <GroupedValueList kind="celestialBody" values={[]} filter={NO_FILTER} />
-);
+export const CelestialBodies: Story = {
+  render: () => (
+    <GroupedValueList
+      kind="celestialBody"
+      values={[
+        flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.'),
+        flat('celestialBody', 'Fixture Comet', 'Another, with a longer tail than the first.'),
+        flat('celestialBody', 'Fixture Moonlet', 'Invented too.'),
+      ]}
+      filter={NO_FILTER}
+    />
+  ),
+};
 
 // Inside the admin layout and the Categories page with its Categories tab
-// open, as the page draws it; at a phone's width in each theme, the tab's Add
+// open, as the page draws it; at a phone's width, the tab's Add
 // at its own width beneath the heading, the filter stacked and each row a
 // card. The page and the filter are the real `TabbedPage` and
 // `FilterForm`, so these show what the sign-off settled.
@@ -319,15 +246,9 @@ const CategoriesPage = () => (
       </Link>
     }
   >
-    <CategoriesFiltered />
+    <FilteredView />
   </AdminTabbedFrame>
 );
-
-export const PhoneDark: Story = () => <CategoriesPage />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <CategoriesPage />;
-PhoneLight.meta = { theme: 'light', width: 375 };
 
 // The same page with a filter applied and the filtered list on its way (MB.115,
 // the owner's call): the filter row greyed and off, and the tabs' skeleton,
@@ -336,16 +257,10 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // tabbed page's own Loading stories do.
 const ON_ITS_WAY = { pending: true, searching: false, go: () => undefined };
 
-const Pending = () => (
+const PendingView = () => (
   <ListNavigationContext.Provider value={ON_ITS_WAY}>
     <CategoriesPage />
   </ListNavigationContext.Provider>
 );
 
-export const CategoriesPending: Story = () => <Pending />;
-
-export const PendingPhoneDark: Story = () => <Pending />;
-PendingPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PendingPhoneLight: Story = () => <Pending />;
-PendingPhoneLight.meta = { theme: 'light', width: 375 };
+export const Pending: Story = { render: () => <PendingView /> };

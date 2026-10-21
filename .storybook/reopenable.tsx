@@ -7,7 +7,7 @@ import { WorkshopNavigation } from './navigation';
 // modal left mounted stays a native modal dialog, invisible but holding the
 // rest of the page inert. So this unmounts it when it asks to close, whether
 // through its own `onClose` (the function handed to `children`) or through the
-// workshop's router, which is how a `RouteModal` closes (".ladle/navigation.ts"),
+// workshop's router, which is how a `RouteModal` closes (".storybook/navigation.ts"),
 // and offers Open Again to mount it afresh, so a review can look again without
 // reloading the story.
 export function Reopenable({

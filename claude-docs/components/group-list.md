@@ -8,13 +8,13 @@ The traditions' list has a name search; the category and form groups' have none.
 
 `GroupListProps` (`types.ts`):
 
-| Prop                       | What it is                                                                                                                                |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                                                   |
-| `groups`                   | The page's groups: `{ id, name, slug, description, editHref, updatedBy, updatedAt }`, plus `colorDark`, `colorLight` for a category group |
-| `previousHref`, `nextHref` | The pager's links, none at either end                                                                                                     |
-| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                                         |
-| `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                                       |
+| Prop                       | What it is                                                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                                 |
+| `groups`                   | The page's groups: `{ id, name, slug, description, editHref, updatedBy, updatedAt }`, plus `color` for a category group |
+| `previousHref`, `nextHref` | The pager's links, none at either end                                                                                   |
+| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                       |
+| `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                     |
 
 `groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's search and cursor, and `?new` or `?edit=<slug>` for a modal, through the shared `listHref` (`src/lib/list-href.ts`): `/admin/deity-traditions?query=wort&after=c&new`. A blank search is written as none. `groupsPath(kind)` is the bare page, which the search submits to and Clear opens. Each kind's address, table name, row nouns, Add label and the value kind it holds are `kinds.ts`'s `KINDS`, the one table the form, the page and the nav's tabs read too (`GroupForm` takes its nouns from it and from the held kind's in [`grouped-value-list.md`](grouped-value-list.md)).
 
@@ -50,15 +50,9 @@ width:
 - `Empty` and `TraditionsEmpty`: the empty messages, the traditions' naming
   them.
 
-The phone stories stand for the page, which draws a group list only inside its
+The stories stand for the page, which draws a group list only inside its
 tabbed page ([`tabbed-page.md`](tabbed-page.md)): the admin layout's frame, the
 page's heading, tabs and Add, with the Groups or Deity Traditions tab open.
-
-- `PhoneDark` and `PhoneLight`: the category groups on the Categories page at
-  375px, each row a card.
-- `TraditionsSearchedPhoneDark` and `TraditionsSearchedPhoneLight`: the
-  searched traditions on the Deities page at 375px, the field across the row
-  with its magnifier and Clear beneath it.
 
 Render-only, no test ids, no snapshots.
 

@@ -1,10 +1,10 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
-import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
-import { INVITATIONS } from '../../../.ladle/fixtures';
-import { WorkshopNavigation } from '../../../.ladle/navigation';
+import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { INVITATIONS } from '../../../.storybook/fixtures';
+import { WorkshopNavigation } from '../../../.storybook/navigation';
 import AdminInvitations, { InviteAdmin } from '.';
 import { invitationsHref } from './href';
 import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProps } from './types';
@@ -13,9 +13,11 @@ import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProp
 // Invite and Revoke talk to the network only when sent, so nothing is mocked:
 // a send in the workshop fails into its alert, which is itself a state worth
 // seeing.
-export default {
-  title: 'Admin / Admin Invitations',
-};
+const meta = {
+  title: 'Admin / Invitations',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // The filter a page shows: part of an address and Expires in 24 Hrs, which
 // leaves the one invitation lapsing tomorrow morning.
@@ -53,6 +55,7 @@ const Frame = ({
 const PAGE_TWO: AdminInvitationEntry[] = Array.from({ length: 25 }, (_, index) => ({
   id: `p${index}`,
   email: `fixture.invitee${index + 26}@example.test`,
+  siteRole: index % 4 === 0 ? 'admin' : 'curator',
   note: index % 3 === 0 ? 'Curates the resins' : null,
   expiresAt: new Date(Date.UTC(2026, 9, 17, 20, 5) - (index + 25) * 3_600_000),
 }));
@@ -66,72 +69,48 @@ const PageTwo = (): ReactElement => (
   />
 );
 
-export const Pending: Story = () => <Frame invitations={INVITATIONS} />;
+export const Default: Story = { render: () => <Frame invitations={INVITATIONS} /> };
 
-export const NoneWaiting: Story = () => <Frame invitations={[]} />;
+export const Empty: Story = { render: () => <Frame invitations={[]} /> };
 
 // Filtered by part of an address and Expires in 24 Hrs: the fields hold the
 // filter shown, Clear is offered, and one invitation is left.
-export const Filtered: Story = () => <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />;
+export const Filtered: Story = {
+  render: () => <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />,
+};
 
 // A filter that leaves none: the empty state names it.
-export const NoMatch: Story = () => <Frame invitations={[]} filter={FILTER} />;
+export const NoMatches: Story = { render: () => <Frame invitations={[]} filter={FILTER} /> };
 
-export const OnePageOfSeveral: Story = () => <PageTwo />;
-
-// A middle page at phone width: the pager beneath the last card.
-export const OnePageOfSeveralPhoneDark: Story = () => <PageTwo />;
-OnePageOfSeveralPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const OnePageOfSeveralPhoneLight: Story = () => <PageTwo />;
-OnePageOfSeveralPhoneLight.meta = { theme: 'light', width: 375 };
+export const MiddlePage: Story = { render: () => <PageTwo /> };
 
 // New Invitation pressed: the form `?invite` opens over the list. Closing it
 // navigates to the list's address without `?invite`, which the workshop's
-// router reports (.ladle/navigation.ts) and this holds as the page's state,
+// router reports (.storybook/navigation.ts) and this holds as the page's state,
 // so the list beneath is usable once the form is gone, and Open Again
 // brings the form back.
-export const Inviting: Story = () => {
-  const [inviting, setInviting] = useState(true);
-  return (
-    <WorkshopNavigation.Provider
-      value={(href) =>
-        setInviting(new URL(href, 'http://workshop.test').searchParams.has('invite'))
-      }
-    >
-      <Frame invitations={INVITATIONS} inviting={inviting} />
-      {!inviting && (
-        <button type="button" className="btn btn--solid" onClick={() => setInviting(true)}>
-          Open Again
-        </button>
-      )}
-    </WorkshopNavigation.Provider>
-  );
+export const Inviting: Story = {
+  render: () => {
+    const [inviting, setInviting] = useState(true);
+    return (
+      <WorkshopNavigation.Provider
+        value={(href) =>
+          setInviting(new URL(href, 'http://workshop.test').searchParams.has('invite'))
+        }
+      >
+        <Frame invitations={INVITATIONS} inviting={inviting} />
+        {!inviting && (
+          <button type="button" className="btn btn--solid" onClick={() => setInviting(true)}>
+            Open Again
+          </button>
+        )}
+      </WorkshopNavigation.Provider>
+    );
+  },
 };
 
 // Paused, to an admin who is not the primary one: New Invitation and every
 // Revoke in view but locked, the pause as the reason in a tip.
-export const Paused: Story = () => (
-  <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />
-);
-
-// At phone width: New Invitation across the line beneath the heading, the
-// filter row stacked, the Email box across the line and the switch, and
-// Clear beneath it, and each invitation a card, Revoke across its
-// foot.
-export const PhoneDark: Story = () => <Frame invitations={INVITATIONS} />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Frame invitations={INVITATIONS} />;
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// The filter applied, at phone width.
-export const FilteredPhoneDark: Story = () => (
-  <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />
-);
-FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const FilteredPhoneLight: Story = () => (
-  <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />
-);
-FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+export const Paused: Story = {
+  render: () => <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />,
+};

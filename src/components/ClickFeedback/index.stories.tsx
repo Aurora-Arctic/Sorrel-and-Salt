@@ -1,15 +1,17 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { CSSProperties, ReactElement } from 'react';
-import { usePressOnMount } from '../../../.ladle/press';
+import { usePressOnMount } from '../../../.storybook/press';
 import { useClickFeedback } from '.';
 
 // Render-only; the opening, closing and focus are asserted in
 // tests/components/ClickFeedback, and the placement, layout and axe in
 // tests/e2e/workshop/click-feedback.spec.ts. Each button stands for a page's action
 // whose service refuses it.
-export default {
+const meta = {
   title: 'Surfaces / Click Feedback',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const REFUSED = 'Testwort is in a spell, so it cannot be removed.';
 
@@ -74,58 +76,56 @@ const Pressed = ({ name, style }: { name: string; style?: CSSProperties }) => {
 };
 
 // Press any button for its refusal; the badge then brings it back.
-export const Default: Story = () => <Row />;
+export const Default: Story = { render: () => <Row /> };
 
 // A bordered button refused: the badge on its corner, the callout below it.
-export const Bordered: Story = () => <Pressed name="Remove" />;
+export const Bordered: Story = { render: () => <Pressed name="Remove" /> };
 
 // A borderless button refused: no corner to sit on, so the badge goes beside it.
-export const Borderless: Story = () => <Pressed name="Annotate" />;
+export const Borderless: Story = { render: () => <Pressed name="Annotate" /> };
 
 // Near the right edge: no room for the callout's start under the control's,
 // so its end goes under the control's end.
-export const NearRightEdge: Story = () => (
-  <Pressed name="Annotate" style={{ justifyContent: 'flex-end' }} />
-);
+export const NearRightEdge: Story = {
+  render: () => <Pressed name="Annotate" style={{ justifyContent: 'flex-end' }} />,
+};
 
 // In a box too narrow for either alignment: the callout pinned inside it, its
 // arrow still under the control.
-export const Pinned: Story = () => {
-  usePressOnMount('Remove');
-  return (
-    <div
-      data-tip-boundary
-      style={{ inlineSize: '24rem', display: 'flex', justifyContent: 'center' }}
-    >
-      <Action label="Remove" className="btn btn--destructive" />
-    </div>
-  );
+export const Pinned: Story = {
+  render: () => {
+    usePressOnMount('Remove');
+    return (
+      <div
+        data-tip-boundary
+        style={{ inlineSize: '24rem', display: 'flex', justifyContent: 'center' }}
+      >
+        <Action label="Remove" className="btn btn--destructive" />
+      </div>
+    );
+  },
 };
-
-export const PhoneDark: Story = () => <Pressed name="Remove" />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Pressed name="Remove" />;
-PhoneLight.meta = { theme: 'light', width: 375 };
 
 // Refused, then a later try that succeeds: the badge and the callout both go,
 // fading out, which the workshop spec samples.
-export const ThenSucceeds: Story = () => {
-  const { anchorRef, report, feedback } = useClickFeedback({ name: 'Remove' });
-  return (
-    <div style={row}>
-      <button
-        type="button"
-        className="btn btn--destructive"
-        ref={anchorRef}
-        onClick={() => report(`Remove: ${REFUSED}`)}
-      >
-        Remove
-      </button>
-      {feedback}
-      <button type="button" className="btn" onClick={() => report(undefined)}>
-        Succeed
-      </button>
-    </div>
-  );
+export const ThenSucceeds: Story = {
+  render: () => {
+    const { anchorRef, report, feedback } = useClickFeedback({ name: 'Remove' });
+    return (
+      <div style={row}>
+        <button
+          type="button"
+          className="btn btn--destructive"
+          ref={anchorRef}
+          onClick={() => report(`Remove: ${REFUSED}`)}
+        >
+          Remove
+        </button>
+        {feedback}
+        <button type="button" className="btn" onClick={() => report(undefined)}>
+          Succeed
+        </button>
+      </div>
+    );
+  },
 };

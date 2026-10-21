@@ -1,5 +1,5 @@
-import type { Story } from '@ladle/react';
-import { ShellFrame } from '../../../.ladle/shell-frame';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import ImpersonationBanner from '.';
 
 // Render-only; behaviour is asserted in tests/components/ImpersonationBanner.
@@ -7,19 +7,20 @@ import ImpersonationBanner from '.';
 // the browser can hover, the banner tucks itself above the page until a
 // pointer nears the top; on a touch screen, which the review screenshots
 // emulate, it sits in the page's flow at the top, shown in full.
-export default {
+const meta = {
   title: 'Layout / Impersonation Banner',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: () => <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />,
 };
-
-export const Default: Story = () => (
-  <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />
-);
-
-// At phone width, above the shell, where the app puts it: the first thing in
-// the body, over everything, the shell's bar included (src/app/layout.tsx). On
-// a touch screen (`hover: none`), as the review screenshots emulate, the banner
-// is in the flow and the bar starts below it; a desktop browser shows it tucked.
-const OverTheShell = () => (
+// Above the shell, where the app puts it: the first thing in the body, over
+// everything, the shell's bar included (src/app/layout.tsx). On a touch screen
+// (`hover: none`) the banner is in the flow and the bar starts below it; a
+// desktop browser shows it tucked.
+const OverTheShellView = () => (
   <>
     <ImpersonationBanner name="Bo Fixturewort" email="bo-fixturewort@users.test" />
     <ShellFrame area="none">
@@ -31,8 +32,6 @@ const OverTheShell = () => (
   </>
 );
 
-export const PhoneDark: Story = () => <OverTheShell />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <OverTheShell />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const OverTheShell: Story = {
+  render: () => <OverTheShellView />,
+};

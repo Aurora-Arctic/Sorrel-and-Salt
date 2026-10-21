@@ -402,8 +402,7 @@ move the label towards the body ink (above).
 **The colour comes from the row, on the element.** `chip($dark, $light, $state)`
 takes the pair rather than a slug, and by default reads it from the element's
 `--chip-dark` and `--chip-light`, which `chipColors(group)` in
-`src/lib/chip-colors.ts` sets inline from the group's `colorDark` and
-`colorLight`. `light-dark()` picks one off the `color-scheme` the theme mixins
+`src/lib/chip-colors.ts` sets inline from the group's `color`. `light-dark()` picks one off the `color-scheme` the theme mixins
 already set, so the per-theme switch `semantic-tokens` once made at build time
 happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
@@ -954,7 +953,7 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
 - **The width and its cap sit inside `:where()`**, so they carry no
   specificity. In the app the class layer compiles as `body .x` (0,1,1) and
   would beat a component's single class; in the workshop it compiles as
-  `:where(.ladle-story-frame) .x` (0,1,0), where source order decides. Under
+  `:where(.workshop-story-frame) .x` (0,1,0), where source order decides. Under
   `:where()` a component's own narrower column, such as the sign-in panel's,
   wins in both. A primitive rule a component must be able to override is
   wrapped the same way; check it in the app, not only the workshop. The
@@ -1208,7 +1207,7 @@ the smooth scrolling off and hides the bug.
 
 ## Theme resolution
 
-`globals.scss` resolves **three** states, not two, and `.ladle/theme.scss`,
+`globals.scss` resolves **three** states, not two, and `.storybook/theme.scss`,
 `ThemeToggle`'s `index.scss` and `resolveCurrentTheme()` all mirror the same
 cascade selector for selector:
 
@@ -1328,7 +1327,7 @@ heavier than the reverse; light reverts to the browser default.
 `var(--font-body)`. Those custom properties are defined on `<html>` by
 `next/font`, so anything rendered **outside the root layout** — a workshop story,
 a standalone render — loses its entire `font-family` declaration rather than
-falling back. `.ladle/typography.scss` works around it by redefining both in its
+falling back. `.storybook/typography.scss` works around it by redefining both in its
 own `:root`. A real fix puts the fallback **inside** the `var()` —
 `var(--font-body, 'Lexend')` — since the concrete families already trailing
 each stack don't rescue it: an unresolved `var()` invalidates the whole

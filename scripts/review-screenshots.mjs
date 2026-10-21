@@ -83,11 +83,16 @@ try {
         // The app follows `prefers-color-scheme` until a viewer picks a theme.
         await page.emulateMedia({ colorScheme });
         const url = new URL(path, values.base);
-        // A workshop story takes its theme from Ladle's own `theme` parameter,
-        // not the media query: without one Ladle sets its configured default
-        // (dark) on the document, which the app's stylesheet then obeys.
-        if (url.searchParams.has('story') && !url.searchParams.has('theme')) {
-          url.searchParams.set('theme', colorScheme);
+        // A workshop story (`/iframe.html?id=...`) takes its theme from
+        // Storybook's `theme` global, not the media query: without one the
+        // preview sets its configured default (dark) on the document, which the
+        // app's stylesheet then obeys.
+        if (
+          url.pathname.endsWith('/iframe.html') &&
+          url.searchParams.has('id') &&
+          !url.searchParams.has('globals')
+        ) {
+          url.searchParams.set('globals', `theme:${colorScheme}`);
         }
         await page.goto(url.href, { waitUntil: 'networkidle' });
         const file = join(values.out, `${name}-${viewport.width}-${colorScheme}.png`);

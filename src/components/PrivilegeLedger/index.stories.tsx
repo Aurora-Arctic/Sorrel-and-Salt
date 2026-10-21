@@ -1,14 +1,15 @@
-import type { Story } from '@ladle/react';
-import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/PrivilegeLedger.
 // Invented people, on invented dates.
-export default {
+const meta = {
   title: 'Admin / Privilege Ledger',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const ADA = { name: 'Ada Fixturewort', href: '/admin/users?query=ada%40users.test' };
 const BRAM = { name: 'Bram Testwort', href: '/admin/users?query=bram%40users.test' };
@@ -66,66 +67,44 @@ const CHANGES: PrivilegeLedgerEntry[] = [
   },
 ];
 
-export const Everything: Story = () => (
-  <PrivilegeLedger
-    changes={CHANGES}
-    filter={{}}
-    nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
-    position={{ page: 1, pages: 3 }}
-  />
-);
+export const Default: Story = {
+  render: () => (
+    <PrivilegeLedger
+      changes={CHANGES}
+      filter={{}}
+      nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
+      position={{ page: 1, pages: 3 }}
+    />
+  ),
+};
 
-export const OneUser: Story = () => (
-  <PrivilegeLedger
-    changes={CHANGES.filter((change) => change.subject === ADA)}
-    filter={{ query: 'ada@users.test' }}
-  />
-);
+export const OneUser: Story = {
+  render: () => (
+    <PrivilegeLedger
+      changes={CHANGES.filter((change) => change.subject === ADA)}
+      filter={{ query: 'ada@users.test' }}
+    />
+  ),
+};
 
-export const OneUserAdminOnly: Story = () => (
+const OneUserAdminOnlyView = () => (
   <PrivilegeLedger
     changes={CHANGES.filter((change) => change.subject === ADA && change.privilege === 'admin')}
     filter={{ query: 'ada@users.test', privilege: 'admin' }}
   />
 );
 
-export const Empty: Story = () => <PrivilegeLedger changes={[]} filter={{}} />;
+export const OneUserAdminOnly: Story = { render: OneUserAdminOnlyView };
+
+export const Empty: Story = { render: () => <PrivilegeLedger changes={[]} filter={{}} /> };
 
 // A search no row in this file matches, so the empty state is true of the
 // other stories' rows as well.
-export const EmptyForASearch: Story = () => (
-  <PrivilegeLedger
-    changes={[]}
-    filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
-  />
-);
-
-// At phone width, in the admin layout's frame and the People page with its
-// Privilege Changes tab open, as /admin/privilege-changes draws them: each
-// change a card, every fact led by its column's name.
-export const PhoneDark: Story = () => (
-  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
-    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
-  </AdminTabbedFrame>
-);
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => (
-  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
-    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
-  </AdminTabbedFrame>
-);
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// The filtered ledger at a phone's width, Clear beneath the fields.
-const FilteredPhone = () => (
-  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
-    <OneUserAdminOnly />
-  </AdminTabbedFrame>
-);
-
-export const FilteredPhoneDark: Story = () => <FilteredPhone />;
-FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const FilteredPhoneLight: Story = () => <FilteredPhone />;
-FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+export const NoMatches: Story = {
+  render: () => (
+    <PrivilegeLedger
+      changes={[]}
+      filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
+    />
+  ),
+};

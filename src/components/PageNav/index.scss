@@ -97,6 +97,7 @@
     margin-block-start: $break;
 
     &::before {
+      @include list-marker-cleared;
       @include short-hairline;
       inset-block-start: calc(#{$break} / -2 - 0.5px);
       inset-inline-start: space(4);

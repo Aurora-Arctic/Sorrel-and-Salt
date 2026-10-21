@@ -1,4 +1,4 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import type { ComboboxChoice } from '../Combobox/types';
 import FormIcon from '../FormIcon';
@@ -6,9 +6,11 @@ import FacetCombobox from '.';
 
 // Render-only; behaviour is asserted in tests/components/FacetCombobox. Invented
 // values and counts, as a filter reads them from a search (M12.4).
-export default {
-  title: 'Admin / Facet Combobox',
-};
+const meta = {
+  title: 'Ingredients / Facet Combobox',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const ELEMENTS: ComboboxChoice[] = [
   { value: 'air', label: 'Testair', count: 3 },
@@ -58,48 +60,54 @@ function Stateful({
 }
 
 // Open the list: Testearth, with a count of nothing, is left out.
-export const NothingChosen: Story = () => <Stateful />;
+export const Default: Story = { render: () => <Stateful /> };
 
 // Two chosen: their chips with counts, and the list open on the rest, the zero value still out.
-export const SomeChosen: Story = () => <Stateful initial={['fire', 'water']} />;
+export const SomeChosen: Story = { render: () => <Stateful initial={['fire', 'water']} /> };
 
 // Every chip holds a placeholder where its count will be, shimmering unless
 // the person asks for reduced motion.
-export const CountsLoading: Story = () => <Stateful initial={['fire', 'water']} loading />;
+export const CountsLoading: Story = {
+  render: () => <Stateful initial={['fire', 'water']} loading />,
+};
 
 // A chosen value with a count of nothing keeps its chip and its cross.
-export const ChosenWithNothingBehindIt: Story = () => <Stateful initial={['earth']} />;
+export const ChosenWithNothingBehindIt: Story = { render: () => <Stateful initial={['earth']} /> };
 
 // Every value counts nothing: the field stays, its list empty, as a facet the search leaves nothing in.
-export const AllZero: Story = () => (
-  <Stateful
-    label="Celestial Bodies"
-    choices={[
-      { value: 'sun', label: 'Test Sun', count: 0 },
-      { value: 'moon', label: 'Test Moon', count: 0 },
-    ]}
-  />
-);
+export const AllZero: Story = {
+  render: () => (
+    <Stateful
+      label="Celestial Bodies"
+      choices={[
+        { value: 'sun', label: 'Test Sun', count: 0 },
+        { value: 'moon', label: 'Test Moon', count: 0 },
+      ]}
+    />
+  ),
+};
 
 // hideZeros off: Testearth is listed with its count of nothing, and can be chosen.
-export const ZerosListed: Story = () => <Stateful hideZeros={false} />;
+export const ZerosListed: Story = { render: () => <Stateful hideZeros={false} /> };
 
-export const WithFormIcons: Story = () => (
-  <Stateful label="Forms" choices={FORMS} initial={['leaf', 'oil']} />
-);
+export const WithFormIcons: Story = {
+  render: () => <Stateful label="Forms" choices={FORMS} initial={['leaf', 'oil']} />,
+};
 
 // Narrow, as on a phone: the chips wrap inside the control.
-export const Narrow: Story = () => (
-  <div style={{ maxWidth: '16rem' }}>
-    <Stateful initial={['air', 'fire', 'spirit', 'water']} />
-  </div>
-);
+export const Narrow: Story = {
+  render: () => (
+    <div style={{ maxWidth: '16rem' }}>
+      <Stateful initial={['air', 'fire', 'spirit', 'water']} />
+    </div>
+  ),
+};
 
 // Typing narrows the list, as the Forms filter does: the typed box, the chosen
 // values still outlined chips with their counts and icons.
-export const Typeahead: Story = () => (
-  <Stateful label="Forms" choices={FORMS} initial={['leaf']} typeahead />
-);
+export const Typeahead: Story = {
+  render: () => <Stateful label="Forms" choices={FORMS} initial={['leaf']} typeahead />,
+};
 
 const DEITIES: ComboboxChoice[] = [
   { value: 'a', label: 'Test Aletheia', count: 4, group: 'Test Tradition One' },
@@ -110,6 +118,6 @@ const DEITIES: ComboboxChoice[] = [
 ];
 
 // Each choice under its group's heading, as the Deities filter groups by tradition.
-export const Grouped: Story = () => (
-  <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />
-);
+export const Grouped: Story = {
+  render: () => <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />,
+};
