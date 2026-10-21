@@ -11,14 +11,7 @@ import {
 } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
-import {
-  AnnotateButton,
-  AnnotateLink,
-  BinButton,
-  CompendiumEditLink,
-  MoreMenu,
-  StockIcon,
-} from '../IconTip';
+import { AnnotateButton, AnnotateLink, BinButton, CompendiumEditLink, MoreMenu } from '../IconTip';
 import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
@@ -288,9 +281,7 @@ export default function CupboardActions(
     setAsking('stock');
   };
   const stockItem: MenuButtonItem | undefined =
-    stockers.length > 0
-      ? { key: 'stock', label: 'Edit Stock', icon: <StockIcon />, onSelect: askStock }
-      : undefined;
+    stockers.length > 0 ? { key: 'stock', label: 'Edit Stock', onSelect: askStock } : undefined;
   const annotateItem: MenuButtonItem | undefined =
     main !== 'annotate' && mayAnnotate
       ? annotators.length === 1

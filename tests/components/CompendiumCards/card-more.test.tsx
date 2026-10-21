@@ -174,13 +174,6 @@ describe('CompendiumCardMore', () => {
       expect(choices()).toEqual(['Edit Stock', 'Annotate', 'Make It Ours', 'Remove']);
     });
 
-    it('wears the stock glyph, and is still named Edit Stock', () => {
-      renderMore(props([place({ stock: stock() })]));
-      fireEvent.click(more());
-      const item = within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Edit Stock' });
-      expect(item.querySelector('svg')).not.toBeNull();
-    });
-
     it('is the only choice the dots hold for a role that may update stock and do nothing else', () => {
       renderMore(props([place({ ...others, stock: stock() })]));
       expect(choices()).toEqual(['Edit Stock']);
