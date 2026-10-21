@@ -342,13 +342,16 @@ $skeleton-fade: 300ms;
       overflow: hidden;
     }
 
-    // A label over its list, not a section of the page: muted, in the
-    // heading face at body size, as the face's small capitals read smaller
-    // than Lexend at the same size.
+    // A label over its list, not a section of the page: set as a fieldset's
+    // legend is (`.fieldset__legend`), Lexend at the small size and 500, over
+    // the h4's heading face. No colour of its own: it takes the notice's ink,
+    // which each kind has checked on its tint (the muted ink read faded).
     .ingredient-form__group-heading {
       margin: 0;
-      color: $text-muted;
-      font-size: type-size('body');
+      font-family: $font-body;
+      font-size: type-size('small');
+      font-weight: 500;
+      letter-spacing: normal;
     }
 
     // Another name's answer on its way: each row the answer will replace

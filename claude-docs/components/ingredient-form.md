@@ -1118,7 +1118,9 @@ and the compendium entries its cupboard already holds (`!isGlobal`, or
 not hold. Each keeps the answer's order. A group with no rows is not drawn,
 but a lone group keeps its heading, so the reader always knows which kind a
 match is. The headings are `h4`s, under the modal's `h2` and the Identity
-section's `h3`, muted and in the heading face at body size; each list is a
+section's `h3`, set as a fieldset's legend is (`.fieldset__legend`): Lexend at the
+small size and 500, in the notice's own ink rather than the muted one (the
+owner's call, 2026-10-21); each list is a
 `<ul>` named by its heading through `aria-labelledby`. Each group slides
 its own rows (`useSlidingRows`, once per list) and opens and closes by
 height round them, 0fr to 1fr as the region does, so a heading never stands
