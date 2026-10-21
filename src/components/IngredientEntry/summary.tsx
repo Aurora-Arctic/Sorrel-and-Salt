@@ -133,7 +133,7 @@ export default function IngredientSummary({
   const inYourCovens = holding.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'covens')}
-      title="In Your Covens"
+      title="In Your Cupboards"
       level={3}
       className="ingredient-summary__covens"
     >

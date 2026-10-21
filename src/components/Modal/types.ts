@@ -91,7 +91,7 @@ export interface ModalProps extends ModalHeading {
    */
   loading?: boolean;
   /**
-   * A bar under the body rather than in it (the details' See in Compendium or See in My Ingredients): outside the
+   * A bar under the body rather than in it (the details' See in Compendium or See in Your Cupboard): outside the
    * element that scrolls, so the body's scrollbar ends above it and the bar never
    * moves. Held inert while a question is asked, as the body is.
    */

@@ -24,9 +24,11 @@ It has five ways in:
   native select from the server, and Combobox's select-only box or
   type-ahead once hydrated (MB.115).
 
-`IngredientForm`'s three fields of its own, `SuggestField`,
-`MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
-the same shell until its design review (MB.120).
+Four fields grown by `IngredientForm`, `SuggestField`, `MultiSelectField`,
+`ListField` and `ToggleField`, stay in `IngredientForm/fields.tsx` on the same
+shell; `CupboardEntryForm` imports `ListField` and `MultiSelectField` from
+there. MB.120 kept them there rather than make them generic fields here (the
+owner, 2026-10-20).
 
 | File                       | What it holds                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------ |

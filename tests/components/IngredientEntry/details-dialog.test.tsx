@@ -112,7 +112,7 @@ describe('DetailsDialog', () => {
       />,
     );
 
-    const link = within(dialog()).getByRole('link', { name: 'See in My Ingredients' });
+    const link = within(dialog()).getByRole('link', { name: 'See in Your Cupboard' });
     expect(link).toHaveAttribute('href', COVEN_PAGE);
     expect(
       within(dialog()).queryByRole('link', { name: 'See in Compendium' }),
@@ -366,20 +366,20 @@ describe('DetailsDialog plus', () => {
   it('puts the plus before the pencil while a coven that may add lacks the entry', () => {
     show({ covens: [ONE, TWO], heldIn: [ONE.id] });
 
-    const add = within(dialog()).getByRole('button', { name: 'Add to My Ingredients' });
+    const add = within(dialog()).getByRole('button', { name: /^Add to My Ingredients: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(before(add, edit)).toBe(true);
     // Why it could be the check: one coven already holds it, but not both.
-    expect(within(dialog()).queryByRole('button', { name: 'In All Covens' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
 
   it("shows the card's check in the plus's place once every coven that may add holds it", () => {
     show({ covens: [ONE, TWO], heldIn: [ONE.id, TWO.id] });
 
-    const held = within(dialog()).getByRole('button', { name: 'In All Covens' });
+    const held = within(dialog()).getByRole('button', { name: /^In Every Cupboard: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(before(held, edit)).toBe(true);
-    expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
   });
 
   it('shows neither where the page gave no plus, the pencil alone', () => {
@@ -387,8 +387,8 @@ describe('DetailsDialog plus', () => {
 
     // Why neither could show: the page would have given one for a viewer who may add.
     expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
-    expect(within(dialog()).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-    expect(within(dialog()).queryByRole('button', { name: 'In All Covens' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
 });
 

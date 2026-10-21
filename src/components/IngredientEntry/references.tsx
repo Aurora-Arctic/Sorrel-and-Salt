@@ -185,9 +185,10 @@ function BibliographyItem({ entry }: { entry: Entry }): ReactElement {
       {reference.url && (
         <>
           {' '}
-          {/* `noopener` keeps the opened page from reaching back. */}
+          {/* `noopener` keeps the opened page from reaching back; the hidden hint
+              tells a screen reader the link leaves this tab, as IngredientForm's duplicates.tsx does. */}
           <a href={reference.url} target="_blank" rel="noopener">
-            Open Source
+            Open the Source<span className="visually-hidden"> (opens in a new tab)</span>
           </a>
         </>
       )}

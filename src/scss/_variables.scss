@@ -204,7 +204,7 @@ $badge-palettes: (
     ),
   // A compendium entry the curators retired, still read by a coven that uses
   // it (M12.24): a fact about the entry, not a hazard, so low-stock's muted
-  // tint and its checked inks, until the section's design review.
+  // tint and its checked inks (signed off in MB.120, 2026-10-20).
   'retired': (
       treatment: tinted,
       dark: $chalk-muted,
@@ -234,7 +234,7 @@ $badge-palettes: (
       light: $local-badge-light,
     ),
   // A compendium entry added in the last 30 days (MB.106): last-used's solid accent
-  // inks, already contrast-checked, until the section's design review.
+  // inks, already contrast-checked (signed off in MB.120, 2026-10-20).
   'new': (
       treatment: solid,
       dark: $sorrel-bright,
@@ -414,6 +414,13 @@ $warning: var(--warning);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
+// A halo of the page colour behind small text that sits over a backdrop ornament, so the
+// sorrel is pushed back to the page under the letters: two blurs, the tight one for density,
+// the wide one for a soft edge, in the theme's own page colour, so it darkens in dark and
+// lightens in light (the owner's call, 2026-10-20).
+$text-halo:
+  0 0 0.5rem $surface-page,
+  0 0 1rem $surface-page;
 $surface-card-hover: var(--surface-card-hover);
 $drawer-slot: var(--drawer-slot);
 $drawer-floor: var(--drawer-floor);
@@ -565,6 +572,41 @@ $heading-sizes: (
   @return map.get($heading-sizes, $level);
 }
 
+// The site name in the bar (AppShell, PublicFrame): the heading face at a size
+// of its own, between h4 and body, so the name sits in the 3rem bar without
+// crowding the nav. Not a level of $heading-sizes, which a heading takes;
+// this is a name set in the heading face outside a heading.
+$brand-size: 1.375rem;
+
+// An icon set inline with a line of text and sized to it: the entry page's held
+// check beside its name, which takes the heading's size. In `em` where the type
+// sizes are `rem`, because it is the text's own size it follows, not the page's
+// (MB.120, consumed by IngredientEntry).
+$inline-mark-size: 0.72em;
+
+// Small optical corrections, each in `em` of the text it sits in so it follows
+// that text's size (MB.120, where each was a raw value in its component).
+// - `$optical-nudge`: the shift that sets a mark level with the text beside it,
+//   by eye: the entry page's held shelf's gap before the name, and the recency
+//   mark's sparkle and label, each about half a pixel off (measured 2026-10-19).
+// - `$back-chevron-pull`: how far the entry page's back link pulls its chevron
+//   back, as the drawing starts inside its 1em box and read as an indent.
+// - `$link-hint-drop`: the drop that sets a 1rem chain icon level with a
+//   link's first line, which is taller than the icon.
+// - `$cap-middle`: the middle of Lexend's capitals measured from the top of a
+//   body line, what the details modal centres the coven shelf on.
+// - `$recency-icon-size`: the recency mark's sparkle, larger than its small
+//   bold label so the drawing's thin rays read.
+$optical-nudge: 0.04em;
+$back-chevron-pull: 0.5em;
+$link-hint-drop: 0.125em;
+$cap-middle: 0.648em;
+$recency-icon-size: 1.375em;
+
+// A top-level link in a grouped jump menu (PageNav), a step above body copy where
+// the scale has none; the entry page centres its Details link with it.
+$nav-link-size: 1.125rem;
+
 // The reading measure: the longest comfortable line of body copy. `ch` is the
 // width of "0" in the element's own font, so the measure follows the text it
 // caps. typography-base caps every paragraph at it, so a page wider than it — a
@@ -591,6 +633,14 @@ $tip-fade: 500ms;
 // already shows, so it should come and go as quickly as the pointer does
 // (claude-docs/components/icon-tip.md, "Behaviour").
 $icon-tip-fade: 120ms;
+
+// How far IconTip's bubble travels as it fades in and out: a hair, towards its control, so
+// it reads as arriving from it rather than appearing (`IconTip/index.scss`).
+$icon-tip-travel: 2px;
+
+// A MenuButton panel's narrowest: wide enough that a short menu of one or two words is not a
+// sliver under its button (`MenuButton/index.scss`).
+$menu-min-width: 11rem;
 
 // The forms' column: the sign-in panel, the account page's sections, the
 // email form and the invitation. One number where each page restated 28rem;
@@ -687,6 +737,9 @@ $table-stack-width: 40rem;
 // The narrowest an ingredient card is drawn: the grid of cards (IngredientCardList)
 // and the skeleton standing in for it both fill a row with as many as fit.
 $ingredient-card-min: 20rem;
+// The same, for the compact density (IngredientCardList, the data-density switch): a
+// narrower card, so more fit across. No space step or other width is this size.
+$ingredient-card-min-compact: 16rem;
 
 // The heavy rule, for a line that must read by its weight as well as its
 // colour: the impersonation banner's foot, the owner's call in MB.53, where it
@@ -718,6 +771,31 @@ $motion-medium: 300ms;
 // How far a card's face slides down out of its slot, and so how tall the drawer body
 // behind it must be to leave no gap (M12.44).
 $drawer-travel: 11px;
+// How far the drawer's body sits in from the slot's sides, and so the band under the
+// face it keeps clear: the drawer is no wider than the slot, with this much each side
+// (M12.44 and MB.120, consumed by IngredientCard).
+$drawer-inset: 10px;
+// The drawer's side walls, each this wide, and where the back wall ends and the seam
+// into the floor begins and ends, as shares of the drawer's height (M12.44).
+$drawer-wall: 7px;
+$drawer-back-stop: 38%;
+$drawer-seam-stop: 48%;
+// The slot the face sits in, shaded inward from its top and left, and the shadow the
+// face casts up onto the drawer's rim as it slides down. Black at alpha in both themes,
+// as `$shadow-ink-dark` is the site's shadow ink; they are lists, so a box-shadow
+// takes them whole (MB.120).
+$drawer-slot-shadow:
+  inset 0 3px 6px rgba(0, 0, 0, 0.45),
+  inset 2px 0 4px rgba(0, 0, 0, 0.3);
+$drawer-rim-shadow: 0 -3px 5px rgba(0, 0, 0, 0.3);
+
+// The bar down a safety note's side (SafetyNote): the heavy rule, so it reads by its
+// weight as well as its colour (MB.120).
+$safety-bar-width: $rule-heavy;
+// The hairline stroke that fakes a weight above the heading face's 700 on the safety
+// note's heading (the owner's call, 2026-10-17). A stroke is not a border or a rule,
+// and under 1px, so it is no `$rule-*`. MB.120 kept it (the owner, 2026-10-20).
+$text-stroke-hairline: 0.6px;
 
 // A movement the eye should follow, not just register: the details window's
 // description opening and closing under its Show More bar (the owner's call,

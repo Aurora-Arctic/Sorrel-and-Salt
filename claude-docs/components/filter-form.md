@@ -25,7 +25,7 @@ a full page load.
 
 | Prop         | What it is                                                                                                                                               |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`      | The form's accessible name, title case: "Filter Users"                                                                                                   |
+| `label`      | The row's accessible name, on its `<search>`, title case: "Filter Users"                                                                                 |
 | `action`     | The page itself, the path its list's `href.ts` exports: what the form submits to natively before hydration, and the unfiltered first page Clear opens    |
 | `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref`      |
 | `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                                 |
@@ -114,8 +114,12 @@ already above them.
 - **The fields are the caller's.** Their labels, their addresses and what
   each applies stay in the list that knows them; this holds the form, the
   search's submit, Clear and the navigation.
-- **It is a `<search>` landmark**, named by `label`, so a screen reader lists
-  it beside the page's other regions.
+- **It is one landmark: the `<search>`**, named by `label`, so a screen reader
+  lists it beside the page's other regions. The `<form>` inside is not named,
+  as a named form is a second landmark for the same row (MB.120). jsdom's role
+  table predates `<search>`, so a component test finds the form through
+  `filterForm(name)` in `tests/support/filter-form.tsx`, and an e2e spec by
+  `getByRole('search', { name })`.
 
 ## Styling
 
@@ -154,7 +158,7 @@ inside the type-ahead keeps its room while hidden
 **An on-or-off filter is a switch**, `SwitchField` ([`field.md`](field.md)):
 a `.field` like the rest, its label above and the slide toggle beneath it, centred under the label, at
 `$control-height`, so it stands level with the boxes and selects beside it
-at desktop width and in the stacked row, and keeps its own width. The
+at desktop width, and keeps its own width. On a phone it is a row instead, the label beside its track, level with the Filters button on that line; with Clear All showing it wraps beneath, at the line's start (the owner's call, 2026-10-20). The
 owner's call at MB.115's review, over a checkbox with its name beside it,
 which looked out of place in the row.
 

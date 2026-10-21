@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import FacetPanel from '@/components/FacetPanel';
+import { readFileSync } from 'node:fs';
+import FacetPanel, { WIDE } from '@/components/FacetPanel';
 import type { FacetPanelFilter, FacetPanelProps } from '@/components/FacetPanel/types';
 import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
 
@@ -822,5 +823,13 @@ describe('FacetPanel phone sheet slide', () => {
     act(() => listeners.forEach((listener) => listener()));
 
     expect(dialog()).not.toHaveAttribute('open');
+  });
+});
+
+describe('FacetPanel width', () => {
+  it('opens as a sheet below the width the stylesheet draws it as one', () => {
+    const scss = readFileSync('src/scss/_variables.scss', 'utf8');
+    const tablet = /^\$shell-tablet-width:\s*([\d.]+rem);/m.exec(scss)?.[1];
+    expect(WIDE).toBe(`(min-width: ${tablet})`);
   });
 });

@@ -306,7 +306,7 @@ export default function CupboardActions(
   const more = moreChoices.sections.length > 0;
   // The plus while some coven that may add lacks the entry, and the check once all hold it
   // (PlusMark), where Add is not one of the choices.
-  const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} /> : null;
+  const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} name={name} /> : null;
   const icons = (plusMark ? 1 : 0) + (main ? 1 : 0) + (more ? 1 : 0) + (bin ? 1 : 0);
   if (icons === 0) return null;
   const openedPlace =

@@ -16,7 +16,7 @@ import type {
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { drawnOnServer, sent } from '../../support/filter-form';
+import { drawnOnServer, filterForm, sent } from '../../support/filter-form';
 import { waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
@@ -440,7 +440,7 @@ describe('CompendiumList filter', () => {
     vi.unstubAllGlobals();
   });
   const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-  const row = () => screen.getByRole('form', { name: 'Filter the Compendium' });
+  const row = () => filterForm('Filter the Compendium');
   const nameBox = () => screen.getByRole('combobox', { name: 'Name' });
   const unsourcedSwitch = () => screen.getByRole('switch', { name: /^No Refs/ });
   const pushed = () => new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
@@ -537,7 +537,7 @@ describe('CompendiumList filter', () => {
         })}
       />,
     );
-    const served = within(container).getByRole('form', { name: 'Filter the Compendium' });
+    const served = filterForm('Filter the Compendium', within(container));
 
     const categories = within(served).getByRole('listbox', { name: 'Categories' });
     expect(categories).toHaveAttribute('name', 'categories');

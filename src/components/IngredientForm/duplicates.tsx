@@ -448,6 +448,30 @@ function useSlidingRows(
 const titleOf = ({ name, canonicalName }: Duplicate) =>
   canonicalName ? `${name} (${canonicalName})` : name;
 
+/**
+ * The notice's classes, in the one place that picks them. The region is an
+ * `<output>` holding block content, so it cannot take the Notice component
+ * (claude-docs/components/ingredient-form.md, "The duplicate warning"); the
+ * block Notice that can is a follow-on to MB.120, and it replaces this
+ * function alone.
+ */
+const noticeClasses = (blocking: boolean): string =>
+  blocking ? 'notice notice--error' : 'notice notice--warn';
+
+/**
+ * What the notice says. Colour alone must not mark a held save, so the words
+ * change with the state: a question while typing, then, once Save was pressed
+ * and held, that the save waits and why (MB.120).
+ */
+function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): string {
+  if (asking) {
+    return `The compendium already has ${exactCount === 1 ? 'an entry' : 'entries'} of this name.`;
+  }
+  return blocking
+    ? 'Your save is on hold, as these entries have a similar name. Check them, or create this one anyway.'
+    : 'Did you mean one of these?';
+}
+
 /** The name field, with the duplicate warning beneath it. */
 export function NameField({
   warning,
@@ -533,7 +557,7 @@ export function NameField({
               abruptly). */}
           <div className="ingredient-form__duplicates-inner">
             {drawn && (
-              <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
+              <div className={noticeClasses(blocking)}>
                 {/* The id sits on the whole block, sentence and list, so the
                   button described by it is read with the names. Plain anchors
                   rather than <Link>, since the caller hands back a plain
@@ -545,11 +569,7 @@ export function NameField({
                   never flashes them and nothing moves (the owner's calls,
                   2026-10-18, over a spinner). Both stay mounted for the fade. */}
                 <div id={warningId} className="ingredient-form__matches">
-                  <p>
-                    {asking
-                      ? `The compendium already has ${exact.length === 1 ? 'an entry' : 'entries'} of this name.`
-                      : 'Did you mean one of these?'}
-                  </p>
+                  <p>{sentenceFor(blocking, asking, exact.length)}</p>
                   <ul
                     ref={list}
                     onTransitionStart={onTransitionStart}

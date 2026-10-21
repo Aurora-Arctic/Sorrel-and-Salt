@@ -1,6 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PublicFrame from '@/components/PublicFrame';
+
+const pathname = vi.fn<() => string>();
+vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
 
 // The frame round a public page for a signed-out visitor (MB.83): the
 // landmarks, the skip link that reaches the page, and the way in.
@@ -12,7 +15,16 @@ const frame = () =>
     </PublicFrame>,
   );
 
+const compendiumLink = () =>
+  within(screen.getByRole('navigation', { name: 'Site' })).getByRole('link', {
+    name: 'Compendium',
+  });
+
 describe('PublicFrame', () => {
+  beforeEach(() => {
+    pathname.mockReturnValue('/compendium');
+  });
+
   it('holds the page in main#main, which the skip link names', () => {
     frame();
 
@@ -42,6 +54,26 @@ describe('PublicFrame', () => {
     expect(screen.getByRole('banner')).toContainElement(
       screen.getByRole('link', { name: 'Sorrel & Salt' }),
     );
+  });
+
+  it('marks the Compendium link as the current page on and beneath /compendium', () => {
+    for (const path of ['/compendium', '/compendium/ingredients/testwort']) {
+      pathname.mockReturnValue(path);
+      const { unmount } = frame();
+
+      expect(compendiumLink()).toHaveAttribute('aria-current', 'page');
+      unmount();
+    }
+  });
+
+  it('marks no page as current anywhere else, nor on a path that only begins with its letters', () => {
+    for (const path of ['/', '/compendium-archive']) {
+      pathname.mockReturnValue(path);
+      const { unmount } = frame();
+
+      expect(compendiumLink()).not.toHaveAttribute('aria-current');
+      unmount();
+    }
   });
 
   it('offers nothing workspace-shaped', () => {

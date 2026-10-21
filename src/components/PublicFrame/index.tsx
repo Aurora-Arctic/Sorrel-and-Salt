@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import ThemeToggle from '../ThemeToggle';
+import PublicNav from './public-nav';
 import type { PublicFrameProps } from './types';
 import './index.scss';
 
@@ -9,8 +10,9 @@ import './index.scss';
 // the page in `main#main`. Nothing workspace-shaped. A signed-in visitor gets
 // `AppShell` from the same layout instead (`src/app/(public)/layout.tsx`).
 // `.skip-link` is drawn by AppShell's stylesheet, which the layout always
-// loads with it. A server component with no script of its own, so the chrome
-// is in the HTML a crawler or a script-less browser receives.
+// loads with it. A server component; its nav is the one client part
+// (`public-nav.tsx`, which marks the current page), and renders on the server
+// too, so the chrome is in the HTML a crawler or a script-less browser receives.
 // See claude-docs/components/public-frame.md.
 
 const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
@@ -28,13 +30,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
             S&amp;S
           </span>
         </Link>
-        <nav aria-label="Site" className="public-frame__nav">
-          <ul>
-            <li>
-              <Link href="/compendium">Compendium</Link>
-            </li>
-          </ul>
-        </nav>
+        <PublicNav />
         <div className="public-frame__end">
           <Link className="btn btn--solid btn--medium" href="/sign-in">
             Sign In

@@ -101,6 +101,20 @@ in the filter slot to carry.
   root's `scroll-padding-top` leaves room for the stuck row and the gap under it,
   when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
+- **On a phone the row is two lines, and both stick** (the MB.120 review, item 6; the
+  owner's call, 2026-10-20). Under the narrow column (`$narrow-column`, tested as the
+  filter row's own container width) the search box takes the first line, and the Filters
+  button and Clear All share the second, the button filling the line (all of it while
+  Clear All is not drawn) and Clear All at its end. The `<search>` stays the one sticky box at every width, so the two lines stick
+  together as the desktop row does. The primitive's narrow-row rule
+  (`_primitives.scss`, "On a phone's narrow row") gives the first child and each choice
+  a whole line and leaves the rest at their own width, so the compendium's button and
+  Clear All share one; a row of selects elsewhere on the site still reads as before.
+  The root's `scroll-padding-top` adds one control height and the row's gap
+  (`space(3)`) under the same width, as the row is two controls tall there. A design that
+  made only the box stick (`display: contents` on the `<search>` and the form, so the
+  box's sticky range ran to the end of the results) was weighed and dropped, as were
+  nothing sticking and one nowrap line (MB.120).
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file
@@ -263,7 +277,7 @@ from the address and has no control yet; the facet screen (M12.4) draws one.
 
 ## Styling
 
-Tokens only, until the section's design review: the box's submit is drawn
+Tokens only, as signed off in MB.120 (2026-10-20): the box's submit is drawn
 by Combobox inside the box, at its start, and the action sits right-aligned beneath it.
 
 ## Stories

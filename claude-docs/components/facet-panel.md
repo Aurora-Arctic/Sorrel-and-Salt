@@ -86,6 +86,36 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
   hidden behind it (WCAG 2.4.11).
 - **Chips come out only by their cross**, inside the panel.
 
+## Styling
+
+Tokens only, as signed off in MB.120 (2026-10-20). `FacetPanel/index.scss` is laid out in the order
+the panel is built: the Filters button and Clear All, the dialog and its slide, the static block
+before script, the rows (`__line`, `__quick`), then the choice chip (`.facet-chip__*`) and the foot. The
+sizes are `space()` steps and tokens. Four measurements stay as named, commented locals because no
+token fits: the categories floor and wide width, the compact control height, the native select's
+cap and the form's quarter-em gap.
+
+The `WIDE` constant, the width from which the panel stays beside the results with no scrim, is
+exported from `index.tsx`, and a test guards it against the Sass `$shell-tablet-width` it must equal.
+
+**On a phone**, below `$shell-tablet-width`, the panel is a modal sheet (`showModal()`) that slides in from the right edge over a fading backdrop, full height, with its foot stuck to the bottom and room kept above the foot so a focused control is never hidden behind it (WCAG 2.4.11). Each row's controls stack in source order, and the chips and switches wrap. From the tablet width up, the panel is an overlay that slides down under the search row with no scrim: its title and Close are hidden (the title stays for assistive technology), and once open it scrolls inside itself, under the sticky row. The Filters button's label never wraps. Under reduced motion neither the slide nor the chip menu's fade runs.
+
+**Forced colours.** No rule of its own. The switches and the chip menu's radios take the `.switch` and `.radio` primitives' forced-colours rules ([`styling.md`](../styling.md)), and the chips keep their 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/FacetPanel/index.stories.tsx), under `Admin / Facet Panel`:
+`Empty`, `Public`, `Chosen`, `FormsAndToxic`, `Admin`, `Coven` and `CovenEmpty`; the counts
+(`MatchShown`, `AllZeroFacet`); each choice chip stuck on a value (`MatchStuck`, `ToxicStuck`,
+`SourceStuck`); and each chip's menu open (`MatchMenu`, `SourceMenu`, `ToxicMenu`).
+
+## Testing
+
+`tests/components/FacetPanel/index.test.tsx`: the panel and its fields, the choice chips, the coven's
+Source, In Stock and Low Stock Only controls, the Toxic and Source fields when a count is zero, the
+phone sheet's slide, and the `WIDE` guard. The panel's placement under the search row is proved in
+the compendium page specs.
+
 ## Not here
 
 The GET form, the address state and the debounce that applies a change are the

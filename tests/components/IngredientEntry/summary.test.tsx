@@ -392,7 +392,7 @@ describe('IngredientSummary', () => {
     it("links the entry in each coven that holds it, by the coven's name, after the categories", () => {
       render(<IngredientSummary detail={full()} covens={covens} />);
 
-      const list = screen.getByRole('list', { name: 'In Your Covens' });
+      const list = screen.getByRole('list', { name: 'In Your Cupboards' });
       expect(within(list).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
         'href',
         `/coven/fixture-coven/ingredients/${ENTRY}`,
@@ -403,7 +403,7 @@ describe('IngredientSummary', () => {
       );
       // The last block: the categories come before it in the document.
       const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-      expect(headings[headings.length - 1]).toBe('In Your Covens');
+      expect(headings[headings.length - 1]).toBe('In Your Cupboards');
       expect(headings).toContain('Categories');
     });
 
@@ -411,11 +411,11 @@ describe('IngredientSummary', () => {
       const { unmount } = render(<IngredientSummary detail={full()} covens={[]} />);
       // Why it could show: the body still draws its other blocks.
       expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
-      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Cupboards' })).not.toBeInTheDocument();
       unmount();
 
       render(<IngredientSummary detail={full()} />);
-      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Cupboards' })).not.toBeInTheDocument();
     });
 
     it("draws no block for a coven's own entry, which only its coven holds", () => {
@@ -426,7 +426,7 @@ describe('IngredientSummary', () => {
         />,
       );
       expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument();
-      expect(screen.queryByRole('heading', { name: 'In Your Covens' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In Your Cupboards' })).not.toBeInTheDocument();
     });
 
     it('still says nothing is recorded of an empty entry, with the covens that hold it beneath', () => {
@@ -445,7 +445,7 @@ describe('IngredientSummary', () => {
       // The links are where the entry is held, not something recorded of it.
       expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
       expect(
-        within(screen.getByRole('list', { name: 'In Your Covens' })).getAllByRole('link'),
+        within(screen.getByRole('list', { name: 'In Your Cupboards' })).getAllByRole('link'),
       ).toHaveLength(2);
     });
   });

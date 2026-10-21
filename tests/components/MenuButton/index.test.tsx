@@ -163,7 +163,44 @@ describe('MenuButton', () => {
 
     const busy = screen.getByRole('button', { name: 'Adding' });
     expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  // MB.120: the busy button was `disabled`, and a browser drops the focus of a control that is
+  // disabled under it to the body, so the keyboard lost its place while an add ran. It is
+  // `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and
+  // ArrowDown itself.
+  describe('while busy', () => {
+    it('keeps the focus on the button as it turns busy, and gives it back as it ends', () => {
+      const { rerender } = draw(actions());
+      // Why the focus could have gone: the same button, focused, before it turns busy.
+      toggle().focus();
+      expect(toggle()).toHaveFocus();
+
+      rerender(
+        <MenuButton label="Edit" className="btn" items={actions()} busy busyLabel="Adding" />,
+      );
+
+      const busy = screen.getByRole('button', { name: 'Adding' });
+      expect(busy).not.toHaveAttribute('disabled');
+      expect(busy).toHaveFocus();
+      expect(document.body).not.toHaveFocus();
+
+      rerender(<MenuButton label="Edit" className="btn" items={actions()} />);
+      expect(toggle()).toHaveFocus();
+      expect(toggle()).not.toHaveAttribute('aria-disabled');
+    });
+
+    it('opens no menu on a press or on ArrowDown', () => {
+      draw(actions(), true);
+      const busy = screen.getByRole('button', { name: 'Adding' });
+
+      fireEvent.click(busy);
+      fireEvent.keyDown(busy, { key: 'ArrowDown' });
+
+      expect(busy).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('menu')).toBeNull();
+    });
   });
 
   // An icon in place of the words (M8.17's card More): the label still names
@@ -190,7 +227,7 @@ describe('MenuButton', () => {
         busyLabel="Adding"
       />,
     );
-    expect(screen.getByRole('button', { name: 'Adding' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Adding' })).toHaveAttribute('aria-disabled', 'true');
   });
 });
 

@@ -539,7 +539,7 @@ describe('IngredientEntry', () => {
   it('jumps to the details, each form and the references from the page nav', () => {
     renderEntry();
 
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     expect(
       within(nav)
         .getAllByRole('link')
@@ -901,7 +901,7 @@ describe('IngredientEntry references', () => {
     }
   });
 
-  it('links a url to its source, opened with rel noopener', () => {
+  it('links a url to its source, opened with rel noopener and named as opening a new tab', () => {
     renderEntry({
       detail: detail({
         references: [cited('Linked Fixtures', null, 'https://fixtures.example/testwort')],
@@ -909,7 +909,10 @@ describe('IngredientEntry references', () => {
       }),
     });
 
-    const link = within(bibliography()).getByRole('link', { name: /source/i });
+    // jsdom drops the space before the hidden hint that a browser keeps.
+    const link = within(bibliography()).getByRole('link', {
+      name: /^Open the Source ?\(opens in a new tab\)$/,
+    });
     expect(link).toHaveAttribute('href', 'https://fixtures.example/testwort');
     expect(link.getAttribute('rel')?.split(' ')).toContain('noopener');
   });
@@ -963,7 +966,7 @@ describe('IngredientEntry references', () => {
 
   it('lists Notes and Bibliography under a References group in the jump menu, after Details and the forms', () => {
     sample();
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
     const group = within(nav).getByRole('list', { name: 'References' });
 
@@ -986,7 +989,7 @@ describe('IngredientEntry references', () => {
 
   it('keeps References a single link when no source is recorded, as there is nothing under it', () => {
     renderEntry({ detail: detail({ references: [], variants: [variantRow('testoil')] }) });
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
 
     expect(links[links.length - 1]).toHaveAttribute('href', '#references');

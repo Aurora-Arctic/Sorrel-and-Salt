@@ -158,14 +158,15 @@ const FilterForm = ({
   }
 
   return (
-    <search>
+    // The `<search>` is the one landmark and carries the name: a named
+    // `<form>` inside it would be a second, listing the row twice.
+    <search aria-label={label}>
       {sorrel && <div className="filter-sorrel" aria-hidden="true" />}
       <form
         className={className ? `filter-row ${className}` : 'filter-row'}
         ref={form}
         method="get"
         action={action}
-        aria-label={label}
         aria-busy={pending || undefined}
         onSubmit={submit}
       >

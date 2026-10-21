@@ -497,13 +497,46 @@
     margin-inline-start: auto;
   }
 
-  // On a phone's narrow row every child takes the whole line, so the boxes
-  // share one edge, and Clear ends the line beneath them. One `:is()`, its
-  // weight the choice rule's above, so it overrides that rule by coming
-  // later rather than by a heavier selector.
+  // On a phone's narrow row (the MB.120 review, item 6; the owner's call,
+  // 2026-10-20) the search takes the whole first line, so its box shares an
+  // edge with the boxes below, and a choice (a select or a type-ahead) takes
+  // a whole line of its own, so it fills it. Every other child, the compendium's
+  // Filters button and its Clear All, a switch, Clear, keeps its own width and
+  // shares a line with the next: the Filters button at the line's start,
+  // Clear at its end (`margin-inline-start: auto`). Before, every child took a
+  // whole line, three lines deep for the compendium's row, and the stuck row
+  // covered a third of the window. One `:is()`, its weight the choice rule's
+  // above, so it overrides that rule by coming later rather than by a
+  // heavier selector. Two choices never share a line: each starts at
+  // `$filter-choice-width`, and two of those do not fit in 28rem.
   @container filter-row (max-width: #{$narrow-column}) {
-    .filter-row > :is(*, .field:has(> .select)) {
+    .filter-row > :is(:first-child, .field:has(> .select), .filter-row__choice) {
       flex-basis: 100%;
+    }
+
+    // A switch (the coven list's Compact) is a row here, not a column: its
+    // label sits beside its track, `space(2)` apart, the pair a control's
+    // height and centred, so it stands level with the Filters button rather
+    // than a label taller, its word riding above that button's top edge. It
+    // keeps its own width (`flex: none`) and shares the Filters line; with
+    // Clear All showing it wraps beneath, at the line's start (the owner's
+    // call, 2026-10-20). Not a choice or the first child, so the rule above
+    // never matches it.
+    .filter-row > .switch {
+      flex: none;
+      flex-direction: row;
+      align-items: center;
+      gap: space(2);
+      min-block-size: $control-height;
+
+      .field__label {
+        text-align: start;
+        white-space: nowrap;
+      }
+
+      .switch__control {
+        min-block-size: 0;
+      }
     }
   }
 
