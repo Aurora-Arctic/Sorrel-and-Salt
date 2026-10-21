@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/site';
 
-// The only paths a crawler may fetch: the home page and the public compendium
+// The only paths a crawler may fetch: the home page, the sign-in page and the public compendium
 // (MB.80), the three public files that describe it (M12.2), and the sitemap this
 // file advertises: `Disallow: /` would otherwise block it. Everything else
 // is behind sign-in or is workspace data. A flat list, so a new public file is
@@ -17,6 +17,7 @@ export const CRAWLABLE_PATHS = [
   '/$',
   '/compendium',
   '/compendium/',
+  '/sign-in',
   '/llms.txt',
   '/.well-known/ai-catalog.json',
   '/.well-known/ard.json',
