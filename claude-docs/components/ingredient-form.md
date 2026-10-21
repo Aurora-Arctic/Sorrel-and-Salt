@@ -1001,8 +1001,8 @@ says as much.
   link must name a form: the announcement adds how many, "Skipped 1 with
   no Oil form", and a notice beneath the list names them.
 - **The skipped notice** (`SkippedNotice` and `useSkippedCopy`, the
-  owner's call). A `.notice--warn` inside an `output` labelled
-  "Substitute Ingredients skipped", always in the page, as a live region
+  owner's call). A block `Notice` of the `warn` kind, taking no role, inside a
+  status region labelled "Substitute Ingredients skipped", always in the page, as a live region
   must be to be heard (the duplicate warning's pattern), and empty, its gap
   cancelled, until a copy skips something. It names what was skipped, "No
   Oil form to link, so not copied: Mockwort.", beside a small quiet **Copy
@@ -1099,7 +1099,8 @@ below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
-The warning sits beneath the field, a `.notice--warn`, the ochre bar and
+The warning sits beneath the field, a block `Notice` of the `warn` kind
+([`notice.md`](notice.md), "The block form"; M12.48), the ochre bar and
 tint with the ochre triangle: "Did you mean one of these?" and a list beneath it, one
 match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
@@ -1190,7 +1191,7 @@ passes validation asks about the very name it is sending, through the query
 client's `fetchQuery`: the cached answer when the typing had settled, asked
 there and then when it had not, so a save inside the debounce cannot slip past
 the warning. If a match not yet set aside comes back, nothing is sent: the
-notice turns to `.notice--error` and its sentence to "Your save is on hold, as
+notice turns to the `error` kind and its sentence to "Your save is on hold, as
 these entries have a similar name" (colour alone must not say it), the name is marked invalid and described by
 it, and the focus goes to Create Anyway, which the warning describes, so the
 focus says why it moved. A second save stops the same way. A failed check
@@ -1212,10 +1213,15 @@ takes the focus before the button goes, through the button's form rather than
 react-hook-form's `setFocus`, which waits a tick with the focus on the body,
 and the name's error goes with the warning.
 
-A screen reader hears it two ways. The warning is inside an `<output>`
+A screen reader hears it two ways. The warning is inside a status region
+(`<div role="status">`, since an `<output>` holds phrasing content alone)
 named "Possible duplicates", always in the page, so it is announced as it
 arrives; and the sentence is in the name field's `aria-describedby` while it
-shows, so it is read with the field, as the hint is.
+shows, so it is read with the field, as the hint is. The notice inside the
+region takes no role of its own (`inRegion`), so it is announced once,
+whether a warning or, held, an error ([`notice.md`](notice.md), "Inside a
+live region, a notice takes no role", for why the region holds the notice
+rather than being it).
 
 **A save shows it is busy**, from the press to the answer, the duplicate
 check included: both saves disabled, and the one pressed marked `aria-busy`
@@ -1637,12 +1643,11 @@ of the column with their label and hint, as the fields above them do, rather
 than centred under the label as the switch primitive draws it for a filter
 bar (`.ingredient-form .switch`; the owner's call, 2026-10-16).
 
-**The duplicates notice is an `<output>`, so its classes are hand-written.**
-The region holds block content (a sentence, a list, a button), which a Notice
-cannot go inside, so `duplicates.tsx` writes `notice notice--warn` or
-`notice notice--error` itself, picked in the one function `noticeClasses`.
-The block Notice that would replace them is M12.48, minted from MB.120; when it
-lands it swaps that function alone. Colour must not be the only sign of a held
+**The duplicates notice is a block `Notice`** (M12.48), of the `warn` kind
+while the name is typed against and the `error` kind once a save is held,
+since it holds a sentence, a list and a button, which an inline notice's
+`<p>` cannot. The skipped-copy notice is one too. Neither writes a `notice`
+class by hand. Colour must not be the only sign of a held
 save, so the sentence changes with the state too: "Did you mean one of these?"
 while the name is typed against, "Your save is on hold, as these entries have a
 similar name. Check them, or create this one anyway." once Save has been pressed
