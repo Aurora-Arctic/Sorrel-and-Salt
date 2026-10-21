@@ -123,6 +123,26 @@ test('a member adds the entry from its public page, and the three dots then offe
     await page.keyboard.press('Escape');
   });
 
+  await test.step('the coven’s own page of the entry offers Edit Stock first in its dots, opening this coven’s dialog at once', async () => {
+    const [{ id }] = await withSql(
+      (sql) => sql<{ id: string }[]>`
+        select id from ingredients where name = ${NAME} and workspace_id is null and deleted_at is null`,
+    );
+    const own = `/coven/${coven.slug}/ingredients/${id}`;
+    await page.goto(own);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME);
+    await menu().click();
+    await expect(page.getByRole('menuitem').first()).toHaveText('Edit Stock');
+    await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: /^Edit Stock/ });
+    await expect(dialog).toBeVisible();
+    // This coven is the only one on the page, so there is none to choose.
+    await expect(dialog.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await open();
+  });
+
   await test.step('the viewer now sees the shelf, and a visitor never does', async () => {
     const visitor = await browser.newPage({ baseURL });
     try {

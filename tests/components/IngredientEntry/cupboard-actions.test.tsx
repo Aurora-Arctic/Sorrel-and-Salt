@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardActionsProps } from '@/components/IngredientEntry/types';
+import type { StockData } from '@/components/StockDialog/types';
 import type {
   AddCupboardEntryMutation,
   MakeItOursMutation,
@@ -548,6 +549,58 @@ describe('CupboardActions', () => {
 
   // The plus beside the pencil on a coven's page too (the owner's call, 2026-10-20): the page's
   // `plus` names every coven the viewer may add in and which of them hold the entry.
+  // Edit Stock on the coven's own page (M9.12; the owner's call, 2026-10-21): first in the dots,
+  // this coven's dialog at once with no coven to choose, for a coven that holds the entry and
+  // where the role may update stock. The page hands over the stock only then.
+  describe('Edit Stock', () => {
+    const FLOWER = '00000000-0000-4000-8000-0000000000f1';
+    const STOCK: StockData = {
+      forms: [{ variantId: FLOWER, label: 'Flower' }],
+      jars: [
+        {
+          id: '00000000-0000-4000-8000-000000000991',
+          variantId: FLOWER,
+          quantity: 50,
+          unit: 'g',
+          threshold: null,
+        },
+      ],
+    };
+
+    it('goes first in the dots once the coven holds the entry and the page gave it the stock', () => {
+      renderActions({ held: true, stock: STOCK });
+
+      expect(choices()).toEqual(['Edit Stock', 'Make It Ours', 'Remove']);
+    });
+
+    it('is not offered without the stock, which the page withholds from a role that may not update it', () => {
+      // Why it could have been: the coven holds the entry and the other choices show.
+      renderActions({ held: true });
+
+      expect(choices()).toEqual(['Make It Ours', 'Remove']);
+    });
+
+    it('is not offered while the coven lacks the entry, whatever stock came', () => {
+      renderActions({ held: false, stock: STOCK });
+
+      // With nothing else to offer the dots are not even drawn.
+      expect(screen.queryByRole('button', { name: 'More for Testwort' })).toBeNull();
+      expect(screen.queryByRole('menuitem', { name: 'Edit Stock' })).toBeNull();
+    });
+
+    it("opens this coven's dialog at once, with no coven to choose", async () => {
+      renderActions({ held: true, stock: STOCK });
+      fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
+      fireEvent.click(
+        within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Edit Stock' }),
+      );
+
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
+      expect(within(dialog).getByRole('button', { name: /^Flower\b.*50 g/ })).toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Coven' })).toBeNull();
+    });
+  });
+
   describe('the plus', () => {
     const OTHER = { id: '00000000-0000-4000-8000-000000000009', name: 'Other Coven' };
     const HERE = { id: BASE.workspaceId, name: 'Fixture Coven' };

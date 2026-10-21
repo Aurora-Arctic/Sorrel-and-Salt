@@ -106,4 +106,28 @@ describe('readEntryStock', () => {
     expect(read.has(stockKey('w1', 'e1'))).toBe(false);
     expect(read.has(stockKey('w1', 'e2'))).toBe(true);
   });
+
+  it("asks a coven's own entry's forms in that coven, beside a compendium entry's in the compendium", async () => {
+    stockOf.mockResolvedValue([[], []]);
+    variantsOf.mockResolvedValue([[variant('v1', 'root')], [variant('v9', 'oil')]]);
+
+    const read = await readEntryStock([
+      { ingredientId: 'e1', workspaceId: 'w1' },
+      { ingredientId: 'own1', workspaceId: 'w1', own: true },
+    ]);
+
+    // One call still; the own entry's tier is its coven, or the service would refuse it as the
+    // compendium's.
+    expect(variantsOf).toHaveBeenCalledTimes(1);
+    expect(variantsOf).toHaveBeenCalledWith(SESSION, [
+      { id: 'e1', workspaceId: null },
+      { id: 'own1', workspaceId: 'w1' },
+    ]);
+    expect(read.get(stockKey('w1', 'own1'))?.forms).toEqual([{ variantId: 'v9', label: 'Oil' }]);
+    // The jars are asked of the coven for both, with no tier in the key the stock service sees.
+    expect(stockOf).toHaveBeenCalledWith(SESSION, [
+      { ingredientId: 'e1', workspaceId: 'w1' },
+      { ingredientId: 'own1', workspaceId: 'w1' },
+    ]);
+  });
 });

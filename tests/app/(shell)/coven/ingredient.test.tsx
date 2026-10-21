@@ -59,6 +59,14 @@ const covensHolding = vi.fn();
 const plusCovensOf = vi.fn();
 vi.mock('@/app/plus-covens', () => ({ covensHolding, plusCovensOf }));
 
+// Edit Stock (M9.12) reads this coven's jars through entry-stock.ts, which is its own tests'.
+// Here only which entries ask, and that what comes back reaches the dots. Nothing unless a test says so.
+const readEntryStock = vi.fn();
+vi.mock('@/app/entry-stock', () => ({
+  readEntryStock,
+  stockKey: (workspaceId: string, ingredientId: string) => `${workspaceId}:${ingredientId}`,
+}));
+
 // The cupboard buttons (M12.17) are client parts that send mutations, so the page
 // renders under a query client.
 const renderPage = (ui: ReactElement) =>
@@ -132,6 +140,7 @@ beforeEach(() => {
   compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0 });
   covensHolding.mockResolvedValue([]);
   plusCovensOf.mockResolvedValue(undefined);
+  readEntryStock.mockResolvedValue(new Map());
 });
 
 describe('the coven ingredient page', () => {
@@ -565,5 +574,64 @@ describe('the coven ingredient page title', () => {
     const result = await generateMetadata(params());
     expect(result.title).toBe(`${covenRow().name} (${covenRow().canonicalName})`);
     expect(result.alternates).toBeUndefined();
+  });
+});
+
+describe('the coven ingredient page’s Edit Stock', () => {
+  const STOCK = { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] };
+  const held = () => getCupboardEntry.mockResolvedValue(HELD_ROW);
+  const gives = () => readEntryStock.mockResolvedValue(new Map([[`${WORKSPACE.id}:${ID}`, STOCK]]));
+  // The dots on the heading are the cupboard's menu; Edit Stock is among their choices.
+  const stockItem = () => {
+    const dots = screen.queryByRole('button', { name: /^More for\b/ });
+    if (dots) fireEvent.click(dots);
+    return screen.queryByRole('menuitem', { name: 'Edit Stock' });
+  };
+
+  it('asks for the stock of a compendium entry the coven holds, as held, and offers Edit Stock', async () => {
+    held();
+    gives();
+    await open(compendiumRow());
+
+    expect(readEntryStock).toHaveBeenCalledWith([
+      { workspaceId: WORKSPACE.id, ingredientId: ID, own: false },
+    ]);
+    expect(stockItem()).toBeInTheDocument();
+  });
+
+  it("asks for the coven's own entry's forms in the coven's tier, and offers Edit Stock", async () => {
+    gives();
+    await open(covenRow());
+
+    expect(readEntryStock).toHaveBeenCalledWith([
+      { workspaceId: WORKSPACE.id, ingredientId: ID, own: true },
+    ]);
+    expect(stockItem()).toBeInTheDocument();
+  });
+
+  it('asks nothing, and offers no Edit Stock, for a compendium entry the coven does not hold', async () => {
+    gives();
+    await open(compendiumRow());
+
+    expect(readEntryStock).not.toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
+  });
+
+  it('asks nothing, and offers no Edit Stock, for a viewer, who may not update stock', async () => {
+    asRole('viewer');
+    held();
+    gives();
+    await open(compendiumRow());
+
+    expect(readEntryStock).not.toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
+  });
+
+  it('offers no Edit Stock when the stock service refused the pair', async () => {
+    held();
+    await open(compendiumRow());
+
+    expect(readEntryStock).toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
   });
 });

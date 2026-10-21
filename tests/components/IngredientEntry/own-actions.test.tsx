@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OwnEntryActions from '@/components/IngredientEntry/own-actions';
@@ -132,5 +132,59 @@ describe('OwnEntryActions', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(bin()).toHaveFocus();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  // Edit Stock (M9.12; the owner's call, 2026-10-21): with the stock handed over the bin joins
+  // Edit Stock in the three dots, a lone choice being its own icon and two being a menu.
+  describe('with the stock to edit', () => {
+    const FLOWER = '00000000-0000-4000-8000-0000000000f1';
+    const withStock: IngredientEntryEdit = {
+      ...EDIT,
+      coven: {
+        ...EDIT.coven!,
+        stock: {
+          forms: [{ variantId: FLOWER, label: 'Flower' }],
+          jars: [
+            {
+              id: '00000000-0000-4000-8000-000000000991',
+              variantId: FLOWER,
+              quantity: 50,
+              unit: 'g',
+              threshold: null,
+            },
+          ],
+        },
+      },
+    };
+    const dots = () => screen.getByRole('button', { name: 'More for Testwort' });
+
+    it('puts Edit Stock first and Delete Ingredient after it in the three dots, and draws no bin', () => {
+      renderOnPage(withStock);
+      fireEvent.click(dots());
+
+      expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+        'Edit Stock',
+        'Delete Ingredient',
+      ]);
+      expect(screen.queryByRole('button', { name: 'Delete Ingredient Testwort' })).toBeNull();
+      expect(screen.getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
+    });
+
+    it("opens this coven's Edit Stock dialog at once", async () => {
+      renderOnPage(withStock);
+      fireEvent.click(dots());
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Edit Stock' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
+      expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
+    });
+
+    it('asks to delete from the dots just as the bin does', async () => {
+      renderOnPage(withStock);
+      fireEvent.click(dots());
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Ingredient' }));
+
+      expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
+    });
   });
 });

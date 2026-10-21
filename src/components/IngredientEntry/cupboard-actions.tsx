@@ -126,8 +126,7 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
         canRemove,
         canMakeOurs,
         annotateHref: props.annotate.href,
-        // A coven's own page keeps its Edit Stock pencil, so no menu item.
-        stock: undefined,
+        stock: props.stock,
       },
     ],
     defaultWorkspaceId: workspaceId,
@@ -219,10 +218,11 @@ export default function CupboardActions(
     ),
   );
 
-  // Edit Stock (M9.12): the compendium's page only; a coven's own page keeps its pencil. A
-  // holding coven where the role may update stock carries the stock the page read for it.
+  // Edit Stock (M9.12), first in More on either page: a holding coven where the role may update
+  // stock carries the stock the page read for it. A coven's own page has one coven, so the
+  // dialog opens at once there; the public page asks which where there are several.
   const stockers = places.flatMap(({ workspaceId, name: coven, held, stock }): StockPlace[] =>
-    viewing === 'compendium' && held && stock ? [{ workspaceId, name: coven, stock }] : [],
+    held && stock ? [{ workspaceId, name: coven, stock }] : [],
   );
   const annotators = placesFor.annotate(places);
   const owners = placesFor.own(places);

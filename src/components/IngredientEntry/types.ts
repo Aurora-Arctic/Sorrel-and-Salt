@@ -48,6 +48,12 @@ export interface IngredientEntryEdit {
     /** The coven's ingredient list; an entry's page in the coven is beneath it, by id. */
     ingredientsHref: Route;
     mayPromote: boolean;
+    /**
+     * What Edit Stock reads on the coven's own entry (M9.12): every form the entry comes in and
+     * this coven's jars of it. Given only where the role may update stock; left out, the entry
+     * offers no Edit Stock.
+     */
+    stock?: StockData;
   };
 }
 
@@ -222,6 +228,12 @@ export interface CupboardProps {
    * neither the plus nor its check is drawn. `plusCovensOf` (src/app/plus-covens.ts) reads it.
    */
   plus?: CupboardPlus;
+  /**
+   * What Edit Stock reads (M9.12), as on a `CupboardPlace`: every form the entry comes in and
+   * this coven's jars of it. Given only where the coven holds the entry and the role may update
+   * stock; left out, the menu has no Edit Stock.
+   */
+  stock?: StockData;
 }
 
 /**

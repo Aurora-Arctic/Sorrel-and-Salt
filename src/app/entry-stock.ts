@@ -16,13 +16,16 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 export const stockKey = (workspaceId: string, ingredientId: string): string =>
   `${workspaceId}:${ingredientId}`;
 
+/** A pair to read: `own` where the entry is the coven's own, whose forms are read in that coven. */
+export type StockAsk = StockKey & { own?: boolean };
+
 /**
  * The stock for each (coven, entry) pair asked, under `stockKey`. A pair is left out when the
  * service refuses its coven's jars or its entry's forms: the dialog then is not offered, and
  * a write the role may not make is refused by the service anyway. None for a visitor.
  */
 export async function readEntryStock(
-  asked: readonly StockKey[],
+  asked: readonly StockAsk[],
 ): Promise<ReadonlyMap<string, StockData>> {
   // The open entry can be on the page too, so a pair may come twice.
   const pairs = [
@@ -33,15 +36,25 @@ export async function readEntryStock(
   const session = await getSession();
   if (!session) return found;
 
-  const entryIds = [...new Set(pairs.map(({ ingredientId }) => ingredientId))];
+  // The forms are read once per entry, in the tier it lives in: the compendium's, or the coven's
+  // for the coven's own entry (the service refuses a coven's entry asked as the compendium's).
+  const tierOf = ({ own, workspaceId }: StockAsk): string | null => (own ? workspaceId : null);
+  const entries = [
+    ...new Map(
+      pairs.map((pair) => [
+        pair.ingredientId,
+        { id: pair.ingredientId, workspaceId: tierOf(pair) },
+      ]),
+    ).values(),
+  ];
   const [jars, forms] = await Promise.all([
-    stockOf(session, pairs),
-    variantsOf(
+    stockOf(
       session,
-      entryIds.map((id) => ({ id, workspaceId: null })),
+      pairs.map(({ workspaceId, ingredientId }) => ({ workspaceId, ingredientId })),
     ),
+    variantsOf(session, entries),
   ]);
-  const formsOf = new Map(entryIds.map((id, i) => [id, forms[i]]));
+  const formsOf = new Map(entries.map(({ id }, i) => [id, forms[i]]));
 
   pairs.forEach(({ ingredientId, workspaceId }, i) => {
     const held = jars[i];

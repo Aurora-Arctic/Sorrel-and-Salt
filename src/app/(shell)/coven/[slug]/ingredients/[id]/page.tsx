@@ -11,6 +11,7 @@ import { requireCovenMembership, requireSession } from '../../../../../../lib/re
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/entry-values';
+import { readEntryStock, stockKey } from '@/app/entry-stock';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import { rolePermits } from '@/modules/coven';
 import {
@@ -123,12 +124,26 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // carries the cupboard entry the retired-entry read found, where
   // `cupboardEntry` reads live entries only.
   const held = entry.workspaceId === null && detail.cupboardEntry != null;
+  const isOwn = entry.workspaceId !== null;
   // The plus beside the pencil (M9.12; the owner's call, 2026-10-20): every coven the viewer may
   // add in, this one first where it may, and which of them hold the entry, from the one held
   // read. A compendium entry only: a coven's own entry and a retired one take no plus.
   const plus = inCompendium
     ? await plusCovensOf(await covensHolding(entry.id), workspace.id)
     : undefined;
+
+  // Edit Stock in the three dots (M9.12; the owner's call, 2026-10-21): the forms the entry comes
+  // in and this coven's jars of it, for a member whose role may update stock, on a compendium
+  // entry the coven holds and on the coven's own. Read per request, for this viewer, in the one
+  // call the pair needs, and never cached (CLAUDE.md rule 6). A retired entry is left out: its
+  // forms are read through its cupboard entry, which this read does not take.
+  const mayStock = rolePermits(role, { inventory: ['update'] });
+  const stock =
+    mayStock && (isOwn || (held && !detail.retired))
+      ? (
+          await readEntryStock([{ workspaceId: workspace.id, ingredientId: entry.id, own: isOwn }])
+        ).get(stockKey(workspace.id, entry.id))
+      : undefined;
 
   // Edit opens a dialog over this page from a bare `?edit`, and the form's
   // values are read only when it is asked for. A compendium entry offers it
@@ -137,7 +152,6 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // read as that member so the coven's proof is checked.
   const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
   const ingredientsHref = `/coven/${workspace.slug}/ingredients` as Route;
-  const isOwn = entry.workspaceId !== null;
   const canEdit = isOwn
     ? rolePermits(role, { ingredient: ['update'] })
     : inCompendium && viewer.canCurate;
@@ -180,6 +194,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                   workspaceId: workspace.id,
                   ingredientsHref,
                   mayPromote: rolePermits(role, { ingredient: ['update'] }),
+                  stock,
                 },
               }
             : canEdit
@@ -210,6 +225,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 canRemove: rolePermits(role, { ingredient: ['delete'] }),
                 canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
                 plus,
+                stock,
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
                 // A retired entry's page reads nothing once its row is gone.
                 removedHref: detail.retired
