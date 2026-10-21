@@ -37,6 +37,7 @@ import {
   isRetired,
   MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
+import { stockDialogOf } from '@/app/coven-stock';
 
 // A coven's Ingredients (M9.6): what the coven has, as compact cards with their jars. The coven
 // comes from the address and the guard proves the caller is in it, as on every coven page (a
@@ -88,6 +89,8 @@ export default async function CovenIngredientsPage({
   // Remove on a compendium entry, on the permissions their services assert.
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
+  // The foot's Edit Stock pencil (M9.9), on the permission `saveStock` asserts: none for a viewer.
+  const mayStock = rolePermits(membership.role, { inventory: ['update'] });
   // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
@@ -143,6 +146,13 @@ export default async function CovenIngredientsPage({
       kind: own ? 'own' : 'cupboard',
       ...footOf(own, { ...shown, id: node.id }, placed({ edit: node.id })),
       retired: isRetired(node),
+      lastEdit: page.lastEdits[i],
+      ...(mayStock && {
+        stock: stockDialogOf(
+          page.variantIds[i].map((id) => ({ id, form: page.formOf.get(id) ?? '' })),
+          page.jars[i],
+        ),
+      }),
       jars: page.jars[i].flatMap((jar): JarLine[] => {
         const form = page.formOf.get(jar.variantId);
         // A jar whose form is gone from the page was removed between the two reads.
@@ -189,8 +199,21 @@ export default async function CovenIngredientsPage({
             viewed && {
               heading: detailsHeading(viewed.shown),
               marks: detailsMarks(viewed.detail, true),
+              lastEdit: viewed.lastEdit,
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
-              children: <IngredientSummary detail={viewed.detail} covens={viewed.covens} />,
+              // The coven's jars of it, to every role: each form shows its stock (M9.9).
+              children: (
+                <IngredientSummary
+                  detail={viewed.detail}
+                  covens={viewed.covens}
+                  jars={
+                    stockDialogOf(
+                      viewed.detail.variants.map(({ variant }) => variant),
+                      viewed.jars,
+                    ).jars
+                  }
+                />
+              ),
               // The card's own controls for this entry (the owner's call, 2026-10-20): Edit over the
               // details or Annotate, and More or the bin, whose delete or remove goes back to the
               // list, which closes them.
@@ -204,6 +227,12 @@ export default async function CovenIngredientsPage({
                     viewed.shown,
                     covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
                   ),
+                  ...(mayStock && {
+                    stock: stockDialogOf(
+                      viewed.detail.variants.map(({ variant }) => variant),
+                      viewed.jars,
+                    ),
+                  }),
                 },
                 workspace.id,
                 workspace.slug,

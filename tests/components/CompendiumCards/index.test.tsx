@@ -12,7 +12,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from '@/gql/graphql';
 import { expectRefusalUnder } from '../../support/click-feedback';
-import { sent } from '../../support/filter-form';
+import { filterForm, sent } from '../../support/filter-form';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -134,6 +134,9 @@ describe('CompendiumCards', () => {
   });
 
   describe('the add icon', () => {
+    /** Any card's plus, and any card's check: each is named by its tip and then its entry. */
+    const PLUS = { name: /^Add to My Ingredients: / };
+    const HELD = { name: /^In Every Cupboard: / };
     const addTo = (slug: string) => {
       const item = screen
         .getAllByRole('listitem')
@@ -141,59 +144,68 @@ describe('CompendiumCards', () => {
       return item;
     };
 
-    it('holds a plus button named Add to My Ingredients on each card not yet held', () => {
+    // MB.120: two cards' pluses read alike to a screen reader's list of buttons unless each
+    // carries its entry, as the pencil beside it does; the two Testworts are told apart by their
+    // formal names there too.
+    it('holds a plus button on each card not yet held, named Add to My Ingredients and its entry', () => {
       render(<Cards {...props({ action: 'add' })} />);
-      const buttons = screen.getAllByRole('button', { name: 'Add to My Ingredients' });
-      expect(buttons).toHaveLength(ENTRIES.length);
-      for (const button of buttons) expect(button).toBeEnabled();
-      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
+      const buttons = screen.getAllByRole('button', PLUS);
+      expect(buttons.map((button) => button.textContent)).toEqual([
+        'Add to My Ingredients: Testwort, Fixtura testalis',
+        'Add to My Ingredients: Testwort, Fixtura alteralis',
+        'Add to My Ingredients: Fixture Salt',
+      ]);
+      for (const button of buttons) expect(button).not.toHaveAttribute('aria-disabled');
+      expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
     // The owner's calls, 2026-10-20: the check is a status mark, not a link, since the details
-    // modal's In Your Covens list carries the links to each coven's copy; and it is named and
-    // tipped In All Covens, a button only to carry its tip, as the entry page's shelf is.
-    it('swaps the plus for a check named In All Covens on a card every coven holds, tipped and no link', () => {
+    // modal's In Your Cupboards list carries the links to each coven's copy; it is tipped and
+    // named In Every Cupboard and its entry (MB.120, the one noun for "you hold this"; the tip
+    // says the name too), a button only to carry its tip, as the entry page's shelf is.
+    it('swaps the plus for a check named and tipped In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
-      expect(screen.getAllByRole('button', { name: 'Add to My Ingredients' })).toHaveLength(2);
-      const mark = screen.getByRole('button', { name: 'In All Covens' });
+      expect(screen.getAllByRole('button', PLUS)).toHaveLength(2);
+      const mark = screen.getByRole('button', HELD);
+      expect(mark).toHaveAccessibleName('In Every Cupboard: Testwort, Fixtura testalis');
       expect(mark.closest('a')).toBeNull();
-      expect(screen.queryByRole('link', { name: 'In All Covens' })).toBeNull();
+      expect(screen.queryByRole('link', HELD)).toBeNull();
 
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain('In All Covens');
+      expect(tips()).not.toContain('In Every Cupboard: Testwort, Fixtura testalis');
       act(() => mark.focus());
-      expect(tips()).toContain('In All Covens');
+      expect(tips()).toContain('In Every Cupboard: Testwort, Fixtura testalis');
     });
 
     // The owner's call, 2026-10-20: a press opens the check's tip, as a tap does on InfoTip's ⓘ,
     // so it shows on touch, where there is no hover. A click here focuses nothing, so the
     // press alone opens it.
-    it('opens the In All Covens tip when the check is pressed', () => {
+    it('opens the In Every Cupboard tip when the check is pressed', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
-      const mark = screen.getByRole('button', { name: 'In All Covens' });
+      const mark = screen.getByRole('button', HELD);
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain('In All Covens');
+      expect(tips()).not.toContain('In Every Cupboard: Testwort, Fixtura testalis');
 
       fireEvent.click(mark);
       expect(mark).not.toHaveFocus();
-      expect(tips()).toContain('In All Covens');
+      expect(tips()).toContain('In Every Cupboard: Testwort, Fixtura testalis');
     });
 
     it('draws neither without a coven to add to', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add', workspaceId: undefined })} />);
-      expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
+      expect(screen.queryByRole('button', PLUS)).toBeNull();
+      expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
     it('draws neither where the action is none, even for a held entry', () => {
       const held = ENTRIES.map((one) => ({ ...one, held: true }));
       render(<Cards {...props({ entries: held, action: 'none' })} />);
-      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
+      expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
     it('adds that entry to the coven and reads the page again', async () => {
@@ -208,7 +220,7 @@ describe('CompendiumCards', () => {
       render(<Cards {...props({ action: 'add' })} />);
       const card = addTo('Fixture Salt')!;
 
-      fireEvent.click(within(card).getByRole('button', { name: 'Add to My Ingredients' }));
+      fireEvent.click(within(card).getByRole('button', PLUS));
 
       await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
       expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, ingredientId: 'fixture-salt' }]);
@@ -220,14 +232,12 @@ describe('CompendiumCards', () => {
         message: 'Viewers cannot add ingredients.',
       });
       render(<Cards {...props({ action: 'add' })} />);
-      const button = within(addTo('Fixture Salt')!).getByRole('button', {
-        name: 'Add to My Ingredients',
-      });
+      const button = within(addTo('Fixture Salt')!).getByRole('button', PLUS);
 
       act(() => button.focus());
       fireEvent.click(button);
 
-      await expectRefusalUnder(button, 'Add to My Ingredients');
+      await expectRefusalUnder(button, 'Add to My Ingredients: Fixture Salt');
       expect(button).not.toHaveAttribute('aria-busy');
       expect(router.refresh).not.toHaveBeenCalled();
     });
@@ -251,7 +261,7 @@ describe('CompendiumCards', () => {
     expect(
       screen.getByRole('link', { name: 'Edit in Compendium Fixture Salt' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Add to My Ingredients' })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: /^Add to My Ingredients: / })).toHaveLength(3);
   });
 
   it('draws no Edit where the page gives none', () => {
@@ -357,7 +367,7 @@ describe('CompendiumCards', () => {
 
   it('holds neither for an account that only views', () => {
     render(<Cards {...props({ action: 'none' })} />);
-    expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Add to My Ingredients/ })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
   });
 
@@ -382,7 +392,7 @@ describe('CompendiumCards', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     expect(screen.queryByRole('switch', { name: /^No Refs/ })).toBeNull();
     expect(screen.queryByRole('group', { name: /Classification/ })).toBeNull();
-    const form = screen.getByRole('form', { name: 'Filter the Compendium' });
+    const form = filterForm('Filter the Compendium');
     expect(form).toHaveAttribute('action', '/compendium');
     expect(new URLSearchParams(sent(form)).has('withoutReferences')).toBe(false);
   });

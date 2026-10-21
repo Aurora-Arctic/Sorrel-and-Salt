@@ -22,6 +22,14 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
 
+// What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only which
+// covens it is asked for.
+const readEntryStock = vi.fn();
+vi.mock('@/app/entry-stock', () => ({
+  readEntryStock,
+  stockKey: (workspaceId: string, ingredientId: string) => `${workspaceId}:${ingredientId}`,
+}));
+
 const readCompendiumEntry = vi.fn();
 const covensHoldingEntry = vi.fn();
 const getCupboardEntry = vi.fn();
@@ -98,6 +106,7 @@ beforeEach(() => {
   getSession.mockResolvedValue(SESSION);
   covensHoldingEntry.mockResolvedValue([]);
   getCupboardEntry.mockResolvedValue(null);
+  readEntryStock.mockResolvedValue(new Map());
 });
 
 describe('the public entry page’s cupboard choices', () => {
@@ -206,6 +215,48 @@ describe('the public entry page’s cupboard choices', () => {
 
 // The In Your Cupboard shelf before the name (M9.12): shown when any coven of the viewer's holds
 // the entry, viewers' covens included, from the one held read that feeds the choices too.
+describe('the public entry page’s Edit Stock', () => {
+  const STOCK = { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] };
+
+  it('hands the stock to a holding coven whose role may update it, asking for that coven alone', async () => {
+    signedIn(coven('ws-w', 'w'), coven('ws-x', 'x'), coven('ws-y', 'y'));
+    roles({ 'ws-w': 'owner', 'ws-x': 'member', 'ws-y': 'member' });
+    holding('ws-w', 'ws-x');
+    readEntryStock.mockResolvedValue(new Map([[`ws-w:${ENTRY_ID}`, STOCK]]));
+
+    const covens = await covensGiven();
+
+    expect(readEntryStock).toHaveBeenCalledExactlyOnceWith([
+      { ingredientId: ENTRY_ID, workspaceId: 'ws-w' },
+      { ingredientId: ENTRY_ID, workspaceId: 'ws-x' },
+    ]);
+    expect(covens?.covens.map(({ workspaceId, stock }) => [workspaceId, stock])).toEqual([
+      ['ws-w', STOCK],
+      ['ws-x', undefined],
+      ['ws-y', undefined],
+    ]);
+  });
+
+  it('asks for no stock where nothing is held, though the role could update it', async () => {
+    signedIn(coven('ws-w', 'w'));
+    roles({ 'ws-w': 'owner' });
+
+    await covensGiven();
+
+    expect(readEntryStock).toHaveBeenCalledExactlyOnceWith([]);
+  });
+
+  it('offers a coven that holds the entry for stock alone, though its role may not annotate or remove', async () => {
+    // Why it could have been none: no other statement of the role is true for the entry.
+    signedIn(coven('ws-w', 'w'));
+    roles({ 'ws-w': 'member' });
+    holding('ws-w');
+    readEntryStock.mockResolvedValue(new Map([[`ws-w:${ENTRY_ID}`, STOCK]]));
+
+    expect((await covensGiven())?.covens[0].stock).toBe(STOCK);
+  });
+});
+
 describe('the public entry page’s shelf mark', () => {
   const heldInCovens = async () => (await entryProps()).heldInCovens;
 

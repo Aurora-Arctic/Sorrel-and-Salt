@@ -106,6 +106,13 @@ export const ManyForms: Story = () => (
   </IngredientCard>
 );
 
+// The coven's card: no forms line (the jar lines name each form held, and the pencil edits them).
+export const NoFormsLine: Story = () => (
+  <IngredientCard {...BASE} kind="own" forms={false}>
+    <Jars />
+  </IngredientCard>
+);
+
 // Retired under the formal name and Toxic beside the name, Toxic winning over Caution.
 export const RetiredCaution: Story = () => (
   <IngredientCard {...BASE} kind="cupboard" retired safetyNotes="Keep away from open flame.">
@@ -260,6 +267,18 @@ export const NewLongName: Story = () => (
     recency="updated"
     label="Testwort Longer Nameicanicusmus"
     formalName="Fixtura testalis longissimanicusmus"
+  >
+    <Jars />
+  </IngredientCard>
+);
+
+// The newest edit across the ingredient's jars (M6.18): who, and when, under the jar lines.
+export const LastEdited: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="own"
+    forms={false}
+    lastEdit={{ by: 'Fixture A', at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }}
   >
     <Jars />
   </IngredientCard>

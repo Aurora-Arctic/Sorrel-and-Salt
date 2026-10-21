@@ -40,31 +40,48 @@ jar states that both are tested against, so a change to one copy alone fails.
   and nothing on the other.
 - **Nothing to flag, nothing rendered.** `StockBadge` returns `null` for the "No
   badge" rows.
-- **Low reads "Low · 6 g".** The word, a middle dot, then the jar's quantity and
-  unit as a plain number. Its accessible name is "Low Stock, 6 g": the word "Stock"
-  is visually hidden, and the space before it sits outside the hidden span.
-- **The threshold lives in the Low badge's tip.** "Low at 10 g or less". The badge
-  is a button; the tip opens on hover, tap and focus, closes on Escape, and stays
-  open while the pointer is over it (WCAG 1.4.13). It reuses `useTip`
-  (`src/components/InfoTip/use-tip.ts`, which also places the bubble on screen) and the InfoTip markup: the tip text stays
-  in the page, `role="tooltip"`, listed in the button's `aria-describedby`, so it is
-  the description and not part of the name.
+- **Each badge is its drawing alone** (the owner's call, 2026-10-20), a 24px square
+  holding the icon, with no words on it. It is a button whose only job is to open a
+  tip, for both states. The tip is an icon tip, `IconTip`'s
+  ([`icon-tip.md`](icon-tip.md)), the owner's call (2026-10-20): the badge is an icon
+  alone, so it behaves as every icon control's tip does. It opens once the pointer
+  has rested on the badge 300ms or at once on focus, fades in, closes the moment the
+  pointer leaves (after a 120ms fade) or on Escape, and **cannot be hovered**. Until
+  2026-10-20 it was InfoTip's, which lets the pointer rest on the bubble (WCAG
+  1.4.13's hoverable clause); that is not wanted here, since the bubble only repeats
+  what the badge's name says and lingering it covers what is beside the badge, the
+  same reason the icon tip gives. The words are on the button as its name and
+  description, so the clause's purpose (a user who cannot read the bubble can still
+  get the content) is met without it.
+- **Low's tip is one statement,** "Low Stock at 10 g or less", the threshold and unit
+  as a plain number, and **without the current amount**, which the jar line already
+  shows (the owner's call, 2026-10-20; the tip first read "Low Stock · 6 g" over the
+  level). With no unit it reads "Low Stock at 10 or less". **Out of Stock's tip is
+  "Out of Stock".**
+- **The words are in the name, not on the badge.** The button's `aria-label` is "Low
+  Stock" or "Out of Stock", so a screen reader has the words without opening the tip.
+  Low's statement is its `aria-describedby`, so it hears the level too, as the
+  description and not part of the name; Out of Stock has no description, since its tip
+  would only repeat the name. An icon tip's bubble is `aria-hidden` and mounted only
+  while open, so it cannot be the description; `StockBadge` writes the statement
+  once more beside the button as a `.visually-hidden` span, and `IconTip` takes no
+  new prop for it.
 - **A threshold of 0 or none shows no Low badge.** It never means "always low". A
   jar at 0 still reads Out of Stock.
-- **Out of Stock is the word alone.** No quantity, no tip, not focusable.
-- **The meaning never rests on colour.** Each state carries its words and its own
-  small drawing (a double down chevron for Low, a slashed ring for Out), hidden from
-  assistive technology because the words are there.
+- **The meaning never rests on colour.** Each state has its own drawing (a double
+  down chevron for Low, a slashed ring for Out) as well as its tint, and the name
+  and the tip carry the words. The drawing is hidden from assistive technology
+  because the button's name is there.
+
+## Shared words
+
+The badge's words are written once, in `stock-words.ts` beside it: `stockName(state)` ("Low Stock" or "Out of Stock"), `stockTip(state, threshold, unit)` ("Low Stock at 10 g or less", or "Out of Stock") and `withUnit(amount, unit)` ("6 g", or "6" with no unit). They are plain strings, not a component, so a server component can call them. `StockBadge` and [`JarShelf`](jar-shelf.md) both use them: the shelf tells a Low or Out jar by the jar's own drawing and a button on its amount (the owner's call, 2026-10-21), with the same name, tip and description as the badge, and so cannot drift from it. The badge is still the card's jar lines and the Edit Stock dialog's, now unboxed and in the jars' colours ("Styling" below).
 
 ## Styling
 
-Low Stock wears `.badge--low-stock`, the muted tinted palette. Out of Stock wears
-`.badge--out-of-stock`, a muted red of its own, a tint of the sealing wax with its
-saturation pulled down; the owner chose it on 2026-10-18. Safety stays the only
-solid, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning
-never rests on colour: Out of Stock also has a 2px border in place of 1px, a heavier
-weight, and the slashed ring in place of the double chevron. Its vertical padding is
-trimmed by the extra border so the two badges stand the same height.
+No box (the owner's call, 2026-10-21): no border, tint or padding. The badge is its drawing alone, drawn in the colour of the matching jar on the entry page's shelf ([`jar-shelf.md`](jar-shelf.md)): Low in the warning amber (`$warning`) and Out of Stock in the Out of Stock palette's ink (`badge-token('out-of-stock', 'fg')`). It is a button reset to bare (`button-reset(help)`, so the help cursor), with the app's normal focus ring. It is not a `.badge`: its own class, `.stock-badge`, is all that styles it, so neither the badge palettes nor the card's badge sizes reach it, and the card no longer zeroes its padding. Safety stays the only boxed, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning never rests on colour: the two drawings differ, the slashed ring in place of the double chevron. The drawing sits centred in the same square as before, `$stock-badge-size` (24px), so the jar lines' inset still centres it on the actions' icon below ([`jar-lines.md`](jar-lines.md)).
+
+The inks were checked as text on both surfaces of both themes, and clear 4.5:1: Low 7.55:1 on the dark card and 8.32:1 on the dark page, 5.44:1 on the light card and 4.89:1 on the light page; Out 6.40:1 and 7.04:1 dark, 7.45:1 and 6.70:1 light. The `out-of-stock` palette is now the `ink` treatment, its `fg` alone (`--badge-out-of-stock-fg`, read by this badge and by the jar shelf), and has no `.badge--out-of-stock` class; the `low-stock` palette is unchanged, since the tip bubble and the Compendium mark still use it ([`styling.md`](../styling.md), "Badge palettes"). Until 2026-10-21 the badge wore `.badge--low-stock` (the muted tinted palette) and `.badge--out-of-stock` (a tint of the sealing wax); until 2026-10-20 the badges carried the words ("Low · 6 g", "Out of Stock"), and Out of Stock a 2px border and a heavier weight.
 
 ## Stories
 
@@ -73,10 +90,13 @@ trimmed by the extra border so the two badges stand the same height.
 
 ## Testing
 
+`tests/components/JarShelf/` proves the shelf's amount buttons use these words.
+
 `tests/components/StockBadge/index.test.tsx` walks the shared jar states through
-`stockState`, checks which of the two badges shows (and that the other does not),
-that a zero threshold still reads Out of Stock at 0, that the two states differ in
-their drawing, and the Low badge's name, its description and the tip opening on focus,
-hover and click and closing on Escape. The `lowStockOnly` filter is proved
+`stockState`, checks which of the two badges shows (and that the other does not), that
+a zero threshold still reads Out of Stock at 0, that the two states differ in their
+drawing, that neither badge carries words, each badge's name and description, and each
+tip's words, opening on focus or after a 300ms rest, closing the moment the pointer
+leaves or on Escape, and that the bubble is kept from a screen reader. The `lowStockOnly` filter is proved
 on the same jar states, one entry each, in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
 and its count in `tests/modules/ingredients/services/ingredient-facets.test.ts`.

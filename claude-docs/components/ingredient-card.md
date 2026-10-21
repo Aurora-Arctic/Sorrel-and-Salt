@@ -16,6 +16,7 @@ nothing from the data.
 | `formalName`   | The formal name, a caption beneath the name                                                                                                                                                                                                                                                               |
 | `nomenclature` | Decides its italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic; mineral, chemical or none is upright                                                                                                                                                                      |
 | `categories`   | The entry's categories with their groups; full chips (a wash, border and label in the group colour; no dot), the first `CATEGORY_CHIP_LIMIT` shown and the rest behind a +N toggletip, plain not links, no row when empty; drawn by the shared `CategoryChips` ([`category-chips.md`](category-chips.md)) |
+| `forms`        | Draws the forms line. A coven card passes `false` (M9.9): its jar lines name each form held and its Quick Look lists them, so the line repeated both. The variants still feed the safety badge. Defaults to true                                                                                          |
 | `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the safety badge                                                                                                                                                                                      |
 | `toxic`        | The ingredient's own flag                                                                                                                                                                                                                                                                                 |
 | `safetyNotes`  | The ingredient's own safety notes; notes here or on a listed form show the Caution badge, unless Toxic shows. The notes themselves are never drawn                                                                                                                                                        |
@@ -25,6 +26,7 @@ nothing from the data.
 | `level`        | The name's heading level, 2 to 5; Defaults to 2                                                                                                                                                                                                                                                           |
 | `children`     | The jar-line slot, last (see the slot’s contract)                                                                                                                                                                                                                                                         |
 | `startActions` | Controls for the left end of the same foot row, level with `actions` on the right (the Quick Look eye, M12.5; the compendium's add and held icons are in `actions`); they sit above the stretched link too                                                                                                |
+| `lastEdit`     | Who last edited the ingredient and when (M6.18): `{ by, at }`, `by` null when the viewer cannot name the editor. Drawn by `LastEdit` ([`last-edit.md`](last-edit.md)) in the foot, under the jar lines and directly above the actions, left-aligned. The caller works it out; none draws no line          |
 | `actions`      | Buttons for the card's foot, right-aligned beneath the jar lines; they sit above the stretched link, so they press on their own                                                                                                                                                                           |
 | `startActions` | Controls for the foot's start, at its bottom left, apart from `actions` at the right: the coven's Quick Look eye (M12.5). They sit above the stretched link too                                                                                                                                           |
 
@@ -35,21 +37,20 @@ restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
   keyboard through it alone. The link ends with a `LinkHint` ([`link-hint.md`](link-hint.md)), a dot that pulses while the entry page loads: the entry pages cannot have a route `loading.tsx`, so the click needs its own sign that it took. The dot is `aria-hidden`, so the link is still named by the label alone;
-- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the category chips, the forms line (a `FormIcon` before each form, a dot between: "Herb · Oil"; it tells two entries sharing a label apart), and the jar lines;
+- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the category chips, the forms line (a `FormIcon` before each form, a dot between: "Herb · Oil"; it tells two entries sharing a label apart; the `forms` prop turns it off, as the coven's cards do), and the jar lines;
 - the marks, in two places (the owner's call, 2026-10-20). The one safety badge, `SafetyMark` (Toxic, or else Caution, [`safety-note.md`](safety-note.md)), sits in `.ingredient-card__corner`, drawn by a second `EntryMarks` given no kind mark and no provenance, always at the card's top-right corner beside the name, with nothing to its right. `RecencyMark` (New or Updated) sits just left of it on the same line, centred across, and takes the corner itself when there is no safety badge (the owner's call, 2026-10-20). The corner is drawn when either shows. Every other mark, Local and Retired, is a row under the formal name, drawn by `EntryMarks` in `.specimen__badges` with `safety={false}`, green first ([`entry-marks.md`](entry-marks.md), "The order"). The card never shows Compendium or Annotated (`provenance={false}`, the owner's call, 2026-10-20): where a held entry came from is the entry page's to say, so the card takes no `annotated` prop. With no mark, neither holder is drawn. In the document the corner comes last, after the name, the formal name and the row, New or Updated before the safety badge: read after the name block, as the row's red mark was, and where it lands when it wraps;
 - no caution block: the notes live on the entry page, and the card carries only the Caution badge, a word with no tip, so Toxic stays the one solid badge;
 - the **jar-line slot**. M9.6 fills it with a line per jar (the form's icon, the
-  form, quantity and unit, M9.8's `StockBadge`, M9.9's and M9.10's actions). The
+  form, quantity and unit, M9.8's `StockBadge`). The
   public compendium leaves it empty.
 
 **The category chips (2026-10-19).** The owner first found a full grid of coloured chips too loud and chose quiet chips; with only two visible he then brought the colour back (same day). The card's category chips, the two shown and those inside the +N panel, are the **full** level of the chip family, as everywhere else: a wash of the group colour, a border and the label in the colour, with no dot (dropped 2026-10-19) (`claude-docs/styling.md`, "Category chips"). The **quiet** level (neutral ink, `$hairline` border, no group colour) stays for the +N button only, a control and not a category. The card shows the first `CATEGORY_CHIP_LIMIT` chips (2, `CategoryChips/constants.ts`): with two, and the +N button, one line holds on the regular card at its 20rem width with typical seeded names (median nine letters; three never fit). A narrower card, or longer names, wrap the row to a second line. The rest sit behind a +N button (`CategoryChips/category-more.tsx`, a client child; the card stays server-compatible). Focus opens a panel of the remaining chips at once, and a hover after the tips' 300ms wait ([`category-chips.md`](category-chips.md)), a click pins it and a second click closes it; Escape closes it and returns focus to the button, and a press outside or leaving (after a 120ms grace, WCAG 1.4.13) closes it too. The panel hangs below the chip row, over the forms and jar lines (the owner's call; it opened above at first), so the card's height never changes; it is now `position: fixed`, placed by Floating UI as wide as the row (at least 12rem), and may flip above near the window's foot (the move into the shared component, 2026-10-19; [`category-chips.md`](category-chips.md)), and it fades at `$tip-fade` (500ms, the tips' pace; dropped under `reduced-motion`). The card rises above its neighbours while the panel is open, with `isolation` and `z-index` and no transform, as for the tips. The button's name carries the count (`3 more categories for Testwort`).
 
 The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is top row, chips, forms, stock (changed 2026-10-18): the chips sit under the name and the forms line leads into the jar lines it describes, with the stock line last under its rule.
 
-On the card only, Out of Stock takes Low's weight in the jar slot: a thin border,
-the badge's normal font weight and padding, so both come out the same height. The
-word and the icon still tell the states apart; the heavier edge is M9.8's for a
-badge standing alone.
+The stock badges are icon-only squares with no box, in the jars' colours
+([`stock-badge.md`](stock-badge.md)). They are not `.badge`s, so the card's badge sizes
+do not reach them.
 **The forms line's dot is drawn in CSS and never leads or ends a wrapped line.** The mechanism is the shared `dotted-row` mixin ([`styling.md`](../styling.md), "Dotted lists"), which the admin Compendium's Form cell uses too.
 Each form after the first carries a `::before` circle (4px, `currentcolor`, so not
 text and never announced) in the 24px margin to its left. The line has a matching
@@ -58,7 +59,7 @@ start a wrapped line falls in the clipped band and a line never ends with one,
 since each dot belongs to the form after it. A screen reader gets a
 `.spoken-separator` comma in each item, so "Dried Leaf, Oil" is not run together;
 the jar-line dot gets the same, and the slot's CSS takes that separator out of the flex flow (`position: absolute`) so the dot has the same gap either side: left to flow, it would add a gap of its own after the dot ("Dried Leaf· 6 g").
-The Low badge's tip opens from the badge's right edge on the card only (`.ingredient-card .stock-badge__tip`, the same `tip-above($align: end)` the Retired tip uses), since the badge sits at the card's right edge and a left-anchored bubble would run off the screen; `StockBadge` keeps its own default elsewhere. Nothing focusable sits in the line, so the clip
+The stock badges' tips are icon tips and open to the badge's left (`IconTip`'s default `side`), so the bubble stays on the card, which the badge's place at its right edge needs; `.ingredient-card .specimen__stock .icon-tip` lifts the badge above the card's link overlay so it keeps its own hover and focus. Nothing but those badges is focusable in the line, so the clip
 cuts no focus ring.
 
 ### Sizes and padding (changed 2026-10-19)
@@ -66,8 +67,6 @@ cuts no focus ring.
 The owner asked for smaller type, about half way to the compact look, with the spacing scaled to match but not compacted. Site tokens only. The name is `heading-size(3)` (1.8rem, was the `h2` default 2.15rem); the forms line is `type-size('small')` (0.875rem, was 1rem; its icons are in `em` and follow). Chip and badge text (the marks, Caution, Toxic, Low and Out of Stock) is `type-size('overline')` (0.75rem, was caption 0.8125rem), ; the badges take the `medium` badge size ([`styling.md`](../styling.md), "Badge sizes"), which holds them at 24px. Their padding and gaps stay. The formal name and jar lines keep their sizes. Card padding is `space(4)` (16px, was 24px); the forms line's air `space(1)` (4px, was 8px); the badge group's air below it `space(1)` (4px, was 8px). The card's own 12px gap, the 24px dot gap in the forms line and the 24px badges are unchanged.
 
 ### The safety badge beside the name (changed 2026-10-20)
-
-**Moving New or Updated into the row under the formal name.** The owner was offered the alternative, and it is one word: `RECENCY_AT` at the top of `index.tsx`, `'corner'` today, `'row'` to hand `recency` to the `EntryMarks` of `.specimen__badges` instead, which draws it before Local and Retired (the owner's rule that it comes before every badge, 2026-10-20; [`entry-marks.md`](entry-marks.md), "New and Updated"), a row the stylesheet already centres across. The trade-off, measured in Chromium at 390px: in the corner, Updated takes 74px beside the name, so "Testwort Longer Nameicanicusmus" wraps onto four lines and breaks "Nameicanicusmus" inside the word; in the row it wraps onto two, as it does with the safety badge alone.
 
 The specimen tops the name and the badges flush (`align-items: flex-start`), so the 24px badges sat above the middle of the taller line of name: 1.5px high in the compact card and 4.5px in the regular one. On the card, the corner (`.ingredient-card__corner`) is a badge tall even holding New or Updated alone, and has a top margin of half the name's line box less the badge's height. The name's line box is its size times 1.15, so that is `heading-size(3)` in the regular card and `heading-size(4)` in compact. The margin centres it on the name's first line, the way the forms line's icons are centred on their line. Measured in Chromium, the same in both themes and at 1280px and 375px, the badge sits 0.3px below the text's middle in compact and 0.05px below it in regular. When it wraps beneath the name block, the margin adds to the row gap (about 2px in compact and 5px in regular), so it sits a little further under the row of other marks than they sit under the formal name. The row under the formal name is `space(2)` below it (`space(1)` compact).
 
@@ -127,12 +126,43 @@ Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyp
 
 Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
+## Styling
+
+Tokens only, as signed off in MB.120 (2026-10-20). `IngredientCard/index.scss` holds the card, the
+slot it hangs in and the drawer that opens under it; the shared `.specimen*` primitives it builds on
+are in `_primitives.scss`. The compact look is the `[data-density='compact']` block of the same file and `_compact.scss`, keyed off the
+list's `data-density` ([`ingredient-card-list.md`](ingredient-card-list.md)).
+
+The drawer's measurements are tokens, not pixel literals: its inset from the slot
+(`$drawer-inset`), its side walls (`$drawer-wall`), its travel (`$drawer-travel`) and its slot shadow
+(`$drawer-slot-shadow`), with the shade colours as theme tokens (lighter in the light theme).
+The computed styles were checked identical to the pixel values the tokens replaced (MB.120).
+
+**On a phone** the card has no rule of its own: the list gives it the full width, one card across ([`ingredient-card-list.md`](ingredient-card-list.md)), and a long name wraps (see "A long name"). Under reduced motion the face does not slide and the drawer's shading does not transition; the colour and shadow change stay.
+
+**Forced colours.** The card's edge is `modal-surface`'s shadow, which forced colours drops, so the card has no drawn edge there; its badges and chips keep their 1px borders, and its icons are drawn in `currentColor`. The forced-colours pass over the compendium section, M14.3, a Wave 14 task, takes this up (minted from MB.120).
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:
+the kinds (`Compendium`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
+`RetiredCaution`, `NewWithoutSafety`), the stress cases for the name (`LongName`, `OneLongWord`,
+`MineralName`, `NoFormalName`, `NewLongName`), the other marks and chips (`ManyForms`,
+`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`,
+`CompactLongName`) and the recency marks (`NewEntry`, `UpdatedEntry`).
+
+## Testing
+
+`tests/components/IngredientCard/index.test.tsx`: the card's name and link, the category chips, safety,
+the cupboard marks, the jar-line slot, the actions, the navigation (the whole card is one target for the
+name link) and the recency marks. Layout and the drawer's look are checked in Ladle and in the page
+specs that place the card, not in jsdom, which has no layout.
+
 ## Accessibility
 
 Meaning is carried by words and shape, never colour alone: every badge has its
 text. The page that places the card (M8.18, M9.6) owns the axe run and the
 keyboard walk in its Playwright spec, since the card has no page of its own.
-Styling stops at the tokens until the section's design review (MB.84).
 
 ### A long name
 

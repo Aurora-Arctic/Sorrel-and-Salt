@@ -75,14 +75,21 @@ rather than naming a GraphQL type, so a card's or the entry page's
 Neither has a colour of its own; both use existing, contrast-checked tokens.
 The mark is the solid `.badge badge--safety` primitive
 ([`styling.md`](../styling.md), "Badge palettes"). The note is ordinary text on
-the page, set apart by a 4px bar of the same safety fill down its leading edge
+the page, set apart by a bar of the same safety fill, `$safety-bar-width` (the heavy rule, 3px), down its leading edge
 (`badge-token('safety', 'fill')`) and a Caution heading in that same fill, so
 the bar, the heading and the badge are one red. `$secondary`, the error red,
 was tried for the heading first and read lighter than the bar on dark. A note filled solid with the safety red was far too
 loud (the owner, 2026-10-17). The bar is decoration, since the heading carries
-the meaning. The heading is set at the h4 size at any level, with a 0.6px
-`-webkit-text-stroke` in its own colour: Cormorant Unicase stops at 700, which
-still read too light, so the stroke fakes a heavier weight (the owner, 2026-10-17).
+the meaning. The heading is set at the h4 size at any level, at Cormorant Unicase's 700,
+with a hairline `-webkit-text-stroke` in its own colour, `$text-stroke-hairline`,
+because 700 still read too light (the owner, 2026-10-17). MB.120 proposed
+dropping the stroke and the owner kept it (2026-10-20): it is the design, not a
+workaround.
+
+The bar is `$safety-bar-width`, the heavy rule, so the note's rule is one of
+the site's rule weights; it was a raw 4px until MB.120 (signed off by the
+owner, 2026-10-20). The contrast below does not change, since it rests on the
+size and weight.
 
 **The heading must stay large text.** As text, the safety fill measures 4.71:1
 on the dark page and 4.28:1 on the dark card (6.02:1 and 6.69:1 on light). That
@@ -90,8 +97,8 @@ clears WCAG's 3:1 for large text, which 24px at 700 is, but not the 4.5:1 for
 body text. A smaller or lighter heading needs another ink.
 
 The note keeps the line breaks typed into its textarea
-(`white-space: pre-line`), and its paragraphs stop at `$measure`. Anything
-beyond the tokens waits for Wave 12's design review.
+(`white-space: pre-line`), and its paragraphs stop at `$measure`. `index.scss`
+takes tokens only.
 
 ## Stories
 

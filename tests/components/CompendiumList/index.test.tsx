@@ -16,7 +16,7 @@ import type {
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { drawnOnServer, sent } from '../../support/filter-form';
+import { drawnOnServer, filterForm, sent } from '../../support/filter-form';
 import { waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
@@ -440,7 +440,7 @@ describe('CompendiumList filter', () => {
     vi.unstubAllGlobals();
   });
   const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-  const row = () => screen.getByRole('form', { name: 'Filter the Compendium' });
+  const row = () => filterForm('Filter the Compendium');
   const nameBox = () => screen.getByRole('combobox', { name: 'Name' });
   const unsourcedSwitch = () => screen.getByRole('switch', { name: /^No Refs/ });
   const pushed = () => new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
@@ -537,7 +537,7 @@ describe('CompendiumList filter', () => {
         })}
       />,
     );
-    const served = within(container).getByRole('form', { name: 'Filter the Compendium' });
+    const served = filterForm('Filter the Compendium', within(container));
 
     const categories = within(served).getByRole('listbox', { name: 'Categories' });
     expect(categories).toHaveAttribute('name', 'categories');
@@ -904,12 +904,111 @@ describe('CompendiumList filter', () => {
     });
 
     it('names a chosen category by its name, not its slug', () => {
+      // A slug that is more than the name in other case, so the name is what the sentence read.
+      const categories = [
+        ...CATEGORIES,
+        { id: 'c-tx', slug: 'test-x-slug', name: 'Testcraft', group: WARDS },
+      ];
       render(
-        <CompendiumList {...props({ filter: { ...NO_FILTER, categories: ['testcraft'] } })} />,
+        <CompendiumList
+          {...props({ categories, filter: { ...NO_FILTER, categories: ['test-x-slug'] } })}
+        />,
       );
 
-      expect(sentence()).toHaveTextContent('Testcraft');
-      expect(sentence()).not.toHaveTextContent('testcraft');
+      // The sentence shows categories in lower case.
+      expect(sentence()).toHaveTextContent('testcraft');
+      expect(sentence()).not.toHaveTextContent('test-x-slug');
+    });
+
+    // The sentence is typed out, hidden from assistive technology, while a search is on its way.
+    const typing = () =>
+      screen
+        .queryAllByRole('group', { hidden: true })
+        .some(
+          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
+        );
+    const SEARCHED = { ...NO_FILTER, categories: ['testcraft'] };
+
+    it('leaves the sentence settled when a pager end opens another page', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })} />
+        </Navigating>,
+      );
+      expect(typing()).toBe(false);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('link', { name: /Next/ }));
+      });
+      // The page is on its way, so the list gave way to its status; the sentence did not move.
+      expect(router.push).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(typing()).toBe(false);
+    });
+
+    // The details the sentence opens to: the one holding its Show or Hide Search Details control.
+    const details = () =>
+      screen.getByText(/^(Show|Hide) Search Details$/).closest('details') as HTMLElement;
+
+    it.each(['closed', 'open'])(
+      'leaves a %s sentence as it was, with no slide, from the pager press to the new page',
+      async (was) => {
+        let arrive = () => {};
+        const arrives = new Promise<void>((resolve) => {
+          arrive = resolve;
+        });
+        render(
+          <Navigating push={router.push} arrives={arrives}>
+            <CompendiumList
+              {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })}
+            />
+          </Navigating>,
+        );
+        if (was === 'open') {
+          fireEvent.click(screen.getByText('Show Search Details'));
+          await waitFor(() => expect(details().hasAttribute('open')).toBe(true));
+        }
+        const wasOpen = details().hasAttribute('open');
+        // Every change of the details' open state from here on.
+        const seen: boolean[] = [];
+        const watch = new MutationObserver(() => seen.push(details().hasAttribute('open')));
+        watch.observe(details(), { attributes: true, attributeFilter: ['open'] });
+
+        await act(async () => {
+          fireEvent.click(screen.getByRole('link', { name: /Next/ }));
+        });
+        expect(screen.queryByRole('table')).not.toBeInTheDocument();
+        await act(async () => {
+          arrive();
+        });
+        expect(screen.getByRole('table')).toBeInTheDocument();
+        // Long enough for any slide, hold or net timer to have run.
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        });
+        watch.disconnect();
+
+        expect(seen).toEqual([]);
+        expect(details().hasAttribute('open')).toBe(wasOpen);
+      },
+    );
+
+    it('types the sentence when a filter is applied', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: SEARCHED })} />
+        </Navigating>,
+      );
+      expect(typing()).toBe(false);
+
+      openPanel();
+      fireEvent.click(unsourcedSwitch());
+      await act(async () => {
+        applyFilters();
+      });
+      expect(router.push).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(typing()).toBe(true);
     });
 
     it('holds no link, so a chosen value is removed in the panel alone', () => {

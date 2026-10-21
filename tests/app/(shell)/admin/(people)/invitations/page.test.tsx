@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
+import { filterForm } from '../../../../../support/filter-form';
 
 // The `/admin/invitations` page, the People page's Invitations tab (MB.70; a
 // tab of its own since MB.115), with New Invitation, its action beside the
@@ -120,7 +121,7 @@ describe('the /admin/invitations page', () => {
       email: 'fern',
       expiringSoon: true,
     });
-    const search = screen.getByRole('form', { name: 'Filter Invitations' });
+    const search = filterForm('Filter Invitations');
     expect(within(search).getByRole('searchbox', { name: 'Email' })).toHaveValue('fern');
     expect(within(search).getByRole('switch', { name: 'Expires in 24 Hrs' })).toBeChecked();
     expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(

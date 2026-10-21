@@ -63,6 +63,7 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 - **A press outside shuts it.** While the non-modal panel is open, a `pointerdown` anywhere outside it (the search box, the page) shuts it and calls `onApply`, the same path as Escape. The Filters button and the bar's Clear All are left to their own handlers, so nothing applies twice. On the modal sheet the page is inert and the backdrop is the dialog's own box, so a press whose target is the dialog itself (not anything in it) shuts it. The sheet fills the screen below 32rem, so there is no backdrop to press on a narrow phone; Close and Escape remain.
 - **Crossing the tablet width** closes the panel at once, since it would otherwise
   change from an overlay to a sheet under the person's hands.
+- **No scrollbar while it slides (M12.46).** Once open, `.facet-panel__inner` scrolls (`overflow: auto`, capped to the room under the sticky row). The `--open` class arrives as the slide starts, though, and a box still shorter than its content showed a scrollbar for the whole opening. A `facet-panel-rolling` animation, as long as the slide (`--slide-ms`), holds `overflow: clip` and the scroll applies when it ends. Closing drops the class, so the box is clipped again from the first frame. Reduced motion has no slide and no animation.
 - **The panel's top never moves while it opens.** Opening a dialog runs the browser's focus step, which scrolls its first control into view, and a box with `overflow: hidden` can be scrolled that way: while the panel was still short, its content slid up and then fell back as it grew. `.facet-panel__inner` is therefore `overflow: clip` (with `hidden` declared just before it as the fallback), which cannot scroll at all; `onScroll` on the clip still puts `scrollTop` back to 0 as a net. `tests/e2e/admin-compendium.spec.ts` samples the top every frame of a real slide.
 - **Before hydration** the dialog renders with `open`, inline, at every width, with
   no Close, and the Filters control is a link to it. The controls submit through the
@@ -84,6 +85,36 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 - **The sheet's foot is sticky**, with scroll padding so a focused control is never
   hidden behind it (WCAG 2.4.11).
 - **Chips come out only by their cross**, inside the panel.
+
+## Styling
+
+Tokens only, as signed off in MB.120 (2026-10-20). `FacetPanel/index.scss` is laid out in the order
+the panel is built: the Filters button and Clear All, the dialog and its slide, the static block
+before script, the rows (`__line`, `__quick`), then the choice chip (`.facet-chip__*`) and the foot. The
+sizes are `space()` steps and tokens. Four measurements stay as named, commented locals because no
+token fits: the categories floor and wide width, the compact control height, the native select's
+cap and the form's quarter-em gap.
+
+The `WIDE` constant, the width from which the panel stays beside the results with no scrim, is
+exported from `index.tsx`, and a test guards it against the Sass `$shell-tablet-width` it must equal.
+
+**On a phone**, below `$shell-tablet-width`, the panel is a modal sheet (`showModal()`) that slides in from the right edge over a fading backdrop, full height, with its foot stuck to the bottom and room kept above the foot so a focused control is never hidden behind it (WCAG 2.4.11). Each row's controls stack in source order, and the chips and switches wrap. From the tablet width up, the panel is an overlay that slides down under the search row with no scrim: its title and Close are hidden (the title stays for assistive technology), and once open it scrolls inside itself, under the sticky row. The Filters button's label never wraps. Under reduced motion neither the slide nor the chip menu's fade runs.
+
+**Forced colours.** No rule of its own. The switches and the chip menu's radios take the `.switch` and `.radio` primitives' forced-colours rules ([`styling.md`](../styling.md)), and the chips keep their 1px border, which forced colours repaints in the system's ink. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/FacetPanel/index.stories.tsx), under `Admin / Facet Panel`:
+`Empty`, `Public`, `Chosen`, `FormsAndToxic`, `Admin`, `Coven` and `CovenEmpty`; the counts
+(`MatchShown`, `AllZeroFacet`); each choice chip stuck on a value (`MatchStuck`, `ToxicStuck`,
+`SourceStuck`); and each chip's menu open (`MatchMenu`, `SourceMenu`, `ToxicMenu`).
+
+## Testing
+
+`tests/components/FacetPanel/index.test.tsx`: the panel and its fields, the choice chips, the coven's
+Source, In Stock and Low Stock Only controls, the Toxic and Source fields when a count is zero, the
+phone sheet's slide, and the `WIDE` guard. The panel's placement under the search row is proved in
+the compendium page specs.
 
 ## Not here
 

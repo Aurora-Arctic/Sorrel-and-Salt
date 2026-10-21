@@ -9,7 +9,10 @@ import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
+import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
+import type { StockData } from '../StockDialog/types';
+import type { StockDialogProps } from '../StockDialog/types';
 
 /** The part of an entry its edit modal names itself by and edits. */
 export type EditableEntry = Pick<IngredientRow, 'id' | 'name' | 'canonicalName' | 'nomenclature'>;
@@ -47,6 +50,12 @@ export interface IngredientEntryEdit {
     /** The coven's ingredient list; an entry's page in the coven is beneath it, by id. */
     ingredientsHref: Route;
     mayPromote: boolean;
+    /**
+     * What Edit Stock reads on the coven's own entry (M9.12): every form the entry comes in and
+     * this coven's jars of it. Given only where the role may update stock; left out, the entry
+     * offers no Edit Stock.
+     */
+    stock?: StockData;
   };
 }
 
@@ -54,6 +63,8 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /** Who last edited the entry in this coven and when (M6.18), from `lastEditsOf`; none draws no line. */
+  lastEdit?: LastEditProps | null;
   /** The entry and everything its page shows, as `ingredientDetailOf` assembles it. */
   detail: IngredientDetail;
   /**
@@ -130,10 +141,23 @@ export interface IngredientEntryProps {
   covens?: PublicCupboardProps;
   /**
    * The public page's (M9.12): one of the viewer's covens, of any role, holds this entry, read
-   * by `covensHoldingEntry` as the details modal's In Your Covens is. Draws the shelf before the
+   * by `covensHoldingEntry` as the details modal's In Your Cupboards is. Draws the shelf before the
    * name and nothing else; false for a visitor.
    */
   heldInCovens?: boolean;
+  /**
+   * The Stock section (M12.29), on a coven's page for an entry the coven has, its own or
+   * one in its cupboard: the coven's jars of it, as the Edit Stock dialog takes them, and
+   * whether the role may edit them, which draws the dialog's button in the heading. Left
+   * out, no section shows: the public page, and a compendium entry the coven does not hold.
+   */
+  stock?: EntryStock;
+}
+
+/** The coven's jars of the entry, for its Stock section (M12.29). */
+export interface EntryStock extends Pick<StockDialogProps, 'workspaceId' | 'forms' | 'jars'> {
+  /** The role permits `inventory: ['update']`: the heading carries Edit Stock. */
+  mayEdit: boolean;
 }
 
 /** One of the viewer's writable covens, as the public page's cupboard choices name it (M9.12). */
@@ -152,6 +176,12 @@ export interface CupboardPlace {
   canMakeOurs: boolean;
   /** The public page with `?annotate=<covenSlug>`: opens this coven's Annotate dialog over it. */
   annotateHref: Route;
+  /**
+   * What Edit Stock reads (M9.12): every form the entry comes in and this coven's jars of it.
+   * Given only where the coven holds the entry and the role may update stock; left out, the
+   * coven offers no Edit Stock.
+   */
+  stock?: StockData;
 }
 
 /** The public page's cupboard choices (M9.12): the viewer's writable covens, and the dialog the address opens. */
@@ -215,6 +245,12 @@ export interface CupboardProps {
    * neither the plus nor its check is drawn. `plusCovensOf` (src/app/plus-covens.ts) reads it.
    */
   plus?: CupboardPlus;
+  /**
+   * What Edit Stock reads (M9.12), as on a `CupboardPlace`: every form the entry comes in and
+   * this coven's jars of it. Given only where the coven holds the entry and the role may update
+   * stock; left out, the menu has no Edit Stock.
+   */
+  stock?: StockData;
 }
 
 /**
@@ -262,7 +298,9 @@ export interface IngredientDetailsOpened {
    * no badge shows.
    */
   marks?: DetailsMarks;
-  /** The entry's own page, which the foot's link (See in Compendium or See in My Ingredients) reaches. */
+  /** Who last edited the entry in this coven and when (M6.18); drawn above the head's buttons. */
+  lastEdit?: LastEditProps | null;
+  /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
   /**
    * An Edit that opens the edit modal over the details, for whoever may edit
@@ -348,6 +386,8 @@ export interface DeleteEntryOptions {
   id: string;
   /** Where a delete leads, replacing the address; left out, the page reads again. */
   deletedHref?: Route;
+  /** Said in the page's status region once the delete succeeds; none, nothing is said. */
+  announcement?: string;
   /** Closes the caller's confirmation on a refusal; a delete's closes with the page it changed. */
   onSettle: () => void;
   /** Shows a refusal's sentence in the caller's alert. */
@@ -403,4 +443,17 @@ export interface AnnotateMoreProps {
   canMakeOurs: boolean;
   canRemove: boolean;
   removedHref?: Route;
+}
+
+/**
+ * One of the coven's jars as the details modal's Forms block reads it (M9.9): the form it
+ * holds, by variant id, and its stock. The Edit Stock dialog's own jar, less its id.
+ */
+export interface SummaryJar {
+  variantId: string;
+  /** On hand: `null` is held but not measured, `0` is out. */
+  quantity: number | null;
+  unit: string | null;
+  /** The low-stock threshold, `null` or 0 for none. */
+  threshold: number | null;
 }

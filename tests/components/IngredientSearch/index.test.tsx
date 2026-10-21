@@ -7,6 +7,7 @@ import IngredientSearch, {
 } from '@/components/IngredientSearch';
 import type { IngredientSearchMatch } from '@/components/IngredientSearch/types';
 import { DEBOUNCE_MS } from '@/lib/debounce';
+import { filterForm } from '../../support/filter-form';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
@@ -76,7 +77,7 @@ function renderSearch(query = '', workspaceId?: string) {
 }
 
 const box = () => screen.getByRole('combobox', { name: 'Name' });
-const form = () => screen.getByRole('form', { name: 'Filter Ingredients' });
+const form = () => filterForm('Filter Ingredients');
 const status = () => screen.getByRole('status', { name: 'Name results' });
 
 /** Focuses the box and types `text` as one change. */
@@ -109,6 +110,15 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeInTheDocument();
     expect(screen.getByText('Results go here')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute('href', `${PATH}?after=x`);
+  });
+
+  it("hides the row's sorrel layer from assistive technology, beside the form", () => {
+    const { container } = renderSearch();
+
+    const layer = container.querySelector('search > .filter-sorrel');
+    expect(layer).toHaveAttribute('aria-hidden', 'true');
+    expect(layer).toBeEmptyDOMElement();
+    expect(layer?.parentElement).toBe(form().parentElement);
   });
 
   it('names the box by its one hidden label', () => {

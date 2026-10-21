@@ -85,9 +85,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   // A body only to read takes a Tab stop (readingBody), so it shows where the
   // keyboard is: inset, as the header above and the dialog's edge would clip it.
   &:focus-visible {
-    @include focus-ring;
-
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 }
 
@@ -165,6 +163,17 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 // and nested References panel are cramped in the default `$dialog-column`.
 .modal-dialog--wide {
   width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+}
+
+// The default column with a list down its side, a third of the body to the
+// list and two to the column (M9.9's Edit Stock, the owner's call,
+// 2026-10-20): half a column more, and the step of gap between them, so the
+// column beside the list keeps the width it has in a dialog of its own.
+.modal-dialog--listed {
+  width: min(
+    calc($dialog-column * 1.5 + #{space(4)} + #{$modal-padding}),
+    calc(100vw - #{$modal-gap} * 2)
+  );
 }
 
 // The × at the dialog's top right, out of the header's flow (the owner's call,
@@ -265,8 +274,11 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 }
 
 // Placed by the grid, so whatever stands in it has no margin of its own (an entry page's
-// controls row has one under it).
-.modal-dialog__naming > .modal-dialog__formal-actions > * {
+// controls row has one under it). Never a dialog: a control that opens one, as Edit Stock does
+// (ModalButton), leaves its `<dialog>` here beside the button, and a modal dialog is centred by
+// the browser's own `margin: auto`, so a zero here pinned the stacked dialog to the screen's
+// top left corner.
+.modal-dialog__naming > .modal-dialog__formal-actions > :not(dialog) {
   margin: 0;
 }
 
@@ -276,8 +288,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   align-items: center;
   justify-self: end;
   gap: space(2);
-  min-block-size: $icon-size-large;
-  margin-block: calc((#{$icon-size} - #{$icon-size-large}) / 2);
+  min-block-size: $action-icon-size;
+  margin-block: calc((#{$icon-size} - #{$action-icon-size}) / 2);
 
   &:empty {
     display: none;
@@ -396,7 +408,7 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   border-radius: radius('pill');
   background-color: transparent;
   color: $text-muted;
-  font-size: 2rem;
+  font-size: $close-target;
   line-height: 1;
   cursor: pointer;
 
@@ -538,7 +550,7 @@ $confirm-flash: $motion-short * 4;
 @keyframes confirm-overlay-mark {
   0%,
   50% {
-    outline: 2px solid $secondary;
+    outline: $rule-medium solid $secondary;
   }
 
   25%,

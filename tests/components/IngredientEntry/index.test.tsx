@@ -247,6 +247,19 @@ const precedes = (a: Node, b: Node): boolean =>
   (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 
 describe('IngredientEntry', () => {
+  it('draws the latest edit when given one, and none when not', () => {
+    const { unmount } = renderEntry({
+      lastEdit: { by: 'Fixture A', at: '2026-09-01T10:30:00.000Z' },
+    });
+    expect(screen.getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
+      /Fixture A/,
+    );
+    unmount();
+
+    renderEntry({ lastEdit: null });
+    expect(screen.queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
+  });
+
   it('heads the page with the entry name', () => {
     renderEntry();
 
@@ -539,7 +552,7 @@ describe('IngredientEntry', () => {
   it('jumps to the details, each form and the references from the page nav', () => {
     renderEntry();
 
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     expect(
       within(nav)
         .getAllByRole('link')
@@ -901,7 +914,7 @@ describe('IngredientEntry references', () => {
     }
   });
 
-  it('links a url to its source, opened with rel noopener', () => {
+  it('links a url to its source, opened with rel noopener and named as opening a new tab', () => {
     renderEntry({
       detail: detail({
         references: [cited('Linked Fixtures', null, 'https://fixtures.example/testwort')],
@@ -909,7 +922,10 @@ describe('IngredientEntry references', () => {
       }),
     });
 
-    const link = within(bibliography()).getByRole('link', { name: /source/i });
+    // jsdom drops the space before the hidden hint that a browser keeps.
+    const link = within(bibliography()).getByRole('link', {
+      name: /^Open the Source ?\(opens in a new tab\)$/,
+    });
     expect(link).toHaveAttribute('href', 'https://fixtures.example/testwort');
     expect(link.getAttribute('rel')?.split(' ')).toContain('noopener');
   });
@@ -963,7 +979,7 @@ describe('IngredientEntry references', () => {
 
   it('lists Notes and Bibliography under a References group in the jump menu, after Details and the forms', () => {
     sample();
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
     const group = within(nav).getByRole('list', { name: 'References' });
 
@@ -986,7 +1002,7 @@ describe('IngredientEntry references', () => {
 
   it('keeps References a single link when no source is recorded, as there is nothing under it', () => {
     renderEntry({ detail: detail({ references: [], variants: [variantRow('testoil')] }) });
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
 
     expect(links[links.length - 1]).toHaveAttribute('href', '#references');
@@ -1333,5 +1349,183 @@ describe('IngredientEntry recency (MB.106)', () => {
 
     expect(screen.queryByText('New', { exact: true })).toBeNull();
     expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  });
+});
+
+describe('IngredientEntry stock (M12.29)', () => {
+  // The fixture's two forms, by id, so a jar can name one.
+  const variants = [variantRow('testroot'), variantRow('testoil')];
+  const [root, oil] = variants.map(({ variant }) => variant.id) as [string, string];
+  const forms = [
+    { variantId: root, label: 'Testroot' },
+    { variantId: oil, label: 'Testoil' },
+  ];
+  const jar = (
+    variantId: string,
+    quantity: number | null,
+    threshold: number | null = null,
+    unit: string | null = 'g',
+  ) => ({ id: nextId(), variantId, quantity, unit, threshold });
+
+  const renderStock = (
+    jars: ReturnType<typeof jar>[],
+    mayEdit = true,
+    overrides: Partial<IngredientDetail> = {},
+  ) =>
+    renderEntry({
+      detail: detail({ entry: entryRow({ workspaceId: COVEN }), variants, ...overrides }),
+      stock: { workspaceId: COVEN, forms, jars, mayEdit },
+    });
+
+  const section = () => screen.getByRole('region', { name: 'Stock' });
+  // The heading's button, by the dialog's own name; a jar's is that name and then its form.
+  const HEADING_BUTTON = 'Edit Stock, Testwort, Fixtura testalis';
+  const headingButton = () => within(section()).getByRole('button', { name: HEADING_BUTTON });
+  const jarButton = (form: string) =>
+    within(section()).queryByRole('button', { name: `${HEADING_BUTTON}, ${form}` });
+  const dialog = () => screen.getByRole('dialog', { name: HEADING_BUTTON });
+  const lineOf = (form: string): HTMLElement =>
+    within(section())
+      .getAllByRole('listitem')
+      .find((item) => item.textContent!.trim().startsWith(form))!;
+
+  it('shelves one jar per form, each naming its form and its amount, Unmeasured, or No Jar', () => {
+    renderStock([jar(root, 250)]);
+    expect(within(section()).getByRole('list', { name: 'Jars' })).toBeInTheDocument();
+    expect(within(section()).getAllByRole('listitem')).toHaveLength(2);
+    expect(lineOf('Testroot')).toHaveTextContent('250 g');
+    expect(lineOf('Testoil')).toHaveTextContent('No Jar');
+  });
+
+  const shelfOrder = () =>
+    within(section())
+      .getAllByRole('listitem')
+      .map((item) => (item.textContent!.trim().startsWith('Testroot') ? 'Testroot' : 'Testoil'));
+
+  it('shelves a form with no jar after every form with one, and a jar holding 0 keeps its place', () => {
+    // The forms' order is Testroot, Testoil. Only Testoil is held, so it goes first.
+    const { unmount } = renderStock([jar(oil, 250)]);
+    expect(shelfOrder()).toEqual(['Testoil', 'Testroot']);
+    unmount();
+
+    // Testroot is out (0 held) and Testoil has none: Testroot is still a jar, so it stays first.
+    renderStock([jar(root, 0, 50)]);
+    expect(shelfOrder()).toEqual(['Testroot', 'Testoil']);
+  });
+
+  it('writes a jar with no amount Unmeasured', () => {
+    renderStock([jar(root, 250), jar(oil, null, null, null)]);
+
+    expect(lineOf('Testoil')).toHaveTextContent('Unmeasured');
+  });
+
+  it('gives a low jar a Low Stock button on its amount, an empty one an Out of Stock button, and a full or unmeasured one neither', () => {
+    // A jar for each state needs four forms.
+    const four = [...variants, variantRow('testleaf'), variantRow('testbark')];
+    const [, , leaf, bark] = four.map(({ variant }) => variant.id) as string[];
+    renderEntry({
+      detail: detail({ entry: entryRow({ workspaceId: COVEN }), variants: four }),
+      stock: {
+        workspaceId: COVEN,
+        forms: [
+          ...forms,
+          { variantId: leaf!, label: 'Testleaf' },
+          { variantId: bark!, label: 'Testbark' },
+        ],
+        jars: [jar(root, 5, 10), jar(oil, 0, 10), jar(leaf!, 50, 10), jar(bark!, null, 10, null)],
+        mayEdit: false,
+      },
+    });
+
+    const badge = (form: string, name: RegExp) =>
+      within(lineOf(form)).queryByRole('button', { name });
+    expect(badge('Testroot', /, Low Stock$/)).toBeInTheDocument();
+    expect(badge('Testroot', /, Out of Stock$/)).toBeNull();
+    expect(badge('Testoil', /, Out of Stock$/)).toBeInTheDocument();
+    expect(badge('Testoil', /, Low Stock$/)).toBeNull();
+    for (const form of ['Testleaf', 'Testbark']) {
+      expect(within(lineOf(form)).queryByRole('button')).toBeNull();
+    }
+  });
+
+  it('carries Edit Stock in the heading for a role that may edit, and none for one that may not', () => {
+    const { unmount } = renderStock([jar(root, 250)]);
+    expect(headingButton()).toBeInTheDocument();
+    unmount();
+
+    renderStock([jar(root, 250)], false);
+    // The jars are there, so the button's absence is the role's.
+    expect(within(section()).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(section()).queryByRole('button', { name: /^Edit Stock/ })).toBeNull();
+  });
+
+  it('opens the Edit Stock dialog from the heading', () => {
+    renderStock([jar(root, 250)]);
+
+    fireEvent.click(headingButton());
+
+    expect(dialog()).toBeInTheDocument();
+  });
+
+  it('opens the dialog on a jar’s form when the jar is pressed', () => {
+    renderStock([jar(root, 250), jar(oil, 40)]);
+
+    fireEvent.click(jarButton('Testoil')!);
+
+    const open = within(dialog());
+    expect(open.getByRole('button', { name: /^Testoil\b/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    expect(open.getByRole('button', { name: /^Testroot\b/ })).not.toHaveAttribute('aria-current');
+  });
+
+  it('adds the form and chooses it when an empty jar is pressed', () => {
+    renderStock([jar(root, 250)]);
+
+    fireEvent.click(jarButton('Testoil')!);
+
+    const open = within(dialog());
+    expect(open.getByRole('button', { name: /^Testoil\b/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
+    // A new row is a change, so Save is on.
+    expect(open.getByRole('button', { name: 'Save' })).toBeEnabled();
+  });
+
+  it('gives a role that may not edit plain jars with no button', () => {
+    renderStock([jar(root, 250)], false);
+
+    expect(jarButton('Testroot')).toBeNull();
+    expect(jarButton('Testoil')).toBeNull();
+    expect(lineOf('Testroot')).toHaveTextContent('250 g');
+  });
+
+  it('says no stock is recorded where the entry has no form, with Edit Stock still offered', () => {
+    renderStock([], true, { variants: [] });
+
+    expect(within(section()).queryByRole('listitem')).toBeNull();
+    expect(within(section()).getByText('No stock recorded.')).toBeInTheDocument();
+    expect(headingButton()).toBeInTheDocument();
+  });
+
+  it('lists Stock in the jump menu after Details', () => {
+    renderStock([jar(root, 250)]);
+
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    const links = within(nav)
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'));
+    expect(links.slice(0, 2)).toEqual(['#details', '#stock']);
+  });
+
+  it('draws no Stock section without stock, as for a compendium entry the coven does not hold', () => {
+    renderEntry();
+
+    expect(screen.queryByRole('region', { name: 'Stock' })).toBeNull();
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(within(nav).queryByRole('link', { name: 'Stock' })).toBeNull();
   });
 });

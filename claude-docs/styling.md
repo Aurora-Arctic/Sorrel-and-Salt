@@ -37,8 +37,8 @@ to.
 - **Never wash a chip or badge ground with its own group colour and leave the label in that colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
   under; solid holds, and so does a wash with the body ink stirred into the label ("Category chips").
-- **A badge palette declares `solid` or `tinted` and emits only that treatment's
-  parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
+- **A badge palette declares `solid`, `tinted` or `ink` and emits only that
+  treatment's parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
   an oversight. A ninth palette picks its treatment first — solid needs 4.5:1
   against the page surface plus 3:1 against both surfaces; tinted needs 4.5:1
   foreground-on-background plus 3:1 on the border.
@@ -252,7 +252,7 @@ Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
-(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its label on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. It also keeps its word, drawing and heavier border, so its meaning never rests on colour. That keeps
+(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill. It was drawn as a tint until 2026-10-21, and is now the `ink` treatment, the red alone with no box, so it never reads as a second alarm. As text it measures 6.40:1 on the dark card, 7.04:1 on the dark page, 7.45:1 on the light card and 6.70:1 on the light page. The badge is its drawing alone (the owner's call, 2026-10-20), a slashed ring that Low's double chevron does not share, with the words in its name and tip, so its meaning never rests on colour. Since 2026-10-21 the stock badge has no box and takes the jars' inks (Low `$warning`, Out this palette's `fg`; [`components/stock-badge.md`](components/stock-badge.md)). That keeps
 exactly one alarming badge in the app and spends no new hue, which matters because every
 hue not already reserved belongs to one of the eight groups.
 
@@ -301,6 +301,9 @@ treatment decides which parts it emits:
 - **`tinted`** — the ink mixed back into the card surface, so the badge tints the
   surface it actually sits on instead of carrying a hardcoded panel colour.
   Three parts, `fg` / `bg` / `border`.
+- **`ink`** — the ink alone, for a mark that draws no box (Out of Stock, since
+  2026-10-21). One part, `fg`, read as text. It emits no `.badge--<palette>`
+  class, since `badge()` has no box to draw for it.
 
 **A palette emits only its treatment's parts**, which is not tidiness. The two
 treatments want opposite things from an ink: solid wants it saturated and close
@@ -497,7 +500,12 @@ owner's call at MB.116's sign-off, over Microsoft's own dark button.
 ## The focus ring
 
 Keyboard focus is a 2px outline drawn 2px outside the element by the
-`focus-ring($color, $strength)` mixin in `_mixins.scss`. Its colour is mixed
+`focus-ring($color, $strength, $placement)` mixin in `_mixins.scss`. A control
+that fills its bar or its row, whose own edge would clip an outside ring, passes
+`$placement: inset` and gets the ring 2px inside instead
+(`@include focus-ring($placement: inset)`; a coloured one passes it third, as
+`focus-ring($accent, $focus-ring-tab-strength, inset)`). It is last so the
+callers that pass a colour and a strength by position keep working (MB.120). Its colour is mixed
 towards transparent, `color-mix(in srgb, <colour> <strength>, transparent)`,
 so the ring softens over whatever ground it crosses rather than standing at
 the body ink's full 14:1, which read as harsh. The strength is
@@ -1231,12 +1239,25 @@ heavier than the reverse; light reverts to the browser default.
   0.8s, `$shimmer-duration` 1.4s, `$pulse-duration` 2s, `$arrive-duration`
   200ms; see [`loading.md`](loading.md)), and the four scales with their accessors — `type-size()`,
   `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
+  Sizes with a role of their own sit beside them: `$brand-size` (1.375rem, the
+  site name in the bars, set in the heading face), `$inline-mark-size` (0.72em,
+  an icon sized to the text beside it), `$text-stroke-hairline` (0.6px, the
+  safety note heading's stroke), `$safety-bar-width` (the safety note's side
+  bar, `$rule-heavy`), `$nav-link-size` (1.125rem, a grouped jump menu's
+  top-level link), the small optical corrections in `em` (`$optical-nudge`
+  0.04em, `$back-chevron-pull` 0.5em, `$link-hint-drop` 0.125em, `$cap-middle`
+  0.648em, `$recency-icon-size` 1.375em, each explained where it is declared), and the ingredient card drawer's `$drawer-inset` (10px),
+  `$drawer-wall` (7px), `$drawer-back-stop` and `$drawer-seam-stop` (38% and
+  48%), `$drawer-slot-shadow` and `$drawer-rim-shadow`. The last six are proposed
+  for MB.120; the card and note stylesheets take them in their own lanes.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
   the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
-  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`,
+  `theme-transition`, `nav-current` (a bar link's current-page mark: weight and a
+  `$rule-heavy` accent border, which forced colours keeps), `reduced-motion`,
+  `font-smoothing-antialiased`,
   `heading-face` (the headings' family, weight and letter spacing).
   The shapes that repeated by hand are mixins too, one line each:
   `color-scheme-light` and `forced-colors` (the two media queries, as

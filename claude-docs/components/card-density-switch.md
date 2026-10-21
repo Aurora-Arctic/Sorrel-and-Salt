@@ -13,7 +13,17 @@
 
 ## Placement
 
-The coven list's filter (`CompendiumListFilter` with `audience="coven"`, a client component like the switch) draws it in its row, inside the `search` landmark (story 12 counts editing controls outside it). The admin and public compendium lists draw none. Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
+The coven list's filter (`CompendiumListFilter` with `audience="coven"`, a client component like the switch) draws it in its row, inside the `search` landmark (story 12 counts editing controls outside it). The admin and public compendium lists draw none, deliberately: the switch is on the coven’s list only, because the public compendium shows full cards by design (the owner’s call, 2026-10-20). Its `name` is empty so it never submits with a form it sits in: it changes the view, not the filter.
+
+## Styling
+
+The switch has no stylesheet of its own: it is a plain switch control. What it changes is styled by the
+cards. The compact selectors, with the `:not(:root[data-card-density='regular'] *)` guard, are in
+`IngredientCard/index.scss` (the `[data-density='compact']` block, with the `_compact.scss` partial it uses) and `IngredientCardList/index.scss` (the grid).
+
+**On a phone** the switch sits in the coven list's filter row (`CompendiumList/filter.tsx`), and nowhere on the public compendium. It sits on the Filters line with its label beside it, the pair a control's height and level with the button (the `.filter-row > .switch` rule in `_primitives.scss`, the owner's call at MB.120's review, 2026-10-20); with Clear All showing it wraps to its own line beneath, aligned to the start. The workshop shows both: `CovenRowPhoneDark` and `CovenRowPhoneLight`, `CovenRowFilteredPhoneDark` and `CovenRowFilteredPhoneLight`. The compact grid's narrower column still comes to one card across at 375px.
+
+**Forced colours.** The switch is the `.switch` primitive, whose forced-colours rule paints the thumb in the system's ink ([`styling.md`](../styling.md)).
 
 ## Tests
 

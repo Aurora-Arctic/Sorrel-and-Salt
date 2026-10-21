@@ -6,7 +6,7 @@
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the
 // layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
 // a list item should not (it is not a dialog), and the forms line's spacing.
-// Past the tokens only after the section's design review (MB.84).
+// Tokens only (signed off in MB.120, 2026-10-20).
 .ingredient-card {
   @include modal-surface($shadow-floating);
 
@@ -62,9 +62,7 @@
   flex-direction: column;
   border-radius: radius('surface');
   background-color: $drawer-slot;
-  box-shadow:
-    inset 0 3px 6px rgba(0, 0, 0, 0.45),
-    inset 2px 0 4px rgba(0, 0, 0, 0.3);
+  box-shadow: $drawer-slot-shadow;
 }
 
 // The drawer: the box the face is the front of, seen from above. This span is only the
@@ -81,28 +79,38 @@
   &::before {
     content: '';
     position: absolute;
-    // Inset 10px each side, so the drawer is no wider than the slot, and square-cornered.
-    inset-inline: 10px;
+    // Inset each side, so the drawer is no wider than the slot, and square-cornered.
+    inset-inline: $drawer-inset;
     // At rest it sits one travel higher, out of the clip; open, 1px of cavity shows above
-    // its back wall. Its height runs 10px under the face at full travel, so no gap opens.
+    // its back wall. Its height runs one inset under the face at full travel, so no gap opens.
     inset-block-start: calc(1px - #{$drawer-travel});
-    block-size: calc(#{$drawer-travel} + 10px);
+    block-size: calc(#{$drawer-travel} + #{$drawer-inset});
     transition: inset-block-start $motion-medium ease;
     // Top of the stack first. Straight bands, not blurred shadows: a blur piles up in the
-    // corners and reads as a curve. The face's cast shadow is dark in the 10px under it and
-    // fades out by 22px; a wash of 10px shades in from each wall (shade colours are theme tokens: lighter in light); 7px side walls; then the
-    // back wall (top 38%), a seam easing into the floor (to 48%) and the floor.
+    // corners and reads as a curve. The face's cast shadow is dark in the inset under it and
+    // fades out by twice that and a bit; a wash of one inset shades in from each wall (shade colours are theme tokens:
+    // lighter in light); side walls; then the back wall, a seam easing into the floor and the floor.
     background:
-      linear-gradient(0deg, $drawer-shade 10px, $drawer-shade-fade 11px, transparent 22px),
-      linear-gradient(90deg, $drawer-shade-edge, transparent 10px),
-      linear-gradient(270deg, $drawer-shade-edge, transparent 10px),
+      linear-gradient(
+        0deg,
+        $drawer-shade $drawer-inset,
+        $drawer-shade-fade calc(#{$drawer-inset} + 1px),
+        transparent calc(2 * #{$drawer-inset} + 2px)
+      ),
+      linear-gradient(90deg, $drawer-shade-edge, transparent $drawer-inset),
+      linear-gradient(270deg, $drawer-shade-edge, transparent $drawer-inset),
       linear-gradient(
         90deg,
-        $drawer-side 0 7px,
-        transparent 7px calc(100% - 7px),
-        $drawer-side calc(100% - 7px)
+        $drawer-side 0 $drawer-wall,
+        transparent $drawer-wall calc(100% - #{$drawer-wall}),
+        $drawer-side calc(100% - #{$drawer-wall})
       ),
-      linear-gradient(180deg, $drawer-back 0 38%, $drawer-seam 38% 48%, $drawer-floor 48%);
+      linear-gradient(
+        180deg,
+        $drawer-back 0 $drawer-back-stop,
+        $drawer-seam $drawer-back-stop $drawer-seam-stop,
+        $drawer-floor $drawer-seam-stop
+      );
   }
 }
 
@@ -135,9 +143,7 @@
   .ingredient-card {
     background-color: $surface-card-hover;
     // The second shadow is cast upward, onto the drawer's rim above the face.
-    box-shadow:
-      $shadow-lifted,
-      0 -3px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: $shadow-lifted, $drawer-rim-shadow;
     inset-block-start: $drawer-travel;
     // Above its neighbours while a tip may be open (hover or keyboard focus), so a
     // tip that spills over the card above is not painted under that card's buttons.
@@ -228,9 +234,9 @@
   font-size: heading-size(3);
 }
 
-// Above the overlay, so the Low badge's button keeps its own hover, focus and
-// click (it opens a tip) instead of following the card's link.
-.ingredient-card .stock-badge-tip {
+// Above the overlay, so the stock badge's button keeps its own hover and focus (it
+// opens an icon tip) instead of following the card's link.
+.ingredient-card .specimen__stock .icon-tip {
   z-index: 1;
 }
 
@@ -265,15 +271,6 @@
   display: inline-flex;
   align-items: center;
   gap: space(1);
-}
-
-// Out of Stock takes Low's weight on the card: the word and the icon still tell
-// the states apart, and the heavier edge is M9.8's for a badge standing alone.
-// The values are the badge mixin's own, so both come out the same height.
-.ingredient-card .specimen__stock .stock-badge--out {
-  border-width: 1px;
-  @include badge-padding-block('medium');
-  font-weight: 500;
 }
 
 // The actions' own addition to the primitive: above the stretched link, so each

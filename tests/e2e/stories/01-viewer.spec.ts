@@ -19,9 +19,9 @@ import {
 } from './coven-ingredients';
 
 // Stories 12 and 13: what a coven's members read of its ingredients and its
-// grimoire, and who last touched a jar. Both are scaffolds: the pages they
-// walk are built in Waves 11 and 12, and the task named in each annotation
-// turns its `fixme` into `test` and makes it pass.
+// grimoire, and who last touched a jar. Story 12 is still a scaffold: the
+// pages it walks are built in Waves 11 and 12, and the task named in its
+// annotation turns its `fixme` into `test` and makes it pass.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -240,16 +240,9 @@ test.fixme(
   },
 );
 
-test.fixme(
-  "a member's edit to a stock row names them and the time, to every member and the viewer alike",
-  {
-    tag: '@story-13',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M6.18 shows the stock row’s last editor, on M9.9’s inline edit and M9.6’s /coven/[slug]/ingredients',
-    },
-  },
+test(
+  "a member's edit to a jar names them and the time on the ingredient's card, to every member and the viewer alike",
+  { tag: '@story-13' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Thirteen', 'story-13.test', {
       A: 'owner',
@@ -263,42 +256,45 @@ test.fixme(
     });
     const path = `/coven/${coven.slug}/ingredients`;
     const row = rowOf(ingredientList(page), 'Testwort');
-
-    await test.step('before the edit the row names A, who wrote it', async () => {
-      // Why this is story 13's case: the answer must move when B edits.
-      await signInAgainAs(page, B);
-      await page.goto(path);
-      await expect(row.getByText('Fixture A', { exact: true })).toBeVisible();
-      await expect(row.getByText('Fixture B', { exact: true })).toHaveCount(0);
-    });
-
-    await test.step('B changes the quantity in place, and the row names B and the moment', async () => {
-      const editor = stockEditor(row, 'Testwort');
-      await editor.open.click();
-      await editor.quantity.fill('2');
-      await editor.save.click();
-
-      await expect(row.getByText('Fixture B', { exact: true })).toBeVisible();
-      await expect(row.getByText('Fixture A', { exact: true })).toHaveCount(0);
-      const [stamps] = await withSql(
+    const jarStamp = async () => {
+      const [stamp] = await withSql(
         (sql) => sql<{ updated_by: string; updated_at: Date; quantity: number }[]>`
           select updated_by, updated_at, quantity_on_hand::float as quantity
           from inventory_items where id = ${stockId}`,
       );
-      expect(stamps).toMatchObject({ updated_by: B, quantity: 2 });
-      await expectEditedAt(row, stamps.updated_at);
+      return stamp;
+    };
+
+    await test.step('before the edit the card names A, who wrote the entry and its jar', async () => {
+      // Why this is story 13's case: the answer must move when B edits.
+      await signInAgainAs(page, B);
+      await page.goto(path);
+      await expect(row).toContainText('Fixture A');
+      await expect(row).not.toContainText('Fixture B');
+    });
+
+    await test.step("B changes the jar's quantity, and the card names B and the moment", async () => {
+      const editor = stockEditor(row, 'Testwort');
+      await editor.open.click();
+      await editor.jar('Root').quantity.fill('2');
+      await editor.save.click();
+      await expect(editor.dialog).toHaveCount(0);
+
+      await expect(row).toContainText('Fixture B');
+      await expect(row).not.toContainText('Fixture A');
+      const stamp = await jarStamp();
+      expect(stamp).toMatchObject({ updated_by: B, quantity: 2 });
+      await expectEditedAt(row, stamp.updated_at);
       await assertNoAccessibilityViolations(page);
     });
 
     await test.step('A and the viewer C read the same name and moment', async () => {
-      const [{ updated_at: at }] = await withSql(
-        (sql) => sql<{ updated_at: Date }[]>`
-          select updated_at from inventory_items where id = ${stockId}`,
-      );
+      const { updated_at: at } = await jarStamp();
       for (const reader of [A, C]) {
         await signInAgainAs(page, reader);
         await page.goto(path);
-        await expect(row.getByText('Fixture B', { exact: true })).toBeVisible();
+        await expect(row).toContainText('Fixture B');
+        await expect(row).not.toContainText('Fixture A');
         await expectEditedAt(row, at);
       }
     });
@@ -306,12 +302,27 @@ test.fixme(
 );
 
 /**
- * The row's `<time>` stands for `at`, the stock row's own `updated_at`, to
- * the second: the attribute may drop the database's microseconds.
+ * The card's `<time>` stands for `at`, the jar's own `updated_at`, to the
+ * second: the attribute may drop the database's microseconds. The server's
+ * HTML holds the short absolute date alone, and the browser swaps it for the
+ * relative phrase once the page has loaded (M6.18); the full sentence is the tip. The server's HTML is
+ * fetched from inside the page, so the request carries the page's session.
  */
 async function expectEditedAt(row: Locator, at: Date) {
   const time = editedAt(row);
   await expect(time).toHaveAttribute('datetime', /.+/);
-  const shown = Date.parse((await time.getAttribute('datetime')) ?? '');
-  expect(Math.abs(shown - at.getTime())).toBeLessThan(1000);
+  const datetime = (await time.getAttribute('datetime')) ?? '';
+  expect(Math.abs(Date.parse(datetime) - at.getTime())).toBeLessThan(1000);
+
+  const served = await row.page().evaluate(async (moment) => {
+    const html = await (await fetch(location.href)).text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.querySelector(`time[datetime="${moment}"]`)?.textContent ?? null;
+  }, datetime);
+  // The absolute date the server drew: the edit's day, in UTC.
+  expect(served).toContain(String(at.getUTCFullYear()));
+  expect(served).toContain(String(at.getUTCDate()));
+  await expect(time).toBeVisible();
+  // Once the page has loaded the visible text is the relative phrase, in place of the date.
+  await expect(time).toHaveText(/ ago$|^just now$/);
 }

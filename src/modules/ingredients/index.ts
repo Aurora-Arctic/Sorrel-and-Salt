@@ -12,11 +12,13 @@ export * from './services/compendium-slugs';
 export * from './services/references';
 export * from './services/promote-folk-name';
 export * from './services/stock';
+export * from './services/last-edits';
 export * from './services/workspace-ingredient-list';
 export * from './services/ingredient-facets';
 export * from './services/replaced-entries';
 export * from './validation/cupboard-merge';
 export * from './services/cupboard-entries';
+export * from './services/entry-covens';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';
@@ -54,8 +56,10 @@ export type {
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
+  LastEdit,
   CompendiumMatches,
   ReplacedCompendiumEntry,
+  SaveStockValues,
   StockKey,
   StockRow,
   StockValues,

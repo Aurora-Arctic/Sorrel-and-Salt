@@ -3,7 +3,7 @@
 import { type ReactElement, createContext, useContext, useEffect, useRef, useState } from 'react';
 import { usePendingNavigation } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
-import type { ListBodyProps, ListFrameProps, ListNavigation } from './types';
+import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
 
 // A list page's root, `.list-frame`, and the one record of whether another
 // of its pages is on its way (MB.115, the owner's call: "Filters should
@@ -40,6 +40,8 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   const keepPlace = useRef(false);
   const [heldHeight, setHeldHeight] = useState<number>();
+  // The kind of the navigation last started; read only while one is pending.
+  const [kind, setKind] = useState<ListNavigationKind>();
 
   // A pager end's page: once the transition ends the new page has rendered, so
   // bring the start of the list to the line the stuck search row leaves, if it
@@ -68,28 +70,31 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
 
   const value: ListNavigation = outer ?? {
     pending,
+    // A filter's navigation is always soft; a pager end's is `page` or `full`.
+    searching: pending && kind === 'soft',
     heldHeight,
-    go: (href, kind) => {
+    go: (href, way) => {
       if (pending) return;
-      if (kind === 'full') {
+      setKind(way);
+      if (way === 'full') {
         setLeaving(true);
         window.location.assign(href);
         return;
       }
       // A pager end keeps the reader at the list rather than Next's scroll to
       // the page top, which would bring the admin section menu back into view.
-      keepPlace.current = kind === 'page';
+      keepPlace.current = way === 'page';
       // The skeleton is far shorter than a page of cards, and a shorter
       // document makes the browser pull the scroll position up (the section
       // menu comes into view, then the list glides back down). So the body
       // keeps the height it had at the press while the page is on its way;
       // the new page renders without it, so a short last page is not padded.
       setHeldHeight(
-        kind === 'page'
+        way === 'page'
           ? root.current?.querySelector('.list-frame__body')?.getBoundingClientRect().height
           : undefined,
       );
-      navigate(href, kind === 'page' ? { scroll: false } : undefined);
+      navigate(href, way === 'page' ? { scroll: false } : undefined);
     },
   };
   return (

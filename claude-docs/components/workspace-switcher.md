@@ -9,9 +9,13 @@ create choice "Create Coven"; code and these docs say workspace.
 
 ## Props
 
-`workspaces`: `{ slug, name }[]`, every workspace the viewer is a member of, in
-the order to list them. The caller already holds the memberships (the coven
-layout, M6.10; the shell, MB.7), so the component fetches nothing.
+`workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
+in the order to list them. Each is `{ slug, name, canReadMembers, canInvite }`:
+the two flags say what the viewer's role there may open (member: read, and
+member: invite, an owner's alone), so the switcher can step back from a people
+page the next coven would 404. The caller already holds the memberships (the
+coven layout, M6.10; the shell, MB.7, which reads the flags from `rolePermits`
+in `viewerOf`), so the component fetches nothing.
 
 `canCreate`: whether the viewer holds `canCreateWorkspace`, which the caller
 reads from the user row, never from the session. When true, the list ends
@@ -23,11 +27,36 @@ with a Create Coven choice (M9.16). It defaults to false.
   `covenSlugOf(usePathname())` (`src/lib/coven-path.ts`). Nothing is stored in
   session, cookie or local state, so two tabs in two workspaces cannot disagree
   through it. Outside `/coven/…` the box shows "Select Coven".
-- **A choice goes to the same section in the other workspace.**
-  `pathInCoven` keeps the first segment after the slug: `/coven/a/ingredients/x`
-  goes to `/coven/b/ingredients`. What lies beneath a section belongs to the
-  workspace it was opened in, and would be a 404 in the next. At the index, or
-  outside a workspace, it goes to the new workspace's index.
+- **A choice keeps the page when the page exists in the other workspace**
+  (M9.12, the owner's call, 2026-10-21). `pathInCoven(pathname, slug, options)`
+  decides, in this order:
+  - at the index, or outside a workspace, the new workspace's index;
+  - the invitations page without `canInvite` goes to the members page beside
+    it when `canReadMembers`, otherwise to the index; members, or invitations,
+    without `canReadMembers` goes to the index;
+  - a page the page itself vouched for (`opens`, below) keeps its whole path:
+    `/coven/a/ingredients/x` goes to `/coven/b/ingredients/x`;
+  - anything else keeps the first segment after the slug:
+    `/coven/a/ingredients/x` goes to `/coven/b/ingredients`, since what lies
+    beneath a section belongs to the workspace it was opened in and would be a
+    404 in the next.
+    The static pages (the index, ingredients, members, invitations) are decided
+    from the address and the flags alone.
+- **A row-bound page says where it opens, through `CovenSwitchTargets`.** The
+  coven layout holds the switcher and cannot see the page beneath it, and the
+  address cannot say which covens an entry opens in. An ingredient's page
+  calls `covensOpeningEntry` ([`../modules.md`](../modules.md), the ingredients
+  module) and renders `<CovenSwitchTargets path slugs />`
+  (`src/components/CovenSwitchTargets/`), which writes `{ path, slugs }` into
+  the `CovenSwitchProvider` the layout wraps its children in. The switcher
+  reads it and passes `slugs` as `opens`. A live compendium entry opens in every
+  coven the viewer is in, held or not; a retired one only where a live
+  cupboard row names it; a coven's own entry in that coven alone. The
+  registration is believed only when its `path` equals the current pathname, so
+  a registration left over from a page the viewer has left is ignored, and the
+  component clears it when it unmounts. With nothing registered, or no
+  provider (stories, tests), only the section is kept. The service reads the
+  viewer's memberships each request and caches nothing (rule 6).
 - **Create Coven goes to the create page.** Its value is
   `NEW_COVEN_PATH`, `/coven/new`, which no slug can equal because a slug
   holds no slash. Choosing it goes there rather than to a section. On that
@@ -116,8 +145,13 @@ router goes nowhere, so a choice only closes the list.
 
 ## Testing
 
-`tests/components/WorkspaceSwitcher/index.test.tsx` covers the list, the value
+`tests/components/WorkspaceSwitcher/index.test.tsx` covers the list, the page kept
+or not by a registration (and a stale one ignored), the value
 read from the address (and following it), the destination on a click and on the
 keyboard, and the Create Coven choice: shown only with `canCreate`, going
-to the create page from a click or the keyboard; `tests/lib/coven-path.test.ts` the two path helpers. Axe is asserted
+to the create page from a click or the keyboard; `tests/lib/coven-path.test.ts` the two path helpers;
+`tests/components/CovenSwitchTargets/index.test.tsx` the registration and its
+clearing; `tests/modules/ingredients/services/covens-opening-entry.test.ts` which
+covens an entry opens in (live, retired, own, by direct id, an admin);
+`tests/e2e/coven-switcher.spec.ts` the walk through the real layout. Axe is asserted
 in Playwright once a `/coven` page renders the switcher (M6.10, MB.7).

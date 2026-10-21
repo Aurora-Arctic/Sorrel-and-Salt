@@ -56,6 +56,7 @@ export default function CardMore({
     workspaceId,
     id,
     deletedHref: leaveHref,
+    announcement: `${label} deleted`,
     onSettle: settle,
     onRefused: setAlert,
   });

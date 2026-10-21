@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { findStockOfIngredients } from '@/db/repository';
+import { findStockByIds, findStockOfIngredients } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
 import { A, D, E, asUser } from '../../support/as-user';
@@ -62,5 +62,33 @@ describe('findStockOfIngredients', () => {
   it('reads nothing for no ingredients', async () => {
     const w = await assertMembership(asUser(A), WORKSPACE_W_ID, { inventory: ['read'] });
     await expect(findStockOfIngredients(w, [])).resolves.toEqual([]);
+  });
+});
+
+describe('findStockByIds', () => {
+  it("reads the coven's live jars with these ids, and no other", async () => {
+    const herb = await insertIngredient(sql, makeIngredient(), E.id);
+    const herbForm = await variantIdOf(sql, herb, 'Testform');
+    const otherForm = await insertVariant(sql, herb, makeVariant({ form: 'Powder' }), E.id);
+    const jar = (workspaceId: string, variantId: string, deleted = false) =>
+      insertStock(sql, { workspaceId, ingredientId: herb, variantId, deleted }, A.id);
+
+    const first = await jar(WORKSPACE_W_ID, herbForm);
+    const second = await jar(WORKSPACE_W_ID, otherForm);
+    const unasked = await jar(WORKSPACE_W_ID, otherForm, true);
+    const deleted = await jar(WORKSPACE_W_ID, herbForm, true);
+    const elsewhere = await jar(WORKSPACE_X_ID, herbForm);
+
+    const w = await assertMembership(asUser(A), WORKSPACE_W_ID, { inventory: ['read'] });
+    const rows = await findStockByIds(w, [first, second, deleted, elsewhere]);
+
+    // The soft-deleted jar and X's jar were asked for by id and are not there.
+    expect(rows.map((row) => row.id).sort()).toEqual([first, second].sort());
+    expect(rows.map((row) => row.id)).not.toContain(unasked);
+  });
+
+  it('reads nothing for no ids', async () => {
+    const w = await assertMembership(asUser(A), WORKSPACE_W_ID, { inventory: ['read'] });
+    await expect(findStockByIds(w, [])).resolves.toEqual([]);
   });
 });

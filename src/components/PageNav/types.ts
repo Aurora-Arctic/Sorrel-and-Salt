@@ -20,7 +20,7 @@ export type PageNavEntry = {
 };
 
 export type PageNavProps = {
-  /** The landmark's accessible name, "On this page". */
+  /** The landmark's accessible name, "On This Page". */
   label: string;
   entries: PageNavEntry[];
 };

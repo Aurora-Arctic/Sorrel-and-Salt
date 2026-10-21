@@ -95,13 +95,43 @@ curates it: no coven entry in the demo has one now.
 A layer finds its ingredient by tier and identity (`ingredientIdByIdentity`),
 the same key the cupboard rows use.
 
+### W's stock
+
+The demo also writes seven jars of stock into W (`DEMO_STOCK`), the rows the
+ingredients page's jar lines and Edit Stock button (M9.9) show. Their ids are
+fixed and take a block of their own, `…0003-…`, after the spells. Each names its
+ingredient and the form it holds, and the seed looks the variant up by that
+pair, so a jar can sit on any form an entry has.
+
+| Ingredient (form)         | Id      | Quantity | Why it is there                                                                 |
+| ------------------------- | ------- | -------- | ------------------------------------------------------------------------------- |
+| Hearth Ash (ash)          | `…0001` | 250 g    | An own entry with a weight, a source and a date acquired.                       |
+| Cat's Claw (bark)         | `…0002` | none     | Held and never weighed: no quantity, no unit, so "Unmeasured" and no threshold. |
+| Rosemary (Herb)           | `…0003` | 60 g     | A compendium entry (as Garden Rosemary), the first of its two jar lines.        |
+| Rosemary (Oil)            | `…0004` | 45 ml    | Its second form, in a second dimension: two jar lines on one card.              |
+| German Chamomile (Flower) | `…0005` | 8 g      | Under the default 10 g threshold, so the Low badge shows.                       |
+| German Chamomile (Oil)    | `…0006` | 20 drop  | A count unit, with a threshold of its own (12) in place of the default 3.       |
+| Ginger (Root)             | `…0007` | 6 piece  | Counted rather than weighed, on the cupboard row that has no annotation.        |
+
+Weight, volume and count are all there. A jar that sets no threshold gets its
+unit's default, from `defaultThreshold` in
+`src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock`
+reads too, so the seed carries no second table of values. Every compendium entry
+stocked is one of the three in W's cupboard (`tests/db/seed/demo.test.ts` holds
+it), and `standard` and the other scenarios write no stock.
+
+Idempotency is the pair the live-unique index guards, W and the variant,
+ignoring `deleted_at`: a jar the coven threw out stays out, one it edited is
+left as edited, and one it added itself for the same form is met rather than
+collided with. A developer scenario, so no test holds it (MB.225).
+
 ### A jar's stack is seeded whole or not at all
 
 Idempotency is `standard`'s — insert what is missing, keyed on identity,
 ignoring `deleted_at` — for the spells (fixed id), W's ingredients
 (`identityOf`, the identity, over W's rows, deleted or not) and the assigned categories (the
-pair), and W's cupboard rows (the coven and the entry), a row the coven
-removed counting as present. A database seeded before M12.26 still holds
+pair), W's cupboard rows (the coven and the entry), a row the coven
+removed counting as present, and W's stock (the coven and the variant). A database seeded before M12.26 still holds
 Garden Rosemary, House Chamomile and Ginger as own rows, which a reseed leaves
 alone: `make db-reset` is what brings it to this scenario. **`spell_ingredients` is the exception: the unit keyed on is the spell,
 not the layer.**

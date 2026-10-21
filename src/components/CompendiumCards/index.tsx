@@ -12,14 +12,16 @@ import AddIcon from '../AddIcon';
 import CompendiumCardMore from './card-more';
 import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
+// The empty sentence (`emptyText`, `.compendium-list__empty`) and the filter are CompendiumList's
+// own, so its stylesheet comes with them; the cards have no stylesheet of their own.
 import '../CompendiumList/index.scss';
 
 // The public compendium's list (M8.18): the filter row, one card per entry in a grid, and
 // the pager. Render-only, like the admin's table (CompendiumList): the page reads one page
 // under the address's filter and hands it here. Each card is a plain link to the entry's
 // page. A card's foot is one row at its bottom right: for someone who can add, the plus (Add
-// to My Ingredients) or, once every coven they may write in holds the entry, the check (In My
-// Ingredients); then, for a curator, Edit in Compendium, which opens the compendium's edit dialog
+// to My Ingredients) or, once every coven they may write in holds the entry, the check (In Every
+// Cupboard), each tipped and named by its words and then the entry (MB.120); then, for a curator, Edit in Compendium, which opens the compendium's edit dialog
 // over the results (M8.17); then the three dots, for a member of a coven that holds the entry
 // (Annotate, Make It Ours, Remove; `card-more.tsx`). The plus adds at once where the viewer has one coven and is a menu of the
 // covens where they have several (M9.12, the owner's calls, 2026-10-20). The foot's left end is the Quick Look eye's (M12.5). A visitor with
@@ -43,13 +45,14 @@ const markOf = (
   if (!entry.held)
     return (
       <AddIcon
+        name={nameOf(entry)}
         workspaceId={workspaceId}
         ingredientId={entry.id}
         covens={covens ?? []}
         heldIn={entry.heldIn ?? []}
       />
     );
-  return <HeldMark />;
+  return <HeldMark name={nameOf(entry)} />;
 };
 
 // A curator's Edit in Compendium, where the page gave the entry an edit address (M8.17). Named

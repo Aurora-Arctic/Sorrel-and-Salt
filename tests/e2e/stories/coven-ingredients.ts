@@ -303,17 +303,17 @@ export function localBadge(row: Locator): Locator {
 }
 
 /**
- * M9.8's two badges. Low Stock is a button (its tip opens from it) named "Low
- * Stock" and the jar's quantity; Out of Stock is its words alone. "Low Stock"
- * and "Out of Stock" are this file's choice, after the entry's "low and
- * out-of-stock badges", in title case as every label is.
+ * M9.8's two badges. Each is a button, drawn as an icon alone (the owner's call,
+ * 2026-10-20), named "Low Stock" or "Out of Stock"; its tip opens from it.
+ * "Low Stock" and "Out of Stock" are this file's choice, after the entry's "low
+ * and out-of-stock badges", in title case as every label is.
  */
 export function lowBadge(row: Locator): Locator {
   return row.getByRole('button', { name: /^Low Stock/ });
 }
 
 export function outBadge(row: Locator): Locator {
-  return row.getByText('Out of Stock', { exact: true });
+  return row.getByRole('button', { name: 'Out of Stock' });
 }
 
 /**
@@ -402,20 +402,76 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 }
 
 /**
- * M9.9's inline edit of a stock row. "Edit Stock, <name>" follows the admin
- * lists' "Edit Ingredient, <name>" (tests/e2e/admin-compendium.spec.ts), so
- * two rows' buttons never share a name; the fields carry the entry's three
- * words, Quantity, Unit and threshold, the last as "Low-Stock Threshold", and
- * Save and Cancel close it. Every name here is this file's choice.
+ * A stock field's name, its label and then its form, which follows the label out of sight
+ * ("Quantity, Root"). The browser reads the hidden span after the label as a space and a
+ * comma, so the name is matched on both.
  */
-export function stockEditor(row: Locator, name: string) {
+const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}\\s*, ${form}$`);
+
+/**
+ * M9.9's Edit Stock dialog, opened from the stock button in a coven card's foot (or the
+ * one in its Quick Look). The button is named "Edit Stock, <name>" (the formal name
+ * follows when the label is shared, as the admin lists' "Edit Ingredient, <name>" does)
+ * and opens a dialog of the same name: a list of the jars held, one button per form, and
+ * beside it the chosen jar's fields, in a group named for its form. Only the chosen jar's
+ * fields are drawn, so `choose(form)` presses its list button before `jar(form)` can
+ * reach them; the dialog opens on the first jar, and Add chooses the form it adds. A
+ * field carries its form after the label out of sight: "Quantity, Root". Add Form picks a
+ * form not held and Add puts it in the list; Remove stages a held jar's removal until
+ * Undo or Save. Save closes the dialog once the batch has been answered. A unit is a
+ * combobox, picked with `pickUnit` by its label as the dialog shows it.
+ */
+export function stockEditor(row: Locator, name: string, coven?: string) {
+  const page = row.page();
+  const title = `Edit Stock, ${name}`;
+  // Opened from a page that is not a coven's (the compendium), the dialog's eyebrow names the
+  // coven, "Edit Stock for <Coven>, <name>" (M9.12), so it is found by that name.
+  const dialog = page.getByRole('dialog', {
+    name: coven ? `Edit Stock for ${coven}, ${name}` : title,
+  });
   return {
-    open: row.getByRole('button', { name: `Edit Stock, ${name}` }),
-    quantity: row.getByRole('spinbutton', { name: 'Quantity' }),
-    unit: row.getByRole('combobox', { name: 'Unit' }),
-    threshold: row.getByRole('spinbutton', { name: 'Low-Stock Threshold' }),
-    save: row.getByRole('button', { name: 'Save' }),
-    cancel: row.getByRole('button', { name: 'Cancel' }),
+    // The button is named for the entry as the card is: the name, then the formal name when it
+    // has one ("Edit Stock, Rosemary, Salvia rosmarinus"). On an entry page the shelf's jar
+    // buttons add the form after that ("..., Salvia rosmarinus, Oil"), so the name is matched
+    // whole: the title, then at most one more part. (An entry with no formal name would
+    // match a jar button too; none of these specs walks one.)
+    open: row.getByRole('button', {
+      name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(, [^,]+)?$`),
+    }),
+    dialog,
+    /**
+     * Chooses a jar from the list, by its form. The button's name starts with the form and
+     * goes on to its amount and any mark ("Oil 30 ml Edited"), so it is matched on the start.
+     */
+    async choose(form: string) {
+      await dialog.getByRole('button', { name: new RegExp(`^${form}\\b`) }).click();
+    },
+    /** The chosen jar's fields, by its form. */
+    jar(form: string) {
+      const group = dialog.getByRole('group', { name: form, exact: true });
+      return {
+        group,
+        quantity: group.getByRole('spinbutton', { name: fieldName('Quantity', form) }),
+        unit: group.getByRole('combobox', { name: fieldName('Unit', form) }),
+        threshold: group.getByRole('spinbutton', { name: fieldName('Low Stock At', form) }),
+        remove: group.getByRole('button', { name: `Remove ${form}`, exact: true }),
+        undo: group.getByRole('button', { name: `Undo Remove ${form}`, exact: true }),
+        async pickUnit(label: string) {
+          await group.getByRole('combobox', { name: fieldName('Unit', form) }).click();
+          await page.getByRole('option', { name: label, exact: true }).click();
+        },
+      };
+    },
+    addForm: dialog.getByRole('combobox', { name: 'Add Form' }),
+    addButton: dialog.getByRole('button', { name: 'Add', exact: true }),
+    /** Adds `form`, a form the coven holds no jar of, which chooses it. */
+    async add(form: string) {
+      await dialog.getByRole('combobox', { name: 'Add Form' }).click();
+      await page.getByRole('option', { name: form, exact: true }).click();
+      await dialog.getByRole('button', { name: 'Add', exact: true }).click();
+    },
+    save: dialog.getByRole('button', { name: 'Save', exact: true }),
+    cancel: dialog.getByRole('button', { name: 'Cancel' }),
   };
 }
 

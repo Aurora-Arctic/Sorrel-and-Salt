@@ -35,9 +35,9 @@ export type MenuButtonItem = {
       disabled?: boolean;
       /**
        * A green check after the label, as a compendium card marks what is held (HeldMark), and
-       * the words it stands for, joined to the item’s name after a comma: "in My Ingredients"
-       * names the item "Hedge Coven, in My Ingredients" (the owner’s call, 2026-10-20, in place
-       * of a note beneath the label).
+       * the words it stands for, joined to the item’s name after a comma: "in its cupboard"
+       * names the item "Hedge Coven, in its cupboard" (the owner’s calls, 2026-10-20, in place
+       * of a note beneath the label; the words MB.120's).
        */
       mark?: string;
     }

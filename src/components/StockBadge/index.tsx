@@ -1,25 +1,35 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
-import { useTip } from '../InfoTip/use-tip';
+import IconTip from '../IconTip';
 import { stockState } from './stock-state';
+import { stockName, stockTip } from './stock-words';
 import type { StockBadgeProps } from './types';
 import './index.scss';
 
 // A jar's Low Stock or Out of Stock badge (M9.8, story 23): per jar, in the
 // jar-line slot the ingredient card leaves, so a card holding two forms can
 // flag one and not the other. Nothing to flag, nothing rendered: a consumer
-// renders it every time and checks nothing. Each state carries its words and
-// its own small drawing, so neither rests on colour. Out of Stock has a muted
-// red tint of its own and is the word alone; safety stays the only alarming
-// badge (styling.md).
+// renders it every time and checks nothing.
 //
-// Low reads "Low · 6 g", the jar's quantity beside the word, and is a button
-// whose only job is to open a tip saying what counts as low ("Low at 10 g or
-// less"). The tip is InfoTip's, through `useTip` (hover, tap and focus open it,
-// Escape closes it, the pointer may rest on it: WCAG 1.4.13). Its text stays in
-// the page while closed and the button lists it in `aria-describedby`, so a
-// screen reader hears "Low Stock, 6 g" and then the level without opening it.
+// Each state is its drawing alone in a small square (the owner's call,
+// 2026-10-20), so neither can rest on colour: Low is a double chevron and Out of
+// Stock a slashed ring. Neither is boxed any more (the owner's call, 2026-10-21):
+// the drawing is drawn in the colour of the matching jar on the entry's shelf, the
+// warning amber for Low and Out of Stock's red; safety stays the only boxed,
+// alarming badge (styling.md). The words moved to a button
+// name and a tip. Both states are buttons whose only job is to open that tip, and
+// they are icon tips (the owner's call, 2026-10-20): `IconTip`'s, which opens after
+// a rest of the pointer or at once on focus, fades, closes the moment the pointer
+// leaves or on Escape, and cannot be hovered. Low's tip is one statement of the
+// level, "Low Stock at 10 g or less", without the jar's amount, which the jar line
+// already shows; Out of Stock's is its name. The name is an `aria-label` ("Low
+// Stock" / "Out of Stock") so a screen reader has the words without opening the tip.
+// `IconTip`'s bubble is decoration, hidden from a screen reader and mounted only
+// while open, so Low's statement is also written once, out of sight, as the button's
+// description: a reader hears it with or without the tip.
+// The words themselves (the name, the tip) are `stock-words.ts`, shared with the entry
+// page's jar shelf, which tells Low and Out by the jar and a button on its amount.
 // claude-docs/components/stock-badge.md.
 
 const Drawing = ({ out }: { out: boolean }): ReactElement => (
@@ -45,57 +55,31 @@ const Drawing = ({ out }: { out: boolean }): ReactElement => (
   </svg>
 );
 
-/** A quantity and its unit as the jar line writes them: "6 g", or "6" when the row has no unit. */
-const withUnit = (amount: number, unit: string | null | undefined): string =>
-  unit ? `${amount} ${unit}` : `${amount}`;
-
 export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
-  const tipId = useId();
-  const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const descriptionId = useId();
   const state = stockState(quantity, threshold);
   if (state === 'ok') return null;
 
-  if (state === 'out') {
-    return (
-      <span className="badge badge--out-of-stock stock-badge stock-badge--out">
-        <Drawing out />
-        Out of Stock
-      </span>
-    );
-  }
+  const out = state === 'out';
+  const tip = stockTip(state, threshold, unit);
+  const name = stockName(state);
 
-  // `low` means a quantity and a threshold above 0 both exist.
   return (
-    // Hover on the wrapper, which holds the tip as well as the button, so the
-    // pointer can move onto the tip without closing it.
-    <span ref={anchor} className="stock-badge-tip" onMouseEnter={showSoon} onMouseLeave={hideSoon}>
-      {/* A tap opens rather than toggles, as InfoTip's does: on touch the
-          emulated hover has already opened it. */}
+    <IconTip tip={tip}>
       <button
         type="button"
-        className="badge badge--low-stock stock-badge stock-badge--low"
-        aria-describedby={tipId}
-        onFocus={show}
-        onBlur={hide}
-        onClick={show}
+        className={`stock-badge ${out ? 'stock-badge--out' : 'stock-badge--low'}`}
+        aria-label={name}
+        aria-describedby={out ? undefined : descriptionId}
       >
-        <Drawing out={false} />
-        <span>
-          Low <span className="visually-hidden">Stock</span>
-          {` · ${withUnit(quantity as number, unit)}`}
-        </span>
+        <Drawing out={out} />
       </button>
-      <span
-        ref={bubble}
-        id={tipId}
-        role="tooltip"
-        className={open ? 'stock-badge__tip is-open' : 'stock-badge__tip'}
-        aria-hidden={!open}
-        style={bubbleStyle}
-      >
-        {`Low at ${withUnit(threshold as number, unit)} or less`}
-      </span>
-    </span>
+      {out ? null : (
+        <span id={descriptionId} className="visually-hidden">
+          {tip}
+        </span>
+      )}
+    </IconTip>
   );
 };
 

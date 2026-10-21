@@ -64,7 +64,7 @@ const ingredientDetailOf = vi.fn();
 // How many entries each filter's choices would list (M12.4), which also
 // names the forms the Form box offers.
 const compendiumFacets = vi.fn();
-// The curator's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// The curator's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
@@ -759,7 +759,7 @@ describe('the /admin/compendium details modal', () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
-    const covens = within(details()).getByRole('list', { name: 'In Your Covens' });
+    const covens = within(details()).getByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
       'href',
       expect.stringMatching(/^\/coven\/fixture-coven\/ingredients\//),

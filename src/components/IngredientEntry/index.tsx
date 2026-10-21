@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import type { ReactElement, ReactNode } from 'react';
+import LastEdit from '../LastEdit';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { SafetyMark } from '../SafetyNote';
 import FormIcon from '../FormIcon';
@@ -35,6 +36,8 @@ import {
 import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
 import OwnEntryActions from './own-actions';
+import StockSection from './stock-section';
+import { cardName } from '../IngredientCard/card-name';
 import type { IngredientEntryProps } from './types';
 import {
   blockOf,
@@ -232,6 +235,7 @@ function ReplacesBlock({
 }
 
 const IngredientEntry = ({
+  lastEdit,
   detail,
   hrefOf,
   edit,
@@ -242,6 +246,7 @@ const IngredientEntry = ({
   cupboard,
   covens,
   heldInCovens = false,
+  stock,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
@@ -323,6 +328,8 @@ const IngredientEntry = ({
             />
           </div>
         )}
+        {/* Above the names, left-aligned; Quick Look draws it in the same place (the owner's call, 2026-10-21). */}
+        {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
         {/* The formal name and the name together, so the Edit pencil, read after the
             heading, can stand at the end of the formal name's line (index.scss). */}
         <div className="ingredient-entry__naming">
@@ -395,9 +402,10 @@ const IngredientEntry = ({
 
       {variants.length > 0 && (
         <PageNav
-          label="On this page"
+          label="On This Page"
           entries={[
             { href: '#details', label: 'Details' },
+            ...(stock ? [{ href: '#stock' as const, label: 'Stock' }] : []),
             ...variants.map(({ variant }, at) => ({
               href: `#${anchors[at]}` as const,
               label: formLabel(variant.form),
@@ -427,77 +435,96 @@ const IngredientEntry = ({
         />
       )}
 
-      <section id="details" className="ingredient-entry__section" aria-labelledby="details-heading">
-        <h2 id="details-heading">Details</h2>
-        <div className="ingredient-entry__text">
-          {said(shown.description) ? (
-            <p className="ingredient-entry__description">{shown.description}</p>
-          ) : (
-            <p className="ingredient-entry__empty">No description recorded.</p>
-          )}
-          <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
-          <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
-        </div>
-        {/* A plain div, not an aside: one complementary landmark per section
+      {/* One box round the sections, so past a tablet's width their text and
+          their side columns run as two independent columns (`entry-body`). */}
+      <div className="ingredient-entry__body">
+        <section
+          id="details"
+          className="ingredient-entry__section"
+          aria-labelledby="details-heading"
+        >
+          <h2 id="details-heading">Details</h2>
+          <div className="ingredient-entry__text">
+            {said(shown.description) ? (
+              <p className="ingredient-entry__description">{shown.description}</p>
+            ) : (
+              <p className="ingredient-entry__empty">No description recorded.</p>
+            )}
+            <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
+            <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
+          </div>
+          {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}
-        <div className="ingredient-entry__side">
-          {replaces && <ReplacesBlock replaces={replaces} />}
-          {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
-          <CorrespondenceBlock
-            block={blockOf('details', 'correspondences')}
-            rows={correspondences(shown, deities)}
-            level={3}
-          />
-          <ListBlock
-            block={blockOf('details', 'folk-names')}
-            title="Folk Names"
-            level={3}
-            empty="No folk names recorded."
-          >
-            {folkNames.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ListBlock>
-          <ListBlock
-            block={blockOf('details', 'categories')}
-            title="Categories"
-            level={3}
-            empty="No categories recorded."
-            className="ingredient-entry__chips"
-          >
-            {categoryItems(categories)}
-          </ListBlock>
-          <ListBlock
-            block={blockOf('details', 'substitutes')}
-            title="Substitutes"
-            level={3}
-            empty="No substitutes recorded."
-          >
-            {substituteItems(substitutes, hrefOf)}
-          </ListBlock>
-        </div>
-      </section>
+          <div className="ingredient-entry__side">
+            {replaces && <ReplacesBlock replaces={replaces} />}
+            {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
+            <CorrespondenceBlock
+              block={blockOf('details', 'correspondences')}
+              rows={correspondences(shown, deities)}
+              level={3}
+            />
+            <ListBlock
+              block={blockOf('details', 'folk-names')}
+              title="Folk Names"
+              level={3}
+              empty="No folk names recorded."
+            >
+              {folkNames.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ListBlock>
+            <ListBlock
+              block={blockOf('details', 'categories')}
+              title="Categories"
+              level={3}
+              empty="No categories recorded."
+              className="ingredient-entry__chips"
+            >
+              {categoryItems(categories)}
+            </ListBlock>
+            <ListBlock
+              block={blockOf('details', 'substitutes')}
+              title="Substitutes"
+              level={3}
+              empty="No substitutes recorded."
+            >
+              {substituteItems(substitutes, hrefOf)}
+            </ListBlock>
+          </div>
+        </section>
 
-      {/* The forms, headed so
+        {/* What the coven has of it, between what the entry is and the forms it comes in. */}
+        {stock && (
+          <StockSection
+            stock={stock}
+            variants={variants}
+            ingredientId={entry.id}
+            name={cardName(shown.name, shown.canonicalName)}
+            formalName={entry.canonicalName}
+          />
+        )}
+
+        {/* The forms, headed so
           the forms read as one part of the page (the owner's call), each
           form a level beneath. */}
-      {variants.length > 0 && (
-        <section id="forms" className="ingredient-entry__forms" aria-labelledby="forms-heading">
-          <h2 id="forms-heading">Forms</h2>
-          {variants.map((variant, at) => (
-            <FormSection
-              key={variant.variant.id}
-              detail={variant}
-              anchor={anchors[at]!}
-              numbers={notes.numbersOf(anchors[at]!)}
-              hrefOf={hrefOf}
-            />
-          ))}
-        </section>
-      )}
+        {variants.length > 0 && (
+          <section id="forms" className="ingredient-entry__forms" aria-labelledby="forms-heading">
+            <h2 id="forms-heading">Forms</h2>
+            {variants.map((variant, at) => (
+              <FormSection
+                key={variant.variant.id}
+                detail={variant}
+                anchor={anchors[at]!}
+                numbers={notes.numbersOf(anchors[at]!)}
+                hrefOf={hrefOf}
+              />
+            ))}
+          </section>
+        )}
 
-      {/* Last, so v2's notes section, appended beneath it, moves nothing. */}
-      <ReferencesSection model={notes} />
+        {/* Last, so v2's notes section, appended beneath it, moves nothing. */}
+        <ReferencesSection model={notes} />
+      </div>
     </article>
   );
 

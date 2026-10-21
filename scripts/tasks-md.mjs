@@ -98,10 +98,20 @@ export function readTasksMd(text) {
 }
 
 /**
+ * A retired heading's title, `M6.4 — ~~Title~~`, as the board's title rule
+ * has its issue's: `M6.4 — [RETIRED] Title` (.claude/rules/task-tracking.md,
+ * "Board layout"). The strike-through is markdown, which an issue title shows
+ * as literal tildes.
+ */
+const retiredTitle = (title) =>
+  title.replace(new RegExp(String.raw`^(${ID}) — ~~(.*)~~$`), '$1 — [RETIRED] $2');
+
+/**
  * One task's entry: the title its heading carries, which is its issue's
- * title, the hours, and the text from the heading to the next task or section
- * heading, which is its issue's body (claude-docs/task-tracking.md, "Sync").
- * Null when no heading carries the id; `MB.12` never reads `MB.127`'s. Matched
+ * title (a retired one's as `retiredTitle` marks it), the hours, and the text
+ * from the heading to the next task or section heading, which is its issue's
+ * body (claude-docs/task-tracking.md, "Sync"). Null when no heading carries
+ * the id; `MB.12` never reads `MB.127`'s. Matched
  * whatever its case, as `find` matches a title, since `sync` upper-cases what
  * it is given and a lettered heading (`M5.6a`) is not; the answer carries the
  * heading's own.
@@ -115,9 +125,10 @@ export function readEntry(text, id) {
   const rest = lines.slice(start + 1);
   const end = rest.findIndex((line) => HEADING.test(line) || line.startsWith('#'));
   const heading = HEADING.exec(lines[start]);
+  const title = /^\*\*(.+?)\*\* · /.exec(lines[start])[1];
   return {
     id: heading[1],
-    title: /^\*\*(.+?)\*\* · /.exec(lines[start])[1],
+    title: heading[2] === undefined ? retiredTitle(title) : title,
     hours: heading[2] === undefined ? undefined : Number(heading[2]),
     body: (end === -1 ? rest : rest.slice(0, end)).join('\n').trim(),
   };

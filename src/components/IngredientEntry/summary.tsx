@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import FormIcon from '../FormIcon';
 import SafetyNote from '../SafetyNote';
+import { StockBadge } from '../StockBadge';
 import SummaryDescription from './summary-description';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
@@ -14,15 +16,21 @@ import {
   said,
 } from './blocks';
 import { ShelfIcon } from './held-mark';
+import type { SummaryJar } from './types';
 // The page's own stylesheet, for its blocks: a list page draws no entry page to load it.
 import './index.scss';
 import './summary.scss';
 
 // The details modal's body (M12.5): the entry page's Details section, drawn by
 // the page's own blocks in the page's order, cut to the owner's choice (the
-// description, the caution, then the correspondences, folk names and
-// categories; the description added by the owner's call, 2026-10-20). No
-// forms, substitutes, references or Similar: the entry's own page has those. Shown as the list names the entry, the coven's annotations laid over a
+// description, the caution, the forms, then the correspondences, folk names and
+// categories; the description added by the owner's call, 2026-10-20, the forms
+// by M9.9, set under the caution by the owner's call of the same day). On the
+// coven's page each form also shows the coven's jar of it: its quantity or
+// Unmeasured, and its stock badge (a form in no jar shows nothing, and is
+// Not Stocked to a screen reader alone); the compendium's pages pass
+// no jars and name the forms alone. No substitutes, references or
+// Similar: the entry's own page has those, and its forms' own sections. Shown as the list names the entry, the coven's annotations laid over a
 // held compendium entry as the page lays them. Each form's caution stays on the
 // page's form sections; a line here says which forms carry one (the owner's
 // call, 2026-10-20). An empty block or correspondence row is left out here,
@@ -43,6 +51,7 @@ function formsCarrying(labels: readonly string[]): string {
 export default function IngredientSummary({
   detail,
   covens = [],
+  jars,
 }: {
   detail: IngredientDetail;
   /**
@@ -51,6 +60,12 @@ export default function IngredientSummary({
    * a coven's own entry is held by its coven alone, which the list already is.
    */
   covens?: readonly HoldingCoven[];
+  /**
+   * The coven's jars of the entry, from the coven's page alone, so each form shows its
+   * stock; a form with none of them is Not Stocked, said to a screen reader alone. Left
+   * out, the forms are named alone.
+   */
+  jars?: readonly SummaryJar[];
 }): ReactElement {
   const { cupboardEntry, folkNames, categories, deities, variants } = detail;
   const shown = applyCupboardEntry(detail.entry, cupboardEntry);
@@ -59,6 +74,57 @@ export default function IngredientSummary({
     .map(({ variant }) => formLabel(variant.form));
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
+  // Each form as a jar line draws it (JarLines): its icon and name, then, with the
+  // coven's jars, its stock in an element of its own: the quantity and the badge, which
+  // the list lays out as a grid so every quantity ends in one column (summary.scss). No
+  // visible dot between the two; the spoken comma stays. A sibling of JarLines rather than
+  // JarLines itself, which draws its own list of jars where this is one line per form,
+  // a form in no jar among them, in the block's list under its heading. A form in no jar
+  // shows no stock (the owner's call, 2026-10-20): "Not Stocked" is visually hidden, so a
+  // screen reader still hears "Oil, Not Stocked", and its empty amount cell keeps its place
+  // in the grid, so the quantities' column does not move.
+  const forms = variants.length > 0 && (
+    <ListBlock
+      block={blockOf('summary', 'forms')}
+      title="Forms"
+      level={3}
+      className={
+        jars
+          ? 'ingredient-summary__forms ingredient-summary__forms--stocked'
+          : 'ingredient-summary__forms'
+      }
+    >
+      {variants.map(({ variant, icon }) => {
+        const jar = jars?.find(({ variantId }) => variantId === variant.id);
+        return (
+          <li key={variant.id}>
+            <span className="ingredient-summary__form">
+              <FormIcon name={icon} /> {formLabel(variant.form)}
+              {jars && <span className="spoken-separator">,</span>}
+            </span>
+            {jars && (
+              <span className="ingredient-summary__stock">
+                <span className="ingredient-summary__amount">
+                  {jar === undefined ? (
+                    <span className="visually-hidden">Not Stocked</span>
+                  ) : jar.quantity === null ? (
+                    'Unmeasured'
+                  ) : jar.unit ? (
+                    `${jar.quantity} ${jar.unit}`
+                  ) : (
+                    jar.quantity
+                  )}
+                </span>
+                {jar && (
+                  <StockBadge quantity={jar.quantity} threshold={jar.threshold} unit={jar.unit} />
+                )}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ListBlock>
+  );
   const holding = detail.entry.workspaceId === null ? covens : [];
   // Where the viewer holds the entry, last (the owner's call, 2026-10-20). Not
   // something recorded of the entry, so it never stands in for the line below.
@@ -67,7 +133,7 @@ export default function IngredientSummary({
   const inYourCovens = holding.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'covens')}
-      title="In Your Covens"
+      title="In Your Cupboards"
       level={3}
       className="ingredient-summary__covens"
     >
@@ -83,7 +149,13 @@ export default function IngredientSummary({
   );
   // With every section hidden, one line says so rather than leave the body blank
   // (the owner's call, 2026-10-20).
-  if (!listed && !said(shown.description) && !said(shown.safetyNotes) && cautioned.length === 0) {
+  if (
+    !listed &&
+    !forms &&
+    !said(shown.description) &&
+    !said(shown.safetyNotes) &&
+    cautioned.length === 0
+  ) {
     return (
       <div className="ingredient-summary">
         <p className="ingredient-entry__empty">Nothing recorded yet.</p>
@@ -107,6 +179,7 @@ export default function IngredientSummary({
           )
         }
       />
+      {forms}
       {/* Not drawn when every block is empty, so it adds no gap of its own. */}
       {(listed || inYourCovens) && (
         <div className="ingredient-entry__side">

@@ -24,6 +24,8 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 
 - **A `page` draws the side menu when its frame is `with-nav` (the coven home, the narrow column) or `entry` (an ingredient's page, the wide column: a Compendium entry in the `main` region, a coven's own entry in the `coven` region)**: the menu column beside the title, the lede and the sections. It is built only from the existing pieces. Below the head the sections are bare bars with no card surface, as the real pages have none: the coven home (`head: eyebrow`) draws Contents (a heading and two linked entries each with a line), Your Membership and Delete This Coven (a heading and a button) in `.page-frame__section`; the account (`head: title`) draws four `.page-frame__section.panel` panels of a heading, a line, a field and a button. The `skeleton__block` card survives only on a `page` with no menu.
 
+- **An `entry` frame also draws the entry’s parts**, in the order the page lays them: Details (a heading, three text bars, the side column’s blocks), a Stock part (a heading and three placeholder jars on a plank, sized from the jar shelf’s tokens), then the forms. See [`ingredient-entry.md`](ingredient-entry.md), “Layout”.
+
 - **Exactly one `<output>`, "Loading"**, visually hidden, so a screen reader
   hears one announcement whatever the shape. The drawn shapes are
   `aria-hidden`.

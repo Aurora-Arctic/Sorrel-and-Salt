@@ -235,8 +235,9 @@
 }
 
 .facet-chip__caret {
-  inline-size: 0.625rem;
-  block-size: 0.375rem;
+  // A chevron five eighths of a glyph wide and three eighths high.
+  inline-size: calc(#{$glyph-size} * 0.625);
+  block-size: calc(#{$glyph-size} * 0.375);
   color: $text-muted;
 }
 
@@ -284,7 +285,7 @@
 
 .facet-chip__option {
   align-items: center;
-  min-block-size: 2rem;
+  min-block-size: space(6);
   padding-block: space(1);
 }
 
@@ -309,11 +310,22 @@
 
     // The search row sticks (IngredientSearch), so the tray opens under a row that may be at
     // the window's top: taller than the room below it, it scrolls inside itself rather than
-    // running off the window. Only once open, so the slide's short box never scrolls.
+    // running off the window. Only once open: the class arrives as the slide starts, and a
+    // short box with `auto` shows a scrollbar for the whole opening, so the animation holds
+    // the clip for the slide's length and the scroll comes after it (a browser that cannot
+    // animate `overflow` shows the bar through the slide, as it did).
     .facet-panel__clip--open > .facet-panel__inner {
       max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(6)});
       overflow: auto;
+      animation: facet-panel-rolling var(--slide-ms, 350ms) step-end;
     }
+  }
+}
+
+@keyframes facet-panel-rolling {
+  from,
+  to {
+    overflow: clip;
   }
 }
 
@@ -336,13 +348,13 @@ $sheet-slide: 250ms ease-out;
   inset: 0;
   display: flex;
   flex-direction: column;
-  width: min(32rem, 100%);
+  width: min(#{$dialog-column}, 100%);
   height: 100%;
   margin: 0 0 0 auto;
   background-color: $surface-page;
   border-left: 1px solid $hairline;
   overflow-y: auto;
-  scroll-padding-block-end: 6rem;
+  scroll-padding-block-end: calc(2 * #{space(7)});
 
   // It slides in from the right edge and back out to it, while the backdrop fades as a
   // Modal's does (M5.5): in is CSS alone, from `@starting-style` as `showModal()` shows it;
@@ -417,6 +429,11 @@ $sheet-slide: 250ms ease-out;
 @include reduced-motion {
   .facet-panel__clip {
     transition: none;
+  }
+
+  // No slide, so nothing to wait out.
+  .facet-panel:not(.facet-panel--static) .facet-panel__clip--open > .facet-panel__inner {
+    animation: none;
   }
 }
 

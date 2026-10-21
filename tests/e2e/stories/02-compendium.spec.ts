@@ -223,16 +223,9 @@ test(
   },
 );
 
-test.fixme(
-  "a member adds a compendium entry to the coven with a quantity, and finds it stocked in the coven's list",
-  {
-    tag: '@story-14',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M9.12’s second PR: the card’s plus adds with no stock (its first PR); the quantity dialog that writes the stock row is still owed',
-    },
-  },
+test(
+  "a member adds a compendium entry to the coven, gives it a form and a quantity in Edit Stock from the same card, and finds it stocked in the coven's list",
+  { tag: '@story-14' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fourteen Stock', 'story-14-add.test', {
       A: 'owner',
@@ -247,7 +240,19 @@ test.fixme(
           from inventory_items
           where workspace_id = ${coven.id} and variant_id = ${comfrey.variantId} and deleted_at is null`,
       );
-    // Why the add is the story's: the coven holds no Comfrey yet.
+    const cupboardRows = () =>
+      withSql(
+        (sql) => sql<{ id: string }[]>`
+          select e.id from workspace_compendium_entries e
+          where e.workspace_id = ${coven.id} and e.ingredient_id = ${comfrey.ingredientId}
+            and e.deleted_at is null`,
+      );
+    const plusOn = (target: typeof page) =>
+      rowOf(compendiumList(target), 'Comfrey').getByRole('button', {
+        name: ADD_TO_MY_INGREDIENTS,
+      });
+    // Why the add is the story's: the coven holds no Comfrey yet, in its cupboard or in a jar.
+    expect(await cupboardRows()).toHaveLength(0);
     expect(await heldRows()).toHaveLength(0);
 
     await test.step('the viewer is offered no add on the compendium', async () => {
@@ -258,57 +263,53 @@ test.fixme(
       await expect(card.getByRole('button', { name: ADD_TO_MY_INGREDIENTS })).toHaveCount(0);
     });
 
-    await test.step('the member adds Comfrey with a quantity and unit, and the confirmation links to the list', async () => {
+    await test.step('the member presses the plus, which adds the entry to the cupboard and no stock', async () => {
       await signInAgainAs(page, coven.users.B);
       await page.goto('/compendium');
-      // Comfrey has one form, so no form is asked for (M9.12's one-variant shortcut).
-      await rowOf(compendiumList(page), 'Comfrey')
-        .getByRole('button', { name: ADD_TO_MY_INGREDIENTS })
-        .click();
-      // The add asks its quantity in a dialog named for the action, with the
-      // stock row's Quantity and Unit; the dialog and its Add are this spec's
-      // choice, after the admin lists' confirmed actions.
-      const dialog = page.getByRole('dialog', { name: ADD_TO_MY_INGREDIENTS });
-      await dialog.getByRole('spinbutton', { name: 'Quantity' }).fill('50');
-      await dialog.getByRole('combobox', { name: 'Unit' }).selectOption('g');
-      await dialog.getByRole('button', { name: 'Add', exact: true }).click();
-
-      const confirmation = page.getByRole('status').getByRole('link');
-      await expect(confirmation).toHaveAttribute(
-        'href',
-        new RegExp(`^/coven/${coven.slug}/ingredients`),
-      );
-      // The default threshold is the weight one, 10 g, written on the row (M9.3, M9.8).
-      expect(await heldRows()).toEqual([{ quantity: 50, unit: 'g', threshold: 10 }]);
+      await plusOn(page).click();
+      await expect(
+        page.getByRole('status').filter({ hasText: 'Added to Fixture Coven Fourteen Stock.' }),
+      ).toHaveCount(1);
+      expect(await cupboardRows()).toHaveLength(1);
+      expect(await heldRows()).toHaveLength(0);
       await assertNoAccessibilityViolations(page);
     });
 
-    await test.step("the coven's list holds Comfrey with its stock and default threshold", async () => {
-      await page.getByRole('status').getByRole('link').click();
-      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients`));
+    await test.step("Edit Stock, from the same card's three dots on the compendium, gives it a form and a quantity", async () => {
+      // The page is still the compendium: the card, now held, carries the three dots.
+      const card = rowOf(compendiumList(page), 'Comfrey');
+      await card.getByRole('button', { name: /^More for Comfrey/ }).click();
+      await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
+      const editor = stockEditor(card, 'Comfrey', 'Fixture Coven Fourteen Stock');
+      await expect(editor.dialog).toContainText('No stock yet');
+      await editor.add('Leaf');
+      const leaf = editor.jar('Leaf');
+      await leaf.quantity.fill('50');
+      await leaf.pickUnit('g');
+      await editor.save.click();
+      await expect(editor.dialog).toHaveCount(0);
+      // The default threshold is the weight one, 10 g, written on the row (M9.3, M9.8).
+      expect(await heldRows()).toEqual([{ quantity: 50, unit: 'g', threshold: 10 }]);
+      expect(await cupboardRows()).toHaveLength(1);
+    });
+
+    await test.step("the coven's list holds Comfrey, not local, with the stock just given", async () => {
+      await page.goto(`/coven/${coven.slug}/ingredients`);
       const row = rowOf(ingredientList(page), 'Comfrey');
       await expect(row).toBeVisible();
       await expect(localBadge(row)).toHaveCount(0);
-      const editor = stockEditor(row, 'Comfrey');
-      await editor.open.click();
-      await expect(editor.quantity).toHaveValue('50');
-      await expect(editor.unit).toHaveValue('g');
-      await expect(editor.threshold).toHaveValue('10');
     });
 
-    await test.step('adding it again is handled: still one jar, and no error', async () => {
-      await page.goto('/compendium');
-      await rowOf(compendiumList(page), 'Comfrey')
-        .getByRole('button', { name: ADD_TO_MY_INGREDIENTS })
-        .click();
-      const dialog = page.getByRole('dialog', { name: ADD_TO_MY_INGREDIENTS });
-      await dialog.getByRole('spinbutton', { name: 'Quantity' }).fill('5');
-      await dialog.getByRole('combobox', { name: 'Unit' }).selectOption('g');
-      await dialog.getByRole('button', { name: 'Add', exact: true }).click();
-
-      await expect(page.getByRole('status').getByRole('link')).toBeVisible();
-      await expect(page.getByRole('alert')).toHaveCount(0);
-      expect(await heldRows()).toHaveLength(1);
+    await test.step('the list shows the stock after a reload', async () => {
+      await page.reload();
+      const editor = stockEditor(rowOf(ingredientList(page), 'Comfrey'), 'Comfrey');
+      await editor.open.click();
+      const leaf = editor.jar('Leaf');
+      await expect(leaf.quantity).toHaveValue('50');
+      await expect(leaf.unit).toHaveText('g');
+      await expect(leaf.threshold).toHaveValue('10');
+      await editor.cancel.click();
+      await assertNoAccessibilityViolations(page);
     });
   },
 );

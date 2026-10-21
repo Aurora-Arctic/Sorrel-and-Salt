@@ -88,7 +88,7 @@ which `mask-size: 100% 100%` relies on; the sorrel also sets
 `--backdrop-scale: 0.75`, since its subject fills more of its frame than the
 salt does. The sorrel's top is `$top-inset` rather than 0, so it starts below
 the impersonation banner, and inside the shell below its bar and context row too ([`styling.md`](../styling.md),
-"The top inset"). The bar and context-row offsets apply on every device; only `$top-inset` is touch-only. The context row's offset is its minimum height, so a coven name that wraps to two lines makes the row taller than the offset and the sorrel's edge then sits under it. On a phone the section nav is a bar fixed along the bottom, so the salt is lifted above it (by `$bottom-bar-height` plus the safe-area inset) rather than left behind it; it stays lifted while a dialog or the keyboard hides the bar. As the page scrolls the context row leaves but the bar stays, so a scroll-driven animation (`animation-timeline: scroll(root)`, over the row's own height of scroll) lifts the sorrel to the bar's foot and holds it there, leaving no gap; a browser without scroll-driven animations keeps the fixed offset.
+"The top inset"). The bar and context-row offsets apply on every device; only `$top-inset` is touch-only. The context row's offset is its minimum height, so a coven name that wraps to two lines makes the row taller than the offset and the sorrel's edge then sits under it. On a phone the section nav is a bar fixed along the bottom, so the salt is lifted above it (by `$bottom-bar-height` plus the safe-area inset) rather than left behind it; it stays lifted while a dialog or the keyboard hides the bar. As the page scrolls the context row leaves but the bar stays, so a scroll-driven animation (`animation-timeline: scroll(root)`, over the row's own height of scroll) lifts the sorrel to the bar's foot and holds it there, leaving no gap; a browser without scroll-driven animations keeps the fixed offset. The public frame's bar is the same case with no sticky bar beneath it: the sorrel starts under the bar rather than behind it, and climbs to the top of the window over the bar's own height of scroll (MB.120, the owner's call, 2026-10-20). One mixin, `follows-scroll`, draws both from `--sorrel-rest` and `--sorrel-lift`. The page head's eyebrow, the small muted text that shares the sorrel's corner, wears `$text-halo`, a blur of the page colour behind the letters, so the ornament sits back under them ([`_typography.scss`](../../src/scss/_typography.scss)).
 
 ## Stacking
 
@@ -104,6 +104,48 @@ cross-fades their opacities on the same 400ms as every other colour; and a
 fixed element is a stacking context, so a layer nested inside it would blend
 with its transparent parent rather than with the page and come out plain
 grey. As siblings in the root stacking context, each blends with the page.
+
+## The copy in the search row
+
+The sticky search row on the ingredient lists is filled with the page colour so
+the cards do not show through, and a sticky box paints as its own stacking
+context, so no `z-index` can put the real sorrel between that fill and the row's
+controls. The row draws a copy instead (M12.46): `.filter-sorrel`, an
+`aria-hidden` child of the `<search>` (not of the form, whose `container-type`
+would become the containing block of fixed children), `position: absolute`,
+`inset: 0 -16px` (the row's width and the page's side gutter either side), `z-index: -1`, filled
+with `$surface-page` and cut to its own box by a solid `mask-image: linear-gradient(#000, #000)`. Its `::before` and `::after` are the `screen` and
+`multiply` layers, `position: fixed` like the real ones, so a fixed copy
+lines up with the real sorrel and the mask shows only the part inside the
+row. The mask makes the layer a stacking context, which is why it carries the
+page colour: the blends need something the colour of the page to blend with. It
+sits on the layer and never on the `<search>`, which would cut off the stuck
+shadow and the Filters tray. The 16px either side is the page's gutter: a card scrolled
+under the row, above all one raised by hover, casts its shadow up to 20px past its edge, and
+beside the row that showed as a dark strip across the real sorrel, cut straight at the row's
+edge; the layer now covers the gutter, and the row's own stuck shadow with it. No wider, since
+the layer would then widen the page. The cut is the layer's own box, not a margin past it: a
+clip reaching 16px past the fill (`clip-path: inset(0 -16px)`, the first try) drew the fixed copies over the
+real sorrel in a strip with no fill beneath, so the screen layer lightened the real one twice (a
+lighter patch in dark, a darker one in light).
+
+A `mask-image`, not a `clip-path: inset(0)`, which was the second try. A clip's edge is anti-aliased
+at a half pixel, and an odd-width window centres the page on one (88.5px at 1457 wide). On a
+low-density screen (device pixel ratio 1) the copies then drew a lighter one-pixel line over the
+real sorrel along the layer's top and left edges, which the owner saw as a sliver; at ratio 2 or
+at a whole pixel it does not show. A mask's edge rounds the way the real sorrel's does, and the
+line is gone. Widening the fill by a pixel did not fix it and made the page scroll sideways. Browser
+floor: unprefixed `mask-image` is in the `masks` feature, Baseline widely available (Chrome 120, Firefox 53,
+Safari 15.4), so it needs no `@supports`. Checked in Chromium only.
+
+The shape, the photograph and the offsets (the shell bar, the context row, the
+`sorrel-follow` scroll animation, on the public frame too) are written once, in the mixins of
+`_sorrel.scss`, and used by `.backdrop--sorrel` and by the copy; the
+keyframes stay in `index.scss`. Under `prefers-contrast: more` the copy's two
+layers are hidden with the sorrel and the layer keeps its fill, so the row
+stays opaque. If a browser ever fails to clip a fixed copy, the fallback is
+`position: absolute` inside an `overflow: hidden` layer, with `StuckMark`
+writing the row's left offset.
 
 ## Accessibility
 

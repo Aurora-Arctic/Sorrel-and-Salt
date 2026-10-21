@@ -247,6 +247,16 @@ export type IngredientValues = z.input<typeof LocalIngredientInput>;
 /** What the stock service parses: the row editor's values, or a mutation's input. */
 export type StockValues = z.input<typeof StockInput>;
 
+/**
+ * What `saveStock` takes: the stock dialog's whole Save, three lists so a
+ * delete cannot carry a quantity (M9.9).
+ */
+export interface SaveStockValues {
+  create: { variantId: string; input: StockValues }[];
+  update: { id: string; input: StockValues }[];
+  delete: string[];
+}
+
 /** What the reference service parses: the form's values, or a mutation's input. */
 export type ReferenceValues = z.input<typeof ReferenceInput>;
 
@@ -380,4 +390,13 @@ export interface HoldingCoven {
   id: string;
   slug: string;
   name: string;
+}
+
+/**
+ * The latest edit a coven's card shows (M6.18): who made it, by the display name the viewer may
+ * read, and when, as an ISO 8601 moment. `by` is null where the viewer cannot name the editor.
+ */
+export interface LastEdit {
+  by: string | null;
+  at: string;
 }

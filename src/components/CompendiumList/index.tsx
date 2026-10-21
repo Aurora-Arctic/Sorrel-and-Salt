@@ -126,7 +126,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   },
 ];
 
-/** A filter's value, bold as the search sentence bolds its values. */
+/** A filter's value, bold. The search sentence above boxes its values instead. */
 const value = (text: string): ReactNode => <strong>{text}</strong>;
 
 /** "A", "A and B", "A, B and C" over nodes: `joinAnd`'s rule, for parts that are not strings. */

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { CardCategory } from '../CategoryChips/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { EntryKind, EntryRecency } from '../EntryMarks/types';
+import type { LastEditProps } from '../LastEdit/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 
 export type { CardCategory };
@@ -30,6 +31,11 @@ export interface IngredientCardProps {
    * group's icon before its name on the secondary line, and    * the notes of those that have any. Structural, so a GraphQL variant passes as is.
    */
   variants?: readonly SafetyVariant[];
+  /**
+   * Draws the forms line. A coven card turns it off (M9.9): its jar lines name each form held,
+   * and its Quick Look lists every form. The variants still feed the safety marks. Defaults to true.
+   */
+  forms?: boolean;
   /** The ingredient's own toxic flag; the Toxic mark also shows when any listed form is flagged. */
   toxic?: boolean | null;
   /** The ingredient's own safety notes; any notes here or on a listed form show the Caution badge, never the notes themselves. */
@@ -52,6 +58,12 @@ export interface IngredientCardProps {
    * right: the coven's Quick Look eye (M12.5). Above the card's link, as `actions` are.
    */
   startActions?: ReactNode;
+  /**
+   * Who last edited the ingredient and when (M6.18), a line under the jar lines: the newest
+   * of its jars and, for a local entry, its own row. `by` is null when the viewer cannot name
+   * the editor. None given draws no line; the caller works it out, the card does not.
+   */
+  lastEdit?: LastEditProps | null;
   /**
    * The jar-line slot beneath the forms. The coven's Ingredients page fills it
    * with a line per jar (M9.6); the public compendium leaves it empty.

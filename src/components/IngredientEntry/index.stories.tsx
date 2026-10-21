@@ -1,13 +1,14 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { Reopenable } from '../../../.ladle/reopenable';
+import StockDialog from '../StockDialog';
 import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
 import { detailsHeading, detailsMarks } from './details';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import IngredientSummary from './summary';
-import type { IngredientDetailsOpened, IngredientEntryProps } from './types';
+import type { IngredientDetailsOpened, IngredientEntryProps, SummaryJar } from './types';
 import type {
   CategoryDetail,
   CitedReference,
@@ -258,6 +259,17 @@ export const NoFormalName: Story = () => (
       }),
       variants: [],
     }}
+  />
+);
+
+// A coven's own entry with its latest editor, right-aligned above the icon row (M6.18).
+export const CovenEntryLastEdited: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({ workspaceId: '00000000-0000-4000-8000-0000000000c1' }),
+    }}
+    lastEdit={{ by: 'Fixture A', at: new Date(Date.now() - 3_600_000).toISOString() }}
   />
 );
 
@@ -570,11 +582,13 @@ const Details = ({
   detail,
   listHref,
   covens,
+  jars,
   ...opened
 }: Omit<IngredientDetailsOpened, 'heading' | 'children'> & {
   detail: IngredientDetail;
   listHref: Route;
   covens?: readonly HoldingCoven[];
+  jars?: readonly SummaryJar[];
 }) => (
   <Reopenable>
     {() => (
@@ -583,7 +597,7 @@ const Details = ({
         opened={{
           heading: detailsHeading(detail.entry),
           marks: detailsMarks(detail),
-          children: <IngredientSummary detail={detail} covens={covens} />,
+          children: <IngredientSummary detail={detail} covens={covens} jars={jars} />,
           ...opened,
         }}
       />
@@ -618,6 +632,88 @@ export const DetailsFromCovenList: Story = () => (
 );
 DetailsFromCovenList.meta = { iframed: true };
 
+// The same from the coven's list with its jars (M9.9): each form shows the coven's
+// jar of it: the oil low, the bundle unmeasured, the root out, and the leaf in
+// no jar, Not Stocked; a badge on the low and the out alone.
+const STOCKED: IngredientDetail = {
+  ...OWN,
+  variants: [...OWN.variants, variant('root'), variant('dried leaf')],
+};
+const [OIL, BUNDLE, ROOT] = STOCKED.variants.map(({ variant }) => variant.id);
+export const DetailsWithStock: Story = () => (
+  <Details
+    detail={STOCKED}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    jars={[
+      { variantId: OIL, quantity: 4, unit: 'ml', threshold: 10 },
+      { variantId: BUNDLE, quantity: null, unit: null, threshold: null },
+      { variantId: ROOT, quantity: 0, unit: 'g', threshold: null },
+    ]}
+  />
+);
+DetailsWithStock.meta = { iframed: true };
+
+// Quick Look with the latest editor stacked over the buttons, right-aligned (M6.18).
+export const DetailsLastEdited: Story = () => (
+  <Details
+    detail={STOCKED}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    lastEdit={{ by: 'Fixture A', at: '2026-10-21T09:00:00.000Z' }}
+  />
+);
+DetailsLastEdited.meta = { iframed: true };
+
+// The Edit Stock dialog opened from the window's own stock button (M9.9), as
+// on a coven's list: a modal over the details modal, which must sit centred
+// on the screen as the card's does, not inside the window it was opened from.
+const JARRED = STOCKED.variants.map(({ variant }) => ({
+  variantId: variant.id,
+  label: variant.form.replace(/\b\w/g, (c) => c.toUpperCase()),
+}));
+const PressStock = (): null => {
+  useEffect(() => {
+    document.querySelector<HTMLButtonElement>('button[aria-label^="Edit Stock"]')?.click();
+  }, []);
+  return null;
+};
+export const DetailsWithStockDialog: Story = () => (
+  <>
+    <Details
+      detail={STOCKED}
+      listHref={COVEN_LIST}
+      pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+      actions={
+        <StockDialog
+          workspaceId="00000000-0000-4000-8000-0000000000c1"
+          ingredientId={OWN.entry.id}
+          ingredientName="Testwort"
+          forms={JARRED}
+          jars={[
+            {
+              id: '00000000-0000-4000-8000-0000000000e1',
+              variantId: OIL,
+              quantity: 4,
+              unit: 'ml',
+              threshold: 10,
+            },
+            {
+              id: '00000000-0000-4000-8000-0000000000e2',
+              variantId: ROOT,
+              quantity: 0,
+              unit: 'g',
+              threshold: null,
+            },
+          ]}
+        />
+      }
+    />
+    <PressStock />
+  </>
+);
+DetailsWithStockDialog.meta = { iframed: true };
+
 // From the public compendium, to anyone but a curator: the same summary, and
 // only the page link.
 export const DetailsFromCompendium: Story = () => (
@@ -630,7 +726,7 @@ export const DetailsFromCompendium: Story = () => (
 DetailsFromCompendium.meta = { iframed: true };
 
 // From the public compendium, to a member of four covens that hold the entry: a
-// last block, In Your Covens, links the entry in each by the coven's name, each
+// last block, In Your Cupboards, links the entry in each by the coven's name, each
 // link led by the In Your Cupboard shelf (the owner's call, 2026-10-20). The
 // long name wraps, its shelf level with its first line.
 const HOLDING = [
@@ -644,7 +740,7 @@ const HOLDING = [
   { id: '00000000-0000-4000-8000-0000000000c4', slug: 'stillroom', name: 'Stillroom' },
 ];
 
-export const DetailsInYourCovens: Story = () => (
+export const DetailsInYourCupboards: Story = () => (
   <Details
     detail={FULL}
     listHref={'/compendium' as Route}
@@ -652,7 +748,7 @@ export const DetailsInYourCovens: Story = () => (
     covens={HOLDING}
   />
 );
-DetailsInYourCovens.meta = { iframed: true };
+DetailsInYourCupboards.meta = { iframed: true };
 
 // The same, to a member of one coven that holds it.
 export const DetailsInOneCoven: Story = () => (

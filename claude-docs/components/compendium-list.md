@@ -93,7 +93,7 @@ different groups, so the page offers each name once, whatever its case.
   (`resolveNumberedPage` returns `totalCount`, which the page passes down as `total`), and
   the labels the facets give: a category by its name, a deity by its name with its
   tradition added when another deity shares the name, an element by its label. It takes
-  `pending` from the list's navigation, so it types itself out while the list loads.
+  `searching` from the list's navigation, so it types itself out while a new search loads and stays still when a pager end changes the page.
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
   builds both, the pager's links and the filter's submit too, a typed wrapper
@@ -127,8 +127,8 @@ different groups, so the page offers each name once, whatever its case.
   classification is its label, and Without
   References is the switch's (MB.115, the owner's call). The sentence is
   built from the same two pieces as `noMatchText` (`noMatchLead` and `NO_MATCH_ADVICE`, `src/lib/text.ts`), one wording for every admin list. It is a node, not a
-  string: each filter value is bold (700), as the search sentence bolds its
-  values, while "the form", "the category", the joining words and the closing
+  string: each filter value is bold (700) (the search sentence above boxes its
+  values instead), while "the form", "the category", the joining words and the closing
   advice stay regular, and the whole sentence is muted (`$text-muted`) through
   `.compendium-list__empty`. The public cards share it.
 

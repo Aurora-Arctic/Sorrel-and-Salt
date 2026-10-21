@@ -252,6 +252,8 @@ export interface ShellWorkspace {
   slug: string;
   name: string;
   canReadMembers: boolean;
+  /** The viewer’s role there may invite (an owner’s alone): the invitations page is a 404 without it. */
+  canInvite: boolean;
   /** The viewer’s role there may create ingredients: false lists the coven in Add Ingredient, disabled. */
   canWrite: boolean;
 }

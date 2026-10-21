@@ -43,9 +43,12 @@ const IconLink = ({
   );
 };
 
-/** A row's Edit: the pencil. */
-export const EditLink = (props: EditLinkProps): ReactElement => (
-  <IconLink {...props} verb="Edit" icon={<PencilIcon />} />
+/** A row's Edit: the pencil. `className` replaces the default green look (the coven card's plain one). */
+export const EditLink = ({
+  className,
+  ...props
+}: EditLinkProps & { className?: string }): ReactElement => (
+  <IconLink {...props} className={className} verb="Edit" icon={<PencilIcon />} />
 );
 
 /**
@@ -62,8 +65,11 @@ export const CompendiumEditLink = (props: EditLinkProps): ReactElement => (
  * Edit's pencil, since it writes the coven's notes over the entry
  * rather than changing the entry.
  */
-export const AnnotateLink = (props: EditLinkProps): ReactElement => (
-  <IconLink {...props} verb="Annotate" icon={<AnnotateIcon />} />
+export const AnnotateLink = ({
+  className,
+  ...props
+}: EditLinkProps & { className?: string }): ReactElement => (
+  <IconLink {...props} className={className} verb="Annotate" icon={<AnnotateIcon />} />
 );
 
 /**

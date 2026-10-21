@@ -11,8 +11,8 @@ export default {
 };
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
 ];
 
 // The admin area's row: the word "Admin" in the display face, the nav beside it.
@@ -46,6 +46,7 @@ export const PhoneLongName: Story = () => (
               slug: 'long',
               name: 'A Long Named Circle of Fixture Herbalists',
               canReadMembers: true,
+              canInvite: true,
             },
           ]}
         />

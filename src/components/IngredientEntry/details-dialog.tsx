@@ -3,6 +3,7 @@
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
+import LastEdit from '../LastEdit';
 import { CompendiumEditLink, EditLink } from '../IconTip';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { RouteModal } from '../Modal';
@@ -32,6 +33,7 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
  * bin (`actions`). Under the formal name: the other badges.
  */
 function headingOf({
+  lastEdit,
   heading,
   marks,
   editAction,
@@ -58,9 +60,11 @@ function headingOf({
     (editAction && <EditAction {...editAction} name={editAction.name ?? heading.title} />);
   // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
   // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
-  const add = plus && ingredientId && <PlusMark plus={plus} ingredientId={ingredientId} />;
+  const add = plus && ingredientId && (
+    <PlusMark plus={plus} ingredientId={ingredientId} name={editAction?.name ?? heading.title} />
+  );
   // The compendium card's order: the plus, Edit in Compendium, then the three dots.
-  const actions = (add || edit || more) && (
+  const buttons = (add || edit || more) && (
     <>
       {add}
       {edit}
@@ -70,7 +74,8 @@ function headingOf({
   return {
     ...heading,
     topEnd: top,
-    ...(actions && { formalActions: actions }),
+    ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
+    ...(buttons && { formalActions: buttons }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
   };
 }
@@ -92,7 +97,7 @@ function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
   // Named by where it goes, not by who is looking (the owner's call, 2026-10-20): the
   // public compendium's page, or a coven's own page for an entry the coven holds, whether
   // it made the entry or annotated the compendium's.
-  const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in My Ingredients';
+  const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
     <div className="ingredient-details-foot">
       <PendingLink

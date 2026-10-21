@@ -24,9 +24,11 @@ It has five ways in:
   native select from the server, and Combobox's select-only box or
   type-ahead once hydrated (MB.115).
 
-`IngredientForm`'s three fields of its own, `SuggestField`,
-`MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
-the same shell until its design review (MB.120).
+Four fields grown by `IngredientForm`, `SuggestField`, `MultiSelectField`,
+`ListField` and `ToggleField`, stay in `IngredientForm/fields.tsx` on the same
+shell; `CupboardEntryForm` imports `ListField` and `MultiSelectField` from
+there. MB.120 kept them there rather than make them generic fields here (the
+owner, 2026-10-20).
 
 | File                       | What it holds                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
@@ -127,12 +129,15 @@ form state, and its select must submit natively.
 
 Every field takes `FieldProps` (`types.ts`):
 
-| Prop       | What it is                                                                             |
-| ---------- | -------------------------------------------------------------------------------------- |
-| `label`    | The label, title case: "Email Address"                                                 |
-| `hint`     | Optional: what the field is for, behind an info tip beside the label                   |
-| `note`     | Optional: a state the field is in, such as why it is shut, as a line beneath the label |
-| `required` | Optional: marked required beside its label, and to assistive technology                |
+| Prop          | What it is                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `label`       | The label, title case: "Email Address"                                                                                                                                                     |
+| `hint`        | Optional: what the field is for, behind an info tip beside the label                                                                                                                       |
+| `note`        | Optional: a state the field is in, such as why it is shut, as a line beneath the label                                                                                                     |
+| `required`    | Optional: marked required beside its label, and to assistive technology                                                                                                                    |
+| `labelSuffix` | Optional: read after the label, out of sight ("Quantity, Flower"), and in the hint's tip name. For a field drawn once per row, so two rows' fields never share a name (M9.9's StockDialog) |
+
+There is no size prop: every field is full size. The one shorter field, the StockDialog's Add Form, wears the `.field--compact` class itself (`_primitives.scss`); the owner removed StockFields' compact rows, and Field's `size` with them, on 2026-10-20.
 
 `FieldShell` adds what `fieldDescription` returns (`controlId`, `labelId`,
 `hintId`, `noteId`, `errorId`, `error`), `children` (the control), `after`
@@ -152,14 +157,14 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 </FieldShell>;
 ```
 
-`TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`),
+`TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`, `number`: any decimal, held as the text typed),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `action`, `format` (a tidy run
 as the field is left), `autoComplete` and `busy` (its text is being looked up: the
 [`Spinner`](spinner.md) inside the box at its right end, shown after 100ms so a quick answer
 never flashes it, and the input `aria-busy`; the name's duplicate check, the owner's
 call of 2026-10-18). `SelectField` adds `name`,
 `options` (each `{ value, label, icon?, disabled?, note? }`, a disabled one listed and not
-choosable, its `note` saying why), `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
+choosable, its `note` saying why), `placeholder`, `typeahead`, `disabled` (the select-only box only: Combobox's shut `ComboboxSelect`, for the StockDialog's stand-in Unit before a form is chosen), `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a
 set long enough to want a search: `GroupedValueForm`'s group, a category's or
 a form's Group and a deity's Tradition (MB.115). Its text

@@ -37,14 +37,18 @@ import './index.scss';
 // the GET form around it; the Filters control is a link to it until then. See
 // claude-docs/components/facet-panel.md.
 
-/** The shell's tablet width (`$shell-tablet-width`), where the panel stops being a sheet. */
 /**
  * How long a leaving sheet waits for its slide out to end before it closes anyway: longer than
  * the slide (`$sheet-slide` in index.scss), for a browser that never reports its end.
  */
 const LEAVE_LIMIT_MS = 400;
 
-const WIDE = '(min-width: 56rem)';
+/**
+ * The shell's tablet width and up, where the panel stops being a sheet and drops down over the
+ * results. A script cannot read a Sass variable, so this repeats `$shell-tablet-width`
+ * (`_variables.scss`); a test fails if the two part.
+ */
+export const WIDE = '(min-width: 56rem)';
 
 const SOURCE_LABELS: Record<IngredientSource, string> = {
   local: 'Local',

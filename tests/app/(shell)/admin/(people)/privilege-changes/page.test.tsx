@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
-import { sent } from '../../../../../support/filter-form';
+import { filterForm, sent } from '../../../../../support/filter-form';
 
 // The `/admin/privilege-changes` page (MB.200): the guard, then the ledger
 // read, its count and the users it names, the search parameters turned into
@@ -218,7 +218,5 @@ describe('the /admin/privilege-changes page', () => {
 
 /** What the filter form sends for `name`: once hydrated, a select-only box's hidden input. */
 function filterSends(name: string): string | null {
-  return new URLSearchParams(
-    sent(screen.getByRole('form', { name: 'Filter Privilege Changes' })),
-  ).get(name);
+  return new URLSearchParams(sent(filterForm('Filter Privilege Changes'))).get(name);
 }

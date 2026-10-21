@@ -381,7 +381,7 @@ test('the page passes axe at both densities and holds at a phone width', async (
 
 // M12.32 turned this on: the coven list reads a retired entry its cupboard
 // still names, so the card draws, marked Retired.
-test('a retired compendium entry the coven still holds keeps its forms and categories on its card', async ({
+test('a retired compendium entry the coven still holds keeps its categories on its card and its forms in Quick Look', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
@@ -429,8 +429,15 @@ test('a retired compendium entry the coven still holds keeps its forms and categ
   await expect(card).toHaveCount(1);
   // Exact: the card's More (M8.17) is named for the entry, "More for Fixture Retiredwort, …".
   await expect(card.getByRole('button', { name: 'Retired', exact: true })).toHaveCount(1);
-  await expect(card).toContainText('Herb');
   await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
+  // The forms are Quick Look's since M9.9, which took the forms line off the card.
+  await card.getByRole('link', { name: /^Quick Look Fixture Retiredwort/ }).click();
+  const details = page.getByRole('dialog', { name: 'Fixture Retiredwort', exact: true });
+  await expect(
+    details.getByRole('list', { name: 'Forms' }).getByRole('listitem').filter({ hasText: 'Herb' }),
+  ).toHaveCount(1);
+  await details.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(details).toHaveCount(0);
 });
 
 // The owner's decision of 2026-10-19, reversing part of M12.24: a coven goes
@@ -480,13 +487,18 @@ test('a retired compendium entry the coven still holds can be annotated, then ma
   await expect(page.getByRole('button', { name: 'Retired' })).toBeVisible();
   await expect(page.getByRole('list', { name: 'In the Compendium' })).toHaveCount(0);
 
-  // Annotate is the main icon, and the dots hold Make It Ours and Remove, drawn under the Coven
-  // label, with no bin beside them (the owner's call, 2026-10-20).
+  // Annotate is the main icon, and the dots hold Edit Stock (the coven holds it, so its stock is
+  // the coven's to keep, M9.12), Make It Ours and Remove, drawn under the Coven label, with no bin
+  // beside them (the owner's call, 2026-10-20).
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: 'Annotate Fixture Lapsedwort' })).toBeVisible();
   await expect(main.getByRole('button', { name: 'Remove Fixture Lapsedwort' })).toHaveCount(0);
   await main.getByRole('button', { name: 'More for Fixture Lapsedwort', exact: true }).click();
-  await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText(['Make It Ours', 'Remove']);
+  await expect(page.getByRole('menu').getByRole('menuitem')).toHaveText([
+    'Edit Stock',
+    'Make It Ours',
+    'Remove',
+  ]);
   await expect(page.getByRole('menu').getByRole('group', { name: 'Coven' })).toBeVisible();
   await page.keyboard.press('Escape');
 

@@ -6,12 +6,14 @@ import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib
 import { usePendingNavigation } from '../../lib/navigation';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
+import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
 import type { WorkspaceSwitcherProps } from './types';
 import './index.scss';
 
 // A select over the viewer's workspaces, called covens on screen. Which one is current is read off the
 // address, never kept in state, so two tabs in two workspaces do not
-// interfere; choosing another goes to the same section there. The list is the
+// interfere; choosing another goes to the same page there when the page
+// said it opens there, otherwise to the same section (M9.12). The list is the
 // caller's: the layout already holds the memberships. A viewer holding
 // creation rights gets one more choice, after the workspaces, that goes to the
 // create page (M9.16); its value is that page's path, which no slug can equal
@@ -45,6 +47,7 @@ export default function WorkspaceSwitcher({
   const id = useId();
   const pathname = usePathname();
   const { navigate, pending } = usePendingNavigation();
+  const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
   const choices = workspaces.map(({ slug, name }) => ({ value: slug, label: name }));
@@ -76,8 +79,16 @@ export default function WorkspaceSwitcher({
         inputRef={box}
         onChange={(value) => {
           const chosen = workspaces.find((workspace) => workspace.slug === value);
+          // A page that said which covens it opens in is believed only at its own address.
+          const opens = registration?.path === pathname ? registration.slugs : undefined;
           const href =
-            value === CREATE.value ? value : pathInCoven(pathname, value, chosen?.canReadMembers);
+            value === CREATE.value
+              ? value
+              : pathInCoven(pathname, value, {
+                  canReadMembers: chosen?.canReadMembers,
+                  canInvite: chosen?.canInvite,
+                  opens,
+                });
           setPicked(value);
           focusAfterSwitch = value === CREATE.value ? undefined : value;
           navigate(href, { target: targetOf(href) });

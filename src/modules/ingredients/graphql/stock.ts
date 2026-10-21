@@ -6,12 +6,13 @@ import { NotFound } from '../../../lib/errors';
 import type { ingredientsById } from '../loaders/ingredients-by-id';
 import { clearStock } from '../loaders/stock';
 import { UNITS, UNIT_DIMENSIONS } from '../schema/units';
-import { createStock, deleteStock, updateStock } from '../services/stock';
+import { createStock, deleteStock, saveStock, updateStock } from '../services/stock';
 import type { StockRow } from '../types';
 import { IngredientRef, IngredientVariantRef } from './ingredient';
 
 // Story 14's jars over the wire (M9.4): what a coven holds of each form, the
-// three writes that change it, and `Ingredient.stock`, which reads it a page
+// three writes that change one jar and M9.9's `saveStock`, which changes an
+// ingredient's jars together, and `Ingredient.stock`, which reads it a page
 // at a time. The resolvers refuse only a missing session; who may read or
 // write which coven's jars is the stock service's check
 // (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and
@@ -98,6 +99,33 @@ const StockInput = builder.inputType('StockInput', {
   }),
 });
 
+const CreateJarInput = builder.inputType('CreateJarInput', {
+  description: 'A jar to start, on a form the coven does not hold.',
+  fields: (t) => ({
+    variantId: t.id({ required: true }),
+    input: t.field({ type: StockInput, required: true }),
+  }),
+});
+
+const UpdateJarInput = builder.inputType('UpdateJarInput', {
+  description: 'A change to a jar the coven holds; a field left out keeps its value.',
+  fields: (t) => ({
+    id: t.id({ required: true }),
+    input: t.field({ type: StockInput, required: true }),
+  }),
+});
+
+// Three lists, not one list of rows with a kind, so a delete cannot carry a
+// quantity and `StockInput`'s omit-keeps, null-clears reading holds in both.
+const SaveStockInput = builder.inputType('SaveStockInput', {
+  description: "One ingredient's stock edited together: jars to start, change and delete.",
+  fields: (t) => ({
+    create: t.field({ type: [CreateJarInput], required: true }),
+    update: t.field({ type: [UpdateJarInput], required: true }),
+    delete: t.idList({ required: true }),
+  }),
+});
+
 builder.objectField(IngredientRef, 'stock', (t) =>
   t.field({
     type: [InventoryItemRef],
@@ -142,6 +170,26 @@ builder.mutationField('updateStock', (t) =>
       const row = await updateStock(sessionOf(context), workspaceId, id, input);
       clearStock(loaders, row);
       return row;
+    },
+  }),
+);
+
+builder.mutationField('saveStock', (t) =>
+  t.field({
+    type: [InventoryItemRef],
+    description:
+      "Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.",
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      ingredientId: t.arg.id({ required: true }),
+      input: t.arg({ type: SaveStockInput, required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, ingredientId, input }, { loaders, ...context }) => {
+      const rows = await saveStock(sessionOf(context), workspaceId, ingredientId, input);
+      // The service answers the rows by ingredient, so one key covers the batch.
+      clearStock(loaders, { ingredientId, workspaceId });
+      return rows;
     },
   }),
 );

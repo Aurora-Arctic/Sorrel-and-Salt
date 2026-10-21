@@ -34,7 +34,7 @@ is the wrapper every admin page opens it through (below).
 | `qualifier`                                      | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
 | `formalName`, `topEnd`, `formalActions`, `under` | The quick-look head's extras ("A title with its own end"); absent on every other dialog                                                 |
 | `onClose`                                        | Asked for by the Close button, Escape and a click outside                                                                               |
-| `size`                                           | `'wide'` for a long form; absent, the default width                                                                                     |
+| `size`                                           | `'wide'` for a long form, `'listed'` for the default column with a list beside it; absent, the default width                            |
 | `readingBody`                                    | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
 | `loading`                                        | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
 | `children`                                       | The body: a form, a confirmation, whatever the owner puts here                                                                          |
@@ -450,6 +450,8 @@ the details window passes them; every other dialog is drawn as before (the owner
   option shown. The × comes after the marks in the
   markup too, as on screen. Without `topEnd` the × stands in the corner beside the head's
   first line, as before, after the head in the markup.
+- **`aboveName`** is a node drawn between the eyebrow and the names: Quick Look puts the
+  entry’s `LastEdit` line there, the place the entry page draws it ([`last-edit.md`](last-edit.md)).
 - **`formalActions`** is a node for the end of the formal name's line: the details
   window's Edit pencil (with the plus beside it where a coven can add the entry), as the
   entry page puts its own (the owner's call, 2026-10-20; it replaced `titleActions`, which
@@ -462,7 +464,10 @@ the details window passes them; every other dialog is drawn as before (the owner
   margin takes half the difference off each side and their middle stands on the
   line's. With no formal name the title takes the first row and the actions stand beside it.
   An action wrapped in a node of its own, as a coven's own entry's pair of icons is, has that wrapper's
-  margin cleared, since the grid places it. Empty, it takes no room.
+  margin cleared, since the grid places it. A `<dialog>` among them keeps its margin
+  (`> :not(dialog)`): a `ModalButton` draws its dialog beside its button, and the
+  browser's `margin: auto` is what centres a dialog in the top layer, so zeroing it
+  opened the Edit Stock dialog at the window's top left over Quick Look (M9.9). Empty, it takes no room.
 - **`under`** is a wrapping row (`.modal-dialog__under`, `space(3)` apart) under the
   qualifier, for the badges. Empty, it takes no room.
 
@@ -521,17 +526,27 @@ owner writes neither. It was lifted from `InviteDialog`, which carried the
 first copy, and is for every modal a page's button opens: an Invite, a Leave
 Coven. `ModalButtonProps` (`types.ts`):
 
-| Prop        | What it is                                                               |
-| ----------- | ------------------------------------------------------------------------ |
-| `label`     | The button's text and accessible name, in title case                     |
-| `className` | The button's classes, `btn btn--solid`                                   |
-| `title`     | The dialog's heading and accessible name                                 |
-| `size`      | As `Modal`'s                                                             |
-| `children`  | A function of the modal's close, so a form can close it once it has sent |
+| Prop        | What it is                                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| `label`     | The button's text and accessible name, in title case; an icon where `ariaLabel` names it       |
+| `className` | The button's classes, `btn btn--solid`                                                         |
+| `title`     | The dialog's heading and accessible name                                                       |
+| `eyebrow`   | As `Modal`'s: an edit dialog's small line over the title (M9.9)                                |
+| `qualifier` | As `Modal`'s: after the title, in the dialog's name (M9.9)                                     |
+| `ariaLabel` | The button's name where its text repeats down a list: "Edit Stock, Rosemary"                   |
+| `tip`       | A tip over an icon button, "Edit Stock" over the pencil; it wraps the button, never the dialog |
+| `size`      | As `Modal`'s                                                                                   |
+| `children`  | A function of the modal's close, so a form can close it once it has sent                       |
 
 It gives the focus back through Modal's own return
 ([above](#giving-the-focus-back)), naming its button as `returnTo` for
 WebKit, where a click focuses no button.
+
+A button repeated down a list, the Edit Stock on each coven card (M9.9), is an
+icon (the pencil) whose `ariaLabel` is its whole name. Its `tip` wraps the
+button alone: the dialog is a DOM child of whatever wraps it, so a tip around
+both would open on the dialog's focus and hover and take its Escape. Its dialog's head is the edit head: `eyebrow` "Edit Stock", `title`
+the ingredient, so the dialog is named as the button is.
 
 ### Add Ingredient
 
@@ -697,7 +712,7 @@ it, the owner's call at MB.115, without being `position: sticky`, and a
 question's layer can lie over exactly the part of the body in view. The body
 is isolated, so nothing in it raised by a `z-index` rises over the layer.
 
-**The foot** (`foot`, the owner's call, 2026-10-20). A bar under the body that stays in view while the body scrolls, for the details modal's link to the entry's page (See in Compendium or See in My Ingredients). It is a sibling of the body in `.modal-dialog__main`, which is a two-row grid, the body in the first row and the foot in the second, and not a `position: sticky` child of the body: a sticky child lies inside the scroller, so the scrollbar's track ran its whole height, down past the bar, and drew over it. In its own row the body is the only thing that scrolls and its scrollbar starts under the head and ends above the foot. With no `foot` there is no second row. The scrim of a question (`.modal-dialog__layer`) covers the body's row alone, so `hold()` marks the foot `inert` with the body and the header slot while a question is asked, and live again once answered (`tests/components/Modal/index.test.tsx`). `RouteModal`'s `content` takes it too (`RouteModalContent.foot`). The foot brings its own surface and hairline; the Modal draws neither.
+**The foot** (`foot`, the owner's call, 2026-10-20). A bar under the body that stays in view while the body scrolls, for the details modal's link to the entry's page (See in Compendium or See in Your Cupboard). It is a sibling of the body in `.modal-dialog__main`, which is a two-row grid, the body in the first row and the foot in the second, and not a `position: sticky` child of the body: a sticky child lies inside the scroller, so the scrollbar's track ran its whole height, down past the bar, and drew over it. In its own row the body is the only thing that scrolls and its scrollbar starts under the head and ends above the foot. With no `foot` there is no second row. The scrim of a question (`.modal-dialog__layer`) covers the body's row alone, so `hold()` marks the foot `inert` with the body and the header slot while a question is asked, and live again once answered (`tests/components/Modal/index.test.tsx`). `RouteModal`'s `content` takes it too (`RouteModalContent.foot`). The foot brings its own surface and hairline; the Modal draws neither.
 
 **A body only to read takes a Tab stop** (`readingBody`, M12.5). A scrolling body with no field in it cannot be scrolled from the keyboard, and axe's `scrollable-region-focusable` rule fails it: the details modal holds only links in its header, so its long summary was out of reach. The body gets `tabIndex={0}` and an inset focus ring, as the header and the dialog's edge would clip an outer one. A form leaves it off, since its fields already reach every part of it.
 
@@ -765,6 +780,11 @@ owner, went back to the default column on the owner's call, since the form
 caps itself at that width and the wide modal only drew empty space beside it.
 M8.16's IngredientForm modal should take the default too, for the same reason. It changes only the width; the body scrolls
 within the viewport's height either way.
+
+`size="listed"` adds `.modal-dialog--listed`, for the default column with a list down its side, a
+third of the body to the list and two to the column: half `$dialog-column` again plus a
+`space(4)` gap, 49rem, so the column keeps the width it has in a dialog of its own. The Edit
+Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`](stock-dialog.md)).
 
 ## Stories
 

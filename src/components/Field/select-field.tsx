@@ -18,10 +18,12 @@ import { useField } from './use-field';
 export function SelectField<V extends FieldValues = FieldValues>({
   name,
   label,
+  labelSuffix,
   hint,
   placeholder,
   options,
   typeahead,
+  disabled,
   required,
   deps,
   onChange,
@@ -31,10 +33,10 @@ export function SelectField<V extends FieldValues = FieldValues>({
   const { aria, ...shell } = useField<V>(name, hint);
   const Box = typeahead ? ComboboxTypeahead : ComboboxSelect;
   return (
-    <FieldShell label={label} hint={hint} required={required} {...shell}>
+    <FieldShell label={label} labelSuffix={labelSuffix} hint={hint} required={required} {...shell}>
       <Box
         id={shell.controlId}
-        label={label}
+        label={labelSuffix ? `${label}, ${labelSuffix}` : label}
         labelId={shell.labelId}
         value={field.value}
         // Before the field and its `deps` revalidate: an IngredientForm
@@ -48,6 +50,7 @@ export function SelectField<V extends FieldValues = FieldValues>({
         choices={options}
         placeholder={placeholder}
         required={required}
+        {...(!typeahead && { disabled })}
         inputRef={field.ref}
         {...aria}
       />

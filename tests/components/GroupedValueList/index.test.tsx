@@ -7,7 +7,7 @@ import type {
   GroupedValuesPlace,
 } from '@/components/GroupedValueList/types';
 import type { ListDialog } from '@/lib/types';
-import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer, filterForm } from '../../support/filter-form';
 import type { FilterFormSubject, GroupedValueListSubject } from '../../support/types';
 
 // The soft pager and the filter navigate through the App Router; Vitest hoists the mock above the imports.
@@ -112,7 +112,7 @@ describe('GroupedValueList', () => {
     const headings = within(screen.getByRole('table')).getAllByRole('columnheader');
     expect(headings).toHaveLength(4);
     expect(
-      within(screen.getByRole('form', { name: 'Filter Celestial Bodies' })).queryByRole('combobox'),
+      within(filterForm('Filter Celestial Bodies')).queryByRole('combobox'),
     ).not.toBeInTheDocument();
   });
 

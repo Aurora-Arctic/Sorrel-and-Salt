@@ -53,6 +53,8 @@ export interface ModalHeading {
    * the markup. The formal name wraps short of them. Not in the dialog's name.
    */
   formalActions?: ReactNode;
+  /** A line above the formal name and the title, under any top line (the details window's last edit). Not in the dialog's name. */
+  aboveName?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
   under?: ReactNode;
 }
@@ -75,9 +77,10 @@ export interface ModalProps extends ModalHeading {
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
   /**
    * The width: 32rem by default, for a short form or a confirmation; `wide`,
-   * 48rem, for a long form such as the compendium entry's (M5.5).
+   * 48rem, for a long form such as the compendium entry's (M5.5); `listed`,
+   * the default column with an 11rem list beside it (the Edit Stock dialog, M9.9).
    */
-  size?: 'wide';
+  size?: 'wide' | 'listed';
   /**
    * A body that holds nothing to fill in, only to read (M12.5's details): Tab
    * stops on the body itself, so a keyboard can scroll it. Off by default,
@@ -90,7 +93,7 @@ export interface ModalProps extends ModalHeading {
    */
   loading?: boolean;
   /**
-   * A bar under the body rather than in it (the details' See in Compendium or See in My Ingredients): outside the
+   * A bar under the body rather than in it (the details' See in Compendium or See in Your Cupboard): outside the
    * element that scrolls, so the body's scrollbar ends above it and the bar never
    * moves. Held inert while a question is asked, as the body is.
    */
@@ -107,12 +110,31 @@ export interface ModalProps extends ModalHeading {
  * Invite, a Leave Coven. The modal's heading is its title alone.
  */
 export interface ModalButtonProps {
-  /** The button's text and accessible name, in title case: "Invite". */
-  label: string;
+  /**
+   * The button's text and accessible name, in title case: "Invite". An icon
+   * (a jar line's pencil) is the label where `ariaLabel` names the button.
+   */
+  label: ReactNode;
   /** The button's classes: `btn btn--solid`. */
   className: string;
   /** The dialog's heading and accessible name, in title case. */
   title: string;
+  /** The small line over the title, for an edit dialog's head: "Edit Stock" (see `ModalHeading`). */
+  eyebrow?: string;
+  /** After the title, in the dialog's name: the jar's form under its ingredient's name. */
+  qualifier?: ReactNode;
+  /**
+   * The button's accessible name where its text alone would not tell one
+   * button from the next: a row's "Edit" is named "Edit Stock, Rosemary, Oil".
+   * It starts with the text, so a voice command for what is shown still works;
+   * an icon label has no text, so the name is this alone.
+   */
+  ariaLabel?: string;
+  /**
+   * A tip over an icon button, "Edit Stock" over the pencil. Wraps the button
+   * alone, never the dialog, which would open the tip on the dialog's own focus.
+   */
+  tip?: string;
   size?: ModalProps['size'];
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;
