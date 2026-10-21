@@ -1,20 +1,21 @@
 ## The standard scenario (M1.22)
 
 `src/db/seed/standard.ts` implements DESIGN.md §"Seed data"'s second scenario:
-six fixture users, workspaces W and X, and a populated compendium. It is the
+seven fixture users, workspaces W and X, and a populated compendium. It is the
 fixture every authorization test reads against, which is why the cast is fixed
 rather than generated — `asUser(A)` (M1.26, `tests/support/as-user.ts`, which
 re-exports this module's own `FIXTURE_USERS`) has to mean the same person in
 every suite, and an id a test can name beats one this run happened to produce.
 
-| User | Id      | Role      | Where                        |
-| ---- | ------- | --------- | ---------------------------- |
-| A    | `…0003` | `user`    | owner of W                   |
-| B    | `…0004` | `user`    | member of W                  |
-| C    | `…0005` | `user`    | viewer in W                  |
-| D    | `…0006` | `user`    | member of unrelated X        |
-| E    | `…0007` | `admin`   | no workspace at all          |
-| F    | `…0008` | `curator` | no workspace at all (M11.20) |
+| User | Id      | Role      | Where                                   |
+| ---- | ------- | --------- | --------------------------------------- |
+| A    | `…0003` | `user`    | owner of W                              |
+| B    | `…0004` | `user`    | member of W                             |
+| C    | `…0005` | `user`    | viewer in W                             |
+| D    | `…0006` | `user`    | member of unrelated X                   |
+| E    | `…0007` | `admin`   | no workspace at all                     |
+| F    | `…0008` | `curator` | no workspace at all (M11.20)            |
+| G    | `…0009` | `user`    | no workspace; email unverified (MB.268) |
 
 The ids continue the series `…0001` (the bootstrap user, MB.5) and `…0002`
 (`minimal`'s plain user) opened; W and X take `…0001-…0001` and `…0001-…0002`,
@@ -28,6 +29,8 @@ asserted by M6.6) is only assertable against an admin who is in none, and W and
 X sharing no member is what makes a cross-workspace denial test say something.
 
 **F is the curator (M11.20)**: the fixture that proves a curator reaches the compendium's writes and refuses the people ones, and, like E, belongs to no workspace. F is seeded with the flag `true`, since the CHECK that replaced MB.177's (`users_privileged_can_create_workspace`) refuses any non-`user` role without it.
+
+**Every fixture user is seeded with a verified email address (MB.268).** An unverified account reaches no page but `/account/email`, so an unverified fixture could not be used to browse the dev site signed in. The seed's system user (`…0001`) is the one unverified user, left so on purpose: it gives the dev site an account to try the unverified path with ([`seed-module.md`](seed-module.md), "minimal").
 
 **`canCreateWorkspace` follows the invite gate rather than convenience.** A–D
 are seeded `true` because each is in a workspace, and under §5 that is how the

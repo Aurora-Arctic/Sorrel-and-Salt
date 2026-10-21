@@ -45,10 +45,11 @@ import type {
 
 /**
  * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X, E a
- * site admin in no workspace, F a site curator in no workspace (M11.20).
+ * site admin in no workspace, F a site curator in no workspace (M11.20), G an
+ * account that has not verified its address and is in no workspace (MB.268).
  * `canCreateWorkspace` follows the invite gate: A–D earned it by membership,
  * and E and F, never invited, hold it by their roles, since the users CHECK
- * requires it of every role but `user` (MB.177, M11.20). `…0003`–`…0008`
+ * requires it of every role but `user` (MB.177, M11.20). `…0003`–`…0009`
  * continue the bootstrap's series.
  */
 export const FIXTURE_USERS = {
@@ -94,7 +95,15 @@ export const FIXTURE_USERS = {
     role: 'curator',
     canCreateWorkspace: true,
   },
-} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F', FixtureUser>;
+  G: {
+    id: '00000000-0000-0000-0000-000000000009',
+    name: 'Fixture G',
+    email: 'g@seed.sorrelandsalt.com',
+    role: 'user',
+    canCreateWorkspace: false,
+    emailVerified: false,
+  },
+} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G', FixtureUser>;
 
 /** W — the workspace A owns and B and C work in. */
 export const WORKSPACE_W_ID = '00000000-0000-0000-0001-000000000001';
@@ -521,7 +530,10 @@ async function insertMissingFixtureUsers(
   tx: SeedTransaction,
   wanted: readonly FixtureUser[],
 ): Promise<void> {
-  await insertMissingBy(tx, users, wanted, { columns: ['id'], toRow: (user) => user });
+  await insertMissingBy(tx, users, wanted, {
+    columns: ['id'],
+    toRow: (user) => ({ emailVerified: true, ...user }),
+  });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {

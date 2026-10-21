@@ -8,7 +8,9 @@ import type { SeedTransaction, SeedUser } from './types';
 // any seed, not a detail of `minimal` — the category seed runs alone in
 // production. One of CLAUDE.md rule 3's two identity bootstraps, stamping itself.
 // The seed's system user, not an admin (MB.58): it has no OAuth account and is
-// unverified, so no sign-in can reach it, and as an admin it would only be a
+// unverified (deliberately, MB.268: the dev site keeps one unverified user to
+// test that path, and a verified one could take a provider's sign-in), so no
+// sign-in can reach it, and as an admin it would only be a
 // revocable row on /admin/users. The file and its exports keep their old
 // names: deploy.yml lists the file among the seed's paths.
 
