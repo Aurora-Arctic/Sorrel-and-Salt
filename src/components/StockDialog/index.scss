@@ -220,16 +220,32 @@
   min-height: $icon-size;
 }
 
-// The dashed "Form" box in that line (the owner's call, 2026-10-21): a hairline box in the
-// muted text, where the form's name will stand. Its 1px borders are taken back from the
-// margin, so the line is exactly as tall as with a name and the fields do not move.
+// The dashed "Form" in that line (the owner's call, 2026-10-21): the word in outline, its stroke
+// dashed in the muted text. The real word is transparent and only sizes the line, as a form's
+// name would; the SVG laid over it strokes the same word in the same font (CSS cannot dash a
+// text stroke), so the line is exactly as tall as with a name and the fields do not move.
 .stock-dialog__placeholder {
-  display: inline-block;
-  margin-block: -1px;
-  padding-inline: space(3);
-  border: 1px dashed $hairline;
-  border-radius: radius('control');
+  position: relative;
+  color: transparent;
+  user-select: none;
+}
+
+.stock-dialog__outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   color: $text-muted;
+  font: inherit;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1;
+  // A dash of 1.5 and a gap of 4, with round ends that add half the stroke to each side: dashes
+  // about 2.5 long with 3.5 between, the owner's "farther out" (2026-10-21).
+  stroke-dasharray: 1.5 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 // A narrow dialog (a phone): the list stacks above the fields.
