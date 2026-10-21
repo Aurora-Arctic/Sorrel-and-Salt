@@ -50,6 +50,8 @@ export interface StoryObservation {
 export type StoryStatus = 'passed' | 'failed' | 'skipped' | 'untested';
 
 export interface StoryEntry extends Story {
+  /** Where in the site the story is walked, from story-sections.ts. */
+  section: string;
   status: StoryStatus;
   /** Every spec holding a test tagged with this story. */
   files: string[];
