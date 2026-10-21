@@ -71,6 +71,7 @@ const CovenCards = ({
             safetyNotes={entry.safetyNotes}
             kind={entry.kind}
             retired={entry.retired}
+            lastEdit={entry.lastEdit}
             actions={covenCardActions(entry, workspaceId, covenSlug)}
             startActions={<DetailsLink opens={entry.details} name={covenCardName(entry)} />}
           >

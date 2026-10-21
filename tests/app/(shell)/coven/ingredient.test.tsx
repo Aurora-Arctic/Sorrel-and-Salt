@@ -39,6 +39,7 @@ const covensOpeningEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
 const stockOf = vi.fn();
+const lastEditsOf = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
@@ -53,6 +54,8 @@ vi.mock('@/modules/ingredients', () => ({
   isAnnotated: () => false,
   // The jars (M12.29) are the stock service's to scope; here only what the page asks it for.
   stockOf,
+  // Who last changed the stock (M6.18); the service asserts the membership.
+  lastEditsOf,
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -161,9 +164,28 @@ beforeEach(() => {
   covensOpeningEntry.mockResolvedValue([]);
   plusCovensOf.mockResolvedValue(undefined);
   stockOf.mockResolvedValue([[]]);
+  lastEditsOf.mockResolvedValue([null]);
 });
 
 describe('the coven ingredient page', () => {
+  it('reads the entry\u2019s last edit through the service and offers its full sentence', async () => {
+    const row = covenRow();
+    lastEditsOf.mockResolvedValue([{ by: 'Fixture Member', at: '2026-10-21T10:00:00.000Z' }]);
+    await open(row);
+
+    expect(lastEditsOf).toHaveBeenCalledWith(SESSION, WORKSPACE.id, [row]);
+    expect(screen.getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
+      /Fixture Member/,
+    );
+  });
+
+  it('draws no last-edit line for an entry nobody has changed', async () => {
+    await open(covenRow());
+
+    expect(lastEditsOf).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /^Edited/ })).toBeNull();
+  });
+
   it('looks the ingredient up inside the coven the address names', async () => {
     await open(covenRow());
 

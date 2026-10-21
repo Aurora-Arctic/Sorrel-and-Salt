@@ -146,6 +146,7 @@ export default async function CovenIngredientsPage({
       kind: own ? 'own' : 'cupboard',
       ...footOf(own, { ...shown, id: node.id }, placed({ edit: node.id })),
       retired: isRetired(node),
+      lastEdit: page.lastEdits[i],
       ...(mayStock && {
         stock: stockDialogOf(
           page.variantIds[i].map((id) => ({ id, form: page.formOf.get(id) ?? '' })),
@@ -198,6 +199,7 @@ export default async function CovenIngredientsPage({
             viewed && {
               heading: detailsHeading(viewed.shown),
               marks: detailsMarks(viewed.detail, true),
+              lastEdit: viewed.lastEdit,
               pageHref: `/coven/${workspace.slug}/ingredients/${viewed.shown.id}` as Route,
               // The coven's jars of it, to every role: each form shows its stock (M9.9).
               children: (

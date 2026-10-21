@@ -18,6 +18,7 @@ import {
   heldCompendiumEntry,
   ingredientDetailOf,
   isRetired,
+  lastEditsOf,
   listWorkspaceIngredients,
   stockOf,
   variantsOf,
@@ -38,7 +39,7 @@ type Filter = Parameters<typeof listWorkspaceIngredients>[2];
 
 /**
  * One page of `CARD_PAGE_SIZE` entries with its count and everything a card draws:
- * forms, category chips, and the coven's jars. Each is one batch for the page,
+ * forms, category chips, the coven's jars and each card's last edit. Each is one batch for the page,
  * whatever its length, and the jars of the whole page are one `stockOf` call.
  * Each edge keeps its `cupboardEntry`, for the label and the Annotated and Retired
  * marks.
@@ -65,12 +66,18 @@ export const readCovenIngredients = cache(
     );
     // Each ref names the entry's own tier (null for the compendium), as GraphQL's loaders do.
     const refs = page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId }));
-    const [forms, categories, jars, formIcons] = await Promise.all([
+    const [forms, categories, jars, lastEdits, formIcons] = await Promise.all([
       variantsOf(session, refs, heldBy),
       readCardCategoriesOf(session, refs, heldBy),
       stockOf(
         session,
         page.edges.map(({ node }) => ({ ingredientId: node.id, workspaceId })),
+      ),
+      // Who last touched each card, the names resolved in one batch for the page (M6.18).
+      lastEditsOf(
+        session,
+        workspaceId,
+        page.edges.map(({ node }) => node),
       ),
       readFormIcons(),
     ]);
@@ -96,6 +103,7 @@ export const readCovenIngredients = cache(
         if (answer instanceof Error) throw answer;
         return answer;
       }),
+      lastEdits,
     };
   },
 );
@@ -149,19 +157,28 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   const jarsOf = () => covenJarsOf(session, membership.workspaceId, id);
+  // The same read the cards make, for the one entry (M6.18).
+  const lastEditOf = async () =>
+    (await lastEditsOf(session, membership.workspaceId, [entry]))[0] ?? null;
   if (entry.workspaceId === membership.workspaceId) {
-    const [detail, jars] = await Promise.all([detailOf(), jarsOf()]);
-    return { shown: entry, own: true, detail, covens: [], jars };
+    const [detail, jars, lastEdit] = await Promise.all([detailOf(), jarsOf(), lastEditOf()]);
+    return { shown: entry, own: true, detail, covens: [], jars, lastEdit };
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
   // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
-  const [read, covens, jars] = await Promise.all([detailOf(), covensHolding(id), jarsOf()]);
+  const [read, covens, jars, lastEdit] = await Promise.all([
+    detailOf(),
+    covensHolding(id),
+    jarsOf(),
+    lastEditOf(),
+  ]);
   return {
     shown: applyCupboardEntry(held.entry, held.cupboardEntry),
     own: false,
     detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },
     covens,
     jars,
+    lastEdit,
   };
 }

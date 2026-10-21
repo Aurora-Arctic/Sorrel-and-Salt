@@ -8,6 +8,7 @@ import type {
   DeleteOwnIngredientMutation,
   DeleteOwnIngredientMutationVariables,
 } from '@/gql/graphql';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -44,10 +45,12 @@ const HELD: CardMoreProps = {
 let queryClient = makeQueryClient();
 const onPage = (props?: CardMoreProps) => (
   <QueryClientProvider client={queryClient}>
-    <main>
-      <h1>Ingredients</h1>
-      {props && <CardMore {...props} />}
-    </main>
+    <StatusRegionProvider>
+      <main>
+        <h1>Ingredients</h1>
+        {props && <CardMore {...props} />}
+      </main>
+    </StatusRegionProvider>
   </QueryClientProvider>
 );
 function renderOnPage(props: CardMoreProps) {
@@ -135,6 +138,9 @@ describe('CardMore', () => {
     expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
     expect(router.replace).not.toHaveBeenCalled();
 
+    // The removal is said in the page's status region, which outlives the card.
+    expect(screen.getByRole('status')).toHaveTextContent('Testwort deleted');
+
     // The list arrives again without the card.
     view.rerender(onPage());
     await waitFor(() =>
@@ -177,6 +183,7 @@ describe('CardMore', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(bin).toHaveFocus();
     expect(router.refresh).not.toHaveBeenCalled();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it("shows the service's refusal of a Remove and gives More the focus back", async () => {

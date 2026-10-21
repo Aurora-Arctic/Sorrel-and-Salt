@@ -3,6 +3,7 @@
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
+import LastEdit from '../LastEdit';
 import { CompendiumEditLink, EditLink } from '../IconTip';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { RouteModal } from '../Modal';
@@ -32,6 +33,7 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
  * bin (`actions`). Under the formal name: the other badges.
  */
 function headingOf({
+  lastEdit,
   heading,
   marks,
   editAction,
@@ -62,7 +64,7 @@ function headingOf({
     <PlusMark plus={plus} ingredientId={ingredientId} name={editAction?.name ?? heading.title} />
   );
   // The compendium card's order: the plus, Edit in Compendium, then the three dots.
-  const actions = (add || edit || more) && (
+  const buttons = (add || edit || more) && (
     <>
       {add}
       {edit}
@@ -72,7 +74,8 @@ function headingOf({
   return {
     ...heading,
     topEnd: top,
-    ...(actions && { formalActions: actions }),
+    ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
+    ...(buttons && { formalActions: buttons }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
   };
 }

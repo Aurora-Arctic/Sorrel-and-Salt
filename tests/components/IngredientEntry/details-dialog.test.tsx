@@ -43,6 +43,31 @@ beforeEach(() => {
 });
 
 describe('DetailsDialog', () => {
+  it('draws the latest edit in the window when given one, and none when not', () => {
+    const { unmount } = render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{
+          heading: detailsHeading(ENTRY),
+          pageHref: PAGE,
+          lastEdit: { by: 'Fixture A', at: '2026-09-01T10:30:00.000Z' },
+        }}
+      />,
+    );
+    expect(within(dialog()).getByRole('button', { name: /^Edited/ })).toHaveAccessibleDescription(
+      /Fixture A/,
+    );
+    unmount();
+
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE }}
+      />,
+    );
+    expect(within(dialog()).queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
+  });
+
   it('opens nothing while its address asks for nothing', () => {
     render(<DetailsDialog closeHref={LIST} />);
 

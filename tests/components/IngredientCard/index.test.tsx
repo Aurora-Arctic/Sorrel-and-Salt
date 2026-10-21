@@ -484,3 +484,32 @@ describe('IngredientCard recency (MB.106)', () => {
     expect(screen.queryByText('Updated', { exact: true })).toBeNull();
   });
 });
+
+describe('IngredientCard last edit (M6.18)', () => {
+  const AT = '2026-09-01T10:30:00.000Z';
+
+  it('shows the latest edit when given one, holding its moment', () => {
+    const { container } = render(
+      <IngredientCard {...BASE} kind="own" lastEdit={{ by: 'Fixture A', at: AT }}>
+        <p>Jar line.</p>
+      </IngredientCard>,
+    );
+
+    expect(container.querySelector('time')).toHaveAttribute('datetime', AT);
+    expect(container).toHaveTextContent('Fixture A');
+  });
+
+  it('shows the edit on a card with no jar lines or actions', () => {
+    const { container } = render(
+      <IngredientCard {...BASE} kind="own" lastEdit={{ by: null, at: AT }} />,
+    );
+
+    expect(container.querySelector('time')).toHaveAttribute('datetime', AT);
+  });
+
+  it('draws no time with no edit', () => {
+    const { container } = render(<IngredientCard {...BASE} kind="own" lastEdit={null} />);
+
+    expect(container.querySelector('time')).toBeNull();
+  });
+});

@@ -62,3 +62,5 @@ The tests: `tests/modules/identity/services/display-names.test.ts` holds
 every row of the table above, each with the precondition that would have let
 it succeed; `tests/modules/identity/loaders/users-by-id.test.ts` holds the
 one read per batch and the per-request construction.
+
+**A second caller: the Ingredients list (M6.18).** A card's last-edit line names its editor with `displayNamesOf` too, not the `usersById` loader, since the list is a server component and not a GraphQL request. `lastEditsOf` (`src/modules/ingredients/services/last-edits.ts`) picks each card's newest edit first and then asks for all the editors' names in one `displayNamesOf` call, so a page of 24 cards costs one name read, never one per card. A null name (a stranger, or a non-uuid id) leaves the card showing the time alone.

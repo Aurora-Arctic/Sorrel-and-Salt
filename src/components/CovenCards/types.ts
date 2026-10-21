@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { CompendiumListFilterProps, CompendiumListProps } from '../CompendiumList/types';
 import type { EntryKind } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
+import type { LastEditProps } from '../LastEdit/types';
 import type { JarLine } from '../JarLines/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { SafetyVariant } from '../SafetyNote/types';
@@ -27,6 +28,8 @@ export interface CovenCardEntry {
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
+  /** Who last edited it and when (M6.18): the newest of its jars and, for a coven's own entry, its row. */
+  lastEdit?: LastEditProps | null;
   /** Its details modal over the list, `?entry=<id>`, which the Quick Look eye at the card's bottom left opens (M12.5). */
   details: RouteModalLink;
   /**

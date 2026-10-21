@@ -271,3 +271,15 @@ export const NewLongName: Story = () => (
     <Jars />
   </IngredientCard>
 );
+
+// The newest edit across the ingredient's jars (M6.18): who, and when, under the jar lines.
+export const LastEdited: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="own"
+    forms={false}
+    lastEdit={{ by: 'Fixture A', at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }}
+  >
+    <Jars />
+  </IngredientCard>
+);

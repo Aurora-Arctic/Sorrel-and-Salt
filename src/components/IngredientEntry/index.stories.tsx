@@ -262,6 +262,17 @@ export const NoFormalName: Story = () => (
   />
 );
 
+// A coven's own entry with its latest editor, right-aligned above the icon row (M6.18).
+export const CovenEntryLastEdited: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({ workspaceId: '00000000-0000-4000-8000-0000000000c1' }),
+    }}
+    lastEdit={{ by: 'Fixture A', at: new Date(Date.now() - 3_600_000).toISOString() }}
+  />
+);
+
 // Unsettled, with a name recorded: upright, and marked unconfirmed.
 export const UnknownWithName: Story = () => (
   <Entry
@@ -642,6 +653,17 @@ export const DetailsWithStock: Story = () => (
   />
 );
 DetailsWithStock.meta = { iframed: true };
+
+// Quick Look with the latest editor stacked over the buttons, right-aligned (M6.18).
+export const DetailsLastEdited: Story = () => (
+  <Details
+    detail={STOCKED}
+    listHref={COVEN_LIST}
+    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    lastEdit={{ by: 'Fixture A', at: '2026-10-21T09:00:00.000Z' }}
+  />
+);
+DetailsLastEdited.meta = { iframed: true };
 
 // The Edit Stock dialog opened from the window's own stock button (M9.9), as
 // on a coven's list: a modal over the details modal, which must sit centred

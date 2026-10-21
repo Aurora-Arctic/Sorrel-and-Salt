@@ -53,6 +53,8 @@ export interface ModalHeading {
    * the markup. The formal name wraps short of them. Not in the dialog's name.
    */
   formalActions?: ReactNode;
+  /** A line above the formal name and the title, under any top line (the details window's last edit). Not in the dialog's name. */
+  aboveName?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
   under?: ReactNode;
 }

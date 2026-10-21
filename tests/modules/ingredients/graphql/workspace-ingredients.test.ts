@@ -6,7 +6,7 @@ import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { toValidationIssues } from '@/lib/validation';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { A, B, C, asUser } from '../../../support/as-user';
+import { A, B, C, D, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
@@ -483,7 +483,9 @@ describe('deleteIngredient', () => {
 
     expect(await remove(asUser(B), id)).toEqual({ data: { deleteIngredient: id } });
 
-    expect(await rowOf(id)).toMatchObject({ deleted_by: B.id });
+    const row = await rowOf(id);
+    expect(row).toMatchObject({ deleted_by: B.id });
+    expect(row.deleted_at).toBeInstanceOf(Date);
     expect((await read(asUser(B), id)).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 
@@ -493,6 +495,18 @@ describe('deleteIngredient', () => {
     expect((await read(asUser(C), id)).data?.ingredient).toMatchObject({ id });
 
     const result = await remove(asUser(C), id);
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect((await rowOf(id)).deleted_at).toBeNull();
+  });
+
+  it('is FORBIDDEN to user D, a member of another coven, by direct id, and the row stays live', async () => {
+    const id = await seed(local());
+    // Why it could have succeeded: the row is live, and W's own member reads it by this id.
+    expect((await read(asUser(B), id)).data?.ingredient).toMatchObject({ id });
+
+    const result = await remove(asUser(D), id);
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');

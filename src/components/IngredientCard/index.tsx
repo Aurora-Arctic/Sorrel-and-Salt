@@ -5,6 +5,7 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
+import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
@@ -39,6 +40,7 @@ const IngredientCard = ({
   level = 2,
   actions,
   startActions,
+  lastEdit,
   children,
 }: IngredientCardProps): ReactElement => {
   const Heading = `h${level}` as const;
@@ -60,6 +62,7 @@ const IngredientCard = ({
   const jars = children != null && children !== false;
   const hasActions = actions != null && actions !== false;
   const hasStart = startActions != null && startActions !== false;
+  const edited = lastEdit != null;
 
   return (
     // The slot is the cabinet hole the card's face slides out of; the drawer body behind the
@@ -140,12 +143,14 @@ const IngredientCard = ({
             ))}
           </p>
         )}
-        {(jars || hasActions || hasStart) && (
+        {(jars || hasActions || hasStart || edited) && (
           // The foot: the jar lines, then the actions, with any start actions at their
           // left. Pushed to the card's bottom edge (`margin-top: auto`), so cards in one
           // grid row end on the same line.
           <div className="specimen__foot">
             {jars && <div className="specimen__stock">{children}</div>}
+            {/* Who last changed the stock, under the jar lines and above the actions (M6.18). */}
+            {edited && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
             {(hasActions || hasStart) && (
               <div className="specimen__actions">
                 {hasStart && <span className="specimen__actions-start">{startActions}</span>}

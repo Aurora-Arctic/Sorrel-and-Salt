@@ -450,6 +450,8 @@ the details window passes them; every other dialog is drawn as before (the owner
   option shown. The × comes after the marks in the
   markup too, as on screen. Without `topEnd` the × stands in the corner beside the head's
   first line, as before, after the head in the markup.
+- **`aboveName`** is a node drawn between the eyebrow and the names: Quick Look puts the
+  entry’s `LastEdit` line there, the place the entry page draws it ([`last-edit.md`](last-edit.md)).
 - **`formalActions`** is a node for the end of the formal name's line: the details
   window's Edit pencil (with the plus beside it where a coven can add the entry), as the
   entry page puts its own (the owner's call, 2026-10-20; it replaced `titleActions`, which
