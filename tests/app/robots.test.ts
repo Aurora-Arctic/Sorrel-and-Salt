@@ -27,6 +27,7 @@ describe('MB.84: robots', () => {
       '/llms.txt',
       '/.well-known/ai-catalog.json',
       '/.well-known/ard.json',
+      '/sitemap.xml',
     ]);
   });
 
@@ -46,6 +47,7 @@ describe('MB.84: robots', () => {
     ['/llms.txt', true],
     ['/.well-known/ai-catalog.json', true],
     ['/.well-known/ard.json', true],
+    ['/sitemap.xml', true],
     ['/.well-known/other.json', false],
     ['/coven/fixture-coven', false],
     ['/coven', false],
@@ -55,6 +57,17 @@ describe('MB.84: robots', () => {
     ['/api/graphql', false],
   ])('treats %s as crawlable: %s', (path, expected) => {
     expect(allowed(path)).toBe(expected);
+  });
+
+  // `Disallow: /` once blocked the very sitemap robots.txt named, so the two are tied together:
+  // whatever sitemap the production rules advertise must itself be crawlable under them.
+  it('lets a crawler fetch the sitemap it advertises', () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+
+    const { sitemap } = robots();
+
+    expect(sitemap).toBeTypeOf('string');
+    expect(allowed(new URL(sitemap as string).pathname)).toBe(true);
   });
 
   it.each(['preview', 'development', undefined])('disallows everything under %s', (env) => {

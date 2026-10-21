@@ -11,7 +11,7 @@ import type {
 // function, so the component only draws it: it returns typed fragments, and the
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
-// text query, categories, forms, deities, zodiac, planets, elements, toxic,
+// text query, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
 // then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
@@ -20,7 +20,7 @@ import type {
 const OR = new Intl.ListFormat('en-GB', { type: 'disjunction' });
 const AND = new Intl.ListFormat('en-GB', { type: 'conjunction' });
 
-// "The" goes before the two luminaries and no other planet.
+// "The" goes before the two luminaries and no other celestial body.
 const WITH_THE = new Set(['sun', 'moon']);
 
 type Part = SearchSentenceFragment;
@@ -28,7 +28,7 @@ type Part = SearchSentenceFragment;
 const text = (t: string): Part => ({ kind: 'text', text: t });
 
 // Values are shown in lower case, bar the three vocabularies whose entries are proper names
-// (deities, zodiac signs and planets), which keep their capitals. This is display only: the
+// (deities, zodiac signs and celestial bodies), which keep their capitals. This is display only: the
 // fragment's `value` is untouched, so it still removes the right filter.
 const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
 
@@ -132,12 +132,12 @@ export function buildSearchSentence({
     clause(text('under '), ...valueList('zodiac', zodiac, OR, (v) => label('zodiac', v)));
   }
 
-  const planets = picked(filter.planets);
-  if (planets.length > 0) {
+  const celestialBodies = picked(filter.celestialBodies);
+  if (celestialBodies.length > 0) {
     clause(
       text('ruled by '),
-      ...valueList('planets', planets, OR, (v) => {
-        const name = label('planets', v);
+      ...valueList('celestialBodies', celestialBodies, OR, (v) => {
+        const name = label('celestialBodies', v);
         return WITH_THE.has(v.toLowerCase()) || WITH_THE.has(name.toLowerCase())
           ? `the ${name}`
           : name;

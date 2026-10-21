@@ -1026,7 +1026,7 @@ type Query {
     categoryMode: CategoryMode = all
 
     """
-    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    Keeps entries listing any one of these celestial bodies, ignoring case.
     """
     celestialBodies: [String!]
 
@@ -1075,7 +1075,7 @@ type Query {
     categoryMode: CategoryMode = all
 
     """
-    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    Keeps entries listing any one of these celestial bodies, ignoring case.
     """
     celestialBodies: [String!]
 
@@ -1171,7 +1171,7 @@ type Query {
     categoryMode: CategoryMode = all
 
     """
-    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    Keeps entries listing any one of these celestial bodies, ignoring case.
     """
     celestialBodies: [String!]
 
@@ -1224,7 +1224,7 @@ type Query {
     categoryMode: CategoryMode = all
 
     """
-    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    Keeps entries listing any one of these celestial bodies, ignoring case.
     """
     celestialBodies: [String!]
 

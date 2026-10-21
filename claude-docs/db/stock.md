@@ -304,7 +304,7 @@ the match score alone, as the compendium does. The joined row rides on each
 page entry, so the resolver primes the `cupboardEntryByIngredient` loader from
 it and `Ingredient.cupboardEntry` on a list row costs no second read.
 
-The search, category, form, deity, zodiac sign, planet and toxic filters (the
+The search, category, form, deity, zodiac sign, celestial body and toxic filters (the
 form filter a list, and the last four since M11.22) are the compendium's own,
 from `compendiumList`, so the list matches, ranks and pages as the compendium
 does. They run under the coven's proof rather than the compendium tier, so a
@@ -342,7 +342,7 @@ entries each filter value would list, counted by the rules of
 `ingredient: read` check as the list, then calls
 `findWorkspaceIngredientFacets`, which counts within `workspaceListScopeIncludingSoftDeleted`
 (the coven's own entries and the compendium entries its cupboard names) over
-the same left join, so the element, zodiac sign and planet counts read the
+the same left join, so the element, zodiac sign and celestial body counts read the
 coven's overrides: an entry whose cupboard row moves it from one element to
 another is counted under the new one, and a list cleared to `[]` counts under
 none. Category counts stay the compendium's, as categories have no override.

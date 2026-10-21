@@ -304,7 +304,7 @@ test(
     });
 
     // M12.20: a name the compendium already bears is a question, not a copy.
-    await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, Use It puts the entry in the cupboard with the typed label", async () => {
+    await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, its + puts the entry in the cupboard and turns into its Quick Look, the form left open", async () => {
       await withSql(async (sql) => {
         for (const name of ['Ostrelvine', 'Kaelmoss']) {
           await insertIngredient(
@@ -325,7 +325,9 @@ test(
 
       const own = dialog.getByRole('button', { name: 'Create Anyway', exact: true });
       await expect(own).toBeVisible();
-      await expect(dialog.getByRole('button', { name: /^Use It/ })).toBeVisible();
+      await expect(
+        dialog.getByRole('button', { name: /^Add to My Ingredients: Ostrelvine/ }),
+      ).toBeVisible();
       // The save waits on the question: nothing was written.
       expect(await savedRows(coven.id, 'Ostrelvine')).toHaveLength(0);
       await assertNoAccessibilityViolations(page);
@@ -338,10 +340,20 @@ test(
       dialog = await openAddIngredient(page);
       await nameField(dialog).fill('Kaelmossia testalis');
       await saveIngredient(dialog).click();
-      await dialog.getByRole('button', { name: /^Use It/ }).click();
+      // The Create Anyway save above left the page on Ostrelvine's own; the + must not move it.
+      const before = page.url();
+      await dialog.getByRole('button', { name: /^Add to My Ingredients: Kaelmoss/ }).click();
 
-      await expect(dialog).toHaveCount(0);
-      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}`));
+      // M12.48: the + shows the check, then turns into the eye, and the row moves under In This
+      // Coven; the form stays open with what was typed, and the page is not left.
+      await expect(
+        dialog
+          .getByRole('list', { name: 'In This Coven' })
+          .getByRole('button', { name: /^Quick Look Kaelmoss/ }),
+      ).toBeVisible();
+      await expect(dialog).toBeVisible();
+      await expect(nameField(dialog)).toHaveValue('Kaelmossia testalis');
+      expect(page.url()).toBe(before);
       const [held] = await withSql(
         (sql) => sql<{ label: string | null; jars: number; copies: number }[]>`
           select e.label,
@@ -353,7 +365,8 @@ test(
           join ingredients i on i.id = e.ingredient_id
           where e.workspace_id = ${coven.id} and i.name = 'Kaelmoss' and e.deleted_at is null`,
       );
-      expect(held).toEqual({ label: 'Kaelmossia testalis', jars: 0, copies: 0 });
+      // The + sends no label: the name typed asked a question, it did not relabel the entry.
+      expect(held).toEqual({ label: null, jars: 0, copies: 0 });
     });
   },
 );

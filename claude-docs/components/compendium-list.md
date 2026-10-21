@@ -22,7 +22,7 @@ resolves through, rather than one read per row.
 | Prop           | What it is                                                                                                                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                 |
-| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked                                                                             |
+| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, celestialBodies, toxic }`, as asked                                                                     |
 | `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                             |
 | `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)                                                                                               |
 | `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts |
@@ -56,7 +56,7 @@ different groups, so the page offers each name once, whatever its case.
   type-ahead (`query`, [`ingredient-search.md`](ingredient-search.md)) with its own Search
   submit, then [`FacetPanel`](facet-panel.md) (M12.4) with `admin` on: the Filters (n)
   button, a quiet Clear All link beside it while any facet is in use, and the dialog of
-  facets (categories with Match, No Refs, No Form, forms, toxic, planets, zodiac, deities,
+  facets (categories with Match, No Refs, No Form, forms, toxic, celestial bodies, zodiac, deities,
   elements). Above the results, outside the form, sits [`SearchSentence`](search-sentence.md).
   The compendium search has no Classification filter (the column stays in the table); the
   `FilterForm` Clear link is turned off (`clear={false}`), since the panel carries Clear
@@ -182,7 +182,7 @@ workshop does not serve. Render-only, no test ids, no snapshots.
 
 `tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit links and their names, no table when there are none, the Filters count (chosen values, not the name), Clear All only while a facet is in use, the form the server drew sending the name and every facet (categories included), the address a panel change or the Search submit pushes (name typed and every facet carried, No Refs as `1`, Match left out below two categories), a picked name opening its modal over the filter shown, the loading state (list gone, row `aria-busy`, controls `aria-disabled`, a second change refused), a change held until Apply Filters applies them all in one push, Escape applying and a close with no change pushing nothing, a count in the panel updating after a change before Apply, Clear All applying at once, the form kept through a facet change and drawn afresh for a new name, the panel following the address, the sentence naming deities (with the tradition only for a shared name) and categories without links, and `compendiumHref`. The browser flows are `tests/e2e/admin-compendium.spec.ts`. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?forms=` read trimmed into the list and its count,
-blank as none, the facet read under the same variables as the list, deities mapped from slugs to ids, zodiac, planets and toxic, kept on every Edit, the pager, Add Ingredient and the
+blank as none, the facet read under the same variables as the list, deities mapped from slugs to ids, zodiac, celestial bodies and toxic, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.
 
 ## The pinned Edit column and the Categories floor (2026-10-19)

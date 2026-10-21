@@ -2,6 +2,7 @@
 
 import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import Combobox, { ComboboxEntry } from '../Combobox';
+import { matchesLabelOrGroup } from '../Combobox/match';
 import InfoTip from '../InfoTip';
 import type { CategoryOption, CategoryPickerProps, PickerCategory } from './types';
 import './index.scss';
@@ -16,13 +17,9 @@ import './index.scss';
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
-/** Whether `text` is in `name`, case set aside; blank text is in every name. */
-const matches = (name: string, text: string) =>
-  name.toLowerCase().includes(text.trim().toLowerCase());
-
 /**
  * The rows the box offers for `text`: the categories not yet picked whose
- * name holds it, under their groups, both alphabetical. Keyed by id, since
+ * name or group name holds it, under their groups, both alphabetical. Keyed by id, since
  * two groups may each hold a category of one name.
  */
 function optionsFor(
@@ -36,7 +33,7 @@ function optionsFor(
       (category) =>
         !picked.has(category.id) &&
         !(hideZeros && category.count === 0) &&
-        matches(category.name, text),
+        matchesLabelOrGroup(category.name, category.group.name, text),
     )
     .sort((a, b) => byName(a.group, b.group) || byName(a, b))
     .map((category) => {

@@ -593,8 +593,9 @@ closes and the control leaves a status beside it, since the form’s own Saved
 notice goes with the form.
 
 A coven's add can end another way (M12.20): when the compendium already bears
-the typed name, the form asks, and Use It closes the modal too and routes to
-the entry's coven page, with no Saved status. The question is the form's
+the typed name, the form asks, and a match's + (M12.48; M12.20's Use It)
+closes the modal too and routes to the entry's coven page, with no Saved
+status. The question is the form's
 ([`ingredient-form.md`](ingredient-form.md), "The duplicate warning").
 
 ## RouteModal

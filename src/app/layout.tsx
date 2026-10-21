@@ -5,6 +5,7 @@ import { StatusRegionProvider } from '../components/ClickFeedback/status-region'
 import ThemeToggle from '../components/ThemeToggle';
 import { impersonationEnabled } from '../lib/impersonation';
 import { SITE_NAME, SITE_ORIGIN } from '../lib/site';
+import CatalogLink from './catalog-link';
 import { body, display } from './fonts';
 import ImpersonationBannerSlot from './impersonation-banner';
 import PrePaintScripts from './pre-paint-scripts';
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <head>
+        <CatalogLink />
         <PrePaintScripts />
       </head>
       <body>

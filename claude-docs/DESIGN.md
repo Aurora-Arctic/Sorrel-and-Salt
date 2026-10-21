@@ -791,7 +791,7 @@ type Query {
     categoryMode: CategoryMode = all # all or any of the chosen categories (M8.12)
     deityIds: [ID!] # entries linked to any one of these deities (M11.22)
     zodiacSigns: [String!] # entries holding any one of these signs (M11.22)
-    celestialBodies: [String!] # entries holding any one of these planets (M11.22)
+    celestialBodies: [String!] # entries holding any one of these celestial bodies (M11.22)
     toxic: ToxicFilter # any, toxic or not_toxic: the entry or any live form flagged (M11.22)
     withoutReferences: Boolean # the admin's to-do list: live entries with no live link (§5, M5.5)
     withoutForms: Boolean # the admin's second to-do list: live entries with no live variant (M12.30)

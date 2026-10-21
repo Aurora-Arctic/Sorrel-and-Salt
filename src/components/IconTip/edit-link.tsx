@@ -56,8 +56,11 @@ export const EditLink = ({
  * pencil, but named and tipped for the compendium it changes, "Edit in Compendium", so that on a
  * page that also offers a coven's own choices it cannot be taken for one of them.
  */
-export const CompendiumEditLink = (props: EditLinkProps): ReactElement => (
-  <IconLink {...props} verb="Edit in Compendium" icon={<PencilIcon />} />
+export const CompendiumEditLink = ({
+  className,
+  ...props
+}: EditLinkProps & { className?: string }): ReactElement => (
+  <IconLink {...props} className={className} verb="Edit in Compendium" icon={<PencilIcon />} />
 );
 
 /**

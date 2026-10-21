@@ -110,7 +110,7 @@ export interface CategoryFacetChoice extends FacetChoice {
  * shows (the compendium's `compendiumFacets`, public like the list). Each list
  * is in the order to offer them: forms, deities and categories most entries
  * first, then by label, and only the values some entry carries plus the ones
- * chosen, which sit at zero if none does; signs, planets and elements all of
+ * chosen, which sit at zero if none does; signs, celestial bodies and elements all of
  * them, zeros included, in the vocabulary's order; toxic as toxic, then not
  * toxic.
  */
@@ -121,7 +121,7 @@ export interface CompendiumFacetCounts {
   /** Zodiac signs, by name. */
   zodiac: FacetChoice[];
   /** Celestial bodies, by name. */
-  planets: FacetChoice[];
+  celestialBodies: FacetChoice[];
   elements: FacetChoice<IngredientElement>[];
   toxic: FacetChoice<'toxic' | 'not_toxic'>[];
   /** How many entries cite no live reference, the No Refs switch's count; the same with it on or off. */
@@ -142,7 +142,7 @@ export interface CompendiumFacetCounts {
 
 /**
  * The list's filter as asked: the name query, the forms, deities (by slug),
- * zodiac signs and planets an entry may hold, whether to show only the entries
+ * zodiac signs and celestial bodies an entry may hold, whether to show only the entries
  * that cite no reference, the elements it may hold, toxic or not toxic (blank
  * for either), and the categories it must all be filed under, or any of, by
  * slug. Read from the address by the parameter table (./params.ts), whose

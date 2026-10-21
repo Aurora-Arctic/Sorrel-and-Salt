@@ -32,7 +32,7 @@ import type { IngredientDetailsDialogProps, IngredientDetailsOpened } from './ty
  * the entry, left of it; on a coven's list, the coven card's Edit or Annotate and its More or
  * bin (`actions`). Under the formal name: the other badges.
  */
-function headingOf({
+export function headingOf({
   lastEdit,
   heading,
   marks,

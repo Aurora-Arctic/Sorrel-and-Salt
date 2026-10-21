@@ -59,7 +59,12 @@ const markOf = (
 // for the compendium it changes, as on the entry page, so it is not taken for a coven's own.
 const editOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
   entry.editHref && entry.editHeading ? (
-    <CompendiumEditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
+    <CompendiumEditLink
+      href={entry.editHref}
+      heading={entry.editHeading}
+      name={nameOf(entry)}
+      className="icon-tip__edit icon-tip__edit--ink"
+    />
   ) : undefined;
 
 // The three dots, where a coven that holds the entry lets the viewer do something about it.

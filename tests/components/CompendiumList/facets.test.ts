@@ -147,7 +147,7 @@ describe('the facet counts as the list takes them', () => {
     expect(counts.categories.map(({ value }) => value)).toEqual(['testward']);
   });
 
-  it('keeps signs and planets by name in the order given, and zeros with them', () => {
+  it('keeps signs and celestial bodies by name in the order given, and zeros with them', () => {
     const counts = compendiumFacetCounts(
       {
         ...EMPTY,
@@ -163,7 +163,7 @@ describe('the facet counts as the list takes them', () => {
       { value: 'Aries', label: 'Aries', count: 0 },
       { value: 'Taurus', label: 'Taurus', count: 2 },
     ]);
-    expect(counts.planets).toEqual([{ value: 'Sun', label: 'Sun', count: 1 }]);
+    expect(counts.celestialBodies).toEqual([{ value: 'Sun', label: 'Sun', count: 1 }]);
   });
 
   it('keeps elements and both toxic settings with their counts, and the No Refs count', () => {
