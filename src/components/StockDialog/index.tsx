@@ -436,18 +436,18 @@ export function StockDialogModal({
   onClose: () => void;
   returnTo?: () => HTMLElement | null | undefined;
   /**
-   * The coven the dialog writes to, named after the ingredient, as the Modal's qualifier (quieter,
-   * and in the dialog's name: "Edit Stock, Testwort, Whitethorn Coven"). For a dialog opened from
-   * a page that is not a coven's, where nothing else says whose jars these are (the owner's call,
-   * 2026-10-21); a coven's own pages leave it out, the address and the shell already say.
+   * The coven the dialog writes to, put in the eyebrow: "Edit Stock for Whitethorn Coven" over the
+   * ingredient's name, and so in the dialog's name ("Edit Stock for Whitethorn Coven, Testwort").
+   * For a dialog opened from a page that is not a coven's, where nothing else says whose jars
+   * these are (the owner's call, 2026-10-21); a coven's own pages leave it out, the address and
+   * the shell already say, and the eyebrow stays "Edit Stock".
    */
   coven?: string;
 }): ReactElement {
   return (
     <Modal
-      eyebrow="Edit Stock"
+      eyebrow={coven ? `Edit Stock for ${coven}` : 'Edit Stock'}
       title={props.ingredientName}
-      qualifier={coven}
       size="listed"
       onClose={onClose}
       returnTo={returnTo}

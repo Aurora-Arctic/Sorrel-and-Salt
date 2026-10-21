@@ -421,10 +421,14 @@ const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}
  * Undo or Save. Save closes the dialog once the batch has been answered. A unit is a
  * combobox, picked with `pickUnit` by its label as the dialog shows it.
  */
-export function stockEditor(row: Locator, name: string) {
+export function stockEditor(row: Locator, name: string, coven?: string) {
   const page = row.page();
   const title = `Edit Stock, ${name}`;
-  const dialog = page.getByRole('dialog', { name: title });
+  // Opened from a page that is not a coven's (the compendium), the dialog's eyebrow names the
+  // coven, "Edit Stock for <Coven>, <name>" (M9.12), so it is found by that name.
+  const dialog = page.getByRole('dialog', {
+    name: coven ? `Edit Stock for ${coven}, ${name}` : title,
+  });
   return {
     open: row.getByRole('button', { name: title }),
     dialog,

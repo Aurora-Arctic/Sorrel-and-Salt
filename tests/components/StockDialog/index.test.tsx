@@ -111,12 +111,12 @@ async function sent(calls: SaveStockMutationVariables[]) {
 describe('StockDialog', () => {
   // Opened from a page that is not a coven's (M9.12), the dialog names the coven it writes to in
   // its accessible name; on a coven's own page it is left out.
-  it('names the coven it writes to when given one, and only then', () => {
+  it('puts the coven it writes to in the eyebrow when given one, and only then', () => {
     const { unmount } = render(
       <StockDialogModal {...PROPS} onClose={() => {}} coven="Fixture Coven" />,
     );
     expect(
-      screen.getByRole('dialog', { name: 'Edit Stock, Testwort, Fixture Coven' }),
+      screen.getByRole('dialog', { name: 'Edit Stock for Fixture Coven, Testwort' }),
     ).toBeInTheDocument();
     unmount();
 

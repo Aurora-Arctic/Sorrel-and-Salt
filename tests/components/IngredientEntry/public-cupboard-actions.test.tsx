@@ -420,7 +420,7 @@ describe('CupboardActions on the public page', () => {
       show(props([place(1, { held: true, stock: stock(50) }), place(2, { held: true })]));
       choose('Edit Stock');
       const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock, Testwort, Fixture Coven One',
+        name: 'Edit Stock for Fixture Coven One, Testwort',
       });
       expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
       expect(within(dialog).queryByRole('combobox', { name: 'Coven' })).toBeNull();
@@ -438,7 +438,7 @@ describe('CupboardActions on the public page', () => {
       pickCoven(picker, 'Fixture Coven Two');
       fireEvent.click(within(picker).getByRole('button', { name: 'Continue' }));
       const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock, Testwort, Fixture Coven Two',
+        name: 'Edit Stock for Fixture Coven Two, Testwort',
       });
       expect(within(dialog).getByRole('button', { name: /^Flower\b.*20 g/ })).toBeInTheDocument();
     });

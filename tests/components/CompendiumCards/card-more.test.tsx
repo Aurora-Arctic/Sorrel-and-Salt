@@ -193,7 +193,7 @@ describe('CompendiumCardMore', () => {
       renderMore(props([place({ stock: stock([jar(FLOWER, 50)]) })]));
       choose('Edit Stock');
       const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock, House Salt, Fixture Coven',
+        name: 'Edit Stock for Fixture Coven, House Salt',
       });
       expect(within(dialog).queryByRole('combobox', { name: 'Coven' })).not.toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
@@ -218,7 +218,7 @@ describe('CompendiumCardMore', () => {
       pickOption('Coven', 'Other Coven');
       press(within(picker).getByRole('button', { name: 'Continue' }));
       const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock, House Salt, Other Coven',
+        name: 'Edit Stock for Other Coven, House Salt',
       });
       expect(within(dialog).getByRole('button', { name: /^Oil\b/ })).toBeInTheDocument();
       expect(within(dialog).queryByRole('button', { name: /^Flower\b/ })).toBeNull();
@@ -236,7 +236,7 @@ describe('CompendiumCardMore', () => {
       );
       choose('Edit Stock');
       expect(
-        await screen.findByRole('dialog', { name: 'Edit Stock, House Salt, Fixture Coven' }),
+        await screen.findByRole('dialog', { name: 'Edit Stock for Fixture Coven, House Salt' }),
       ).toBeInTheDocument();
     });
 
@@ -244,7 +244,7 @@ describe('CompendiumCardMore', () => {
       renderMore(props([place({ stock: stock() })]));
       choose('Edit Stock');
       const dialog = await screen.findByRole('dialog', {
-        name: 'Edit Stock, House Salt, Fixture Coven',
+        name: 'Edit Stock for Fixture Coven, House Salt',
       });
       press(within(dialog).getByRole('button', { name: 'Cancel' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
