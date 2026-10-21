@@ -386,3 +386,160 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
   await server.release();
   await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
 });
+
+// Signed out, the public frame's body answers a move between public pages
+// as the shell's does (M12.47): the page gives way to the destination's
+// skeleton under the frame's bar and nav, in the page's one main landmark.
+// What these do not repeat: a retired slug still answers 308 on a direct
+// request, which tests/e2e/compendium-entry.spec.ts proves on every run.
+
+/** A signed-out visitor's page: the frame's way in is in the bar. */
+async function expectSignedOut(page: Page): Promise<void> {
+  await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toBeVisible();
+}
+
+/** The public frame's chrome, which stays through a wait. */
+async function expectFrameStanding(page: Page): Promise<void> {
+  await expect(page.getByRole('banner')).toBeVisible();
+  await expect(siteNav(page).getByRole('link', { name: 'Compendium', exact: true })).toBeVisible();
+}
+
+/** One main landmark, one level-one heading and one status, as at every wait. */
+async function expectOneWait(page: Page): Promise<void> {
+  await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(statuses(page)).toHaveCount(1);
+}
+
+/** The first card's entry on the public Compendium: its address and its name. */
+async function firstEntry(page: Page): Promise<{ href: string; name: string }> {
+  const link = compendiumList(page).locator('a[href^="/compendium/ingredients/"]').first();
+  const href = await link.getAttribute('href');
+  expect(href).toBeTruthy();
+  return { href: href!, name: (await link.innerText()).trim() };
+}
+
+test("signed out, the Compendium link takes an entry's page away at once and puts the Compendium's cards in its place", async ({
+  page,
+}) => {
+  await page.goto('/compendium');
+  const { href } = await firstEntry(page);
+  const response = await page.goto(href);
+  expect(response?.status()).toBe(200);
+  await expectSignedOut(page);
+  const title = page.getByRole('heading', { level: 1 });
+  await expect(title).toHaveCount(1);
+  const name = await title.innerText();
+  // Why a wait has something to take away: the entry's own heading is the page's.
+  expect(name).not.toBe('Loading');
+  const server = await holdServerAnswers(page);
+
+  server.hold();
+  await siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+
+  await expect(page.getByRole('heading', { level: 1, name, exact: true })).toHaveCount(0);
+  await expectOneWait(page);
+  await expectFrameStanding(page);
+  expect(new URL(page.url()).pathname).toBe(href);
+  await assertNoAccessibilityViolations(page);
+
+  await server.release();
+
+  await expect(page).toHaveURL('/compendium');
+  await expect(compendiumList(page)).toBeVisible();
+  await expect(page.getByRole('main')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+});
+
+test("signed out, a card takes the Compendium away at once and puts an entry's page in its place", async ({
+  page,
+}) => {
+  const response = await page.goto('/compendium');
+  expect(response?.status()).toBe(200);
+  await expectSignedOut(page);
+  const { href, name } = await firstEntry(page);
+  const server = await holdServerAnswers(page);
+
+  server.hold();
+  await compendiumList(page).locator(`a[href="${href}"]`).click();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+
+  await expect(compendiumList(page)).toHaveCount(0);
+  await expectOneWait(page);
+  await expectFrameStanding(page);
+  expect(new URL(page.url()).pathname).toBe('/compendium');
+  await assertNoAccessibilityViolations(page);
+
+  await server.release();
+
+  await expect(page).toHaveURL(href);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(name);
+  await expect(page.getByRole('main')).toHaveCount(1);
+});
+
+test("signed out under reduced motion, the public frame's wait pulses with the one shared keyframes and nothing else moves", async ({
+  page,
+}) => {
+  await page.goto('/compendium');
+  const { href } = await firstEntry(page);
+  await page.goto(href);
+  await expectSignedOut(page);
+  const server = await holdServerAnswers(page);
+  const press = () => siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
+
+  // Why the name below is reduced motion's doing: with motion allowed, the
+  // same wait's skeleton moves with the shimmer's keyframes.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expectStill(page);
+  server.hold();
+  await press();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+  await expect
+    .poll(async () => (await runningAnimations(page)).some(({ inMain }) => inMain))
+    .toBe(true);
+  expect((await runningAnimations(page)).some(({ inMain, name }) => inMain && name !== PULSE)).toBe(
+    true,
+  );
+  await server.release();
+  await expect(page).toHaveURL('/compendium');
+  await expect(compendiumList(page)).toBeVisible();
+
+  await page.goto(href);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expectStill(page);
+  server.hold();
+  await press();
+  await expect.poll(server.navigations).toBeGreaterThan(0);
+  await expect
+    .poll(async () => {
+      const running = await runningAnimations(page);
+      return {
+        inMain: running.some(({ inMain }) => inMain),
+        held: running.some(({ name }) => name === 'loading-appear'),
+      };
+    })
+    .toEqual({ inMain: true, held: false });
+  const pulsing = await runningAnimations(page);
+  expect([...new Set(pulsing.map(({ name }) => name))]).toEqual([PULSE]);
+  await assertNoAccessibilityViolations(page);
+
+  await server.release();
+  await expect(page).toHaveURL('/compendium');
+  await expect(compendiumList(page)).toBeVisible();
+});
+
+test('signed out, a direct request for an unknown entry still answers 404 with the page the server drew', async ({
+  page,
+}) => {
+  // Why the 404 is the slug's: the route answers a known one with 200.
+  await page.goto('/compendium');
+  const { href } = await firstEntry(page);
+  expect((await page.request.get(href)).status()).toBe(200);
+
+  const response = await page.goto('/compendium/ingredients/fixture-no-such-wort');
+
+  // A route-level Suspense boundary would have sent a 200 before the page knew.
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+});

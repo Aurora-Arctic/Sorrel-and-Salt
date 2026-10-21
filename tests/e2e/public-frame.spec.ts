@@ -29,7 +29,8 @@ test.describe('without script', () => {
       '#main',
     );
     await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
-    await expect(page.locator('main#main')).toBeVisible();
+    // The frame's #main is the skip link's wrapper, as the shell's is (M12.47).
+    await expect(page.locator('#main main')).toBeVisible();
   });
 });
 

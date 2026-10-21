@@ -56,40 +56,42 @@ const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
   <WorkshopPathname.Provider value="/coven/fixture-coven/ingredients">
     <PublicFrame>
-      <div className="page-column">
-        <IngredientSearch
-          shape="cards"
-          search={
-            <CompendiumListFilter
-              audience="coven"
-              covenSlug="fixture-coven"
-              workspaceId="00000000-0000-4000-8000-000000000001"
-              filter={filter}
-              facets={NO_FACETS}
-              categories={[]}
-              vocabulary={{ deities: [], formIcons: {} }}
-              total={NAMES.length}
-            />
-          }
-        >
-          <IngredientCardList label="Ingredients">
-            {NAMES.map((name) => (
-              <IngredientCard
-                key={name}
-                href="/compendium"
-                label={name}
-                formalName={null}
-                nomenclature="none"
+      <main>
+        <div className="page-column">
+          <IngredientSearch
+            shape="cards"
+            search={
+              <CompendiumListFilter
+                audience="coven"
+                covenSlug="fixture-coven"
+                workspaceId="00000000-0000-4000-8000-000000000001"
+                filter={filter}
+                facets={NO_FACETS}
                 categories={[]}
-                variants={[]}
-                toxic={false}
-                safetyNotes={null}
-                kind="compendium"
+                vocabulary={{ deities: [], formIcons: {} }}
+                total={NAMES.length}
               />
-            ))}
-          </IngredientCardList>
-        </IngredientSearch>
-      </div>
+            }
+          >
+            <IngredientCardList label="Ingredients">
+              {NAMES.map((name) => (
+                <IngredientCard
+                  key={name}
+                  href="/compendium"
+                  label={name}
+                  formalName={null}
+                  nomenclature="none"
+                  categories={[]}
+                  variants={[]}
+                  toxic={false}
+                  safetyNotes={null}
+                  kind="compendium"
+                />
+              ))}
+            </IngredientCardList>
+          </IngredientSearch>
+        </div>
+      </main>
     </PublicFrame>
   </WorkshopPathname.Provider>
 );
