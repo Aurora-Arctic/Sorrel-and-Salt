@@ -18,6 +18,8 @@ It replaces the one-jar `EditStock` dialog of the first build (the owner's call,
 
 The entry page's Stock section carries the same dialog behind the same button in its heading (M12.29).
 
+**From the compendium's three dots** (M9.12; the owner's call, 2026-10-21) the dialog opens without its own button. A compendium card, the Quick Look window and the public entry page list **Edit Stock** first in their dots, and choosing it mounts `StockDialogModal`, the same `StockDialogForm` inside a `Modal` with the eyebrow "Edit Stock" over the ingredient's name, opened at once and closing back to the dots. `EditStock` (`IngredientEntry/edit-stock.tsx`) holds the choice: one coven opens it, several ask which first. The forms and jars come from `readEntryStock` (`src/app/entry-stock.ts`), read per viewer in one batch, and a save reads the page again as it does here. The coven's own pages are unchanged.
+
 **Over Quick Look**, the dialog opens centred, as any modal does. `ModalButton` draws its `<dialog>` beside the button, so in Quick Look it sits among the details window's `formalActions`, and Modal's rule zeroing those actions' margins (`.modal-dialog__naming > .modal-dialog__formal-actions > *`) took the dialog's own `margin: auto` with them, which is what centres a dialog in the top layer; it opened at the window's top left. The rule now skips a dialog (`:not(dialog)`, [`modal.md`](modal.md)). Layout is not something jsdom computes, so the fix was checked in the browser, on `DetailsWithStockDialog`.
 
 ## The button and the dialog
