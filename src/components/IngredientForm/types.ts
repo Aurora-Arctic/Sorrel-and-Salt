@@ -1,4 +1,5 @@
 import type { ReactNode, Ref, RefObject } from 'react';
+import type { RouteModalLink } from '../Modal/types';
 import type { z } from 'zod';
 import type {
   CreateReferenceMutation,
@@ -42,6 +43,12 @@ interface IngredientFormCallbacks {
   /** Where a near match the duplicate warning names links: a coven's ingredient page, or the admin's compendium modal. */
   duplicateHref: (match: Duplicate) => string;
   /**
+   * A match's Quick Look, the details its list opens over the form (the owner's
+   * call: the admin's form, every match being the compendium's); left out where
+   * the page under the form has no details to open.
+   */
+  quickLookOf?: (match: Duplicate) => RouteModalLink;
+  /**
    * Where a linked substitute's summary links its entry, opened in a new tab;
    * undefined for an entry with no page to open. Left out, a summary links
    * nothing (MB.115).
@@ -67,8 +74,13 @@ export type EntryHref = (ingredient: { slug: string; isGlobal: boolean }) => str
  */
 export type IngredientFormProps = IngredientFormCallbacks &
   (
-    | { workspaceId: string; entry?: EditedIngredient }
-    | { workspaceId: null; entry?: EditedIngredient }
+    | {
+        workspaceId: string;
+        entry?: EditedIngredient;
+        /** The coven's name, which the page status region says an add from a match's + went to; "My Ingredients" when left out. */
+        workspaceName?: string;
+      }
+    | { workspaceId: null; entry?: EditedIngredient; workspaceName?: undefined }
   );
 
 /** The ingredient an edit opens: its id, which the writes name, and its values as the form shows them. */
@@ -603,14 +615,32 @@ export interface DuplicateWarning {
   check: (name: string) => Promise<boolean>;
   /** Sets the matches shown aside and lifts the hold. */
   dismiss: () => void;
+  /** The coven now holds this compendium entry: its lookups are asked again, so it is listed as held. */
+  added: (id: string) => Promise<void>;
 }
 
 export interface NameFieldProps {
   warning: DuplicateWarning;
   /** Where a match links: a coven's ingredient page, or the admin's compendium modal. */
   hrefOf: (match: Duplicate) => string;
-  /** Puts a compendium match in the cupboard (Use It); left out where there is no cupboard, the admin's, and no match offers it. */
-  onUse?: (match: Duplicate) => void;
+  /**
+   * Puts a compendium match in the cupboard (its +, M12.48; once Use It), answering whether it
+   * went in; left out where there is no cupboard, the admin's, and no match offers it.
+   */
+  onUse?: (match: Duplicate) => Promise<boolean>;
+  /** The coven's name, which the page status region says an add went to; "My Ingredients" when left out. */
+  workspaceName?: string;
+  /**
+   * The coven the form adds to, whose held matches each open a Quick Look over the form,
+   * read in it (M12.48); left out on the admin's form, which has no coven.
+   */
+  workspaceId?: string;
+  /**
+   * A match's Quick Look, the details its list opens over the form (the owner's
+   * call: the admin's form, every match being the compendium's); left out where
+   * the page under the form has no details to open.
+   */
+  quickLookOf?: (match: Duplicate) => RouteModalLink;
   /** Whether a match holds a save, offering Create Anyway: a new entry's; an edit's only names its matches. True by default. */
   holds?: boolean;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */

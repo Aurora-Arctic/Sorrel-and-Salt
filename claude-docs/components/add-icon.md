@@ -34,6 +34,7 @@
 - **`.add-icon--held`**: the held check, the same box and green but the default cursor and no wash under the pointer, since it acts on nothing. It is worn alone, without `.add-icon`, so the plus's wash on focus never reaches it.
 - **`.add-icon[data-state]`**: while the check shows, no wash and the default cursor, the held check's look, so nothing moves when the page swaps one for the other.
 - **`.add-icon__glyphs`, `__check`, `__plus`**: the check and the plus stacked in one grid cell. The check is drawn along its stroke (a dash of 15, run to nothing) over `$arrive-duration` and fades out the same way; under reduced motion nothing is drawn or faded.
+- **`.add-icon__eye`**: the Quick Look eye arriving in the plus's place, as `__plus` does. The ingredient form's duplicate warning stacks it under the check, whose + turns into the eye after an add rather than back into a plus (M12.48; [`ingredient-form.md`](ingredient-form.md), "The + in the duplicate warning").
 
 **On a phone** the plus and the check have no rule of their own: each is a `$icon-size-large` (2rem) target, above WCAG 2.5.8's 24px.
 

@@ -4,7 +4,7 @@ import type { ReactElement, Ref } from 'react';
 import MenuButton from '../MenuButton';
 import type { MenuButtonChoices } from '../MenuButton/types';
 import IconTip from './icon-tip';
-import { AnnotateIcon, BinIcon, DotsIcon } from './icons';
+import { AnnotateIcon, BinIcon, DotsIcon, MysticEyeIcon } from './icons';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot and
 // the entry page and Quick Look window's row (the owner's call, 2026-10-20: an entry's actions
@@ -51,6 +51,28 @@ export const AnnotateButton = ({
     <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
       <AnnotateIcon />
       <span className="visually-hidden">Annotate {name}</span>
+    </button>
+  </IconTip>
+);
+
+/**
+ * Quick Look as a button, where the details open in the page rather than at an address: the
+ * Add Ingredient form's held duplicates (M12.48), whose details open over the form so nothing
+ * typed is lost. Everywhere else the eye is `QuickLookLink`.
+ */
+export const QuickLookButton = ({
+  name,
+  onClick,
+  ref,
+}: {
+  name: string;
+  onClick: () => void;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Quick Look">
+    <button ref={ref} type="button" className="icon-tip__look" onClick={onClick}>
+      <MysticEyeIcon />
+      <span className="visually-hidden">Quick Look {name}</span>
     </button>
   </IconTip>
 );

@@ -122,7 +122,8 @@ const UpdateWorkspaceIngredientDocument = graphql(`
   }
 `);
 
-// Use It (M12.20): the compendium entry goes into the cupboard, no jar with it.
+// A match's + (M12.20's Use It, an icon since M12.48): the compendium entry goes
+// into the cupboard, no jar with it.
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntryFromForm(
     $workspaceId: ID!
@@ -185,11 +186,13 @@ const END_REDIRECT = 'endRedirect';
 
 const IngredientForm = ({
   workspaceId,
+  workspaceName,
   entry,
   onSaved,
   onDeleted,
   onCancel,
   duplicateHref,
+  quickLookOf,
   entryHref,
   mayPromote = false,
 }: IngredientFormProps): ReactElement => {
@@ -472,20 +475,24 @@ const IngredientForm = ({
   };
 
   /**
-   * Use It on a compendium match: the typed name is the coven's label only
-   * when it differs from the entry's, and what else was typed rides as the
-   * coven's overrides. The page the entry is in opens, as a save's does.
+   * A compendium match's +: the entry goes in under its own name, and what else
+   * was typed rides as the coven's overrides. The typed name is never sent as a
+   * label: it was a search that found the entry, and as a label it could clash
+   * with one the coven already gives another entry, which refused the add (the
+   * owner's call, M12.48). The entry can be relabelled on its page. The form
+   * stays open with what was typed, reported as Save & Add Another's save is
+   * (`another`), and the + says the add itself: its check, then the eye, and
+   * the row moving under In This Coven (the owner's calls, M12.48, in place of
+   * opening the entry's page). Answers whether it went in.
    */
-  const useEntry = async (match: Duplicate): Promise<void> => {
-    if (workspaceId === null) return;
+  const useEntry = async (match: Duplicate): Promise<boolean> => {
+    if (workspaceId === null) return false;
     const values = getValues();
-    const typed = values.name.trim();
     const listed = (entries: { value: string }[]): string[] | undefined => {
       const chosen = entries.map(({ value }) => value.trim()).filter((value) => value !== '');
       return chosen.length > 0 ? chosen : undefined;
     };
     const input = {
-      label: typed.toLowerCase() !== match.name.trim().toLowerCase() ? typed : undefined,
       description: values.description.trim() || undefined,
       safetyNotes: values.safetyNotes.trim() || undefined,
       elements: values.elements.length > 0 ? values.elements : undefined,
@@ -493,18 +500,22 @@ const IngredientForm = ({
       zodiacSigns: listed(values.zodiacSigns),
       colors: listed(values.colors),
     };
+    // A refusal or a save said before is not about this add.
+    setSaved(null);
+    methods.clearErrors('root');
     try {
       await graphqlRequest(AddCupboardEntryDocument, {
         workspaceId,
         ingredientId: match.id,
         input,
       });
-      setSaved(typed);
-      onSaved?.({ id: match.id, name: typed, slug: match.slug }, 'open');
+      // No Saved notice: the page status region says the add, once (NameField).
+      onSaved?.({ id: match.id, name: match.name, slug: match.slug }, 'another');
+      return true;
     } catch (error) {
-      placeServerIssues(error, setError, ({ path }) =>
-        path.includes('label') ? 'name' : undefined,
-      );
+      // Nothing sent comes from the name now, so every issue is said at the form's head.
+      placeServerIssues(error, setError, () => undefined);
+      return false;
     }
   };
 
@@ -635,6 +646,9 @@ const IngredientForm = ({
                         warning={duplicates}
                         hrefOf={duplicateHref}
                         onUse={workspaceId === null ? undefined : useEntry}
+                        workspaceId={workspaceId ?? undefined}
+                        workspaceName={workspaceName}
+                        quickLookOf={quickLookOf}
                         holds={!editing}
                         ref={createAnyway}
                       />

@@ -16,6 +16,17 @@ export interface NoticeProps {
    * Success is a status already, and a plain remark has no role to quieten.
    */
   quiet?: boolean;
+  /**
+   * Holds block content, a sentence with a list or buttons beneath it, as a
+   * `<div>` rather than a `<p>`, with the same look and the same role rules.
+   */
+  block?: boolean;
+  /**
+   * Inside a live region that is always in the page and announces it: the
+   * notice takes no role of its own, so nothing is announced twice. The look
+   * still follows the kind.
+   */
+  inRegion?: boolean;
   /** For a control that names the notice in its `aria-describedby`. */
   id?: string;
   /** A layout class from the caller, added after the notice's own. */

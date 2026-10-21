@@ -11,13 +11,15 @@ _See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31
 
 `NoticeProps` (`types.ts`):
 
-| Prop        | What it is                                                                              |
-| ----------- | --------------------------------------------------------------------------------------- |
-| `kind`      | `error`, `warn`, `caution`, `success` or `plain`: the look and the role                 |
-| `quiet`     | Optional: an error, warning or caution on the page from the start, as a status          |
-| `id`        | Optional, for a control that names the notice in its `aria-describedby`                 |
-| `className` | Optional layout class from the caller, added after the notice's own                     |
-| `children`  | The sentence; a link inside it stays inline, in the notice's text colour and underlined |
+| Prop        | What it is                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------------------- |
+| `kind`      | `error`, `warn`, `caution`, `success` or `plain`: the look and the role                               |
+| `quiet`     | Optional: an error, warning or caution on the page from the start, as a status                        |
+| `block`     | Optional: block content, a sentence with a list or buttons beneath it, in a `<div>`                   |
+| `inRegion`  | Optional: inside a live region always in the page, so the notice takes no role                        |
+| `id`        | Optional, for a control that names the notice in its `aria-describedby`                               |
+| `className` | Optional layout class from the caller, added after the notice's own                                   |
+| `children`  | The sentence, or with `block` the block content; a link stays in the notice's text colour, underlined |
 
 ## Contracts
 
@@ -34,6 +36,36 @@ _See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31
   | `plain`   | `<p class="notice">`                      | none                      |
 
   `<output>` carries the status role itself, so it takes no `role` attribute.
+
+- **The block form** (`block`, M12.48) holds what a sentence cannot: a
+  sentence in its own `<p>` with a list, links and buttons beneath it, as
+  the ingredient form's duplicates warning does. It draws a `<div>` with
+  the same classes, so the same look, and the same role rules with the role
+  written out: `role="alert"` for an error, warning or caution,
+  `role="status"` for a success or a quiet one, none for plain. A `<p>`
+  cannot hold a list or a button, nor an `<output>` anything but phrasing
+  content, so neither element serves.
+
+- **Inside a live region, a notice takes no role** (`inRegion`, M12.48). A
+  region that a notice arrives in must already be in the page to be heard,
+  so a component whose notice comes and goes keeps the region there, empty,
+  and draws the notice inside it. The region announces what arrives in it;
+  a role on the notice as well would make it a second live region inside
+  the first, which a screen reader may announce twice. The look still
+  follows the kind, so a held save can still turn a warning to an error.
+  The region is a `<div role="status">` with an `aria-label`, rather than
+  an `<output>`, when the notice is a block one.
+
+  The other way was the notice as the region: one element, always in the
+  page, taking the region's role and label. It was set aside because the
+  region outlives the notice. Empty, it would still draw the bar, the tint
+  and the padding with nothing to say; and the duplicates warning opens and
+  closes by height round its notice, with a wrapper between the region and
+  the notice that the notice cannot hold round itself. A notice inside the
+  region keeps the region plain and the notice a notice. The duplicates
+  warning and the ingredient form's skipped-copy notice both work this way
+  ([`ingredient-form.md`](ingredient-form.md), "The duplicate warning" and
+  "Copying from the ingredient").
 
 - **A warning is an alert too**: it leads with the error's triangle and asks
   for attention, even though it does not block. **A caution** is a quieter
@@ -93,11 +125,15 @@ at 4.5:1 over its own tint on the page and on a card, are rows in
 [`index.stories.tsx`](../../src/components/Notice/index.stories.tsx), under
 `Surfaces / Notice`: `Failure` (an error), `Warning`, `QuietWarning` (a
 warning as a status), `Caution`, `Success` and `Plain`, one for each look and role in
-the table above. `PhoneDark` and `PhoneLight` stack the five kinds at 375px
-in each theme.
+the table above, and `BlockWarning` and `BlockFailure`, the block form with a
+sentence, a list of links and a button. `PhoneDark` and `PhoneLight` stack
+the five kinds and the two block notices at 375px in each theme.
 
 ## Testing
 
 `tests/components/Notice/index.test.tsx` asserts the role each kind takes, one
-row per kind, and that a quiet warning or caution is a status. The look is the story's (`Surfaces / Notice`, both themes at
+row per kind, and that a quiet warning or caution is a status; that the block
+form holds a sentence, a list and a button in every kind, with the same roles
+and no list or button inside a paragraph or an `<output>`; and that a notice
+`inRegion` takes no role, so the region round it is the one thing announced. The look is the story's (`Surfaces / Notice`, both themes at
 375px) and axe's on every page that shows one.

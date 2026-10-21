@@ -282,7 +282,7 @@ $skeleton-fade: 300ms;
     inset-block-start: space(3);
   }
 
-  // One match a row, its title at the left and its Use It or Open It at the
+  // One match a row, its title at the left and its +, Open It or Quick Look at the
   // right, rather than buttons run into a sentence (the owner's call at the
   // cupboard review).
   .ingredient-form__matches {
@@ -308,10 +308,71 @@ $skeleton-fade: 300ms;
       position: relative;
     }
 
+    // In a coven's form the matches come in two headed groups, the coven's
+    // own and the compendium's (the owner's call). Each group opens and
+    // closes by height round its rows, 0fr to 1fr as the region itself does,
+    // so its heading never stands alone over an emptied list. The gutter pull
+    // moves from the list onto the group, so the heading sits flush with the
+    // diamonds' edge.
+    .ingredient-form__group {
+      display: grid;
+      grid-template-rows: 0fr;
+      margin: space(2) 0 0 calc(-1 * (1.0125rem + #{space(2)}));
+      transition: grid-template-rows $skeleton-fade ease-in-out;
+
+      @include reduced-motion {
+        transition: none;
+      }
+
+      &--open {
+        grid-template-rows: 1fr;
+      }
+
+      ul {
+        margin: space(1) 0 0;
+      }
+    }
+
+    .ingredient-form__group + .ingredient-form__group {
+      margin-top: space(2);
+    }
+
+    // In a coven's form, the Quick Look eye of a held match, the one a + turns into included,
+    // in the add's green ($accent, the check's) rather than the cards' ink (the owner's call,
+    // M12.48), in every state; the green wash under it on hover and focus is icon-button-edit's,
+    // as for the +. At least 3.9:1 on either notice's tint and on the wash, in both themes
+    // (claude-docs/components/ingredient-form.md, "The + in the duplicate warning").
+    .ingredient-form__group .icon-tip__look {
+      &,
+      &:hover,
+      &:focus-visible,
+      &[aria-expanded='true'] {
+        color: $accent;
+      }
+    }
+
+    .ingredient-form__group-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    // A label over its list, not a section of the page: set as a fieldset's
+    // legend is (`.fieldset__legend`), Lexend at the small size and 500, over
+    // the h4's heading face. No colour of its own: it takes the notice's ink,
+    // which each kind has checked on its tint (the muted ink read faded).
+    .ingredient-form__group-heading {
+      margin: 0;
+      font-family: $font-body;
+      font-size: type-size('small');
+      font-weight: 500;
+      letter-spacing: normal;
+    }
+
     // Another name's answer on its way: each row the answer will replace
     // cross-fades to the skeleton's shapes (`skeleton-shape`, _mixins.scss),
     // laid over the row, a bar where the title was and, where the row had a
-    // Use It, a bar in the small button's own padding, border and type, so
+    // control, its shape: a bar in the small button's own padding, border and
+    // type for Open It, an icon's box for a + or a Quick Look, so
     // the row keeps its height and nothing jumps when the answer lands. The
     // fade in waits $skeleton-delay, so an answer back sooner never shows the
     // shapes at all, and the fade out is as slow, so a late one never flashes
@@ -462,29 +523,29 @@ $skeleton-fade: 300ms;
       inline-size: min(14rem, 60%);
     }
 
-    .ingredient-form__shape--button {
-      box-sizing: border-box;
-      inline-size: 3.5rem;
-      block-size: auto;
-      padding: space(1) space(3);
-      border: 1px solid transparent;
-      font-size: type-size('caption');
-
-      &::after {
-        content: '\200b';
-      }
+    // The Quick Look eye's place: its box, square, as the eye is.
+    .ingredient-form__shape--icon {
+      inline-size: $icon-size-large;
+      block-size: $icon-size-large;
     }
 
-    // typography-base sets its ◆ for a line of text; a row here is as tall
-    // as its Use It, so the mark is centred on the row instead.
+    // The ◆ centred on the row, not on a line of text: a row here is as tall
+    // as its control, its title centred in it. The row is the li's body, which
+    // after the first row starts space(1) down (the rule above), so the
+    // centre moves down half that.
     li::before {
       top: 50%;
       @include theme-transition(background-color);
     }
 
+    li + li::before {
+      top: calc(50% + #{space(1)} / 2);
+    }
+
     // The title link in the body ink with the faded underline the entry
-    // page's links wear (`faded-underline`; the owner's call), never the Open It `.btn`.
-    a:not(.btn) {
+    // page's links wear (`faded-underline`; the owner's call): by its class,
+    // so neither Open It's `.btn` nor the Quick Look eye takes it.
+    .ingredient-form__title {
       color: $text-primary;
       @include faded-underline;
       @include theme-transition(color);

@@ -18,7 +18,11 @@ import type {
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
 } from '@/gql/graphql';
+import { ADDED_HOLD_MS } from '@/components/AddIcon';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { DEBOUNCE_MS } from '@/lib/debounce';
+import { ValidationError } from '@/lib/errors';
+import { maskError } from '@/graphql/errors';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import {
   box,
@@ -1117,7 +1121,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // M12.20: Use It, as only the whole form sends it.
+  // M12.20: the + (M12.48's, once Use It), as only the whole form sends it.
   describe('using a compendium entry of the name typed', () => {
     const CLAW: DuplicateNode = {
       id: 'claw-1',
@@ -1126,15 +1130,31 @@ describe('IngredientForm', () => {
       slug: 'cats-claw-uncaria-tomentosa',
       isGlobal: true,
     };
+    /**
+     * Adds as the server does in a coven that already calls another entry by the
+     * name typed: any label sent is refused as taken, as Rose under "rosemary"
+     * was (the owner's report, M12.48).
+     */
     const accept = () => {
       const adds: AddCupboardEntryFromFormMutationVariables[] = [];
-      mockGraphQLMutation<
-        AddCupboardEntryFromFormMutation,
-        AddCupboardEntryFromFormMutationVariables
-      >('AddCupboardEntryFromForm', (variables) => {
-        adds.push(variables);
-        return { addCupboardEntry: { id: 'cupboard-1' } };
-      });
+      server.use(
+        graphqlLink.mutation<
+          AddCupboardEntryFromFormMutation,
+          AddCupboardEntryFromFormMutationVariables
+        >('AddCupboardEntryFromForm', ({ variables }) => {
+          adds.push(variables);
+          if (variables.input?.label != null) {
+            const taken = new ValidationError([
+              { path: ['label'], message: 'This coven already calls another entry that' },
+            ]);
+            return HttpResponse.json({
+              errors: [maskError(taken, 'Unexpected error.')],
+              data: null,
+            });
+          }
+          return HttpResponse.json({ data: { addCupboardEntry: { id: 'cupboard-1' } } });
+        }),
+      );
       return adds;
     };
 
@@ -1145,7 +1165,7 @@ describe('IngredientForm', () => {
       vi.useRealTimers();
     });
 
-    it('puts the entry in the cupboard under the typed label and description, creates nothing, and opens it', async () => {
+    it('puts the entry in the cupboard under its own name, the typed name sent as no label even where the coven already calls another entry that, creates nothing, and keeps the form open', async () => {
       const creates = acceptCreate();
       const adds = accept();
       const onSaved = renderForm();
@@ -1155,35 +1175,224 @@ describe('IngredientForm', () => {
       type('Name', 'Porch Claw');
       type('Description', 'Dried from the porch.');
       save();
-      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+      fireEvent.click(await screen.findByRole('button', { name: /^Add to My Ingredients: / }));
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(adds).toEqual([
         {
           workspaceId: WORKSPACE_ID,
           ingredientId: 'claw-1',
-          input: expect.objectContaining({
-            label: 'Porch Claw',
-            description: 'Dried from the porch.',
-          }),
+          input: expect.objectContaining({ description: 'Dried from the porch.' }),
         },
       ]);
-      expect(onSaved.mock.calls[0]).toEqual([expect.objectContaining({ id: 'claw-1' }), 'open']);
+      expect(adds[0].input?.label).toBeUndefined();
+      expect(onSaved.mock.calls[0]).toEqual([
+        expect.objectContaining({ id: 'claw-1', name: "Cat's Claw" }),
+        'another',
+      ]);
       expect(creates).toHaveLength(0);
     });
 
-    it("sends no label when the typed name differs from the entry's only in case", async () => {
-      const adds = accept();
-      const onSaved = renderForm();
+    // The owner's report (M12.48): the lookups' cached answers still said the
+    // entry was not held, so its row stayed under In the Compendium with its +.
+    const heldRow = () =>
+      within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('link', {
+        name: /^Cat's Claw \(Uncaria tomentosa\)/,
+      });
+
+    it('asks the lookup again once the + has added, so the entry is listed as in the cupboard', async () => {
+      accept();
+      renderForm();
+      offerDuplicates([CLAW]);
+
+      type('Name', 'Porch Claw');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+      const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
+      // The server's answer from here on: the coven holds it.
+      offerDuplicates([{ ...CLAW, inCupboard: true }]);
+      fireEvent.click(plus);
+      // The row moves once the check has held and the eye is in.
+      await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+      act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+
+      await waitFor(() => expect(heldRow()).toBeInTheDocument());
+    });
+
+    it('lists the exact match as in the cupboard once its + has added it, from a held save', async () => {
+      accept();
+      renderForm();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
 
-      type('Name', "  cat's claw ");
+      type('Name', 'Porch Claw');
       save();
-      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+      const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
+      offerDuplicates([{ ...CLAW, inCupboard: true }]);
+      offerCompendiumMatches([{ ...CLAW, inCupboard: true }]);
+      fireEvent.click(plus);
+      await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+      act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
 
-      await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(adds[0].input?.label).toBeUndefined();
+      await waitFor(() => expect(heldRow()).toBeInTheDocument());
+    });
+
+    // After the add, the + shows the check, then turns into the eye, and the
+    // row then moves under In This Coven; the form stays open (the owner's
+    // calls, M12.48, in place of opening the entry's page).
+    describe('after the + has added', () => {
+      const QUICK_LOOK = /^Quick Look Cat's Claw, Uncaria tomentosa/;
+
+      /** The form in a coven named Hedge Coven, under the page's status region. */
+      const renderInCoven = () => {
+        const onSaved = vi.fn();
+        offerNothing();
+        offerCategories([]);
+        renderWithClient(
+          <StatusRegionProvider>
+            <IngredientForm
+              duplicateHref={duplicateHref}
+              workspaceId={WORKSPACE_ID}
+              workspaceName="Hedge Coven"
+              onSaved={onSaved}
+            />
+          </StatusRegionProvider>,
+        );
+        return onSaved;
+      };
+
+      /** Types a name that finds Cat's Claw, and presses its +, the server holding it from then on. */
+      const addClaw = async () => {
+        offerDuplicates([CLAW]);
+        type('Name', 'Porch Claw');
+        act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+        const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
+        offerDuplicates([{ ...CLAW, inCupboard: true }]);
+        act(() => plus.focus());
+        fireEvent.click(plus);
+        return plus;
+      };
+
+      const region = () => screen.getByRole('status', { name: 'Possible duplicates' });
+
+      it('keeps the form open with what was typed, and says the add once, in the page status region', async () => {
+        accept();
+        const onSaved = renderInCoven();
+        type('Description', 'Dried from the porch.');
+        await addClaw();
+
+        await waitFor(() => expect(statusesSaying('Added to Hedge Coven.')).toHaveLength(1));
+        expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ id: 'claw-1' }), 'another');
+        expect(textbox('Name')).toHaveValue('Porch Claw');
+        expect(textbox('Description')).toHaveValue('Dried from the porch.');
+        // The form's own Saved notice would say it a second time.
+        expect(statusesSaying("Saved Cat's Claw")).toHaveLength(0);
+
+        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+        await waitFor(() => expect(heldRow()).toBeInTheDocument());
+        expect(statusesSaying('Added to Hedge Coven.')).toHaveLength(1);
+      });
+
+      // The test environment reports prefers-reduced-motion (tests/support/setup-dom.ts).
+      it('under reduced motion, still shows the check for a moment, then the eye at once, with no fade between', async () => {
+        accept();
+        renderInCoven();
+        const plus = await addClaw();
+
+        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+        // Still the +, named as it was, and pressing it now does nothing.
+        expect(plus).toHaveAccessibleName(/^Add to My Ingredients: Cat's Claw/);
+        expect(plus).toHaveAttribute('aria-disabled', 'true');
+        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS - 100));
+        expect(plus).toHaveAttribute('data-state', 'added');
+
+        act(() => vi.advanceTimersByTime(100));
+        // The same button, so the focus stays on it: the eye, with no fade from the check.
+        expect(plus).toHaveAccessibleName(QUICK_LOOK);
+        expect(plus).not.toHaveAttribute('data-state');
+        expect(plus).not.toHaveAttribute('aria-disabled');
+      });
+
+      describe('with motion', () => {
+        beforeEach(() => {
+          const media = window.matchMedia;
+          vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+            ...media(query),
+            matches: false,
+          }));
+        });
+        afterEach(() => {
+          vi.restoreAllMocks();
+        });
+
+        it('fades the check into the eye', async () => {
+          accept();
+          renderInCoven();
+          const plus = await addClaw();
+
+          await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+          act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+          expect(plus).toHaveAccessibleName(QUICK_LOOK);
+          expect(plus).toHaveAttribute('data-state', 'returning');
+          // The fade's end, or its net when no end is reported.
+          act(() => vi.advanceTimersByTime(500));
+          expect(plus).not.toHaveAttribute('data-state');
+        });
+      });
+
+      it('moves the row under In This Coven only once the eye shows, the focus going to its eye, the duplicates busy meanwhile', async () => {
+        accept();
+        renderInCoven();
+        const plus = await addClaw();
+
+        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+        // Not asked again while the check shows: the row stays under In the Compendium.
+        await settle();
+        expect(screen.queryByRole('list', { name: 'In This Coven' })).not.toBeInTheDocument();
+        expect(region()).not.toHaveAttribute('aria-busy');
+
+        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+        expect(region()).toHaveAttribute('aria-busy', 'true');
+        await waitFor(() => expect(heldRow()).toBeInTheDocument());
+        const eye = within(screen.getByRole('list', { name: 'In This Coven' })).getByRole(
+          'button',
+          { name: QUICK_LOOK },
+        );
+        expect(eye).not.toBe(plus);
+        expect(eye).toHaveFocus();
+        await waitFor(() => expect(region()).not.toHaveAttribute('aria-busy'));
+      });
+
+      it('leaves the focus where it was moved to while the check showed', async () => {
+        accept();
+        renderInCoven();
+        const plus = await addClaw();
+
+        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+        act(() => textbox('Name').focus());
+        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+        await waitFor(() => expect(heldRow()).toBeInTheDocument());
+        expect(textbox('Name')).toHaveFocus();
+      });
+
+      it('says a refusal at the form head, with no check, and announces nothing', async () => {
+        mockGraphQLError('AddCupboardEntryFromForm', {
+          code: 'VALIDATION',
+          fieldErrors: [{ path: [], message: 'The coven cannot take new ingredients right now' }],
+        });
+        const onSaved = renderInCoven();
+        const plus = await addClaw();
+
+        const alert = await screen.findByRole('alert');
+        expect(alert).toHaveTextContent('The coven cannot take new ingredients right now');
+        expect(
+          alert.compareDocumentPosition(textbox('Name')) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(plus).not.toHaveAttribute('data-state');
+        expect(plus).not.toHaveAttribute('aria-disabled');
+        expect(plus).toHaveAccessibleName(/^Add to My Ingredients: Cat's Claw/);
+        expect(onSaved).not.toHaveBeenCalled();
+        expect(statusesSaying('Added to')).toHaveLength(0);
+      });
     });
   });
 

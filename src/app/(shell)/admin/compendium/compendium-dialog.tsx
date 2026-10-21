@@ -3,6 +3,7 @@
 import { usePendingNavigation } from '@/lib/navigation';
 import type { ReactElement } from 'react';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
+import { detailsHeading } from '../../../../components/IngredientEntry/details';
 import IngredientForm from '../../../../components/IngredientForm';
 import { RouteModal } from '../../../../components/Modal';
 import type { CompendiumDialogProps } from './types';
@@ -20,6 +21,7 @@ export default function CompendiumDialog({
   place,
   opened,
   path,
+  lookUnder,
 }: CompendiumDialogProps): ReactElement {
   const { navigate, refresh } = usePendingNavigation();
   const entry = opened?.entry;
@@ -62,6 +64,16 @@ export default function CompendiumDialog({
               onCancel={done}
               // A near match opens its own modal here, over the same list.
               duplicateHref={(match) => href({ edit: match.slug })}
+              // And its Quick Look opens its details over the form, the form
+              // kept open beneath them in the address, so closing them comes
+              // back to it (the owner's call).
+              quickLookOf={
+                lookUnder &&
+                ((match) => ({
+                  href: compendiumHref({ ...place, entry: match.slug }, lookUnder, path),
+                  heading: detailsHeading(match),
+                }))
+              }
               // A linked substitute's summary opens its entry's modal in a new
               // tab, every substitute here being a compendium entry (MB.115).
               entryHref={({ slug }) => href({ edit: slug })}

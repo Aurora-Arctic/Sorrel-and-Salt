@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { IngredientFormValues } from '../../../../components/IngredientForm/types';
 import type { CompendiumPlace } from '../../../../components/CompendiumList/types';
 import type { ModalHeading } from '../../../../components/Modal/types';
+import type { ListDialog } from '../../../../lib/types';
 import type { ListSearchParams } from '../types';
 
 export interface AdminCompendiumPageProps {
@@ -57,4 +58,10 @@ export interface CompendiumDialogProps {
    * same dialog for a curator (M8.17). The admin's when left out.
    */
   path?: Route;
+  /**
+   * The modal the address opens, kept beneath a near match's Quick Look, which then opens that
+   * match's details over the form (the owner's call). Left out where the list opens no details by
+   * slug, the public search's, whose duplicate warning offers no Quick Look.
+   */
+  lookUnder?: ListDialog;
 }

@@ -8,21 +8,24 @@ request and draws [`AppShell`](app-shell.md) instead for a signed-in one, so
 
 ## What it draws
 
-- **A skip link** ("Skip to Content") first, targeting `#main`. Its styling is
-  `.skip-link` from AppShell's stylesheet, which the layout always loads.
+- **A skip link** ("Skip to Content") first, targeting `#main`: an empty
+  `span` with `tabindex="-1"` just before the page's wrapper, as in
+  [`AppShell`](app-shell.md), which says why it is not the wrapper itself. Its
+  styling is `.skip-link` and `.skip-target` from AppShell's stylesheet,
+  which the layout always loads.
 - **A bar** with the site name linking to `/` (set in the heading face at `$brand-size`, as the shell's is), a `nav` named "Site" holding the
   Compendium link (a `PendingLink` carrying `siteLinkTarget('/compendium')`, so a press draws the list's skeleton, M12.47), which carries `aria-current="page"` at or beneath `/compendium` (MB.120), a Sign In link (`/sign-in`, `.btn--solid.btn--medium`, the size the shell's Add Ingredient button takes) and the inline
   theme toggle. At or under `$shell-brand-width` the brand reads "S&S" (the full
   name stays for a screen reader), as the shell's does, so the bar holds at 375px.
-- **`#main`**, a wrapper `div` round the page, as the shell's is, with the
+- **`.public-frame__main`**, a wrapper `div` round the page, as the shell's is, with the
   shell's [`MainBody`](app-shell.md) inside it. The frame does not own the
   `main` landmark: the `(public)` layout renders `<main>` round the page, in
   `.page-column`, the top-left wide column `/admin/compendium` uses, so M8.18's
   page lands in it. The wrapper was chosen over a frame-owned `main` whose
   skeleton dropped its own, so that `MainBody` is reused unchanged: during a
   wait it swaps the layout's `main` for the skeleton's, and a `main` on the
-  wrapper would have nested the two. The wrapper takes `tabIndex={-1}` so the
-  skip link moves focus to it, with no outline.
+  wrapper would have nested the two. The wrapper has no id and no `tabIndex`:
+  the skip link's target is the span before it (M12.48).
 
 Nothing here is workspace-shaped: no coven link, no Admin, no Add Ingredient.
 
@@ -74,5 +77,5 @@ page and holds the wait, so the cards skeleton stands under the bar.
 link's target, the way in and the current-page mark (present at and beneath
 `/compendium`, absent elsewhere and on a path that only begins with its letters), and that pressing the Compendium link leaves one `main` holding one status, one h1, the bar standing and the link busy. `tests/app/(public)/layout.test.tsx` asserts which
 chrome each kind of visitor gets. `tests/e2e/public-frame.spec.ts` proves the
-chrome with script off (the page's `main` inside `#main`), the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
+chrome with script off (the page's `main` inside `.public-frame__main`, after the `span#main` target), the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
 walks the visitor in. `tests/e2e/navigation-wait.spec.ts` ("signed out") proves the wait in a browser: the Compendium link from an entry and a card from the list each draw one wait under held answers, reduced motion leaves only the pulse with axe passing, and a direct request for an unknown entry still answers 404.

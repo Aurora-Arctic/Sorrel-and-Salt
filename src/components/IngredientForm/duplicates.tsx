@@ -17,14 +17,30 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
+import { ADDED_HOLD_MS } from '../AddIcon';
+import { useFade } from '../ClickFeedback/fade';
+import { useAnnounce } from '../ClickFeedback/status-region';
+import IconTip, { CheckIcon, MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
+import { cardName } from '../IngredientCard/card-name';
+import DetailsLink from '../IngredientEntry/details-link';
+import Notice from '../Notice';
+import Spinner from '../Spinner';
+import { DuplicateQuickLook } from './quick-look';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
+// The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
+// add where this one hands the entry to the form.
+import '../AddIcon/index.scss';
 
 // Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
 // the typing settles, on the debounce the other lookups wait on, and each
 // near match is listed beneath the field by its label and formal name, linked
-// to its entry, with M12.20's Use It or Open It at the row's right for a
-// compendium entry. The list is a list, one match a row, never a sentence
-// with buttons run into it (the owner's call at the cupboard review). It has
+// to its entry, with a + at the row's right for a compendium entry the coven
+// does not hold, which adds it to the coven the form is adding to (M12.48, in
+// place of M12.20's Use It), and for one it holds, its own entries too, the
+// eye, whose Quick Look opens the entry's details over the form (M12.48, in
+// place of M12.20's Open It). The list
+// is a list, one match a row, never a sentence with buttons run into it (the
+// owner's call at the cupboard review). It has
 // to be answered: a save asks about the very name it is sending, settled or
 // not, and while a match shows the save is held, the warning turns to an
 // error on the name, and the focus goes to Create Anyway, which sets the
@@ -41,6 +57,7 @@ const PossibleDuplicatesDocument = graphql(`
           id
           name
           canonicalName
+          nomenclature
           slug
           isGlobal
           inCupboard(workspaceId: $workspaceId)
@@ -60,6 +77,7 @@ const CompendiumMatchesDocument = graphql(`
           id
           name
           canonicalName
+          nomenclature
           slug
           isGlobal
           inCupboard(workspaceId: $workspaceId)
@@ -184,6 +202,25 @@ export function useDuplicateWarning(
     setExact([]);
   };
 
+  /**
+   * After a match's + has added it (M12.48, the owner's report): the cached
+   * answers still say the coven lacks it, and would for their stale time, so
+   * every lookup of both kinds is asked again rather than only this name's,
+   * since another name typed in this form may find it too. The held save's
+   * exact matches are state, not cache, so the entry is marked held there.
+   */
+  const added = async (id: string): Promise<void> => {
+    setExact((now) =>
+      now.map((match) => (match.id === id ? { ...match, inCupboard: true } : match)),
+    );
+    // By the operation's name, the first part of every key graphqlQuery makes.
+    await Promise.all(
+      ['PossibleDuplicates', 'CompendiumMatches'].map((name) =>
+        client.invalidateQueries({ queryKey: [name] }),
+      ),
+    );
+  };
+
   return {
     shown: untouched ? [] : shown,
     // A new name's answer on its way while the last name's list still shows
@@ -193,6 +230,7 @@ export function useDuplicateWarning(
     exact: !untouched && heldFor === typed ? exact : [],
     check,
     dismiss,
+    added,
   };
 }
 
@@ -449,16 +487,6 @@ const titleOf = ({ name, canonicalName }: Duplicate) =>
   canonicalName ? `${name} (${canonicalName})` : name;
 
 /**
- * The notice's classes, in the one place that picks them. The region is an
- * `<output>` holding block content, so it cannot take the Notice component
- * (claude-docs/components/ingredient-form.md, "The duplicate warning"); the
- * block Notice that can is a follow-on to MB.120, and it replaces this
- * function alone.
- */
-const noticeClasses = (blocking: boolean): string =>
-  blocking ? 'notice notice--error' : 'notice notice--warn';
-
-/**
  * What the notice says. Colour alone must not mark a held save, so the words
  * change with the state: a question while typing, then, once Save was pressed
  * and held, that the save waits and why (MB.120).
@@ -472,53 +500,402 @@ function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): st
     : 'Did you mean one of these?';
 }
 
+/** A match the cupboard already holds: the coven's own, or a compendium entry it has used. */
+const isHeld = (match: Duplicate): boolean => !match.isGlobal || match.inCupboard === true;
+
+/**
+ * One list of the warning's matches, sliding between answers on its own
+ * (`useSlidingRows`), and drawn while it has a row, the leaving ones too.
+ * Under a `heading`, the list is named by it, an `h4` beneath the form's
+ * Identity section's `h3`, and the group opens by height round its first
+ * rows and closes round its last, as the region does round the whole notice,
+ * so a group arriving or leaving under a warning already shown never jumps.
+ */
+/**
+ * What a row offers at its right: the control, the same drawn as text alone
+ * for a row fading out over its successor, and the skeleton shape it stands
+ * as while another answer is on its way.
+ */
+interface Choice {
+  control: ReactElement;
+  ghost: ReactElement;
+  shape: 'icon';
+}
+
+function MatchList({
+  slide,
+  list,
+  heading,
+  choiceFor,
+  linkTo,
+}: {
+  slide: ReturnType<typeof useSlidingRows>;
+  list: RefObject<HTMLUListElement | null>;
+  heading?: string;
+  choiceFor: (match: Duplicate) => Choice | null;
+  linkTo: (match: Duplicate) => ReactElement;
+}): ReactElement | null {
+  const headingId = useId();
+  if (slide.rows.length === 0) return null;
+  const items = (
+    <ul
+      ref={list}
+      aria-labelledby={heading === undefined ? undefined : headingId}
+      onTransitionStart={slide.onTransitionStart}
+      onTransitionEnd={slide.onTransitionEnd}
+    >
+      {/* Keyed by place, not entry: a new answer then changes
+          each row under its shapes and every row fades back
+          together, where a new entry's row would mount drawn
+          beside a surviving one fading in. A row leaving is
+          out of the accessibility tree at once. */}
+      {slide.rows.map(({ match, phase, gone }, place) => {
+        const choice = choiceFor(match);
+        const classes = ['ingredient-form__match'];
+        if (phase !== 'present') classes.push(`ingredient-form__match--${phase}`);
+        if (slide.covered) classes.push('ingredient-form__match--pending');
+        return (
+          <li
+            key={place}
+            className={classes.join(' ')}
+            aria-hidden={phase === 'leaving' || undefined}
+          >
+            <div className="ingredient-form__body">
+              {/* Keyed by entry, so another entry's row fades in
+                  afresh, over the last one's fading out as text
+                  alone: nothing in it to press. */}
+              <span
+                key={match.id}
+                className={`ingredient-form__row${gone ? ' ingredient-form__row--arriving' : ''}`}
+              >
+                {linkTo(match)}
+                {choice?.control}
+              </span>
+              {gone && (
+                <span
+                  // Keyed too: a third entry within the fade
+                  // then starts a fresh fade out of the second,
+                  // rather than taking over one already done.
+                  key={gone.id}
+                  className="ingredient-form__row ingredient-form__row--gone"
+                  aria-hidden="true"
+                >
+                  <span className="ingredient-form__was">{titleOf(gone)}</span>
+                  {choiceFor(gone)?.ghost}
+                </span>
+              )}
+              <span className="ingredient-form__shapes" aria-hidden="true">
+                <span className="ingredient-form__shape" />
+                {choice && (
+                  <span
+                    className={`ingredient-form__shape ingredient-form__shape--${choice.shape}`}
+                  />
+                )}
+              </span>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+  if (heading === undefined) return items;
+  // Open once a row is in, so a group's first frame, its rows still
+  // entering, is closed and the opening is a transition.
+  const open = slide.rows.some((row) => row.phase === 'present');
+  return (
+    <div className={`ingredient-form__group${open ? ' ingredient-form__group--open' : ''}`}>
+      <div className="ingredient-form__group-inner">
+        <h4 id={headingId} className="ingredient-form__group-heading">
+          {heading}
+        </h4>
+        {items}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Where a +'s add has got to: sending, the check held after it worked, and the eye it turns into
+ * (M12.48, the owner's call, 2026-10-21).
+ */
+type PlusPhase = 'busy' | 'added' | 'eye';
+
+/**
+ * The + of a compendium match the coven does not hold, and the Quick Look eye it becomes once the
+ * add has worked: one button throughout, so the focus stays on it. While the add is sent it shows
+ * the spinner; then AddIcon's check, held `ADDED_HOLD_MS`; then the check fades into the eye, the
+ * stack AddIcon draws when its check fades back to the plus, and under reduced motion the eye
+ * simply takes the check's place. Once the eye is in, `onShown` asks for the row to move under In
+ * This Coven, so the move never starts under the check.
+ */
+function PlusChoice({
+  match,
+  phase,
+  onAdd,
+  onLook,
+  onShown,
+  buttonRef,
+}: {
+  match: Duplicate;
+  phase: PlusPhase | undefined;
+  onAdd: () => void;
+  onLook: () => void;
+  onShown: () => void;
+  buttonRef: (node: HTMLButtonElement | null) => void;
+}): ReactElement {
+  const name = cardName(match.name, match.canonicalName);
+  // Named as the card's plus is, "Add to My Ingredients: Name, Formal".
+  const label = `Add to My Ingredients: ${name}`;
+  const fade = useFade(phase === 'added');
+  const eye = phase === 'eye';
+  const state = phase === 'added' ? 'added' : fade.closing ? 'returning' : undefined;
+  const shown = eye && !fade.closing;
+  useEffect(() => {
+    if (shown) onShown();
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per eye: onShown is a fresh closure each render.
+  }, [shown]);
+  const busy = phase === 'busy';
+  const glyph = state ? (
+    <span className="add-icon__glyphs">
+      <span className="add-icon__check" onAnimationEnd={fade.onAnimationEnd}>
+        <CheckIcon />
+      </span>
+      {state === 'returning' && (
+        <span className="add-icon__eye">
+          <MysticEyeIcon />
+        </span>
+      )}
+    </span>
+  ) : busy ? (
+    <Spinner />
+  ) : eye ? (
+    <MysticEyeIcon />
+  ) : (
+    <PlusIcon />
+  );
+  return (
+    <IconTip tip={eye ? 'Quick Look' : label}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className={eye ? 'icon-tip__look' : 'add-icon'}
+        data-state={state}
+        aria-busy={busy || undefined}
+        aria-disabled={busy || phase === 'added' || undefined}
+        onClick={() => {
+          if (eye) onLook();
+          else if (phase === undefined) onAdd();
+        }}
+      >
+        {glyph}
+        <span className="visually-hidden">{eye ? `Quick Look ${name}` : label}</span>
+      </button>
+    </IconTip>
+  );
+}
+
 /** The name field, with the duplicate warning beneath it. */
 export function NameField({
   warning,
   hrefOf,
   onUse,
+  quickLookOf,
+  workspaceId,
+  workspaceName,
   holds = true,
   ref,
 }: NameFieldProps): ReactElement {
+  const announce = useAnnounce();
+  // The held match whose Quick Look is open over the form.
+  const [looking, setLooking] = useState<Duplicate | null>(null);
+  const region = useRef<HTMLDivElement>(null);
+  /** The Name box, through the form, as Create Anyway reaches it. */
+  const nameInput = (): HTMLElement | null => {
+    const field = region.current?.closest('form')?.elements.namedItem('name');
+    return field instanceof HTMLInputElement ? field : null;
+  };
   const { shown, blocking, exact, pending } = warning;
   // The save is held on a compendium entry of the very name typed: a question
   // rather than a warning, answered by using the entry or creating anyway.
   const asking = blocking && exact.length > 0;
   const warningId = useId();
-  const list = useRef<HTMLUListElement>(null);
-  const { rows, covered, onTransitionStart, onTransitionEnd } = useSlidingRows(
-    asking ? exact : shown,
+  const listed = asking ? exact : shown;
+  // Two groups where there is a cupboard (the owner's call): what the coven
+  // already holds, its own entries and the compendium entries it has used,
+  // then what is in the compendium alone, each in the answer's order. The
+  // admin's form has no coven, so its matches stand in one list, unheaded.
+  const grouped = onUse !== undefined;
+  const covenList = useRef<HTMLUListElement>(null);
+  const compendiumList = useRef<HTMLUListElement>(null);
+  const coven = useSlidingRows(grouped ? listed.filter(isHeld) : listed, pending, covenList);
+  const compendium = useSlidingRows(
+    grouped ? listed.filter((match) => !isHeld(match)) : [],
     pending,
-    list,
+    compendiumList,
   );
+  const rows = [...coven.rows, ...compendium.rows];
   // The notice stays while any row is drawn, the leaving ones too, and the
   // region closes round them as they fade: open while a row stays.
   const drawn = rows.length > 0;
   const open = rows.some((row) => row.phase !== 'leaving');
 
+  // Each +'s add, by entry (M12.48, the owner's calls, 2026-10-21): the check holds, then the eye,
+  // then the row moves under In This Coven, the region busy while it does. The + buttons by entry,
+  // so the focus follows from one to the eye in its new row.
+  const [phases, setPhases] = useState<ReadonlyMap<string, PlusPhase>>(new Map());
+  const setPhase = (id: string, phase: PlusPhase | undefined) =>
+    setPhases((now) => {
+      const next = new Map(now);
+      if (phase === undefined) next.delete(id);
+      else next.set(id, phase);
+      return next;
+    });
+  const pluses = useRef(new Map<string, HTMLButtonElement>());
+  const following = useRef<string | null>(null);
+  const [moving, setMoving] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const holdTimers = useRef(new Set<number>());
+  useEffect(() => {
+    const timers = holdTimers.current;
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+  const sliding = rows.some((row) => row.phase !== 'present' || row.gone !== undefined);
+  // The move is over once the lookups are back and the rows have stopped sliding: seen during
+  // the render that sees it, as useSlidingRows sees a new answer.
+  if (moving !== null && !refreshing && !pending && !sliding) {
+    setMoving(null);
+    setPhase(moving, undefined);
+  }
+
+  const add = async (match: Duplicate): Promise<void> => {
+    if (!onUse) return;
+    setPhase(match.id, 'busy');
+    // A caller may answer nothing: that is not an add.
+    const added = (await onUse(match)) === true;
+    if (!added) {
+      setPhase(match.id, undefined);
+      return;
+    }
+    setPhase(match.id, 'added');
+    announce(`Added to ${workspaceName ?? 'My Ingredients'}.`);
+    const timer = window.setTimeout(() => {
+      holdTimers.current.delete(timer);
+      setPhase(match.id, 'eye');
+    }, ADDED_HOLD_MS);
+    holdTimers.current.add(timer);
+  };
+
+  const move = async (id: string): Promise<void> => {
+    // The focus follows only from the + itself, and only if it is still there when the row moves.
+    following.current = document.activeElement === pluses.current.get(id) ? id : null;
+    setMoving(id);
+    setRefreshing(true);
+    try {
+      await warning.added(id);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // The focus follows from the + to the eye of its new row once both are in the page, or once the
+  // + has gone with the focus on it; the move over, it follows no more.
+  const eyes = useRef(new Map<string, HTMLButtonElement>());
+  useLayoutEffect(() => {
+    const id = following.current;
+    if (id === null) return;
+    const eye = eyes.current.get(id);
+    const was = document.activeElement;
+    if (
+      eye?.isConnected &&
+      (was === pluses.current.get(id) || was === null || was === document.body)
+    ) {
+      following.current = null;
+      eye.focus();
+    } else if (moving === null) following.current = null;
+  });
+
   /**
-   * What a compendium match offers, in either list: Use It, which puts it in
-   * the cupboard, or Open It, its coven page, once the cupboard holds it.
-   * Nothing for a coven's own entry, or where no cupboard is to be put into
-   * (the admin's form).
+   * What a match offers. Its Quick Look where the page under the form has
+   * details to open (the admin's form, every match being the compendium's;
+   * the owner's call). Otherwise, for a match the coven holds, its own or a compendium entry it
+   * has used, the eye, which opens its details over the form, read in the page
+   * so nothing typed is lost (M12.48, the owner's call, in place of Open It).
+   * For a compendium match it does not hold: the +, which puts it in the
+   * cupboard the form is adding to, with no menu of covens (M12.48, the
+   * owner's call). Nothing where neither applies.
    */
-  const choiceFor = (match: Duplicate): ReactElement | null => {
+  const choiceFor = (match: Duplicate): Choice | null => {
+    const look = quickLookOf?.(match);
+    if (look)
+      return {
+        control: <DetailsLink opens={look} name={cardName(match.name, match.canonicalName)} />,
+        ghost: (
+          <span className="icon-tip__look">
+            <MysticEyeIcon />
+          </span>
+        ),
+        shape: 'icon',
+      };
+    if (workspaceId !== undefined && isHeld(match))
+      return {
+        control: (
+          <QuickLookButton
+            ref={(node) => {
+              if (node) eyes.current.set(match.id, node);
+            }}
+            name={cardName(match.name, match.canonicalName)}
+            onClick={() => setLooking(match)}
+          />
+        ),
+        ghost: (
+          <span className="icon-tip__look">
+            <MysticEyeIcon />
+          </span>
+        ),
+        shape: 'icon',
+      };
     if (!onUse || !match.isGlobal) return null;
-    const name = <span className="visually-hidden"> {titleOf(match)}</span>;
-    return match.inCupboard ? (
-      <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
-        Open It{name}
-      </a>
-    ) : (
-      <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
-        Use It{name}
-      </button>
-    );
+    if (!match.inCupboard) {
+      const phase = phases.get(match.id);
+      return {
+        control: (
+          <PlusChoice
+            match={match}
+            phase={phase}
+            onAdd={() => void add(match)}
+            onLook={() => setLooking(match)}
+            onShown={() => void move(match.id)}
+            buttonRef={(node) => {
+              if (node) pluses.current.set(match.id, node);
+              else if (pluses.current.get(match.id)?.isConnected === false)
+                pluses.current.delete(match.id);
+            }}
+          />
+        ),
+        ghost:
+          phase === 'eye' ? (
+            <span className="icon-tip__look">
+              <MysticEyeIcon />
+            </span>
+          ) : (
+            <span className="add-icon">
+              <PlusIcon />
+            </span>
+          ),
+        shape: 'icon',
+      };
+    }
+    return null;
   };
 
   /** A match's title, linked to its entry in a new tab. */
   const linkTo = (match: Duplicate): ReactElement => (
-    <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
+    <a
+      className="ingredient-form__title"
+      href={hrefOf(match)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       {titleOf(match)}
       <span className="visually-hidden"> (opens in a new tab)</span>
     </a>
@@ -533,32 +910,38 @@ export function NameField({
   };
 
   return (
-    <TextField<IngredientFormValues>
-      name="name"
-      label="Name"
-      autoComplete="off"
-      required
-      placeholder="Add a name"
-      describedBy={shown.length > 0 ? warningId : undefined}
-      invalid={blocking}
-      // The one sign of a lookup out: the region below draws nothing until an
-      // answer has something to show (the owner's call, 2026-10-18).
-      busy={pending}
-      after={
-        // Always in the page, as a live region must be to be heard: the
-        // warning arrives after the typing, and nothing else says so.
-        <output
-          className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
-          aria-label="Possible duplicates"
-          aria-busy={pending || undefined}
-        >
-          {/* The region opens by height round its notice, which fades in
+    <>
+      <TextField<IngredientFormValues>
+        name="name"
+        label="Name"
+        autoComplete="off"
+        required
+        placeholder="Add a name"
+        describedBy={shown.length > 0 ? warningId : undefined}
+        invalid={blocking}
+        // The one sign of a lookup out: the region below draws nothing until an
+        // answer has something to show (the owner's call, 2026-10-18).
+        busy={pending}
+        after={
+          // Always in the page, as a live region must be to be heard: the
+          // warning arrives after the typing, and nothing else says so. A
+          // status written out, where an `<output>` would hold phrasing
+          // content alone, and the notice inside takes no role of its own, so
+          // it is announced once (claude-docs/components/notice.md).
+          <div
+            ref={region}
+            role="status"
+            className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
+            aria-label="Possible duplicates"
+            aria-busy={pending || moving !== null || undefined}
+          >
+            {/* The region opens by height round its notice, which fades in
               (the owner's call, 2026-10-18: the first warning landed too
               abruptly). */}
-          <div className="ingredient-form__duplicates-inner">
-            {drawn && (
-              <div className={noticeClasses(blocking)}>
-                {/* The id sits on the whole block, sentence and list, so the
+            <div className="ingredient-form__duplicates-inner">
+              {drawn && (
+                <Notice kind={blocking ? 'error' : 'warn'} block inRegion>
+                  {/* The id sits on the whole block, sentence and list, so the
                   button described by it is read with the names. Plain anchors
                   rather than <Link>, since the caller hands back a plain
                   string, not a typed route; each in a new tab, so the form and
@@ -568,91 +951,59 @@ export function NameField({
                   list wears them, after a short delay, so an answer back fast
                   never flashes them and nothing moves (the owner's calls,
                   2026-10-18, over a spinner). Both stay mounted for the fade. */}
-                <div id={warningId} className="ingredient-form__matches">
-                  <p>{sentenceFor(blocking, asking, exact.length)}</p>
-                  <ul
-                    ref={list}
-                    onTransitionStart={onTransitionStart}
-                    onTransitionEnd={onTransitionEnd}
-                  >
-                    {/* Keyed by place, not entry: a new answer then changes
-                      each row under its shapes and every row fades back
-                      together, where a new entry's row would mount drawn
-                      beside a surviving one fading in. A row leaving is
-                      out of the accessibility tree at once. */}
-                    {rows.map(({ match, phase, gone }, place) => {
-                      const choice = choiceFor(match);
-                      const classes = ['ingredient-form__match'];
-                      if (phase !== 'present') classes.push(`ingredient-form__match--${phase}`);
-                      if (covered) classes.push('ingredient-form__match--pending');
-                      return (
-                        <li
-                          key={place}
-                          className={classes.join(' ')}
-                          aria-hidden={phase === 'leaving' || undefined}
-                        >
-                          <div className="ingredient-form__body">
-                            {/* Keyed by entry, so another entry's row fades in
-                              afresh, over the last one's fading out as text
-                              alone: nothing in it to press. */}
-                            <span
-                              key={match.id}
-                              className={`ingredient-form__row${gone ? ' ingredient-form__row--arriving' : ''}`}
-                            >
-                              {linkTo(match)}
-                              {choice}
-                            </span>
-                            {gone && (
-                              <span
-                                // Keyed too: a third entry within the fade
-                                // then starts a fresh fade out of the second,
-                                // rather than taking over one already done.
-                                key={gone.id}
-                                className="ingredient-form__row ingredient-form__row--gone"
-                                aria-hidden="true"
-                              >
-                                <span className="ingredient-form__was">{titleOf(gone)}</span>
-                                {choiceFor(gone) && (
-                                  <span className="btn btn--quiet btn--small">
-                                    {gone.inCupboard ? 'Open It' : 'Use It'}
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                            <span className="ingredient-form__shapes" aria-hidden="true">
-                              <span className="ingredient-form__shape" />
-                              {choice && (
-                                <span className="ingredient-form__shape ingredient-form__shape--button" />
-                              )}
-                            </span>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-                {/* One Create Anyway under either list (the owner's call,
+                  <div id={warningId} className="ingredient-form__matches">
+                    <p>{sentenceFor(blocking, asking, exact.length)}</p>
+                    <MatchList
+                      slide={coven}
+                      list={covenList}
+                      heading={grouped ? 'In This Coven' : undefined}
+                      choiceFor={choiceFor}
+                      linkTo={linkTo}
+                    />
+                    <MatchList
+                      slide={compendium}
+                      list={compendiumList}
+                      heading="In the Compendium"
+                      choiceFor={choiceFor}
+                      linkTo={linkTo}
+                    />
+                  </div>
+                  {/* One Create Anyway under either list (the owner's call,
                   2026-10-18: the question's own button was Add Our Own), in
                   the accent outline at the medium size. Described by the
                   warning: a save that stops here moves the focus to it, and
                   the focus should say why. None on an edit's warning, whose
                   save is never held. */}
-                {(asking || holds) && (
-                  <button
-                    ref={ref}
-                    type="button"
-                    className="btn btn--medium"
-                    aria-describedby={warningId}
-                    onClick={dismiss}
-                  >
-                    Create Anyway
-                  </button>
-                )}
-              </div>
-            )}
+                  {(asking || holds) && (
+                    <button
+                      ref={ref}
+                      type="button"
+                      className="btn btn--medium"
+                      aria-describedby={warningId}
+                      onClick={dismiss}
+                    >
+                      Create Anyway
+                    </button>
+                  )}
+                </Notice>
+              )}
+            </div>
           </div>
-        </output>
-      }
-    />
+        }
+      />
+      {/* Outside the live region, which would read the details out as a status.
+        The focus goes back to the eye that opened it, or, with its row gone
+        under a new answer, to the name. */}
+      {looking && workspaceId !== undefined && (
+        <DuplicateQuickLook
+          id={looking.id}
+          entry={looking}
+          workspaceId={workspaceId}
+          pageHref={hrefOf(looking)}
+          onClose={() => setLooking(null)}
+          returnTo={nameInput}
+        />
+      )}
+    </>
   );
 }

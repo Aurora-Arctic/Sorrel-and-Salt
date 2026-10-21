@@ -33,12 +33,16 @@ describe('PublicFrame', () => {
     pathname.mockReturnValue('/compendium');
   });
 
-  it('holds the page in the element the skip link names', () => {
+  it('holds the page just after the empty target the skip link names', () => {
     frame();
 
     const skip = screen.getByRole('link', { name: 'Skip to Content' });
     const target = document.getElementById(skip.getAttribute('href')?.slice(1) ?? '');
-    expect(target).toContainElement(screen.getByRole('main'));
+    // Focusable by script only, and wrapping nothing, so a click on the page
+    // never lands on it (M12.48).
+    expect(target).toHaveAttribute('tabindex', '-1');
+    expect(target).toBeEmptyDOMElement();
+    expect(target!.nextElementSibling).toContainElement(screen.getByRole('main'));
     expect(
       within(screen.getByRole('main')).getByRole('heading', { name: 'The page' }),
     ).toBeInTheDocument();

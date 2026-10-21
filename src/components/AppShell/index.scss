@@ -6,6 +6,13 @@
 // controls `$control-height` tall, with a step of air above and below.
 // claude-docs/components/app-shell.md, "Styling".
 
+// The skip link's target, an empty span before the page in AppShell and
+// PublicFrame alike: the link moves focus to it, and nothing shows it, as it
+// has no box to draw a ring round and the focus is on its way to the page.
+.skip-target:focus {
+  outline: none;
+}
+
 // First in the page, off-screen until it takes the focus; the one place a
 // keyboard user can step past the bar to the page.
 .skip-link {
@@ -144,11 +151,6 @@
 
 // The page's own frame is `min-height: 100dvh` less the top inset; inside the
 // shell the bar takes room too (_primitives.scss).
-.app-shell__main {
-  &:focus {
-    outline: none;
-  }
-}
 
 @media (max-width: $shell-phone-width) {
   .app-shell__bar-inner {
