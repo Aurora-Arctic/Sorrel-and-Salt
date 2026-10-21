@@ -13,6 +13,7 @@ import {
   chooseChip,
   compendiumVariant,
   filterOf,
+  graphqlFromPage,
   ingredientList,
   insertStock,
   localBadge,
@@ -32,11 +33,9 @@ import {
 } from './coven-ingredients';
 
 // Stories 20–27: the coven's ingredient list at /coven/[slug]/ingredients,
-// and everything a member does from it. The page is M9.6's, and stories 20,
-// 21, 22 and 27 walk it; each scaffold still marked `fixme` waits on the
-// task named in its annotation, which turns it into `test` and makes it
-// pass. Each story writes its own coven, so one story's rows never decide
-// another's counts.
+// and everything a member does from it. The page is M9.6's, and every
+// story here walks it. Each story writes its own coven, so one story's rows
+// never decide another's counts.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -656,15 +655,15 @@ test(
   },
 );
 
-test.fixme(
-  "a delete asks first, naming the item and whether it deletes the coven's ingredient or only its jar; Cancel keeps it, Delete removes the row in place",
-  {
-    tag: '@story-25',
-    annotation: { type: 'fixme', description: 'M9.10 builds the delete and its confirmation' },
-  },
+test(
+  "deleting the coven's own ingredient asks first, naming it; Cancel keeps it, Delete removes its card in place and marks it deleted, and a viewer is offered no Delete",
+  { tag: '@story-25' },
   async ({ page }) => {
-    const coven = await ownCoven(page, 25);
-    const { testwort, rosemaryStock } = await withSql(async (sql) => {
+    const coven = await seedCoven(page, 'Fixture Coven Story 25', 'story-25.test', {
+      A: 'owner',
+      C: 'viewer',
+    });
+    const { testwort, keptwort } = await withSql(async (sql) => {
       const testwort = await localIngredient(sql, coven.id, coven.users.A);
       await insertStock(
         sql,
@@ -673,69 +672,79 @@ test.fixme(
         { quantity: 4, unit: 'piece', threshold: 3 },
         coven.users.A,
       );
-      const [rosemaryStock] = await stockJars(sql, coven, [
-        { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
-      ]);
-      return { testwort, rosemaryStock };
+      const keptwort = await localIngredient(sql, coven.id, coven.users.A, {
+        name: 'Fixture Keptwort',
+        canonicalName: 'Fixtura servata',
+      });
+      return { testwort, keptwort };
     });
-    const rosemary = await withSql((sql) => compendiumVariant(sql, 'Rosemary', 'Herb'));
+    await signInAgainAs(page, coven.users.A);
     await page.goto(listPath(coven));
     const list = ingredientList(page);
     await expect(cardsIn(list)).toHaveCount(2);
     await markDocument(page);
 
-    // The row's Delete is named for its item, as the members page's Remove
-    // is (`Remove <name>`, claude-docs/components/member-list.md); the
-    // dialog's title says which delete it is: Delete Ingredient for the
-    // coven's own, M5.3's `deleteIngredient`, and Delete Stock for a jar of a
-    // compendium entry, M9.4's `deleteStock`. The names are this spec's choice.
-    const deleteIngredient = page.getByRole('dialog', { name: 'Delete Ingredient' });
-    const deleteStock = page.getByRole('dialog', { name: 'Delete Stock' });
+    // A coven's own entry's card carries M8.17's bin, named for the entry
+    // ("Delete Ingredient Testwort, Fixtura testalis"), which asks in a dialog
+    // named for the delete it is: Delete Ingredient, M5.3's `deleteIngredient`.
+    const bin = rowOf(list, 'Testwort').getByRole('button', {
+      name: 'Delete Ingredient Testwort, Fixtura testalis',
+      exact: true,
+    });
+    const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
+    const deletedAt = async (id: string) => {
+      const [row] = await withSql(
+        (sql) => sql<{ deleted_at: Date | null }[]>`
+          select deleted_at from ingredients where id = ${id}`,
+      );
+      return row.deleted_at;
+    };
 
-    await test.step('Cancel closes the question and changes nothing', async () => {
-      await rowOf(list, 'Testwort').getByRole('button', { name: 'Delete Testwort' }).click();
-      await expect(deleteIngredient).toContainText('Testwort');
+    await test.step('the Delete asks first, naming the item, and Cancel changes nothing', async () => {
+      await bin.click();
+      await expect(question).toContainText('Testwort');
       await assertNoAccessibilityViolations(page);
-      await deleteIngredient.getByRole('button', { name: 'Cancel' }).click();
+      await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
-      await expect(deleteIngredient).toHaveCount(0);
-      await expect(rowOf(list, 'Testwort')).toBeVisible();
-      const [row] = await withSql(
-        (sql) => sql`select deleted_at from ingredients where id = ${testwort.ingredientId}`,
-      );
-      expect(row.deleted_at).toBeNull();
+      await expect(question).toHaveCount(0);
+      await expect(bin).toBeFocused();
+      await expect(cardsIn(list)).toHaveCount(2);
+      expect(await deletedAt(testwort.ingredientId)).toBeNull();
     });
 
-    await test.step("confirmed, the coven's own ingredient is deleted and its row goes without a reload", async () => {
-      await rowOf(list, 'Testwort').getByRole('button', { name: 'Delete Testwort' }).click();
-      await expect(deleteIngredient).toContainText('Testwort');
-      await deleteIngredient.getByRole('button', { name: 'Delete', exact: true }).click();
+    await test.step('confirmed, the card goes without a reload, the focus goes to the heading, and the removal is announced', async () => {
+      await bin.click();
+      await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
+      await expect(question).toHaveCount(0);
       await expect(rowOf(list, 'Testwort')).toHaveCount(0);
-      await expect(cardsIn(list)).toHaveCount(1);
+      await expect(rowOf(list, 'Fixture Keptwort')).toHaveCount(1);
       expect(await stillSameDocument(page)).toBe(true);
-      // Soft: the row is marked deleted, not removed.
-      const [row] = await withSql(
-        (sql) => sql`select deleted_at from ingredients where id = ${testwort.ingredientId}`,
-      );
-      expect(row.deleted_at).not.toBeNull();
+      // The bin went with its card, so the focus goes to the page's heading.
+      await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
+      // The page's one status region carries the item the delete removed.
+      await expect(page.getByRole('status').filter({ hasText: 'Testwort' })).toHaveCount(1);
+      // Soft: the row is marked deleted, not removed; the other entry is untouched.
+      expect(await deletedAt(testwort.ingredientId)).not.toBeNull();
+      expect(await deletedAt(keptwort.ingredientId)).toBeNull();
     });
 
-    await test.step("confirmed on compendium stock, only the coven's jar goes", async () => {
-      await rowOf(list, 'Rosemary').getByRole('button', { name: 'Delete Rosemary' }).click();
-      await expect(deleteStock).toContainText('Rosemary');
-      await expect(deleteIngredient).toHaveCount(0);
-      await deleteStock.getByRole('button', { name: 'Delete', exact: true }).click();
+    await test.step('a viewer is offered no Delete, and one sent by direct id is refused', async () => {
+      await signInAgainAs(page, coven.users.C);
+      await page.goto(listPath(coven));
+      const kept = rowOf(list, 'Fixture Keptwort');
+      // Why it could be offered: the viewer reads the card the owner could delete.
+      await expect(kept).toBeVisible();
+      await expect(kept.getByRole('button', { name: /^Delete/ })).toHaveCount(0);
+      await expect(page.getByRole('main').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
 
-      await expect(rowOf(list, 'Rosemary')).toHaveCount(0);
-      expect(await stillSameDocument(page)).toBe(true);
-      await withSql(async (sql) => {
-        const [jar] = await sql`select deleted_at from inventory_items where id = ${rosemaryStock}`;
-        expect(jar.deleted_at).not.toBeNull();
-        const [entry] = await sql`
-          select deleted_at from ingredients where id = ${rosemary.ingredientId}`;
-        expect(entry.deleted_at).toBeNull();
-      });
+      const answer = await graphqlFromPage(
+        page,
+        'mutation ($w: ID!, $id: ID!) { deleteIngredient(workspaceId: $w, id: $id) }',
+        { w: coven.id, id: keptwort.ingredientId },
+      );
+      expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      expect(await deletedAt(keptwort.ingredientId)).toBeNull();
     });
   },
 );

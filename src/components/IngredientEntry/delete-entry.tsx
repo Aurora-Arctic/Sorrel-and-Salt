@@ -7,6 +7,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
+import { useAnnounce } from '../ClickFeedback/status-region';
 import Modal from '../Modal';
 import type { CupboardQuestionProps, CupboardWrite, DeleteEntryOptions } from './types';
 
@@ -75,13 +76,18 @@ export function useDeleteEntry({
   workspaceId,
   id,
   deletedHref,
+  announcement,
   onSettle,
   onRefused,
 }: DeleteEntryOptions): CupboardWrite {
   const { navigate, refresh } = usePendingNavigation();
+  const announce = useAnnounce();
   const remove = useMutation({
     mutationFn: () => graphqlRequest(DeleteOwnIngredientDocument, { id, workspaceId }),
     onSuccess: () => {
+      // The page's status region outlives the card, so a screen reader hears the removal
+      // the list then shows (M9.10).
+      if (announcement) announce(announcement);
       if (deletedHref) navigate(deletedHref, { replace: true });
       else refresh();
     },

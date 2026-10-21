@@ -362,6 +362,8 @@ export interface DeleteEntryOptions {
   id: string;
   /** Where a delete leads, replacing the address; left out, the page reads again. */
   deletedHref?: Route;
+  /** Said in the page's status region once the delete succeeds; none, nothing is said. */
+  announcement?: string;
   /** Closes the caller's confirmation on a refusal; a delete's closes with the page it changed. */
   onSettle: () => void;
   /** Shows a refusal's sentence in the caller's alert. */
