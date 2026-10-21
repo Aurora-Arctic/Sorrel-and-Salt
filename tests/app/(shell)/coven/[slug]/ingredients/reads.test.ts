@@ -13,12 +13,14 @@ vi.mock('@/lib/request-session', () => ({ requireSession: async () => session })
 const listWorkspaceIngredients = vi.fn();
 const countWorkspaceIngredients = vi.fn();
 const stockOf = vi.fn();
+const lastEditsOf = vi.fn();
 const variantsOf = vi.fn();
 const workspaceIngredientFacets = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   listWorkspaceIngredients,
   countWorkspaceIngredients,
   stockOf,
+  lastEditsOf,
   variantsOf,
   workspaceIngredientFacets,
 }));
@@ -50,6 +52,7 @@ beforeEach(() => {
   ]);
   readCardCategoriesOf.mockResolvedValue([[], []]);
   stockOf.mockResolvedValue([[{ id: 'j1' }], []]);
+  lastEditsOf.mockResolvedValue([{ by: 'Fixture Name', at: '2026-01-01T00:00:00.000Z' }, null]);
 });
 
 describe('readCovenIngredients', () => {
@@ -113,6 +116,14 @@ describe('readCovenIngredients', () => {
 
     expect(listWorkspaceIngredients.mock.calls[0][2]).toEqual({ source: 'local', inStock: true });
     expect(countWorkspaceIngredients.mock.calls[0][2]).toEqual({ source: 'local', inStock: true });
+  });
+
+  it("reads every entry's last edit in one batch for the page", async () => {
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
+
+    expect(lastEditsOf).toHaveBeenCalledTimes(1);
+    expect(lastEditsOf).toHaveBeenCalledWith(session, COVEN, [own, held]);
+    expect(page.lastEdits).toEqual([{ by: 'Fixture Name', at: '2026-01-01T00:00:00.000Z' }, null]);
   });
 
   it('throws a refusal in a batch rather than draw a card without its jars', async () => {

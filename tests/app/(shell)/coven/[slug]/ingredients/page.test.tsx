@@ -48,6 +48,7 @@ vi.mock('@/app/compendium-reads', () => ({
 const listWorkspaceIngredients = vi.fn();
 const countWorkspaceIngredients = vi.fn();
 const stockOf = vi.fn();
+const lastEditsOf = vi.fn();
 const variantsOf = vi.fn();
 const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
@@ -62,6 +63,7 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
   listWorkspaceIngredients,
   countWorkspaceIngredients,
   stockOf,
+  lastEditsOf,
   variantsOf,
   workspaceIngredientFacets,
   getIngredient,
@@ -172,6 +174,7 @@ beforeEach(() => {
     [{ id: 'j1', variantId: 'v1', quantityOnHand: '3', unit: 'oz', lowStockThreshold: '1' }],
     [],
   ]);
+  lastEditsOf.mockResolvedValue([{ by: 'Fixture Editor', at: '2026-03-04T05:06:07.000Z' }, null]);
   workspaceIngredientFacets.mockResolvedValue(NO_FACETS);
   getIngredient.mockImplementation(async (_session: unknown, id: string) =>
     id === 'a1' ? row('a1', 'Testwort', COVEN.id) : row(id, 'Fixture Salt', null),
@@ -214,6 +217,12 @@ describe('the coven Ingredients page', () => {
     expect(CARD_PAGE_SIZE).toBe(24);
     expect(listWorkspaceIngredients.mock.calls[0]![3]).toMatchObject({ limit: CARD_PAGE_SIZE + 1 });
     expect(stockOf).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands a card its last edit, and a card with none draws none', async () => {
+    await renderPage();
+    expect(lastEditsOf).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByText(/Last edited by Fixture Editor/)).toHaveLength(1);
   });
 
   it('links each entry to its page in the coven, under the coven’s label', async () => {

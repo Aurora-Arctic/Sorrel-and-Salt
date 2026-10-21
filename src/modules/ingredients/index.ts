@@ -12,6 +12,7 @@ export * from './services/compendium-slugs';
 export * from './services/references';
 export * from './services/promote-folk-name';
 export * from './services/stock';
+export * from './services/last-edits';
 export * from './services/workspace-ingredient-list';
 export * from './services/ingredient-facets';
 export * from './services/replaced-entries';
@@ -54,6 +55,7 @@ export type {
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
+  LastEdit,
   CompendiumMatches,
   ReplacedCompendiumEntry,
   SaveStockValues,

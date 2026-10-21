@@ -391,3 +391,12 @@ export interface HoldingCoven {
   slug: string;
   name: string;
 }
+
+/**
+ * The latest edit a coven's card shows (M6.18): who made it, by the display name the viewer may
+ * read, and when, as an ISO 8601 moment. `by` is null where the viewer cannot name the editor.
+ */
+export interface LastEdit {
+  by: string | null;
+  at: string;
+}

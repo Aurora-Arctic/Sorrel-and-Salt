@@ -146,6 +146,7 @@ export default async function CovenIngredientsPage({
       kind: own ? 'own' : 'cupboard',
       ...footOf(own, { ...shown, id: node.id }, placed({ edit: node.id })),
       retired: isRetired(node),
+      lastEdit: page.lastEdits[i],
       ...(mayStock && {
         stock: stockDialogOf(
           page.variantIds[i].map((id) => ({ id, form: page.formOf.get(id) ?? '' })),
