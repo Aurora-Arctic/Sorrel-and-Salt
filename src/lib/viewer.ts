@@ -5,7 +5,7 @@ import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { getSession, requireSignedIn } from './request-session';
 import type { Session } from './session';
 import { curates } from './site-roles';
-import type { ShellContext, ShellViewer, ShellWorkspace } from './types';
+import type { ShellContext } from './types';
 
 // What the application shell draws and the coven layout's switcher lists: the
 // viewer, their covens, and how many coven invitations wait for them. Cached
