@@ -100,7 +100,7 @@ export function buildSearchSentence({
 
   const query = filter.query?.trim();
   if (query) {
-    clause(text('matching '), { kind: 'value', text: `“${query}”`, facet: 'query', value: query });
+    clause(text('matching '), { kind: 'value', text: query, facet: 'query', value: query });
   }
 
   const categories = picked(filter.categories);

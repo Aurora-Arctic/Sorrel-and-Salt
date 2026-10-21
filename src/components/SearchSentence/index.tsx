@@ -4,7 +4,7 @@ import { type ReactElement, type ReactNode, useEffect, useRef, useState } from '
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
 import { ChevronIcon } from '../Combobox/icons';
-import { clausesText, type ClausePart, sentenceParts } from './parts';
+import { clausesText, type ClausePart, MATCHING, sentenceParts } from './parts';
 import {
   advance,
   convergeOnce,
@@ -22,17 +22,14 @@ import './index.scss';
 
 const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
-/** " matching “rue”" as far as typed, the term in a hairline box like the other values. */
+/** " matching rue" as far as typed, the term in a hairline box like the other values. */
 function termNode(text: string): ReactNode {
-  const open = text.indexOf('“');
-  if (open < 0) return text;
-  const inner = text.slice(open + 1);
-  const closed = inner.endsWith('”');
+  if (!text.startsWith(MATCHING)) return text;
+  const term = text.slice(MATCHING.length);
   return (
     <>
-      {text.slice(0, open + 1)}
-      <strong>{closed ? inner.slice(0, -1) : inner}</strong>
-      {closed ? '”' : null}
+      {MATCHING}
+      {term ? <strong>{term}</strong> : null}
     </>
   );
 }
@@ -68,7 +65,7 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
 
 /**
  * The sentence above a list that says what it is searching for. Settled, it is one closed
- * line, "12 ingredients matching “rue”", that opens to the clauses beneath. While a search is
+ * line, "12 ingredients matching rue", that opens to the clauses beneath. While a search is
  * on its way the whole sentence is typed out in its place as the loading animation: the
  * count is "Searching for ingredients" until it comes back, then backspaced to the real one,
  * and the clauses finish typing, are held for a moment and slide up into the closed line.

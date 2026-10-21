@@ -310,7 +310,7 @@ the address holds them: text query, categories, forms, deities, zodiac, planets,
 elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
-> 3 ingredients, matching “rue”, in the protection and healing categories, in the
+> 3 ingredients, matching rue, in the protection and healing categories, in the
 > form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of
 > the fire element, that are not toxic, classified as botanical, without references
 

@@ -1,7 +1,7 @@
 # SearchSentence
 
 `src/components/SearchSentence/` — the sentence above a list that says what it is
-searching for (M12.4): "12 ingredients matching “rue”", and beneath it, opened,
+searching for (M12.4): "12 ingredients matching rue", and beneath it, opened,
 the filters that narrowed it. It draws the fragments `buildSearchSentence`
 returns ([`ingredient-search.md`](ingredient-search.md), "The search sentence") and
 does the loading animation that stands in for a spinner. A client component.
@@ -23,7 +23,7 @@ well would be a second copy to keep equal.
 ## Contracts
 
 - **Settled, it is one closed line.** The lead, the term and a chevron, with one
-  space at every join and no comma: "12 ingredients matching “rue”". The builder
+  space at every join and no comma: "12 ingredients matching rue". The builder
   writes a comma before each clause (the term's too), so the component takes the
   sentence apart (`parts.ts`) and keeps the commas for the clauses beneath only.
   A press opens the clauses and a second shuts them. With no clause to show (no

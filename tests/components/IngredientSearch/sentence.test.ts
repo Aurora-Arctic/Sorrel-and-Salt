@@ -76,8 +76,8 @@ describe('buildSearchSentence', () => {
   });
 
   it('writes the text query as matching', () => {
-    expect(text({ query: 'rue' }, 1)).toBe('1 ingredient, matching “rue”');
-    expect(text({ query: '  rue ' }, 1)).toBe('1 ingredient, matching “rue”');
+    expect(text({ query: 'rue' }, 1)).toBe('1 ingredient, matching rue');
+    expect(text({ query: '  rue ' }, 1)).toBe('1 ingredient, matching rue');
   });
 
   it('says toxic each way and nothing for any', () => {
@@ -131,7 +131,7 @@ describe('buildSearchSentence', () => {
       withoutReferences: true,
     };
     expect(text(filter, 3, { labels, admin: true })).toBe(
-      '3 ingredients, matching “rue”, in the protection and healing categories, in the form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of the fire element, that are not toxic, classified as botanical, without references',
+      '3 ingredients, matching rue, in the protection and healing categories, in the form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of the fire element, that are not toxic, classified as botanical, without references',
     );
   });
 
@@ -206,7 +206,7 @@ describe('buildSearchSentence', () => {
     });
     expect(hasFilter).toBe(true);
     expect(fragments.filter((f) => f.kind === 'value')).toEqual([
-      { kind: 'value', text: '“rue”', facet: 'query', value: 'rue' },
+      { kind: 'value', text: 'rue', facet: 'query', value: 'rue' },
       { kind: 'value', text: 'oil', facet: 'forms', value: 'oil' },
       { kind: 'value', text: 'the Sun', facet: 'planets', value: 'sun' },
       { kind: 'value', text: 'toxic', facet: 'toxic', value: 'toxic' },
@@ -297,6 +297,6 @@ describe('buildSearchSentence', () => {
   });
 
   it('shows the text query as typed', () => {
-    expect(text({ query: 'Rue' }, 1)).toBe('1 ingredient, matching “Rue”');
+    expect(text({ query: 'Rue' }, 1)).toBe('1 ingredient, matching Rue');
   });
 });
