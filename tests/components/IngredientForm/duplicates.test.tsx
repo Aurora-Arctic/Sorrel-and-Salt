@@ -513,10 +513,14 @@ describe('NameField, with useDuplicateWarning', () => {
       type("Cat's Claw");
       save();
 
-      press(await screen.findByRole('button', { name: ADD }));
+      const plus = await screen.findByRole('button', { name: ADD });
+      press(plus);
 
       expect(sent.used).toHaveBeenCalledWith(expect.objectContaining({ id: CLAW.id }));
       expect(sent).not.toHaveBeenCalled();
+      // The form answered no add, so the + is back, with no check.
+      await waitFor(() => expect(plus).not.toHaveAttribute('aria-busy'));
+      expect(plus).not.toHaveAttribute('data-state');
     });
 
     it("lets the next save go once the question's Create Anyway is pressed", async () => {

@@ -1530,7 +1530,7 @@ function HeldNameField({ blocking }: { blocking: boolean }) {
             dismiss: () => undefined,
           }}
           hrefOf={covenDuplicateHref}
-          onUse={() => undefined}
+          onUse={async () => false}
           ref={null}
         />
       </form>

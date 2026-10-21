@@ -17,10 +17,14 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
-import IconTip, { MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
+import { ADDED_HOLD_MS } from '../AddIcon';
+import { useFade } from '../ClickFeedback/fade';
+import { useAnnounce } from '../ClickFeedback/status-region';
+import IconTip, { CheckIcon, MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
 import { cardName } from '../IngredientCard/card-name';
 import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
+import Spinner from '../Spinner';
 import { DuplicateQuickLook } from './quick-look';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 // The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
@@ -610,6 +614,86 @@ function MatchList({
   );
 }
 
+/**
+ * Where a +'s add has got to: sending, the check held after it worked, and the eye it turns into
+ * (M12.48, the owner's call, 2026-10-21).
+ */
+type PlusPhase = 'busy' | 'added' | 'eye';
+
+/**
+ * The + of a compendium match the coven does not hold, and the Quick Look eye it becomes once the
+ * add has worked: one button throughout, so the focus stays on it. While the add is sent it shows
+ * the spinner; then AddIcon's check, held `ADDED_HOLD_MS`; then the check fades into the eye, the
+ * stack AddIcon draws when its check fades back to the plus, and under reduced motion the eye
+ * simply takes the check's place. Once the eye is in, `onShown` asks for the row to move under In
+ * This Coven, so the move never starts under the check.
+ */
+function PlusChoice({
+  match,
+  phase,
+  onAdd,
+  onLook,
+  onShown,
+  buttonRef,
+}: {
+  match: Duplicate;
+  phase: PlusPhase | undefined;
+  onAdd: () => void;
+  onLook: () => void;
+  onShown: () => void;
+  buttonRef: (node: HTMLButtonElement | null) => void;
+}): ReactElement {
+  const name = cardName(match.name, match.canonicalName);
+  // Named as the card's plus is, "Add to My Ingredients: Name, Formal".
+  const label = `Add to My Ingredients: ${name}`;
+  const fade = useFade(phase === 'added');
+  const eye = phase === 'eye';
+  const state = phase === 'added' ? 'added' : fade.closing ? 'returning' : undefined;
+  const shown = eye && !fade.closing;
+  useEffect(() => {
+    if (shown) onShown();
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per eye: onShown is a fresh closure each render.
+  }, [shown]);
+  const busy = phase === 'busy';
+  const glyph = state ? (
+    <span className="add-icon__glyphs">
+      <span className="add-icon__check" onAnimationEnd={fade.onAnimationEnd}>
+        <CheckIcon />
+      </span>
+      {state === 'returning' && (
+        <span className="add-icon__eye">
+          <MysticEyeIcon />
+        </span>
+      )}
+    </span>
+  ) : busy ? (
+    <Spinner />
+  ) : eye ? (
+    <MysticEyeIcon />
+  ) : (
+    <PlusIcon />
+  );
+  return (
+    <IconTip tip={eye ? 'Quick Look' : label}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className={eye ? 'icon-tip__look' : 'add-icon'}
+        data-state={state}
+        aria-busy={busy || undefined}
+        aria-disabled={busy || phase === 'added' || undefined}
+        onClick={() => {
+          if (eye) onLook();
+          else if (phase === undefined) onAdd();
+        }}
+      >
+        {glyph}
+        <span className="visually-hidden">{eye ? `Quick Look ${name}` : label}</span>
+      </button>
+    </IconTip>
+  );
+}
+
 /** The name field, with the duplicate warning beneath it. */
 export function NameField({
   warning,
@@ -617,9 +701,11 @@ export function NameField({
   onUse,
   quickLookOf,
   workspaceId,
+  workspaceName,
   holds = true,
   ref,
 }: NameFieldProps): ReactElement {
+  const announce = useAnnounce();
   // The held match whose Quick Look is open over the form.
   const [looking, setLooking] = useState<Duplicate | null>(null);
   const region = useRef<HTMLDivElement>(null);
@@ -653,6 +739,81 @@ export function NameField({
   const drawn = rows.length > 0;
   const open = rows.some((row) => row.phase !== 'leaving');
 
+  // Each +'s add, by entry (M12.48, the owner's calls, 2026-10-21): the check holds, then the eye,
+  // then the row moves under In This Coven, the region busy while it does. The + buttons by entry,
+  // so the focus follows from one to the eye in its new row.
+  const [phases, setPhases] = useState<ReadonlyMap<string, PlusPhase>>(new Map());
+  const setPhase = (id: string, phase: PlusPhase | undefined) =>
+    setPhases((now) => {
+      const next = new Map(now);
+      if (phase === undefined) next.delete(id);
+      else next.set(id, phase);
+      return next;
+    });
+  const pluses = useRef(new Map<string, HTMLButtonElement>());
+  const following = useRef<string | null>(null);
+  const [moving, setMoving] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const holdTimers = useRef(new Set<number>());
+  useEffect(() => {
+    const timers = holdTimers.current;
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+  const sliding = rows.some((row) => row.phase !== 'present' || row.gone !== undefined);
+  // The move is over once the lookups are back and the rows have stopped sliding: seen during
+  // the render that sees it, as useSlidingRows sees a new answer.
+  if (moving !== null && !refreshing && !pending && !sliding) {
+    setMoving(null);
+    setPhase(moving, undefined);
+  }
+
+  const add = async (match: Duplicate): Promise<void> => {
+    if (!onUse) return;
+    setPhase(match.id, 'busy');
+    // A caller may answer nothing: that is not an add.
+    const added = (await onUse(match)) === true;
+    if (!added) {
+      setPhase(match.id, undefined);
+      return;
+    }
+    setPhase(match.id, 'added');
+    announce(`Added to ${workspaceName ?? 'My Ingredients'}.`);
+    const timer = window.setTimeout(() => {
+      holdTimers.current.delete(timer);
+      setPhase(match.id, 'eye');
+    }, ADDED_HOLD_MS);
+    holdTimers.current.add(timer);
+  };
+
+  const move = async (id: string): Promise<void> => {
+    // The focus follows only from the + itself, and only if it is still there when the row moves.
+    following.current = document.activeElement === pluses.current.get(id) ? id : null;
+    setMoving(id);
+    setRefreshing(true);
+    try {
+      await warning.added(id);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // The focus follows from the + to the eye of its new row once both are in the page, or once the
+  // + has gone with the focus on it; the move over, it follows no more.
+  const eyes = useRef(new Map<string, HTMLButtonElement>());
+  useLayoutEffect(() => {
+    const id = following.current;
+    if (id === null) return;
+    const eye = eyes.current.get(id);
+    const was = document.activeElement;
+    if (
+      eye?.isConnected &&
+      (was === pluses.current.get(id) || was === null || was === document.body)
+    ) {
+      following.current = null;
+      eye.focus();
+    } else if (moving === null) following.current = null;
+  });
+
   /**
    * What a match offers. Its Quick Look where the page under the form has
    * details to open (the admin's form, every match being the compendium's;
@@ -679,6 +840,9 @@ export function NameField({
       return {
         control: (
           <QuickLookButton
+            ref={(node) => {
+              if (node) eyes.current.set(match.id, node);
+            }}
             name={cardName(match.name, match.canonicalName)}
             onClick={() => setLooking(match)}
           />
@@ -692,22 +856,32 @@ export function NameField({
       };
     if (!onUse || !match.isGlobal) return null;
     if (!match.inCupboard) {
-      // Named as the card's plus is, "Add to My Ingredients: Name, Formal".
-      const label = `Add to My Ingredients: ${cardName(match.name, match.canonicalName)}`;
+      const phase = phases.get(match.id);
       return {
         control: (
-          <IconTip tip={label}>
-            <button type="button" className="add-icon" onClick={() => onUse(match)}>
+          <PlusChoice
+            match={match}
+            phase={phase}
+            onAdd={() => void add(match)}
+            onLook={() => setLooking(match)}
+            onShown={() => void move(match.id)}
+            buttonRef={(node) => {
+              if (node) pluses.current.set(match.id, node);
+              else if (pluses.current.get(match.id)?.isConnected === false)
+                pluses.current.delete(match.id);
+            }}
+          />
+        ),
+        ghost:
+          phase === 'eye' ? (
+            <span className="icon-tip__look">
+              <MysticEyeIcon />
+            </span>
+          ) : (
+            <span className="add-icon">
               <PlusIcon />
-              <span className="visually-hidden">{label}</span>
-            </button>
-          </IconTip>
-        ),
-        ghost: (
-          <span className="add-icon">
-            <PlusIcon />
-          </span>
-        ),
+            </span>
+          ),
         shape: 'icon',
       };
     }
@@ -759,7 +933,7 @@ export function NameField({
             role="status"
             className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
             aria-label="Possible duplicates"
-            aria-busy={pending || undefined}
+            aria-busy={pending || moving !== null || undefined}
           >
             {/* The region opens by height round its notice, which fades in
               (the owner's call, 2026-10-18: the first warning landed too

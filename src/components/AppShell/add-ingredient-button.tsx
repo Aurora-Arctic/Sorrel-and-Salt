@@ -69,6 +69,7 @@ function AddIngredientBody({
   return (
     <IngredientForm
       workspaceId={workspace.id}
+      workspaceName={workspace.name}
       onSaved={(saved, next) => {
         if (next !== 'open') return;
         onSaved(saved);

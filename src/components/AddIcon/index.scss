@@ -75,7 +75,9 @@
   }
 }
 
-.add-icon__plus {
+// The eye arrives the same way where the duplicate warning's + turns into Quick Look (M12.48).
+.add-icon__plus,
+.add-icon__eye {
   @include arrived;
 }
 

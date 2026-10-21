@@ -74,8 +74,13 @@ export type EntryHref = (ingredient: { slug: string; isGlobal: boolean }) => str
  */
 export type IngredientFormProps = IngredientFormCallbacks &
   (
-    | { workspaceId: string; entry?: EditedIngredient }
-    | { workspaceId: null; entry?: EditedIngredient }
+    | {
+        workspaceId: string;
+        entry?: EditedIngredient;
+        /** The coven's name, which the page status region says an add from a match's + went to; "My Ingredients" when left out. */
+        workspaceName?: string;
+      }
+    | { workspaceId: null; entry?: EditedIngredient; workspaceName?: undefined }
   );
 
 /** The ingredient an edit opens: its id, which the writes name, and its values as the form shows them. */
@@ -618,8 +623,13 @@ export interface NameFieldProps {
   warning: DuplicateWarning;
   /** Where a match links: a coven's ingredient page, or the admin's compendium modal. */
   hrefOf: (match: Duplicate) => string;
-  /** Puts a compendium match in the cupboard (its +, M12.48; once Use It); left out where there is no cupboard, the admin's, and no match offers it. */
-  onUse?: (match: Duplicate) => void;
+  /**
+   * Puts a compendium match in the cupboard (its +, M12.48; once Use It), answering whether it
+   * went in; left out where there is no cupboard, the admin's, and no match offers it.
+   */
+  onUse?: (match: Duplicate) => Promise<boolean>;
+  /** The coven's name, which the page status region says an add went to; "My Ingredients" when left out. */
+  workspaceName?: string;
   /**
    * The coven the form adds to, whose held matches each open a Quick Look over the form,
    * read in it (M12.48); left out on the admin's form, which has no coven.

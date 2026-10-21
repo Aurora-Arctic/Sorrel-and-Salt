@@ -337,6 +337,20 @@ $skeleton-fade: 300ms;
       margin-top: space(2);
     }
 
+    // In a coven's form, the Quick Look eye of a held match, the one a + turns into included,
+    // in the add's green ($accent, the check's) rather than the cards' ink (the owner's call,
+    // M12.48), in every state; the green wash under it on hover and focus is icon-button-edit's,
+    // as for the +. At least 3.9:1 on either notice's tint and on the wash, in both themes
+    // (claude-docs/components/ingredient-form.md, "The + in the duplicate warning").
+    .ingredient-form__group .icon-tip__look {
+      &,
+      &:hover,
+      &:focus-visible,
+      &[aria-expanded='true'] {
+        color: $accent;
+      }
+    }
+
     .ingredient-form__group-inner {
       min-height: 0;
       overflow: hidden;
