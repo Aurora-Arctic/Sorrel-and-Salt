@@ -27,6 +27,7 @@ import { viewerIfSignedIn } from '../../../lib/viewer';
 import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
+import { readEntryStock, stockKey } from '../../entry-stock';
 import { cardPlacesOf, readCardCovens } from './card-places';
 import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
 import { readEditPlace } from '../../(shell)/admin/list-page';
@@ -168,19 +169,38 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // What the role in each of those covens permits, for the three dots on the cards and in the
   // window: one read, per request, for both, and none for a visitor or a viewer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
-  const detailsPlaces = detailed
-    ? cardPlacesOf(
-        cardCovens,
-        (id) => holding.some((coven) => coven.id === id),
-        `/compendium/ingredients/${detailed.slug}`,
-      )
-    : [];
   const held = defaultCoven
     ? await heldEntryIds(
         covens.map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
+  // The stock Edit Stock opens with (the owner's call, 2026-10-21): the forms and jars of each
+  // entry a coven holds where its role may update stock, for the cards and the open entry
+  // together. One read per service for the whole page, per viewer (rule 6).
+  const stockers = new Set(cardCovens.filter(({ canStock }) => canStock).map((c) => c.workspaceId));
+  const stock = await readEntryStock([
+    ...page.edges.flatMap(({ node }) =>
+      [...stockers]
+        .filter((id) => held?.get(id)?.has(node.id) === true)
+        .map((workspaceId) => ({ ingredientId: node.id, workspaceId })),
+    ),
+    ...(detailed
+      ? holding
+          .filter(({ id }) => stockers.has(id))
+          .map(({ id }) => ({ ingredientId: detailed.id, workspaceId: id }))
+      : []),
+  ]);
+  const stockIn = (entryId: string) => (workspaceId: string) =>
+    stock.get(stockKey(workspaceId, entryId));
+  const detailsPlaces = detailed
+    ? cardPlacesOf(
+        cardCovens,
+        (id) => holding.some((coven) => coven.id === id),
+        `/compendium/ingredients/${detailed.slug}`,
+        stockIn(detailed.id),
+      )
+    : [];
   const entries = page.edges.map(({ node }, i): CompendiumCardEntry => {
     const heldIn = writable.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ id }) => id);
     return {
@@ -207,6 +227,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         cardCovens,
         (id) => held?.get(id)?.has(node.id) === true,
         `/compendium/ingredients/${node.slug}`,
+        stockIn(node.id),
       ),
       ...(canEdit && {
         editHref: listWith(node.slug),
