@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import StockDialog, { StockJarButton } from '@/components/StockDialog';
+import StockDialog, { StockDialogModal, StockJarButton } from '@/components/StockDialog';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { SaveStockMutation, SaveStockMutationVariables } from '@/gql/graphql';
 import { choose, press, typeIn } from '../../support/interact';
@@ -109,6 +109,21 @@ async function sent(calls: SaveStockMutationVariables[]) {
 }
 
 describe('StockDialog', () => {
+  // Opened from a page that is not a coven's (M9.12), the dialog names the coven it writes to in
+  // its accessible name; on a coven's own page it is left out.
+  it('puts the coven it writes to in the eyebrow when given one, and only then', () => {
+    const { unmount } = render(
+      <StockDialogModal {...PROPS} onClose={() => {}} coven="Fixture Coven" />,
+    );
+    expect(
+      screen.getByRole('dialog', { name: 'Edit Stock for Fixture Coven, Testwort' }),
+    ).toBeInTheDocument();
+    unmount();
+
+    render(<StockDialogModal {...PROPS} onClose={() => {}} />);
+    expect(screen.getByRole('dialog', { name: 'Edit Stock, Testwort' })).toBeInTheDocument();
+  });
+
   it('is a button named for its ingredient, shut until pressed, that opens the dialog named the same', async () => {
     render(<StockDialog {...PROPS} />);
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -530,6 +545,9 @@ describe('StockDialog', () => {
       'true',
     );
     expect(within(blank).queryByRole('button', { name: /^Remove/ })).toBeNull();
+    // The placeholder where the form's name will go is for the eye alone: the group is named and
+    // described by its legend and hint, and no heading is announced.
+    expect(within(blank).queryByRole('heading')).toBeNull();
     expect(save()).toBeDisabled();
     fireEvent.click(addForm()!);
     expect(offered()).toEqual(['Flower', 'Oil', 'Resin']);

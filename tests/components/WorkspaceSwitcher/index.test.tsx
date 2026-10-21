@@ -10,14 +10,16 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitcher');
+const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTargets');
+const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/context');
 
 // Story 8 (M6.9): the viewer's workspaces, the current one read off the
 // address, a choice going to the same section in the other. Story 3 (M9.16):
 // the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
 ];
 
 const box = () => screen.getByRole('combobox', { name: 'Coven' });
@@ -58,13 +60,79 @@ describe('WorkspaceSwitcher', () => {
 
   it('goes to the coven index when the viewer cannot read members there', () => {
     pathname.mockReturnValue('/coven/fixture-coven/members');
-    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[1]!, canReadMembers: false }];
+    const workspaces = [
+      WORKSPACES[0]!,
+      { ...WORKSPACES[1]!, canReadMembers: false, canInvite: false },
+    ];
 
     render(<WorkspaceSwitcher workspaces={workspaces} />);
     fireEvent.click(box());
     fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
 
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
+  });
+
+  it('goes to the members page, not a 404, from invitations when the viewer cannot invite there', () => {
+    pathname.mockReturnValue('/coven/fixture-coven/invitations');
+    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[1]!, canInvite: false }];
+
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+    fireEvent.click(box());
+    fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+
+    // Why the members page: they may read it there, only the invite right is missing.
+    expect(workspaces[1]!.canReadMembers).toBe(true);
+    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/members');
+  });
+
+  describe('from a page that says which covens it opens in (M9.12)', () => {
+    const ENTRY = '/coven/fixture-coven/ingredients/some-id';
+    const switchTo = (name: string) => {
+      fireEvent.click(box());
+      fireEvent.click(screen.getByRole('option', { name }));
+    };
+    const renderOn = (slugs: readonly string[] | null, path = ENTRY) =>
+      render(
+        <CovenSwitchProvider>
+          {slugs && <CovenSwitchTargets path={path} slugs={slugs} />}
+          <WorkspaceSwitcher workspaces={WORKSPACES} />
+        </CovenSwitchProvider>,
+      );
+
+    beforeEach(() => pathname.mockReturnValue(ENTRY));
+
+    it('stays on the page in a coven it opens in', () => {
+      renderOn(['fixture-coven', 'testwort-circle']);
+
+      switchTo('Testwort Circle');
+
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
+    });
+
+    it('falls back to the section in a coven it does not open in', () => {
+      renderOn(['fixture-coven']);
+
+      switchTo('Testwort Circle');
+
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
+    });
+
+    it('falls back to the section when no page registered', () => {
+      renderOn(null);
+
+      switchTo('Testwort Circle');
+
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
+    });
+
+    it('ignores a registration made for another address', () => {
+      // Why it could be used: it names the target coven, only for a different entry.
+      renderOn(['fixture-coven', 'testwort-circle'], '/coven/fixture-coven/ingredients/other-id');
+
+      switchTo('Testwort Circle');
+
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
+    });
   });
 
   it('is operable from the keyboard', () => {

@@ -5,6 +5,7 @@ import type {
   CupboardPlace,
   PublicCupboardProps,
 } from '../../../../../components/IngredientEntry/types';
+import { readEntryStock, stockKey } from '../../../../entry-stock';
 import { getSession } from '../../../../../lib/request-session';
 import { single } from '../../../../../lib/search-params';
 import { covenRolesIfSignedIn, viewerIfSignedIn } from '../../../../../lib/viewer';
@@ -45,6 +46,15 @@ export async function publicCupboardOf(
   if (writable.length === 0) return undefined;
   const roles = await covenRolesIfSignedIn();
   const held = new Set(holding.map(({ id }) => id));
+  // Edit Stock (the owner's call, 2026-10-21): a holding coven whose role may update stock, with
+  // the stock read for it in one batch, per viewer (rule 6).
+  const stockers = writable.filter(({ id }) => {
+    const role = roles?.get(id);
+    return held.has(id) && role !== undefined && rolePermits(role, { inventory: ['update'] });
+  });
+  const stock = await readEntryStock(
+    stockers.map(({ id }) => ({ ingredientId: entry.id, workspaceId: id })),
+  );
   const covens: CupboardPlace[] = writable.flatMap(({ id, slug, name }) => {
     const role = roles?.get(id);
     if (!role) return [];
@@ -59,11 +69,14 @@ export async function publicCupboardOf(
         canRemove: rolePermits(role, { ingredient: ['delete'] }),
         canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
         annotateHref: `${own}?annotate=${encodeURIComponent(slug)}` as Route,
+        stock: stock.get(stockKey(id, entry.id)),
       },
     ];
   });
   const offers = covens.some(
-    (p) => (p.canAdd && !p.held) || (p.held && (p.canAnnotate || p.canRemove || p.canMakeOurs)),
+    (p) =>
+      (p.canAdd && !p.held) ||
+      (p.held && (p.canAnnotate || p.canRemove || p.canMakeOurs || p.stock)),
   );
   if (!offers) return undefined;
 

@@ -100,7 +100,7 @@ test('a member adds the entry from its public page, and the three dots then offe
       page.getByRole('status').filter({ hasText: 'Added to Fixture Coven Shelf.' }),
     ).toHaveCount(1);
     await expect(menu()).toBeVisible();
-    // Remove is among the dots, not its own bin, beside two other choices.
+    // Remove is among the dots, not its own bin, beside three other choices.
     await expect(bin()).toHaveCount(0);
     // Every coven of the member's holds it now, so the card's check stands where the plus was
     // (the owner's call, 2026-10-20).
@@ -114,8 +114,33 @@ test('a member adds the entry from its public page, and the three dots then offe
   await test.step('the menu offers what the coven’s copy offers, Add not among them, and stays after a reload', async () => {
     await open();
     await menu().click();
-    await expect(page.getByRole('menuitem')).toHaveText(['Annotate', 'Make It Ours', 'Remove']);
+    await expect(page.getByRole('menuitem')).toHaveText([
+      'Edit Stock',
+      'Annotate',
+      'Make It Ours',
+      'Remove',
+    ]);
     await page.keyboard.press('Escape');
+  });
+
+  await test.step('the coven’s own page of the entry offers Edit Stock first in its dots, opening this coven’s dialog at once', async () => {
+    const [{ id }] = await withSql(
+      (sql) => sql<{ id: string }[]>`
+        select id from ingredients where name = ${NAME} and workspace_id is null and deleted_at is null`,
+    );
+    const own = `/coven/${coven.slug}/ingredients/${id}`;
+    await page.goto(own);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME);
+    await menu().click();
+    await expect(page.getByRole('menuitem').first()).toHaveText('Edit Stock');
+    await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: /^Edit Stock/ });
+    await expect(dialog).toBeVisible();
+    // This coven is the only one on the page, so there is none to choose.
+    await expect(dialog.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await open();
   });
 
   await test.step('the viewer now sees the shelf, and a visitor never does', async () => {

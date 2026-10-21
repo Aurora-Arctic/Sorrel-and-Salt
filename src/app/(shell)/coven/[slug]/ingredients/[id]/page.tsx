@@ -1,6 +1,7 @@
 import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import CovenSwitchTargets from '../../../../../../components/CovenSwitchTargets';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
@@ -17,6 +18,7 @@ import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   compendiumMatchesOf,
+  covensOpeningEntry,
   getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
@@ -109,11 +111,14 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // entry again; the one the metadata shares is laid in.
   // The coven's jars are read alongside, whether or not the coven holds the entry, so the
   // page waits on no second round; they show only where it does (M12.29).
-  const [read, { viewer }, matches, cupboardEntry, jars] = await Promise.all([
+  const [read, { viewer }, matches, cupboardEntry, opening, jars] = await Promise.all([
     ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
     viewerOf(),
     compendiumMatchesOf(session, entry),
     cupboardOf(slug, id),
+    // The viewer's covens this entry's page also opens in, for the layout's coven switcher to
+    // stay on it (M9.12). Per viewer, from their memberships, and never cached.
+    covensOpeningEntry(session, entry),
     covenJarsOf(session, workspace.id, entry.id),
   ]);
   // A retired entry (M12.24) reads its children through its cupboard entry,
@@ -127,12 +132,29 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // carries the cupboard entry the retired-entry read found, where
   // `cupboardEntry` reads live entries only.
   const held = entry.workspaceId === null && detail.cupboardEntry != null;
+  const isOwn = entry.workspaceId !== null;
   // The plus beside the pencil (M9.12; the owner's call, 2026-10-20): every coven the viewer may
   // add in, this one first where it may, and which of them hold the entry, from the one held
   // read. A compendium entry only: a coven's own entry and a retired one take no plus.
   const plus = inCompendium
     ? await plusCovensOf(await covensHolding(entry.id), workspace.id)
     : undefined;
+
+  // What the coven has of an entry it has, its own or one in its cupboard (M12.29), read once
+  // and used twice: by the Stock section, and by Edit Stock in the three dots (M9.12; the owner's
+  // call, 2026-10-21), which a role that may update stock is offered. A retired entry this coven
+  // still holds is offered too (stock is per coven): its forms come from the detail, which
+  // reads them through this coven's cupboard entry, and a coven that does not hold it has
+  // none. Read per request, for this viewer, never cached (CLAUDE.md rule 6).
+  const mayStock = rolePermits(role, { inventory: ['update'] });
+  const stockData =
+    isOwn || held
+      ? stockDialogOf(
+          detail.variants.map(({ variant }) => variant),
+          jars,
+        )
+      : undefined;
+  const stock = mayStock ? stockData : undefined;
 
   // Edit opens a dialog over this page from a bare `?edit`, and the form's
   // values are read only when it is asked for. A compendium entry offers it
@@ -141,7 +163,6 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // read as that member so the coven's proof is checked.
   const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
   const ingredientsHref = `/coven/${workspace.slug}/ingredients` as Route;
-  const isOwn = entry.workspaceId !== null;
   const canEdit = isOwn
     ? rolePermits(role, { ingredient: ['update'] })
     : inCompendium && viewer.canCurate;
@@ -164,6 +185,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
 
   return (
     <main>
+      <CovenSwitchTargets path={own} slugs={opening.map((coven) => coven.slug)} />
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}
@@ -184,6 +206,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                   workspaceId: workspace.id,
                   ingredientsHref,
                   mayPromote: rolePermits(role, { ingredient: ['update'] }),
+                  stock,
                 },
               }
             : canEdit
@@ -214,6 +237,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 canRemove: rolePermits(role, { ingredient: ['delete'] }),
                 canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
                 plus,
+                stock,
                 annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
                 // A retired entry's page reads nothing once its row is gone.
                 removedHref: detail.retired
@@ -251,18 +275,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
         // What the coven has of an entry it has, its own or one in its cupboard (M12.29): the
         // lines for every member, Edit Stock for a role that may update stock. A compendium
         // entry the coven does not hold has no section.
-        stock={
-          isOwn || held
-            ? {
-                workspaceId: workspace.id,
-                ...stockDialogOf(
-                  detail.variants.map(({ variant }) => variant),
-                  jars,
-                ),
-                mayEdit: rolePermits(role, { inventory: ['update'] }),
-              }
-            : undefined
-        }
+        stock={stockData && { workspaceId: workspace.id, ...stockData, mayEdit: mayStock }}
         similar={
           matches.kind === 'similar' && matches.entries.length > 0
             ? {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The `/coven/[slug]` layout runs the coven guard on the slug in its own URL
@@ -13,13 +13,16 @@ const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
 // CovenNav marks the page you are on from the address, which Next reads from
 // the App Router's state; a test mounts no router, so the address is given.
+const pathname = vi.fn<() => string>();
+const push = vi.fn();
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/coven/fixture-coven',
-  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => pathname(),
+  useRouter: () => ({ push }),
 }));
 
 const { default: CovenLayout, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/layout');
+const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTargets');
 
 const ADMITTED = {
   workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven' },
@@ -30,9 +33,14 @@ const params = (slug: string) => Promise.resolve({ slug });
 
 beforeEach(() => {
   requireCovenMembership.mockReset();
+  push.mockClear();
+  pathname.mockReturnValue('/coven/fixture-coven');
   viewerOf.mockResolvedValue({
     viewer: { name: 'Fixture Owner', canCurate: false, canCreate: true, verified: true },
-    workspaces: [{ slug: 'fixture-coven', name: 'Fixture Coven' }],
+    workspaces: [
+      { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: false },
+      { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: false },
+    ],
   });
 });
 
@@ -50,6 +58,29 @@ describe('the /coven/[slug] layout', () => {
     // The context row's lead: the switcher, on the coven the address names.
     expect(screen.getByRole('combobox', { name: 'Coven' })).toHaveTextContent('Fixture Coven');
     expect(screen.getByText('The page itself')).toBeInTheDocument();
+  });
+
+  // M9.12: the switcher is the layout's and the page is its child, so the layout is what lets
+  // the page tell the switcher where it also opens.
+  it('lets a page beneath it tell the switcher which covens it opens in', async () => {
+    requireCovenMembership.mockResolvedValue(ADMITTED);
+    pathname.mockReturnValue('/coven/fixture-coven/ingredients/some-id');
+
+    render(
+      await CovenLayout({
+        children: (
+          <CovenSwitchTargets
+            path="/coven/fixture-coven/ingredients/some-id"
+            slugs={['fixture-coven', 'testwort-circle']}
+          />
+        ),
+        params: params('fixture-coven'),
+      }),
+    );
+    fireEvent.click(screen.getByRole('combobox', { name: 'Coven' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+
+    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
   });
 
   it('renders nothing when the guard refuses', async () => {

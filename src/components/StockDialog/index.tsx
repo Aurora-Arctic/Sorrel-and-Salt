@@ -9,7 +9,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { FieldError, FormActions } from '../Field';
 import { BinButton, StockIcon } from '../IconTip';
-import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
+import Modal, { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { StockBadge } from '../StockBadge';
 import StockFields, {
@@ -190,9 +190,11 @@ function NoJar(): ReactElement {
         <p id={`${id}-why`} className="visually-hidden">
           Add a form to enter its stock.
         </p>
-        {/* The heading's line, kept so the fields stand where a jar's will. */}
+        {/* "Form" in the placeholder ink where the form's name will go, so the fields stand where a
+            jar's will and the eye is told what the space is for. Hidden from a screen reader: the
+            legend above already names the state (the owner's call, 2026-10-21). */}
         <div className="stock-dialog__head is-blank" aria-hidden="true">
-          <h3 className="stock-dialog__heading">{'\u00a0'}</h3>
+          <h3 className="stock-dialog__heading stock-dialog__placeholder">Form</h3>
         </div>
         <div className="stock-dialog__fields">
           <StockFields disabled />
@@ -431,6 +433,41 @@ const StockDialog = (props: StockDialogProps): ReactElement => (
 );
 
 /**
+ * The same dialog opened by something other than its pencil: a menu item on a compendium card
+ * (M9.12), whose owner holds the question of whether it is open. Modal restores nothing itself,
+ * so `returnTo` names where the focus goes when it closes.
+ */
+export function StockDialogModal({
+  onClose,
+  returnTo,
+  coven,
+  ...props
+}: StockDialogProps & {
+  onClose: () => void;
+  returnTo?: () => HTMLElement | null | undefined;
+  /**
+   * The coven the dialog writes to, put in the eyebrow: "Edit Stock for Whitethorn Coven" over the
+   * ingredient's name, and so in the dialog's name ("Edit Stock for Whitethorn Coven, Testwort").
+   * For a dialog opened from a page that is not a coven's, where nothing else says whose jars
+   * these are (the owner's call, 2026-10-21); a coven's own pages leave it out, the address and
+   * the shell already say, and the eyebrow stays "Edit Stock".
+   */
+  coven?: string;
+}): ReactElement {
+  return (
+    <Modal
+      eyebrow={coven ? `Edit Stock for ${coven}` : 'Edit Stock'}
+      title={props.ingredientName}
+      size="listed"
+      onClose={onClose}
+      returnTo={returnTo}
+    >
+      {(close) => <StockDialogForm {...props} close={close} />}
+    </Modal>
+  );
+}
+
+/**
  * The same dialog behind a button of the caller's own, opening on one form
  * (`openOn`): a jar on the entry page's shelf. One dialog, two doors, so what
  * is saved and how it is refused cannot differ between them.
@@ -454,4 +491,4 @@ export const StockJarButton = ({
 );
 
 export default StockDialog;
-export type { StockDialogProps, StockForm, StockJar } from './types';
+export type { StockData, StockDialogProps, StockForm, StockJar } from './types';

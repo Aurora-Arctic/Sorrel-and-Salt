@@ -53,6 +53,13 @@ vi.mock('@/modules/ingredients', () => ({
   heldCompendiumEntryIdsIn: async () => new Map<string, ReadonlySet<string>>(),
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
+// What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only that
+// the window's three dots offer it where the page read stock for the holding coven.
+const readEntryStock = vi.fn();
+vi.mock('@/app/entry-stock', () => ({
+  readEntryStock,
+  stockKey: (workspaceId: string, ingredientId: string) => `${workspaceId}:${ingredientId}`,
+}));
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 // The form is its own tests'; here only that the dialog holds one.
@@ -103,6 +110,8 @@ const sizeRead = () => readCompendium.mock.lastCall![3] as number;
 const variablesRead = () => JSON.parse(readCompendium.mock.lastCall![0] as string);
 
 beforeEach(() => {
+  readEntryStock.mockReset();
+  readEntryStock.mockResolvedValue(new Map());
   readCompendium.mockReset();
   readCompendium.mockResolvedValue({
     edges: [{ node: NODE, cursor: 'c' }],
@@ -383,6 +392,33 @@ describe("the public compendium page, with an entry's details open", () => {
       fireEvent.click(more);
       const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
       expect(items.map((item) => item.textContent)).toEqual(['Annotate', 'Make It Ours', 'Remove']);
+    });
+
+    it('offers Edit Stock first where the page read stock for the holding coven, and asks for it once', async () => {
+      viewerIfSignedIn.mockResolvedValue(member());
+      covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'member']]));
+      covensHoldingEntry.mockResolvedValue([
+        { id: 'w-1', slug: 'fixture-coven', name: 'Fixture Coven' },
+      ]);
+      readEntryStock.mockResolvedValue(
+        new Map([[`w-1:${NODE.id}`, { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] }]]),
+      );
+      readCompendiumDetails.mockResolvedValue(DETAIL);
+      await renderPage({ ...SEARCH, entry: NODE.id });
+
+      fireEvent.click(
+        within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
+      );
+      const items = within(screen.getByRole('menu')).getAllByRole('menuitem');
+      expect(items.map((item) => item.textContent)).toEqual([
+        'Edit Stock',
+        'Annotate',
+        'Make It Ours',
+        'Remove',
+      ]);
+      expect(readEntryStock).toHaveBeenCalledExactlyOnceWith([
+        { ingredientId: NODE.id, workspaceId: 'w-1' },
+      ]);
     });
 
     it.each([
