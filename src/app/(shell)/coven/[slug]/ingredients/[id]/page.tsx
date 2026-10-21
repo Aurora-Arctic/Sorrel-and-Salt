@@ -140,11 +140,12 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // Edit Stock in the three dots (M9.12; the owner's call, 2026-10-21): the forms the entry comes
   // in and this coven's jars of it, for a member whose role may update stock, on a compendium
   // entry the coven holds and on the coven's own. Read per request, for this viewer, in the one
-  // call the pair needs, and never cached (CLAUDE.md rule 6). A retired entry is left out: its
-  // forms are read through its cupboard entry, which this read does not take.
+  // call the pair needs, and never cached (CLAUDE.md rule 6). A retired entry this coven still
+  // holds is offered too (the owner's call, 2026-10-21: stock is per coven): its forms are read
+  // through this coven's proof, and a coven that does not hold it reads none.
   const mayStock = rolePermits(role, { inventory: ['update'] });
   const stock =
-    mayStock && (isOwn || (held && !detail.retired))
+    mayStock && (isOwn || held)
       ? (
           await readEntryStock([{ workspaceId: workspace.id, ingredientId: entry.id, own: isOwn }])
         ).get(stockKey(workspace.id, entry.id))

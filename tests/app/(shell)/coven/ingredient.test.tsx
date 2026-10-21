@@ -641,6 +641,35 @@ describe('the coven ingredient page’s Edit Stock', () => {
     expect(stockItem()).toBeNull();
   });
 
+  const retired = async (cupboardEntry: typeof HELD_ROW | null) => {
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true, cupboardEntry });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+  };
+
+  it('asks for the stock of a retired entry the coven still holds, and offers Edit Stock', async () => {
+    gives();
+    await retired({ ...HELD_ROW });
+
+    expect(readEntryStock).toHaveBeenCalledWith([
+      { workspaceId: WORKSPACE.id, ingredientId: ID, own: false },
+    ]);
+    expect(stockItem()).toBeInTheDocument();
+  });
+
+  it('asks nothing, and offers no Edit Stock, for a retired entry the coven does not hold', async () => {
+    // Why it could have been asked: the stock read would answer, and the role may update stock.
+    gives();
+    await retired(null);
+
+    expect(readEntryStock).not.toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
+  });
+
   it('asks nothing, and offers no Edit Stock, for a viewer, who may not update stock', async () => {
     asRole('viewer');
     held();

@@ -20,7 +20,8 @@ import { dimensionOf } from '../schema/units';
 import { defaultThreshold } from '../validation/default-threshold';
 import { StockInput } from '../validation/stock';
 import { heldCompendiumEntry } from './cupboard-entries';
-import type { SaveStockValues, StockKey, StockValues } from '../types';
+import { variantsOf } from './ingredient-children';
+import type { IngredientVariantRow, SaveStockValues, StockKey, StockValues } from '../types';
 import { type Membership, assertMembership } from '@/modules/coven';
 
 // Story 12's stock half: what a coven holds of each form, written by its
@@ -333,6 +334,82 @@ export async function stockOf(
       ? held
       : (held ?? []).filter((jar) => jar.ingredientId === ref.ingredientId);
   });
+}
+
+/**
+ * The live forms of each compendium entry a coven holds, one answer per ref in the order given:
+ * what Edit Stock lists beside `stockOf`'s jars. Stock is per coven, so an entry the curators
+ * have retired but the coven's cupboard still names is read like a live one (M12.24, the
+ * owner's call of 2026-10-21): the forms come through that coven's own proof as `heldBy`, which
+ * the SQL checks against the cupboard row itself. A retired entry the coven's cupboard does not
+ * name, or an id that names nothing, gets a `NotFound` in its slot; a coven the
+ * caller may not read the ingredients of, a `Forbidden`. One forms read per coven named,
+ * whatever the batch size, and one cupboard read for each entry that comes back with no forms.
+ */
+export async function heldFormsOf(
+  session: Session,
+  refs: readonly StockKey[],
+): Promise<(IngredientVariantRow[] | Forbidden | NotFound)[]> {
+  const covens = [...new Set(refs.map((ref) => ref.workspaceId))];
+  const forms = new Map(
+    await Promise.all(
+      covens.map(async (workspaceId) => {
+        const ids = [
+          ...new Set(
+            refs
+              .filter((ref) => ref.workspaceId === workspaceId)
+              .map((ref) => ref.ingredientId)
+              .filter((id) => RowId.safeParse(id).success),
+          ),
+        ];
+        return [workspaceId, await formsHeldBy(session, workspaceId, ids)] as const;
+      }),
+    ),
+  );
+  return refs.map((ref) => {
+    const held = forms.get(ref.workspaceId);
+    if (held instanceof Forbidden) return held;
+    return held?.get(ref.ingredientId) ?? new NotFound(NO_FORM);
+  });
+}
+
+/** One coven's forms by entry id, a `NotFound` for an entry its cupboard does not name, or the refusal its proof threw. */
+async function formsHeldBy(
+  session: Session,
+  workspaceId: string,
+  ingredientIds: string[],
+): Promise<Map<string, IngredientVariantRow[] | NotFound> | Forbidden> {
+  let membership: Membership;
+  try {
+    membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  } catch (error) {
+    if (error instanceof Forbidden) return error;
+    throw error;
+  }
+  const rows = await variantsOf(
+    session,
+    ingredientIds.map((id) => ({ id, workspaceId: null })),
+    membership,
+  );
+  const forms = new Map<string, IngredientVariantRow[] | NotFound>();
+  await Promise.all(
+    ingredientIds.map(async (id, i) => {
+      const read = rows[i];
+      // A compendium ref needs no coven's proof, so none of these is a refusal.
+      if (read instanceof Forbidden) return;
+      // The SQL already answers only what the coven may read: a live entry's forms, or a retired
+      // entry's while the cupboard names it. An empty answer is told apart here, so an entry the
+      // cupboard does not name is a refusal and an entry that has no forms is not. Few asks
+      // come back empty, so these reads are not a read per entry.
+      forms.set(
+        id,
+        read.length > 0 || (await heldCompendiumEntry(membership, id))
+          ? read
+          : new NotFound(NO_FORM),
+      );
+    }),
+  );
+  return forms;
 }
 
 /** One coven's live jars of these ingredients, or the refusal its proof threw. */

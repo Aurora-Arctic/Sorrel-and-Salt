@@ -1,14 +1,15 @@
 import 'server-only';
 import type { StockData } from '@/components/StockDialog/types';
 import { getSession } from '@/lib/request-session';
-import { stockOf, variantsOf, type StockKey } from '@/modules/ingredients';
+import { heldFormsOf, stockOf, variantsOf, type StockKey } from '@/modules/ingredients';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 // What Edit Stock in the compendium's three dots reads (M9.12; the owner's call, 2026-10-21): the
 // forms an entry comes in and the jars a coven holds of it, so the dialog opens at once with
 // both. Per viewer, so read per request through the services and never inside the cached
 // compendium read (CLAUDE.md rule 6). One call to each service for the whole page, whatever the
-// number of entries and covens, so a longer page costs no more reads. The same mapping as the
+// number of entries and covens, so a longer page costs no more reads (a compendium entry's forms
+// are read per coven, through its proof, in one call). The same mapping as the
 // coven's Ingredients page makes for its pencil (`stockOf` in its `page.tsx`), kept apart so
 // that page stays as it is. claude-docs/components/stock-dialog.md.
 
@@ -36,29 +37,41 @@ export async function readEntryStock(
   const session = await getSession();
   if (!session) return found;
 
-  // The forms are read once per entry, in the tier it lives in: the compendium's, or the coven's
-  // for the coven's own entry (the service refuses a coven's entry asked as the compendium's).
-  const tierOf = ({ own, workspaceId }: StockAsk): string | null => (own ? workspaceId : null);
-  const entries = [
-    ...new Map(
-      pairs.map((pair) => [
-        pair.ingredientId,
-        { id: pair.ingredientId, workspaceId: tierOf(pair) },
-      ]),
-    ).values(),
-  ];
-  const [jars, forms] = await Promise.all([
+  // The forms of a compendium entry are read per coven, through that coven's proof: stock is per
+  // coven, so an entry the curators have retired still lists its forms for a coven whose
+  // cupboard names it, and reads as none for any other. A coven's own entry has no cupboard
+  // row to hold, so its forms are read in its own tier (the service refuses a coven's entry
+  // asked as the compendium's).
+  const compendium = pairs.filter(({ own }) => !own);
+  const own = pairs.filter(({ own: isOwn }) => isOwn);
+  const [jars, compendiumForms, ownForms] = await Promise.all([
     stockOf(
       session,
       pairs.map(({ workspaceId, ingredientId }) => ({ workspaceId, ingredientId })),
     ),
-    variantsOf(session, entries),
+    compendium.length > 0
+      ? heldFormsOf(
+          session,
+          compendium.map(({ workspaceId, ingredientId }) => ({ workspaceId, ingredientId })),
+        )
+      : [],
+    own.length > 0
+      ? variantsOf(
+          session,
+          own.map(({ workspaceId, ingredientId }) => ({ id: ingredientId, workspaceId })),
+        )
+      : [],
   ]);
-  const formsOf = new Map(entries.map(({ id }, i) => [id, forms[i]]));
+  const formsOf = new Map([
+    ...compendium.map(
+      (pair, i) => [stockKey(pair.workspaceId, pair.ingredientId), compendiumForms[i]] as const,
+    ),
+    ...own.map((pair, i) => [stockKey(pair.workspaceId, pair.ingredientId), ownForms[i]] as const),
+  ]);
 
   pairs.forEach(({ ingredientId, workspaceId }, i) => {
     const held = jars[i];
-    const variants = formsOf.get(ingredientId);
+    const variants = formsOf.get(stockKey(workspaceId, ingredientId));
     if (held instanceof Error || variants === undefined || variants instanceof Error) return;
     found.set(stockKey(workspaceId, ingredientId), {
       forms: variants.map(({ id, form }) => ({ variantId: id, label: formLabel(form) })),
