@@ -46,7 +46,7 @@ export type SeedUser = Pick<
  */
 export type FixtureUser = Pick<
   typeof users.$inferInsert,
-  'name' | 'email' | 'role' | 'canCreateWorkspace'
+  'name' | 'email' | 'role' | 'canCreateWorkspace' | 'emailVerified'
 > & { id: string };
 
 export type SeedWorkspace = Pick<typeof workspaces.$inferInsert, 'name'> & { id: string };

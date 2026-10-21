@@ -119,11 +119,11 @@ admin role on it would grant nothing to anyone. `/admin/users` leaves it out
 (MB.52). The file and its exports keep their old names, since `deploy.yml` lists the file.
 The plain
 user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user, and is
-seeded **verified** (MB.268), as every fixture user in `standard` is: an
+seeded **verified** (MB.268), as fixtures A–F in `standard` are: an
 unverified account reaches no page but `/account/email`, so a developer could
 browse the dev site as no seeded user otherwise. The system user stays
-unverified for the reason above, and so doubles as the dev site's unverified
-account (`tests/db/seed/verified-users.test.ts` pins both). Both
+unverified for the reason above; the dev site's unverified account to sign in
+as is `standard`'s fixture G (`tests/db/seed/verified-users.test.ts` pins both). Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
 truncating: a re-run adds nothing, and nothing is dropped — the reset that

@@ -1,20 +1,21 @@
 ## The standard scenario (M1.22)
 
 `src/db/seed/standard.ts` implements DESIGN.md §"Seed data"'s second scenario:
-six fixture users, workspaces W and X, and a populated compendium. It is the
+seven fixture users, workspaces W and X, and a populated compendium. It is the
 fixture every authorization test reads against, which is why the cast is fixed
 rather than generated — `asUser(A)` (M1.26, `tests/support/as-user.ts`, which
 re-exports this module's own `FIXTURE_USERS`) has to mean the same person in
 every suite, and an id a test can name beats one this run happened to produce.
 
-| User | Id      | Role      | Where                        |
-| ---- | ------- | --------- | ---------------------------- |
-| A    | `…0003` | `user`    | owner of W                   |
-| B    | `…0004` | `user`    | member of W                  |
-| C    | `…0005` | `user`    | viewer in W                  |
-| D    | `…0006` | `user`    | member of unrelated X        |
-| E    | `…0007` | `admin`   | no workspace at all          |
-| F    | `…0008` | `curator` | no workspace at all (M11.20) |
+| User | Id      | Role      | Where                                   |
+| ---- | ------- | --------- | --------------------------------------- |
+| A    | `…0003` | `user`    | owner of W                              |
+| B    | `…0004` | `user`    | member of W                             |
+| C    | `…0005` | `user`    | viewer in W                             |
+| D    | `…0006` | `user`    | member of unrelated X                   |
+| E    | `…0007` | `admin`   | no workspace at all                     |
+| F    | `…0008` | `curator` | no workspace at all (M11.20)            |
+| G    | `…0009` | `user`    | no workspace; email unverified (MB.268) |
 
 The ids continue the series `…0001` (the bootstrap user, MB.5) and `…0002`
 (`minimal`'s plain user) opened; W and X take `…0001-…0001` and `…0001-…0002`,
