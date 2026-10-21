@@ -26,15 +26,18 @@ async function userRow(id: string): Promise<NamedUserRow> {
   return row as NamedUserRow;
 }
 
-/** The seed leaves every fixture unverified; a test says which state it is about. */
+/** The seed leaves every fixture verified; a test says which state it is about. */
 async function setVerified(id: string, verified: boolean): Promise<void> {
   await sql`update users set email_verified = ${verified} where id = ${id}`;
 }
 
 beforeEach(async () => {
   // Both verified, back to their seeded names, and stamped by E, so a stamp
-  // of their own id is visible as this call's write.
+  // of their own id is visible as this call's write. Unverified first: the
+  // trigger on `users` keeps `updated_by` on a write that changes nothing,
+  // and the seed already verified them.
   for (const user of [A, B]) {
+    await setVerified(user.id, false);
     await sql`update users set email_verified = true, name = ${user.name}, updated_by = ${E.id} where id = ${user.id}`;
   }
 });
