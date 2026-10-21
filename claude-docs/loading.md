@@ -259,7 +259,7 @@ with the value already put back.
   skeletons.
 
 **What `MainBody` replaces.** `MainBody` (`src/components/AppShell/main-body.tsx`)
-answers a `main` target by replacing everything inside `#main` with one
+answers a `main` target by replacing everything inside `.app-shell__main` with one
 `<main>` holding the skeleton, so the page frame is replaced as well as the
 page's content. The `<main>` takes the frame the target names, top-aligned
 and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`,
@@ -273,8 +273,10 @@ refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBo
 Compendium pages sit in `PublicFrame`, not the shell, and its body is the same
 `MainBody`, so a press of the frame's Compendium link (`siteLinkTarget('/compendium')`),
 a card or an entry's own links draws the destination's skeleton under the
-frame's bar. In both chromes `#main` is a wrapper `div`, the skip link's
-target, and the `(public)` layout renders the page's own `<main>` inside it:
+frame's bar. In both chromes the page sits in a wrapper `div`
+(`.app-shell__main`, `.public-frame__main`), the skip link's target is an
+empty span just before it, and the `(public)` layout renders the page's own
+`<main>` inside the wrapper:
 during a wait `MainBody` swaps that `main` for the skeleton's, so the page
 still has one `main` and one h1. A `main` on the wrapper would have nested the
 two. There is no `loading.tsx` here either, so a direct request for an unknown
@@ -336,7 +338,7 @@ More examples:
 - **Site link (Compendium):**
   - Page: the bar.
   - Control: the dot.
-  - Region: `#main` shows the page-blocks skeleton.
+  - Region: the page (`.app-shell__main`) shows the page-blocks skeleton.
 - **Filter or pager:** unchanged, plus the bar.
   - Region: the list's skeleton replaces its rows.
 - **Save in a modal:** unchanged, with no bar, because nothing navigates.

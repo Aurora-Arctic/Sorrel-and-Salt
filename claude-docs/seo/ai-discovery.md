@@ -59,3 +59,10 @@ draft says a catalog SHOULD be served with it, and ARD names none for
 `ard.json` while listing that type for a catalog of entries. Both specs are
 drafts that can change; if either moves, this page and `src/app/ai-discovery.ts`
 change together.
+
+Every page also names the catalog from its head, as
+`<link rel="ai-catalog" href=... type="application/ai-catalog+json">`
+(`src/app/catalog-link.tsx`, placed by the root layout). The AI Catalog draft's
+"Link Relation Discovery" lets a page do this, and an agent that finds no `Link`
+header reads it. ARD names `rel="ard"` for `ard.json` instead; we do not emit
+that yet.

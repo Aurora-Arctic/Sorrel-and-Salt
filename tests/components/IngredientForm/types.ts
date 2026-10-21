@@ -39,16 +39,17 @@ export type IngredientNode = Omit<SuggestedNode, 'cupboardEntry'> & {
 
 /**
  * One row of a `PossibleDuplicates` answer. A coven's own entry unless said
- * otherwise: `isGlobal` and `inCupboard` default to false (M12.20).
+ * otherwise: `isGlobal` and `inCupboard` default to false (M12.20), and
+ * `nomenclature` to `unknown`, which only the Quick Look heading reads.
  */
 export type DuplicateNode = Omit<
   PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'],
-  'isGlobal' | 'inCupboard'
+  'isGlobal' | 'inCupboard' | 'nomenclature'
 > &
   Partial<
     Pick<
       PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'],
-      'isGlobal' | 'inCupboard'
+      'isGlobal' | 'inCupboard' | 'nomenclature'
     >
   >;
 

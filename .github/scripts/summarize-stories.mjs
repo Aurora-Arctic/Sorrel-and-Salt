@@ -39,10 +39,21 @@ const SUFFIX = {
 };
 
 const lines = ['<details><summary>Story checklist</summary>', ''];
-for (const { id, title, status, flaky } of stories) {
-  const box = status === 'passed' ? 'x' : ' ';
-  const suffix = status === 'failed' && flaky ? ' — **failing** (flaky)' : SUFFIX[status];
-  lines.push(`- [${box}] Story ${id}: ${title}${suffix}`);
+// Sections in name order, stories in §10 order within each.
+const bySection = new Map();
+for (const story of stories) {
+  const section = story.section ?? 'Other';
+  bySection.set(section, [...(bySection.get(section) ?? []), story]);
+}
+const sections = [...bySection].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+for (const [section, entries] of sections) {
+  lines.push(`**${section}**`, '');
+  for (const { id, title, status, flaky } of entries) {
+    const box = status === 'passed' ? 'x' : ' ';
+    const suffix = status === 'failed' && flaky ? ' — **failing** (flaky)' : SUFFIX[status];
+    lines.push(`- [${box}] Story ${id}: ${title}${suffix}`);
+  }
+  lines.push('');
 }
 if (unknown.length > 0 || untagged.length > 0) {
   lines.push('', '**Not a v1 story:**', '');

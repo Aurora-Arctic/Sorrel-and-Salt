@@ -308,20 +308,33 @@ const SOURCES = [
   }),
 ];
 
+// One of each place a match can be, so a coven's form shows both groups:
+// a compendium entry the coven holds, one it does not, and the coven's own.
 const CATS_CLAW = [
   {
     id: 'claw-1',
     name: "Cat's Claw",
     canonicalName: 'Uncaria tomentosa',
     slug: 'cats-claw-uncaria-tomentosa',
+    isGlobal: true,
+    inCupboard: true,
   },
   {
     id: 'claw-2',
     name: "Cat's Claw",
     canonicalName: 'Felis catus',
     slug: 'cats-claw-felis-catus',
+    isGlobal: true,
+    inCupboard: false,
   },
-  { id: 'claw-3', name: "Cat's Claw", canonicalName: null, slug: 'cats-claw' },
+  {
+    id: 'claw-3',
+    name: "Cat's Claw",
+    canonicalName: null,
+    slug: 'cats-claw',
+    isGlobal: false,
+    inCupboard: false,
+  },
 ];
 
 /** How long a save takes to be accepted: long enough to see Save busy and shut. */
@@ -483,7 +496,15 @@ function answer(operation: string, variables: Record<string, unknown>): object |
     case 'PossibleDuplicates':
       // Only a name close to "Cat's Claw" is near anything.
       return {
-        possibleDuplicates: page(query.toLowerCase().includes('cat') ? CATS_CLAW : [], first),
+        // The compendium's form asks with no coven: compendium entries alone, held by none.
+        possibleDuplicates: page(
+          !query.toLowerCase().includes('cat')
+            ? []
+            : variables.workspaceId == null
+              ? CATS_CLAW.filter((row) => row.isGlobal).map((row) => ({ ...row, inCupboard: null }))
+              : CATS_CLAW,
+          first,
+        ),
       } satisfies PossibleDuplicatesQuery;
     case 'CreateWorkspaceIngredient': {
       const input = variables.input as { name?: string } | undefined;
@@ -1509,7 +1530,7 @@ function HeldNameField({ blocking }: { blocking: boolean }) {
             dismiss: () => undefined,
           }}
           hrefOf={covenDuplicateHref}
-          onUse={() => undefined}
+          onUse={async () => false}
           ref={null}
         />
       </form>

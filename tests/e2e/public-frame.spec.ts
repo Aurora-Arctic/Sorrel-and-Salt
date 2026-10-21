@@ -29,8 +29,8 @@ test.describe('without script', () => {
       '#main',
     );
     await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
-    // The frame's #main is the skip link's wrapper, as the shell's is (M12.47).
-    await expect(page.locator('#main main')).toBeVisible();
+    // The skip link's target is an empty span; the wrapper after it holds the layout's main.
+    await expect(page.locator('span#main[tabindex="-1"] + .public-frame__main main')).toBeVisible();
   });
 });
 
@@ -43,8 +43,8 @@ test('a signed-in request gets the application shell from the same layout', asyn
   await expect(
     page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
   ).toBeVisible();
-  // The shell's #main is the skip link's wrapper; the layout's main sits inside it.
-  await expect(page.locator('#main main')).toBeVisible();
+  // The shell's #main is the skip link's empty target; the wrapper after it holds the layout's main.
+  await expect(page.locator('span#main[tabindex="-1"] + .app-shell__main main')).toBeVisible();
 });
 
 // The Compendium link is the page you are on, told to a screen reader by aria-current

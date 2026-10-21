@@ -93,7 +93,7 @@ is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name
 stays the ingredient's name and the card has exactly one link. The Low badge's tip
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
-click. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
+click. The category chips pass a click through the same way (the owner, 2026-10-21): the chip row's `list-reset` makes each `li` relative, so it painted above the overlay, and each plain chip's `li` now has `pointer-events: none`. The +N item is left out, so its button keeps its own press, hover and focus and does not open the ingredient. A plain chip is text with no tip, so nothing is lost, and it was never a tab stop. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
 pointer, and the focus ring is drawn on the overlay,
 round the card.
 
