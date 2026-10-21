@@ -1152,6 +1152,11 @@ describe('IngredientForm’s variants', () => {
       expect(notice).toHaveTextContent(/Tinctwort/);
       expect(notice).toHaveTextContent(/Plainwort/);
       expect(notice).not.toHaveTextContent(/Oilwort|Fixture moss/);
+      // Announced once, by the region, and in valid markup: block content in
+      // no `<output>`, no button in a paragraph (M12.48).
+      expect(within(notice).queryAllByRole('alert')).toEqual([]);
+      expect(within(notice).queryAllByRole('status')).toEqual([]);
+      expect(oil.querySelector('output div, output p, p button')).toBeNull();
       expect(
         within(oil).getByRole('status', { name: 'Substitute Ingredients changes' }),
       ).toHaveTextContent(/2/);

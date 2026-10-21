@@ -6,6 +6,7 @@ import { type ReactElement, useId, useRef, useState } from 'react';
 import { type FieldPath, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { plural } from '@/lib/text';
 import IconTip, { CopyIcon } from '../IconTip';
+import Notice from '../Notice';
 import { RemoveIcon } from './icons';
 import { FIELD_NOUNS, entryText, fold } from './values';
 import type {
@@ -263,9 +264,15 @@ export function SkippedNotice({
     close();
   };
   return (
-    <output className="ingredient-form__copy-skipped" aria-label="Substitute Ingredients skipped">
+    // A status written out, where an `<output>` would hold phrasing content
+    // alone; the notice inside takes no role, so it is announced once.
+    <div
+      role="status"
+      className="ingredient-form__copy-skipped"
+      aria-label="Substitute Ingredients skipped"
+    >
       {skipped && (
-        <div className="notice notice--warn">
+        <Notice kind="warn" block inRegion>
           <p id={textId}>
             {named ? `No ${named} form to link` : 'No form like this one to link'}, so not copied:{' '}
             {skipped.entries.map(entryText).join(', ')}.
@@ -288,8 +295,8 @@ export function SkippedNotice({
               <RemoveIcon />
             </button>
           </div>
-        </div>
+        </Notice>
       )}
-    </output>
+    </div>
   );
 }

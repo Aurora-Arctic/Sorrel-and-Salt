@@ -17,6 +17,7 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
+import Notice from '../Notice';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 
 // Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
@@ -449,16 +450,6 @@ const titleOf = ({ name, canonicalName }: Duplicate) =>
   canonicalName ? `${name} (${canonicalName})` : name;
 
 /**
- * The notice's classes, in the one place that picks them. The region is an
- * `<output>` holding block content, so it cannot take the Notice component
- * (claude-docs/components/ingredient-form.md, "The duplicate warning"); the
- * block Notice that can is a follow-on to MB.120, and it replaces this
- * function alone.
- */
-const noticeClasses = (blocking: boolean): string =>
-  blocking ? 'notice notice--error' : 'notice notice--warn';
-
-/**
  * What the notice says. Colour alone must not mark a held save, so the words
  * change with the state: a question while typing, then, once Save was pressed
  * and held, that the save waits and why (MB.120).
@@ -546,8 +537,12 @@ export function NameField({
       busy={pending}
       after={
         // Always in the page, as a live region must be to be heard: the
-        // warning arrives after the typing, and nothing else says so.
-        <output
+        // warning arrives after the typing, and nothing else says so. A
+        // status written out, where an `<output>` would hold phrasing
+        // content alone, and the notice inside takes no role of its own, so
+        // it is announced once (claude-docs/components/notice.md).
+        <div
+          role="status"
           className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
           aria-label="Possible duplicates"
           aria-busy={pending || undefined}
@@ -557,7 +552,7 @@ export function NameField({
               abruptly). */}
           <div className="ingredient-form__duplicates-inner">
             {drawn && (
-              <div className={noticeClasses(blocking)}>
+              <Notice kind={blocking ? 'error' : 'warn'} block inRegion>
                 {/* The id sits on the whole block, sentence and list, so the
                   button described by it is read with the names. Plain anchors
                   rather than <Link>, since the caller hands back a plain
@@ -648,10 +643,10 @@ export function NameField({
                     Create Anyway
                   </button>
                 )}
-              </div>
+              </Notice>
             )}
           </div>
-        </output>
+        </div>
       }
     />
   );

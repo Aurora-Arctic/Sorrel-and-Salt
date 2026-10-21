@@ -282,6 +282,50 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(createAnyway()).toHaveAccessibleDescription(expect.stringMatching(/save is on hold/));
   });
 
+  // The region is in the page before the warning, as a live region must be to
+  // be heard, and announces it; the notice inside takes no role of its own,
+  // so it is not announced twice, held or not (M12.48).
+  it('announces the warning once, through a region in the page before it arrives', async () => {
+    renderName();
+    offerDuplicates([TOMENTOSA]);
+    const region = warning();
+    expect(region).toHaveTextContent('');
+    const announcers = () => [
+      ...screen.queryAllByRole('alert'),
+      ...screen.queryAllByRole('status'),
+    ];
+
+    type("Cat's Claw");
+    settle();
+    await within(region).findByRole('link');
+    expect(announcers()).toEqual([region]);
+
+    save();
+    await waitFor(() => expect(name()).toBeInvalid());
+    expect(within(region).getByText(/save is on hold/)).toBeInTheDocument();
+    expect(announcers()).toEqual([region]);
+  });
+
+  // A list or a button inside a paragraph is invalid, and so is anything but
+  // phrasing content inside an `<output>` (M12.48).
+  it('draws the warning, its list and Create Anyway, in valid markup', async () => {
+    renderName();
+    offerDuplicates([TOMENTOSA]);
+
+    type("Cat's Claw");
+    settle();
+    await within(warning()).findByRole('link');
+    save();
+    await waitFor(() => expect(createAnyway()).toBeInTheDocument());
+
+    expect(within(warning()).getByRole('list')).toBeInTheDocument();
+    expect(
+      document.body.querySelector(
+        'p ul, p li, p button, p div, p p, output ul, output div, output p',
+      ),
+    ).toBeNull();
+  });
+
   it('checks a name saved before its typing settles, and holds on what it finds', async () => {
     const sent = renderName();
     const calls = offerDuplicates([TOMENTOSA]);
