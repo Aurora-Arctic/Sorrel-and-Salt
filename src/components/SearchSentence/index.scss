@@ -13,19 +13,21 @@
 }
 
 // The values the sentence names are a quiet mark: the sentence's own weight, in a hairline
-// box like a key on a keyboard. There is no weight token, the scale is raw numbers. The
+// box like a key on a keyboard. The box is there from the start, its edge transparent, so
+// the text never moves; it shows (`is-boxed`) once the value is whole, and while the sentence
+// types it fades in. The fade is on `is-boxed` alone, so a box lost to backspacing goes at once. There is no weight token, the scale is raw numbers. The
 // padding is the box's own geometry, in em so it follows the text size, so it stays off the
 // spacing scale. The bottom is deeper than the top so a descender (g, p, y) clears the edge.
 .search-sentence__value {
   font-weight: inherit;
   padding: 0.02em 0.3em 0.14em;
-  border: 1px solid $hairline;
+  border: 1px solid transparent;
   border-radius: radius('sharp');
-}
 
-// A value the typing has not reached yet holds its room and shows no box.
-.search-sentence__unreached {
-  border-color: transparent;
+  &.is-boxed {
+    border-color: $hairline;
+    transition: border-color $motion-short ease-out;
+  }
 }
 
 // The count at the start ("12") is a step heavier than the words after it.
@@ -140,7 +142,8 @@
   }
 
   .search-sentence__tail,
-  .search-sentence__chevron {
+  .search-sentence__chevron,
+  .search-sentence__value.is-boxed {
     transition: none;
   }
 }

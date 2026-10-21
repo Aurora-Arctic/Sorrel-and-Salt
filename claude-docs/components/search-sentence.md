@@ -35,8 +35,11 @@ well would be a second copy to keep equal.
   (`join` in `ClausePart`), is a `<span class="search-sentence__join">`: weight 600, in the accent
   colour, a little letter-spaced and set apart, with no box. The count at the start of the lead
   ("12", or "No") is a `<span class="search-sentence__count">` at 500. All are drawn while typing
-  too, so a join types out with its style on; a value the typing has not reached yet keeps its room
-  and shows no box. The status region keeps plain text. The casing is the builder's
+  too, so a join types out with its style on. A value's box is not drawn while it types: it keeps
+  its room (a transparent 1px edge and the padding, so the text never moves) and the edge fades in
+  over `$motion-short` (150ms, ease-out) once every letter of the value is there (`is-boxed`).
+  Backspacing a value drops the class and the box goes at once; reduced motion shows it with no
+  fade, and a settled sentence is drawn boxed from the first paint. The status region keeps plain text. The casing is the builder's
   ([`ingredient-search.md`](ingredient-search.md), "The search sentence").
 - **Before hydration** it is a native `<details>`, closed, holding the whole
   clauses, so it opens without script; the tail is not clipped until the script

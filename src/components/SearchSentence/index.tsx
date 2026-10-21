@@ -34,14 +34,17 @@ function leadNode(lead: string): ReactNode {
   );
 }
 
-/** " matching rue" as far as typed, the term in a hairline box like the other values. */
-function termNode(text: string): ReactNode {
+/** The class of a value: its box shows only once the value is whole, and fades in as it becomes so. */
+const valueClass = (whole: boolean): string => `search-sentence__value${whole ? ' is-boxed' : ''}`;
+
+/** " matching rue" as far as typed, the term in a hairline box once it is all there (`full`). */
+function termNode(text: string, full: string): ReactNode {
   if (!text.startsWith(MATCHING)) return text;
   const term = text.slice(MATCHING.length);
   return (
     <>
       {MATCHING}
-      {term ? <span className="search-sentence__value">{term}</span> : null}
+      {term ? <span className={valueClass(text === full)}>{term}</span> : null}
     </>
   );
 }
@@ -49,7 +52,7 @@ function termNode(text: string): ReactNode {
 /**
  * The clauses as far as typed, the values in their boxes and the joining words in the accent,
  * then the untyped rest invisible so the tail keeps its full height while it types. A value
- * not yet reached keeps its room but shows no box.
+ * keeps its room from the start and takes its box once every letter of it is typed.
  */
 function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode): ReactNode {
   let left = shown;
@@ -62,7 +65,7 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
     const className = part.join
       ? 'search-sentence__join'
       : part.strong
-        ? `search-sentence__value${cut === 0 ? ' search-sentence__unreached' : ''}`
+        ? valueClass(cut === part.text.length)
         : undefined;
     return (
       <span key={index} className={className}>
@@ -199,14 +202,14 @@ export default function SearchSentence({
     <>
       {leadNode(view.term ? view.lead.trimEnd() : view.lead)}
       {view.caret === 'lead' && caret}
-      {termNode(view.term)}
+      {termNode(view.term, parts.term)}
       {view.caret === 'term' && caret}
     </>
   );
   const finished = (
     <>
       {parts.lead}
-      {termNode(parts.term)}
+      {termNode(parts.term, parts.term)}
       {hasTail ? `, ${fullClauses}` : null}
     </>
   );
