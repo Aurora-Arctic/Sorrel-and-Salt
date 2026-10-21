@@ -147,19 +147,19 @@ $-shake-duration: 500ms;
 // The hover on a jar the coven can edit (the owner, 2026-10-21): the drawing shakes
 // once, gently, and the name grows a little. Only where there is a button, so a
 // viewer's shelf is still, and only on a device that really hovers, so a touch screen
-// is not left with a jar stuck mid-shake. Keyboard focus shakes it too (the owner,
-// 2026-10-21), as `:focus-visible` so a mouse click does not shake it twice; that rule sits
+// is not left with a jar stuck mid-shake. Keyboard focus does both too (the owner,
+// 2026-10-21), as `:focus-visible` so a mouse click does not repeat it; those rules sit
 // outside the hover query, since a keyboard on a touch device has no hover to wait for.
 // The shake moves the whole `svg`, not the level inside it, which has its own
 // transform transition (`__rise`). The drawing pivots on its base, the plank.
-@media (hover: hover) {
-  .jar-shelf__press .jar-shelf__name {
-    // Inline-block, since a transform has no effect on an inline box. The scale grows
-    // from the middle of the name and moves nothing around it.
-    display: inline-block;
-    transition: transform $motion-short ease-out;
-  }
+.jar-shelf__press .jar-shelf__name {
+  // Inline-block, since a transform has no effect on an inline box. The scale grows
+  // from the middle of the name and moves nothing around it.
+  display: inline-block;
+  transition: transform $motion-short ease-out;
+}
 
+@media (hover: hover) {
   .jar-shelf__press:hover .jar-shelf__name {
     transform: scale($-name-grow);
   }
@@ -169,23 +169,30 @@ $-shake-duration: 500ms;
   }
 
   @include reduced-motion {
-    .jar-shelf__press .jar-shelf__name {
-      transition: none;
-    }
-
     .jar-shelf__jar:has(.jar-shelf__press:hover) svg {
       animation: none;
     }
   }
 }
 
-// Keyboard focus on a jar the coven can edit: the same shake as the hover. `:focus-visible`
-// and not `:focus`, which a click would set as well as the hover.
-.jar-shelf__jar:has(.jar-shelf__press:focus-visible) svg {
-  animation: jar-shelf-shake $-shake-duration ease-out;
+// Keyboard focus on a jar the coven can edit: the same shake and growth as the hover.
+// `:focus-visible` and not `:focus`, which a click would set as well as the hover.
+.jar-shelf__jar:has(.jar-shelf__press:focus-visible) {
+  svg {
+    animation: jar-shelf-shake $-shake-duration ease-out;
+  }
+
+  .jar-shelf__name {
+    transform: scale($-name-grow);
+  }
 }
 
+// Reduced motion: no shake and no transition on the name, which still changes size.
 @include reduced-motion {
+  .jar-shelf__press .jar-shelf__name {
+    transition: none;
+  }
+
   .jar-shelf__jar:has(.jar-shelf__press:focus-visible) svg {
     animation: none;
   }
