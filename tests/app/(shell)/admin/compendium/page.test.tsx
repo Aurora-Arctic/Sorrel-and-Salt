@@ -11,7 +11,6 @@ import type { PageRequest } from '@/lib/types';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../../../support/msw/graphql';
 import { offerCategories } from '../../../../support/msw/ingredient-lookups';
 import { openSections } from '../../../../support/ingredient-sections';
-import { sent } from '../../../../support/filter-form';
 import { entryDetail } from '../../../../support/entry-detail';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
