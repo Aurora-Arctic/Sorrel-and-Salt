@@ -104,6 +104,11 @@
   margin-left: auto;
 }
 
+// The skip link focuses the wrapper by script; a ring round the whole page would say nothing.
+.public-frame__main:focus {
+  outline: none;
+}
+
 .public-frame__brand-short {
   display: none;
 }
