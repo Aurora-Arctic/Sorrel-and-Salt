@@ -198,6 +198,25 @@ export function useDuplicateWarning(
     setExact([]);
   };
 
+  /**
+   * After a match's + has added it (M12.48, the owner's report): the cached
+   * answers still say the coven lacks it, and would for their stale time, so
+   * every lookup of both kinds is asked again rather than only this name's,
+   * since another name typed in this form may find it too. The held save's
+   * exact matches are state, not cache, so the entry is marked held there.
+   */
+  const added = async (id: string): Promise<void> => {
+    setExact((now) =>
+      now.map((match) => (match.id === id ? { ...match, inCupboard: true } : match)),
+    );
+    // By the operation's name, the first part of every key graphqlQuery makes.
+    await Promise.all(
+      ['PossibleDuplicates', 'CompendiumMatches'].map((name) =>
+        client.invalidateQueries({ queryKey: [name] }),
+      ),
+    );
+  };
+
   return {
     shown: untouched ? [] : shown,
     // A new name's answer on its way while the last name's list still shows
@@ -207,6 +226,7 @@ export function useDuplicateWarning(
     exact: !untouched && heldFor === typed ? exact : [],
     check,
     dismiss,
+    added,
   };
 }
 

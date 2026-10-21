@@ -1190,6 +1190,44 @@ describe('IngredientForm', () => {
       ]);
       expect(creates).toHaveLength(0);
     });
+
+    // The owner's report (M12.48): the lookups' cached answers still said the
+    // entry was not held, so its row stayed under In the Compendium with its +.
+    const heldRow = () =>
+      within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('link', {
+        name: /^Cat's Claw \(Uncaria tomentosa\)/,
+      });
+
+    it('asks the lookup again once the + has added, so the entry is listed as in the cupboard', async () => {
+      accept();
+      renderForm();
+      offerDuplicates([CLAW]);
+
+      type('Name', 'Porch Claw');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+      const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
+      // The server's answer from here on: the coven holds it.
+      offerDuplicates([{ ...CLAW, inCupboard: true }]);
+      fireEvent.click(plus);
+
+      await waitFor(() => expect(heldRow()).toBeInTheDocument());
+    });
+
+    it('lists the exact match as in the cupboard once its + has added it, from a held save', async () => {
+      accept();
+      renderForm();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+
+      type('Name', 'Porch Claw');
+      save();
+      const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
+      offerDuplicates([{ ...CLAW, inCupboard: true }]);
+      offerCompendiumMatches([{ ...CLAW, inCupboard: true }]);
+      fireEvent.click(plus);
+
+      await waitFor(() => expect(heldRow()).toBeInTheDocument());
+    });
   });
 
   // The form's half of each lookup, once per kind: the box asks with this

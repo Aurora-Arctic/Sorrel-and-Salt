@@ -610,6 +610,8 @@ export interface DuplicateWarning {
   check: (name: string) => Promise<boolean>;
   /** Sets the matches shown aside and lifts the hold. */
   dismiss: () => void;
+  /** The coven now holds this compendium entry: its lookups are asked again, so it is listed as held. */
+  added: (id: string) => Promise<void>;
 }
 
 export interface NameFieldProps {

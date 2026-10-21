@@ -1204,7 +1204,12 @@ entry can be relabelled on its page. It sends whichever of the description,
 safety notes, elements, celestial bodies, zodiac signs and colours were filled
 as the coven's overrides, and then reports the entry, by its own name, through
 `onSaved` as `'open'`, so the modal closes and the page routes to the entry's
-coven page. A refusal is said at the form's head. A near match in the
+coven page. A refusal is said at the form's head. Once the add lands, both
+lookups, `possibleDuplicates` and `compendiumMatches`, are asked again for every
+name (`added` on `useDuplicateWarning`), and a held save's exact matches mark the
+entry held: their cached answers would otherwise say the coven still lacks it for
+the cache's stale time, so the form opened again on that name listed it under In
+the Compendium with its + (the owner's report, M12.48). A near match in the
 did-you-mean list gets the same + or eye at the right of its row when
 it is a compendium entry (`isGlobal`); the coven's own entry, which the
 cupboard holds by being the coven's, gets the eye and never a + (the owner's

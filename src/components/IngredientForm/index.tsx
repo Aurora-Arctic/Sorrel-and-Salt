@@ -503,6 +503,7 @@ const IngredientForm = ({
         input,
       });
       setSaved(match.name);
+      void duplicates.added(match.id);
       onSaved?.({ id: match.id, name: match.name, slug: match.slug }, 'open');
     } catch (error) {
       // Nothing sent comes from the name now, so every issue is said at the form's head.
