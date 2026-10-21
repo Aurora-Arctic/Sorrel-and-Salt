@@ -39,8 +39,11 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
  * failed send is the transport's to log: the invitation stays pending and can
  * be revoked and sent again.
  *
- * A second invitation to an address already invited is allowed, as the admin
- * tier's is: each mail carries its own link, and any one accepts.
+ * A second invitation to an address already invited replaces the pending one
+ * (MB.269): that one is stamped revoked by the session's user in the same write,
+ * so only the newest link works and its role is the one that applies. Another
+ * coven's invitation, an accepted or lapsed one, and the site tier's are left
+ * alone.
  *
  * @throws {Forbidden} the caller is not an owner of the coven (`member: invite`).
  * @throws {ValidationError} on `role`: owner, which is granted afterwards on
@@ -78,9 +81,12 @@ export async function createInvitation(
   if (!workspace) throw new ValidationError([{ path: ['workspaceId'], message: 'No such coven' }]);
 
   const token = newToken();
-  const [row] = await withAudit(session, (write) =>
-    write.insertInvitation(membership, { email, role, token }),
-  );
+  // The waiting invitation to this address is withdrawn in the write that
+  // creates the new one, so a failed insert leaves it pending.
+  const [row] = await withAudit(session, async (write) => {
+    await write.revokePendingInvitationsTo(membership, email);
+    return write.insertInvitation(membership, { email, role, token });
+  });
   // After the commit, so a mailed link always names a row.
   // The mail names who sent it; the session holds the id alone, so the name is read here.
   const inviter = await findOneById(users, session.userId);

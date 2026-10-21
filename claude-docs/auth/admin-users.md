@@ -396,6 +396,11 @@ The names in code still say "admin invitation" for both roles: an admin is
 who sends one, and renaming the mutation and the services would buy no
 behaviour.
 
+- **A repeat invitation replaces the pending one** (MB.269). Inviting an address
+  that already has a pending site-tier invitation, admin or curator, stamps that
+  one revoked, as the admin, in the same write that creates the new one, so one
+  is pending and its role is the one that applies. A coven's invitation to the
+  address is not touched ([`db/invitations.md`](../db/invitations.md)).
 - **One service each way, two checks.** `createAdminInvitation(session,
 email, siteRole, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role

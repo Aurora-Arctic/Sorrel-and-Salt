@@ -135,6 +135,54 @@ describe('createAdminInvitation', () => {
     expect(mailedToken().token).not.toBe(first);
   });
 
+  describe('a repeat invitation', () => {
+    const pendingFor = async (email: string) =>
+      (await invitations()).filter(
+        (row) => row.email === email && row.revoked_at === null && row.accepted_at === null,
+      );
+
+    it('replaces the pending site-tier invitation to the address, in any case, with the newest role, stamped revoked by the admin', async () => {
+      const first = await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
+      expect(await pendingFor(INVITED)).toHaveLength(1);
+
+      const second = await createAdminInvitation(
+        asUser(E),
+        INVITED.toUpperCase(),
+        'admin',
+        undefined,
+        sender(),
+      );
+
+      const pending = await pendingFor(INVITED);
+      expect(pending.map((row) => [row.id, row.site_role])).toEqual([[second.id, 'admin']]);
+      const replaced = (await invitations()).find((row) => row.id === first.id);
+      expect(replaced?.revoked_at).not.toBeNull();
+      expect(replaced?.updated_by).toBe(E.id);
+    });
+
+    it("leaves a coven's invitation to the address alone, and is left alone by it", async () => {
+      await sql`
+        insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at)
+        values (${INVITED}, 'coven-hash', ${WORKSPACE_W_ID}, 'member', ${A.id}, ${A.id}, now() + interval '7 days')`;
+
+      await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
+
+      expect(await pendingFor(INVITED)).toHaveLength(2);
+    });
+
+    it('leaves an accepted and a lapsed invitation to the address as they were', async () => {
+      await sql`
+        insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at, accepted_at, accepted_by)
+        values (${INVITED}, 'accepted-hash', 'admin', ${E.id}, ${E.id}, now() + interval '7 days', now(), ${B.id}),
+               (${INVITED}, 'lapsed-hash', 'admin', ${E.id}, ${E.id}, now() - interval '1 second', null, null)`;
+      const before = await invitations();
+
+      await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
+
+      expect((await invitations()).slice(0, 2)).toEqual(before);
+    });
+  });
+
   it('stores a blank reason as none', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'admin', '   ', sender());
 

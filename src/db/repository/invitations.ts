@@ -379,6 +379,7 @@ export function invitationWrites({
   | 'acceptReceivedInvitation'
   | 'declineReceivedInvitation'
   | 'revokeInvitation'
+  | 'revokePendingInvitationsTo'
 > {
   return {
     // The columns named rather than spread, as `workspaceId` is placed last
@@ -442,6 +443,18 @@ export function invitationWrites({
         invitations,
         { revokedAt: sql`now()` },
         openInvitation(inTierOf(proof), eq(invitations.id, id)),
+      ),
+    // A repeat invitation withdraws the one waiting (MB.269): the same tier
+    // and, on the workspace tier, the same coven, by the proof; the address
+    // matched as the accept matches it, lowered on both sides.
+    revokePendingInvitationsTo: (proof: Membership | SiteAdmin, email: string) =>
+      update(
+        invitations,
+        { revokedAt: sql`now()` },
+        pendingInvitation(
+          inTierOf(proof),
+          eq(sql`lower(${invitations.email})`, sql`lower(${email})`),
+        ),
       ),
   };
 }
