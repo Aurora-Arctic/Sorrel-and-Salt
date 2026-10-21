@@ -3,6 +3,7 @@
 import { type ReactElement, useState } from 'react';
 import Combobox from '../Combobox';
 import { ComboboxEntry } from '../Combobox/entry';
+import { matchesLabelOrGroup } from '../Combobox/match';
 import type { ComboboxChoice, ComboboxOption } from '../Combobox/types';
 
 // The typing form of the facet box (M12.4): the typed Combobox with the
@@ -48,7 +49,7 @@ export function FacetTypeahead({
       (choice) =>
         !values.includes(choice.value) &&
         !(hideZeros && choice.count === 0) &&
-        choice.label.toLowerCase().includes(needle),
+        matchesLabelOrGroup(choice.label, choice.group, text),
     )
     .map((choice) => ({
       value: choice.value,

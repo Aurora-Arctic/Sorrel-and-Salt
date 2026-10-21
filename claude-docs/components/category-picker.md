@@ -48,7 +48,8 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
   Clear takes them all. Each is announced through a labelled status region,
   "Categories changes", as a list field's are.
 - **The rows come from the categories.** The list offers every category not
-  yet picked whose name holds the text, case set aside, under its group's
+  yet picked whose name or whose group's name holds the text, case set
+  aside (typing a group lists all its categories), under its group's
   heading — the Combobox's `heading` on each row — the groups and the names
   both alphabetical by `localeCompare`. No code names a group, so one an
   admin adds is a heading without a change here. A category's description
