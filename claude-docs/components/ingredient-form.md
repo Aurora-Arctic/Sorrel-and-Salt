@@ -1130,9 +1130,8 @@ no coven, so it draws one plain list with no headings. The + never needs to
 move a row from one group to the other: it closes the modal and routes to
 the entry's coven page. While another name's answer is on
 its way, each row stands as the skeleton's shape (`skeleton-shape`,
-`_mixins.scss`, as a tab's list does), a bar for the title and one in the
-small button's own size where the row had an Open It, or an icon's box where
-it had a + or a Quick Look, so the box keeps its
+`_mixins.scss`, as a tab's list does), a bar for the title and an icon's box where
+the row had a + or a Quick Look, so the box keeps its
 height and nothing jumps when the answer lands (the owner's call over a
 spinner, 2026-10-18). Row and shapes both stay mounted and cross-fade: the
 shapes wait 200ms before fading in over 300ms, so an answer back sooner never
@@ -1163,7 +1162,7 @@ round the last rows as they fade, so neither the first warning nor the last
 lands or leaves outright (the owner's calls). A list rather than a
 sentence, since the owner found the sentence with buttons run into it
 unreadable at the cupboard review (2026-10-18); a compendium match's +
-or Open It (below) sits at the right of its row. Each match is a link named
+or Quick Look eye (below) sits at the right of its row. Each match is a link named
 by its label and its formal name, since the label alone can name five
 plants; one with no formal name shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and the shell's add button to
@@ -1187,8 +1186,9 @@ with a **+** at its right (M12.48, the owner's call, in place of M12.20's Use
 It button): an icon button in the card's plus's look (`add-icon`,
 [`add-icon.md`](add-icon.md)), named "Add to My Ingredients: " and the
 entry's label and formal name, as the card's plus is, which adds the entry to
-the coven the form is adding to, with no menu of covens. Or **Open It**, a link to its coven page, where
-the cupboard already holds it, and one **Create Anyway** beneath the list (the
+the coven the form is adding to, with no menu of covens. Or the **Quick Look** eye
+where the cupboard already holds it (M12.48, in place of M12.20's Open It;
+"Quick Look in the warning" below), and one **Create Anyway** beneath the list (the
 owner's word for both lists, 2026-10-18; M12.20 had named the question's Add
 Our Own). The
 block's id, the sentence and the list together, is what the button and the
@@ -1201,9 +1201,10 @@ description, safety notes, elements, celestial bodies, zodiac signs and
 colours were filled as the coven's overrides. It then reports the entry
 through `onSaved` as `'open'`, so the modal closes and the page routes to the
 entry's coven page; a refused label lands beside Name. A near match in the
-did-you-mean list gets the same + or Open It at the right of its row when
-it is a compendium entry (`isGlobal`), and none when it is the coven's own
-(the owner's call, 2026-10-18). Both need `onUse`, which the compendium's
+did-you-mean list gets the same + or eye at the right of its row when
+it is a compendium entry (`isGlobal`); the coven's own entry, which the
+cupboard holds by being the coven's, gets the eye and never a + (the owner's
+calls, 2026-10-18 and M12.48). Both need `onUse`, which the compendium's
 form leaves out, since it has no cupboard. Viewers never reach the modal.
 
 **An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
@@ -1228,6 +1229,23 @@ their own entry's edit, M12.5's way round, keep it. A reload of such an
 address draws the form over the details, since the order of the two in the
 address is not kept. The public search's form opens details by id, not
 slug, and offers no Quick Look.
+
+In the coven's form, the shell's Add Ingredient dialog, the eye sits on each
+row the coven holds, its own entries and the compendium entries in its
+cupboard, and is a button (`QuickLookButton`,
+[`icon-tip.md`](icon-tip.md)) rather than a link: that dialog opens over
+any shell page by `?new`, and most of those pages have no details modal to
+route to. Its press opens `DuplicateQuickLook` (`quick-look.tsx`), the
+details modal over the form, which reads the entry in the page through the
+existing `ingredient(id, workspaceId)` query, nothing new on the server.
+It opens at once, `aria-busy` with the modal skeleton (M12.33), under the
+head the details will have, the row's name with its formal name over it, as
+a route modal's press opens under the head its opener names, so nothing in
+the head moves when the details arrive. The head and body are then the
+details modal's own (`headingOf`, `detailsHeading`, `IngredientSummary`),
+and its foot's See in Your Cupboard opens the entry's page in a new tab, so
+the form and what is typed in it stay. A failed read says so in the modal,
+with Try Again. Escape closes it alone and hands the focus back to the eye.
 
 **The warning has to be answered before the form saves**, the owner's call,
 which corrects the issue's "does not block submission". While it is only

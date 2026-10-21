@@ -509,19 +509,6 @@ $skeleton-fade: 300ms;
       inline-size: min(14rem, 60%);
     }
 
-    .ingredient-form__shape--button {
-      box-sizing: border-box;
-      inline-size: 3.5rem;
-      block-size: auto;
-      padding: space(1) space(3);
-      border: 1px solid transparent;
-      font-size: type-size('caption');
-
-      &::after {
-        content: '\200b';
-      }
-    }
-
     // The Quick Look eye's place: its box, square, as the eye is.
     .ingredient-form__shape--icon {
       inline-size: $icon-size-large;

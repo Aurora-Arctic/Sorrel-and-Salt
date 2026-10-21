@@ -495,7 +495,7 @@ const isHeld = (match: Duplicate): boolean => !match.isGlobal || match.inCupboar
 interface Choice {
   control: ReactElement;
   ghost: ReactElement;
-  shape: 'button' | 'icon';
+  shape: 'icon';
 }
 
 function MatchList({
