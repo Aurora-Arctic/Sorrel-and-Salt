@@ -270,22 +270,3 @@
     transition: none;
   }
 }
-
-// The Quick Look head's buttons with the last edit stacked under them, left-aligned (the owner's
-// call, 2026-10-21); the row is what `.modal-dialog__formal-actions` is when it holds no line.
-.ingredient-details-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-// Under the buttons it needs only a step to stand off them, not the card's wide gap above.
-.ingredient-details-actions .last-edit {
-  margin-block-start: space(1);
-}
-
-.ingredient-details-actions__row {
-  display: flex;
-  align-items: center;
-  gap: space(2);
-}

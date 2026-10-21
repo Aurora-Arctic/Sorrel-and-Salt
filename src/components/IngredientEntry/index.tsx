@@ -328,7 +328,7 @@ const IngredientEntry = ({
             />
           </div>
         )}
-        {/* Just above the row of buttons, right-aligned (the owner's call, 2026-10-21). */}
+        {/* Above the names, left-aligned; Quick Look draws it in the same place (the owner's call, 2026-10-21). */}
         {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
         {/* The formal name and the name together, so the Edit pencil, read after the
             heading, can stand at the end of the formal name's line (index.scss). */}

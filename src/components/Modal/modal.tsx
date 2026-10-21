@@ -72,6 +72,7 @@ const Modal = ({
   topEnd,
   formalActions,
   under,
+  aboveName,
   onClose,
   returnTo,
   size,
@@ -323,6 +324,7 @@ const Modal = ({
               <span className="spoken-separator">to</span> {destination}
             </p>
           )}
+          {aboveName}
           {formalActions !== undefined ? (
             // The formal name, the title, and the actions at the formal name's end: after the
             // title in the markup, as the entry page's are, and placed on the formal name's line.

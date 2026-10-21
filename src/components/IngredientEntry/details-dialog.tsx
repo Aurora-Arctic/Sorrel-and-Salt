@@ -71,19 +71,11 @@ function headingOf({
       {more}
     </>
   );
-  // The last edit stands left-aligned just below the buttons (the owner's call, 2026-10-21).
-  const actions = lastEdit ? (
-    <div className="ingredient-details-actions">
-      {buttons && <div className="ingredient-details-actions__row">{buttons}</div>}
-      <LastEdit by={lastEdit.by} at={lastEdit.at} />
-    </div>
-  ) : (
-    buttons
-  );
   return {
     ...heading,
     topEnd: top,
-    ...(actions && { formalActions: actions }),
+    ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
+    ...(buttons && { formalActions: buttons }),
     ...(marks && { under: <EntryMarks {...marks} safety={false} recency={null} /> }),
   };
 }
