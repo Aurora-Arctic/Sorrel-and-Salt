@@ -16,7 +16,6 @@ export function TextField<V extends FieldValues = FieldValues>({
   name,
   label,
   labelSuffix,
-  size,
   hint,
   note,
   required,
@@ -66,7 +65,6 @@ export function TextField<V extends FieldValues = FieldValues>({
     <FieldShell
       label={label}
       labelSuffix={labelSuffix}
-      size={size}
       hint={hint}
       note={note}
       required={required}

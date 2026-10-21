@@ -402,22 +402,24 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 }
 
 /**
- * A compact field's name, its label and then its form, which follows the label out of sight
+ * A stock field's name, its label and then its form, which follows the label out of sight
  * ("Quantity, Root"). The browser reads the hidden span after the label as a space and a
  * comma, so the name is matched on both.
  */
 const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}\\s*, ${form}$`);
 
 /**
- * M9.9's Edit Stock dialog, opened from a coven card's pencil (or the one in its Quick
- * Look). The button is named "Edit Stock, <name>" (the formal name follows when the
- * label is shared, as the admin lists' "Edit Ingredient, <name>" does) and opens a
- * dialog of the same name holding one group per jar held, named for its form. A jar's
- * fields are compact and carry their form after the label out of sight, so two rows'
- * "Quantity" stay apart: "Quantity, Root". `jar(form)` finds one row by its form group;
- * Add Form appends a row for a form not held, and Remove stages a held jar's removal
- * until Undo or Save. Save closes the dialog once the batch has been answered.
- * A unit is a combobox, picked with `pickUnit` by its label as the dialog shows it.
+ * M9.9's Edit Stock dialog, opened from the stock button in a coven card's foot (or the
+ * one in its Quick Look). The button is named "Edit Stock, <name>" (the formal name
+ * follows when the label is shared, as the admin lists' "Edit Ingredient, <name>" does)
+ * and opens a dialog of the same name: a list of the jars held, one button per form, and
+ * beside it the chosen jar's fields, in a group named for its form. Only the chosen jar's
+ * fields are drawn, so `choose(form)` presses its list button before `jar(form)` can
+ * reach them; the dialog opens on the first jar, and Add chooses the form it adds. A
+ * field carries its form after the label out of sight: "Quantity, Root". Add Form picks a
+ * form not held and Add puts it in the list; Remove stages a held jar's removal until
+ * Undo or Save. Save closes the dialog once the batch has been answered. A unit is a
+ * combobox, picked with `pickUnit` by its label as the dialog shows it.
  */
 export function stockEditor(row: Locator, name: string) {
   const page = row.page();
@@ -426,7 +428,14 @@ export function stockEditor(row: Locator, name: string) {
   return {
     open: row.getByRole('button', { name: title }),
     dialog,
-    /** One row of the dialog, by its form. */
+    /**
+     * Chooses a jar from the list, by its form. The button's name starts with the form and
+     * goes on to its amount and any mark ("Oil 30 ml Edited"), so it is matched on the start.
+     */
+    async choose(form: string) {
+      await dialog.getByRole('button', { name: new RegExp(`^${form}\\b`) }).click();
+    },
+    /** The chosen jar's fields, by its form. */
     jar(form: string) {
       const group = dialog.getByRole('group', { name: form, exact: true });
       return {
@@ -443,12 +452,14 @@ export function stockEditor(row: Locator, name: string) {
       };
     },
     addForm: dialog.getByRole('combobox', { name: 'Add Form' }),
-    /** Appends a row for `form`, a form the coven holds no jar of. */
+    addButton: dialog.getByRole('button', { name: 'Add', exact: true }),
+    /** Adds `form`, a form the coven holds no jar of, which chooses it. */
     async add(form: string) {
       await dialog.getByRole('combobox', { name: 'Add Form' }).click();
       await page.getByRole('option', { name: form, exact: true }).click();
+      await dialog.getByRole('button', { name: 'Add', exact: true }).click();
     },
-    save: dialog.getByRole('button', { name: 'Save Stock' }),
+    save: dialog.getByRole('button', { name: 'Save', exact: true }),
     cancel: dialog.getByRole('button', { name: 'Cancel' }),
   };
 }

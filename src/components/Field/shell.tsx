@@ -31,7 +31,6 @@ export const Required = (): ReactElement => (
 export function FieldShell({
   label,
   labelSuffix,
-  size,
   hint,
   note,
   required,
@@ -47,7 +46,7 @@ export function FieldShell({
   className,
 }: FieldShellProps): ReactElement {
   return (
-    <div className={['field', size && `field--${size}`, className].filter(Boolean).join(' ')}>
+    <div className={['field', className].filter(Boolean).join(' ')}>
       {/* Positioned by the primitive: the hint's tip places itself above its
           nearest positioned ancestor (claude-docs/components/info-tip.md). */}
       <div className="field__label-row">

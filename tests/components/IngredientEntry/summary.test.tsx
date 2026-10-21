@@ -455,7 +455,7 @@ describe('IngredientSummary', () => {
         .getAllByRole('listitem')
         .find((item) => item.textContent!.trim().startsWith(formLabel(form)))!;
 
-    it('names each form the entry comes in, after the description, and nothing of stock without jars', () => {
+    it('names each form the entry comes in, after the caution, and nothing of stock without jars', () => {
       render(<IngredientSummary detail={full()} />);
 
       const items = within(screen.getByRole('list', { name: 'Forms' })).getAllByRole('listitem');
@@ -466,15 +466,15 @@ describe('IngredientSummary', () => {
       // A compendium page passes no jars: no quantity, no stock state, no badge.
       expect(screen.queryByText(/Unmeasured|Not Stocked/)).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Stock/ })).not.toBeInTheDocument();
-      // After the description in the document.
-      const description = screen.getByText('A fixture description.');
+      // After the caution in the document (the owner's call, 2026-10-20), so also after the description.
+      const caution = screen.getByRole('region', { name: 'Caution' });
       expect(
-        description.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
+        caution.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     });
 
-    it("shows each form's jar with jars: its quantity, Unmeasured or Not Stocked, and its badge", () => {
+    it("shows each form's jar with jars: its quantity or Unmeasured, and its badge; a form in no jar is Not Stocked to a screen reader", () => {
       render(
         <IngredientSummary
           detail={full({
@@ -501,9 +501,11 @@ describe('IngredientSummary', () => {
       const seed = lineOf('testseed');
       expect(seed).toHaveTextContent('0 g');
       expect(within(seed).getByRole('button', { name: 'Out of Stock' })).toBeInTheDocument();
-      // No jar: the coven holds the form in no jar, which is not out of stock.
+      // No jar: the coven holds the form in no jar, which is not out of stock. Nothing shows
+      // on screen (the owner's call, 2026-10-20), but the line's text, which a screen reader
+      // reads, still says so.
       const root = lineOf('testroot');
-      expect(root).toHaveTextContent('Not Stocked');
+      expect(within(root).getByText('Not Stocked')).toBeInTheDocument();
       expect(within(root).queryByRole('button')).not.toBeInTheDocument();
     });
 

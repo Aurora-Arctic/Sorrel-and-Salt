@@ -27,6 +27,7 @@ export function ComboboxSelect({
   required,
   inputRef,
   busy,
+  disabled,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
 }: ComboboxSelectProps): ReactElement {
@@ -56,7 +57,11 @@ export function ComboboxSelect({
       {/* The control is the box itself: nothing is typed, so the whole of it
           is the one target, and it takes the focus. */}
       <div
-        className={['input combobox__control combobox__control--select', invalid && 'is-invalid']
+        className={[
+          'input combobox__control combobox__control--select',
+          invalid && 'is-invalid',
+          disabled && 'is-disabled',
+        ]
           .filter(Boolean)
           .join(' ')}
         {...getToggleButtonProps({
@@ -77,7 +82,12 @@ export function ComboboxSelect({
           'aria-invalid': invalid,
           'aria-required': required,
           'aria-busy': busy ? true : undefined,
+          // Downshift leaves the click and key handlers off a disabled box, and
+          // would write `disabled` onto the div, where it means nothing: the
+          // box says it with `aria-disabled` and leaves the tab order instead.
+          disabled,
         })}
+        {...(disabled && { disabled: undefined, 'aria-disabled': true, tabIndex: -1 })}
       >
         <div className="combobox__values">
           {selected ? (

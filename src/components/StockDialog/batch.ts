@@ -21,7 +21,8 @@ export function openingRows(jars: readonly StockJar[]): StockRow[] {
   }));
 }
 
-const changed = (row: StockRow, opening: StockFormValues): boolean =>
+/** Whether a row's amounts differ from a jar's as it opened: an update to send, and the list's Edited mark. */
+export const changed = (row: StockFormValues, opening: StockFormValues): boolean =>
   AMOUNTS.some((key) => row[key] !== opening[key]);
 
 /** The batch, and which row each create and update entry came from. */

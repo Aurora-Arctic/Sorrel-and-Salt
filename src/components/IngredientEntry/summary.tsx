@@ -23,11 +23,13 @@ import './summary.scss';
 
 // The details modal's body (M12.5): the entry page's Details section, drawn by
 // the page's own blocks in the page's order, cut to the owner's choice (the
-// description, the forms, the caution, then the correspondences, folk names and
+// description, the caution, the forms, then the correspondences, folk names and
 // categories; the description added by the owner's call, 2026-10-20, the forms
-// by M9.9). On the coven's page each form also shows the coven's jar of it: its
-// quantity, Unmeasured or Not Stocked, and its stock badge; the compendium's
-// pages pass no jars and name the forms alone. No substitutes, references or
+// by M9.9, set under the caution by the owner's call of the same day). On the
+// coven's page each form also shows the coven's jar of it: its quantity or
+// Unmeasured, and its stock badge (a form in no jar shows nothing, and is
+// Not Stocked to a screen reader alone); the compendium's pages pass
+// no jars and name the forms alone. No substitutes, references or
 // Similar: the entry's own page has those, and its forms' own sections. Shown as the list names the entry, the coven's annotations laid over a
 // held compendium entry as the page lays them. Each form's caution stays on the
 // page's form sections; a line here says which forms carry one (the owner's
@@ -60,7 +62,8 @@ export default function IngredientSummary({
   covens?: readonly HoldingCoven[];
   /**
    * The coven's jars of the entry, from the coven's page alone, so each form shows its
-   * stock; a form with none of them is Not Stocked. Left out, the forms are named alone.
+   * stock; a form with none of them is Not Stocked, said to a screen reader alone. Left
+   * out, the forms are named alone.
    */
   jars?: readonly SummaryJar[];
 }): ReactElement {
@@ -72,38 +75,50 @@ export default function IngredientSummary({
   const rows = correspondences(shown, deities).filter((row) => row.values.length > 0);
   const listed = rows.length > 0 || folkNames.length > 0 || categories.length > 0;
   // Each form as a jar line draws it (JarLines): its icon and name, then, with the
-  // coven's jars, a dot, the quantity and the badge. A sibling of JarLines rather than
+  // coven's jars, its stock in an element of its own: the quantity and the badge, which
+  // the list lays out as a grid so every quantity ends in one column (summary.scss). No
+  // visible dot between the two; the spoken comma stays. A sibling of JarLines rather than
   // JarLines itself, which draws its own list of jars where this is one line per form,
-  // a form in no jar among them (Not Stocked), in the block's list under its heading.
+  // a form in no jar among them, in the block's list under its heading. A form in no jar
+  // shows no stock (the owner's call, 2026-10-20): "Not Stocked" is visually hidden, so a
+  // screen reader still hears "Oil, Not Stocked", and its empty amount cell keeps its place
+  // in the grid, so the quantities' column does not move.
   const forms = variants.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'forms')}
       title="Forms"
       level={3}
-      className="ingredient-summary__forms"
+      className={
+        jars
+          ? 'ingredient-summary__forms ingredient-summary__forms--stocked'
+          : 'ingredient-summary__forms'
+      }
     >
       {variants.map(({ variant, icon }) => {
         const jar = jars?.find(({ variantId }) => variantId === variant.id);
         return (
           <li key={variant.id}>
-            <span>
+            <span className="ingredient-summary__form">
               <FormIcon name={icon} /> {formLabel(variant.form)}
-              {jars && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="spoken-separator">,</span>
-                  {jar === undefined
-                    ? 'Not Stocked'
-                    : jar.quantity === null
-                      ? 'Unmeasured'
-                      : jar.unit
-                        ? `${jar.quantity} ${jar.unit}`
-                        : jar.quantity}
-                </>
-              )}
+              {jars && <span className="spoken-separator">,</span>}
             </span>
-            {jar && (
-              <StockBadge quantity={jar.quantity} threshold={jar.threshold} unit={jar.unit} />
+            {jars && (
+              <span className="ingredient-summary__stock">
+                <span className="ingredient-summary__amount">
+                  {jar === undefined ? (
+                    <span className="visually-hidden">Not Stocked</span>
+                  ) : jar.quantity === null ? (
+                    'Unmeasured'
+                  ) : jar.unit ? (
+                    `${jar.quantity} ${jar.unit}`
+                  ) : (
+                    jar.quantity
+                  )}
+                </span>
+                {jar && (
+                  <StockBadge quantity={jar.quantity} threshold={jar.threshold} unit={jar.unit} />
+                )}
+              </span>
             )}
           </li>
         );
@@ -155,7 +170,6 @@ export default function IngredientSummary({
       {/* The page's own description, cut to its first lines here. Left out
           when empty, where the page says so. */}
       {said(shown.description) && <SummaryDescription text={shown.description!} />}
-      {forms}
       <SafetyNote
         safetyNotes={shown.safetyNotes}
         level={3}
@@ -165,6 +179,7 @@ export default function IngredientSummary({
           )
         }
       />
+      {forms}
       {/* Not drawn when every block is empty, so it adds no gap of its own. */}
       {(listed || inYourCovens) && (
         <div className="ingredient-entry__side">

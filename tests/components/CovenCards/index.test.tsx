@@ -194,6 +194,29 @@ describe('CovenCards', () => {
     );
   });
 
+  it("puts Edit Stock first in a card's foot, before Edit", () => {
+    const editHref = '/coven/fixture-coven/ingredients?edit=e1' as Route;
+    const stock = { forms: [{ variantId: 'v1', label: 'Fixture Herb' }], jars: [] };
+    render(
+      <Cards
+        {...props({
+          entries: [
+            {
+              ...ENTRIES[0]!,
+              editHref,
+              editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+              stock,
+            },
+          ],
+        })}
+      />,
+    );
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const pencil = within(list).getByRole('button', { name: /^Edit Stock/ });
+    const edit = within(list).getByRole('link', { name: /^Edit Testwort/ });
+    expect(pencil.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {
     const editHref = '/coven/fixture-coven/ingredients?edit=e1' as Route;
     render(

@@ -608,8 +608,8 @@ $pager-tight-width: 23rem;
 // 44px target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
 
-// A compact field's height (`.field--compact`, M9.9): 32px, for a row of
-// fields that sits on one short line, the StockDialog's jars. Under the
+// A compact field's height (`.field--compact`, M9.9): 32px, for a field
+// that sits on one short line, the StockDialog's Add Form. Under the
 // full height's 44px but over WCAG 2.5.8's 24px target, as `.btn--small` is.
 $control-height-compact: 2rem;
 

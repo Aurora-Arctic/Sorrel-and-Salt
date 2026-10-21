@@ -1218,8 +1218,9 @@
   }
 
   // A size, not a look, as `.btn--small` is, so it composes with every
-  // field: for a row of fields — a StockDialog jar's three amounts — that the
-  // full field would make tall. The control comes down to its own height
+  // field: for a field the full size would make tall where it sits, drawn by
+  // its class (the StockDialog's Add Form, under the list of jars; no Field
+  // takes a size prop). The control comes down to its own height
   // ($control-height-compact) with tighter padding, and the label and the
   // text to the caption size; the edge, states and error stay the field's.
   // A combobox's line inside the box follows in Combobox/index.scss.

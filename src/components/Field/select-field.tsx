@@ -19,11 +19,11 @@ export function SelectField<V extends FieldValues = FieldValues>({
   name,
   label,
   labelSuffix,
-  size,
   hint,
   placeholder,
   options,
   typeahead,
+  disabled,
   required,
   deps,
   onChange,
@@ -33,14 +33,7 @@ export function SelectField<V extends FieldValues = FieldValues>({
   const { aria, ...shell } = useField<V>(name, hint);
   const Box = typeahead ? ComboboxTypeahead : ComboboxSelect;
   return (
-    <FieldShell
-      label={label}
-      labelSuffix={labelSuffix}
-      size={size}
-      hint={hint}
-      required={required}
-      {...shell}
-    >
+    <FieldShell label={label} labelSuffix={labelSuffix} hint={hint} required={required} {...shell}>
       <Box
         id={shell.controlId}
         label={labelSuffix ? `${label}, ${labelSuffix}` : label}
@@ -57,6 +50,7 @@ export function SelectField<V extends FieldValues = FieldValues>({
         choices={options}
         placeholder={placeholder}
         required={required}
+        {...(!typeahead && { disabled })}
         inputRef={field.ref}
         {...aria}
       />

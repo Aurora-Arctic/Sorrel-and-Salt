@@ -75,9 +75,10 @@ export interface ModalProps extends ModalHeading {
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
   /**
    * The width: 32rem by default, for a short form or a confirmation; `wide`,
-   * 48rem, for a long form such as the compendium entry's (M5.5).
+   * 48rem, for a long form such as the compendium entry's (M5.5); `listed`,
+   * the default column with an 11rem list beside it (the Edit Stock dialog, M9.9).
    */
-  size?: 'wide';
+  size?: 'wide' | 'listed';
   /**
    * A body that holds nothing to fill in, only to read (M12.5's details): Tab
    * stops on the body itself, so a keyboard can scroll it. Off by default,

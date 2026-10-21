@@ -210,3 +210,24 @@ export function BinIcon(): ReactElement {
     </svg>
   );
 }
+
+/**
+ * A jar with a cloth tied over its mouth, the cloth's hem wavy: the coven's
+ * stock of an ingredient. Edit Stock (M9.9) wears it rather than the pencil,
+ * which Edit already shows beside it in a card's foot, so stock has a mark of
+ * its own there (the owner's pick, 2026-10-20).
+ */
+export function StockIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M4.5 6V5.125Q4.5 4.125 5.5 4.125h5Q11.5 4.125 11.5 5.125V6M4.25 6h7.5M4.5 6L3.5 8.5M11.5 6l1 2.5M3.5 8.5q1.125.75 2.25 0t2.25 0 2.25 0 2.25 0M4 9.25v3a1.75 1.75 0 0 0 1.75 1.75h4.5A1.75 1.75 0 0 0 12 12.25v-3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

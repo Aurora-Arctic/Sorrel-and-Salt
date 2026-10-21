@@ -1,48 +1,235 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A jar's row in the Edit Stock dialog (M9.9): the form's name with Remove at
-// its end, over the three compact amounts, so the bin takes nothing from the
-// amounts' line. A fieldset for the row's name, unboxed: the form's gap is
-// what sets one row from the next. Positioned for the bin.
-.stock-dialog__row {
-  position: relative;
+// The Edit Stock dialog (M9.9), option E: the coven's jars listed down the
+// left, the chosen jar's fields at full size on the right. A container of its
+// own, so it is the dialog's width and not the screen's that stacks the list
+// above the fields: below 30rem, two thirds is too narrow for the fields.
+.stock-dialog {
+  container: stock-dialog / inline-size;
+}
+
+// A container query styles what is inside the container, never the container
+// itself, so the grid is the box within. Its cells stretch to the row, so the
+// list's rule runs the height of the taller column: down past a short list
+// beside the fields, and down the fields' side of a long list. The dialog is
+// the `listed` size (Modal). A third of the body to the list and two to the
+// fields (the owner's call, 2026-10-20), so a long form name has room.
+.stock-dialog__columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: stretch;
+  gap: space(4);
+}
+
+.stock-dialog__list {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  min-width: 0;
+  padding-inline-end: space(4);
+  border-inline-end: 1px solid $hairline;
+}
+
+.stock-dialog__picks {
+  @include list-reset;
+
   display: flex;
   flex-direction: column;
   gap: space(1);
+}
+
+// A form in the list. Positioned for its badge, which sits beside the button
+// (a button of its own) at the end of the name's line, the top right (the
+// owner's call, 2026-10-20).
+.stock-dialog__pick {
+  position: relative;
+
+  > .icon-tip {
+    position: absolute;
+    inset-block-start: space(2);
+    inset-inline-end: space(2);
+  }
+}
+
+.stock-dialog__choose {
+  @include button-reset;
+
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  width: 100%;
+  padding: space(2);
+  padding-inline-end: calc(#{$control-height-compact} + #{space(2)});
+  border-radius: radius('control');
+  text-align: start;
+  // The pointer's answer at its own pace, not the theme's 400ms fade.
+  transition: background-color $motion-short ease-out;
+
+  // Every state in the accent's green, a step apart: a hovered form halfway
+  // to the chosen look, the chosen one a touch stronger under the pointer
+  // (the owner's call, 2026-10-20). Each hover names whether it is chosen,
+  // so neither rests on the other's order in the sheet; the grey
+  // `$fill-quiet` hover is gone.
+  &:hover:not([aria-current='true']) {
+    background-color: color-mix(in srgb, $accent 6%, transparent);
+  }
+
+  &[aria-current='true'] {
+    background-color: $fill-highlight;
+
+    &:hover {
+      background-color: color-mix(in srgb, $accent 18%, transparent);
+    }
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.stock-dialog__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  row-gap: space(2);
+  font-weight: 600;
+}
+
+// The space before a mark is its own margin rather than a column gap: the
+// spoken commas between the parts are flex items of no size, and a gap would
+// stand either side of each.
+.stock-dialog__edited,
+.stock-dialog__flag {
+  margin-inline-start: space(2);
+}
+
+.stock-dialog__amount,
+.stock-dialog__edited,
+.stock-dialog__new {
+  color: $text-muted;
+  font-size: type-size('caption');
+  font-weight: 400;
+}
+
+.stock-dialog__edited,
+.stock-dialog__new {
+  font-style: italic;
+}
+
+// Edited in the edit pencil's green (`icon-button-edit`), so the mark reads
+// as the edit it records (the owner's call, 2026-10-20).
+.stock-dialog__edited {
+  color: $accent;
+}
+
+// On the chosen form the accent is also its wash, and light-theme `$accent`
+// fell below 4.5:1 against it. The accent's hover ink is the same green a
+// step further from the ground in each theme (darker in light, lighter in
+// dark) and clears 6.39:1 in every state, so no new token (the owner's call,
+// 2026-10-20; claude-docs/components/stock-dialog.md, "Edited").
+.stock-dialog__choose[aria-current='true'] .stock-dialog__edited {
+  color: $accent-hover;
+}
+
+// The mark on a form the refused save named: drawn as a warning, read as
+// "Needs a Fix" in the list button's name.
+.stock-dialog__flag {
+  color: $secondary;
+  font-weight: 700;
+}
+
+// On its way out: struck through and muted until Save, or Undo.
+.stock-dialog__pick.is-removed .stock-dialog__choose {
+  color: $text-muted;
+}
+
+.stock-dialog__empty {
+  margin: 0;
+  color: $text-muted;
+}
+
+// Add Form and its Add button on one line, under the list.
+.stock-dialog__add {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  padding-block-start: space(3);
+  border-block-start: 1px dashed $hairline;
+
+  > .btn {
+    align-self: start;
+  }
+}
+
+.stock-dialog__detail {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  min-width: 0;
+}
+
+.stock-dialog__jar {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
+}
 
-  > .icon-tip {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
+// The form's name, Remove (or Undo) at the line's end.
+.stock-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
+}
+
+.stock-dialog__heading {
+  display: flex;
+  align-items: baseline;
+  gap: space(2);
+  margin: 0;
+}
+
+// Quantity, Unit and Low Stock At one under another, each the column's full
+// width (the owner's call, 2026-10-20).
+.stock-dialog__fields {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+
+  // As tall as a hint’s ⓘ whether or not the field has one, so Quantity,
+  // which has none, stands as far below the heading as the others below it.
+  .field__label-row {
+    min-height: $icon-size;
   }
 }
 
-// Floated, the legend leaves the fieldset's border and sits in its flow like
-// any child, so the bin's top is the name's. As tall as the bin, the name
-// centred against it, with room kept at its end.
-.stock-dialog__form {
-  display: flex;
-  float: inline-start;
-  align-items: center;
-  min-height: $control-height-compact;
-  padding: 0;
-  padding-inline-end: calc(#{$control-height-compact} + #{space(2)});
-  font-weight: 600;
+.stock-dialog__removed {
+  margin: 0;
+  color: $text-muted;
 }
 
-// Staged for removal: the form struck through and muted, Undo beside it.
-.stock-dialog__row.is-removed {
-  flex-direction: row;
-  align-items: center;
-  gap: space(3);
+// No form yet: the heading's line held empty, as tall as a jar's, which
+// Remove's button sets, so the shut fields stand where a jar's will.
+.stock-dialog__head.is-blank {
+  min-height: $icon-size;
+}
 
-  .stock-dialog__form {
+// A narrow dialog (a phone): the list stacks above the fields.
+
+@container stock-dialog (max-width: 30rem) {
+  .stock-dialog__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stock-dialog__list {
     padding-inline-end: 0;
-    color: $text-muted;
+    padding-block-end: space(4);
+    border-inline-end: 0;
+    border-block-end: 1px solid $hairline;
   }
 }

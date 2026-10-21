@@ -454,7 +454,11 @@ test(
       // The form held is not offered again.
       await expect(page.getByRole('option', { name: 'Herb', exact: true })).toHaveCount(0);
       await page.getByRole('option', { name: 'Oil', exact: true }).click();
+      // Picking a form adds nothing yet: Add does, and chooses it, its Quantity focused.
+      await expect(editor.jar('Oil').group).toHaveCount(0);
+      await editor.addButton.click();
       const oil = editor.jar('Oil');
+      await expect(oil.quantity).toBeFocused();
       await oil.quantity.fill('30');
       await oil.pickUnit('ml');
       await oil.threshold.fill('5');
@@ -469,6 +473,7 @@ test(
       // has closed, and the dialog is drawn from what the card was given.
       await expect(rowOf(list, 'Rosemary')).toContainText('Oil');
       await editor.open.click();
+      await editor.choose('Oil');
       await expect(editor.jar('Oil').quantity).toHaveValue('30');
       await expect(editor.addForm).toHaveCount(0);
       await editor.cancel.click();
@@ -477,6 +482,8 @@ test(
     await test.step('Remove is staged until Save, and Undo takes it back', async () => {
       const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
       await editor.open.click();
+      // The dialog opens on Herb, the first jar.
+      await editor.choose('Oil');
       const oil = editor.jar('Oil');
       await oil.remove.click();
       await expect(oil.undo).toBeVisible();
@@ -549,7 +556,7 @@ test(
       });
       await editor.save.click();
 
-      // The refusal is the form's own, said on its row.
+      // The refusal is the form's own, said on its jar, which is chosen to show it.
       await expect(editor.jar('Oil').group).toContainText('already holds this form');
       await expect(editor.dialog).toBeVisible();
       await expect(editor.jar('Oil').quantity).toHaveValue('12');
@@ -577,7 +584,12 @@ test(
 
       await expect(editor.dialog.getByRole('alert')).toBeVisible();
       await expect(editor.jar('Herb').quantity).toHaveValue('99');
-      await expect(row).not.toContainText('99');
+      // The card's own Herb line, not the dialog nested in the same `li`, whose
+      // list reads the 99 typed: the line still reading 0.5 kg is the proof no
+      // 99 reached the card, where it would read 99 kg in its place.
+      await expect(
+        row.getByRole('listitem').filter({ hasText: 'Herb' }).filter({ hasText: '0.5 kg' }),
+      ).toBeVisible();
       expect((await jarsOf(coven, 'Rosemary'))[0]).toMatchObject({ form: 'Herb', quantity: 0.5 });
       expect(await stillSameDocument(page)).toBe(true);
       await page.unrouteAll();
@@ -585,13 +597,13 @@ test(
       await page.getByRole('button', { name: 'Discard Changes' }).click();
     });
 
-    await test.step('Escape on the dialog over Quick Look closes only the dialog, and the pencil has the focus', async () => {
+    await test.step('Escape on the dialog over Quick Look closes only the dialog, and the Edit Stock button has the focus', async () => {
       await rowOf(list, 'Rosemary')
         .getByRole('link', { name: /^Quick Look Rosemary/ })
         .click();
       const details = page.getByRole('dialog', { name: 'Rosemary', exact: true });
       await expect(details).toBeVisible();
-      // The window carries the same pencil as the card.
+      // The window carries the same Edit Stock button as the card.
       const editor = stockEditor(details, 'Rosemary');
       await editor.open.click();
       await expect(editor.dialog).toBeVisible();
@@ -606,7 +618,7 @@ test(
       await expect(details).toHaveCount(0);
     });
 
-    await test.step('a viewer is offered no pencil, on the card or in Quick Look', async () => {
+    await test.step('a viewer is offered no Edit Stock button, on the card or in Quick Look', async () => {
       await signInAgainAs(page, coven.users.C);
       await page.goto(path);
       const row = rowOf(list, 'Rosemary');

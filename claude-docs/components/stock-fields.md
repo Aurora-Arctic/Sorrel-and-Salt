@@ -1,6 +1,6 @@
 # StockFields
 
-`src/components/StockFields/` — a jar's three amounts, Quantity, Unit and Low Stock At (the low-stock threshold), drawn inside whichever react-hook-form form holds a jar (M9.9). A row of the [`StockDialog`](stock-dialog.md) is the first user; M9.12's add dialog takes the same fields rather than writing its own.
+`src/components/StockFields/` — a jar's three amounts, Quantity, Unit and Low Stock At (the low-stock threshold), drawn inside whichever react-hook-form form holds a jar (M9.9). The chosen jar of the [`StockDialog`](stock-dialog.md) is the first user, at full size; M9.12's add dialog takes the same fields rather than writing its own.
 
 ## What it is
 
@@ -10,11 +10,11 @@ A fragment of three fields: they sit in the form's own gap like any fields, so t
 
 All optional (`StockFieldsProps`).
 
-| Prop     | What it does                                                                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prefix` | Where the three sit in the form's values, a row of a list: `rows.0`. Left out, at the top level, as the add dialog has them                                               |
-| `form`   | The row's form as the screen says it, passed to each field as `labelSuffix`, so the fields of two rows are never named alike: "Quantity, Flower" ([`field.md`](field.md)) |
-| `size`   | `compact` draws the three as compact fields on one row, wrapped in `.stock-fields--compact`. Left out, three full fields in the form's column                             |
+| Prop       | What it does                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prefix`   | Where the three sit in the form's values, a row of a list: `rows.0`. Left out, at the top level, as the add dialog has them                                               |
+| `form`     | The row's form as the screen says it, passed to each field as `labelSuffix`, so the fields of two rows are never named alike: "Quantity, Flower" ([`field.md`](field.md)) |
+| `disabled` | All three shut: the StockDialog's stand-in fields before a form is chosen                                                                                                 |
 
 The generic parameter, `StockFields<V>`, is the caller's form values: the prefix is a row of a list the type cannot follow, so `V` vouches for it.
 

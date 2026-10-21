@@ -16,7 +16,7 @@ export interface StockJar extends StockOfJar {
 export interface StockDialogProps {
   workspaceId: string;
   ingredientId: string;
-  /** What the coven calls the ingredient: the dialog's title and the pencil's name. */
+  /** What the coven calls the ingredient: the dialog's title and its button's name. */
   ingredientName: string;
   /** Every form the ingredient comes in, in the order the dialog offers them. */
   forms: readonly StockForm[];

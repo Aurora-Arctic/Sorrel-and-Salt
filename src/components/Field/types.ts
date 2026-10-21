@@ -9,12 +9,6 @@ export interface FieldProps {
    * once per row, so two rows' fields never share a name (M9.9's StockDialog).
    */
   labelSuffix?: string;
-  /**
-   * A size, not a look: `compact` draws the field shorter, its label and
-   * text at the caption size, for a row of fields that the full field would
-   * make tall (the StockDialog's jars, M9.9). Every other field is full size.
-   */
-  size?: 'compact';
   /** What the field is for, behind an info tip beside the label. */
   hint?: string;
   /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */
@@ -125,6 +119,8 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
    * want a search, the deities' traditions.
    */
   typeahead?: boolean;
+  /** Shut, for a field the form has no use for yet: the select-only box only. */
+  disabled?: boolean;
   deps?: FieldPath<V>[];
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;

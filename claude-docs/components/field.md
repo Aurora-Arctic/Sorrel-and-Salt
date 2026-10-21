@@ -134,7 +134,8 @@ Every field takes `FieldProps` (`types.ts`):
 | `note`        | Optional: a state the field is in, such as why it is shut, as a line beneath the label                                                                                                     |
 | `required`    | Optional: marked required beside its label, and to assistive technology                                                                                                                    |
 | `labelSuffix` | Optional: read after the label, out of sight ("Quantity, Flower"), and in the hint's tip name. For a field drawn once per row, so two rows' fields never share a name (M9.9's StockDialog) |
-| `size`        | Optional: `compact` draws the field shorter, its label and text at the caption size, for a row of fields the full size would make tall. A size, not a look: every other field is full size |
+
+There is no size prop: every field is full size. The one shorter field, the StockDialog's Add Form, wears the `.field--compact` class itself (`_primitives.scss`); the owner removed StockFields' compact rows, and Field's `size` with them, on 2026-10-20.
 
 `FieldShell` adds what `fieldDescription` returns (`controlId`, `labelId`,
 `hintId`, `noteId`, `errorId`, `error`), `children` (the control), `after`
@@ -161,7 +162,7 @@ as the field is left), `autoComplete` and `busy` (its text is being looked up: t
 never flashes it, and the input `aria-busy`; the name's duplicate check, the owner's
 call of 2026-10-18). `SelectField` adds `name`,
 `options` (each `{ value, label, icon?, disabled?, note? }`, a disabled one listed and not
-choosable, its `note` saying why), `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
+choosable, its `note` saying why), `placeholder`, `typeahead`, `disabled` (the select-only box only: Combobox's shut `ComboboxSelect`, for the StockDialog's stand-in Unit before a form is chosen), `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a
 set long enough to want a search: `GroupedValueForm`'s group, a category's or
 a form's Group and a deity's Tradition (MB.115). Its text

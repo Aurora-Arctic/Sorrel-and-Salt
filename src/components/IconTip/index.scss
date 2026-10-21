@@ -104,9 +104,10 @@
   @include icon-button-edit;
 }
 
-// The pencil in the theme's main text colour, the owner's call (M9.9, 2026-10-20),
-// in place of the accent green: `$text-primary` is chalk on the dark page and
-// the body text on the light one, where a pure white would vanish on a card.
+// A coven card foot's Edit and Annotate icons in the theme's main text colour, the owner's call
+// (M9.9, 2026-10-20), in place of the accent green, which its Edit Stock pencil keeps:
+// `$text-primary` is chalk on the dark page and the body text on the light one, where a
+// pure white would vanish on a card.
 // The hover and focus tint stays the edit pencil's.
 .icon-tip__edit--plain {
   &,

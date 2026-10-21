@@ -1,7 +1,8 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { Reopenable } from '../../../.ladle/reopenable';
+import StockDialog from '../StockDialog';
 import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
 import { detailsHeading, detailsMarks } from './details';
@@ -641,6 +642,55 @@ export const DetailsWithStock: Story = () => (
   />
 );
 DetailsWithStock.meta = { iframed: true };
+
+// The Edit Stock dialog opened from the window's own stock button (M9.9), as
+// on a coven's list: a modal over the details modal, which must sit centred
+// on the screen as the card's does, not inside the window it was opened from.
+const JARRED = STOCKED.variants.map(({ variant }) => ({
+  variantId: variant.id,
+  label: variant.form.replace(/\b\w/g, (c) => c.toUpperCase()),
+}));
+const PressStock = (): null => {
+  useEffect(() => {
+    document.querySelector<HTMLButtonElement>('button[aria-label^="Edit Stock"]')?.click();
+  }, []);
+  return null;
+};
+export const DetailsWithStockDialog: Story = () => (
+  <>
+    <Details
+      detail={STOCKED}
+      listHref={COVEN_LIST}
+      pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+      actions={
+        <StockDialog
+          workspaceId="00000000-0000-4000-8000-0000000000c1"
+          ingredientId={OWN.entry.id}
+          ingredientName="Testwort"
+          forms={JARRED}
+          jars={[
+            {
+              id: '00000000-0000-4000-8000-0000000000e1',
+              variantId: OIL,
+              quantity: 4,
+              unit: 'ml',
+              threshold: 10,
+            },
+            {
+              id: '00000000-0000-4000-8000-0000000000e2',
+              variantId: ROOT,
+              quantity: 0,
+              unit: 'g',
+              threshold: null,
+            },
+          ]}
+        />
+      }
+    />
+    <PressStock />
+  </>
+);
+DetailsWithStockDialog.meta = { iframed: true };
 
 // From the public compendium, to anyone but a curator: the same summary, and
 // only the page link.

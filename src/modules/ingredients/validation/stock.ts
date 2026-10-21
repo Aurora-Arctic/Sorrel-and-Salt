@@ -24,7 +24,7 @@ export const StockInput = z.object({
   quantityOnHand: amount('Quantity'),
   // The units module's list, never a second one here.
   unit: z.enum(UNITS, { error: 'Choose a unit from the list' }).nullish(),
-  lowStockThreshold: amount('Low-stock threshold'),
+  lowStockThreshold: amount('Low Stock At'),
   source: optionalText(),
   acquiredDate: CalendarDay.nullish(),
 });
