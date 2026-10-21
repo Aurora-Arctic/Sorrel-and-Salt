@@ -94,6 +94,9 @@ const quickLookOf = (match: { slug: string; name: string }) => ({
   heading: { title: match.name },
 });
 
+/** A compendium match's +, named as the card's plus is (M12.48). */
+const ADD = /^Add to My Ingredients: /;
+
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 /** Types into the Name box, the one field here. */
 const type = (value: string) => typeIn(name(), value);
@@ -437,11 +440,11 @@ describe('NameField, with useDuplicateWarning', () => {
     await emptied();
   });
 
-  // M12.20: an exact compendium name is a question, a near one a list, Use It on both.
+  // M12.20: an exact compendium name is a question, a near one a list, the + on both (M12.48).
   describe('a compendium entry of the very name typed', () => {
     const CLAW = { ...TOMENTOSA, isGlobal: true };
 
-    it('holds the save on a question, a row per entry with its link and Use It, and Create Anyway', async () => {
+    it('holds the save on a question, a row per entry with its link and its +, and Create Anyway', async () => {
       const sent = renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
@@ -451,19 +454,23 @@ describe('NameField, with useDuplicateWarning', () => {
 
       const row = await within(warning()).findByRole('listitem');
       expect(within(row).getByRole('link')).toHaveAttribute('href', duplicateHref(CLAW));
-      expect(within(row).getByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      // The +, named as the card's plus is, and the row's only button.
+      expect(within(row).getByRole('button')).toHaveAccessibleName(
+        "Add to My Ingredients: Cat's Claw, Uncaria tomentosa",
+      );
+      expect(within(row).queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
       expect(createAnyway()).toBeInTheDocument();
       expect(sent).not.toHaveBeenCalled();
     });
 
-    it('hands the entry chosen to Use It, and sends nothing itself', async () => {
+    it('hands the entry whose + was pressed to the form, and sends nothing itself', async () => {
       const sent = renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
       type("Cat's Claw");
       save();
 
-      press(await screen.findByRole('button', { name: /^Use It/ }));
+      press(await screen.findByRole('button', { name: ADD }));
 
       expect(sent.used).toHaveBeenCalledWith(expect.objectContaining({ id: CLAW.id }));
       expect(sent).not.toHaveBeenCalled();
@@ -483,7 +490,7 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(sent).toHaveBeenCalledWith("Cat's Claw");
     });
 
-    it('offers Open It and no Use It for an entry the cupboard already holds', async () => {
+    it('offers Open It and no + for an entry the cupboard already holds', async () => {
       renderName();
       const held = { ...CLAW, inCupboard: true };
       offerDuplicates([held]);
@@ -495,10 +502,10 @@ describe('NameField, with useDuplicateWarning', () => {
         'href',
         duplicateHref(held),
       );
-      expect(screen.queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: ADD })).not.toBeInTheDocument();
     });
 
-    it('lists a near compendium match as a row with its link and Use It, and asks no question', async () => {
+    it('lists a near compendium match as a row with its link and its +, and asks no question', async () => {
       renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([]);
@@ -510,19 +517,19 @@ describe('NameField, with useDuplicateWarning', () => {
         'href',
         duplicateHref(CLAW),
       );
-      expect(within(row).getByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(within(row).getByRole('button', { name: ADD })).toBeInTheDocument();
       expect(name()).not.toBeInvalid();
       expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
     });
 
-    it("offers no Use It beside a coven's own entry", async () => {
+    it("offers no + beside a coven's own entry", async () => {
       renderName();
       offerDuplicates([MOCKLEAF]);
       type('Mockleaff');
       settle();
 
       await screen.findByRole('link', { name: /Mockleaf/ });
-      expect(screen.queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: ADD })).not.toBeInTheDocument();
     });
   });
 
@@ -552,7 +559,7 @@ describe('NameField, with useDuplicateWarning', () => {
       // Its own entry and the compendium entry it has used, in the answer's order.
       expect(titlesIn(coven!)).toEqual(['Mockleaf', "Cat's Claw (Felis catus)"]);
       expect(titlesIn(compendium!)).toEqual(["Cat's Claw (Uncaria tomentosa)"]);
-      expect(within(compendium!).getByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(within(compendium!).getByRole('button', { name: ADD })).toBeInTheDocument();
       expect(within(coven!).getByRole('link', { name: /^Open It/ })).toBeInTheDocument();
       // The coven's first, each named by a heading beneath the form's section headings.
       expect(

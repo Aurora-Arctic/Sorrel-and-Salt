@@ -17,18 +17,23 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
-import { MysticEyeIcon } from '../IconTip';
+import IconTip, { MysticEyeIcon, PlusIcon } from '../IconTip';
 import { cardName } from '../IngredientCard/card-name';
 import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
+// The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
+// add where this one hands the entry to the form.
+import '../AddIcon/index.scss';
 
 // Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
 // the typing settles, on the debounce the other lookups wait on, and each
 // near match is listed beneath the field by its label and formal name, linked
-// to its entry, with M12.20's Use It or Open It at the row's right for a
-// compendium entry. The list is a list, one match a row, never a sentence
-// with buttons run into it (the owner's call at the cupboard review). It has
+// to its entry, with a + at the row's right for a compendium entry the coven
+// does not hold, which adds it to the coven the form is adding to (M12.48, in
+// place of M12.20's Use It), and M12.20's Open It for one it holds. The list
+// is a list, one match a row, never a sentence with buttons run into it (the
+// owner's call at the cupboard review). It has
 // to be answered: a save asks about the very name it is sending, settled or
 // not, and while a match shows the save is held, the warning turns to an
 // error on the name, and the focus goes to Create Anyway, which sets the
@@ -619,9 +624,10 @@ export function NameField({
   /**
    * What a match offers. Its Quick Look where the page under the form has
    * details to open (the admin's form, every match being the compendium's;
-   * the owner's call). Otherwise, for a compendium match: Use It, which puts
-   * it in the cupboard, or Open It, its coven page, once the cupboard holds
-   * it. Nothing for a coven's own entry, or where neither applies.
+   * the owner's call). Otherwise, for a compendium match: the +, which puts
+   * it in the cupboard the form is adding to, with no menu of covens (M12.48,
+   * the owner's call), or Open It, its coven page, once the cupboard holds it.
+   * Nothing for a coven's own entry, or where neither applies.
    */
   const choiceFor = (match: Duplicate): Choice | null => {
     const look = quickLookOf?.(match);
@@ -636,19 +642,33 @@ export function NameField({
         shape: 'icon',
       };
     if (!onUse || !match.isGlobal) return null;
-    const name = <span className="visually-hidden"> {titleOf(match)}</span>;
-    const verb = match.inCupboard ? 'Open It' : 'Use It';
+    if (!match.inCupboard) {
+      // Named as the card's plus is, "Add to My Ingredients: Name, Formal".
+      const label = `Add to My Ingredients: ${cardName(match.name, match.canonicalName)}`;
+      return {
+        control: (
+          <IconTip tip={label}>
+            <button type="button" className="add-icon" onClick={() => onUse(match)}>
+              <PlusIcon />
+              <span className="visually-hidden">{label}</span>
+            </button>
+          </IconTip>
+        ),
+        ghost: (
+          <span className="add-icon">
+            <PlusIcon />
+          </span>
+        ),
+        shape: 'icon',
+      };
+    }
     return {
-      control: match.inCupboard ? (
+      control: (
         <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
-          Open It{name}
+          Open It<span className="visually-hidden"> {titleOf(match)}</span>
         </a>
-      ) : (
-        <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
-          Use It{name}
-        </button>
       ),
-      ghost: <span className="btn btn--quiet btn--small">{verb}</span>,
+      ghost: <span className="btn btn--quiet btn--small">Open It</span>,
       shape: 'button',
     };
   };

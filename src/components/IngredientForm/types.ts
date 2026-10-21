@@ -616,7 +616,7 @@ export interface NameFieldProps {
   warning: DuplicateWarning;
   /** Where a match links: a coven's ingredient page, or the admin's compendium modal. */
   hrefOf: (match: Duplicate) => string;
-  /** Puts a compendium match in the cupboard (Use It); left out where there is no cupboard, the admin's, and no match offers it. */
+  /** Puts a compendium match in the cupboard (its +, M12.48; once Use It); left out where there is no cupboard, the admin's, and no match offers it. */
   onUse?: (match: Duplicate) => void;
   /**
    * A match's Quick Look, the details its list opens over the form (the owner's

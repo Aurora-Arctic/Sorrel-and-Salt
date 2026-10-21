@@ -1117,7 +1117,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // M12.20: Use It, as only the whole form sends it.
+  // M12.20: the + (M12.48's, once Use It), as only the whole form sends it.
   describe('using a compendium entry of the name typed', () => {
     const CLAW: DuplicateNode = {
       id: 'claw-1',
@@ -1155,7 +1155,7 @@ describe('IngredientForm', () => {
       type('Name', 'Porch Claw');
       type('Description', 'Dried from the porch.');
       save();
-      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+      fireEvent.click(await screen.findByRole('button', { name: /^Add to My Ingredients: / }));
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(adds).toEqual([
@@ -1180,7 +1180,7 @@ describe('IngredientForm', () => {
 
       type('Name', "  cat's claw ");
       save();
-      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+      fireEvent.click(await screen.findByRole('button', { name: /^Add to My Ingredients: / }));
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(adds[0].input?.label).toBeUndefined();

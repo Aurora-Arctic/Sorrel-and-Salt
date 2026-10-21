@@ -122,7 +122,8 @@ const UpdateWorkspaceIngredientDocument = graphql(`
   }
 `);
 
-// Use It (M12.20): the compendium entry goes into the cupboard, no jar with it.
+// A match's + (M12.20's Use It, an icon since M12.48): the compendium entry goes
+// into the cupboard, no jar with it.
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntryFromForm(
     $workspaceId: ID!
@@ -473,7 +474,7 @@ const IngredientForm = ({
   };
 
   /**
-   * Use It on a compendium match: the typed name is the coven's label only
+   * A compendium match's +: the typed name is the coven's label only
    * when it differs from the entry's, and what else was typed rides as the
    * coven's overrides. The page the entry is in opens, as a save's does.
    */

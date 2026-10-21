@@ -282,7 +282,7 @@ $skeleton-fade: 300ms;
     inset-block-start: space(3);
   }
 
-  // One match a row, its title at the left and its Use It or Open It at the
+  // One match a row, its title at the left and its +, Open It or Quick Look at the
   // right, rather than buttons run into a sentence (the owner's call at the
   // cupboard review).
   .ingredient-form__matches {
@@ -354,7 +354,8 @@ $skeleton-fade: 300ms;
     // Another name's answer on its way: each row the answer will replace
     // cross-fades to the skeleton's shapes (`skeleton-shape`, _mixins.scss),
     // laid over the row, a bar where the title was and, where the row had a
-    // Use It, a bar in the small button's own padding, border and type, so
+    // control, its shape: a bar in the small button's own padding, border and
+    // type for Open It, an icon's box for a + or a Quick Look, so
     // the row keeps its height and nothing jumps when the answer lands. The
     // fade in waits $skeleton-delay, so an answer back sooner never shows the
     // shapes at all, and the fade out is as slow, so a late one never flashes
@@ -525,7 +526,7 @@ $skeleton-fade: 300ms;
     }
 
     // The ◆ centred on the row, not on a line of text: a row here is as tall
-    // as its Use It, its title centred in it. The row is the li's body, which
+    // as its control, its title centred in it. The row is the li's body, which
     // after the first row starts space(1) down (the rule above), so the
     // centre moves down half that.
     li::before {

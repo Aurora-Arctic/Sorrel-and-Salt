@@ -1124,12 +1124,13 @@ its own rows (`useSlidingRows`, once per list) and opens and closes by
 height round them, 0fr to 1fr as the region does, so a heading never stands
 over an emptied list. The sentence above both is unchanged, and the region's
 `aria-describedby` still covers the whole block. The compendium's form has
-no coven, so it draws one plain list with no headings. Use It never needs to
+no coven, so it draws one plain list with no headings. The + never needs to
 move a row from one group to the other: it closes the modal and routes to
 the entry's coven page. While another name's answer is on
 its way, each row stands as the skeleton's shape (`skeleton-shape`,
 `_mixins.scss`, as a tab's list does), a bar for the title and one in the
-small button's own size where the row had a Use It, so the box keeps its
+small button's own size where the row had an Open It, or an icon's box where
+it had a + or a Quick Look, so the box keeps its
 height and nothing jumps when the answer lands (the owner's call over a
 spinner, 2026-10-18). Row and shapes both stay mounted and cross-fade: the
 shapes wait 200ms before fading in over 300ms, so an answer back sooner never
@@ -1159,7 +1160,7 @@ the facet panel opens, while the notice fades in, and closes the same way
 round the last rows as they fade, so neither the first warning nor the last
 lands or leaves outright (the owner's calls). A list rather than a
 sentence, since the owner found the sentence with buttons run into it
-unreadable at the cupboard review (2026-10-18); a compendium match's Use It
+unreadable at the cupboard review (2026-10-18); a compendium match's +
 or Open It (below) sits at the right of its row. Each match is a link named
 by its label and its formal name, since the label alone can name five
 plants; one with no formal name shows its label. Each links where `duplicateHref` says — the admin's
@@ -1180,21 +1181,25 @@ compendium entries bearing the typed name exactly, case aside, on the formal
 name too. If any come back that the person has not set aside, the save waits
 and the notice reads "The compendium already has an entry of this name."
 ("entries", with several), over the same list: each row the entry's link
-with **Use It** at its right, or **Open It**, a link to its coven page, where
+with a **+** at its right (M12.48, the owner's call, in place of M12.20's Use
+It button): an icon button in the card's plus's look (`add-icon`,
+[`add-icon.md`](add-icon.md)), named "Add to My Ingredients: " and the
+entry's label and formal name, as the card's plus is, which adds the entry to
+the coven the form is adding to, with no menu of covens. Or **Open It**, a link to its coven page, where
 the cupboard already holds it, and one **Create Anyway** beneath the list (the
 owner's word for both lists, 2026-10-18; M12.20 had named the question's Add
 Our Own). The
 block's id, the sentence and the list together, is what the button and the
 field are described by, so a focus landing on it still hears the names. It sets
 the entries aside and takes the focus the way the warning's does, so the next
-Save makes the coven's own entry as before. Use It calls `addCupboardEntry`
+Save makes the coven's own entry as before. The + calls `addCupboardEntry`
 (no jar, no form) and sends the typed name as `label` only when it differs
 from the entry's own name, string for string, plus whichever of the
 description, safety notes, elements, celestial bodies, zodiac signs and
 colours were filled as the coven's overrides. It then reports the entry
 through `onSaved` as `'open'`, so the modal closes and the page routes to the
 entry's coven page; a refused label lands beside Name. A near match in the
-did-you-mean list gets the same Use It or Open It at the right of its row when
+did-you-mean list gets the same + or Open It at the right of its row when
 it is a compendium entry (`isGlobal`), and none when it is the coven's own
 (the owner's call, 2026-10-18). Both need `onUse`, which the compendium's
 form leaves out, since it has no cupboard. Viewers never reach the modal.
@@ -1209,7 +1214,7 @@ compendium's form every match is a compendium entry, so each row gets the
 Quick Look eye (`DetailsLink`, [`ingredient-entry.md`](ingredient-entry.md))
 at its right, named "Quick Look" and the entry's label and formal name, as a
 list row's eye is. Its name still links the entry in a new tab, and there is
-no Use It. The form takes `quickLookOf`, which `CompendiumDialog` builds when
+no +. The form takes `quickLookOf`, which `CompendiumDialog` builds when
 the page passes `lookUnder`, the open form's `?new` or `?edit=<slug>`: the
 address is the list with `?entry=<slug>` and that form's parameter, so the
 details open over the form in their own modal place and close back to it. The

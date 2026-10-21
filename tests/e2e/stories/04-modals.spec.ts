@@ -304,7 +304,7 @@ test(
     });
 
     // M12.20: a name the compendium already bears is a question, not a copy.
-    await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, Use It puts the entry in the cupboard with the typed label", async () => {
+    await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, its + puts the entry in the cupboard with the typed label", async () => {
       await withSql(async (sql) => {
         for (const name of ['Ostrelvine', 'Kaelmoss']) {
           await insertIngredient(
@@ -325,7 +325,9 @@ test(
 
       const own = dialog.getByRole('button', { name: 'Create Anyway', exact: true });
       await expect(own).toBeVisible();
-      await expect(dialog.getByRole('button', { name: /^Use It/ })).toBeVisible();
+      await expect(
+        dialog.getByRole('button', { name: /^Add to My Ingredients: Ostrelvine/ }),
+      ).toBeVisible();
       // The save waits on the question: nothing was written.
       expect(await savedRows(coven.id, 'Ostrelvine')).toHaveLength(0);
       await assertNoAccessibilityViolations(page);
@@ -338,7 +340,7 @@ test(
       dialog = await openAddIngredient(page);
       await nameField(dialog).fill('Kaelmossia testalis');
       await saveIngredient(dialog).click();
-      await dialog.getByRole('button', { name: /^Use It/ }).click();
+      await dialog.getByRole('button', { name: /^Add to My Ingredients: Kaelmoss/ }).click();
 
       await expect(dialog).toHaveCount(0);
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}`));
