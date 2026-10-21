@@ -71,11 +71,11 @@ function headingOf({
       {more}
     </>
   );
-  // The last edit stands right-aligned just above the buttons (the owner's call, 2026-10-21).
+  // The last edit stands left-aligned just below the buttons (the owner's call, 2026-10-21).
   const actions = lastEdit ? (
     <div className="ingredient-details-actions">
-      <LastEdit by={lastEdit.by} at={lastEdit.at} />
       {buttons && <div className="ingredient-details-actions__row">{buttons}</div>}
+      <LastEdit by={lastEdit.by} at={lastEdit.at} />
     </div>
   ) : (
     buttons
