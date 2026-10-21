@@ -17,10 +17,11 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
-import IconTip, { MysticEyeIcon, PlusIcon } from '../IconTip';
+import IconTip, { MysticEyeIcon, PlusIcon, QuickLookButton } from '../IconTip';
 import { cardName } from '../IngredientCard/card-name';
 import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
+import { DuplicateQuickLook } from './quick-look';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 // The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
 // add where this one hands the entry to the form.
@@ -31,7 +32,9 @@ import '../AddIcon/index.scss';
 // near match is listed beneath the field by its label and formal name, linked
 // to its entry, with a + at the row's right for a compendium entry the coven
 // does not hold, which adds it to the coven the form is adding to (M12.48, in
-// place of M12.20's Use It), and M12.20's Open It for one it holds. The list
+// place of M12.20's Use It), and for one it holds, its own entries too, the
+// eye, whose Quick Look opens the entry's details over the form (M12.48, in
+// place of M12.20's Open It). The list
 // is a list, one match a row, never a sentence with buttons run into it (the
 // owner's call at the cupboard review). It has
 // to be answered: a save asks about the very name it is sending, settled or
@@ -593,9 +596,18 @@ export function NameField({
   hrefOf,
   onUse,
   quickLookOf,
+  workspaceId,
   holds = true,
   ref,
 }: NameFieldProps): ReactElement {
+  // The held match whose Quick Look is open over the form.
+  const [looking, setLooking] = useState<Duplicate | null>(null);
+  const region = useRef<HTMLDivElement>(null);
+  /** The Name box, through the form, as Create Anyway reaches it. */
+  const nameInput = (): HTMLElement | null => {
+    const field = region.current?.closest('form')?.elements.namedItem('name');
+    return field instanceof HTMLInputElement ? field : null;
+  };
   const { shown, blocking, exact, pending } = warning;
   // The save is held on a compendium entry of the very name typed: a question
   // rather than a warning, answered by using the entry or creating anyway.
@@ -624,16 +636,33 @@ export function NameField({
   /**
    * What a match offers. Its Quick Look where the page under the form has
    * details to open (the admin's form, every match being the compendium's;
-   * the owner's call). Otherwise, for a compendium match: the +, which puts
-   * it in the cupboard the form is adding to, with no menu of covens (M12.48,
-   * the owner's call), or Open It, its coven page, once the cupboard holds it.
-   * Nothing for a coven's own entry, or where neither applies.
+   * the owner's call). Otherwise, for a match the coven holds, its own or a compendium entry it
+   * has used, the eye, which opens its details over the form, read in the page
+   * so nothing typed is lost (M12.48, the owner's call, in place of Open It).
+   * For a compendium match it does not hold: the +, which puts it in the
+   * cupboard the form is adding to, with no menu of covens (M12.48, the
+   * owner's call). Nothing where neither applies.
    */
   const choiceFor = (match: Duplicate): Choice | null => {
     const look = quickLookOf?.(match);
     if (look)
       return {
         control: <DetailsLink opens={look} name={cardName(match.name, match.canonicalName)} />,
+        ghost: (
+          <span className="icon-tip__look">
+            <MysticEyeIcon />
+          </span>
+        ),
+        shape: 'icon',
+      };
+    if (workspaceId !== undefined && isHeld(match))
+      return {
+        control: (
+          <QuickLookButton
+            name={cardName(match.name, match.canonicalName)}
+            onClick={() => setLooking(match)}
+          />
+        ),
         ghost: (
           <span className="icon-tip__look">
             <MysticEyeIcon />
@@ -662,15 +691,7 @@ export function NameField({
         shape: 'icon',
       };
     }
-    return {
-      control: (
-        <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
-          Open It<span className="visually-hidden"> {titleOf(match)}</span>
-        </a>
-      ),
-      ghost: <span className="btn btn--quiet btn--small">Open It</span>,
-      shape: 'button',
-    };
+    return null;
   };
 
   /** A match's title, linked to its entry in a new tab. */
@@ -695,36 +716,38 @@ export function NameField({
   };
 
   return (
-    <TextField<IngredientFormValues>
-      name="name"
-      label="Name"
-      autoComplete="off"
-      required
-      placeholder="Add a name"
-      describedBy={shown.length > 0 ? warningId : undefined}
-      invalid={blocking}
-      // The one sign of a lookup out: the region below draws nothing until an
-      // answer has something to show (the owner's call, 2026-10-18).
-      busy={pending}
-      after={
-        // Always in the page, as a live region must be to be heard: the
-        // warning arrives after the typing, and nothing else says so. A
-        // status written out, where an `<output>` would hold phrasing
-        // content alone, and the notice inside takes no role of its own, so
-        // it is announced once (claude-docs/components/notice.md).
-        <div
-          role="status"
-          className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
-          aria-label="Possible duplicates"
-          aria-busy={pending || undefined}
-        >
-          {/* The region opens by height round its notice, which fades in
+    <>
+      <TextField<IngredientFormValues>
+        name="name"
+        label="Name"
+        autoComplete="off"
+        required
+        placeholder="Add a name"
+        describedBy={shown.length > 0 ? warningId : undefined}
+        invalid={blocking}
+        // The one sign of a lookup out: the region below draws nothing until an
+        // answer has something to show (the owner's call, 2026-10-18).
+        busy={pending}
+        after={
+          // Always in the page, as a live region must be to be heard: the
+          // warning arrives after the typing, and nothing else says so. A
+          // status written out, where an `<output>` would hold phrasing
+          // content alone, and the notice inside takes no role of its own, so
+          // it is announced once (claude-docs/components/notice.md).
+          <div
+            ref={region}
+            role="status"
+            className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
+            aria-label="Possible duplicates"
+            aria-busy={pending || undefined}
+          >
+            {/* The region opens by height round its notice, which fades in
               (the owner's call, 2026-10-18: the first warning landed too
               abruptly). */}
-          <div className="ingredient-form__duplicates-inner">
-            {drawn && (
-              <Notice kind={blocking ? 'error' : 'warn'} block inRegion>
-                {/* The id sits on the whole block, sentence and list, so the
+            <div className="ingredient-form__duplicates-inner">
+              {drawn && (
+                <Notice kind={blocking ? 'error' : 'warn'} block inRegion>
+                  {/* The id sits on the whole block, sentence and list, so the
                   button described by it is read with the names. Plain anchors
                   rather than <Link>, since the caller hands back a plain
                   string, not a typed route; each in a new tab, so the form and
@@ -734,45 +757,59 @@ export function NameField({
                   list wears them, after a short delay, so an answer back fast
                   never flashes them and nothing moves (the owner's calls,
                   2026-10-18, over a spinner). Both stay mounted for the fade. */}
-                <div id={warningId} className="ingredient-form__matches">
-                  <p>{sentenceFor(blocking, asking, exact.length)}</p>
-                  <MatchList
-                    slide={coven}
-                    list={covenList}
-                    heading={grouped ? 'In This Coven' : undefined}
-                    choiceFor={choiceFor}
-                    linkTo={linkTo}
-                  />
-                  <MatchList
-                    slide={compendium}
-                    list={compendiumList}
-                    heading="In the Compendium"
-                    choiceFor={choiceFor}
-                    linkTo={linkTo}
-                  />
-                </div>
-                {/* One Create Anyway under either list (the owner's call,
+                  <div id={warningId} className="ingredient-form__matches">
+                    <p>{sentenceFor(blocking, asking, exact.length)}</p>
+                    <MatchList
+                      slide={coven}
+                      list={covenList}
+                      heading={grouped ? 'In This Coven' : undefined}
+                      choiceFor={choiceFor}
+                      linkTo={linkTo}
+                    />
+                    <MatchList
+                      slide={compendium}
+                      list={compendiumList}
+                      heading="In the Compendium"
+                      choiceFor={choiceFor}
+                      linkTo={linkTo}
+                    />
+                  </div>
+                  {/* One Create Anyway under either list (the owner's call,
                   2026-10-18: the question's own button was Add Our Own), in
                   the accent outline at the medium size. Described by the
                   warning: a save that stops here moves the focus to it, and
                   the focus should say why. None on an edit's warning, whose
                   save is never held. */}
-                {(asking || holds) && (
-                  <button
-                    ref={ref}
-                    type="button"
-                    className="btn btn--medium"
-                    aria-describedby={warningId}
-                    onClick={dismiss}
-                  >
-                    Create Anyway
-                  </button>
-                )}
-              </Notice>
-            )}
+                  {(asking || holds) && (
+                    <button
+                      ref={ref}
+                      type="button"
+                      className="btn btn--medium"
+                      aria-describedby={warningId}
+                      onClick={dismiss}
+                    >
+                      Create Anyway
+                    </button>
+                  )}
+                </Notice>
+              )}
+            </div>
           </div>
-        </div>
-      }
-    />
+        }
+      />
+      {/* Outside the live region, which would read the details out as a status.
+        The focus goes back to the eye that opened it, or, with its row gone
+        under a new answer, to the name. */}
+      {looking && workspaceId !== undefined && (
+        <DuplicateQuickLook
+          id={looking.id}
+          entry={looking}
+          workspaceId={workspaceId}
+          pageHref={hrefOf(looking)}
+          onClose={() => setLooking(null)}
+          returnTo={nameInput}
+        />
+      )}
+    </>
   );
 }

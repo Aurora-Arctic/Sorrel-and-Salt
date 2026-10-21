@@ -637,6 +637,7 @@ const IngredientForm = ({
                         warning={duplicates}
                         hrefOf={duplicateHref}
                         onUse={workspaceId === null ? undefined : useEntry}
+                        workspaceId={workspaceId ?? undefined}
                         quickLookOf={quickLookOf}
                         holds={!editing}
                         ref={createAnyway}
