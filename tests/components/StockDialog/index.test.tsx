@@ -520,6 +520,9 @@ describe('StockDialog', () => {
       'true',
     );
     expect(within(blank).queryByRole('button', { name: /^Remove/ })).toBeNull();
+    // The placeholder where the form's name will go is for the eye alone: the group is named and
+    // described by its legend and hint, and no heading is announced.
+    expect(within(blank).queryByRole('heading')).toBeNull();
     expect(save()).toBeDisabled();
     fireEvent.click(addForm()!);
     expect(offered()).toEqual(['Flower', 'Oil', 'Resin']);

@@ -189,9 +189,13 @@ function NoJar(): ReactElement {
         <p id={`${id}-why`} className="visually-hidden">
           Add a form to enter its stock.
         </p>
-        {/* The heading's line, kept so the fields stand where a jar's will. */}
+        {/* A dashed "Form" where the form's name will go, so the fields stand where a jar's will
+            and the eye is told what the space is for. Hidden from a screen reader: the legend
+            above already names the state. */}
         <div className="stock-dialog__head is-blank" aria-hidden="true">
-          <h3 className="stock-dialog__heading">{'\u00a0'}</h3>
+          <h3 className="stock-dialog__heading">
+            <span className="stock-dialog__placeholder">Form</span>
+          </h3>
         </div>
         <div className="stock-dialog__fields">
           <StockFields disabled />
