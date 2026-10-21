@@ -42,10 +42,6 @@ const SOURCE_LABELS = { local: 'Local', compendium: 'Compendium' } as const;
 /** The toxic strip's two settings as the facets name them, and what each says. */
 const TOXIC_LABELS = { toxic: 'Toxic', not_toxic: 'Not Toxic' } as const;
 
-/** Most entries first, then by label, so a tie reads alphabetically whatever order the ids came in. */
-const byCountThenLabel = (a: FacetChoice, b: FacetChoice): number =>
-  b.count - a.count || a.label.localeCompare(b.label);
-
 /** Counts that carry no vocabulary of their own: the value is the label. */
 const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: value, count });
 
@@ -83,30 +79,24 @@ export function compendiumFacetCounts(
   { formIcons, deities, categories }: FacetVocabularies,
 ): CompendiumFacetCounts {
   return {
-    forms: facets.forms
-      .map(({ value, count }): FormFacetChoice => ({
-        value,
-        label: formLabel(value),
-        count,
-        icon: formIcons.get(value.toLocaleLowerCase()) ?? null,
-      }))
-      .sort(byCountThenLabel),
-    deities: facets.deities
-      .flatMap(({ value, count }): DeityFacetChoice[] => {
-        const deity = deities.get(value);
-        return deity
-          ? [{ value: deity.slug, label: deity.name, count, tradition: deity.tradition }]
-          : [];
-      })
-      .sort((a, b) => byCountThenLabel(a, b) || a.tradition.localeCompare(b.tradition)),
-    categories: facets.categories
-      .flatMap(({ value, count }): CategoryFacetChoice[] => {
-        const category = categories.get(value);
-        return category
-          ? [{ value: category.slug, label: category.name, count, group: category.group }]
-          : [];
-      })
-      .sort(byCountThenLabel),
+    forms: facets.forms.map(({ value, count }): FormFacetChoice => ({
+      value,
+      label: formLabel(value),
+      count,
+      icon: formIcons.get(value.toLocaleLowerCase()) ?? null,
+    })),
+    deities: facets.deities.flatMap(({ value, count }): DeityFacetChoice[] => {
+      const deity = deities.get(value);
+      return deity
+        ? [{ value: deity.slug, label: deity.name, count, tradition: deity.tradition }]
+        : [];
+    }),
+    categories: facets.categories.flatMap(({ value, count }): CategoryFacetChoice[] => {
+      const category = categories.get(value);
+      return category
+        ? [{ value: category.slug, label: category.name, count, group: category.group }]
+        : [];
+    }),
     zodiac: facets.zodiacSigns.map(named),
     celestialBodies: facets.celestialBodies.map(named),
     elements: facets.elements.map(({ value, count }) => ({

@@ -15,8 +15,6 @@ import './index.scss';
 // ingredients filter. Nothing can be typed in as a category, so there is no
 // Add and no typed row (claude-docs/components/category-picker.md).
 
-const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
-
 /**
  * The rows the box offers for `text`: the categories not yet picked whose
  * name or group name holds it, under their groups, both alphabetical. Keyed by id, since
@@ -35,7 +33,6 @@ function optionsFor(
         !(hideZeros && category.count === 0) &&
         matchesLabelOrGroup(category.name, category.group.name, text),
     )
-    .sort((a, b) => byName(a.group, b.group) || byName(a, b))
     .map((category) => {
       return {
         value: category.name,

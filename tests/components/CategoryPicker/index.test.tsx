@@ -40,13 +40,14 @@ const category = (
   description?: string,
 ): PickerCategory => ({ id, name, group, description });
 
-// Out of order on purpose, groups and names both.
+// In the order the vocabulary read gives them, groups and names alphabetical
+// (M12.52): the picker keeps the order it is given.
 const CATEGORIES: PickerCategory[] = [
-  category('c-zz', 'Zestwort', zanthic),
+  category('c-cn', 'Cinderfix', ashen),
+  category('c-tc', 'Testcraft', fixtureWard),
   category('c-tw', 'Testward', fixtureWard, 'Guards nothing in particular.'),
   category('c-ab', 'Ablefix', zanthic),
-  category('c-tc', 'Testcraft', fixtureWard),
-  category('c-cn', 'Cinderfix', ashen),
+  category('c-zz', 'Zestwort', zanthic),
 ];
 
 const PROPS: CategoryPickerProps = {
@@ -90,8 +91,19 @@ describe('CategoryPicker', () => {
     expect(box()).toHaveAccessibleDescription('What it is used for.');
   });
 
-  it('lists every category under its group, groups and names alphabetical, a novel group included', () => {
-    renderPicker();
+  // M12.52: the order is the read's, sorted in SQL, so the picker sorts
+  // nothing. Groups and names here run against the alphabet, so a re-sort
+  // would read differently.
+  it('lists every category under its group in the order given, a novel group included', () => {
+    renderPicker({
+      categories: [
+        category('c-zz', 'Zestwort', zanthic),
+        category('c-ab', 'Ablefix', zanthic),
+        category('c-tw', 'Testward', fixtureWard, 'Guards nothing in particular.'),
+        category('c-tc', 'Testcraft', fixtureWard),
+        category('c-cn', 'Cinderfix', ashen),
+      ],
+    });
 
     open();
     const list = screen.getByRole('listbox', { name: 'Category suggestions' });
@@ -99,15 +111,20 @@ describe('CategoryPicker', () => {
     expect(
       groups.map((group) => group.getAttribute('aria-labelledby') && group.textContent),
     ).toEqual([
-      expect.stringContaining('Ashen Fixtures'),
-      expect.stringContaining('Fixture Wards'),
       expect.stringContaining('Zanthic Oddments'),
+      expect.stringContaining('Fixture Wards'),
+      expect.stringContaining('Ashen Fixtures'),
     ]);
+    expect(
+      within(screen.getByRole('group', { name: 'Zanthic Oddments' }))
+        .getAllByRole('option')
+        .map((row) => row.textContent),
+    ).toEqual([expect.stringMatching(/^Zestwort/), expect.stringMatching(/^Ablefix/)]);
     expect(
       within(screen.getByRole('group', { name: 'Fixture Wards' }))
         .getAllByRole('option')
         .map((row) => row.textContent),
-    ).toEqual([expect.stringMatching(/^Testcraft/), expect.stringMatching(/^Testward/)]);
+    ).toEqual([expect.stringMatching(/^Testward/), expect.stringMatching(/^Testcraft/)]);
     // A description reads beneath its row.
     expect(option('Testward')).toHaveTextContent('Guards nothing in particular.');
   });

@@ -140,8 +140,8 @@ describe('compendiumFacets', () => {
     expect(result.errors).toBeUndefined();
     const facets = result.data?.compendiumFacets;
     expect(facets?.forms).toEqual([
-      { value: 'Resin', count: 2 },
       { value: 'Leaf', count: 1 },
+      { value: 'Resin', count: 2 },
     ]);
     expect(facets?.deities).toEqual([{ value: hecate, count: 1 }]);
     expect(facets?.categories).toEqual([{ value: protection, count: 1 }]);

@@ -236,12 +236,12 @@ describe('findDeityPage and findDeityCount', () => {
     await sql`update deity_traditions set deleted_at = null, deleted_by = null`;
   });
 
-  /** The curated deities in the finder's order, from the database's own collation. */
+  /** The curated deities in the finder's order, under its natural collation (M12.52). */
   async function expectedDeities(): Promise<string[]> {
     const rows = await sql<{ id: string }[]>`
       select d.id from deities d join deity_traditions t on t.id = d.tradition_id
       where d.deleted_at is null and t.deleted_at is null
-      order by t.name, d.name, d.id`;
+      order by t.name collate "en-US-x-icu", d.name collate "en-US-x-icu", d.id`;
     return rows.map((row) => row.id);
   }
 
