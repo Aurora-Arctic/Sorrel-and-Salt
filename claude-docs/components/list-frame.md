@@ -47,8 +47,9 @@ parts, and the table passes through them from the server.
     true only while a `soft` navigation is pending, which only a filter makes,
     so the search sentence types for a new search and not for a pager press.
     `target` is the address that navigation is opening, while it is pending: the
-    page still shown is the previous search, so the sentence reads the term it
-    names from `target`, not from the filter on screen.
+    page still shown is the previous search, so the sentence is built from the
+    term and facets `target` carries, read through the same parameter table
+    the page uses, not from the filter on screen.
   - `page` is a pager end's soft navigation. It pushes with `{ scroll: false }`,
     so Next does not scroll to the page top (on `/admin/compendium` that
     brings the Admin section menu back into view), and once the transition

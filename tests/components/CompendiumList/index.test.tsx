@@ -1055,6 +1055,57 @@ describe('CompendiumList filter', () => {
       expect(typedLine()).not.toContain('oldwort');
     });
 
+    // The whole typed sentence while a search is on its way: the first line and the clauses
+    // beneath it, typed or still to type.
+    const typedSentence = () =>
+      screen
+        .getAllByRole('group', { hidden: true })
+        .find(
+          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
+        )!.textContent;
+
+    // A facet changed in the panel is on the address being opened, not on the page being left.
+    it('names the facets being searched with while the search is on its way', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: SEARCHED })} />
+        </Navigating>,
+      );
+      openPanel();
+      fireEvent.click(unsourcedSwitch());
+      await act(async () => {
+        applyFilters();
+      });
+
+      expect(pushed().get('withoutReferences')).toBe('1');
+      expect(typing()).toBe(true);
+      expect(typedSentence()).toContain('without references');
+      expect(typedSentence()).toContain('testcraft');
+    });
+
+    it('drops a facet being removed from the typed sentence, and names the new term and facet', async () => {
+      render(
+        <Navigating push={router.push}>
+          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
+        </Navigating>,
+      );
+      typeIn(nameBox(), 'newwort');
+      openPanel();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Category: Testcraft' }));
+      fireEvent.click(unsourcedSwitch());
+      await act(async () => {
+        applyFilters();
+      });
+
+      expect(pushed().get('query')).toBe('newwort');
+      expect(pushed().has('categories')).toBe(false);
+      expect(typing()).toBe(true);
+      expect(typedSentence()).toContain('newwort');
+      expect(typedSentence()).toContain('without references');
+      expect(typedSentence()).not.toContain('oldwort');
+      expect(typedSentence()).not.toContain('testcraft');
+    });
+
     it('holds no link, so a chosen value is removed in the panel alone', () => {
       render(
         <CompendiumList {...props({ filter: { ...NO_FILTER, categories: ['testcraft'] } })} />,

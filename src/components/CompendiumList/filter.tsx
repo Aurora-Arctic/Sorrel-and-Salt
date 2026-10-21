@@ -285,11 +285,17 @@ function labelsOf({
   };
 }
 
-/** The name search an address carries, read as the page reads it: trimmed, blank for none. */
-const queryOf = (href: string): string =>
-  COMPENDIUM_PARAMS.entries.query.read(
-    new URL(href, 'http://localhost').searchParams.get('query') ?? undefined,
-  );
+/**
+ * The filter an address holds, read as the page reads it from the same parameter table: the
+ * term and every facet, a parameter the address lacks being no filter. `shown` supplies what
+ * the table does not carry.
+ */
+function filterOf(href: string, shown: Held, coven: boolean): Held {
+  const params: Record<string, string[]> = {};
+  const { searchParams } = new URL(href, 'http://localhost');
+  for (const key of new Set(searchParams.keys())) params[key] = searchParams.getAll(key);
+  return { ...shown, ...(coven ? COVEN_PARAMS : COMPENDIUM_PARAMS).read(params) };
+}
 
 const CompendiumListFilterWithSentence = ({
   filter,
@@ -303,25 +309,27 @@ const CompendiumListFilterWithSentence = ({
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
   const { searching, target } = useListNavigation();
-  // The page still shows the previous search while the new one is read, so the term the sentence
-  // names is the one the navigation is opening, not the one in `filter`.
-  const query = searching && target !== undefined ? queryOf(target) : filter.query;
+  // The page still shows the previous search while the new one is read, so the sentence names the
+  // term and the facets of the address the navigation is opening, not those of `filter`.
+  const searched =
+    searching && target !== undefined
+      ? filterOf(target, filter, whereOf({ audience, covenSlug }).covenSlug !== undefined)
+      : filter;
   const sentence = useMemo(
     () =>
       buildSearchSentence({
         filter: {
-          ...filter,
-          query,
-          toxic: filter.toxic || null,
-          source: filter.source || null,
-          inStock: filter.inStock ?? false,
-          lowStockOnly: filter.lowStockOnly ?? false,
+          ...searched,
+          toxic: searched.toxic || null,
+          source: searched.source || null,
+          inStock: searched.inStock ?? false,
+          lowStockOnly: searched.lowStockOnly ?? false,
         },
         labels: labelsOf({ facets, categories }),
         total,
         admin: audience === 'admin',
       }),
-    [filter, query, facets, categories, total, audience],
+    [searched, facets, categories, total, audience],
   );
   return (
     <>
@@ -336,7 +344,7 @@ const CompendiumListFilterWithSentence = ({
         covenSlug={covenSlug}
         workspaceId={workspaceId}
       />
-      <SearchSentence sentence={sentence} query={query} pending={searching} />
+      <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
     </>
   );
 };
