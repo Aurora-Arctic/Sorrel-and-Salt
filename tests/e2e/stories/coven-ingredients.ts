@@ -426,7 +426,8 @@ export function stockEditor(row: Locator, name: string) {
   const title = `Edit Stock, ${name}`;
   const dialog = page.getByRole('dialog', { name: title });
   return {
-    open: row.getByRole('button', { name: title }),
+    // Exact: on an entry page the shelf's jar buttons begin with the same words ("Edit Stock, Rosemary, Oil").
+    open: row.getByRole('button', { name: title, exact: true }),
     dialog,
     /**
      * Chooses a jar from the list, by its form. The button's name starts with the form and

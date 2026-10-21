@@ -10,6 +10,7 @@ import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
+import { covenJarsOf, stockDialogOf } from '@/app/coven-stock';
 import { entryValues } from '@/app/entry-values';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import { rolePermits } from '@/modules/coven';
@@ -106,11 +107,14 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // compendium entry. The compendium is public, so the links reveal nothing.
   // The detail is read without the coven so it does not read the cupboard
   // entry again; the one the metadata shares is laid in.
-  const [read, { viewer }, matches, cupboardEntry] = await Promise.all([
+  // The coven's jars are read alongside, whether or not the coven holds the entry, so the
+  // page waits on no second round; they show only where it does (M12.29).
+  const [read, { viewer }, matches, cupboardEntry, jars] = await Promise.all([
     ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
     viewerOf(),
     compendiumMatchesOf(session, entry),
     cupboardOf(slug, id),
+    covenJarsOf(session, workspace.id, entry.id),
   ]);
   // A retired entry (M12.24) reads its children through its cupboard entry,
   // so its detail is read in the coven and carries that entry itself.
@@ -243,6 +247,21 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                   }),
                 }
               : undefined
+        }
+        // What the coven has of an entry it has, its own or one in its cupboard (M12.29): the
+        // lines for every member, Edit Stock for a role that may update stock. A compendium
+        // entry the coven does not hold has no section.
+        stock={
+          isOwn || held
+            ? {
+                workspaceId: workspace.id,
+                ...stockDialogOf(
+                  detail.variants.map(({ variant }) => variant),
+                  jars,
+                ),
+                mayEdit: rolePermits(role, { inventory: ['update'] }),
+              }
+            : undefined
         }
         similar={
           matches.kind === 'similar' && matches.entries.length > 0

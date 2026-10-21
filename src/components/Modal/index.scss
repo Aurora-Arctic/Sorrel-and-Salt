@@ -288,8 +288,8 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   align-items: center;
   justify-self: end;
   gap: space(2);
-  min-block-size: $icon-size-large;
-  margin-block: calc((#{$icon-size} - #{$icon-size-large}) / 2);
+  min-block-size: $action-icon-size;
+  margin-block: calc((#{$icon-size} - #{$action-icon-size}) / 2);
 
   &:empty {
     display: none;

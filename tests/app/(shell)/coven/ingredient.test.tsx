@@ -32,6 +32,7 @@ const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
+const stockOf = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
@@ -43,6 +44,8 @@ vi.mock('@/modules/ingredients', () => ({
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
   isAnnotated: () => false,
+  // The jars (M12.29) are the stock service's to scope; here only what the page asks it for.
+  stockOf,
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -132,6 +135,7 @@ beforeEach(() => {
   compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0 });
   covensHolding.mockResolvedValue([]);
   plusCovensOf.mockResolvedValue(undefined);
+  stockOf.mockResolvedValue([[]]);
 });
 
 describe('the coven ingredient page', () => {
@@ -565,5 +569,87 @@ describe('the coven ingredient page title', () => {
     const result = await generateMetadata(params());
     expect(result.title).toBe(`${covenRow().name} (${covenRow().canonicalName})`);
     expect(result.alternates).toBeUndefined();
+  });
+});
+
+describe('the coven ingredient page’s stock (M12.29)', () => {
+  const VARIANT_ID = '00000000-0000-4000-8000-0000000000c1';
+  const STAMPS = {
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    createdBy: null,
+    updatedAt: new Date('2026-01-01T00:00:00Z'),
+    updatedBy: null,
+    deletedAt: null,
+    deletedBy: null,
+  };
+  // One form, Testroot, and one jar of it holding 5 g.
+  const withRoot = async (row: ReturnType<typeof compendiumRow>) => {
+    const variant = {
+      id: VARIANT_ID,
+      ingredientId: row.id,
+      workspaceId: null,
+      form: 'testroot',
+      formId: null,
+      description: null,
+      safetyNotes: null,
+      toxic: false,
+      elements: null,
+      celestialBodies: null,
+      zodiacSigns: null,
+      colors: null,
+      ...STAMPS,
+    };
+    stockOf.mockResolvedValue([
+      [
+        {
+          id: 'fixture-stock',
+          variantId: VARIANT_ID,
+          quantityOnHand: '5',
+          unit: 'g',
+          lowStockThreshold: null,
+        },
+      ],
+    ]);
+    getIngredient.mockResolvedValue(row);
+    ingredientDetailOf.mockResolvedValue({
+      ...entryDetail(),
+      entry: row,
+      variants: [{ variant, icon: null, categories: [], substitutes: [], references: [] }],
+    });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+  };
+  const stock = () => screen.queryByRole('region', { name: 'Stock' });
+  // The heading's button and the one jar's, each named for the ingredient; none for a viewer.
+  const editStock = () => screen.queryAllByRole('button', { name: /^Edit Stock\b/ });
+
+  it('asks for this coven’s jars of the entry alone, and lists them under Stock for a held entry', async () => {
+    getCupboardEntry.mockResolvedValue(HELD_ROW);
+    await withRoot(compendiumRow());
+
+    expect(stockOf).toHaveBeenCalledWith(SESSION, [
+      { ingredientId: compendiumRow().id, workspaceId: WORKSPACE.id },
+    ]);
+    expect(within(stock()!).getByRole('listitem')).toHaveTextContent('5 g');
+    expect(editStock()).toHaveLength(2);
+  });
+
+  it('draws no Stock for a compendium entry the coven does not hold, though the jars were read', async () => {
+    await withRoot(compendiumRow());
+
+    // Precondition: there was a jar to show, so the section is absent by the guard alone.
+    expect(stockOf).toHaveBeenCalled();
+    expect(stock()).not.toBeInTheDocument();
+  });
+
+  it('shows a viewer the coven’s own entry’s jars and no Edit Stock', async () => {
+    asRole('viewer');
+    await withRoot(covenRow());
+
+    expect(within(stock()!).getByRole('listitem')).toHaveTextContent('5 g');
+    expect(editStock()).toHaveLength(0);
   });
 });

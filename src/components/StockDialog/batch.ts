@@ -1,7 +1,7 @@
 import type { SaveStockInput } from '../../gql/graphql';
 import type { StockFormValues } from '../StockFields';
 import { stockAmountsOf, stockFormValues } from '../StockFields';
-import type { StockBatchRows, StockJar, StockRow } from './types';
+import type { StockBatchRows, StockForm, StockJar, StockRow } from './types';
 
 // The rows as `saveStock` takes them, and the way back from an issue's path
 // to the row it names. Only what changed is sent: a jar left as it opened is
@@ -11,14 +11,22 @@ import type { StockBatchRows, StockJar, StockRow } from './types';
 
 const AMOUNTS: readonly (keyof StockFormValues)[] = ['quantityOnHand', 'unit', 'lowStockThreshold'];
 
-/** The rows the dialog opens on: one per jar held, as it is. */
-export function openingRows(jars: readonly StockJar[]): StockRow[] {
-  return jars.map((jar) => ({
-    jarId: jar.id,
-    variantId: jar.variantId,
-    removed: false,
-    ...stockFormValues(jar),
-  }));
+/**
+ * The rows the dialog opens on: one per jar held, as it is, by its form's name
+ * from A to Z. The jars arrive in no fixed order, so the dialog would otherwise
+ * open on whichever came first (the owner's call, 2026-10-21).
+ */
+export function openingRows(jars: readonly StockJar[], forms: readonly StockForm[]): StockRow[] {
+  const labelOf = (jar: StockJar) =>
+    forms.find((form) => form.variantId === jar.variantId)?.label ?? '';
+  return [...jars]
+    .sort((a, b) => labelOf(a).localeCompare(labelOf(b)))
+    .map((jar) => ({
+      jarId: jar.id,
+      variantId: jar.variantId,
+      removed: false,
+      ...stockFormValues(jar),
+    }));
 }
 
 /** Whether a row's amounts differ from a jar's as it opened: an update to send, and the list's Edited mark. */

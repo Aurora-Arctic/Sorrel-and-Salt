@@ -41,7 +41,7 @@ const List = () => (
 export const Default: Story = () => <List />;
 
 export const Pending: Story = () => (
-  <ListNavigationContext.Provider value={{ pending: true, go: () => undefined }}>
+  <ListNavigationContext.Provider value={{ pending: true, searching: false, go: () => undefined }}>
     <List />
   </ListNavigationContext.Provider>
 );

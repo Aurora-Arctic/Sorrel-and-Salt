@@ -14,12 +14,12 @@ UserList, PrivilegeLedger and AdminInvitations each sit in one.
 
 `index.tsx`, a client file:
 
-| Export                  | What it is                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------- |
-| `ListFrame` (default)   | The root `div.list-frame`, with the list's own class beside it, holding the navigation      |
-| `ListBody`              | The list under the filter, the table or empty state and the pager, or the skeleton for them |
-| `useListNavigation`     | `{ pending, go(href, kind) }` for the filter and the pager; it throws outside a `ListFrame` |
-| `ListNavigationContext` | The context itself, exported for the workshop, whose stub router goes nowhere               |
+| Export                  | What it is                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `ListFrame` (default)   | The root `div.list-frame`, with the list's own class beside it, holding the navigation                 |
+| `ListBody`              | The list under the filter, the table or empty state and the pager, or the skeleton for them            |
+| `useListNavigation`     | `{ pending, searching, go(href, kind) }` for the filter and the pager; it throws outside a `ListFrame` |
+| `ListNavigationContext` | The context itself, exported for the workshop, whose stub router goes nowhere                          |
 
 `ListFrameProps` and `ListBodyProps` are in `types.ts`, with `ListNavigation`
 and `ListNavigationKind` (`soft`, `page` or `full`).
@@ -43,7 +43,9 @@ parts, and the table passes through them from the server.
     (`src/lib/navigation/`), which runs the router call inside a React
     transition. Next runs its navigation inside the caller's transition, so
     `pending` stays true until the new page has rendered. The same navigation
-    puts up the page bar ([`../loading.md`](../loading.md)).
+    puts up the page bar ([`../loading.md`](../loading.md)). `searching` is
+    true only while a `soft` navigation is pending, which only a filter makes,
+    so the search sentence types for a new search and not for a pager press.
   - `page` is a pager end's soft navigation. It pushes with `{ scroll: false }`,
     so Next does not scroll to the page top (on `/admin/compendium` that
     brings the Admin section menu back into view), and once the transition

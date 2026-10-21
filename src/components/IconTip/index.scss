@@ -153,3 +153,38 @@
   @include icon-button($icon-size-large, math.div($glyph-size-large * 4, 3));
   @include icon-button-edit;
 }
+
+// The action icons of a card's foot, an entry page's head and the Quick Look window's head, 13%
+// larger than the large size (`$action-icon-size`, the owner's call, 2026-10-21): the pencils
+// (Edit, Annotate, Edit Stock), the plus and its held check, the bin, the three dots, and the
+// eye, whose mark is 11% past the pencil's here, not the third bigger it is elsewhere (the owner's
+// calls, 2026-10-21; it stands in a card's foot alone). Scoped to those three places: the same
+// classes in a list row, a table or a form stay at `$icon-size-large`. Each place that works a
+// gap out from the box (the stock lines' badge inset, the entry's title room, the window's
+// controls row) reads `$action-icon-size` too.
+.ingredient-card .specimen__actions,
+.ingredient-entry__cupboard--icons,
+.modal-dialog__formal-actions {
+  :is(.icon-tip__edit, .icon-tip__remove, .icon-tip__look, .add-icon, .add-icon--held) {
+    width: $action-icon-size;
+    height: $action-icon-size;
+
+    svg,
+    .spinner {
+      width: $action-glyph-size;
+      height: $action-glyph-size;
+    }
+  }
+
+  // The eye, 11% past the pencil (the owner's call, 2026-10-21), in the same box.
+  .icon-tip__look svg {
+    width: $action-look-glyph-size;
+    height: $action-look-glyph-size;
+  }
+
+  // The jar of Edit Stock, 11% past the others (the owner's call, 2026-10-21), in the same box.
+  svg.stock-icon {
+    width: $action-jar-glyph-size;
+    height: $action-jar-glyph-size;
+  }
+}

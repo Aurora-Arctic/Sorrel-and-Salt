@@ -93,7 +93,7 @@ different groups, so the page offers each name once, whatever its case.
   (`resolveNumberedPage` returns `totalCount`, which the page passes down as `total`), and
   the labels the facets give: a category by its name, a deity by its name with its
   tradition added when another deity shares the name, an element by its label. It takes
-  `pending` from the list's navigation, so it types itself out while the list loads.
+  `searching` from the list's navigation, so it types itself out while a new search loads and stays still when a pager end changes the page.
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
   builds both, the pager's links and the filter's submit too, a typed wrapper

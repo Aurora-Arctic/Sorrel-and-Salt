@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { StockFormValues, StockOfJar } from '../StockFields/types';
 
 /** A form the ingredient comes in: a variant, by its id, as the screen names it. */
@@ -22,6 +23,22 @@ export interface StockDialogProps {
   forms: readonly StockForm[];
   /** The jars held, one per form at most. */
   jars: readonly StockJar[];
+  /**
+   * A form, by its variant id, to open on: it is the chosen one as the dialog
+   * opens. A form the coven holds no jar of is added as a new row first, as
+   * Add Form would, so a press on an empty jar on the entry page lands on its
+   * fields. Left out, the first jar is chosen.
+   */
+  openOn?: string;
+}
+
+/** A jar on the entry page's shelf: a button of the caller's own, opening the same dialog on one form. */
+export interface StockJarButtonProps extends StockDialogProps {
+  /** The button's name, such as "Edit Stock, Rosemary, Dried Leaf". */
+  ariaLabel: string;
+  className?: string;
+  /** What the button shows. */
+  children: ReactNode;
 }
 
 /** One row of the dialog: a jar held, or one being added (`jarId` null). */

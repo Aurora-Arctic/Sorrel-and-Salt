@@ -4082,6 +4082,8 @@ Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flo
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
+**Amended by M12.29 (2026-10-21):** the scope gains the entry page's Stock section (`JarShelf`, M12.29): the shelf, its Low and Out jars and their tips, the Edit Stock button and the empty "No stock recorded." state. M12.29 put the section in a `.panel` box as an interim trial, and this review removes it: the Stock section is the only boxed section on the entry page, and the jar's shine is drawn in the card colour, so it fades on a card-coloured panel. Drop `panel` from the wrapper in `IngredientEntry/stock-section.tsx`, and set the section apart, if it still needs it, in a way the entry page's other sections can share. The review also checks the section for repetition (DRY: one shared helper or mixin where the shelf, the stock badge and the Edit Stock dialog repeat a style, a string or a piece of markup), for UX (pressing a jar, the amount tip, and editing with no stock), and for accessibility (names and descriptions of the jar and amount buttons, keyboard order, focus, and colour that is never the only cue).
+
 _Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `IngredientCard` for its rows (corrected by the Wave 12 review; the admin lists use `StackTable`, a table that turns each row into a card on a narrow screen, `components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
 
 _Acceptance criteria:_
@@ -4093,6 +4095,9 @@ _Acceptance criteria:_
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - A jar being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
+- The entry page's Stock section has no `.panel` box, and the review records what sets it apart instead, if anything
+- The section repeats no style, string or markup that a shared helper or mixin already holds, and the review lists what it merged
+- Each jar and amount button has a name and description a screen reader can tell apart, the shelf works by keyboard alone, and Low and Out are never shown by colour alone
 
 **MB.122 — ~~Design review: the navigation~~** · **RETIRED 2026-10-12, folded into MB.7**
 
