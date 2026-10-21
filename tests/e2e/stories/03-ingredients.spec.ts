@@ -361,6 +361,10 @@ test(
       await crystal.threshold.fill('5');
       await editor.save.click();
 
+      // The dialog is a child of the card and previews its own Low Stock badge from what is
+      // typed, so the badge below only proves the save once the dialog has closed (it closes
+      // after the save is answered).
+      await expect(editor.dialog).toHaveCount(0);
       await expect(lowBadge(row)).toBeVisible();
       const [stock] = await withSql(
         (sql) => sql<{ threshold: number }[]>`
