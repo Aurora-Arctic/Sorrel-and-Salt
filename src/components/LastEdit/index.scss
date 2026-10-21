@@ -26,6 +26,11 @@
 .meta.last-edit {
   margin-block-start: space(5);
   text-align: start;
+  // Above the card's stretched name link (IngredientCard), which would take the hover; as wide
+  // as its text, so the rest of the row still follows the link.
+  position: relative;
+  z-index: 1;
+  inline-size: fit-content;
   color: $text-placeholder;
 }
 
