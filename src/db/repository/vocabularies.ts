@@ -390,7 +390,9 @@ function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
  *
  * A name or value matches by `%` or `<%` and a description by `<%` alone, so
  * a query finds a word inside a description and completes a typed prefix
- * (claude-docs/db/member-autofill.md, "The member's autofill").
+ * (claude-docs/db/member-autofill.md, "The member's autofill"). A form or a
+ * deity also matches when its group or tradition name holds the query as a
+ * case-folded substring, so typing the heading lists everything under it.
  *
  * A form suggestion also carries its group and the in-scope ingredients whose
  * form folds to it, and a deity suggestion its tradition. A form or a deity
@@ -438,6 +440,11 @@ export async function findVocabularySuggestions(
     ? sql`lower(${grouping.groups.name}) || ' ' || ${vocabulary.id}::text`
     : sql`${vocabulary.id}::text`;
 
+  // A form or a deity also matches on the group or tradition it is listed
+  // under, by the substring the client's grouped dropdowns use, so typing
+  // "irish" finds every Irish deity. The join already drops a retired group.
+  const byGroup = grouping ? containsText(grouping.groups.name, query) : undefined;
+
   // Tier literals are written into the text: a bound 0 and 1 would type the
   // `case` as text, and the union would refuse to stack it on the integer 2.
   const curatedTier = sql`
@@ -448,7 +455,7 @@ export async function findVocabularySuggestions(
       ${claimed ? sql`${ingredientFormGroups.icon}::text` : sql`null`} as group_icon,
       lower(${vocabulary.name}) as fold, ${tiebreak} as tiebreak
     from ${curatedRows}
-    where ${and(live, query ? or(byName, sql`${query} <% ${vocabulary.description}`) : undefined)}`;
+    where ${and(live, query ? or(byName, sql`${query} <% ${vocabulary.description}`, byGroup) : undefined)}`;
 
   // The spelling most entries use stands for the group; `mode()` breaks a tie
   // by the order it is given, so the choice is stable.

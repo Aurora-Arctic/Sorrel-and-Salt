@@ -38,6 +38,12 @@ cut by cursor as a whole.
 - **A name or an in-use value matches by either.** `<%` completes a typed
   prefix: `mer` is 0.33 similar to Mercury and 0.75 word-similar. A name
   should never be harder to find than its own description.
+- **A group or tradition name matches by substring, as tier 1.** A form or a
+  deity is listed under its group or tradition, so typing `irish` lists every
+  Irish deity, as the client's grouped dropdowns do (`ilike %query%`, case
+  folded). It is a substring and not `%` or `<%`, so a heading never reaches a
+  row by fuzzy luck; the live join already drops a retired group, and the
+  curated tier is global, so no workspace is involved.
 - **Each tier is alphabetical, case-folded**, not ranked by score. The tiers
   carry the ranking the story asks for — a name match before a description
   match, curated before in use — and a name is an exact cursor key where a
