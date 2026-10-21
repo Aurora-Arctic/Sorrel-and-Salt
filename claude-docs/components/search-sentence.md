@@ -28,13 +28,15 @@ well would be a second copy to keep equal.
   sentence apart (`parts.ts`) and keeps the commas for the clauses beneath only.
   A press opens the clauses and a second shuts them. With no clause to show (no
   filter) it is a plain line and has no chevron.
-- **Values are a quiet mark, joins the loud word.** A chosen value is a `<strong>` (it still
-  means "the chosen thing") drawn at regular weight inside a 1px hairline box, like a key on
-  a keyboard; the search term is drawn the same way. A join, the bare "or" or "and" between two
-  values (`join` in `ClausePart`), is a `<span class="search-sentence__join">`: bold, in the accent
-  colour, a little letter-spaced and set apart, with no box. Both are drawn while typing too, so a join
-  types out with its style on; a value the typing has not reached yet keeps its room and shows no box.
-  The status region keeps plain text. The casing is the builder's
+- **Values are a quiet mark, joins the loud word.** A chosen value is a
+  `<span class="search-sentence__value">` (not a `<strong>`: it is a mark, not emphasis) at
+  the sentence's own weight (300, the body's) inside a 1px hairline box, like a key on a keyboard;
+  the search term is drawn the same way. A join, the bare "or" or "and" between two values
+  (`join` in `ClausePart`), is a `<span class="search-sentence__join">`: weight 600, in the accent
+  colour, a little letter-spaced and set apart, with no box. The count at the start of the lead
+  ("12", or "No") is a `<span class="search-sentence__count">` at 500. All are drawn while typing
+  too, so a join types out with its style on; a value the typing has not reached yet keeps its room
+  and shows no box. The status region keeps plain text. The casing is the builder's
   ([`ingredient-search.md`](ingredient-search.md), "The search sentence").
 - **Before hydration** it is a native `<details>`, closed, holding the whole
   clauses, so it opens without script; the tail is not clipped until the script

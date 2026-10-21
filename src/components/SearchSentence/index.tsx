@@ -22,6 +22,18 @@ import './index.scss';
 
 const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
+/** The count at the start of the lead ("12", or "No") a little heavier than the words round it. */
+function leadNode(lead: string): ReactNode {
+  const count = /^(?:\d+|No(?= |$))/.exec(lead)?.[0];
+  if (!count) return lead;
+  return (
+    <>
+      <span className="search-sentence__count">{count}</span>
+      {lead.slice(count.length)}
+    </>
+  );
+}
+
 /** " matching rue" as far as typed, the term in a hairline box like the other values. */
 function termNode(text: string): ReactNode {
   if (!text.startsWith(MATCHING)) return text;
@@ -29,7 +41,7 @@ function termNode(text: string): ReactNode {
   return (
     <>
       {MATCHING}
-      {term ? <strong>{term}</strong> : null}
+      {term ? <span className="search-sentence__value">{term}</span> : null}
     </>
   );
 }
@@ -47,18 +59,17 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
     left -= part.text.length;
     const here = !placed && cut < part.text.length;
     if (here) placed = true;
-    const Tag = part.strong ? 'strong' : 'span';
     const className = part.join
       ? 'search-sentence__join'
-      : part.strong && cut === 0
-        ? 'search-sentence__unreached'
+      : part.strong
+        ? `search-sentence__value${cut === 0 ? ' search-sentence__unreached' : ''}`
         : undefined;
     return (
-      <Tag key={index} className={className}>
+      <span key={index} className={className}>
         {part.text.slice(0, cut)}
         {here ? caret : null}
         <span className="search-sentence__untyped">{part.text.slice(cut)}</span>
-      </Tag>
+      </span>
     );
   });
 }
@@ -186,7 +197,7 @@ export default function SearchSentence({
   // space ("12 ") is trimmed while a term follows: one space, never two.
   const firstLine = (
     <>
-      {view.term ? view.lead.trimEnd() : view.lead}
+      {leadNode(view.term ? view.lead.trimEnd() : view.lead)}
       {view.caret === 'lead' && caret}
       {termNode(view.term)}
       {view.caret === 'term' && caret}

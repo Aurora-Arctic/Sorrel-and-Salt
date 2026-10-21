@@ -12,11 +12,11 @@
   margin: 0;
 }
 
-// The values the sentence names are a quiet mark: regular weight in a hairline box, like a
-// key on a keyboard. There is no weight token, the scale is raw numbers. The padding is the
-// box's own geometry, trimmed by its 1px edge, so it stays off the spacing scale.
-.search-sentence strong {
-  font-weight: 400;
+// The values the sentence names are a quiet mark: the sentence's own weight, in a hairline
+// box like a key on a keyboard. There is no weight token, the scale is raw numbers. The
+// padding is the box's own geometry, trimmed by its 1px edge, so it stays off the spacing scale.
+.search-sentence__value {
+  font-weight: inherit;
   padding: 0.02em 0.3em;
   border: 1px solid $hairline;
   border-radius: radius('sharp');
@@ -27,11 +27,16 @@
   border-color: transparent;
 }
 
-// The joining words ("or", "and") are the loudest thing in the line: bold, in the accent,
+// The count at the start ("12") is a step heavier than the words after it.
+.search-sentence__count {
+  font-weight: 500;
+}
+
+// The joining words ("or", "and") are the loudest thing in the line: semibold, in the accent,
 // a little apart. No box and no background, so they read as words, not as chosen values.
 .search-sentence__join {
   margin-inline: 0.1em;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.06em;
   color: $accent;
 }
