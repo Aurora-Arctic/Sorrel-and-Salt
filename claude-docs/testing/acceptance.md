@@ -30,6 +30,12 @@ decisions make it hold:
   story added to §10 joins the checklist without a harness edit. The harness
   has no tests of its own (MB.224): a broken checklist is seen by whoever runs
   it.
+- **Each story has a section: the part of the site it walks.**
+  `tests/support/story-sections.ts` maps a story number to a name such as
+  `Coven - Spells - Ingredients`, and the checklist (terminal and CI) groups the
+  stories under those names, in name order. The map is separate from §10 so the
+  spec stays plain prose. `tests/guards/story-sections.test.ts` fails when a
+  story in §10 has no section, so a new story needs a line there.
 - **A story's status is the state of every test tagged with it.** Any failure
   is _failing_; otherwise any skip is _skipped_; otherwise _passing_. An
   interrupted test reads as failing, so it can never look green.

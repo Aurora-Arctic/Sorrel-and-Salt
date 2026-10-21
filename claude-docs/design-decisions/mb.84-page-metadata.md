@@ -4,7 +4,7 @@
 
 ## The pieces
 
-- **`src/app/robots.ts`.** Production allows `/$`, `/compendium` and `/compendium/`, and disallows `/`. Anything else, including `/coven/…`, `/admin` and `/account`, is disallowed by the catch-all. A test (`tests/app/robots.test.ts`) reads the rules with the matching RFC 9309 gives and asserts the allowed and refused paths.
+- **`src/app/robots.ts`.** Production allows `/$`, `/compendium`, `/compendium/`, the three public files of M12.2 and `/sitemap.xml`, and disallows `/`. The sitemap is listed because the file advertises it, and `Disallow: /` would otherwise block it. Anything else, including `/coven/…`, `/admin` and `/account`, is disallowed by the catch-all. A test (`tests/app/robots.test.ts`) reads the rules with the matching RFC 9309 gives and asserts the allowed and refused paths.
 - **`src/app/sitemap.ts`.** The home page, `/compendium`, and one entry per current compendium slug, from the cached sessionless read `listCompendiumSlugs` (`claude-docs/db/compendium-cache.md`). `lastModified` is the entry's `updatedAt`, MB.106's definition of a change. A retired slug is never listed.
 - **Page metadata.** `src/lib/page-metadata.ts` builds title, description, absolute canonical, Open Graph and Twitter text tags. There is no image. The root layout's title template appends the site name to every page; the home page uses an absolute title so the name is not doubled.
 - **JSON-LD.** `src/lib/json-ld.ts` is the one place a block is serialised, escaping `<` as `<` so the data cannot close its own script tag. An entry carries `DefinedTerm` and `BreadcrumbList`, the list `CollectionPage`, and the signed-out home page `WebSite`. A filtered list and the in-app entry page carry none.
