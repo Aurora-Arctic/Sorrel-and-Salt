@@ -42,6 +42,7 @@ foot, as the compendium's does ([`ingredient-entry.md`](ingredient-entry.md), "E
 | Prop            | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                                                                                                                                                                                                                                 |
+| `workspaceName` | With a coven's id only: the coven's name, said in "Added to <coven>." after the duplicate warning's + adds an entry. Left out, the sentence says "My Ingredients".                                                                                                                                                                                                                                                                                                                         |
 | `entry`         | The entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`: a compendium entry with a null `workspaceId`, or the coven's own with a coven's id (M8.17). Left out, the form creates.                                                                                                                                                                                                                                                                   |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
@@ -1126,9 +1127,9 @@ its own rows (`useSlidingRows`, once per list) and opens and closes by
 height round them, 0fr to 1fr as the region does, so a heading never stands
 over an emptied list. The sentence above both is unchanged, and the region's
 `aria-describedby` still covers the whole block. The compendium's form has
-no coven, so it draws one plain list with no headings. The + never needs to
-move a row from one group to the other: it closes the modal and routes to
-the entry's coven page. While another name's answer is on
+no coven, so it draws one plain list with no headings. An add by the + moves
+its row from In the Compendium to In This Coven, by these same slides ("The +
+in the duplicate warning" below). While another name's answer is on
 its way, each row stands as the skeleton's shape (`skeleton-shape`,
 `_mixins.scss`, as a tab's list does), a bar for the title and an icon's box where
 the row had a + or a Quick Look, so the box keeps its
@@ -1203,8 +1204,8 @@ the add: "rosemary" pressed on Rose, where the coven calls its Daisy Rosemary. T
 entry can be relabelled on its page. It sends whichever of the description,
 safety notes, elements, celestial bodies, zodiac signs and colours were filled
 as the coven's overrides, and then reports the entry, by its own name, through
-`onSaved` as `'open'`, so the modal closes and the page routes to the entry's
-coven page. A refusal is said at the form's head. Once the add lands, both
+`onSaved` as `'another'`, so the modal stays open with what was typed ("The +
+in the duplicate warning" below). A refusal is said at the form's head. Once the add lands, both
 lookups, `possibleDuplicates` and `compendiumMatches`, are asked again for every
 name (`added` on `useDuplicateWarning`), and a held save's exact matches mark the
 entry held: their cached answers would otherwise say the coven still lacks it for
@@ -1215,6 +1216,61 @@ it is a compendium entry (`isGlobal`); the coven's own entry, which the
 cupboard holds by being the coven's, gets the eye and never a + (the owner's
 calls, 2026-10-18 and M12.48). Both need `onUse`, which the compendium's
 form leaves out, since it has no cupboard. Viewers never reach the modal.
+
+**The + in the duplicate warning** (M12.48, the owner's calls, 2026-10-21).
+This replaces navigating to the entry's page after the add: the form stays open,
+and the + turns into the entry's Quick Look eye where it stands.
+
+- **While the add is sent**, the + shows the spinner, and is `aria-busy` and
+  `aria-disabled` rather than `disabled`, so the focus stays on it.
+- **Once it has worked**, the + shows AddIcon's check (`data-state="added"`,
+  drawn along its stroke) for `ADDED_HOLD_MS` (1000 ms,
+  [`add-icon.md`](add-icon.md)). It keeps its name, "Add to My Ingredients: "
+  and the entry, and stays `aria-disabled`.
+- **Then the check turns into the eye**: the same button, now named "Quick Look"
+  and the entry's label and formal name, which opens the details over the form.
+  With motion, the check fades out over the eye arriving (`data-state="returning"`,
+  the stack AddIcon fades back to its plus with; `.add-icon__eye` arrives as
+  `.add-icon__plus` does). Under reduced motion the check is still shown for
+  the whole hold; the eye then takes its place at once, with no fade or motion.
+- **Only once the eye is in** is the cache refreshed (`added` on
+  `useDuplicateWarning`, above), and the row then slides from In the
+  Compendium to In This Coven. The duplicates region is `aria-busy` from the
+  refresh's start until the rows have stopped sliding.
+- **The focus follows**: if it was on the + when the move began, it goes to the
+  eye in the row under In This Coven. If the person had moved it elsewhere, it
+  stays there.
+- **"Added to <coven>." is said once, through the page's status region**
+  (`useAnnounce`, [`click-feedback.md`](click-feedback.md), "The status
+  region"). The form shows no Saved notice for it. The coven's name comes from
+  the `workspaceName` prop, which the shell's add button passes; without it
+  the sentence says "My Ingredients".
+- **The modal stays open** with everything typed, since `onSaved` is called with
+  `'another'`, which the shell's add button ignores. The coven page beneath
+  the modal is not refreshed until the next navigation, as with Save & Add
+  Another.
+- **A refusal** is said at the form's head, as before; the + shows no check and
+  is back to an idle +.
+
+In a coven's form, the warning's Quick Look eyes, the one a + turns into
+included, are in the add's green (`$accent`, the colour of the check), not
+the cards' ink (`$card-more-ink`), in every state (the owner's call). On hover
+and focus the green wash under them is `icon-button-edit`'s, as under the +.
+The rule is scoped to `.ingredient-form__group`, which only the coven's form
+draws, so the admin form's eyes keep the cards' ink. The eye's contrast, as a
+non-text control (WCAG 1.4.11 asks at least 3:1), on the notice's tint over
+the surface the form sits on:
+
+| Theme | Surface | On the `warn` tint | On the `error` tint | On the hover wash |
+| ----- | ------- | ------------------ | ------------------- | ----------------- |
+| Dark  | Card    | 6.29:1             | 6.55:1              | 4.97:1            |
+| Dark  | Page    | 7.05:1             | 7.30:1              | n/a               |
+| Light | Card    | 4.74:1             | 4.67:1              | 3.96:1            |
+| Light | Page    | 4.28:1             | 4.22:1              | n/a               |
+
+The tint is the notice's bar colour (`$warning` or `$secondary`) at
+`--notice-tint` (8% dark, 7% light) over the surface; the wash is
+`$accent` at 20% over the card surface.
 
 **An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
 entry makes nothing new, so on an edit the warning names its matches and
