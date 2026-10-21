@@ -1113,8 +1113,8 @@ test('two forms list the entries holding either, and a form with a deity lists t
   await expect.poll(() => listed(page)).toBe('ABDE');
   // The sentence names each value, and holds no link to follow.
   const sentence = sentenceOf(page);
-  await expect(sentence).toContainText('Facetform Alpha');
-  await expect(sentence).toContainText('Facetform Beta');
+  await expect(sentence).toContainText('facetform alpha');
+  await expect(sentence).toContainText('facetform beta');
   await expect(sentence.getByRole('link')).toHaveCount(0);
 
   // A chip's cross takes its value out of the filter and the address.
@@ -1123,7 +1123,7 @@ test('two forms list the entries holding either, and a form with a deity lists t
   await applyFilters(page);
   await expect(page).not.toHaveURL(/Beta/);
   await expect.poll(() => listed(page)).toBe('ADE');
-  await expect(sentence).not.toContainText('Facetform Beta');
+  await expect(sentence).not.toContainText('facetform beta');
 
   // Two deities of one name, told apart by the address and the sentence.
   await openFilters(page);
@@ -1305,14 +1305,14 @@ test('the sentence is a status region that follows each change without links', a
   // The sentence says what is applied, so it waits for Apply as the list does.
   expect(await sentence.innerText()).toBe(before);
   await applyFilters(page);
-  await expect(sentence).toContainText('Facetform Gamma');
+  await expect(sentence).toContainText('facetform gamma');
   expect(await sentence.innerText()).not.toBe(before);
 
   await openFilters(page);
   await page.getByRole('switch', { name: /^No Refs/ }).click();
   await applyFilters(page);
   await expect(page).toHaveURL(/withoutReferences=1/);
-  await expect(sentence).toContainText('Facetform Gamma');
+  await expect(sentence).toContainText('facetform gamma');
   await expect(sentence.getByRole('link')).toHaveCount(0);
 });
 

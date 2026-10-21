@@ -13,6 +13,11 @@ export type ListNavigationKind = 'soft' | 'page' | 'full';
 export interface ListNavigation {
   /** True from a filter's or a pager's press until the new page renders, or the browser leaves. */
   pending: boolean;
+  /**
+   * True only while a filter's soft navigation is pending: the search itself is on its way, not just
+   * another page of the same one. A pager press leaves it false, so the search sentence does not retype.
+   */
+  searching: boolean;
   /** Opens another page of the list, filtered or paged, the way `kind` says; nothing while one is pending. */
   go: (href: string, kind: ListNavigationKind) => void;
   /** A pager end's press: the height in pixels the body had then, which its skeleton keeps (`index.tsx`). */

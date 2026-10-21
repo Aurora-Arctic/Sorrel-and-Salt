@@ -27,6 +27,23 @@ type Part = SearchSentenceFragment;
 
 const text = (t: string): Part => ({ kind: 'text', text: t });
 
+// Values are shown in lower case, bar the three vocabularies whose entries are proper names
+// (deities, zodiac signs and planets), which keep their capitals. This is display only: the
+// fragment's `value` is untouched, so it still removes the right filter.
+const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
+
+/** A list format's literal chunk: a bare word ("or") is a join, between its spaces; a comma stays text. */
+function literal(chunk: string): Part[] {
+  const word = chunk.trim();
+  if (!/^\p{L}+$/u.test(word)) return [text(chunk)];
+  const at = chunk.indexOf(word);
+  return [
+    ...(at > 0 ? [text(chunk.slice(0, at))] : []),
+    { kind: 'join', text: word },
+    ...(at + word.length < chunk.length ? [text(chunk.slice(at + word.length))] : []),
+  ];
+}
+
 /** Writes a list of value fragments joined by the list format, in the list's own order. */
 function valueList(
   facet: SearchSentenceFacet,
@@ -40,7 +57,7 @@ function valueList(
   const chunks = format.formatToParts(values.map((_, i) => `${marker}${i}`));
   for (const chunk of chunks) {
     if (chunk.type === 'literal') {
-      parts.push(text(chunk.value));
+      parts.push(...literal(chunk.value));
     } else {
       const value = values[Number(chunk.value.slice(1))]!;
       parts.push({ kind: 'value', text: show(value), facet, value });
@@ -83,7 +100,7 @@ export function buildSearchSentence({
 
   const query = filter.query?.trim();
   if (query) {
-    clause(text('matching '), { kind: 'value', text: `“${query}”`, facet: 'query', value: query });
+    clause(text('matching '), { kind: 'value', text: query, facet: 'query', value: query });
   }
 
   const categories = picked(filter.categories);
@@ -92,7 +109,7 @@ export function buildSearchSentence({
     // Any-mode reads "in the A or B category" (one of them is enough); all-mode "in the A and B categories".
     clause(
       text('in the '),
-      ...valueList('categories', categories, any ? OR : AND, (v) => label('categories', v)),
+      ...valueList('categories', categories, any ? OR : AND, (v) => lower(label('categories', v))),
       text(!any && categories.length > 1 ? ' categories' : ' category'),
     );
   }
@@ -101,7 +118,7 @@ export function buildSearchSentence({
   if (forms.length > 0) {
     clause(
       text('in the form '),
-      ...valueList('forms', forms, OR, (v) => formLabel(label('forms', v))),
+      ...valueList('forms', forms, OR, (v) => lower(formLabel(label('forms', v)))),
     );
   }
 
@@ -132,7 +149,7 @@ export function buildSearchSentence({
   if (elements.length > 0) {
     clause(
       text('of the '),
-      ...valueList('elements', elements, OR, (v) => label('elements', v)),
+      ...valueList('elements', elements, OR, (v) => lower(label('elements', v))),
       text(' element'),
     );
   }
@@ -149,7 +166,7 @@ export function buildSearchSentence({
   if (filter.source === 'local' || filter.source === 'compendium') {
     clause(text('from the '), {
       kind: 'value',
-      text: filter.source === 'local' ? 'Local' : 'Compendium',
+      text: filter.source,
       facet: 'source',
       value: filter.source,
     });
@@ -172,7 +189,7 @@ export function buildSearchSentence({
   if (admin && filter.nomenclature) {
     clause(text('classified as '), {
       kind: 'value',
-      text: filter.nomenclature,
+      text: lower(filter.nomenclature),
       facet: 'nomenclature',
       value: filter.nomenclature,
     });

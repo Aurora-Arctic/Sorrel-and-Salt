@@ -295,7 +295,8 @@ const CompendiumListFilterWithSentence = ({
   workspaceId,
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
-  const { pending } = useListNavigation();
+  // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
+  const { searching } = useListNavigation();
   const sentence = useMemo(
     () =>
       buildSearchSentence({
@@ -325,7 +326,7 @@ const CompendiumListFilterWithSentence = ({
         covenSlug={covenSlug}
         workspaceId={workspaceId}
       />
-      <SearchSentence sentence={sentence} query={filter.query} pending={pending} />
+      <SearchSentence sentence={sentence} query={filter.query} pending={searching} />
     </>
   );
 };

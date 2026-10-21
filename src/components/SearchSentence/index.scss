@@ -12,14 +12,36 @@
   margin: 0;
 }
 
-// The values the sentence names are bold (700); there is no weight token, the scale is raw
-// numbers. Inside the disclosure they are one step lighter, 600.
-.search-sentence strong {
-  font-weight: 700;
+// The values the sentence names are a quiet mark: the sentence's own weight, in a hairline
+// box like a key on a keyboard. The box is there from the start, its edge transparent, so
+// the text never moves; it shows (`is-boxed`) once the value is whole, and while the sentence
+// types it fades in. The fade is on `is-boxed` alone, so a box lost to backspacing goes at once. There is no weight token, the scale is raw numbers. The
+// padding is the box's own geometry, in em so it follows the text size, so it stays off the
+// spacing scale. The bottom is deeper than the top so a descender (g, p, y) clears the edge.
+.search-sentence__value {
+  font-weight: inherit;
+  padding: 0.02em 0.3em 0.14em;
+  border: 1px solid transparent;
+  border-radius: radius('sharp');
+
+  &.is-boxed {
+    border-color: $hairline;
+    transition: border-color $motion-short ease-out;
+  }
 }
 
-.search-sentence__disclosure strong {
+// The count at the start ("12") is a step heavier than the words after it.
+.search-sentence__count {
+  font-weight: 500;
+}
+
+// The joining words ("or", "and") are the loudest thing in the line: semibold, in the accent,
+// a little apart. No box and no background, so they read as words, not as chosen values.
+.search-sentence__join {
+  margin-inline: 0.1em;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  color: $accent;
 }
 
 .search-sentence__disclosure > summary {
@@ -35,6 +57,9 @@
 
 .search-sentence__first {
   margin: 0;
+  // A summary is not a <p>, so it missed the body copy's 1.65 and fell back to `normal`, too
+  // tight for the value boxes: a term that wraps would touch the box below it.
+  line-height: 1.65;
 }
 
 // The clauses beneath the first line open and close by height. Grid rows 0fr to 1fr is
@@ -117,7 +142,8 @@
   }
 
   .search-sentence__tail,
-  .search-sentence__chevron {
+  .search-sentence__chevron,
+  .search-sentence__value.is-boxed {
     transition: none;
   }
 }

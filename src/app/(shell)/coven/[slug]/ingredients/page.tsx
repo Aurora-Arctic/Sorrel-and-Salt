@@ -24,7 +24,6 @@ import IngredientSummary from '../../../../../components/IngredientEntry/summary
 // component cannot import.
 import { RouteModalProvider } from '../../../../../components/Modal/route-modal-provider';
 import PageHeader from '../../../../../components/PageHeader';
-import type { StockDialogProps } from '../../../../../components/StockDialog/types';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../lib/numbered-page';
 import { requireCovenMembership } from '../../../../../lib/request-session';
@@ -37,9 +36,8 @@ import {
   heldCompendiumEntry,
   isRetired,
   MAKE_IT_OURS_PERMISSION,
-  type StockRow,
 } from '@/modules/ingredients';
-import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { stockDialogOf } from '@/app/coven-stock';
 
 // A coven's Ingredients (M9.6): what the coven has, as compact cards with their jars. The coven
 // comes from the address and the guard proves the caller is in it, as on every coven page (a
@@ -58,21 +56,6 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 // empty cupboard (M9.11). claude-docs/components/coven-cards.md.
 
 export const metadata: Metadata = { title: 'Ingredients' };
-
-/** What the Edit Stock dialog reads of an entry: every form it comes in, and the coven's jars. */
-const stockOf = (
-  variants: readonly { id: string; form: string }[],
-  jars: readonly StockRow[],
-): Pick<StockDialogProps, 'forms' | 'jars'> => ({
-  forms: variants.map(({ id, form }) => ({ variantId: id, label: formLabel(form) })),
-  jars: jars.map((jar) => ({
-    id: jar.id,
-    variantId: jar.variantId,
-    quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
-    unit: jar.unit,
-    threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
-  })),
-});
 
 export default async function CovenIngredientsPage({
   params,
@@ -164,7 +147,7 @@ export default async function CovenIngredientsPage({
       ...footOf(own, { ...shown, id: node.id }, placed({ edit: node.id })),
       retired: isRetired(node),
       ...(mayStock && {
-        stock: stockOf(
+        stock: stockDialogOf(
           page.variantIds[i].map((id) => ({ id, form: page.formOf.get(id) ?? '' })),
           page.jars[i],
         ),
@@ -222,7 +205,7 @@ export default async function CovenIngredientsPage({
                   detail={viewed.detail}
                   covens={viewed.covens}
                   jars={
-                    stockOf(
+                    stockDialogOf(
                       viewed.detail.variants.map(({ variant }) => variant),
                       viewed.jars,
                     ).jars
@@ -243,7 +226,7 @@ export default async function CovenIngredientsPage({
                     covenIngredientsHref(workspace.slug, here, { edit: viewed.shown.id }),
                   ),
                   ...(mayStock && {
-                    stock: stockOf(
+                    stock: stockDialogOf(
                       viewed.detail.variants.map(({ variant }) => variant),
                       viewed.jars,
                     ),

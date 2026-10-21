@@ -88,9 +88,12 @@
     align-items: center;
   }
 
+  // An ink palette has no box to draw, so it gets no class.
   @each $palette in map.keys($badge-palettes) {
-    .badge--#{$palette} {
-      @include badge($palette);
+    @if map.get(map.get($badge-palettes, $palette), treatment) != ink {
+      .badge--#{$palette} {
+        @include badge($palette);
+      }
     }
   }
 
@@ -2131,7 +2134,7 @@
   // The jar lines are a list: one `li` per jar, the form and quantity first and the
   // stock badge last, at the right end. The line stops short of the card's right edge
   // by half the difference between the large icon button below it (the actions' Edit
-  // pencil or three dots, `$icon-size-large`) and the badge, so the badge's centre sits
+  // pencil or three dots, `$action-icon-size`) and the badge, so the badge's centre sits
   // on the icon's. The actions share the line's right edge, so this is the whole gap.
   .specimen__stock > ul {
     @include list-reset;
@@ -2146,7 +2149,7 @@
       align-items: center;
       justify-content: space-between;
       gap: space(2);
-      padding-inline-end: calc((#{$icon-size-large} - #{$stock-badge-size}) / 2);
+      padding-inline-end: calc((#{$action-icon-size} - #{$stock-badge-size}) / 2);
 
       > span {
         display: inline-flex;

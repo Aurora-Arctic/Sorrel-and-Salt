@@ -8,6 +8,7 @@ import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
 import type { CovenIngredientPage } from './types';
 import { entryValues } from '@/app/entry-values';
+import { covenJarsOf } from '@/app/coven-stock';
 import { covensHolding } from '@/app/plus-covens';
 import type { CovenMembership } from '@/modules/coven';
 import {
@@ -147,13 +148,7 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   // A retired entry is read in the coven, whose cupboard entry is its proof (M12.24).
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
-  const jarsOf = async () => {
-    const [jars] = await stockOf(session, [
-      { ingredientId: id, workspaceId: membership.workspaceId },
-    ]);
-    if (jars === undefined || jars instanceof Error) throw jars ?? new Error('No answer');
-    return jars;
-  };
+  const jarsOf = () => covenJarsOf(session, membership.workspaceId, id);
   if (entry.workspaceId === membership.workspaceId) {
     const [detail, jars] = await Promise.all([detailOf(), jarsOf()]);
     return { shown: entry, own: true, detail, covens: [], jars };

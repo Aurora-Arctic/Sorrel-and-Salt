@@ -334,7 +334,7 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // rows and pager, in place of the list. The workshop's router goes nowhere,
 // so a list navigation provided above the page holds one on its way, as the
 // tabbed page's own Loading stories do.
-const ON_ITS_WAY = { pending: true, go: () => undefined };
+const ON_ITS_WAY = { pending: true, searching: false, go: () => undefined };
 
 const Pending = () => (
   <ListNavigationContext.Provider value={ON_ITS_WAY}>

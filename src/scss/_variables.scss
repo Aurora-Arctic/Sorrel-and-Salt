@@ -1,6 +1,7 @@
 @use 'sass:color';
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:math';
 @use 'sass:meta';
 
 // The raw palette and the `var(--token)` aliases over it. Emits no CSS: every
@@ -143,8 +144,11 @@ $card-more-ink-dark: #fff;
 // it is solid in the accent, which spends no new hue. A palette
 // emits only its own treatment's parts: safety's ink fails AA as a tint, so
 // asking for its `bg` is a compile error. claude-docs/styling.md, "Badge palettes".
+// An ink palette is its text colour alone, for a mark that draws no box (the stock
+// badge's Out of Stock, 2026-10-21); it emits no `.badge--<palette>` class.
 $badge-treatments: (
   solid: ('fill'),
+  ink: ('fg'),
   tinted: (
     'fg',
     'bg',
@@ -181,11 +185,13 @@ $badge-palettes: (
     dark: $chalk-muted,
     light: $ink-muted,
   ),
-  // A jar at nothing (M9.8): a muted red tint, owner's call 2026-10-18. Tinted,
-  // so safety stays the one solid, alarming badge. Label on tint 5.10:1 dark,
-  // 6.18:1 light; edge at least 3.70:1.
+  // A jar at nothing (M9.8): a muted red, owner's call 2026-10-18, so safety stays the
+  // one solid, alarming badge. Ink only since 2026-10-21: the stock badge draws no box,
+  // so the tint and edge it once had are gone, and the ink is read as text by the badge
+  // and the jar shelf. As text 6.40:1 on the dark card, 7.04:1 on the dark page, 7.45:1
+  // on the light card, 6.70:1 on the light page.
   'out-of-stock': (
-      treatment: tinted,
+      treatment: ink,
       dark: $wax-muted-dark,
       light: $wax-muted-light,
     ),
@@ -704,6 +710,20 @@ $icon-size-large: 2rem;
 $radio-size: 1.125rem;
 $glyph-size-large: 1.25rem;
 
+// The action icons of an ingredient card's foot, an entry page's head and the Quick Look
+// window's head (the pencils, the plus, the eye, the bin, the three dots) 13% larger than
+// the `$icon-size-large` they were, box and mark alike (the owner's call, 2026-10-21). Their own
+// tokens, not a change to the large size: that one still sets every other list row's pencil.
+$action-icon-scale: 1.13;
+$action-icon-size: $icon-size-large * $action-icon-scale;
+$action-glyph-size: $glyph-size-large * $action-icon-scale;
+// The jar (the Edit Stock button's mark, `StockIcon`) and the Quick Look eye's mark 11% larger
+// again, on top of the 13% (the owner's calls, 2026-10-21); their buttons keep the
+// `$action-icon-size` box.
+$action-mark-scale: 1.11;
+$action-jar-glyph-size: $action-glyph-size * $action-mark-scale;
+$action-look-glyph-size: $action-glyph-size * $action-mark-scale;
+
 // A tip's widest line, written as `min($tip-width, calc(100vw - space(6)))`
 // so a tip never runs off a phone. InfoTip, Combobox's qualifier tip and the
 // user list's locked-control tip each wrote 18rem.
@@ -921,6 +941,17 @@ $space-steps: (
 // a row of two or three category chips and a correspondence's list of colours.
 // Shared with the entry's wait (Skeleton) so the two lay out alike.
 $side-column: calc(#{space(8)} * 5);
+
+// The jar shelf's measures (M12.29), shared with the entry's wait (Skeleton) so the
+// stand-in jars are the real ones' size and the page does not drop when Stock loads: the
+// cell's top padding, the drawing's size (the owner's 11% bigger, 2026-10-21), the plank's
+// thickness, and the narrowest a cell goes, on a wide and on a narrow screen.
+$jar-top: 0.7rem;
+$jar-drawing-width: 35.52px;
+$jar-drawing-height: 29.97px;
+$jar-plank: 1.5px;
+$jar-cell-min: 5.25rem;
+$jar-cell-min-narrow: 4.6rem;
 
 // The air added to the card's own 12px gap above and below the forms line (chips to
 // forms, forms to the jar rule): one token, so the two stay equal. 16px in all.

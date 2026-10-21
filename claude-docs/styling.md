@@ -37,8 +37,8 @@ to.
 - **Never wash a chip or badge ground with its own group colour and leave the label in that colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
   under; solid holds, and so does a wash with the body ink stirred into the label ("Category chips").
-- **A badge palette declares `solid` or `tinted` and emits only that treatment's
-  parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
+- **A badge palette declares `solid`, `tinted` or `ink` and emits only that
+  treatment's parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
   an oversight. A ninth palette picks its treatment first — solid needs 4.5:1
   against the page surface plus 3:1 against both surfaces; tinted needs 4.5:1
   foreground-on-background plus 3:1 on the border.
@@ -252,7 +252,7 @@ Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
-(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its drawing on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. The badge is its drawing alone (the owner's call, 2026-10-20), a slashed ring that Low's double chevron does not share, with the words in its name and tip, so its meaning never rests on colour. That keeps
+(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill. It was drawn as a tint until 2026-10-21, and is now the `ink` treatment, the red alone with no box, so it never reads as a second alarm. As text it measures 6.40:1 on the dark card, 7.04:1 on the dark page, 7.45:1 on the light card and 6.70:1 on the light page. The badge is its drawing alone (the owner's call, 2026-10-20), a slashed ring that Low's double chevron does not share, with the words in its name and tip, so its meaning never rests on colour. Since 2026-10-21 the stock badge has no box and takes the jars' inks (Low `$warning`, Out this palette's `fg`; [`components/stock-badge.md`](components/stock-badge.md)). That keeps
 exactly one alarming badge in the app and spends no new hue, which matters because every
 hue not already reserved belongs to one of the eight groups.
 
@@ -301,6 +301,9 @@ treatment decides which parts it emits:
 - **`tinted`** — the ink mixed back into the card surface, so the badge tints the
   surface it actually sits on instead of carrying a hardcoded panel colour.
   Three parts, `fg` / `bg` / `border`.
+- **`ink`** — the ink alone, for a mark that draws no box (Out of Stock, since
+  2026-10-21). One part, `fg`, read as text. It emits no `.badge--<palette>`
+  class, since `badge()` has no box to draw for it.
 
 **A palette emits only its treatment's parts**, which is not tidiness. The two
 treatments want opposite things from an ink: solid wants it saturated and close

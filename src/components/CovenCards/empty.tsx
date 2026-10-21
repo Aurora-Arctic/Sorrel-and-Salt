@@ -14,7 +14,7 @@ import './index.scss';
 //     first add, the shell's own dialog. A viewer reads the sentence alone.
 //   - No Matches: a filter is in force and matched nothing. The search sentence above the list
 //     already names each filter and says nothing matched ("No ingredients, matching
-//     “Knitbone”"), so this says only what to do: change or clear the filter, with the filter
+//     Knitbone"), so this says only what to do: change or clear the filter, with the filter
 //     row's own clears (Clear Name, Clear All) rather than another. A search that found nothing
 //     in the cupboard is handed on to the Compendium, which may hold it.
 // Which state is the search sentence's own test, `hasFilter`, so the two never disagree.
