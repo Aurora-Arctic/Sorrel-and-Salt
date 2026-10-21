@@ -544,12 +544,15 @@ describe('the /admin/compendium filter', () => {
     expect(categoryGroupsOf).toHaveBeenCalledOnce();
   });
 
-  it('offers the forms the facets count in the Form box, most entries first', async () => {
+  // The facets come sorted by name from SQL (M12.52); the box keeps their order,
+  // here neither alphabetical nor by count, so any re-sort would show.
+  it('offers the forms the facets count in the Form box, in the order given', async () => {
     compendiumFacets.mockResolvedValue({
       ...NO_FACETS,
       forms: [
         { value: 'Fixture Powder', count: 1 },
         { value: 'Fixture Oil', count: 2 },
+        { value: 'Fixture Ash', count: 1 },
       ],
     });
 
@@ -562,7 +565,11 @@ describe('the /admin/compendium filter', () => {
       within(choices)
         .getAllByRole('option')
         .map((option) => option.textContent),
-    ).toEqual([expect.stringContaining('Fixture Oil'), expect.stringContaining('Fixture Powder')]);
+    ).toEqual([
+      expect.stringContaining('Fixture Powder'),
+      expect.stringContaining('Fixture Oil'),
+      expect.stringContaining('Fixture Ash'),
+    ]);
   });
 
   // 84 forms are seeded against a page of at most 100, so one page is not a
