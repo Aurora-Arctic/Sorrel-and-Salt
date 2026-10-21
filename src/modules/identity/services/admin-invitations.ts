@@ -42,6 +42,10 @@ const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
  * carries no token. A failed send is the transport's to log: the invitation
  * stays pending and can be withdrawn and sent again.
  *
+ * A second invitation to an address already invited replaces the pending
+ * site-tier one (MB.269): that one is stamped revoked by the admin in the same
+ * write. A coven's invitation to the address is left alone.
+ *
  * @throws {Forbidden} the session's role is not `admin`, or the primary admin
  * has paused admin changes and the caller is another admin (MB.63).
  * @throws {ValidationError} on `email`: malformed, unmailable, or a live
@@ -67,14 +71,17 @@ export async function createAdminInvitation(
   }
 
   const token = newToken();
-  const [row] = await withAudit(session, (write) =>
-    write.insertInvitation(admin, {
+  // The waiting site-tier invitation to this address is withdrawn in the same
+  // write, so a failed insert leaves it pending.
+  const [row] = await withAudit(session, async (write) => {
+    await write.revokePendingInvitationsTo(admin, email);
+    return write.insertInvitation(admin, {
       email,
       token,
       siteRole,
       note: adminDeclaration(note).note ?? null,
-    }),
-  );
+    });
+  });
   // After the commit, so a mailed link always names a row.
   // The mail names who sent it; the session holds the id alone, so the name is read here.
   const inviter = await findOneById(users, session.userId);

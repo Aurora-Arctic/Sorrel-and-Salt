@@ -653,6 +653,16 @@ export interface AuditWriter {
   /** The same on the site tier: a workspace's invitation is not reached. */
   revokeInvitation(admin: SiteAdmin, id: string): Promise<InvitationRow[]>;
   /**
+   * Revoke every pending invitation to `email` in the proof's tier, stamping
+   * `revoked_at` now: a repeat invitation replaces the one waiting (MB.269).
+   * The proof's tier is its workspace for a `Membership` and the site tier for
+   * a `SiteAdmin`, so the two never replace each other. The address is matched
+   * in any case. An accepted, declined, revoked or lapsed row is left alone.
+   */
+  revokePendingInvitationsTo(membership: Membership, email: string): Promise<InvitationRow[]>;
+  /** The same on the site tier. */
+  revokePendingInvitationsTo(admin: SiteAdmin, email: string): Promise<InvitationRow[]>;
+  /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
    * `workspace_id`: no table is both today, and the one that is first adds its

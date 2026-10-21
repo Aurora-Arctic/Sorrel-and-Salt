@@ -106,6 +106,11 @@ writer method ([`write-path.md`](write-path.md#table-marks-mb198), "Table
 marks"; MB.198). In their place, in the repository's `invitations.ts`, which
 `writerFor` spreads into the writer:
 
+- **`revokePendingInvitationsTo(proof, email)`** stamps revoked every pending
+  invitation to the address in the proof's tier: its coven for a `Membership`,
+  the site tier for a `SiteAdmin`, so the two tiers never replace each other.
+  Both create services call it before `insertInvitation`, in the same write
+  (MB.269).
 - **`insertInvitation(membership, values)`** writes a workspace invitation
   into the proof's workspace with the role `values` names, which the type
   requires and confines to `viewer` or `member`.
@@ -280,9 +285,15 @@ runs in this order, and the order is the point:
    inviting owner's name, read from their `users` row, since the session holds
    the id alone.
 
-**A second pending invitation to an address already invited is accepted**, as
-the admin tier's is: each mail carries its own token and any one accepts. What
-the first leaves pending, the owner revokes (M7.6). **A failed send leaves the
+**A repeat invitation replaces the pending one** (MB.269). Inviting an address
+that already has a pending invitation to the same coven first stamps that one
+revoked, as the inviter, in the same `withAudit` write that inserts the new one,
+through the repository's `revokePendingInvitationsTo(membership, email)`. So one
+invitation per address and coven is pending, its link is the newest and its role
+the one that applies, and the old link is refused as revoked. The address is
+matched in any case. Only a pending row in this coven is touched: another
+coven's, the site tier's, and an accepted, declined or lapsed one stay as they
+are. A new invitation that fails its checks revokes nothing. **A failed send leaves the
 invitation pending**: `send` in `src/lib/mail.ts` never throws and logs with
 `console.error`, so the mutation succeeds and the owner can revoke and
 re-invite. The test for it runs the real `send` over a `fetch` that answers
