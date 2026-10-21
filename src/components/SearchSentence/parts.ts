@@ -1,9 +1,10 @@
 import type { SearchSentenceFragment } from '../IngredientSearch/types';
 
-/** A run of the clauses' text; a chosen value is `strong`. */
+/** A run of the clauses' text; a chosen value is `strong`, and a joining word ("or", "and") is `join`. */
 export interface ClausePart {
   text: string;
   strong?: boolean;
+  join?: boolean;
 }
 
 /**
@@ -60,6 +61,7 @@ export function sentenceParts(
   const clauses: ClausePart[] = rest.map((fragment) => ({
     text: fragment.text,
     ...(fragment.kind === 'value' ? { strong: true } : {}),
+    ...(fragment.kind === 'join' ? { join: true } : {}),
   }));
   if (clauses.length > 0) clauses.push({ text: '.' });
   return { lead, term: term ? ` matching “${term}”` : '', clauses };

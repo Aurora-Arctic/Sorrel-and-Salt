@@ -127,8 +127,8 @@ different groups, so the page offers each name once, whatever its case.
   classification is its label, and Without
   References is the switch's (MB.115, the owner's call). The sentence is
   built from the same two pieces as `noMatchText` (`noMatchLead` and `NO_MATCH_ADVICE`, `src/lib/text.ts`), one wording for every admin list. It is a node, not a
-  string: each filter value is bold (700), as the search sentence bolds its
-  values, while "the form", "the category", the joining words and the closing
+  string: each filter value is bold (700) (the search sentence above boxes its
+  values instead), while "the form", "the category", the joining words and the closing
   advice stay regular, and the whole sentence is muted (`$text-muted`) through
   `.compendium-list__empty`. The public cards share it.
 

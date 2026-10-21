@@ -10,12 +10,12 @@ does the loading animation that stands in for a spinner. A client component.
 
 `SearchSentenceProps` (`types.ts`):
 
-| Prop        | What it is                                                                                           |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| `sentence`  | The `SearchSentence` from `buildSearchSentence`. Its values are drawn bold and are never links       |
-| `query`     | The text the person searched for, or "". It always shows in the closed line                          |
-| `pending`   | A search is on its way. Read as its two edges: true starts the typing, false is the search returning |
-| `className` | Added to the sentence's own class                                                                    |
+| Prop        | What it is                                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------------------- |
+| `sentence`  | The `SearchSentence` from `buildSearchSentence`. Its values are drawn in a hairline box and are never links |
+| `query`     | The text the person searched for, or "". It always shows in the closed line                                 |
+| `pending`   | A search is on its way. Read as its two edges: true starts the typing, false is the search returning        |
+| `className` | Added to the sentence's own class                                                                           |
 
 There is no `total` prop: the count is the sentence's own lead, so passing it as
 well would be a second copy to keep equal.
@@ -28,6 +28,14 @@ well would be a second copy to keep equal.
   sentence apart (`parts.ts`) and keeps the commas for the clauses beneath only.
   A press opens the clauses and a second shuts them. With no clause to show (no
   filter) it is a plain line and has no chevron.
+- **Values are a quiet mark, joins the loud word.** A chosen value is a `<strong>` (it still
+  means "the chosen thing") drawn at regular weight inside a 1px hairline box, like a key on
+  a keyboard; the search term is drawn the same way. A join, the bare "or" or "and" between two
+  values (`join` in `ClausePart`), is a `<span class="search-sentence__join">`: bold, in the accent
+  colour, a little letter-spaced and set apart, with no box. Both are drawn while typing too, so a join
+  types out with its style on; a value the typing has not reached yet keeps its room and shows no box.
+  The status region keeps plain text. The casing is the builder's
+  ([`ingredient-search.md`](ingredient-search.md), "The search sentence").
 - **Before hydration** it is a native `<details>`, closed, holding the whole
   clauses, so it opens without script; the tail is not clipped until the script
   runs.

@@ -300,8 +300,8 @@ applies the trimmed text, and that the row's sorrel layer is hidden from assisti
 (M12.4). It is pure: no React, no component imports. It turns the filter as the
 address holds it, the display labels of each vocabulary and the total into
 `{ fragments, hasFilter }`. A fragment is `{ kind: 'text', text }` or
-`{ kind: 'value', text, facet, value }`; the component draws a `value` as a link
-to the same filter without that value, and draws Clear All while `hasFilter` is
+`{ kind: 'join', text }` or `{ kind: 'value', text, facet, value }`; the component draws a `value` as a quiet boxed mark and a `join` as a loud
+word (see Joining and Casing below), and draws Clear All while `hasFilter` is
 true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`).
 
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
@@ -310,22 +310,31 @@ the address holds them: text query, categories, forms, deities, zodiac, planets,
 elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
-> 3 ingredients, matching “rue”, in the Protection and Healing categories, in the
-> form Oil or Resin, linked to Isis, under Aries, ruled by the Sun or Mars, of
-> the Fire element, that are not toxic, classified as botanical, without references
+> 3 ingredients, matching “rue”, in the protection and healing categories, in the
+> form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of
+> the fire element, that are not toxic, classified as botanical, without references
 
 - **Joining.** Values are joined through `Intl.ListFormat` in `en-GB`, which has
-  no serial comma: "Oil, Resin or Leaf". Forms, deities, zodiac, planets and
+  no serial comma: "oil, resin or leaf". Forms, deities, zodiac, planets and
   elements join with "or"; categories join with "and" in all-mode ("in the
-  Protection and Healing categories") and "or" in any-mode ("in the Protection or
-  Healing category"). `Intl.ListFormat` is Baseline Widely Available, so the
-  browser-floor guard needs no line for it.
+  protection and healing categories") and "or" in any-mode ("in the protection or
+  healing category"). `Intl.ListFormat` is Baseline Widely Available, so the
+  browser-floor guard needs no line for it. The bare word the list format
+  writes ("or", "and") is a `join` fragment, with the spaces round it left as
+  `text`, so the component can set the word apart. A comma stays plain text. A join
+  is never a link and carries no facet.
+- **Casing.** A value is shown in lower case (`toLocaleLowerCase('en-GB')`): categories, forms,
+  elements, source and nomenclature. Deities, zodiac signs and planets keep their capitals
+  ("Hecate", "Scorpio", "the Sun"), since they are proper names. The text query is shown as
+  typed. A value that is already a lower-case phrase ("not toxic", "in stock") is unchanged.
+  The lowering is of the display text only: the fragment's `value` keeps its own spelling, so
+  removing it still finds the filter.
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   planets, which belongs to the linked value ("the Sun").
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
 - **Source, In Stock and Low Stock Only** belong to a coven's list and are named
   whenever the filter holds them. `source` (`local` or `compendium`) reads "from
-  the Local source" or "from the Compendium source"; `inStock` reads "in stock";
+  the local source" or "from the compendium source"; `inStock` reads "in stock";
   `lowStockOnly` reads "low or out of stock", the two badges it keeps. A false flag
   or a null source says nothing. Their fragments carry the facets `source`,
   `inStock` and `lowStockOnly` (`value` `true` for the two flags), so the component's

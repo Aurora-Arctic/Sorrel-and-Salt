@@ -22,7 +22,7 @@ import './index.scss';
 
 const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
 
-/** " matching “rue”" as far as typed, the term in bold. */
+/** " matching “rue”" as far as typed, the term in a hairline box like the other values. */
 function termNode(text: string): ReactNode {
   const open = text.indexOf('“');
   if (open < 0) return text;
@@ -38,8 +38,9 @@ function termNode(text: string): ReactNode {
 }
 
 /**
- * The clauses as far as typed, the values in bold, then the untyped rest invisible so the
- * tail keeps its full height while it types.
+ * The clauses as far as typed, the values in their boxes and the joining words in the accent,
+ * then the untyped rest invisible so the tail keeps its full height while it types. A value
+ * not yet reached keeps its room but shows no box.
  */
 function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode): ReactNode {
   let left = shown;
@@ -50,8 +51,13 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
     const here = !placed && cut < part.text.length;
     if (here) placed = true;
     const Tag = part.strong ? 'strong' : 'span';
+    const className = part.join
+      ? 'search-sentence__join'
+      : part.strong && cut === 0
+        ? 'search-sentence__unreached'
+        : undefined;
     return (
-      <Tag key={index}>
+      <Tag key={index} className={className}>
         {part.text.slice(0, cut)}
         {here ? caret : null}
         <span className="search-sentence__untyped">{part.text.slice(cut)}</span>

@@ -904,12 +904,20 @@ describe('CompendiumList filter', () => {
     });
 
     it('names a chosen category by its name, not its slug', () => {
+      // A slug that is more than the name in other case, so the name is what the sentence read.
+      const categories = [
+        ...CATEGORIES,
+        { id: 'c-tx', slug: 'test-x-slug', name: 'Testcraft', group: WARDS },
+      ];
       render(
-        <CompendiumList {...props({ filter: { ...NO_FILTER, categories: ['testcraft'] } })} />,
+        <CompendiumList
+          {...props({ categories, filter: { ...NO_FILTER, categories: ['test-x-slug'] } })}
+        />,
       );
 
-      expect(sentence()).toHaveTextContent('Testcraft');
-      expect(sentence()).not.toHaveTextContent('testcraft');
+      // The sentence shows categories in lower case.
+      expect(sentence()).toHaveTextContent('testcraft');
+      expect(sentence()).not.toHaveTextContent('test-x-slug');
     });
 
     it('holds no link, so a chosen value is removed in the panel alone', () => {

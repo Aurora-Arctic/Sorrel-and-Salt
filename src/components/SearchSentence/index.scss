@@ -12,14 +12,28 @@
   margin: 0;
 }
 
-// The values the sentence names are bold (700); there is no weight token, the scale is raw
-// numbers. Inside the disclosure they are one step lighter, 600.
+// The values the sentence names are a quiet mark: regular weight in a hairline box, like a
+// key on a keyboard. There is no weight token, the scale is raw numbers. The padding is the
+// box's own geometry, trimmed by its 1px edge, so it stays off the spacing scale.
 .search-sentence strong {
-  font-weight: 700;
+  font-weight: 400;
+  padding: 0.02em 0.3em;
+  border: 1px solid $hairline;
+  border-radius: radius('sharp');
 }
 
-.search-sentence__disclosure strong {
-  font-weight: 600;
+// A value the typing has not reached yet holds its room and shows no box.
+.search-sentence__unreached {
+  border-color: transparent;
+}
+
+// The joining words ("or", "and") are the loudest thing in the line: bold, in the accent,
+// a little apart. No box and no background, so they read as words, not as chosen values.
+.search-sentence__join {
+  margin-inline: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: $accent;
 }
 
 .search-sentence__disclosure > summary {

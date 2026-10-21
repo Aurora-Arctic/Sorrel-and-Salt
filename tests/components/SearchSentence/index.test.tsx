@@ -17,6 +17,14 @@ const sentence = (query = 'testwort') =>
     total: 3,
   });
 
+// Two categories, so the sentence holds a joining word ("and") between two values.
+const joined = () =>
+  buildSearchSentence({
+    filter: { categories: ['warding', 'mending'] },
+    labels: { categories: { warding: 'Testwarding', mending: 'Testmending' } },
+    total: 3,
+  });
+
 const BARE = buildSearchSentence({ filter: {}, total: 3 });
 
 const PROPS: SearchSentenceProps = { sentence: sentence(), query: 'testwort', pending: false };
@@ -50,8 +58,8 @@ describe('SearchSentence', () => {
     render(<SearchSentence {...PROPS} />);
 
     expect(status()).toHaveTextContent('testwort');
-    expect(status()).toHaveTextContent('Testwarding');
-    expect(status()).toHaveTextContent('Testwater');
+    expect(status()).toHaveTextContent('testwarding');
+    expect(status()).toHaveTextContent('testwater');
     expect(within(status()).queryAllByRole('link')).toHaveLength(0);
   });
 
@@ -79,9 +87,30 @@ describe('SearchSentence', () => {
   it('draws its clauses in the server markup, closed, so the disclosure opens before any script runs', () => {
     const html = renderToString(<SearchSentence {...PROPS} />);
 
-    expect(html).toContain('Testwarding');
+    expect(html).toContain('testwarding');
     expect(html).toContain('<details');
     expect(html).not.toMatch(/<details[^>]*\sopen/);
+  });
+
+  it('reads the joining word between two values, spaced, in the status region and the opened line', () => {
+    render(<SearchSentence sentence={joined()} query="" pending={false} />);
+
+    expect(status()).toHaveTextContent('in the testwarding and testmending categories');
+    fireEvent.click(summary());
+    expect(disclosure()).toHaveTextContent('in the testwarding and testmending categories');
+  });
+
+  it('types the joining word out with the rest of the sentence', () => {
+    stubMotion(false);
+    vi.useFakeTimers();
+    const props: SearchSentenceProps = { sentence: joined(), query: '', pending: false };
+    const { rerender } = render(<SearchSentence {...props} />);
+
+    rerender(<SearchSentence {...props} pending />);
+    pass(3000);
+
+    expect(disclosure(true)).toHaveTextContent('in the testwarding and testmending categories');
+    expect(status()).toBeEmptyDOMElement();
   });
 
   describe('while a search is on its way', () => {
@@ -133,13 +162,13 @@ describe('SearchSentence', () => {
       // Still searching: typed out, open, hidden, and the status region still quiet.
       expect(disclosure(true)).toHaveAttribute('aria-hidden', 'true');
       expect(disclosure(true)).toHaveAttribute('open');
-      expect(disclosure(true)).toHaveTextContent('Testwarding');
+      expect(disclosure(true)).toHaveTextContent('testwarding');
       expect(status()).toBeEmptyDOMElement();
 
       rerender(<SearchSentence {...PROPS} />);
       pass(500);
       // The search came back: the sentence is announced while the line is still held open.
-      expect(status()).toHaveTextContent('Testwarding');
+      expect(status()).toHaveTextContent('testwarding');
       expect(disclosure(true)).toHaveAttribute('open');
 
       // The count retyped, the hold, then the slide: the line settles closed and is readable.
