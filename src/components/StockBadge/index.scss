@@ -1,47 +1,36 @@
-@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
 // Low Stock wears the muted `.badge--low-stock` palette and Out of Stock a muted
 // red of its own, `.badge--out-of-stock` (both from the primitives); safety stays
-// the only solid, alarming badge. The states are also told apart by word and icon,
-// and Out of Stock by a heavier border, so the difference survives without colour.
+// the only solid, alarming badge. The badge is its drawing alone, so the two states
+// are told apart by the drawing (a double chevron, a slashed ring) as well as the
+// tint, and the difference survives without colour.
 .stock-badge {
-  gap: space(1);
-}
-
-.stock-badge--out {
-  border-width: 2px;
-  // Keeps the heavier border from making this badge taller than a Low Stock one;
-  // the top keeps the default size's optical drop (_mixins.scss, badge-padding).
-  padding-block: map.get(map.get($badge-sizes, 'default'), optical-drop) 0;
-  font-weight: 700;
+  // A square the height of a medium badge (24px), the drawing centred in it. The
+  // cards' `.badge` size rules set a padding of their own, so this one is zeroed
+  // beside the card's (IngredientCard/index.scss).
+  box-sizing: border-box;
+  inline-size: $stock-badge-size;
+  block-size: $stock-badge-size;
+  padding: 0;
+  justify-content: center;
 }
 
 .stock-badge__icon {
-  inline-size: 0.875em;
-  block-size: 0.875em;
+  inline-size: 1rem;
+  block-size: 1rem;
   flex: none;
 }
 
-// The Low badge and its tip together: the tip's anchor, and the box the pointer
-// may cross onto the tip within.
-.stock-badge-tip {
-  @include tip-anchor;
-}
-
-// The badge as a button: only the tip opens from it, so it keeps the badge look
-// and shows the help cursor and a focus ring.
-.stock-badge--low {
+// The badge as a button: only its icon tip opens from it (IconTip's own wrapper and
+// bubble), so it keeps the badge look and shows the help cursor and a focus ring.
+.stock-badge--low,
+.stock-badge--out {
   font-family: inherit;
   cursor: help;
 
   &:focus-visible {
     @include focus-ring;
   }
-}
-
-// InfoTip's bubble, placed by `useTip` above the badge.
-.stock-badge__tip {
-  @include tip-above;
 }

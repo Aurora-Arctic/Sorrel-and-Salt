@@ -306,6 +306,12 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     }`,
     variables: () => ({ id: jarId }),
   },
+  saveStock: {
+    source: `mutation ($workspaceId: ID!, $ingredientId: ID!) {
+      saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: { create: [], update: [], delete: [] }) { id }
+    }`,
+    variables: () => ({ ingredientId: heldEntryId }),
+  },
   deleteStock: {
     source:
       'mutation ($workspaceId: ID!, $id: ID!) { deleteStock(workspaceId: $workspaceId, id: $id) }',

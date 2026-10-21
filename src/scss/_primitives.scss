@@ -1250,6 +1250,34 @@
     gap: space(2);
   }
 
+  // A size, not a look, as `.btn--small` is, so it composes with every
+  // field: for a field the full size would make tall where it sits, drawn by
+  // its class (the StockDialog's Add Form, under the list of jars; no Field
+  // takes a size prop). The control comes down to its own height
+  // ($control-height-compact) with tighter padding, and the label and the
+  // text to the caption size; the edge, states and error stay the field's.
+  // A combobox's line inside the box follows in Combobox/index.scss.
+  .field--compact {
+    gap: space(1);
+
+    .field__label {
+      font-size: type-size('caption');
+    }
+
+    // As tall as a hint's ⓘ whether or not the field has one, so fields side
+    // by side in a row start their boxes level.
+    .field__label-row {
+      min-height: $icon-size;
+    }
+
+    .input,
+    .select {
+      min-height: $control-height-compact;
+      padding: space(1) space(2);
+      font-size: type-size('caption');
+    }
+  }
+
   // The body's weight: a label names the field, and the value is what reads.
   .field__label {
     font-size: type-size('small');
@@ -2101,7 +2129,10 @@
   }
 
   // The jar lines are a list: one `li` per jar, the form and quantity first and the
-  // stock badge last, so the badge lands at the right edge.
+  // stock badge last, at the right end. The line stops short of the card's right edge
+  // by half the difference between the large icon button below it (the actions' Edit
+  // pencil or three dots, `$icon-size-large`) and the badge, so the badge's centre sits
+  // on the icon's. The actions share the line's right edge, so this is the whole gap.
   .specimen__stock > ul {
     @include list-reset;
 
@@ -2115,6 +2146,7 @@
       align-items: center;
       justify-content: space-between;
       gap: space(2);
+      padding-inline-end: calc((#{$icon-size-large} - #{$stock-badge-size}) / 2);
 
       > span {
         display: inline-flex;

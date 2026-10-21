@@ -189,21 +189,22 @@ while the table was empty.
 ### The stock service
 
 `src/modules/ingredients/services/stock.ts` (M9.3) is how anything reads or
-writes a coven's stock. It has five functions, each taking the coven's id and
+writes a coven's stock. It has six functions, each taking the coven's id and
 checking membership first:
 
-| Function                                              | Checks              | What it does                                                                       |
-| ----------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
-| `createStock(session, workspaceId, variantId, input)` | `inventory: update` | Starts a jar of one form the coven does not hold yet, stored on that form (M12.28) |
-| `updateStock(session, workspaceId, id, input)`        | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it                  |
-| `deleteStock(session, workspaceId, id)`               | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place                     |
-| `getStock(session, workspaceId, id)`                  | `inventory: read`   | One jar, for any member of the coven, viewers included                             |
-| `stockOf(session, refs)`                              | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`                       |
+| Function                                               | Checks              | What it does                                                                       |
+| ------------------------------------------------------ | ------------------- | ---------------------------------------------------------------------------------- |
+| `createStock(session, workspaceId, variantId, input)`  | `inventory: update` | Starts a jar of one form the coven does not hold yet, stored on that form (M12.28) |
+| `updateStock(session, workspaceId, id, input)`         | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it                  |
+| `deleteStock(session, workspaceId, id)`                | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place                     |
+| `saveStock(session, workspaceId, ingredientId, batch)` | `inventory: update` | One ingredient's creates, updates and deletes in one transaction (M9.9)            |
+| `getStock(session, workspaceId, id)`                   | `inventory: read`   | One jar, for any member of the coven, viewers included                             |
+| `stockOf(session, refs)`                               | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`                       |
 
 The permission is the `inventory` statement in
 `src/modules/coven/services/access-control.ts`: viewers hold `read`, members
 and owners `read` and `update`. The statement has no `create` or `delete`,
-so all three writes check `update`; the `ingredient` statement is not used for
+so all four writes check `update`; the `ingredient` statement is not used for
 stock.
 
 - **A jar is read through a live form of a live ingredient.** M5.3's ingredient
@@ -253,8 +254,12 @@ stock.
   threshold, `createStock` writes 3 for a count unit, and 10 g or 15 ml
   converted into the jar's own unit with `unitConvert` for a weight or a
   volume: 10 g is 0.01 in kilograms and 15 ml is 3 in teaspoons. A threshold the
-  input states, `0` included, is kept. A jar with no unit gets none, and
-  `updateStock` never applies the default.
+  input states, `0` included, is kept. A jar with no unit gets none. The rule is
+  `defaultThreshold` in `validation/default-threshold.ts`, in `validation/` (the seed may reach only that, `schema/` and the index), so
+  the demo seed (which may not import a service) reads the same one.
+  `updateStock` applies it once, to a jar that had no unit and gets one while its
+  threshold is empty (M9.9); a threshold the jar holds or the input states, `0`
+  included, is kept, and a jar that already had a unit gets none.
 
 ### The workspace ingredient list
 
@@ -345,3 +350,26 @@ rows are the coven's. Unlike the compendium's, it is never cached: what it
 counts differs from coven to coven (CLAUDE.md rule 6).
 
 **A save never moves a jar** (M12.27). Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save gives the entry a compendium entry's name or formal name. The save-time follow of M12.8 (`carryJarsToLocal`, `JarMergeNeeded`, the `jarMerges` input and the jar merge) is gone, and M12.28 removed the rest of M12.8, the `createStock` redirect that stored a new jar of a matched entry's form on the local's form. The three saves no longer take the per-coven advisory lock (`lockCovenStock`) or assert `inventory: update`; both were added by M12.8 for the carry alone. The lock now has three callers: `createStock`, `removeCupboardEntry` (M12.15), which counts jars under it, and `convertCompendiumEntryToLocal` (M12.23), which moves a held entry's jars and spell layers onto the forms of a new own entry ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Converting a compendium entry into our own"). The reverse, turning an own entry into the compendium entry it duplicates, was built as M12.21 and removed by M12.42: linking goes one way in v1 and the other way waits for v2 (DESIGN.md §13). The convert also calls `lockJarsOfIngredient` and `lockLiveVariants`, the two locked reads left after M12.28 removed the redirect's `lockJarsOnHiddenEntries` and `lockLocalsHiding`. The retired design is recorded in [`m12.8-jar-follows-local.md`](../design-decisions/m12.8-jar-follows-local.md).
+
+- **A batch save is one transaction (M9.9).** `saveStock` is the stock
+  dialog's one Save: a `create` list (`{ variantId, input }`), an `update` list
+  (`{ id, input }`) and a `delete` list of ids, all of one ingredient, in three
+  lists so a delete cannot carry a quantity. It checks `inventory: update`
+  once, parses every row with the same `StockInput`, then reads every jar with
+  `findStockByIds` and every form with `findReadableVariant` before it writes
+  anything. A jar or form of another coven, of another ingredient than
+  `ingredientId`, deleted, or not a uuid refuses the whole batch with
+  `NotFound`; a jar named twice (twice in one list, or in `update` and
+  `delete`) is a `ValidationError`. The write is one `withAudit` that takes
+  `lockCovenStock` first, then adds the cupboard row (once, for a first
+  compendium jar; an all-delete adds none), then creates, updates and deletes.
+  The per-row columns are `createStock`'s and `updateStock`'s own helpers, so
+  the first-unit default threshold applies per row and no unit is ever
+  converted. Every bad row comes back in one `ValidationError` whose paths
+  carry the list and position: `create.0.input.quantityOnHand`,
+  `update.1.input.lowStockThreshold`, and `create.2.variantId` for a form the
+  coven already holds (the unique index breaking, mapped to the row being
+  inserted). An empty batch opens no transaction. The result is the
+  ingredient's live jars after the write (`findStockOfIngredients`).
+  `findStockByIds` (`src/db/repository/stock.ts`) reads a coven's live jars by
+  id under the same proof and readability rules as the other finders.

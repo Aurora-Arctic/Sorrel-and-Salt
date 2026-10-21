@@ -404,3 +404,16 @@ export interface AnnotateMoreProps {
   canRemove: boolean;
   removedHref?: Route;
 }
+
+/**
+ * One of the coven's jars as the details modal's Forms block reads it (M9.9): the form it
+ * holds, by variant id, and its stock. The Edit Stock dialog's own jar, less its id.
+ */
+export interface SummaryJar {
+  variantId: string;
+  /** On hand: `null` is held but not measured, `0` is out. */
+  quantity: number | null;
+  unit: string | null;
+  /** The low-stock threshold, `null` or 0 for none. */
+  threshold: number | null;
+}

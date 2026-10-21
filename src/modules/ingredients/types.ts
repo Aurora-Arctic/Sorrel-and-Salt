@@ -247,6 +247,16 @@ export type IngredientValues = z.input<typeof LocalIngredientInput>;
 /** What the stock service parses: the row editor's values, or a mutation's input. */
 export type StockValues = z.input<typeof StockInput>;
 
+/**
+ * What `saveStock` takes: the stock dialog's whole Save, three lists so a
+ * delete cannot carry a quantity (M9.9).
+ */
+export interface SaveStockValues {
+  create: { variantId: string; input: StockValues }[];
+  update: { id: string; input: StockValues }[];
+  delete: string[];
+}
+
 /** What the reference service parses: the form's values, or a mutation's input. */
 export type ReferenceValues = z.input<typeof ReferenceInput>;
 

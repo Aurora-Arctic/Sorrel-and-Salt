@@ -34,7 +34,7 @@ is the wrapper every admin page opens it through (below).
 | `qualifier`                                      | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
 | `formalName`, `topEnd`, `formalActions`, `under` | The quick-look head's extras ("A title with its own end"); absent on every other dialog                                                 |
 | `onClose`                                        | Asked for by the Close button, Escape and a click outside                                                                               |
-| `size`                                           | `'wide'` for a long form; absent, the default width                                                                                     |
+| `size`                                           | `'wide'` for a long form, `'listed'` for the default column with a list beside it; absent, the default width                            |
 | `readingBody`                                    | A body only to read, with nothing to fill in (M12.5's details): Tab stops on the body itself, so a keyboard can scroll it               |
 | `loading`                                        | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
 | `children`                                       | The body: a form, a confirmation, whatever the owner puts here                                                                          |
@@ -462,7 +462,10 @@ the details window passes them; every other dialog is drawn as before (the owner
   margin takes half the difference off each side and their middle stands on the
   line's. With no formal name the title takes the first row and the actions stand beside it.
   An action wrapped in a node of its own, as a coven's own entry's pair of icons is, has that wrapper's
-  margin cleared, since the grid places it. Empty, it takes no room.
+  margin cleared, since the grid places it. A `<dialog>` among them keeps its margin
+  (`> :not(dialog)`): a `ModalButton` draws its dialog beside its button, and the
+  browser's `margin: auto` is what centres a dialog in the top layer, so zeroing it
+  opened the Edit Stock dialog at the window's top left over Quick Look (M9.9). Empty, it takes no room.
 - **`under`** is a wrapping row (`.modal-dialog__under`, `space(3)` apart) under the
   qualifier, for the badges. Empty, it takes no room.
 
@@ -521,17 +524,27 @@ owner writes neither. It was lifted from `InviteDialog`, which carried the
 first copy, and is for every modal a page's button opens: an Invite, a Leave
 Coven. `ModalButtonProps` (`types.ts`):
 
-| Prop        | What it is                                                               |
-| ----------- | ------------------------------------------------------------------------ |
-| `label`     | The button's text and accessible name, in title case                     |
-| `className` | The button's classes, `btn btn--solid`                                   |
-| `title`     | The dialog's heading and accessible name                                 |
-| `size`      | As `Modal`'s                                                             |
-| `children`  | A function of the modal's close, so a form can close it once it has sent |
+| Prop        | What it is                                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| `label`     | The button's text and accessible name, in title case; an icon where `ariaLabel` names it       |
+| `className` | The button's classes, `btn btn--solid`                                                         |
+| `title`     | The dialog's heading and accessible name                                                       |
+| `eyebrow`   | As `Modal`'s: an edit dialog's small line over the title (M9.9)                                |
+| `qualifier` | As `Modal`'s: after the title, in the dialog's name (M9.9)                                     |
+| `ariaLabel` | The button's name where its text repeats down a list: "Edit Stock, Rosemary"                   |
+| `tip`       | A tip over an icon button, "Edit Stock" over the pencil; it wraps the button, never the dialog |
+| `size`      | As `Modal`'s                                                                                   |
+| `children`  | A function of the modal's close, so a form can close it once it has sent                       |
 
 It gives the focus back through Modal's own return
 ([above](#giving-the-focus-back)), naming its button as `returnTo` for
 WebKit, where a click focuses no button.
+
+A button repeated down a list, the Edit Stock on each coven card (M9.9), is an
+icon (the pencil) whose `ariaLabel` is its whole name. Its `tip` wraps the
+button alone: the dialog is a DOM child of whatever wraps it, so a tip around
+both would open on the dialog's focus and hover and take its Escape. Its dialog's head is the edit head: `eyebrow` "Edit Stock", `title`
+the ingredient, so the dialog is named as the button is.
 
 ### Add Ingredient
 
@@ -765,6 +778,11 @@ owner, went back to the default column on the owner's call, since the form
 caps itself at that width and the wide modal only drew empty space beside it.
 M8.16's IngredientForm modal should take the default too, for the same reason. It changes only the width; the body scrolls
 within the viewport's height either way.
+
+`size="listed"` adds `.modal-dialog--listed`, for the default column with a list down its side, a
+third of the body to the list and two to the column: half `$dialog-column` again plus a
+`space(4)` gap, 49rem, so the column keeps the width it has in a dialog of its own. The Edit
+Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`](stock-dialog.md)).
 
 ## Stories
 

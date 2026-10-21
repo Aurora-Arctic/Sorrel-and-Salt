@@ -468,8 +468,10 @@ describe("the coven Ingredients page's details modal", () => {
       '/coven/fixture-coven/ingredients/b2',
     );
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
-    // Nor the menu a coven's own entry has.
-    expect(within(dialog).queryByRole('button', { name: /^Edit\b/ })).not.toBeInTheDocument();
+    // Nor the menu a coven's own entry has; Edit Stock edits the jars, not the entry.
+    expect(
+      within(dialog).queryByRole('button', { name: /^Edit\b(?! Stock)/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("draws neither the plus nor the check in the details of a held compendium entry, though another of the member's covens lacks it", async () => {
@@ -735,5 +737,89 @@ describe("the coven Ingredients page's card More", () => {
     expect(screen.getByRole('link', { name: /^Testwort/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^(Delete|Remove) / })).not.toBeInTheDocument();
+  });
+});
+
+describe("the coven Ingredients page's Edit Stock", () => {
+  const asRole = (role: string) =>
+    requireCovenMembership.mockResolvedValue({
+      workspace: COVEN,
+      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
+    });
+  const JAR = {
+    id: 'j1',
+    variantId: 'v1',
+    quantityOnHand: '3',
+    unit: 'oz',
+    lowStockThreshold: '1',
+  };
+  const list = () => screen.getByRole('list', { name: 'Ingredients' });
+  const pencil = (scope: HTMLElement, name: string) =>
+    within(scope).queryByRole('button', { name: `Edit Stock, ${name}` });
+  // The foot's controls bar the card's own two links, its name and its Quick Look.
+  const footOf = (scope: HTMLElement): string[] =>
+    [...within(scope).queryAllByRole('button'), ...within(scope).queryAllByRole('link')]
+      .map((control) => control.getAttribute('aria-label') ?? control.textContent ?? '')
+      .filter((name) => /^(Edit|Annotate|Delete|More|Remove)/.test(name))
+      .sort();
+
+  beforeEach(() => {
+    // Each ingredient's own jars, whether the list's batch or the details' one read.
+    stockOf.mockImplementation(async (_session: unknown, refs: { ingredientId: string }[]) =>
+      refs.map(({ ingredientId }) => (ingredientId === 'a1' ? [JAR] : [])),
+    );
+    ingredientDetailOf.mockImplementation(async (_session: unknown, entry: { id: string }) => ({
+      ...entryDetail({ id: entry.id }),
+      variants: [
+        {
+          variant: { id: 'v1', form: 'fixture herb', toxic: false, safetyNotes: null },
+          icon: null,
+          categories: [],
+          substitutes: [],
+          references: [],
+        },
+      ],
+    }));
+    heldCompendiumEntry.mockResolvedValue(undefined);
+  });
+
+  it("gives a member Edit Stock on every card, opening on the entry's jars by form", async () => {
+    await renderPage();
+    expect(pencil(list(), 'House Salt')).toBeInTheDocument();
+    fireEvent.click(pencil(list(), 'Testwort')!);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
+    expect(within(dialog).getByRole('spinbutton', { name: 'Quantity, Fixture Herb' })).toHaveValue(
+      3,
+    );
+    expect(
+      within(dialog).getByRole('spinbutton', { name: 'Low Stock At, Fixture Herb' }),
+    ).toHaveValue(1);
+  });
+
+  it('gives a viewer no Edit Stock, on a card or in the details, though both show', async () => {
+    asRole('viewer');
+    await renderPage({ entry: 'a1' });
+    // The card and the details are drawn, so the pencil's absence is the role's.
+    expect(screen.getByRole('link', { name: 'Quick Look Testwort' })).toBeInTheDocument();
+    const details = screen.getByRole('dialog', { name: 'Testwort' });
+    expect(within(list()).queryAllByRole('button', { name: /^Edit Stock/ })).toHaveLength(0);
+    expect(within(details).queryByRole('button', { name: /^Edit Stock/ })).toBeNull();
+  });
+
+  it("draws the same controls in the details as on the entry's card, Edit Stock among them", async () => {
+    await renderPage({ entry: 'a1' });
+    const details = screen.getByRole('dialog', { name: 'Testwort' });
+    const card = screen.getByRole('link', { name: 'Quick Look Testwort' }).closest('article')!;
+    expect(footOf(details)).toContain('Edit Stock, Testwort');
+    expect(footOf(details)).toEqual(footOf(card as HTMLElement));
+  });
+  it("shows each form's jar in the details' Forms to every role, a viewer included", async () => {
+    asRole('viewer');
+    await renderPage({ entry: 'a1' });
+    const forms = within(screen.getByRole('dialog', { name: 'Testwort' })).getByRole('list', {
+      name: 'Forms',
+    });
+    // The jar read for the details, on its form: the quantity is the coven's, not the compendium's.
+    expect(within(forms).getByRole('listitem')).toHaveTextContent(/Fixture Herb.*3 oz/);
   });
 });

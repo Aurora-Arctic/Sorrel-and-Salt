@@ -49,9 +49,11 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 
 ## Stock
 
-| Doc                                | Component                                                                                    |
-| ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| [`stock-badge.md`](stock-badge.md) | A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line |
+| Doc                                  | Component                                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| [`stock-badge.md`](stock-badge.md)   | A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line |
+| [`stock-fields.md`](stock-fields.md) | A jar's quantity, unit and low-stock threshold fields, for whichever form holds a jar        |
+| [`stock-dialog.md`](stock-dialog.md) | The Edit Stock pencil on a coven card and the dialog that edits, adds and removes its jars   |
 
 ## Pages
 

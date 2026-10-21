@@ -10,7 +10,7 @@ import '../AddIcon/index.scss';
 /**
  * The start of the tip and the name: the compendium's one noun for "you hold this" is the
  * cupboard, as the entry page's In Your Cupboard and the details modal's In Your Cupboards say
- * (MB.120, the owner's call, 2026-10-20, in place of In All Covens).
+ * (MB.120, the owner's call, 2026-10-20).
  */
 export const HELD_ALL_TIP = 'In Every Cupboard';
 

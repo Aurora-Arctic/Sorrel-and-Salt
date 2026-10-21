@@ -15,6 +15,7 @@ import { useField } from './use-field';
 export function TextField<V extends FieldValues = FieldValues>({
   name,
   label,
+  labelSuffix,
   hint,
   note,
   required,
@@ -54,6 +55,8 @@ export function TextField<V extends FieldValues = FieldValues>({
     disabled,
     placeholder,
     autoComplete,
+    // Any decimal: the browser's default step is whole numbers, which would flag 2.5 as invalid.
+    step: type === 'number' ? 'any' : undefined,
     'aria-required': required || undefined,
     ...aria,
     ...register(name, { deps, onBlur: format ? tidy : undefined }),
@@ -61,6 +64,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   return (
     <FieldShell
       label={label}
+      labelSuffix={labelSuffix}
       hint={hint}
       note={note}
       required={required}

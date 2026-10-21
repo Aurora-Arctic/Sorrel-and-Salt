@@ -104,6 +104,20 @@
   @include icon-button-edit;
 }
 
+// A coven card foot's Edit and Annotate icons in the theme's main text colour, the owner's call
+// (M9.9, 2026-10-20), in place of the accent green, which its Edit Stock pencil keeps:
+// `$text-primary` is chalk on the dark page and the body text on the light one, where a
+// pure white would vanish on a card.
+// The hover and focus tint stays the edit pencil's.
+.icon-tip__edit--plain {
+  &,
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: $text-primary;
+  }
+}
+
 // The three dots (a More menu, M8.17) in the ink of the page rather than Edit's green, at rest and
 // pressed alike: white in dark and the body text in light, `$card-more-ink`, wherever it stands
 // (a card's foot, the entry page, the Quick Look window; the owner's call, 2026-10-20), where the

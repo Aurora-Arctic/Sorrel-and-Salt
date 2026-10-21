@@ -85,6 +85,7 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
 const ENTRIES = [
   entry('e1', 'Testwort', {
     kind: 'own',
+    variants: [{ form: 'fixture herb' }, { form: 'fixture oil' }],
     jars: [
       { id: 'j1', form: 'Fixture Herb', icon: null, quantity: 3, unit: 'oz', threshold: null },
     ],
@@ -162,6 +163,58 @@ describe('CovenCards', () => {
   it('draws a jar line for each jar an entry holds', () => {
     render(<Cards {...props()} />);
     expect(screen.getAllByText(/Fixture Herb/)).toHaveLength(1);
+  });
+
+  it('draws no forms line, the jar lines standing in its place', () => {
+    render(<Cards {...props()} />);
+    const card = screen.getByRole('list', { name: 'Ingredients' });
+    // The jar line names the form held; the form held of none is named nowhere.
+    expect(within(card).getAllByText(/Fixture Herb/)).toHaveLength(1);
+    expect(within(card).queryByText(/Fixture Oil/i)).toBeNull();
+  });
+
+  it('draws Edit Stock on a card only when it is given the stock, opening on its jars', () => {
+    const stock = {
+      forms: [
+        { variantId: 'v1', label: 'Fixture Herb' },
+        { variantId: 'v2', label: 'Fixture Oil' },
+      ],
+      jars: [{ id: 'j1', variantId: 'v1', quantity: 3, unit: 'oz', threshold: null }],
+    };
+    render(<Cards {...props({ entries: [{ ...ENTRIES[0]!, stock }, ENTRIES[1]!] })} />);
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const pencils = within(list).getAllByRole('button', { name: /^Edit Stock/ });
+    expect(pencils).toHaveLength(1);
+    expect(pencils[0]).toHaveAccessibleName('Edit Stock, Testwort');
+
+    fireEvent.click(pencils[0]!);
+    const dialog = screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
+    expect(within(dialog).getByRole('spinbutton', { name: 'Quantity, Fixture Herb' })).toHaveValue(
+      3,
+    );
+  });
+
+  it("puts Edit Stock first in a card's foot, before Edit", () => {
+    const editHref = '/coven/fixture-coven/ingredients?edit=e1' as Route;
+    const stock = { forms: [{ variantId: 'v1', label: 'Fixture Herb' }], jars: [] };
+    render(
+      <Cards
+        {...props({
+          entries: [
+            {
+              ...ENTRIES[0]!,
+              editHref,
+              editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+              stock,
+            },
+          ],
+        })}
+      />,
+    );
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const pencil = within(list).getByRole('button', { name: /^Edit Stock/ });
+    const edit = within(list).getByRole('link', { name: /^Edit Testwort/ });
+    expect(pencil.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('draws Edit on a card only when it is given an edit address, named for the entry', () => {

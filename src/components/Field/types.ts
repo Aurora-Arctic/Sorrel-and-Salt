@@ -4,6 +4,11 @@ import type { FieldPath, FieldValues } from 'react-hook-form';
 /** What every field shares: what it is called, and what it is told about it. */
 export interface FieldProps {
   label: string;
+  /**
+   * Read after the label, out of sight: "Quantity, Flower". For a field drawn
+   * once per row, so two rows' fields never share a name (M9.9's StockDialog).
+   */
+  labelSuffix?: string;
   /** What the field is for, behind an info tip beside the label. */
   hint?: string;
   /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */
@@ -69,8 +74,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
   multiline?: boolean;
   /** A textarea's height in lines, where its prose runs longer than the primitive's 6rem holds. */
   rows?: number;
-  /** The input's type, for a single line: a reference's days are `date`s. */
-  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
+  /** The input's type, for a single line: a reference's days are `date`s, a jar's amounts `number`s (any decimal, read back as the text typed). */
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
   /** Shut, for a field the rest of the form has ruled out; its note says why. */
   disabled?: boolean;
   /** Fields whose errors this one's value decides as well, revalidated when it changes. */
@@ -114,6 +119,8 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
    * want a search, the deities' traditions.
    */
   typeahead?: boolean;
+  /** Shut, for a field the form has no use for yet: the select-only box only. */
+  disabled?: boolean;
   deps?: FieldPath<V>[];
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;

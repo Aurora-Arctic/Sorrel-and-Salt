@@ -289,11 +289,14 @@ test.fixme(
       const row = rowOf(ingredientList(page), 'Comfrey');
       await expect(row).toBeVisible();
       await expect(localBadge(row)).toHaveCount(0);
+      // The amounts themselves are asserted from the database above; here the dialog shows them.
       const editor = stockEditor(row, 'Comfrey');
       await editor.open.click();
-      await expect(editor.quantity).toHaveValue('50');
-      await expect(editor.unit).toHaveValue('g');
-      await expect(editor.threshold).toHaveValue('10');
+      const leaf = editor.jar('Leaf');
+      await expect(leaf.quantity).toHaveValue('50');
+      await expect(leaf.unit).toHaveText('g');
+      await expect(leaf.threshold).toHaveValue('10');
+      await editor.cancel.click();
     });
 
     await test.step('adding it again is handled: still one jar, and no error', async () => {

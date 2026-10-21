@@ -29,6 +29,7 @@ const IngredientCard = ({
   formalName,
   nomenclature,
   variants = [],
+  forms = true,
   categories = [],
   toxic,
   safetyNotes,
@@ -116,7 +117,7 @@ const IngredientCard = ({
           )}
         </div>
         <CategoryChips categories={categories} label={label} />
-        {variants.length > 0 && (
+        {forms && variants.length > 0 && (
           <p className="ingredient-card__forms">
             {variants.map((variant, at) => (
               <Fragment key={variant.form}>

@@ -98,6 +98,9 @@ const BASE: CovenCardsProps = {
 
 export const Default: Story = () => <CovenCards {...BASE} />;
 
+// A viewer: the same jar lines, and no way to add.
+export const ForAViewer: Story = () => <CovenCards {...BASE} canAdd={false} />;
+
 // A page with a neighbour on each side.
 export const MidList: Story = () => (
   <CovenCards
@@ -182,5 +185,43 @@ export const WithLoneBin: Story = () => (
   <CovenCards
     {...BASE}
     entries={ENTRIES.map((shown) => (shown.kind === 'own' ? { ...shown, mayDelete: true } : shown))}
+  />
+);
+
+// A member's foot with the stock (M9.9): Edit or Annotate, the Edit Stock pencil, then More.
+// The jar lines stay, a badge per jar; the forms line is gone from every coven card.
+const STOCK: Record<string, CovenCardEntry['stock']> = {
+  'own-1': {
+    forms: [
+      { variantId: 'v1', label: 'Dried Leaf' },
+      { variantId: 'v2', label: 'Oil' },
+    ],
+    jars: [
+      { id: 'j1', variantId: 'v1', quantity: 3, unit: 'oz', threshold: 1 },
+      { id: 'j2', variantId: 'v2', quantity: 0.5, unit: 'oz', threshold: 1 },
+    ],
+  },
+};
+
+export const WithStock: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+            mayDelete: true,
+            stock: STOCK[shown.id],
+          }
+        : {
+            ...shown,
+            annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}`,
+            mayMakeOurs: true,
+            mayRemove: true,
+            stock: { forms: [{ variantId: `${shown.id}-v`, label: 'Coarse' }], jars: [] },
+          },
+    )}
   />
 );

@@ -275,7 +275,7 @@ test.fixme(
     await test.step('B changes the quantity in place, and the row names B and the moment', async () => {
       const editor = stockEditor(row, 'Testwort');
       await editor.open.click();
-      await editor.quantity.fill('2');
+      await editor.jar('Root').quantity.fill('2');
       await editor.save.click();
 
       await expect(row.getByText('Fixture B', { exact: true })).toBeVisible();

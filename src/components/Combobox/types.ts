@@ -396,6 +396,8 @@ export interface ComboboxSelectProps {
   inputRef?: Ref<HTMLDivElement>;
   /** A change this box started is on its way (M12.33): the box is `aria-busy` and carries a spinner. */
   busy?: boolean;
+  /** Shut: `aria-disabled`, out of the tab order, deaf to the pointer and the keys, drawn as a disabled input. */
+  disabled?: boolean;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }

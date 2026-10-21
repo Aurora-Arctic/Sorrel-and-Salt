@@ -106,6 +106,13 @@ export const ManyForms: Story = () => (
   </IngredientCard>
 );
 
+// The coven's card: no forms line (the jar lines name each form held, and the pencil edits them).
+export const NoFormsLine: Story = () => (
+  <IngredientCard {...BASE} kind="own" forms={false}>
+    <Jars />
+  </IngredientCard>
+);
+
 // Retired under the formal name and Toxic beside the name, Toxic winning over Caution.
 export const RetiredCaution: Story = () => (
   <IngredientCard {...BASE} kind="cupboard" retired safetyNotes="Keep away from open flame.">

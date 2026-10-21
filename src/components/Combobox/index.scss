@@ -14,6 +14,10 @@
 // hidden copy all take it.
 $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
+// The same line in a compact field (`.field--compact`, M9.9), off its
+// shorter box.
+$text-height-compact: calc(#{$control-height-compact} - 2px - #{2 * space(1)});
+
 // The least width a text slot keeps in a row: a few letters' room, or beside
 // chips the placeholder's (`--combobox-room`, room.ts), never past the row.
 $room: min(100%, max(6rem, var(--combobox-room, 0px)));
@@ -62,6 +66,25 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// Shut, as a disabled input is drawn (_primitives.scss): dashed, unfilled,
+// muted and faded, its label dimmed. A div, so `aria-disabled` rather than
+// `:disabled` says it.
+.input.combobox__control--select.is-disabled {
+  border-style: dashed;
+  background-color: transparent;
+  color: $text-muted;
+  opacity: 0.7;
+  cursor: not-allowed;
+
+  &:hover {
+    border-color: $text-muted;
+  }
+}
+
+.field:has(.combobox__control.is-disabled) .field__label {
+  color: $text-muted;
+}
+
 // A chosen value, or the placeholder, at the text's height and inset. Its
 // line is the input's whole height, so the text sits centred in it as an
 // input centres its own, and a select's text lines up with a typed box's.
@@ -76,6 +99,29 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   &.is-placeholder {
     color: $text-placeholder;
+  }
+}
+
+// A compact field's box keeps its text on the shorter line, so the box
+// stands at $control-height-compact, level with a compact text field.
+.field--compact {
+  // No block padding: the chevron's button is an icon's height, and with
+  // the full box's padding it would stand the box over the compact height.
+  .input.combobox__control {
+    padding-block: 0;
+  }
+
+  .combobox__value,
+  .combobox__input {
+    min-height: $text-height-compact;
+    line-height: $text-height-compact;
+  }
+
+  // The open list in the box's own caption size, as the text it would put in
+  // the box (the owner's call, 2026-10-20). The list is the field's child, not
+  // portalled, so the field's class reaches it.
+  .combobox__option {
+    font-size: type-size('caption');
   }
 }
 
@@ -262,7 +308,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   max-height: min(20rem, var(--combobox-list-room, 20rem));
   overflow: hidden auto;
 
-  @include list-reset(space(1) 0, false);
+  // No padding above or below the rows: the first and last rows' highlight
+  // meets the panel's edge, with no strip it never covers (the owner's call,
+  // 2026-10-20).
+  @include list-reset(0, false);
   @include floating-panel;
 
   &.is-open {
@@ -389,6 +438,23 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
       transition: none;
     }
   }
+}
+
+// The rows at the panel's top and bottom edges take its inner corners, so a
+// highlight there follows the curve rather than a square inside it (the
+// owner's call, 2026-10-20). A row is a list's direct child, or the last
+// group's last; one row alone is both first and last, and rounds all four. A
+// group's heading, not a row, is the top of a grouped list. The panel's 1px
+// edge is `floating-panel`'s, on the list or, inset, on the popup.
+.combobox__list > .combobox__option:first-child {
+  border-start-start-radius: calc(#{radius('surface')} - 1px);
+  border-start-end-radius: calc(#{radius('surface')} - 1px);
+}
+
+.combobox__list > .combobox__option:last-child,
+.combobox__list > .combobox__group:last-child .combobox__option:last-child {
+  border-end-start-radius: calc(#{radius('surface')} - 1px);
+  border-end-end-radius: calc(#{radius('surface')} - 1px);
 }
 
 // A choice that makes something new: after a hairline rule, led by a plus.

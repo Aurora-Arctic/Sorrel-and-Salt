@@ -30,6 +30,11 @@ export interface IngredientCardProps {
    * group's icon before its name on the secondary line, and    * the notes of those that have any. Structural, so a GraphQL variant passes as is.
    */
   variants?: readonly SafetyVariant[];
+  /**
+   * Draws the forms line. A coven card turns it off (M9.9): its jar lines name each form held,
+   * and its Quick Look lists every form. The variants still feed the safety marks. Defaults to true.
+   */
+  forms?: boolean;
   /** The ingredient's own toxic flag; the Toxic mark also shows when any listed form is flagged. */
   toxic?: boolean | null;
   /** The ingredient's own safety notes; any notes here or on a listed form show the Caution badge, never the notes themselves. */

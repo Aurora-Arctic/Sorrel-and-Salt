@@ -4,16 +4,19 @@ import { COVEN_STOCK_LOCK_NAMESPACE } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import {
+  type SaveStockValues,
   type StockValues,
   createStock,
   deleteStock,
   getStock,
+  saveStock,
   stockOf,
   updateStock,
 } from '@/modules/ingredients';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
@@ -269,6 +272,63 @@ describe('updateStock', () => {
     expect((await jars())[0]).toMatchObject({ unit: null, unit_dimension: null });
   });
 
+  describe('the default threshold', () => {
+    // A jar saved with a quantity and no unit holds no threshold either; the
+    // unit it later gets brings the dimension's default, as a new jar's does.
+    it.each([
+      ['g', 10],
+      ['kg', 0.01],
+      ['ml', 15],
+      ['tsp', 3],
+      ['piece', 3],
+    ] as const)(
+      'writes the default threshold for the first unit a jar gets: %s',
+      async (unit, threshold) => {
+        const id = await seedJar({ unit: null, lowStockThreshold: null });
+
+        await updateStock(asUser(B), WORKSPACE_W_ID, id, { unit });
+
+        const [jar] = await jars();
+        expect(jar.unit).toBe(unit);
+        expect(Number(jar.low_stock_threshold)).toBeCloseTo(threshold, 6);
+      },
+    );
+
+    it('leaves a threshold the jar already holds alone, as it leaves one the input states', async () => {
+      const held = await seedJar({ unit: null, lowStockThreshold: '4' });
+      await updateStock(asUser(A), WORKSPACE_W_ID, held, { unit: 'g' });
+      expect(Number((await jars())[0].low_stock_threshold)).toBe(4);
+
+      const stated = await seedJar({
+        ingredientId: ownIngredient,
+        variantId: ownForm,
+        unit: null,
+        lowStockThreshold: null,
+      });
+      await updateStock(asUser(A), WORKSPACE_W_ID, stated, { unit: 'g', lowStockThreshold: 0 });
+      const rows = await jars();
+      expect(Number(rows.find((row) => row.id === stated)?.low_stock_threshold)).toBe(0);
+    });
+
+    it('writes none for a jar that already had a unit, or when the update sets none', async () => {
+      const united = await seedJar({ unit: 'g', lowStockThreshold: null });
+      await updateStock(asUser(A), WORKSPACE_W_ID, united, { unit: 'kg' });
+      await updateStock(asUser(A), WORKSPACE_W_ID, united, { quantityOnHand: 2 });
+      expect((await jars())[0].low_stock_threshold).toBeNull();
+
+      const bare = await seedJar({
+        ingredientId: ownIngredient,
+        variantId: ownForm,
+        unit: null,
+        lowStockThreshold: null,
+      });
+      await updateStock(asUser(A), WORKSPACE_W_ID, bare, { quantityOnHand: 2 });
+      await updateStock(asUser(A), WORKSPACE_W_ID, bare, { unit: null });
+      const rows = await jars();
+      expect(rows.find((row) => row.id === bare)?.low_stock_threshold).toBeNull();
+    });
+  });
+
   it('refuses a viewer, who may still read the jar', async () => {
     const id = await seedJar();
     await expect(getStock(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
@@ -278,6 +338,10 @@ describe('updateStock', () => {
       Forbidden,
     );
     expect(await jars()).toEqual([before]);
+    // The same call by a member succeeds, so the refusal is the role.
+    await expect(
+      updateStock(asUser(B), WORKSPACE_W_ID, id, { quantityOnHand: 0 }),
+    ).resolves.toMatchObject({ id });
   });
 
   it('refuses D a jar of W by direct id, under either coven', async () => {
@@ -296,6 +360,10 @@ describe('updateStock', () => {
       NotFound,
     );
     expect((await jars())[0]).toEqual(before);
+    // The jar is live and a member of W writes it by the same id.
+    await expect(
+      updateStock(asUser(B), WORKSPACE_W_ID, id, { quantityOnHand: 0 }),
+    ).resolves.toMatchObject({ id });
   });
 
   it('refuses the site admin', async () => {
@@ -567,5 +635,374 @@ describe("a coven's stock lock", () => {
       });
       expect(jar.variantId).toBe(compendiumForm);
     });
+  });
+});
+
+// M9.9's batch: the dialog's one Save, a list of creates, updates and deletes
+// of one ingredient's jars in one transaction. Compendium entries are in the
+// cupboard only once stocked, so the cupboard rows are read raw below.
+describe('saveStock', () => {
+  const none: SaveStockValues = { create: [], update: [], delete: [] };
+  let powderForm: string;
+  let oilForm: string;
+
+  beforeEach(async () => {
+    powderForm = await insertVariant(
+      sql,
+      compendiumIngredient,
+      makeVariant({ form: 'Powder' }),
+      E.id,
+    );
+    oilForm = await insertVariant(sql, compendiumIngredient, makeVariant({ form: 'Oil' }), E.id);
+  });
+
+  const cupboardRows = () =>
+    sql`select ingredient_id from workspace_compendium_entries where deleted_at is null`;
+  const live = () => sql`select id from inventory_items where deleted_at is null order by id`;
+  const save = (user: Parameters<typeof asUser>[0], batch: Partial<SaveStockValues>) =>
+    saveStock(asUser(user), WORKSPACE_W_ID, compendiumIngredient, { ...none, ...batch });
+
+  it('creates, updates and deletes in one call and answers the ingredient’s live jars', async () => {
+    const kept = await seedJar();
+    const edited = await seedJar({ variantId: powderForm, quantityOnHand: '2', unit: 'g' });
+    const removed = await seedJar({ variantId: oilForm });
+    const teaForm = await insertVariant(
+      sql,
+      compendiumIngredient,
+      makeVariant({ form: 'Tea' }),
+      E.id,
+    );
+
+    const result = await save(B, {
+      create: [{ variantId: teaForm, input: { quantityOnHand: 7, unit: 'g' } }],
+      update: [{ id: edited, input: { quantityOnHand: 9 } }],
+      delete: [removed],
+    });
+
+    expect(result.map((jar) => jar.variantId).sort()).toEqual(
+      [compendiumForm, powderForm, teaForm].sort(),
+    );
+    expect(result.map((jar) => jar.id)).toEqual(expect.arrayContaining([kept, edited]));
+    expect(result.map((jar) => jar.id)).not.toContain(removed);
+    const rows = await jars();
+    expect(rows.find((jar) => jar.id === removed)).toMatchObject({
+      deleted_by: B.id,
+    });
+    expect(Number(rows.find((jar) => jar.id === edited)?.quantity_on_hand)).toBe(9);
+    expect(rows.find((jar) => jar.id === edited)).toMatchObject({ updated_by: B.id });
+    expect(rows.find((jar) => jar.id === kept)).toMatchObject({ updated_by: A.id });
+  });
+
+  it('creates new jars beside the held one, stamped as the writer', async () => {
+    const held = await seedJar();
+
+    const result = await save(B, {
+      create: [
+        { variantId: powderForm, input: { quantityOnHand: 7, unit: 'g' } },
+        { variantId: oilForm, input: { quantityOnHand: 1, unit: 'ml' } },
+      ],
+    });
+
+    expect(result).toHaveLength(3);
+    expect(result.map((jar) => jar.variantId).sort()).toEqual(
+      [compendiumForm, powderForm, oilForm].sort(),
+    );
+    const created = (await jars()).filter((jar) => jar.id !== held);
+    expect(created.map((jar) => jar.created_by)).toEqual([B.id, B.id]);
+    expect(created.map((jar) => jar.unit_dimension).sort()).toEqual(['volume', 'weight']);
+  });
+
+  it.each([
+    ['C, a viewer', C],
+    ['D, in an unrelated coven', D],
+    ['E, the site admin', E],
+  ])('refuses %s every part of the batch, by direct id', async (_label, user) => {
+    // The jar and form are real, live and in W, and a member's same call works.
+    const id = await seedJar({ variantId: powderForm });
+    const removed = await seedJar({ variantId: oilForm });
+    const [before] = await jars();
+    const batch = {
+      create: [{ variantId: compendiumForm, input: { quantityOnHand: 1 } }],
+      update: [{ id, input: { quantityOnHand: 99 } }],
+      delete: [removed],
+    };
+
+    await expect(save(user, batch)).rejects.toThrow(Forbidden);
+    expect((await jars())[0]).toEqual(before);
+    expect(await live()).toHaveLength(2);
+
+    await expect(save(B, batch)).resolves.toHaveLength(2);
+  });
+
+  it('refuses a viewer who may still read the jars', async () => {
+    const id = await seedJar();
+    await expect(getStock(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({ id });
+    await expect(save(C, { delete: [id] })).rejects.toThrow(Forbidden);
+    expect(await live()).toHaveLength(1);
+  });
+
+  it('writes nothing when one id is out of scope', async () => {
+    const own = await seedJar();
+    const otherCoven = await insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_X_ID,
+        ingredientId: compendiumIngredient,
+        variantId: compendiumForm,
+      },
+      D.id,
+    );
+    const otherIngredientJar = await insertStock(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: ownIngredient, variantId: ownForm },
+      A.id,
+    );
+    const goneJar = await seedJar({ variantId: powderForm, deleted: true });
+    const before = await jars();
+
+    const cases = [
+      { delete: [own, otherCoven] },
+      {
+        update: [
+          { id: own, input: { quantityOnHand: 1 } },
+          { id: otherCoven, input: {} },
+        ],
+      },
+      { delete: [otherIngredientJar, own] },
+      { update: [{ id: otherIngredientJar, input: { quantityOnHand: 1 } }] },
+      { delete: [goneJar] },
+      { delete: ['not-a-uuid'] },
+      { create: [{ variantId: otherCovenForm, input: {} }], delete: [own] },
+      { create: [{ variantId: ownForm, input: {} }], delete: [own] },
+      { create: [{ variantId: 'not-a-uuid', input: {} }], delete: [own] },
+    ];
+    for (const batch of cases) {
+      await expect(save(A, batch)).rejects.toThrow(NotFound);
+    }
+    expect(await jars()).toEqual(before);
+    expect(await cupboardRows()).toHaveLength(0);
+  });
+
+  it('refuses a jar twice in one batch, or in two lists', async () => {
+    const id = await seedJar();
+    await expect(save(A, { delete: [id, id] })).rejects.toThrow(ValidationError);
+    await expect(
+      save(A, { update: [{ id, input: { quantityOnHand: 1 } }], delete: [id] }),
+    ).rejects.toThrow(ValidationError);
+    expect(await live()).toHaveLength(1);
+  });
+
+  it('refuses a duplicate form in the creates once, with the held message, and writes nothing', async () => {
+    const edited = await seedJar({ variantId: oilForm, quantityOnHand: '1', unit: 'g' });
+    const before = await jars();
+
+    const refusal = await save(A, {
+      create: [
+        { variantId: powderForm, input: { quantityOnHand: 2, unit: 'g' } },
+        { variantId: powderForm, input: { quantityOnHand: 3, unit: 'g' } },
+      ],
+      update: [{ id: edited, input: { quantityOnHand: 50 } }],
+    }).catch((error: unknown) => error);
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as ValidationError).issues).toEqual([
+      { path: ['create', 1, 'variantId'], message: 'Your coven already holds this form' },
+    ]);
+    expect(await jars()).toEqual(before);
+    expect(await cupboardRows()).toHaveLength(0);
+  });
+
+  it('refuses a create of a form already held, beside that row', async () => {
+    await seedJar();
+    const refusal = await save(A, {
+      create: [
+        { variantId: powderForm, input: {} },
+        { variantId: compendiumForm, input: {} },
+      ],
+    }).catch((error: unknown) => error);
+    expect((refusal as ValidationError).issues.map((issue) => issue.path)).toEqual([
+      ['create', 1, 'variantId'],
+    ]);
+    expect(await live()).toHaveLength(1);
+  });
+
+  it('answers every bad row at once, prefixed by list and position, and saves none', async () => {
+    const first = await seedJar({ variantId: powderForm });
+    const second = await seedJar({ variantId: oilForm, lowStockThreshold: '4' });
+    const teaForm = await insertVariant(
+      sql,
+      compendiumIngredient,
+      makeVariant({ form: 'Tea' }),
+      E.id,
+    );
+    const before = await jars();
+
+    const refusal = await save(A, {
+      create: [
+        { variantId: compendiumForm, input: { quantityOnHand: 1, unit: 'g' } },
+        { variantId: teaForm, input: { quantityOnHand: -1 } },
+      ],
+      update: [
+        { id: first, input: { quantityOnHand: 3 } },
+        { id: second, input: { lowStockThreshold: -2 } },
+      ],
+    }).catch((error: unknown) => error);
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as ValidationError).issues.map((issue) => issue.path)).toEqual([
+      ['create', 1, 'input', 'quantityOnHand'],
+      ['update', 1, 'input', 'lowStockThreshold'],
+    ]);
+    expect(await jars()).toEqual(before);
+  });
+
+  it('prefixes a create row’s field issues with its position', async () => {
+    const refusal = await save(A, {
+      create: [
+        { variantId: powderForm, input: { quantityOnHand: 1, unit: 'g' } },
+        { variantId: oilForm, input: { quantityOnHand: 2, unit: 'g' } },
+        { variantId: compendiumForm, input: { quantityOnHand: -1 } },
+      ],
+    }).catch((error: unknown) => error);
+
+    expect((refusal as ValidationError).issues.map((issue) => issue.path)).toEqual([
+      ['create', 2, 'input', 'quantityOnHand'],
+    ]);
+    expect(await live()).toHaveLength(0);
+  });
+
+  it('starts a fresh jar for a form whose jar was deleted', async () => {
+    const gone = await seedJar({ deleted: true });
+    const result = await save(A, {
+      create: [{ variantId: compendiumForm, input: { quantityOnHand: 4 } }],
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].id).not.toBe(gone);
+  });
+
+  it('puts a compendium entry in the cupboard once, on its first jar, and not again', async () => {
+    expect(await cupboardRows()).toHaveLength(0);
+    await save(A, { create: [{ variantId: compendiumForm, input: {} }] });
+    await save(A, { create: [{ variantId: powderForm, input: {} }] });
+    expect(await cupboardRows()).toEqual([{ ingredient_id: compendiumIngredient }]);
+  });
+
+  it('leaves the cupboard alone when the batch only deletes', async () => {
+    const id = await seedJar();
+    await save(A, { delete: [id] });
+    expect(await live()).toHaveLength(0);
+    expect(await cupboardRows()).toHaveLength(0);
+  });
+
+  it('does not touch the cupboard for the coven’s own entry', async () => {
+    const result = await saveStock(asUser(A), WORKSPACE_W_ID, ownIngredient, {
+      ...none,
+      create: [{ variantId: ownForm, input: {} }],
+    });
+    expect(result).toHaveLength(1);
+    expect(await cupboardRows()).toHaveLength(0);
+  });
+
+  it('refuses a form of a retired entry the cupboard does not name, and keeps one it does', async () => {
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: compendiumIngredient },
+      A.id,
+    );
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${compendiumIngredient}`;
+    await expect(save(A, { create: [{ variantId: powderForm, input: {} }] })).resolves.toHaveLength(
+      1,
+    );
+
+    await sql`delete from workspace_compendium_entries`;
+    await expect(save(A, { create: [{ variantId: oilForm, input: {} }] })).rejects.toThrow(
+      NotFound,
+    );
+  });
+
+  describe('the first-unit default threshold', () => {
+    it('applies to each created row and each updated row that gains a first unit', async () => {
+      const bare = await seedJar({
+        variantId: powderForm,
+        unit: null,
+        quantityOnHand: null,
+        lowStockThreshold: null,
+      });
+      const result = await save(A, {
+        create: [
+          { variantId: compendiumForm, input: { quantityOnHand: 1, unit: 'g' } },
+          { variantId: oilForm, input: { unit: 'ml' } },
+        ],
+        update: [{ id: bare, input: { unit: 'piece' } }],
+      });
+      const byForm = Object.fromEntries(result.map((jar) => [jar.variantId, jar]));
+      expect(Number(byForm[compendiumForm].lowStockThreshold)).toBe(10);
+      expect(Number(byForm[oilForm].lowStockThreshold)).toBe(15);
+      expect(Number(byForm[powderForm].lowStockThreshold)).toBe(3);
+    });
+
+    it('keeps a threshold the row states or already holds', async () => {
+      const held = await seedJar({ variantId: powderForm, unit: null, lowStockThreshold: '8' });
+      const result = await save(A, {
+        create: [{ variantId: oilForm, input: { unit: 'g', lowStockThreshold: 2 } }],
+        update: [{ id: held, input: { unit: 'g' } }],
+      });
+      const byForm = Object.fromEntries(result.map((jar) => [jar.variantId, jar]));
+      expect(Number(byForm[oilForm].lowStockThreshold)).toBe(2);
+      expect(Number(byForm[powderForm].lowStockThreshold)).toBe(8);
+    });
+
+    it('never converts a unit: a changed unit keeps its quantity as typed', async () => {
+      const id = await seedJar({ quantityOnHand: '5', unit: 'g' });
+      const [jar] = await save(A, { update: [{ id, input: { unit: 'oz' } }] });
+      expect(Number(jar.quantityOnHand)).toBe(5);
+      expect(jar.unit).toBe('oz');
+    });
+  });
+
+  it('is a no-op for an empty batch: it answers the current jars and writes no row', async () => {
+    const id = await seedJar();
+    const [before] = await jars();
+    const result = await save(A, {});
+    expect(result.map((jar) => jar.id)).toEqual([id]);
+    expect((await jars())[0]).toEqual(before);
+  });
+
+  it('still refuses an empty batch from a viewer', async () => {
+    await expect(save(C, {})).rejects.toThrow(Forbidden);
+  });
+
+  it('waits for the coven’s stock lock, and writes nothing before it', async () => {
+    const holding = async (during: () => Promise<void>) => {
+      let release!: () => void;
+      const released = new Promise<void>((resolve) => (release = resolve));
+      let acquired!: () => void;
+      const held = new Promise<void>((resolve) => (acquired = resolve));
+      const transaction = sql.begin(async (tx) => {
+        await tx`select pg_advisory_xact_lock(${COVEN_STOCK_LOCK_NAMESPACE}, hashtext(${WORKSPACE_W_ID}))`;
+        acquired();
+        await released;
+      });
+      await held;
+      try {
+        await during();
+      } finally {
+        release();
+        await transaction;
+      }
+    };
+    let running!: ReturnType<typeof save>;
+    await holding(async () => {
+      let settled = false;
+      running = save(A, { create: [{ variantId: compendiumForm, input: { quantityOnHand: 5 } }] });
+      running.then(
+        () => (settled = true),
+        () => (settled = true),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(settled).toBe(false);
+      expect(await live()).toHaveLength(0);
+    });
+    await expect(running).resolves.toHaveLength(1);
   });
 });

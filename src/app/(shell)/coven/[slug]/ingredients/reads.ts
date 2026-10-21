@@ -82,6 +82,9 @@ export const readCovenIngredients = cache(
           return { form, toxic, safetyNotes, formChoice: icon ? { group: { icon } } : null };
         });
       }),
+      variantIds: forms.map((answer) =>
+        answer instanceof Error ? [] : answer.map(({ id }) => id),
+      ),
       formOf: new Map(
         forms.flatMap((answer) =>
           answer instanceof Error ? [] : answer.map(({ id, form }): [string, string] => [id, form]),
@@ -130,7 +133,7 @@ export async function readEditedEntry(workspaceId: string, id: string) {
  * never shows: the list then opens no modal, as `readEditedEntry`'s does. Any other failure
  * of the read is let through rather than called no entry. With it, `detail`: the sections
  * the details show, read as the entry's page in the coven reads them, the held entry's
- * cupboard entry laid in.
+ * cupboard entry laid in; and `jars`, the coven's jars of it, for the details' Edit Stock (M9.9).
  */
 export async function readViewedEntry(membership: CovenMembership['membership'], id: string) {
   const session = await requireSession();
@@ -144,17 +147,26 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   // A retired entry is read in the coven, whose cupboard entry is its proof (M12.24).
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
+  const jarsOf = async () => {
+    const [jars] = await stockOf(session, [
+      { ingredientId: id, workspaceId: membership.workspaceId },
+    ]);
+    if (jars === undefined || jars instanceof Error) throw jars ?? new Error('No answer');
+    return jars;
+  };
   if (entry.workspaceId === membership.workspaceId) {
-    return { shown: entry, own: true, detail: await detailOf(), covens: [] };
+    const [detail, jars] = await Promise.all([detailOf(), jarsOf()]);
+    return { shown: entry, own: true, detail, covens: [], jars };
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
   // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
-  const [read, covens] = await Promise.all([detailOf(), covensHolding(id)]);
+  const [read, covens, jars] = await Promise.all([detailOf(), covensHolding(id), jarsOf()]);
   return {
     shown: applyCupboardEntry(held.entry, held.cupboardEntry),
     own: false,
     detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },
     covens,
+    jars,
   };
 }

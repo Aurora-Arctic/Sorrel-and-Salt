@@ -134,6 +134,23 @@ describe('IngredientCard', () => {
     expect(follows(form, jars)).toBe(true);
   });
 
+  it("leaves the forms line out when asked, keeping the formal name and the forms' cautions", () => {
+    render(
+      <IngredientCard
+        {...BASE}
+        formalName="Fixtura testalis"
+        variants={[LEAF, OIL]}
+        forms={false}
+      />,
+    );
+
+    expect(screen.getByText('Fixtura testalis')).toBeInTheDocument();
+    expect(screen.queryByText('Testleaf')).toBeNull();
+    expect(screen.queryByText('Testoil')).toBeNull();
+    // A form's notes still mark the card: only the line of names went.
+    expect(cautionMark()).toBeInTheDocument();
+  });
+
   it('shows no formal name and no forms for an entry with neither', () => {
     render(<IngredientCard {...BASE} formalName={null} variants={[]} />);
 
@@ -323,16 +340,16 @@ describe('IngredientCard', () => {
       );
 
       const jars = screen.getByRole('list', { name: 'Jars' });
-      // Low is a button, Out is plain text, and a healthy jar draws nothing.
+      // Low and Out are each a button named for the state, and a healthy jar draws nothing.
       expect(within(jars).getAllByRole('button', { name: /^Low Stock/ })).toHaveLength(1);
-      expect(within(jars).getAllByText('Out of Stock')).toHaveLength(1);
+      expect(within(jars).getAllByRole('button', { name: 'Out of Stock' })).toHaveLength(1);
     });
 
     it('renders nothing for the slot when the caller passes none', () => {
       render(<IngredientCard {...BASE} />);
 
       expect(screen.queryByRole('button')).toBeNull();
-      expect(screen.queryByText('Out of Stock')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Out of Stock' })).toBeNull();
     });
   });
 });

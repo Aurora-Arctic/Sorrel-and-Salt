@@ -282,6 +282,129 @@ describe('deleteStock', () => {
   });
 });
 
+describe('saveStock', () => {
+  const SAVE = `mutation ($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {
+    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) { ${ITEM} }
+  }`;
+  const save = (session: Session, input: Record<string, unknown>) =>
+    run<{ saveStock: InventoryItemNode[] }>(session, SAVE, {
+      workspaceId: WORKSPACE_W_ID,
+      ingredientId: entry,
+      input: { create: [], update: [], delete: [], ...input },
+    });
+
+  it('answers the ingredient’s live jars after creating, changing and deleting', async () => {
+    const held = await seedJar();
+
+    const result = await save(asUser(B), {
+      create: [{ variantId: oil, input: { quantityOnHand: 2, unit: 'ml' } }],
+      update: [{ id: held, input: { quantityOnHand: 8 } }],
+    });
+
+    expect(result.errors).toBeUndefined();
+    const jars = result.data?.saveStock ?? [];
+    expect(jars.map((jar) => jar.variant.form).sort()).toEqual(['Herb', 'Oil']);
+    expect(jars.find((jar) => jar.id === held)).toMatchObject({
+      quantityOnHand: 8,
+      audit: { updatedBy: B.id },
+    });
+    expect(jars.find((jar) => jar.variant.form === 'Oil')).toMatchObject({
+      unitDimension: 'volume',
+      lowStockThreshold: 15,
+    });
+
+    const removed = await save(asUser(B), { delete: [held] });
+    expect(removed.data?.saveStock.map((jar) => jar.variant.form)).toEqual(['Oil']);
+    expect(await liveJars()).toBe(1);
+  });
+
+  it('answers each jar’s own stock as the writes left it, in one request', async () => {
+    const held = await seedJar();
+
+    const result = await run<{ first: InventoryItemNode[]; second: InventoryItemNode[] }>(
+      asUser(B),
+      `mutation ($workspaceId: ID!, $ingredientId: ID!, $held: ID!) {
+        first: saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId,
+          input: { create: [], update: [{ id: $held, input: { quantityOnHand: 1 } }], delete: [] }) { ${ITEM} }
+        second: saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId,
+          input: { create: [], update: [{ id: $held, input: { quantityOnHand: 2 } }], delete: [] }) { ${ITEM} }
+      }`,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: entry, held },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.first[0].ingredient.stock).toEqual([{ id: held, quantityOnHand: 1 }]);
+    expect(result.data?.second[0].ingredient.stock).toEqual([{ id: held, quantityOnHand: 2 }]);
+  });
+
+  it('is FORBIDDEN to a viewer and to an outsider, who could read it, writing nothing', async () => {
+    const held = await seedJar();
+    const batch = { update: [{ id: held, input: { quantityOnHand: 1 } }] };
+
+    for (const user of [C, D]) {
+      const result = await save(asUser(user), batch);
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    }
+    const [row] = await sql`select quantity_on_hand from inventory_items where id = ${held}`;
+    expect(Number(row.quantity_on_hand)).toBe(5);
+    expect((await save(asUser(B), batch)).errors).toBeUndefined();
+  });
+
+  it('is NOT_FOUND for a jar that is not the ingredient’s, writing nothing', async () => {
+    const other = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Otherwort', nomenclature: 'none' }),
+      E.id,
+    );
+    const otherJar = await insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        ingredientId: other,
+        variantId: await variantIdOf(sql, other, 'Testform'),
+      },
+      A.id,
+    );
+
+    const result = await save(asUser(B), {
+      create: [{ variantId: herb, input: {} }],
+      delete: [otherJar],
+    });
+
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect(await liveJars()).toBe(1);
+  });
+
+  it('refuses a bad row as VALIDATION with the list and position in the path, writing nothing', async () => {
+    const held = await seedJar();
+
+    const result = await save(asUser(B), {
+      create: [{ variantId: oil, input: { quantityOnHand: -1 } }],
+      update: [{ id: held, input: { quantityOnHand: 3 } }],
+    });
+    const second = await save(asUser(B), {
+      update: [{ id: held, input: { lowStockThreshold: -3 } }],
+    });
+    const third = await save(asUser(B), { create: [{ variantId: herb, input: {} }] });
+
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['create', 0, 'input', 'quantityOnHand'] }],
+    });
+    expect(second.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['update', 0, 'input', 'lowStockThreshold'] }],
+    });
+    expect(third.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['create', 0, 'variantId'] }],
+    });
+    const [row] = await sql`select quantity_on_hand from inventory_items where id = ${held}`;
+    expect(Number(row.quantity_on_hand)).toBe(5);
+    expect(await liveJars()).toBe(1);
+  });
+});
+
 describe('Ingredient.stock', () => {
   it('is FORBIDDEN naming a coven the caller is not in, at the field', async () => {
     const id = await seedJar();

@@ -234,9 +234,9 @@
   font-size: heading-size(3);
 }
 
-// Above the overlay, so the Low badge's button keeps its own hover, focus and
-// click (it opens a tip) instead of following the card's link.
-.ingredient-card .stock-badge-tip {
+// Above the overlay, so the stock badge's button keeps its own hover and focus (it
+// opens an icon tip) instead of following the card's link.
+.ingredient-card .specimen__stock .icon-tip {
   z-index: 1;
 }
 
@@ -273,13 +273,10 @@
   gap: space(1);
 }
 
-// Out of Stock takes Low's weight on the card: the word and the icon still tell
-// the states apart, and the heavier edge is M9.8's for a badge standing alone.
-// The values are the badge mixin's own, so both come out the same height.
-.ingredient-card .specimen__stock .stock-badge--out {
-  border-width: 1px;
-  @include badge-padding-block('medium');
-  font-weight: 500;
+// The stock badge is its drawing alone in a square, so it keeps no padding of the
+// card's badge size (`.ingredient-card .badge`, below), which would squeeze the drawing.
+.ingredient-card .specimen__stock .stock-badge {
+  padding: 0;
 }
 
 // The actions' own addition to the primitive: above the stretched link, so each

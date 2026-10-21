@@ -30,6 +30,73 @@
   gap: space(3);
 }
 
+// The forms (M9.9), each line a card's jar line in the body size: the icon and the
+// form's name, then on the coven's page the stock, in an element of its own. Without
+// jars (the compendium's pages) the list is the plain list of names it was, with no
+// empty column. With them (`--stocked`) the list is a grid of three columns: the names,
+// the quantities, the badges. Each line is a subgrid of the list's columns (and its stock
+// a subgrid of the last two), so every quantity ends in one right-aligned column however
+// long the names, and whether or not a badge follows it (the owner's call, 2026-10-20).
+// A form in no jar keeps its amount cell, holding only visually hidden text, so the
+// column stays where it is.
+// The names' column ends 4rem (`space(8)`) before the quantities, and the badge stands
+// `space(2)` after its quantity: both as padding or a margin rather than a column gap, so
+// a list with no badge draws no empty gap. The badge follows the quantity rather than
+// standing at the far end as on the card: across the modal's 32rem it would sit apart from
+// the line it flags. The spoken comma is out of the flow, so it takes no room. Subgrid is
+// Baseline widely available (2023).
+.ingredient-summary__forms > li {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+}
+
+.ingredient-summary__form {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+
+  > .spoken-separator {
+    position: absolute;
+  }
+}
+
+.ingredient-summary__forms--stocked {
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+  column-gap: 0;
+  align-items: center;
+
+  > li {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    gap: 0;
+  }
+
+  .ingredient-summary__form {
+    padding-inline-end: space(8);
+  }
+}
+
+.ingredient-summary__stock {
+  display: grid;
+  grid-column: 2 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+.ingredient-summary__amount {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+// The badge, whatever element its tip wraps it in.
+.ingredient-summary__stock > :not(.ingredient-summary__amount) {
+  margin-inline-start: space(2);
+}
+
 // In Your Cupboards: each coven's link led by the In Your Cupboard shelf, the name
 // one weight above the body's 300 (the owner's calls, 2026-10-20). The shelf
 // stands at the top of the link, level with the name's first line, so a wrapped

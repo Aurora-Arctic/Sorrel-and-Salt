@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
-import { WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
+import { DEMO_STOCK, WORKSPACE_W_CUPBOARD, WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
 import { COMPENDIUM_INGREDIENTS, WORKSPACE_W_ID, identityOf } from '@/db/seed/standard';
 import { COMPENDIUM } from '@/db/seed/compendium/index';
 
@@ -216,5 +216,46 @@ describe('seed(db, { scenario: "demo" })', () => {
     const all = await sql`select id from retired_ingredient_slugs`;
     // The moved slug beside the two `standard` seeds as fixtures.
     expect(all).toHaveLength(3);
+  });
+  // The Edit Stock button and the jar lines show only on a card with stock, and
+  // no other scenario writes any (M9.9).
+  describe("W's stock", () => {
+    const stockRows = () => sql`
+      select s.id, s.quantity_on_hand, s.unit, s.unit_dimension, s.low_stock_threshold,
+             i.identity_key, i.workspace_id is null as compendium, v.form
+      from inventory_items s
+      join ingredients i on i.id = s.ingredient_id
+      join ingredient_variants v on v.id = s.variant_id
+      where s.workspace_id = ${WORKSPACE_W_ID} and s.deleted_at is null`;
+
+    it('holds every jar the scenario names, among them one unmeasured, one low and one with two forms beside it', async () => {
+      const rows = await stockRows();
+
+      expect(rows.map((row) => row.id).sort()).toEqual(DEMO_STOCK.map((jar) => jar.id).sort());
+      const unmeasured = rows.filter((row) => row.quantity_on_hand === null);
+      expect(unmeasured.map((row) => [row.unit, row.low_stock_threshold])).toEqual([[null, null]]);
+      // Below its threshold, the default one where the jar sets none.
+      expect(
+        rows.filter(
+          (row) =>
+            row.quantity_on_hand !== null &&
+            Number(row.quantity_on_hand) <= Number(row.low_stock_threshold),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(new Set(rows.map((row) => row.unit_dimension))).toEqual(
+        new Set(['weight', 'volume', 'count', null]),
+      );
+      const formsOfRosemary = rows.filter((row) => row.identity_key === 'salvia rosmarinus');
+      expect(formsOfRosemary.map((row) => row.form).sort()).toEqual(['Herb', 'Oil']);
+    });
+
+    it('holds every compendium entry it stocks in the cupboard', async () => {
+      const names = new Set(WORKSPACE_W_CUPBOARD.map((held) => identityOf(held.entry)));
+      const stocked = (await stockRows()).filter((row) => row.compendium);
+
+      // Precondition: a compendium jar exists, so the check below tests something.
+      expect(stocked.length).toBeGreaterThan(0);
+      expect(stocked.filter((row) => !names.has(row.identity_key))).toEqual([]);
+    });
   });
 });

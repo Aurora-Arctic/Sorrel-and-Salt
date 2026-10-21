@@ -14,5 +14,6 @@ export {
   PencilIcon,
   PlusIcon,
   RedoIcon,
+  StockIcon,
   UndoIcon,
 } from './icons';

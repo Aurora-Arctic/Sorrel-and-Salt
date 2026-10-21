@@ -1,6 +1,7 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type postgres from 'postgres';
 import { test, expect } from '../fixtures';
+import { signInAgainAs } from '../session';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import {
@@ -118,12 +119,29 @@ test(
       }
     });
 
-    await test.step('each shows its form, and a shared label its formal name', async () => {
-      await expect(rowOf(list, 'Rosemary')).toContainText('Herb');
-      await expect(rowOf(list, 'Selenite')).toContainText('Crystal');
-      await expect(rowOf(list, 'Testwort')).toContainText('Root');
+    await test.step('each lists its form in Quick Look, and a shared label shows its formal name on its card', async () => {
       await expect(rowOf(list, "Cat's Claw")).toContainText('Uncaria tomentosa');
-      await expect(rowOf(list, "Cat's Claw")).toContainText('Bark');
+      // The forms are Quick Look's since M9.9, which took the forms line off the card.
+      const forms: [string, string][] = [
+        ['Rosemary', 'Herb'],
+        ['Selenite', 'Crystal'],
+        ['Testwort', 'Root'],
+        ["Cat's Claw", 'Bark'],
+      ];
+      for (const [name, form] of forms) {
+        await rowOf(list, name)
+          .getByRole('link', { name: new RegExp(`^Quick Look ${name}`) })
+          .click();
+        const details = page.getByRole('dialog', { name, exact: true });
+        await expect(
+          details
+            .getByRole('list', { name: 'Forms' })
+            .getByRole('listitem')
+            .filter({ hasText: form }),
+        ).toHaveCount(1);
+        await details.getByRole('button', { name: 'Close', exact: true }).click();
+        await expect(details).toHaveCount(0);
+      }
     });
 
     await test.step('each stocked entry shows its jar, by quantity and unit', async () => {
@@ -262,16 +280,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'low and out-of-stock rows are badged apart, by a threshold the row shows and edits, which zero turns off',
-  {
-    tag: '@story-23',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M9.8 builds the stock badges, the threshold on the row and the low-stock filter',
-    },
-  },
+  { tag: '@story-23' },
   async ({ page }) => {
     const coven = await ownCoven(page, 23);
     const [, , seleniteId] = await withSql(async (sql) => {
@@ -309,15 +320,27 @@ test.fixme(
         await expect(lowBadge(rowOf(list, name))).toHaveCount(0);
         await expect(outBadge(rowOf(list, name))).toHaveCount(0);
       }
-      // The badges are words, not a colour alone, and axe holds their contrast.
-      await expect(outBadge(rowOf(list, 'Rosemary'))).toBeVisible();
+      // Each badge is a drawing alone, named in full for a screen reader, and its
+      // tip says the state in words: not a colour alone. The tip is an icon tip, kept out
+      // of the accessibility tree, so it is found with `includeHidden`, in its badge's row
+      // (the page's hidden info tips are tooltips too). Axe holds their contrast.
+      const tipIn = (row: Locator) => row.getByRole('tooltip', { includeHidden: true });
+      await outBadge(rowOf(list, 'Rosemary')).focus();
+      await expect(tipIn(rowOf(list, 'Rosemary'))).toHaveText('Out of Stock');
+      await page.keyboard.press('Escape');
+      await expect(tipIn(rowOf(list, 'Rosemary'))).toHaveCount(0);
+      await lowBadge(rowOf(list, 'Sea Salt')).focus();
+      await expect(tipIn(rowOf(list, 'Sea Salt'))).toHaveText('Low Stock at 10 g or less');
+      await page.keyboard.press('Escape');
       await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the low-stock filter keeps the low rows, in the address', async () => {
       // M9.8's `lowStockOnly`, a switch as the admin's Without References is
       // (claude-docs/components/compendium-list.md); "Low Stock Only" is this spec's choice.
-      await filterOf(page).getByRole('switch', { name: 'Low Stock Only' }).click();
+      const panel = await openFilters(page);
+      await panel.getByRole('switch', { name: 'Low Stock Only' }).click();
+      await applyFilters(page, panel);
       await expect(rowOf(list, 'Testwort')).toBeVisible();
       await expect(rowOf(list, 'Sea Salt')).toBeVisible();
       await expect(rowOf(list, 'Selenite')).toHaveCount(0);
@@ -333,8 +356,9 @@ test.fixme(
       const row = rowOf(list, 'Selenite');
       const editor = stockEditor(row, 'Selenite');
       await editor.open.click();
-      await expect(editor.threshold).toHaveValue('3');
-      await editor.threshold.fill('5');
+      const crystal = editor.jar('Crystal');
+      await expect(crystal.threshold).toHaveValue('3');
+      await crystal.threshold.fill('5');
       await editor.save.click();
 
       await expect(lowBadge(row)).toBeVisible();
@@ -357,15 +381,29 @@ async function stockOf(id: string) {
   return row;
 }
 
-test.fixme(
-  'quantity, unit and threshold are edited on the row, by mouse or keyboard, and a failed save rolls back and says so',
-  {
-    tag: '@story-24',
-    annotation: { type: 'fixme', description: 'M9.9 builds the inline row edit' },
-  },
+/** A coven's live jars of the entry called `name`, by form, as the database holds them. */
+async function jarsOf(coven: Coven, name: string) {
+  return withSql(
+    (sql) => sql<{ form: string; quantity: number; unit: string; threshold: number }[]>`
+      select v.form, s.quantity_on_hand::float as quantity, s.unit,
+             s.low_stock_threshold::float as threshold
+      from inventory_items s
+      join ingredient_variants v on v.id = s.variant_id
+      join ingredients i on i.id = v.ingredient_id
+      where s.workspace_id = ${coven.id} and i.name = ${name} and s.deleted_at is null
+      order by v.form`,
+  );
+}
+
+test(
+  "a member edits an ingredient's stock in one dialog, by mouse or keyboard, adding and removing forms, and a refused save keeps what was typed",
+  { tag: '@story-24' },
   async ({ page }) => {
-    const coven = await ownCoven(page, 24);
-    const { testwortStock, rosemaryStock } = await withSql(async (sql) => {
+    const coven = await seedCoven(page, 'Fixture Coven Story 24', 'story-24.test', {
+      A: 'owner',
+      C: 'viewer',
+    });
+    const { testwortStock, rosemaryOil } = await withSql(async (sql) => {
       const testwort = await localIngredient(sql, coven.id, coven.users.A);
       const testwortStock = await insertStock(
         sql,
@@ -374,60 +412,188 @@ test.fixme(
         { quantity: 4, unit: 'piece', threshold: 3 },
         coven.users.A,
       );
-      const [rosemaryStock] = await stockJars(sql, coven, [
+      await stockJars(sql, coven, [
         { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
       ]);
-      return { testwortStock, rosemaryStock };
+      // Rosemary's other form, which the coven does not hold yet.
+      const rosemaryOil = await compendiumVariant(sql, 'Rosemary', 'Oil');
+      return { testwortStock, rosemaryOil };
     });
     const path = listPath(coven);
+    await signInAgainAs(page, coven.users.A);
     await page.goto(path);
     const list = ingredientList(page);
     await expect(rowOf(list, 'Rosemary')).toBeVisible();
     await markDocument(page);
 
-    await test.step('all three are changed and saved without leaving the page', async () => {
+    await test.step('the dialog opens on a row for the jar held, and Save waits for a change', async () => {
       const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
       await editor.open.click();
-      await editor.quantity.fill('0.5');
+      const herb = editor.jar('Herb');
+      await expect(herb.quantity).toHaveValue('20');
+      await expect(herb.threshold).toHaveValue('10');
+      // Why it could save: the dialog holds a jar to change, and nothing is changed yet.
+      await expect(editor.save).toBeDisabled();
+      await herb.quantity.fill('21');
+      await expect(editor.save).toBeEnabled();
+      await herb.quantity.fill('20');
+      await editor.cancel.click();
+      await expect(editor.dialog).toHaveCount(0);
+      expect(await jarsOf(coven, 'Rosemary')).toEqual([
+        { form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
+      ]);
+    });
+
+    await test.step('all three amounts are changed and saved without leaving the page', async () => {
+      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+      await editor.open.click();
+      const herb = editor.jar('Herb');
+      await herb.quantity.fill('0.5');
       // Within the dimension: weight to weight (CLAUDE.md, unit conversion).
-      await editor.unit.selectOption('kg');
-      await editor.threshold.fill('0.1');
+      await herb.pickUnit('kg');
+      await herb.threshold.fill('0.1');
       await editor.save.click();
 
-      await expect(editor.quantity).toHaveCount(0);
-      await expect(editor.open).toBeVisible();
-      expect(await stockOf(rosemaryStock)).toEqual({ quantity: 0.5, unit: 'kg', threshold: 0.1 });
+      await expect(editor.dialog).toHaveCount(0);
+      await expect(editor.open).toBeFocused();
+      expect(await jarsOf(coven, 'Rosemary')).toEqual([
+        { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
+      ]);
       expect(new URL(page.url()).pathname).toBe(path);
       expect(await stillSameDocument(page)).toBe(true);
       await assertNoAccessibilityViolations(page);
     });
 
+    await test.step('Add Form offers the forms not held, and a form added is saved with the rest', async () => {
+      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+      await editor.open.click();
+      await editor.addForm.click();
+      // The form held is not offered again.
+      await expect(page.getByRole('option', { name: 'Herb', exact: true })).toHaveCount(0);
+      await page.getByRole('option', { name: 'Oil', exact: true }).click();
+      // Picking a form adds nothing yet: Add does, and chooses it, its Quantity focused.
+      await expect(editor.jar('Oil').group).toHaveCount(0);
+      await editor.addButton.click();
+      const oil = editor.jar('Oil');
+      await expect(oil.quantity).toBeFocused();
+      await oil.quantity.fill('30');
+      await oil.pickUnit('ml');
+      await oil.threshold.fill('5');
+      await editor.save.click();
+
+      await expect(editor.dialog).toHaveCount(0);
+      expect(await jarsOf(coven, 'Rosemary')).toEqual([
+        { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
+        { form: 'Oil', quantity: 30, unit: 'ml', threshold: 5 },
+      ]);
+      // With every form held there is nothing left to add. The card reads again once the dialog
+      // has closed, and the dialog is drawn from what the card was given.
+      // The card's own Oil jar line (the forms are Quick Look's since M9.9, off the card).
+      await expect(
+        rowOf(list, 'Rosemary')
+          .getByRole('listitem')
+          .filter({ hasText: 'Oil' })
+          .filter({ hasText: '30 ml' }),
+      ).toBeVisible();
+      await editor.open.click();
+      await editor.choose('Oil');
+      await expect(editor.jar('Oil').quantity).toHaveValue('30');
+      await expect(editor.addForm).toHaveCount(0);
+      await editor.cancel.click();
+    });
+
+    await test.step('Remove is staged until Save, and Undo takes it back', async () => {
+      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+      await editor.open.click();
+      // The dialog opens on Herb, the first jar.
+      await editor.choose('Oil');
+      const oil = editor.jar('Oil');
+      await oil.remove.click();
+      await expect(oil.undo).toBeVisible();
+      await oil.undo.click();
+      await expect(oil.quantity).toHaveValue('30');
+      // Undone, nothing differs from what is held: nothing to save.
+      await expect(editor.save).toBeDisabled();
+      await oil.remove.click();
+      await expect(editor.save).toBeEnabled();
+      // Why nothing is lost yet: the jar is still held until Save.
+      expect(await jarsOf(coven, 'Rosemary')).toHaveLength(2);
+      await editor.save.click();
+
+      await expect(editor.dialog).toHaveCount(0);
+      expect(await jarsOf(coven, 'Rosemary')).toEqual([
+        { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
+      ]);
+      expect(await stillSameDocument(page)).toBe(true);
+    });
+
     await test.step('the keyboard alone opens, edits, saves and cancels', async () => {
       const editor = stockEditor(rowOf(list, 'Testwort'), 'Testwort');
+      const root = editor.jar('Root');
       await editor.open.focus();
       await page.keyboard.press('Enter');
       // Opening moves the focus into the first field, Quantity.
-      await expect(editor.quantity).toBeFocused();
+      await expect(root.quantity).toBeFocused();
       await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type('6');
       await page.keyboard.press('Enter');
 
-      await expect(editor.quantity).toHaveCount(0);
+      await expect(editor.dialog).toHaveCount(0);
       // Closing hands the focus back to what opened it.
       await expect(editor.open).toBeFocused();
-      expect(await stockOf(testwortStock)).toEqual({ quantity: 6, unit: 'piece', threshold: 3 });
+      expect(await jarsOf(coven, 'Testwort')).toEqual([
+        { form: 'Root', quantity: 6, unit: 'piece', threshold: 3 },
+      ]);
 
       await page.keyboard.press('Enter');
-      await expect(editor.quantity).toBeFocused();
+      await expect(root.quantity).toBeFocused();
       await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.type('9');
+      // An edit not yet saved is asked about first: the question opens on
+      // Keep Editing, and Shift+Tab reaches Discard Changes before it.
       await page.keyboard.press('Escape');
-      await expect(editor.quantity).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Keep Editing' })).toBeFocused();
+      await page.keyboard.press('Shift+Tab');
+      await expect(page.getByRole('button', { name: 'Discard Changes' })).toBeFocused();
+      await page.keyboard.press('Enter');
+      await expect(editor.dialog).toHaveCount(0);
       await expect(editor.open).toBeFocused();
       expect(await stockOf(testwortStock)).toEqual({ quantity: 6, unit: 'piece', threshold: 3 });
     });
 
-    await test.step('a save that fails puts the row back and explains', async () => {
+    await test.step('a refused save keeps what was typed and says which form it was', async () => {
+      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+      await editor.open.click();
+      await editor.add('Oil');
+      await editor.jar('Oil').quantity.fill('12');
+      // Why it is refused: another member stocked Oil while the dialog was open, and a form is
+      // held once, so this add finds it held (the batch's own message, on that row).
+      await withSql(async (sql) => {
+        await insertStock(
+          sql,
+          coven.id,
+          rosemaryOil,
+          { quantity: 1, unit: 'ml', threshold: 0 },
+          coven.users.A,
+        );
+      });
+      await editor.save.click();
+
+      // The refusal is the form's own, said on its jar, which is chosen to show it.
+      await expect(editor.jar('Oil').group).toContainText('already holds this form');
+      await expect(editor.dialog).toBeVisible();
+      await expect(editor.jar('Oil').quantity).toHaveValue('12');
+      // The refusal wrote nothing of the batch.
+      expect(await jarsOf(coven, 'Rosemary')).toEqual([
+        { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
+        { form: 'Oil', quantity: 1, unit: 'ml', threshold: 0 },
+      ]);
+      await editor.cancel.click();
+      await page.getByRole('button', { name: 'Discard Changes' }).click();
+      await expect(editor.dialog).toHaveCount(0);
+    });
+
+    await test.step('a save that fails on the network puts nothing on the page and explains', async () => {
       // The network fails the write and nothing else, so the page's own
       // reads still answer: a failure the member could meet on a train.
       await page.route('**/api/graphql', (route) =>
@@ -436,14 +602,56 @@ test.fixme(
       const row = rowOf(list, 'Rosemary');
       const editor = stockEditor(row, 'Rosemary');
       await editor.open.click();
-      await editor.quantity.fill('99');
+      await editor.jar('Herb').quantity.fill('99');
       await editor.save.click();
 
-      await expect(page.getByRole('alert')).toBeVisible();
-      await expect(row).not.toContainText('99');
-      expect(await stockOf(rosemaryStock)).toEqual({ quantity: 0.5, unit: 'kg', threshold: 0.1 });
+      await expect(editor.dialog.getByRole('alert')).toBeVisible();
+      await expect(editor.jar('Herb').quantity).toHaveValue('99');
+      // The card's own Herb line, not the dialog nested in the same `li`, whose
+      // list reads the 99 typed: the line still reading 0.5 kg is the proof no
+      // 99 reached the card, where it would read 99 kg in its place.
+      await expect(
+        row.getByRole('listitem').filter({ hasText: 'Herb' }).filter({ hasText: '0.5 kg' }),
+      ).toBeVisible();
+      expect((await jarsOf(coven, 'Rosemary'))[0]).toMatchObject({ form: 'Herb', quantity: 0.5 });
       expect(await stillSameDocument(page)).toBe(true);
       await page.unrouteAll();
+      await editor.cancel.click();
+      await page.getByRole('button', { name: 'Discard Changes' }).click();
+    });
+
+    await test.step('Escape on the dialog over Quick Look closes only the dialog, and the Edit Stock button has the focus', async () => {
+      await rowOf(list, 'Rosemary')
+        .getByRole('link', { name: /^Quick Look Rosemary/ })
+        .click();
+      const details = page.getByRole('dialog', { name: 'Rosemary', exact: true });
+      await expect(details).toBeVisible();
+      // The window carries the same Edit Stock button as the card.
+      const editor = stockEditor(details, 'Rosemary');
+      await editor.open.click();
+      await expect(editor.dialog).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(editor.dialog).toHaveCount(0);
+      await expect(details).toBeVisible();
+      await expect(editor.open).toBeFocused();
+      // A browser closes a second dialog on Escape only after a press of the page's own between
+      // (Chromium's close watchers), so the window's title is pressed first, as a person would.
+      await details.getByRole('heading', { name: 'Rosemary', exact: true }).click();
+      await page.keyboard.press('Escape');
+      await expect(details).toHaveCount(0);
+    });
+
+    await test.step('a viewer is offered no Edit Stock button, on the card or in Quick Look', async () => {
+      await signInAgainAs(page, coven.users.C);
+      await page.goto(path);
+      const row = rowOf(list, 'Rosemary');
+      await expect(row).toBeVisible();
+      await expect(stockEditor(row, 'Rosemary').open).toHaveCount(0);
+      await row.getByRole('link', { name: /^Quick Look Rosemary/ }).click();
+      const details = page.getByRole('dialog', { name: 'Rosemary', exact: true });
+      await expect(details).toBeVisible();
+      await expect(stockEditor(details, 'Rosemary').open).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
     });
   },
 );

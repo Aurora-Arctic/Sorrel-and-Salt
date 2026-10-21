@@ -3,15 +3,18 @@ import type { ReactElement } from 'react';
 import { AnnotateLink, EditLink } from '../IconTip';
 import { cardName } from '../IngredientCard/card-name';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
+import StockDialog from '../StockDialog';
 import CardMore from './card-more';
 import type { CovenCardEntry } from './types';
 
 // A coven card's foot controls, in one place so the list's cards and the Quick Look window
 // opened from them draw the very same ones (the owner's call, 2026-10-20: the window's icons
-// follow the card's). The dialog link first, Edit on the coven's own entry or Annotate on a
-// compendium entry the cupboard holds, each only where the page gave its address; then the
-// card's More (`card-more.tsx`) with whatever else the role may do, which draws nothing when it
-// may do nothing more. Not a client file: it only composes the client controls, so a server
+// follow the card's). The Edit Stock pencil first, where the page gave the stock, a role that
+// may update it (M9.9), in the accent green; then the dialog link, Edit on the coven's own entry
+// or Annotate on a compendium entry the cupboard holds, each only where the page gave its
+// address, in the page's plain text colour (the owner's call, 2026-10-20: the stock button is
+// the card's one green control); then the card's More (`card-more.tsx`) with whatever else the
+// role may do, which draws nothing when it may do nothing more. Not a client file: it only composes the client controls, so a server
 // page can call it and hand the result down. claude-docs/components/coven-cards.md.
 
 /** What the foot's controls read of an entry, so the Quick Look window can pass the same. */
@@ -26,16 +29,25 @@ export type CovenCardActionsEntry = Pick<
   | 'mayDelete'
   | 'mayMakeOurs'
   | 'mayRemove'
+  | 'stock'
 >;
 
 /** Named with the formal name too, as two entries can share a label. */
 export const covenCardName = (entry: Pick<CovenCardEntry, 'label' | 'canonicalName'>): string =>
   cardName(entry.label, entry.canonicalName);
 
+/** Edit and Annotate in the text colour rather than the accent green, here and not in admin. */
+const PLAIN = 'icon-tip__edit icon-tip__edit--plain';
+
 const opensOf = (entry: CovenCardActionsEntry): ReactElement | null => {
   if (entry.editHref && entry.editHeading)
     return (
-      <EditLink href={entry.editHref} heading={entry.editHeading} name={covenCardName(entry)} />
+      <EditLink
+        href={entry.editHref}
+        heading={entry.editHeading}
+        name={covenCardName(entry)}
+        className={PLAIN}
+      />
     );
   if (entry.annotateHref)
     return (
@@ -43,6 +55,7 @@ const opensOf = (entry: CovenCardActionsEntry): ReactElement | null => {
         href={entry.annotateHref}
         heading={ANNOTATE_HEADING}
         name={covenCardName(entry)}
+        className={PLAIN}
       />
     );
   return null;
@@ -61,9 +74,18 @@ export function covenCardActions(
 ): ReactElement | undefined {
   const opens = opensOf(entry);
   const more = entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
-  if (!opens && !more) return undefined;
+  if (!opens && !entry.stock && !more) return undefined;
   return (
     <>
+      {entry.stock && (
+        <StockDialog
+          workspaceId={workspaceId}
+          ingredientId={entry.id}
+          ingredientName={covenCardName(entry)}
+          forms={entry.stock.forms}
+          jars={entry.stock.jars}
+        />
+      )}
       {opens}
       {more && (
         <CardMore
