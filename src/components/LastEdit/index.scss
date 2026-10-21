@@ -19,14 +19,13 @@
   @include tip-above;
 }
 
-// Right-aligned, just above the row of buttons it sits over, and set well apart from what is
+// Left-aligned, flush with the content edge, just above the row of buttons it sits over, and set well apart from what is
 // above it: `space(5)` is three steps past the `space(2)` the jar lines end on, and the gap
 // below it is the least there is (the owner's calls, 2026-10-21). The ink is the faintest
 // token that still holds 4.5:1 on the card in both themes (tests/scss/tokens.test.ts).
 .meta.last-edit {
   margin-block-start: space(5);
-  margin-inline-start: auto;
-  text-align: end;
+  text-align: start;
   color: $text-placeholder;
 }
 
