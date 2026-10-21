@@ -25,6 +25,7 @@ export default function EditStock({
   ingredientId,
   ingredientName,
   defaultWorkspaceId,
+  namesCoven = false,
   onClose,
   returnTo,
 }: {
@@ -34,6 +35,13 @@ export default function EditStock({
   /** The entry as the compendium calls it: the dialog's title. */
   ingredientName: string;
   defaultWorkspaceId: string;
+  /**
+   * Whether the dialog names the coven it writes to, after the ingredient: for a page that is
+   * not a coven's (the compendium's card, Quick Look and the public entry page), where nothing
+   * else says which coven the jars are. A coven's own pages leave it false (M9.12; the owner's
+   * call, 2026-10-21).
+   */
+  namesCoven?: boolean;
   onClose: () => void;
   returnTo: () => HTMLElement | null | undefined;
 }): ReactElement {
@@ -50,6 +58,7 @@ export default function EditStock({
         workspaceId={place.workspaceId}
         ingredientId={ingredientId}
         ingredientName={ingredientName}
+        coven={namesCoven ? place.name : undefined}
         forms={place.stock.forms}
         jars={place.stock.jars}
         onClose={onClose}

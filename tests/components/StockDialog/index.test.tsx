@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import StockDialog from '@/components/StockDialog';
+import StockDialog, { StockDialogModal } from '@/components/StockDialog';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { SaveStockMutation, SaveStockMutationVariables } from '@/gql/graphql';
 import { choose, press, typeIn } from '../../support/interact';
@@ -109,6 +109,21 @@ async function sent(calls: SaveStockMutationVariables[]) {
 }
 
 describe('StockDialog', () => {
+  // Opened from a page that is not a coven's (M9.12), the dialog names the coven it writes to in
+  // its accessible name; on a coven's own page it is left out.
+  it('names the coven it writes to when given one, and only then', () => {
+    const { unmount } = render(
+      <StockDialogModal {...PROPS} onClose={() => {}} coven="Fixture Coven" />,
+    );
+    expect(
+      screen.getByRole('dialog', { name: 'Edit Stock, Testwort, Fixture Coven' }),
+    ).toBeInTheDocument();
+    unmount();
+
+    render(<StockDialogModal {...PROPS} onClose={() => {}} />);
+    expect(screen.getByRole('dialog', { name: 'Edit Stock, Testwort' })).toBeInTheDocument();
+  });
+
   it('is a button named for its ingredient, shut until pressed, that opens the dialog named the same', async () => {
     render(<StockDialog {...PROPS} />);
     expect(screen.queryByRole('dialog')).toBeNull();

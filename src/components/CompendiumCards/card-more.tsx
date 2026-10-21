@@ -129,6 +129,7 @@ export default function CompendiumCardMore({
           ingredientId={id}
           ingredientName={label}
           defaultWorkspaceId={places[0].workspaceId}
+          namesCoven
           onClose={settle}
           returnTo={back}
         />

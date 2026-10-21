@@ -370,6 +370,7 @@ export default function CupboardActions(
           ingredientId={ingredientId}
           ingredientName={name}
           defaultWorkspaceId={defaultWorkspaceId}
+          namesCoven={viewing === 'compendium'}
           onClose={settle}
           returnTo={() => back(moreControl)}
         />

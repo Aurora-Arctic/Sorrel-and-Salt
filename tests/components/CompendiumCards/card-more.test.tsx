@@ -192,7 +192,9 @@ describe('CompendiumCardMore', () => {
     it("opens the coven's dialog at once for one coven, with its jars and the entry's forms", async () => {
       renderMore(props([place({ stock: stock([jar(FLOWER, 50)]) })]));
       choose('Edit Stock');
-      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' });
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Edit Stock, House Salt, Fixture Coven',
+      });
       expect(within(dialog).queryByRole('combobox', { name: 'Coven' })).not.toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
       expect(within(dialog).getByRole('combobox', { name: 'Add Form' })).toBeInTheDocument();
@@ -215,7 +217,9 @@ describe('CompendiumCardMore', () => {
       expect(screen.queryByRole('dialog', { name: 'Edit Stock, House Salt' })).toBeNull();
       pickOption('Coven', 'Other Coven');
       press(within(picker).getByRole('button', { name: 'Continue' }));
-      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' });
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Edit Stock, House Salt, Other Coven',
+      });
       expect(within(dialog).getByRole('button', { name: /^Oil\b/ })).toBeInTheDocument();
       expect(within(dialog).queryByRole('button', { name: /^Flower\b/ })).toBeNull();
     });
@@ -232,14 +236,16 @@ describe('CompendiumCardMore', () => {
       );
       choose('Edit Stock');
       expect(
-        await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' }),
+        await screen.findByRole('dialog', { name: 'Edit Stock, House Salt, Fixture Coven' }),
       ).toBeInTheDocument();
     });
 
     it('gives the dots the focus back when the dialog is cancelled', async () => {
       renderMore(props([place({ stock: stock() })]));
       choose('Edit Stock');
-      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' });
+      const dialog = await screen.findByRole('dialog', {
+        name: 'Edit Stock, House Salt, Fixture Coven',
+      });
       press(within(dialog).getByRole('button', { name: 'Cancel' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       expect(more()).toHaveFocus();
