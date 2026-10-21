@@ -119,12 +119,29 @@ test(
       }
     });
 
-    await test.step('each shows its form, and a shared label its formal name', async () => {
-      await expect(rowOf(list, 'Rosemary')).toContainText('Herb');
-      await expect(rowOf(list, 'Selenite')).toContainText('Crystal');
-      await expect(rowOf(list, 'Testwort')).toContainText('Root');
+    await test.step('each lists its form in Quick Look, and a shared label shows its formal name on its card', async () => {
       await expect(rowOf(list, "Cat's Claw")).toContainText('Uncaria tomentosa');
-      await expect(rowOf(list, "Cat's Claw")).toContainText('Bark');
+      // The forms are Quick Look's since M9.9, which took the forms line off the card.
+      const forms: [string, string][] = [
+        ['Rosemary', 'Herb'],
+        ['Selenite', 'Crystal'],
+        ['Testwort', 'Root'],
+        ["Cat's Claw", 'Bark'],
+      ];
+      for (const [name, form] of forms) {
+        await rowOf(list, name)
+          .getByRole('link', { name: new RegExp(`^Quick Look ${name}`) })
+          .click();
+        const details = page.getByRole('dialog', { name, exact: true });
+        await expect(
+          details
+            .getByRole('list', { name: 'Forms' })
+            .getByRole('listitem')
+            .filter({ hasText: form }),
+        ).toHaveCount(1);
+        await details.getByRole('button', { name: 'Close', exact: true }).click();
+        await expect(details).toHaveCount(0);
+      }
     });
 
     await test.step('each stocked entry shows its jar, by quantity and unit', async () => {
@@ -471,7 +488,13 @@ test(
       ]);
       // With every form held there is nothing left to add. The card reads again once the dialog
       // has closed, and the dialog is drawn from what the card was given.
-      await expect(rowOf(list, 'Rosemary')).toContainText('Oil');
+      // The card's own Oil jar line (the forms are Quick Look's since M9.9, off the card).
+      await expect(
+        rowOf(list, 'Rosemary')
+          .getByRole('listitem')
+          .filter({ hasText: 'Oil' })
+          .filter({ hasText: '30 ml' }),
+      ).toBeVisible();
       await editor.open.click();
       await editor.choose('Oil');
       await expect(editor.jar('Oil').quantity).toHaveValue('30');
