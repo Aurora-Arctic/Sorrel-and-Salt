@@ -1,5 +1,5 @@
 // How long ago an instant was, as a phrase ("3 days ago"). Worked out against the
-// reader's clock, so it only ever runs in the browser (relative-time.tsx).
+// reader's clock, so it only ever runs in the browser (last-edit-tip.tsx).
 
 const UNITS: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[] = [
   ['year', 365 * 24 * 60 * 60 * 1000],
