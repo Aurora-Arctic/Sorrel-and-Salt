@@ -475,11 +475,17 @@ $skeleton-fade: 300ms;
       }
     }
 
-    // typography-base sets its ◆ for a line of text; a row here is as tall
-    // as its Use It, so the mark is centred on the row instead.
+    // The ◆ centred on the row, not on a line of text: a row here is as tall
+    // as its Use It, its title centred in it. The row is the li's body, which
+    // after the first row starts space(1) down (the rule above), so the
+    // centre moves down half that.
     li::before {
-      top: 50%;
+      @include list-marker(50%);
       @include theme-transition(background-color);
+    }
+
+    li + li::before {
+      top: calc(50% + #{space(1)} / 2);
     }
 
     // The title link in the body ink with the faded underline the entry
