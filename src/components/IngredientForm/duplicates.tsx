@@ -463,6 +463,111 @@ function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): st
     : 'Did you mean one of these?';
 }
 
+/** A match the cupboard already holds: the coven's own, or a compendium entry it has used. */
+const isHeld = (match: Duplicate): boolean => !match.isGlobal || match.inCupboard === true;
+
+/**
+ * One list of the warning's matches, sliding between answers on its own
+ * (`useSlidingRows`), and drawn while it has a row, the leaving ones too.
+ * Under a `heading`, the list is named by it, an `h4` beneath the form's
+ * Identity section's `h3`, and the group opens by height round its first
+ * rows and closes round its last, as the region does round the whole notice,
+ * so a group arriving or leaving under a warning already shown never jumps.
+ */
+function MatchList({
+  slide,
+  list,
+  heading,
+  choiceFor,
+  linkTo,
+}: {
+  slide: ReturnType<typeof useSlidingRows>;
+  list: RefObject<HTMLUListElement | null>;
+  heading?: string;
+  choiceFor: (match: Duplicate) => ReactElement | null;
+  linkTo: (match: Duplicate) => ReactElement;
+}): ReactElement | null {
+  const headingId = useId();
+  if (slide.rows.length === 0) return null;
+  const items = (
+    <ul
+      ref={list}
+      aria-labelledby={heading === undefined ? undefined : headingId}
+      onTransitionStart={slide.onTransitionStart}
+      onTransitionEnd={slide.onTransitionEnd}
+    >
+      {/* Keyed by place, not entry: a new answer then changes
+          each row under its shapes and every row fades back
+          together, where a new entry's row would mount drawn
+          beside a surviving one fading in. A row leaving is
+          out of the accessibility tree at once. */}
+      {slide.rows.map(({ match, phase, gone }, place) => {
+        const choice = choiceFor(match);
+        const classes = ['ingredient-form__match'];
+        if (phase !== 'present') classes.push(`ingredient-form__match--${phase}`);
+        if (slide.covered) classes.push('ingredient-form__match--pending');
+        return (
+          <li
+            key={place}
+            className={classes.join(' ')}
+            aria-hidden={phase === 'leaving' || undefined}
+          >
+            <div className="ingredient-form__body">
+              {/* Keyed by entry, so another entry's row fades in
+                  afresh, over the last one's fading out as text
+                  alone: nothing in it to press. */}
+              <span
+                key={match.id}
+                className={`ingredient-form__row${gone ? ' ingredient-form__row--arriving' : ''}`}
+              >
+                {linkTo(match)}
+                {choice}
+              </span>
+              {gone && (
+                <span
+                  // Keyed too: a third entry within the fade
+                  // then starts a fresh fade out of the second,
+                  // rather than taking over one already done.
+                  key={gone.id}
+                  className="ingredient-form__row ingredient-form__row--gone"
+                  aria-hidden="true"
+                >
+                  <span className="ingredient-form__was">{titleOf(gone)}</span>
+                  {choiceFor(gone) && (
+                    <span className="btn btn--quiet btn--small">
+                      {gone.inCupboard ? 'Open It' : 'Use It'}
+                    </span>
+                  )}
+                </span>
+              )}
+              <span className="ingredient-form__shapes" aria-hidden="true">
+                <span className="ingredient-form__shape" />
+                {choice && (
+                  <span className="ingredient-form__shape ingredient-form__shape--button" />
+                )}
+              </span>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+  if (heading === undefined) return items;
+  // Open once a row is in, so a group's first frame, its rows still
+  // entering, is closed and the opening is a transition.
+  const open = slide.rows.some((row) => row.phase === 'present');
+  return (
+    <div className={`ingredient-form__group${open ? ' ingredient-form__group--open' : ''}`}>
+      <div className="ingredient-form__group-inner">
+        <h4 id={headingId} className="ingredient-form__group-heading">
+          {heading}
+        </h4>
+        {items}
+      </div>
+    </div>
+  );
+}
+
 /** The name field, with the duplicate warning beneath it. */
 export function NameField({
   warning,
@@ -476,12 +581,21 @@ export function NameField({
   // rather than a warning, answered by using the entry or creating anyway.
   const asking = blocking && exact.length > 0;
   const warningId = useId();
-  const list = useRef<HTMLUListElement>(null);
-  const { rows, covered, onTransitionStart, onTransitionEnd } = useSlidingRows(
-    asking ? exact : shown,
+  const listed = asking ? exact : shown;
+  // Two groups where there is a cupboard (the owner's call): what the coven
+  // already holds, its own entries and the compendium entries it has used,
+  // then what is in the compendium alone, each in the answer's order. The
+  // admin's form has no coven, so its matches stand in one list, unheaded.
+  const grouped = onUse !== undefined;
+  const covenList = useRef<HTMLUListElement>(null);
+  const compendiumList = useRef<HTMLUListElement>(null);
+  const coven = useSlidingRows(grouped ? listed.filter(isHeld) : listed, pending, covenList);
+  const compendium = useSlidingRows(
+    grouped ? listed.filter((match) => !isHeld(match)) : [],
     pending,
-    list,
+    compendiumList,
   );
+  const rows = [...coven.rows, ...compendium.rows];
   // The notice stays while any row is drawn, the leaving ones too, and the
   // region closes round them as they fade: open while a row stays.
   const drawn = rows.length > 0;
@@ -565,66 +679,20 @@ export function NameField({
                   2026-10-18, over a spinner). Both stay mounted for the fade. */}
                 <div id={warningId} className="ingredient-form__matches">
                   <p>{sentenceFor(blocking, asking, exact.length)}</p>
-                  <ul
-                    ref={list}
-                    onTransitionStart={onTransitionStart}
-                    onTransitionEnd={onTransitionEnd}
-                  >
-                    {/* Keyed by place, not entry: a new answer then changes
-                      each row under its shapes and every row fades back
-                      together, where a new entry's row would mount drawn
-                      beside a surviving one fading in. A row leaving is
-                      out of the accessibility tree at once. */}
-                    {rows.map(({ match, phase, gone }, place) => {
-                      const choice = choiceFor(match);
-                      const classes = ['ingredient-form__match'];
-                      if (phase !== 'present') classes.push(`ingredient-form__match--${phase}`);
-                      if (covered) classes.push('ingredient-form__match--pending');
-                      return (
-                        <li
-                          key={place}
-                          className={classes.join(' ')}
-                          aria-hidden={phase === 'leaving' || undefined}
-                        >
-                          <div className="ingredient-form__body">
-                            {/* Keyed by entry, so another entry's row fades in
-                              afresh, over the last one's fading out as text
-                              alone: nothing in it to press. */}
-                            <span
-                              key={match.id}
-                              className={`ingredient-form__row${gone ? ' ingredient-form__row--arriving' : ''}`}
-                            >
-                              {linkTo(match)}
-                              {choice}
-                            </span>
-                            {gone && (
-                              <span
-                                // Keyed too: a third entry within the fade
-                                // then starts a fresh fade out of the second,
-                                // rather than taking over one already done.
-                                key={gone.id}
-                                className="ingredient-form__row ingredient-form__row--gone"
-                                aria-hidden="true"
-                              >
-                                <span className="ingredient-form__was">{titleOf(gone)}</span>
-                                {choiceFor(gone) && (
-                                  <span className="btn btn--quiet btn--small">
-                                    {gone.inCupboard ? 'Open It' : 'Use It'}
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                            <span className="ingredient-form__shapes" aria-hidden="true">
-                              <span className="ingredient-form__shape" />
-                              {choice && (
-                                <span className="ingredient-form__shape ingredient-form__shape--button" />
-                              )}
-                            </span>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  <MatchList
+                    slide={coven}
+                    list={covenList}
+                    heading={grouped ? 'In This Coven' : undefined}
+                    choiceFor={choiceFor}
+                    linkTo={linkTo}
+                  />
+                  <MatchList
+                    slide={compendium}
+                    list={compendiumList}
+                    heading="In the Compendium"
+                    choiceFor={choiceFor}
+                    linkTo={linkTo}
+                  />
                 </div>
                 {/* One Create Anyway under either list (the owner's call,
                   2026-10-18: the question's own button was Add Our Own), in

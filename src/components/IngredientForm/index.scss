@@ -308,6 +308,49 @@ $skeleton-fade: 300ms;
       position: relative;
     }
 
+    // In a coven's form the matches come in two headed groups, the coven's
+    // own and the compendium's (the owner's call). Each group opens and
+    // closes by height round its rows, 0fr to 1fr as the region itself does,
+    // so its heading never stands alone over an emptied list. The gutter pull
+    // moves from the list onto the group, so the heading sits flush with the
+    // diamonds' edge.
+    .ingredient-form__group {
+      display: grid;
+      grid-template-rows: 0fr;
+      margin: space(2) 0 0 calc(-1 * (1.0125rem + #{space(2)}));
+      transition: grid-template-rows $skeleton-fade ease-in-out;
+
+      @include reduced-motion {
+        transition: none;
+      }
+
+      &--open {
+        grid-template-rows: 1fr;
+      }
+
+      ul {
+        margin: space(1) 0 0;
+      }
+    }
+
+    .ingredient-form__group + .ingredient-form__group {
+      margin-top: space(2);
+    }
+
+    .ingredient-form__group-inner {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    // A label over its list, not a section of the page: muted, in the
+    // heading face at body size, as the face's small capitals read smaller
+    // than Lexend at the same size.
+    .ingredient-form__group-heading {
+      margin: 0;
+      color: $text-muted;
+      font-size: type-size('body');
+    }
+
     // Another name's answer on its way: each row the answer will replace
     // cross-fades to the skeleton's shapes (`skeleton-shape`, _mixins.scss),
     // laid over the row, a bar where the title was and, where the row had a

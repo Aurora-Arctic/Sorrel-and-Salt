@@ -1106,7 +1106,26 @@ match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
 2026-10-18, which took it off MB.115's quiet style). The rows' title links
 wear the body ink and the faded underline of the entry page's links, with
-typography-base's ◆ centred on the row. While another name's answer is on
+a ◆ centred on the row: the `list-marker` shape (`_mixins.scss`), not
+typography-base's glyph, whose box sat its top rather than its middle on a
+centre line (M12.48).
+
+**In a coven's form the matches come in two groups** (M12.48, the owner's
+call), each under its own heading: **In This Coven**, the coven's own entries
+and the compendium entries its cupboard already holds (`!isGlobal`, or
+`inCupboard`), then **In the Compendium**, the compendium entries it does
+not hold. Each keeps the answer's order. A group with no rows is not drawn,
+but a lone group keeps its heading, so the reader always knows which kind a
+match is. The headings are `h4`s, under the modal's `h2` and the Identity
+section's `h3`, muted and in the heading face at body size; each list is a
+`<ul>` named by its heading through `aria-labelledby`. Each group slides
+its own rows (`useSlidingRows`, once per list) and opens and closes by
+height round them, 0fr to 1fr as the region does, so a heading never stands
+over an emptied list. The sentence above both is unchanged, and the region's
+`aria-describedby` still covers the whole block. The compendium's form has
+no coven, so it draws one plain list with no headings. Use It never needs to
+move a row from one group to the other: it closes the modal and routes to
+the entry's coven page. While another name's answer is on
 its way, each row stands as the skeleton's shape (`skeleton-shape`,
 `_mixins.scss`, as a tab's list does), a bar for the title and one in the
 small button's own size where the row had a Use It, so the box keeps its

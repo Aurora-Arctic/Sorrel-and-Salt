@@ -43,9 +43,10 @@ const MOCKLEAF: DuplicateNode = {
 
 /**
  * The name field and its warning; a save that the warning does not hold calls
- * `sent` with the name. `opened` is an edited entry's name, as the form opens with it.
+ * `sent` with the name. `opened` is an edited entry's name, as the form opens with it;
+ * `cupboard: false` is the admin's form, which has no cupboard to put an entry in.
  */
-function renderName(opened?: string) {
+function renderName(opened?: string, { cupboard = true }: { cupboard?: boolean } = {}) {
   const sent = vi.fn();
   const used = vi.fn();
   const Harness = () => {
@@ -66,7 +67,12 @@ function renderName(opened?: string) {
           })}
         >
           {/* No ref: moving the focus to Create Anyway is the form's. */}
-          <NameField warning={warning} hrefOf={duplicateHref} onUse={used} ref={null} />
+          <NameField
+            warning={warning}
+            hrefOf={duplicateHref}
+            onUse={cupboard ? used : undefined}
+            ref={null}
+          />
           <button type="submit">Save Ingredient</button>
         </form>
       </FormProvider>
@@ -505,6 +511,85 @@ describe('NameField, with useDuplicateWarning', () => {
 
       await screen.findByRole('link', { name: /Mockleaf/ });
       expect(screen.queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
+    });
+  });
+
+  // The owner's call: which matches the coven already holds, its own and the
+  // compendium entries it has used, and which are in the compendium alone.
+  describe('grouped by where each match is', () => {
+    const UNUSED = { ...TOMENTOSA, isGlobal: true, inCupboard: false };
+    const USED = { ...FELIS, isGlobal: true, inCupboard: true };
+    const group = (heading: string) => within(warning()).queryByRole('list', { name: heading });
+    const titlesIn = (list: HTMLElement) =>
+      within(list)
+        .getAllByRole('link', { name: /new tab/ })
+        .map((link) => link.textContent?.replace(' (opens in a new tab)', ''));
+
+    it('lists what the coven holds under In This Coven, then the rest under In the Compendium', async () => {
+      renderName();
+      offerDuplicates([UNUSED, MOCKLEAF, USED]);
+
+      type('Cats Claw');
+      settle();
+      await within(warning()).findAllByRole('listitem');
+
+      const coven = group('In This Coven');
+      const compendium = group('In the Compendium');
+      expect(coven).not.toBeNull();
+      expect(compendium).not.toBeNull();
+      // Its own entry and the compendium entry it has used, in the answer's order.
+      expect(titlesIn(coven!)).toEqual(['Mockleaf', "Cat's Claw (Felis catus)"]);
+      expect(titlesIn(compendium!)).toEqual(["Cat's Claw (Uncaria tomentosa)"]);
+      expect(within(compendium!).getByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(within(coven!).getByRole('link', { name: /^Open It/ })).toBeInTheDocument();
+      // The coven's first, each named by a heading beneath the form's section headings.
+      expect(
+        coven!.compareDocumentPosition(compendium!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'In This Coven', level: 4 })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'In the Compendium', level: 4 }),
+      ).toBeInTheDocument();
+    });
+
+    it('keeps the heading of the one group there is, and draws no empty one', async () => {
+      renderName();
+      offerDuplicates([UNUSED]);
+
+      type('Cats Claw');
+      settle();
+      await within(warning()).findByRole('listitem');
+
+      expect(group('In the Compendium')).not.toBeNull();
+      expect(group('In This Coven')).toBeNull();
+      expect(screen.queryByRole('heading', { name: 'In This Coven' })).not.toBeInTheDocument();
+    });
+
+    it('groups the exact-name question the same way', async () => {
+      renderName();
+      offerDuplicates([UNUSED, USED]);
+      offerCompendiumMatches([UNUSED, USED]);
+
+      type("Cat's Claw");
+      save();
+      await within(warning()).findByText(/already has entries/);
+
+      expect(titlesIn(group('In This Coven')!)).toEqual(["Cat's Claw (Felis catus)"]);
+      expect(titlesIn(group('In the Compendium')!)).toEqual(["Cat's Claw (Uncaria tomentosa)"]);
+    });
+
+    // The admin's form has no coven: every match is the compendium's, and a
+    // heading saying so would say nothing.
+    it('draws one list with no heading where there is no cupboard', async () => {
+      renderName(undefined, { cupboard: false });
+      offerDuplicates([UNUSED, USED]);
+
+      type('Cats Claw');
+      settle();
+      await within(warning()).findAllByRole('listitem');
+
+      expect(within(warning()).getAllByRole('list')).toHaveLength(1);
+      expect(within(warning()).queryByRole('heading')).not.toBeInTheDocument();
     });
   });
 });
