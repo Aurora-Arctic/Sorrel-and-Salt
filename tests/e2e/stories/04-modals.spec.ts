@@ -340,6 +340,8 @@ test(
       dialog = await openAddIngredient(page);
       await nameField(dialog).fill('Kaelmossia testalis');
       await saveIngredient(dialog).click();
+      // The Create Anyway save above left the page on Ostrelvine's own; the + must not move it.
+      const before = page.url();
       await dialog.getByRole('button', { name: /^Add to My Ingredients: Kaelmoss/ }).click();
 
       // M12.48: the + shows the check, then turns into the eye, and the row moves under In This
@@ -351,7 +353,7 @@ test(
       ).toBeVisible();
       await expect(dialog).toBeVisible();
       await expect(nameField(dialog)).toHaveValue('Kaelmossia testalis');
-      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}$`));
+      expect(page.url()).toBe(before);
       const [held] = await withSql(
         (sql) => sql<{ label: string | null; jars: number; copies: number }[]>`
           select e.label,
