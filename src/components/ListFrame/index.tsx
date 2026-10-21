@@ -42,6 +42,8 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const [heldHeight, setHeldHeight] = useState<number>();
   // The kind of the navigation last started; read only while one is pending.
   const [kind, setKind] = useState<ListNavigationKind>();
+  // The address of the navigation last started, read only while one is pending.
+  const [target, setTarget] = useState<string>();
 
   // A pager end's page: once the transition ends the new page has rendered, so
   // bring the start of the list to the line the stuck search row leaves, if it
@@ -72,10 +74,12 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
     pending,
     // A filter's navigation is always soft; a pager end's is `page` or `full`.
     searching: pending && kind === 'soft',
+    target: pending ? target : undefined,
     heldHeight,
     go: (href, way) => {
       if (pending) return;
       setKind(way);
+      setTarget(href);
       if (way === 'full') {
         setLeaving(true);
         window.location.assign(href);

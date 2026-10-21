@@ -285,6 +285,12 @@ function labelsOf({
   };
 }
 
+/** The name search an address carries, read as the page reads it: trimmed, blank for none. */
+const queryOf = (href: string): string =>
+  COMPENDIUM_PARAMS.entries.query.read(
+    new URL(href, 'http://localhost').searchParams.get('query') ?? undefined,
+  );
+
 const CompendiumListFilterWithSentence = ({
   filter,
   facets,
@@ -296,12 +302,16 @@ const CompendiumListFilterWithSentence = ({
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
-  const { searching } = useListNavigation();
+  const { searching, target } = useListNavigation();
+  // The page still shows the previous search while the new one is read, so the term the sentence
+  // names is the one the navigation is opening, not the one in `filter`.
+  const query = searching && target !== undefined ? queryOf(target) : filter.query;
   const sentence = useMemo(
     () =>
       buildSearchSentence({
         filter: {
           ...filter,
+          query,
           toxic: filter.toxic || null,
           source: filter.source || null,
           inStock: filter.inStock ?? false,
@@ -311,7 +321,7 @@ const CompendiumListFilterWithSentence = ({
         total,
         admin: audience === 'admin',
       }),
-    [filter, facets, categories, total, audience],
+    [filter, query, facets, categories, total, audience],
   );
   return (
     <>
@@ -326,7 +336,7 @@ const CompendiumListFilterWithSentence = ({
         covenSlug={covenSlug}
         workspaceId={workspaceId}
       />
-      <SearchSentence sentence={sentence} query={filter.query} pending={searching} />
+      <SearchSentence sentence={sentence} query={query} pending={searching} />
     </>
   );
 };
