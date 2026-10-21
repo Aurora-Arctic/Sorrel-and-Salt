@@ -10,6 +10,7 @@ import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
+import type { StockData } from '../StockDialog/types';
 
 /** The part of an entry its edit modal names itself by and edits. */
 export type EditableEntry = Pick<IngredientRow, 'id' | 'name' | 'canonicalName' | 'nomenclature'>;
@@ -152,6 +153,12 @@ export interface CupboardPlace {
   canMakeOurs: boolean;
   /** The public page with `?annotate=<covenSlug>`: opens this coven's Annotate dialog over it. */
   annotateHref: Route;
+  /**
+   * What Edit Stock reads (M9.12): every form the entry comes in and this coven's jars of it.
+   * Given only where the coven holds the entry and the role may update stock; left out, the
+   * coven offers no Edit Stock.
+   */
+  stock?: StockData;
 }
 
 /** The public page's cupboard choices (M9.12): the viewer's writable covens, and the dialog the address opens. */

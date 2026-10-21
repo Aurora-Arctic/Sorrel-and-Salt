@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardPlace, PublicCupboardActionsProps } from '@/components/IngredientEntry/types';
+import type { StockData } from '@/components/StockDialog/types';
 import type { AddCupboardEntryMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
@@ -35,6 +36,21 @@ const place = (n: 1 | 2, over: Partial<CupboardPlace> = {}): CupboardPlace => ({
 });
 
 const INGREDIENT = '00000000-0000-4000-8000-0000000000aa';
+const FLOWER = '00000000-0000-4000-8000-0000000000f1';
+
+/** What Edit Stock reads for a coven: the entry's one form, and a jar of it. */
+const stock = (quantity: number): StockData => ({
+  forms: [{ variantId: FLOWER, label: 'Flower' }],
+  jars: [
+    {
+      id: `00000000-0000-4000-8000-0000000009${quantity}`,
+      variantId: FLOWER,
+      quantity,
+      unit: 'g',
+      threshold: null,
+    },
+  ],
+});
 
 const EDIT = {
   href: `${PAGE}?edit` as Route,
@@ -385,5 +401,42 @@ describe('CupboardActions on the public page', () => {
 
     const dialog = screen.getByRole('dialog', { name: /Annotate/ });
     expect(within(dialog).getByRole('textbox', { name: 'Label' })).toHaveValue('Their Testwort');
+  });
+
+  // Edit Stock, first in the dots (the owner's call, 2026-10-21): the coven card's own dialog,
+  // for a coven that holds the entry and where the role may update stock.
+  describe('Edit Stock', () => {
+    it('goes first in the dots for a holding coven that may update stock', () => {
+      show(props([place(1, { held: true, stock: stock(50) })]));
+      expect(choices()).toEqual(['Edit Stock', 'Annotate', 'Make It Ours', 'Remove']);
+    });
+
+    it('is not offered for a coven that lacks the entry, or where the role may not update stock', () => {
+      show(props([place(1, { held: true }), place(2, { held: false })]));
+      expect(choices()).not.toContain('Edit Stock');
+    });
+
+    it("opens that coven's dialog at once for one coven", async () => {
+      show(props([place(1, { held: true, stock: stock(50) }), place(2, { held: true })]));
+      choose('Edit Stock');
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
+      expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
+      expect(within(dialog).queryByRole('combobox', { name: 'Coven' })).toBeNull();
+    });
+
+    it("asks which coven where two may, then opens that coven's jar", async () => {
+      show(
+        props([
+          place(1, { held: true, stock: stock(50) }),
+          place(2, { held: true, stock: stock(20) }),
+        ]),
+      );
+      choose('Edit Stock');
+      const picker = await screen.findByRole('dialog', { name: 'Edit Stock' });
+      pickCoven(picker, 'Fixture Coven Two');
+      fireEvent.click(within(picker).getByRole('button', { name: 'Continue' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
+      expect(within(dialog).getByRole('button', { name: /^Flower\b.*20 g/ })).toBeInTheDocument();
+    });
   });
 });

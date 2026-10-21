@@ -22,6 +22,7 @@ export type CompendiumCardPlace = Pick<
   | 'canMakeOurs'
   | 'canRemove'
   | 'annotateHref'
+  | 'stock'
 >;
 
 /** What a card's More, and the Quick Look window's made from it, needs of one entry. */

@@ -20,6 +20,7 @@ import { MakeItOursDialog, RemoveDialog, useCupboardWrites } from './cupboard-wr
 import { ANNOTATE_HEADING } from './annotate-heading';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import AnnotatePicker from './annotate-picker';
+import EditStock, { type StockPlace } from './edit-stock';
 import PlusMark from './plus-mark';
 import type {
   CupboardActionsProps,
@@ -84,7 +85,7 @@ const plusOfPlaces = (
     : undefined;
 };
 
-type Asking = 'remove' | 'own' | 'annotate';
+type Asking = 'remove' | 'own' | 'annotate' | 'stock';
 
 /** The covens a choice may act in: Add in those that lack the entry, the rest in those that hold it. */
 const placesFor = {
@@ -125,6 +126,8 @@ function normalise(props: CupboardActionsProps | PublicCupboardActionsProps) {
         canRemove,
         canMakeOurs,
         annotateHref: props.annotate.href,
+        // A coven's own page keeps its Edit Stock pencil, so no menu item.
+        stock: undefined,
       },
     ],
     defaultWorkspaceId: workspaceId,
@@ -216,6 +219,11 @@ export default function CupboardActions(
     ),
   );
 
+  // Edit Stock (M9.12): the compendium's page only; a coven's own page keeps its pencil. A
+  // holding coven where the role may update stock carries the stock the page read for it.
+  const stockers = places.flatMap(({ workspaceId, name: coven, held, stock }): StockPlace[] =>
+    viewing === 'compendium' && held && stock ? [{ workspaceId, name: coven, stock }] : [],
+  );
   const annotators = placesFor.annotate(places);
   const owners = placesFor.own(places);
   const removers = placesFor.remove(places);
@@ -267,6 +275,13 @@ export default function CupboardActions(
           ? 'edit'
           : undefined;
 
+  const askStock = (): void => {
+    lastAsked.current = 'stock';
+    moreFeedback.report(undefined);
+    setAsking('stock');
+  };
+  const stockItem: MenuButtonItem | undefined =
+    stockers.length > 0 ? { key: 'stock', label: 'Edit Stock', onSelect: askStock } : undefined;
   const annotateItem: MenuButtonItem | undefined =
     main !== 'annotate' && mayAnnotate
       ? annotators.length === 1
@@ -290,7 +305,7 @@ export default function CupboardActions(
           onSelect: ask('remove', removers, writes.remove),
         }
       : undefined;
-  const covenItems = [annotateItem, ownItem, removeItem].filter(
+  const covenItems = [stockItem, annotateItem, ownItem, removeItem].filter(
     (item): item is MenuButtonItem => item !== undefined,
   );
   // Remove is the one choice left in More: a lone choice is its own icon, so it is the bin.
@@ -349,6 +364,16 @@ export default function CupboardActions(
       {moreFeedback.feedback}
       {/* Asked in a dialog over the page, as Leave Coven asks (the owner's
           call, 2026-10-19), rather than in the title's row. */}
+      {asking === 'stock' && (
+        <EditStock
+          places={stockers}
+          ingredientId={ingredientId}
+          ingredientName={name}
+          defaultWorkspaceId={defaultWorkspaceId}
+          onClose={settle}
+          returnTo={() => back(moreControl)}
+        />
+      )}
       {asking === 'annotate' && (
         <AnnotatePicker
           places={annotators}

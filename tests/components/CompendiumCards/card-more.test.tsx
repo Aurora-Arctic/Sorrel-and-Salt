@@ -7,8 +7,9 @@ import type {
   CompendiumCardMoreProps,
   CompendiumCardPlace,
 } from '@/components/CompendiumCards/types';
+import type { StockData, StockJar } from '@/components/StockDialog/types';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { press } from '../../support/interact';
+import { choose as pickOption, press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -21,6 +22,25 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const ID = '00000000-0000-4000-8000-000000000002';
 const LIST = '/compendium' as Route;
+
+const FLOWER = '00000000-0000-4000-8000-0000000000f1';
+const OIL = '00000000-0000-4000-8000-0000000000f2';
+
+/** The covens' stock the dialog reads: every form, and the jars this coven holds. */
+const stock = (jars: StockJar[] = []): StockData => ({
+  forms: [
+    { variantId: FLOWER, label: 'Flower' },
+    { variantId: OIL, label: 'Oil' },
+  ],
+  jars,
+});
+const jar = (variantId: string, quantity: number): StockJar => ({
+  id: `00000000-0000-4000-8000-00000000009${quantity % 10}`,
+  variantId,
+  quantity,
+  unit: 'g',
+  threshold: null,
+});
 
 const place = (over: Partial<CompendiumCardPlace> = {}): CompendiumCardPlace => ({
   workspaceId: '00000000-0000-4000-8000-000000000001',
@@ -144,5 +164,85 @@ describe('CompendiumCardMore', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(more()).toHaveFocus();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  describe('Edit Stock', () => {
+    const others = { canAnnotate: false, canMakeOurs: false, canRemove: false };
+
+    it('goes first in the menu, for a coven where the role may update stock', () => {
+      renderMore(props([place({ stock: stock() })]));
+      expect(choices()).toEqual(['Edit Stock', 'Annotate', 'Make It Ours', 'Remove']);
+    });
+
+    it('is the only choice the dots hold for a role that may update stock and do nothing else', () => {
+      renderMore(props([place({ ...others, stock: stock() })]));
+      expect(choices()).toEqual(['Edit Stock']);
+    });
+
+    it('is not offered where the role may not update stock, whatever else it may do', () => {
+      renderMore(props([place()]));
+      expect(choices()).not.toContain('Edit Stock');
+    });
+
+    it('is not offered to a viewer, who has no dots at all', () => {
+      renderMore(props([place({ ...others })]));
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it("opens the coven's dialog at once for one coven, with its jars and the entry's forms", async () => {
+      renderMore(props([place({ stock: stock([jar(FLOWER, 50)]) })]));
+      choose('Edit Stock');
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' });
+      expect(within(dialog).queryByRole('combobox', { name: 'Coven' })).not.toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
+      expect(within(dialog).getByRole('combobox', { name: 'Add Form' })).toBeInTheDocument();
+    });
+
+    it("asks which coven where two may, then opens that coven's jars", async () => {
+      renderMore(
+        props([
+          place({ stock: stock([jar(FLOWER, 50)]) }),
+          place({
+            workspaceId: '00000000-0000-4000-8000-000000000003',
+            covenSlug: 'other-coven',
+            name: 'Other Coven',
+            stock: stock([jar(OIL, 20)]),
+          }),
+        ]),
+      );
+      choose('Edit Stock');
+      const picker = await screen.findByRole('dialog', { name: 'Edit Stock' });
+      expect(screen.queryByRole('dialog', { name: 'Edit Stock, House Salt' })).toBeNull();
+      pickOption('Coven', 'Other Coven');
+      press(within(picker).getByRole('button', { name: 'Continue' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' });
+      expect(within(dialog).getByRole('button', { name: /^Oil\b/ })).toBeInTheDocument();
+      expect(within(dialog).queryByRole('button', { name: /^Flower\b/ })).toBeNull();
+    });
+
+    it('asks only among the covens that may update stock', async () => {
+      renderMore(
+        props([
+          place({ stock: stock() }),
+          place({
+            workspaceId: '00000000-0000-4000-8000-000000000003',
+            name: 'Other Coven',
+          }),
+        ]),
+      );
+      choose('Edit Stock');
+      expect(
+        await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' }),
+      ).toBeInTheDocument();
+    });
+
+    it('gives the dots the focus back when the dialog is cancelled', async () => {
+      renderMore(props([place({ stock: stock() })]));
+      choose('Edit Stock');
+      const dialog = await screen.findByRole('dialog', { name: 'Edit Stock, House Salt' });
+      press(within(dialog).getByRole('button', { name: 'Cancel' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(more()).toHaveFocus();
+    });
   });
 });

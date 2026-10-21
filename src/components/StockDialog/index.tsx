@@ -9,7 +9,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { FieldError, FormActions } from '../Field';
 import { BinButton, StockIcon } from '../IconTip';
-import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
+import Modal, { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { StockBadge } from '../StockBadge';
 import StockFields, {
@@ -409,5 +409,31 @@ const StockDialog = (props: StockDialogProps): ReactElement => (
   </ModalButton>
 );
 
+/**
+ * The same dialog opened by something other than its pencil: a menu item on a compendium card
+ * (M9.12), whose owner holds the question of whether it is open. Modal restores nothing itself,
+ * so `returnTo` names where the focus goes when it closes.
+ */
+export function StockDialogModal({
+  onClose,
+  returnTo,
+  ...props
+}: StockDialogProps & {
+  onClose: () => void;
+  returnTo?: () => HTMLElement | null | undefined;
+}): ReactElement {
+  return (
+    <Modal
+      eyebrow="Edit Stock"
+      title={props.ingredientName}
+      size="listed"
+      onClose={onClose}
+      returnTo={returnTo}
+    >
+      {(close) => <StockDialogForm {...props} close={close} />}
+    </Modal>
+  );
+}
+
 export default StockDialog;
-export type { StockDialogProps, StockForm, StockJar } from './types';
+export type { StockData, StockDialogProps, StockForm, StockJar } from './types';
