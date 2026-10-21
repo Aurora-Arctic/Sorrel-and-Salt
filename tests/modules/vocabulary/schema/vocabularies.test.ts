@@ -46,7 +46,12 @@ const TABLES = [
     { table: groups, own: groupOwn, parent: undefined },
     { table: items, own: [groupColumn], parent: { groups, groupColumn, groupExtra } },
   ]),
-  ...Object.values(FLAT).map((table) => ({ table: nameOf(table), own: [], parent: undefined })),
+  // The flat vocabularies, celestial bodies and zodiac signs, each carry a curated position (M12.52).
+  ...Object.values(FLAT).map((table) => ({
+    table: nameOf(table),
+    own: ['position'],
+    parent: undefined,
+  })),
 ];
 
 const DRIZZLE = Object.fromEntries(

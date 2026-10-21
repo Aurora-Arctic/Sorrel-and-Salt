@@ -1,5 +1,5 @@
-import { and, eq, sql, type SQL } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -7,8 +7,8 @@ import { INGREDIENT_ELEMENTS } from '../../modules/ingredients/schema/ingredient
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
-import { categories } from '../../modules/vocabulary/schema/categories';
-import { deities } from '../../modules/vocabulary/schema/deities';
+import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
+import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import {
   citesNowhere,
@@ -22,7 +22,7 @@ import {
   toxicArm,
   workspaceListScopeIncludingSoftDeleted,
 } from './ingredients';
-import { fold, readableInTiers } from './predicates';
+import { fold, naturally, readableInTiers } from './predicates';
 import { selectFrom } from './select';
 import { curated, inLiveGroup } from './vocabularies';
 import type {
@@ -48,12 +48,14 @@ import type {
  * `findCompendiumCount` reads with that value as its kind's only choice; a
  * category under `all` is counted with the chosen ones beside it.
  *
- * Zodiac signs and celestial bodies list every live curated row by name, and
- * elements and toxic every setting, zeros included, in the vocabulary's own
- * order. Forms, deities and categories list the values some entry carries,
- * and every chosen one, at zero if none does, most entries first and then by
- * value. A form is spelled as the live curated form folding the same, else as
- * its counted variants most often spell it, ties alphabetically.
+ * Zodiac signs and celestial bodies list every live curated row, by position
+ * (nulls last) then name, and elements and toxic every setting, zeros
+ * included, in the vocabulary's own order. Forms, deities and categories list
+ * the values some entry carries, and every chosen one, at zero if none does,
+ * alphabetically in natural-language order and never by count: a category by
+ * group then name, a deity by tradition then name (M12.52). A form is spelled
+ * as the live curated form folding the same, else as its counted variants most
+ * often spell it, ties alphabetically.
  *
  * `withoutReferences` is how many entries cite no live reference, on
  * themselves or a live form, under the rest of the filter: the filter's own
@@ -146,24 +148,25 @@ async function readFacets(
 ): Promise<IngredientFacets> {
   const columns = listColumns(membership);
   const read = { scope, membership };
-  const [forms, deityCounts, categoryCounts, signs, bodies, elements, toxic] = await Promise.all([
-    formFacet(filter, read),
-    deityFacet(filter, read),
-    categoryFacet(filter, read),
-    listFacet(zodiacSigns, columns.zodiacSigns, { ...filter, zodiacSigns: undefined }, read),
-    listFacet(
-      celestialBodies,
-      columns.celestialBodies,
-      { ...filter, celestialBodies: undefined },
-      read,
-    ),
-    elementFacet(filter, read, columns),
-    toxicFacet(filter, read),
-  ]);
+  const [forms, deityCounts, categoryCounts, signs, bodies, elements, { toxic, orders }] =
+    await Promise.all([
+      formFacet(filter, read),
+      deityFacet(filter, read),
+      categoryFacet(filter, read),
+      listFacet(zodiacSigns, columns.zodiacSigns, { ...filter, zodiacSigns: undefined }, read),
+      listFacet(
+        celestialBodies,
+        columns.celestialBodies,
+        { ...filter, celestialBodies: undefined },
+        read,
+      ),
+      elementFacet(filter, read, columns),
+      toxicFacet(filter, read),
+    ]);
   return {
     forms,
-    deities: deityCounts,
-    categories: categoryCounts,
+    deities: withZeros(deityCounts, orders.deities),
+    categories: withZeros(categoryCounts, orders.categories),
     zodiacSigns: signs,
     celestialBodies: bodies,
     elements,
@@ -240,17 +243,20 @@ async function formFacet(
     value: group.curated ?? mostUsed(group.spellings),
     count: group.count,
   }));
-  return ordered(
-    counted,
-    chosen.filter((form) => !matched.has(form)),
-  );
+  return alphabetical([
+    ...counted,
+    ...[...new Set(chosen.filter((form) => !matched.has(form)))].map((value) => ({
+      value,
+      count: 0,
+    })),
+  ]);
 }
 
 /** Deities, by the curated row each live link names; a link to a deleted deity counts for none. */
 async function deityFacet(
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
-): Promise<FacetCount[]> {
+): Promise<Counted> {
   const { where, over } = listed({ ...filter, deityIds: undefined }, scope, membership);
   const link = alias(ingredientDeities, 'facet_link');
   const counted = await selectFrom(ingredients, where, {
@@ -263,10 +269,12 @@ async function deityFacet(
         table: deities,
         on: and(eq(deities.id, link.deityId), inLiveGroup(deities)),
       },
+      { type: 'inner', table: deityTraditions, on: eq(deityTraditions.id, deities.traditionId) },
     ],
-    groupBy: [deities.id],
+    groupBy: [deities.id, deityTraditions.id],
+    orderBy: [naturally(deityTraditions.name), naturally(deities.name), deities.id],
   });
-  return ordered(counted, unmatched(filter.deityIds, counted));
+  return { counted, zeros: unmatched(filter.deityIds, counted) };
 }
 
 /**
@@ -277,7 +285,7 @@ async function deityFacet(
 async function categoryFacet(
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
-): Promise<FacetCount[]> {
+): Promise<Counted> {
   const rest = filter.categoryMode === 'any' ? { ...filter, categoryIds: undefined } : filter;
   const { where, over } = listed(rest, scope, membership);
   const pair = alias(ingredientCategories, 'facet_pair');
@@ -295,10 +303,12 @@ async function categoryFacet(
         table: categories,
         on: and(eq(categories.id, pair.categoryId), inLiveGroup(categories)),
       },
+      { type: 'inner', table: categoryGroups, on: eq(categoryGroups.id, categories.groupId) },
     ],
-    groupBy: [categories.id],
+    groupBy: [categories.id, categoryGroups.id],
+    orderBy: [naturally(categoryGroups.name), naturally(categories.name), categories.id],
   });
-  return ordered(counted, unmatched(filter.categoryIds, counted));
+  return { counted, zeros: unmatched(filter.categoryIds, counted) };
 }
 
 /**
@@ -323,7 +333,11 @@ function listFacet(
     over,
     joins: [{ type: 'right', table: vocabulary, on: and(listHolds(list, vocabulary.name), where) }],
     groupBy: [vocabulary.id, vocabulary.name],
-    orderBy: [vocabulary.name, vocabulary.id],
+    orderBy: [
+      sql`${vocabulary.position} asc nulls last`,
+      naturally(vocabulary.name),
+      vocabulary.id,
+    ],
   });
 }
 
@@ -350,19 +364,26 @@ async function elementFacet(
 async function toxicFacet(
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
-): Promise<IngredientFacets['toxic']> {
+): Promise<{ toxic: IngredientFacets['toxic']; orders: Orders }> {
   const { where, over } = listed({ ...filter, toxic: undefined }, scope, membership);
   const [row] = await selectFrom(ingredients, where, {
     aggregate: {
+      // Carried here because this read always returns its one row, which a
+      // grouped read of no entries does not (see `Orders`).
+      deities: rankOf(deities, deityTraditions, deities.traditionId, filter.deityIds),
+      categories: rankOf(categories, categoryGroups, categories.groupId, filter.categoryIds),
       toxic: countWhere(toxicArm('toxic')),
       notToxic: countWhere(toxicArm('not_toxic')),
     },
     over,
   });
-  return [
-    { value: 'toxic', count: row.toxic },
-    { value: 'not_toxic', count: row.notToxic },
-  ];
+  return {
+    toxic: [
+      { value: 'toxic', count: row.toxic },
+      { value: 'not_toxic', count: row.notToxic },
+    ],
+    orders: { deities: row.deities, categories: row.categories },
+  };
 }
 
 /**
@@ -405,10 +426,66 @@ function unmatched(chosen: readonly string[] | undefined, counted: FacetCount[])
   return (chosen ?? []).filter((id) => !found.has(id.toLowerCase()));
 }
 
-/** The counted values and the unmatched chosen ones at zero, most entries first, then by value. */
-function ordered(counted: FacetCount[], zeros: readonly string[]): FacetCount[] {
+/** A grouped kind's counted values, in SQL order, and the chosen ones counting nothing. */
+interface Counted {
+  counted: FacetCount[];
+  zeros: string[];
+}
+
+/**
+ * Every live id of a grouped kind in listing order, as `rankOf` reads it; empty
+ * where nothing is chosen, since only a chosen value can count zero.
+ */
+interface Orders {
+  deities: string[];
+  categories: string[];
+}
+
+/**
+ * The counted values, already in SQL order, and the unmatched chosen ones at
+ * zero in their own place in it, not last: `order` lists every live id as the
+ * facet sorts them, and the lot is sorted by position in it. With no zero the
+ * SQL order stands.
+ */
+function withZeros({ counted, zeros }: Counted, order: readonly string[]): FacetCount[] {
+  if (zeros.length === 0) return counted;
   const all = [...counted, ...[...new Set(zeros)].map((value) => ({ value, count: 0 }))];
-  return all.sort((a, b) => b.count - a.count || byCodeUnit(a.value, b.value));
+  const at = new Map(order.map((id, index) => [id, index]));
+  // A chosen id no live row holds sorts last, by code unit.
+  const place = (value: string) => at.get(value) ?? order.length;
+  return all.sort((a, b) => place(a.value) - place(b.value) || byCodeUnit(a.value, b.value));
+}
+
+/**
+ * Every live id of `items` as a subquery lists them: group or tradition name,
+ * then name, both naturally, then id. Read only when `chosen` holds something;
+ * it sits in a read that always returns a row, because the zero-count place of
+ * a chosen value must come without a read of its own (the facet reads have a
+ * fixed query budget).
+ */
+function rankOf(
+  items: typeof categories | typeof deities,
+  groups: typeof categoryGroups | typeof deityTraditions,
+  groupId: AnyPgColumn,
+  chosen: readonly string[] | undefined,
+): SQL<string[]> {
+  if (!chosen || chosen.length === 0) return sql<string[]>`array[]::text[]`;
+  return sql<
+    string[]
+  >`array(select ${items.id}::text from ${items} inner join ${groups} on ${groups.id} = ${groupId} where ${isNull(items.deletedAt)} order by ${naturally(groups.name)}, ${naturally(items.name)}, ${items.id})`;
+}
+
+/**
+ * `facets` sorted by value in natural-language order, ties by code unit. The
+ * forms list is sorted here rather than in SQL because its values are settled
+ * in code: a form chosen in the filter that no entry in the current results
+ * uses joins the list here with a count of zero, and a group's label is
+ * picked by `mostUsed`. ICU's English collation (`Intl.Collator`) gives the
+ * order `NATURAL_COLLATION` gives the other kinds (M12.52).
+ */
+function alphabetical(facets: FacetCount[]): FacetCount[] {
+  const collator = new Intl.Collator('en-US');
+  return facets.sort((a, b) => collator.compare(a.value, b.value) || byCodeUnit(a.value, b.value));
 }
 
 /** The spelling used most often, ties going to the one that sorts first. */

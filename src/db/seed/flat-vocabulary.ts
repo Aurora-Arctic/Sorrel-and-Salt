@@ -16,16 +16,17 @@ import type { SeedTransaction } from './types';
 export async function seedFlatVocabulary(
   tx: SeedTransaction,
   table: FlatTable,
-  items: readonly { name: string; description: string }[],
+  items: readonly { name: string; description: string; position?: number | null }[],
 ): Promise<void> {
   await insertMissing(tx, table, items, {
     existing: (tx) => presentKeys(tx, table),
     keyOf: (item) => slugify(item.name),
-    toRow: ({ name, description }) => ({
+    toRow: ({ name, description, position }) => ({
       name,
       slug: slugify(name),
       seedKey: slugify(name),
       description,
+      ...(position === undefined ? {} : { position }),
     }),
   });
 }

@@ -160,3 +160,16 @@ export function foldedWordMatch(query: string): WordMatch {
     position: (text) => sql<number>`coalesce(nullif(${at(text)}, 0), ${sql.raw(String(NOWHERE))})`,
   };
 }
+
+/**
+ * The natural-language collation every facet list and the category picker
+ * sort names under (M12.52): case set aside, an accented letter beside its
+ * plain one. Named rather than left to the database default, so the order is
+ * the same wherever the server runs; it needs a Postgres built with ICU.
+ */
+export const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
+
+/** `value` sorted under `NATURAL_COLLATION`: the one place the COLLATE clause is written. */
+export function naturally(value: SQL | AnyPgColumn): SQL {
+  return sql`${value} collate ${NATURAL_COLLATION}`;
+}

@@ -63,7 +63,7 @@ box's state.
   counts, icons, the loading placeholder, `removeNoun`, `hideZeros` (a zero
   value left out) and the hidden inputs all
   behave as in the default form. A row's `group` is its heading in the list,
-  the headings in the order they first appear, ungrouped rows after them, under no heading of their own, so a grouped set gives
+  the headings in the order they first appear (the caller's order; for categories the read's alphabetical, M12.52), ungrouped rows after them, under no heading of their own, so a grouped set gives
   every choice a `group`. Typing matches a choice's label or its group's name
   (`matchesLabelOrGroup`, `Combobox/match.ts`, shared with the category picker), so
   "irish" lists every Irish deity. Before

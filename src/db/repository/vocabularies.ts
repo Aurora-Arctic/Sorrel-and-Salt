@@ -29,6 +29,7 @@ import {
   containsText,
   fold,
   inCompendium,
+  naturally,
   notSoftDeleted,
   readableInTiers,
   trigramMatch,
@@ -222,7 +223,7 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
 
 /**
  * The key of a vocabulary filed under groups: by its group's name, then its
- * own, then id, the owner's call during MB.126, so a page reads as the picker
+ * own, both under the natural collation (M12.52), then id, the owner's call during MB.126, so a page reads as the picker
  * lists it and two groups' namesakes sit apart. A page and its count share
  * it, with the join that reads the group's name — for its name alone, since
  * the row's own filter already holds the group live.
@@ -230,7 +231,10 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
 function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
   const grouped = sql.identifier('grouped');
   return {
-    sort: [{ expression: sql`${grouped}.name`, type: 'text' }, items.name],
+    sort: [
+      { expression: naturally(sql`${grouped}.name`), type: 'text' },
+      { expression: naturally(items.name), type: 'text' },
+    ],
     join: {
       source: sql`(select ${groups.id}, ${groups.name} from ${groups}) as ${grouped}`,
       on: eq(sql`${grouped}.id`, column),

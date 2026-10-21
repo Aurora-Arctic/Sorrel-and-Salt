@@ -19,7 +19,7 @@ name it shipped under, since its tag is in the journal.
 - **`celestial_bodies`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
-  form pair is. No group, no colour, no order column, no `workspace_id`.
+  form pair is. No group, no colour, and a nullable integer `position` (M12.52): calendar order for the signs, Ophiuchus 13, and the Sun outward for the eleven lights and planets; the other bodies and any value a curator adds have none, sort after the positioned ones by name, and the curation form does not take it. No `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.celestial_bodies` and
   `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
   holds `ingredients`' own keys to its workspace, and

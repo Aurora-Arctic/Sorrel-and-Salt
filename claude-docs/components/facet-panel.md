@@ -30,6 +30,8 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 
 ## Contracts
 
+- **Sort rule (M12.52).** The panel sorts nothing: every facet lists its values in the order the repository read gives, never by count. Names are alphabetical in natural-language order, categories under their group and deities under their tradition; signs and bodies by position; Toxic, Source and Elements are fixed. See `claude-docs/design-decisions/m12.52-facet-sort-order.md`.
+
 - **Under a stuck row (2026-10-19).** The search row sticks to the top once scrolled to
   ([`ingredient-search.md`](ingredient-search.md)), and the panel opens inside its form, so it
   travels with the row and always opens under it. At the tablet width and up, an open panel

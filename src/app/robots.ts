@@ -1,12 +1,13 @@
 import type { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/site';
 
-// The only paths a crawler may fetch: the home page and the public compendium
+// The only paths a crawler may fetch: the home page, the sign-in page and the public compendium
 // (MB.80), the three public files that describe it (M12.2), and the sitemap this
 // file advertises: `Disallow: /` would otherwise block it. Everything else
 // is behind sign-in or is workspace data. A flat list, so a new public file is
 // one entry. `Allow` wins over `Disallow: /` by being the longer match (RFC 9309,
-// 2.2.2).
+// 2.2.2). `/robots.txt` is listed although RFC 9309 (2.2.2) already treats it as
+// implicitly allowed: the entry states it for crawlers and tools that do not apply that rule.
 //
 // `/$` and not `/`: a path rule matches by prefix, so a bare `/` would allow
 // every path. `$` ends the pattern (RFC 9309, 2.2.3), so `/$` matches the root
@@ -17,7 +18,9 @@ export const CRAWLABLE_PATHS = [
   '/$',
   '/compendium',
   '/compendium/',
+  '/sign-in',
   '/llms.txt',
+  '/robots.txt',
   '/.well-known/ai-catalog.json',
   '/.well-known/ard.json',
   '/sitemap.xml',
