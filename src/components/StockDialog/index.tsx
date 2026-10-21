@@ -189,22 +189,11 @@ function NoJar(): ReactElement {
         <p id={`${id}-why`} className="visually-hidden">
           Add a form to enter its stock.
         </p>
-        {/* "Form" in dashed outline where the form's name will go, so the fields stand where a
+        {/* "Form" in the placeholder ink where the form's name will go, so the fields stand where a
             jar's will and the eye is told what the space is for. Hidden from a screen reader: the
-            legend above already names the state. The word itself is transparent and only gives
-            the line its size; the SVG over it strokes the same word, since CSS cannot dash text
-            (the owner's call, 2026-10-21). */}
+            legend above already names the state (the owner's call, 2026-10-21). */}
         <div className="stock-dialog__head is-blank" aria-hidden="true">
-          <h3 className="stock-dialog__heading">
-            <span className="stock-dialog__placeholder">
-              Form
-              <svg className="stock-dialog__outline" focusable="false">
-                <text x="0" y="0.92em">
-                  Form
-                </text>
-              </svg>
-            </span>
-          </h3>
+          <h3 className="stock-dialog__heading stock-dialog__placeholder">Form</h3>
         </div>
         <div className="stock-dialog__fields">
           <StockFields disabled />
