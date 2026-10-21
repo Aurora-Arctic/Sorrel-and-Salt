@@ -16,7 +16,7 @@ import { viewerIfSignedIn } from '../../lib/viewer';
 // Either way the page sits in `.page-column`, the top-left wide column the
 // admin pages share, so M8.18's page lands where /admin/compendium does.
 // Either way the layout owns `<main>`, which a page here therefore does not
-// render: PublicFrame draws `main#main`, and AppShell's `#main` wraps this one.
+// render: PublicFrame draws a `main`, and AppShell's page wrapper holds this one.
 export default async function PublicLayout({ children }: { children: ReactNode }) {
   const shell = await viewerIfSignedIn();
 

@@ -259,7 +259,7 @@ with the value already put back.
   skeletons.
 
 **What `MainBody` replaces.** `MainBody` (`src/components/AppShell/main-body.tsx`)
-answers a `main` target by replacing everything inside `#main` with one
+answers a `main` target by replacing everything inside `.app-shell__main` with one
 `<main>` holding the skeleton, so the page frame is replaced as well as the
 page's content. The `<main>` takes the frame the target names, top-aligned
 and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`,
@@ -325,7 +325,7 @@ More examples:
 - **Site link (Compendium):**
   - Page: the bar.
   - Control: the dot.
-  - Region: `#main` shows the page-blocks skeleton.
+  - Region: the page (`.app-shell__main`) shows the page-blocks skeleton.
 - **Filter or pager:** unchanged, plus the bar.
   - Region: the list's skeleton replaces its rows.
 - **Save in a modal:** unchanged, with no bar, because nothing navigates.

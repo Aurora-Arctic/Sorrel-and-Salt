@@ -25,11 +25,14 @@ describe('PublicFrame', () => {
     pathname.mockReturnValue('/compendium');
   });
 
-  it('holds the page in main#main, which the skip link names', () => {
+  it('holds the page in a main, just after the empty target the skip link names', () => {
     frame();
 
     const main = screen.getByRole('main');
-    expect(main).toHaveAttribute('id', 'main');
+    const target = document.getElementById('main');
+    expect(target).toHaveAttribute('tabindex', '-1');
+    expect(target).toBeEmptyDOMElement();
+    expect(target!.nextElementSibling).toBe(main);
     expect(within(main).getByRole('heading', { name: 'The page' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute('href', '#main');
   });

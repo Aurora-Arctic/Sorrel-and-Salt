@@ -35,7 +35,7 @@ beforeEach(() => {
 });
 
 describe('the (public) layout', () => {
-  it('gives a signed-out visitor the public frame, the way in, and main#main', async () => {
+  it('gives a signed-out visitor the public frame, the way in, and the skip target', async () => {
     viewerIfSignedIn.mockResolvedValue(null);
 
     await layout();
@@ -43,7 +43,7 @@ describe('the (public) layout', () => {
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
     expect(screen.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute('href', '#main');
     expect(screen.getByRole('navigation', { name: 'Site' })).toBeInTheDocument();
-    expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
+    expect(document.getElementById('main')!.nextElementSibling).toBe(screen.getByRole('main'));
     expect(screen.getByRole('heading', { name: 'The compendium' })).toBeInTheDocument();
   });
 

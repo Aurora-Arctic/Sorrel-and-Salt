@@ -8,13 +8,16 @@ request and draws [`AppShell`](app-shell.md) instead for a signed-in one, so
 
 ## What it draws
 
-- **A skip link** ("Skip to Content") first, targeting `#main`. Its styling is
-  `.skip-link` from AppShell's stylesheet, which the layout always loads.
+- **A skip link** ("Skip to Content") first, targeting `#main`: an empty
+  `span` with `tabindex="-1"` just before the `main`, as in
+  [`AppShell`](app-shell.md), which says why it is not the `main` itself. Its
+  styling is `.skip-link` and `.skip-target` from AppShell's stylesheet,
+  which the layout always loads.
 - **A bar** with the site name linking to `/` (set in the heading face at `$brand-size`, as the shell's is), a `nav` named "Site" holding the
   Compendium link, which carries `aria-current="page"` at or beneath `/compendium` (MB.120), a Sign In link (`/sign-in`, `.btn--solid.btn--medium`, the size the shell's Add Ingredient button takes) and the inline
   theme toggle. At or under `$shell-brand-width` the brand reads "S&S" (the full
   name stays for a screen reader), as the shell's does, so the bar holds at 375px.
-- **`main#main`** round the page. Unlike the shell, whose `#main` is a wrapper,
+- **A `main`** round the page. Unlike the shell, whose page sits in a wrapper,
   the frame owns the `main` landmark, so a public page renders none. It is not a
   `.page-frame`: the `(public)` layout puts the page in `.page-column`, the
   top-left wide column `/admin/compendium` uses, so M8.18's page lands in it.

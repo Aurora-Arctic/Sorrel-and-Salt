@@ -24,8 +24,8 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
 `(public)` is the sibling group for the public compendium (MB.80, MB.83). Its
 layout, `src/app/(public)/layout.tsx`, reads `viewerIfSignedIn()`: null for a
 signed-out visitor, who gets [`PublicFrame`](public-frame.md); otherwise the
-viewer and covens, drawn in this shell. It never redirects. Because the shell's
-`#main` is a wrapper and `PublicFrame`'s is a `main`, the layout owns the
+viewer and covens, drawn in this shell. It never redirects. Because the shell
+puts the page in a wrapper and `PublicFrame` puts it in a `main`, the layout owns the
 plain `<main>` in the signed-in branch (the page in `.page-column` inside it, as in the signed-out frame), so a public page
 renders no landmark of its own. An unverified account is shown the shell's
 unverified chrome (brand text, the account menu, the Compendium link) rather
@@ -82,10 +82,18 @@ one's own id) throws.
   Out alone, and the theme disc, a site nav holding the Compendium alone, and no Add Ingredient. (The
   theme disc stays because the root's corner toggle is hidden on shell pages;
   without it the viewer could not change the theme.)
-- **The body** (`#main`) is wrapped in `main-body.tsx`, a client part (M12.33). While a navigation aimed at the `main` region is pending ([loading](../loading.md)), it swaps the page for one `Skeleton` of the target's shape inside a `main`, so the landmark survives the wait, with a visually hidden `<h1>Loading</h1>` because the skeleton replaced the page's heading (the owner's call, 2026-10-19: kept, so a screen reader hears it and the skeleton's "Loading" status). A `coven` or `admin` target is `SectionBody`'s (the page under that section's context row, which stays), and a navigation with no target (a refresh) leaves the page standing. The `main` is drawn in the frame the target names, top-aligned: `wide`, `with-nav` and `entry` in `page-column` (the last two with the side menu drawn, `entry` in the ingredient page's wide grid), `narrow` in `page-frame--narrow`, with a `panel` under a form. When the wait ends, the skeleton stays over the arrived page for 200ms and fades out ([`SkeletonFade`](skeleton-fade.md)); the body is wrapped in a plain block `div` (the fade's `position: relative` host) to hold it, and the overlay carries no heading or landmark of its own. The site links get their target from `siteLinkTarget(base, href)`.
+- **The body** (`.app-shell__main`) is wrapped in `main-body.tsx`, a client part (M12.33). While a navigation aimed at the `main` region is pending ([loading](../loading.md)), it swaps the page for one `Skeleton` of the target's shape inside a `main`, so the landmark survives the wait, with a visually hidden `<h1>Loading</h1>` because the skeleton replaced the page's heading (the owner's call, 2026-10-19: kept, so a screen reader hears it and the skeleton's "Loading" status). A `coven` or `admin` target is `SectionBody`'s (the page under that section's context row, which stays), and a navigation with no target (a refresh) leaves the page standing. The `main` is drawn in the frame the target names, top-aligned: `wide`, `with-nav` and `entry` in `page-column` (the last two with the side menu drawn, `entry` in the ingredient page's wide grid), `narrow` in `page-frame--narrow`, with a `panel` under a form. When the wait ends, the skeleton stays over the arrived page for 200ms and fades out ([`SkeletonFade`](skeleton-fade.md)); the body is wrapped in a plain block `div` (the fade's `position: relative` host) to hold it, and the overlay carries no heading or landmark of its own. The site links get their target from `siteLinkTarget(base, href)`.
 - **The skip link** ("Skip to Content") is the first element and targets
-  `#main`, a wrapper around the page's children, since each page owns its own
-  `main`.
+  `#main`, an empty `span` with `tabindex="-1"` just before the page's
+  wrapper (`.app-shell__main`), since each page owns its own `main` and
+  there is no one element a page could be asked to name. The link moves focus
+  to the span, and the next Tab reaches the page's first control;
+  `.skip-target:focus` draws no ring, as the span has no box. It is not the
+  wrapper itself (M12.48): a click on plain text focuses the nearest focusable
+  ancestor, so a `tabindex="-1"` wrapper took every click on the page's
+  text, and the next Tab restarted at the top of the page rather than going on
+  from where the click was. [`PublicFrame`](public-frame.md) draws the same
+  span before its `main`. `tests/e2e/skip-target.spec.ts` walks both.
 - **The context row** is the layouts' to render: the coven layout puts the
   switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).
