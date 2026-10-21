@@ -322,14 +322,18 @@ test(
       // Each badge is a drawing alone, named in full for a screen reader, and its
       // tip says the state in words: not a colour alone. The tip is an icon tip, kept out
       // of the accessibility tree, so it is found with `includeHidden`, in its badge's row
-      // (the page's hidden info tips are tooltips too). Axe holds their contrast.
-      const tipIn = (row: Locator) => row.getByRole('tooltip', { includeHidden: true });
+      // (the page's hidden info tips, and a card's last-edit tip, are tooltips too, so the
+      // query names the stock tip by its words). Axe holds their contrast.
+      const tipIn = (row: Locator, words: string) =>
+        row.getByRole('tooltip', { includeHidden: true }).filter({ hasText: words });
       await outBadge(rowOf(list, 'Rosemary')).focus();
-      await expect(tipIn(rowOf(list, 'Rosemary'))).toHaveText('Out of Stock');
+      await expect(tipIn(rowOf(list, 'Rosemary'), 'Out of Stock')).toHaveText('Out of Stock');
       await page.keyboard.press('Escape');
-      await expect(tipIn(rowOf(list, 'Rosemary'))).toHaveCount(0);
+      await expect(tipIn(rowOf(list, 'Rosemary'), 'Out of Stock')).toHaveCount(0);
       await lowBadge(rowOf(list, 'Sea Salt')).focus();
-      await expect(tipIn(rowOf(list, 'Sea Salt'))).toHaveText('Low Stock at 10 g or less');
+      await expect(tipIn(rowOf(list, 'Sea Salt'), 'Low Stock')).toHaveText(
+        'Low Stock at 10 g or less',
+      );
       await page.keyboard.press('Escape');
       await assertNoAccessibilityViolations(page);
     });
