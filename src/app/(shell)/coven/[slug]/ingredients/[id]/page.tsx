@@ -1,6 +1,7 @@
 import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
+import CovenSwitchTargets from '../../../../../../components/CovenSwitchTargets';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
@@ -17,6 +18,7 @@ import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   compendiumMatchesOf,
+  covensOpeningEntry,
   getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
@@ -107,11 +109,14 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // compendium entry. The compendium is public, so the links reveal nothing.
   // The detail is read without the coven so it does not read the cupboard
   // entry again; the one the metadata shares is laid in.
-  const [read, { viewer }, matches, cupboardEntry] = await Promise.all([
+  const [read, { viewer }, matches, cupboardEntry, opening] = await Promise.all([
     ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
     viewerOf(),
     compendiumMatchesOf(session, entry),
     cupboardOf(slug, id),
+    // The viewer's covens this entry's page also opens in, for the layout's coven switcher to
+    // stay on it (M9.12). Per viewer, from their memberships, and never cached.
+    covensOpeningEntry(session, entry),
   ]);
   // A retired entry (M12.24) reads its children through its cupboard entry,
   // so its detail is read in the coven and carries that entry itself.
@@ -174,6 +179,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
 
   return (
     <main>
+      <CovenSwitchTargets path={own} slugs={opening.map((coven) => coven.slug)} />
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}

@@ -5,6 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { makeQueryClient } from '@/lib/graphql-client';
+import {
+  CovenSwitchProvider,
+  useCovenSwitchRegistration,
+} from '@/components/CovenSwitchTargets/context';
 import { entryDetail } from '../../../support/entry-detail';
 
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
@@ -30,6 +34,8 @@ const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
+// Which of the viewer's covens an entry opens in is the service's to say (M9.12); none unless a test says so.
+const covensOpeningEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
 vi.mock('@/modules/ingredients', () => ({
@@ -37,6 +43,7 @@ vi.mock('@/modules/ingredients', () => ({
   ingredientDetailOf,
   compendiumMatchesOf,
   getCupboardEntry,
+  covensOpeningEntry,
   isRetired,
   // The permission Make It Ours is offered on, as the service asserts it (M12.23).
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
@@ -69,8 +76,24 @@ vi.mock('@/app/entry-stock', () => ({
 
 // The cupboard buttons (M12.17) are client parts that send mutations, so the page
 // renders under a query client.
+// The coven layout holds the provider the switcher reads (M9.12); a probe stands in for the switcher.
+function Registration() {
+  const registration = useCovenSwitchRegistration();
+  return (
+    <p data-testid="switch-registration">{registration ? JSON.stringify(registration) : 'none'}</p>
+  );
+}
+const registered = () =>
+  JSON.parse(screen.getByTestId('switch-registration').textContent ?? 'null');
 const renderPage = (ui: ReactElement) =>
-  render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      <CovenSwitchProvider>
+        {ui}
+        <Registration />
+      </CovenSwitchProvider>
+    </QueryClientProvider>,
+  );
 
 const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/ingredients/[id]/page');
@@ -139,6 +162,7 @@ beforeEach(() => {
   getCupboardEntry.mockResolvedValue(null);
   compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0 });
   covensHolding.mockResolvedValue([]);
+  covensOpeningEntry.mockResolvedValue([]);
   plusCovensOf.mockResolvedValue(undefined);
   readEntryStock.mockResolvedValue(new Map());
 });
@@ -633,5 +657,42 @@ describe('the coven ingredient page’s Edit Stock', () => {
 
     expect(readEntryStock).toHaveBeenCalled();
     expect(stockItem()).toBeNull();
+  });
+});
+
+// The coven switcher stays on this page when the next coven opens it (M9.12). Which covens do is the
+// service's, per viewer; the page asks it once and passes the slugs up to the switcher.
+describe('the coven ingredient page’s coven switch', () => {
+  const ADDRESS = `/coven/${WORKSPACE.slug}/ingredients/${ID}`;
+
+  it('tells the switcher the covens the service says the entry opens in, at its own address', async () => {
+    const row = compendiumRow();
+    covensOpeningEntry.mockResolvedValue([
+      { id: WORKSPACE.id, slug: WORKSPACE.slug, name: WORKSPACE.name },
+      { id: 'w-testwort', slug: 'testwort-circle', name: 'Testwort Circle' },
+    ]);
+
+    await open(row);
+
+    expect(covensOpeningEntry).toHaveBeenCalledExactlyOnceWith(SESSION, row);
+    expect(registered()).toEqual({ path: ADDRESS, slugs: [WORKSPACE.slug, 'testwort-circle'] });
+  });
+
+  it("names only this coven for the coven's own entry, as the service answers it", async () => {
+    covensOpeningEntry.mockResolvedValue([
+      { id: WORKSPACE.id, slug: WORKSPACE.slug, name: WORKSPACE.name },
+    ]);
+
+    await open(covenRow());
+
+    expect(registered()).toEqual({ path: ADDRESS, slugs: [WORKSPACE.slug] });
+  });
+
+  it('asks nothing and registers nothing when the entry is refused', async () => {
+    getIngredient.mockRejectedValue(new NotFound('ingredient'));
+
+    await expect(Page(params())).rejects.toThrow('not-found');
+
+    expect(covensOpeningEntry).not.toHaveBeenCalled();
   });
 });
