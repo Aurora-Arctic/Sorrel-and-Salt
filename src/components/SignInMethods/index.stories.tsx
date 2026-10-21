@@ -91,7 +91,7 @@ const WholeAccountPage = ({
   <main className="page-frame page-frame--narrow page-with-nav">
     <h1>Your Account</h1>
     <PageNav
-      label="On this page"
+      label="On This Page"
       entries={[
         { href: '#account-name', label: 'Name' },
         { href: '#account-email', label: 'Email' },

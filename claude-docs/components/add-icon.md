@@ -1,0 +1,45 @@
+# AddIcon
+
+`src/components/AddIcon/` is the plus: **Add to My Ingredients** as an icon button. It stands at a compendium card's bottom right ([`compendium-cards.md`](compendium-cards.md), "The plus"), just left of the pencil on the entry pages, and beside the pencil in the Quick Look window ([`ingredient-entry.md`](ingredient-entry.md), "The plus"). It is a client component of its own, so the cards stay a server component.
+
+## Props
+
+`NamedAddIconProps` (`types.ts`), which is `AddIconProps` with the entry's name:
+
+| Prop           | What it is                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `name`         | The entry as the card names it (`cardName`): "Testwort, Formalis testis". The accessible name carries it |
+| `workspaceId`  | The default coven, added to at once where `covens` is empty                                              |
+| `ingredientId` | The compendium entry's id                                                                                |
+| `covens`       | Every coven the viewer may write in                                                                      |
+| `heldIn`       | The ids of those that already hold the entry                                                             |
+
+`AddIconProps` stays apart because a page reads the covens (`CupboardPlus`) and the name from different places.
+
+## Contracts
+
+- **One coven adds at once; two or more are a menu.** With one writable coven, a press sends `addCupboardEntry` there and reads the page again. With two or more, the plus is a [`MenuButton`](menu-button.md) of every one of them by name, and a coven that holds the entry is a disabled item named **<coven>, in its cupboard**.
+- **Its name and its tip are the words and then the entry:** **Add to My Ingredients: Testwort, Formalis testis** (MB.120; the owner's call, 2026-10-20, that the tip says the entry too), so the words on screen are the name (WCAG 2.5.3). The colon is there because a formal name holds a comma of its own. The menu takes the same name. The reasoning is in [`compendium-cards.md`](compendium-cards.md), "Names".
+- **Busy keeps the focus.** From the press until the page has been read again, the plus shows the shared spinner and carries `aria-busy` and `aria-disabled`, never `disabled`, so the focus stays on it (MB.120). A press while busy does nothing.
+- **After an add**, the spinner turns into the check, which holds for `ADDED_HOLD_MS` (1s) and then fades back to the plus; where the add left every coven holding the entry, the check stays until the page draws `HeldMark` in its place. The button's `data-state` is `added`, then `returning` during the fade. The success is said once, "Added to <coven>.", through the page's status region.
+- **A refusal** is said in a callout under the plus ([`click-feedback.md`](click-feedback.md)), whose badge is named Show the error for <the plus's name>, and the focus goes back to the plus.
+- **The held check**, `HeldMark` in `src/components/CompendiumCards/held-mark.tsx`, takes the plus's place once every writable coven holds the entry. It is tipped and named **In Every Cupboard** and then the entry: **In Every Cupboard: Testwort, Formalis testis**. Its look lives here, in `.add-icon--held`, since it stands where the plus stood.
+
+## Styling
+
+`index.scss`, on the `add-icon` block (moved out of IconTip's stylesheet, MB.120, since IconTip only wraps the plus):
+
+- **`.add-icon`**: the `icon-button` mixin at `$icon-size-large` around `$glyph-size-large`, in Edit's green (`icon-button-edit`), since adding is constructive. The spinner takes the glyph's size.
+- **`.add-icon--held`**: the held check, the same box and green but the default cursor and no wash under the pointer, since it acts on nothing. It is worn alone, without `.add-icon`, so the plus's wash on focus never reaches it.
+- **`.add-icon[data-state]`**: while the check shows, no wash and the default cursor, the held check's look, so nothing moves when the page swaps one for the other.
+- **`.add-icon__glyphs`, `__check`, `__plus`**: the check and the plus stacked in one grid cell. The check is drawn along its stroke (a dash of 15, run to nothing) over `$arrive-duration` and fades out the same way; under reduced motion nothing is drawn or faded.
+
+**On a phone** the plus and the check have no rule of their own: each is a `$icon-size-large` (2rem) target, above WCAG 2.5.8's 24px.
+
+**Forced colours.** The glyphs are drawn in `currentColor`, so they take the system's ink. The plus has no border, so the wash under the pointer, a background colour, is all that marks a hover there, and the `icon-button` mixin sets no focus outline of its own, so focus shows the browser's, which forced colours keeps. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
+
+## Stories and tests
+
+Stories ([`index.stories.tsx`](../../src/components/AddIcon/index.stories.tsx), `Surfaces / Add Icon`): `OneCoven`, `SeveralCovens`, `Busy`, `Added`, `Returning` and `Held`. Busy, Added and Returning are the plus's markup in those states, since only a press reaches them and the workshop serves no `/api/graphql`.
+
+Tests: `tests/components/AddIcon/index.test.tsx` (the names and tips) and `tests/components/CompendiumCards/add-icon.test.tsx` (the add, the menu, busy, the check and the refusal). E2e: `tests/e2e/compendium-add.spec.ts`.

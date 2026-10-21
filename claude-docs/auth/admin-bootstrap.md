@@ -506,7 +506,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   these.", then `SignInMethods`) and Invitations ("Covens that have invited
   this email address to join them.", then `ReceivedInvitations`, M10.32). It
   carries no link to `/account/email`.
-  Under the heading, a nav labelled "On this page"
+  Under the heading, a nav labelled "On This Page"
   links to each section by its prefixed id (`#account-name`,
   `#account-email`, `#account-sign-in-methods`, `#account-invitations`).
   The Invitations section is always shown, with the table's empty state when

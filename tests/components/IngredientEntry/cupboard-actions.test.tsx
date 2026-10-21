@@ -566,7 +566,7 @@ describe('CupboardActions', () => {
         plus: { workspaceId: HERE.id, covens: [HERE, OTHER], heldIn: [HERE.id] },
       });
 
-      const plus = screen.getByRole('button', { name: 'Add to My Ingredients' });
+      const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const annotate = screen.getByRole('link', { name: 'Annotate Testwort' });
       expect(
         plus.compareDocumentPosition(annotate) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -576,9 +576,9 @@ describe('CupboardActions', () => {
 
       fireEvent.click(plus);
       const [here, other] = within(
-        screen.getByRole('menu', { name: 'Add to My Ingredients' }),
+        screen.getByRole('menu', { name: /^Add to My Ingredients: / }),
       ).getAllByRole('menuitem');
-      expect(here).toHaveAccessibleName(`${HERE.name}, in My Ingredients`);
+      expect(here).toHaveAccessibleName(`${HERE.name}, in its cupboard`);
       expect(here).toHaveAttribute('aria-disabled', 'true');
       expect(other).toHaveAccessibleName(OTHER.name);
       expect(other).not.toHaveAttribute('aria-disabled');
@@ -591,7 +591,9 @@ describe('CupboardActions', () => {
     it('is a plain button, no menu, while this coven, the only one that may add, lacks the entry', () => {
       renderActions({ plus: { workspaceId: HERE.id, covens: [HERE], heldIn: [] } });
 
-      expect(button('Add to My Ingredients')).not.toHaveAttribute('aria-haspopup');
+      expect(
+        screen.queryByRole('button', { name: /^Add to My Ingredients: / }),
+      ).not.toHaveAttribute('aria-haspopup');
     });
 
     it("gives way to the card's check once every coven that may add holds the entry", () => {
@@ -600,8 +602,10 @@ describe('CupboardActions', () => {
         plus: { workspaceId: HERE.id, covens: [HERE], heldIn: [HERE.id] },
       });
 
-      expect(button('Add to My Ingredients')).not.toBeInTheDocument();
-      expect(button('In All Covens')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /^Add to My Ingredients: / }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toBeInTheDocument();
     });
 
@@ -609,8 +613,10 @@ describe('CupboardActions', () => {
       // Why one could have shown: the same props with a `plus` draw it (above).
       renderActions({ held: true });
 
-      expect(button('Add to My Ingredients')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'In All Covens' })).toBeNull();
+      expect(
+        screen.queryByRole('button', { name: /^Add to My Ingredients: / }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
     });
   });
 });

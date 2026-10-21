@@ -1190,7 +1190,8 @@ passes validation asks about the very name it is sending, through the query
 client's `fetchQuery`: the cached answer when the typing had settled, asked
 there and then when it had not, so a save inside the debounce cannot slip past
 the warning. If a match not yet set aside comes back, nothing is sent: the
-notice turns to `.notice--error`, the name is marked invalid and described by
+notice turns to `.notice--error` and its sentence to "Your save is on hold, as
+these entries have a similar name" (colour alone must not say it), the name is marked invalid and described by
 it, and the focus goes to Create Anyway, which the warning describes, so the
 focus says why it moved. A second save stops the same way. A failed check
 holds nothing, as a failed lookup warns of nothing. The check runs after
@@ -1636,6 +1637,19 @@ of the column with their label and hint, as the fields above them do, rather
 than centred under the label as the switch primitive draws it for a filter
 bar (`.ingredient-form .switch`; the owner's call, 2026-10-16).
 
+**The duplicates notice is an `<output>`, so its classes are hand-written.**
+The region holds block content (a sentence, a list, a button), which a Notice
+cannot go inside, so `duplicates.tsx` writes `notice notice--warn` or
+`notice notice--error` itself, picked in the one function `noticeClasses`.
+The block Notice that would replace them is M12.48, minted from MB.120; when it
+lands it swaps that function alone. Colour must not be the only sign of a held
+save, so the sentence changes with the state too: "Did you mean one of these?"
+while the name is typed against, "Your save is on hold, as these entries have a
+similar name. Check them, or create this one anyway." once Save has been pressed
+and held, and the exact-name question's own sentence, which was already
+different (MB.120). `DuplicatesNotice` and its two phone stories show the
+warning and the held state one above the other.
+
 The component's own stylesheet holds what is the form's alone. Its column
 is at most `$dialog-column` (32rem), narrower than the measure as the other
 forms keep, and the compendium's modal is the default one, no wider than the
@@ -1722,7 +1736,8 @@ request, and answers a request to `/api/graphql` naming one of the eight
 lookups, the categories, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a
 fixture that drifts from the schema stops compiling. A name holding "cat"
-shows the duplicate warning. A save is answered after two seconds
+shows the duplicate warning. `DuplicatesNotice`, with a phone dark and a phone
+light, draws the warning and the held state in one column from fixed state. A save is answered after two seconds
 (`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
 name holding "taken" is refused as a `VALIDATION` error on the name, one
 holding "refuse" as a `FORBIDDEN` above the fields, one holding "retired"

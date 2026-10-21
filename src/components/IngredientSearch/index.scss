@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 @use '../Backdrop/sorrel' as *;
 
-// Tokens and primitives only until the section's design review: the action
+// Tokens and primitives only (signed off in MB.120, 2026-10-20): the action
 // beneath the filter row takes the row's own spacing
 // (claude-docs/components/ingredient-search.md).
 
@@ -142,6 +142,23 @@ $page-gutter: space(4);
   pointer-events: none;
 }
 
+// On a phone the row is two lines (the MB.120 review, item 6; the owner's call, 2026-10-20): the
+// search box on the first, the Filters button and Clear All sharing the second (the primitive's
+// narrow-row rule, in `_primitives.scss`), and the two lines stick together as the desktop row
+// does. The Filters button grows to fill the second line (the owner's call, 2026-10-20), taking
+// all of it when Clear All is not drawn, and Clear All is pushed to the line's end, as the
+// primitive does Clear for the other filter rows. Scoped here, so those rows are unchanged. The
+// container query is that rule's own, so the two agree on what narrow means.
+@container filter-row (max-width: #{$narrow-column}) {
+  .ingredient-search .facet-panel__button {
+    flex: 1 1 auto;
+  }
+
+  .ingredient-search .facet-panel__clear {
+    margin-inline-start: auto;
+  }
+}
+
 // A focus or a jump that scrolls a control into view lands it below the stuck row, not
 // under it: the bar (the shell's alone), the row's own height, and a step of air. The root
 // is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The
@@ -156,4 +173,22 @@ html:has(.app-shell .ingredient-search) {
 
 html:has(.public-frame .ingredient-search) {
   scroll-padding-top: calc(#{$control-height} + #{$stuck-pad} + #{space(2)} + #{space(4)});
+}
+
+// Under the narrow column the row is two controls tall plus the row's gap, so the root leaves one
+// more control and gap of room. The query is the container query's width on the window: the
+// column (`$narrow-column`) plus the page's two gutters.
+@media (max-width: calc(#{$narrow-column} + 2 * #{space(4)})) {
+  html:has(.app-shell .ingredient-search) {
+    scroll-padding-top: calc(
+      #{$top-inset} + #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} +
+        #{space(2)} + #{space(4)}
+    );
+  }
+
+  html:has(.public-frame .ingredient-search) {
+    scroll-padding-top: calc(
+      2 * #{$control-height} + #{space(3)} + #{$stuck-pad} + #{space(2)} + #{space(4)}
+    );
+  }
 }

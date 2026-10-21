@@ -30,12 +30,13 @@
 // The New / Updated marker (MB.106). Not a badge: an icon and the word in the accent ink with
 // nothing around them, a step larger than badge text, so it reads apart from the stock,
 // source and safety badges. The inks are the `new` and `updated` badge palettes', already
-// contrast-checked on the card.
+// held to the text floor on the page, the card and a card pointed at, in both themes
+// (`tests/scss/tokens.test.ts`, MB.120).
 // ---------------------------------------------------------------------------
 .recency-mark {
   display: inline-flex;
   align-items: center;
-  gap: 0.3em;
+  gap: space(1);
   font-family: $font-body;
   // Half way between the overline and caption sizes (the owner, 2026-10-19).
   font-size: calc((#{type-size('overline')} + #{type-size('caption')}) / 2);
@@ -49,22 +50,19 @@
   }
 }
 
-.recency-mark__icon {
-  inline-size: 1.375em;
-  block-size: 1.375em;
-  flex: none;
-}
-
 // Optical centring against the "Back to" link beside it (measured in a
 // browser, 2026-10-19). The two share a baseline and equal box centres, but
 // the marker's smaller capitals then sit about half a pixel low, and the
 // sparkle's drawn path sits about half a pixel high, so each is nudged back.
 .recency-mark__text {
   position: relative;
-  inset-block-start: -0.04em;
+  inset-block-start: -$optical-nudge;
 }
 
 .recency-mark__icon {
   position: relative;
-  inset-block-start: 0.04em;
+  inset-block-start: $optical-nudge;
+  flex: none;
+  inline-size: $recency-icon-size;
+  block-size: $recency-icon-size;
 }

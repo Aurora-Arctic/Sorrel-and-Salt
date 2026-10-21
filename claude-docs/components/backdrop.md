@@ -88,7 +88,7 @@ which `mask-size: 100% 100%` relies on; the sorrel also sets
 `--backdrop-scale: 0.75`, since its subject fills more of its frame than the
 salt does. The sorrel's top is `$top-inset` rather than 0, so it starts below
 the impersonation banner, and inside the shell below its bar and context row too ([`styling.md`](../styling.md),
-"The top inset"). The bar and context-row offsets apply on every device; only `$top-inset` is touch-only. The context row's offset is its minimum height, so a coven name that wraps to two lines makes the row taller than the offset and the sorrel's edge then sits under it. On a phone the section nav is a bar fixed along the bottom, so the salt is lifted above it (by `$bottom-bar-height` plus the safe-area inset) rather than left behind it; it stays lifted while a dialog or the keyboard hides the bar. As the page scrolls the context row leaves but the bar stays, so a scroll-driven animation (`animation-timeline: scroll(root)`, over the row's own height of scroll) lifts the sorrel to the bar's foot and holds it there, leaving no gap; a browser without scroll-driven animations keeps the fixed offset.
+"The top inset"). The bar and context-row offsets apply on every device; only `$top-inset` is touch-only. The context row's offset is its minimum height, so a coven name that wraps to two lines makes the row taller than the offset and the sorrel's edge then sits under it. On a phone the section nav is a bar fixed along the bottom, so the salt is lifted above it (by `$bottom-bar-height` plus the safe-area inset) rather than left behind it; it stays lifted while a dialog or the keyboard hides the bar. As the page scrolls the context row leaves but the bar stays, so a scroll-driven animation (`animation-timeline: scroll(root)`, over the row's own height of scroll) lifts the sorrel to the bar's foot and holds it there, leaving no gap; a browser without scroll-driven animations keeps the fixed offset. The public frame's bar is the same case with no sticky bar beneath it: the sorrel starts under the bar rather than behind it, and climbs to the top of the window over the bar's own height of scroll (MB.120, the owner's call, 2026-10-20). One mixin, `follows-scroll`, draws both from `--sorrel-rest` and `--sorrel-lift`. The page head's eyebrow, the small muted text that shares the sorrel's corner, wears `$text-halo`, a blur of the page colour behind the letters, so the ornament sits back under them ([`_typography.scss`](../../src/scss/_typography.scss)).
 
 ## Stacking
 
@@ -139,7 +139,7 @@ floor: unprefixed `mask-image` is in the `masks` feature, Baseline widely availa
 Safari 15.4), so it needs no `@supports`. Checked in Chromium only.
 
 The shape, the photograph and the offsets (the shell bar, the context row, the
-`sorrel-follow-bar` scroll animation) are written once, in the mixins of
+`sorrel-follow` scroll animation, on the public frame too) are written once, in the mixins of
 `_sorrel.scss`, and used by `.backdrop--sorrel` and by the copy; the
 keyframes stay in `index.scss`. Under `prefers-contrast: more` the copy's two
 layers are hidden with the sorrel and the layer keeps its fill, so the row

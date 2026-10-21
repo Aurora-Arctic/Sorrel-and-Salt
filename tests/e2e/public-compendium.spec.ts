@@ -19,7 +19,7 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
 const ADD = 'Add to My Ingredients';
-const HELD = 'In All Covens';
+const HELD = 'In Every Cupboard';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -269,6 +269,9 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
   });
 });
 
+// Under the narrow column the row is two lines, the search box and then Filters beside Clear All,
+// and both stick together as the desktop row does (the MB.120 review, item 6; the owner's call,
+// 2026-10-20).
 test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
   page,
 }) => {
@@ -276,10 +279,32 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 1500));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
   const row = await searchRow(page).boundingBox();
   expect(row?.y).toBeCloseTo(0, 0);
+  // The Filters button sticks with the search box, inside the window and under the box.
+  const box = await searchForm(page).locator(':scope > :first-child').boundingBox();
+  const filters = await page.getByRole('button', { name: /^Filters/ }).boundingBox();
+  expect(filters!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
+  expect(filters!.y + filters!.height).toBeLessThanOrEqual(row!.y + row!.height + 1);
+  expect(filters!.y + filters!.height).toBeLessThanOrEqual(700);
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+test('at 375px a control focused below the fold lands under the stuck search row, not behind it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto('/compendium');
+  await expect(cardsOf(page).first()).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  // Tab walks from the top of the page, so focus a card's link far below the row directly:
+  // the browser scrolls it into view, and `scroll-padding-top` keeps it clear of both lines.
+  const link = cardsOf(page).nth(2).getByRole('link').first();
+  await link.focus();
+  const [box, focused] = await Promise.all([searchRow(page).boundingBox(), link.boundingBox()]);
+  expect(focused!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
 });
 
 test('the search row is marked stuck once scrolled past, and unmarked back at the top', async ({

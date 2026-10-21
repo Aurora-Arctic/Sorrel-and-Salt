@@ -630,7 +630,7 @@ export const DetailsFromCompendium: Story = () => (
 DetailsFromCompendium.meta = { iframed: true };
 
 // From the public compendium, to a member of four covens that hold the entry: a
-// last block, In Your Covens, links the entry in each by the coven's name, each
+// last block, In Your Cupboards, links the entry in each by the coven's name, each
 // link led by the In Your Cupboard shelf (the owner's call, 2026-10-20). The
 // long name wraps, its shelf level with its first line.
 const HOLDING = [
@@ -644,7 +644,7 @@ const HOLDING = [
   { id: '00000000-0000-4000-8000-0000000000c4', slug: 'stillroom', name: 'Stillroom' },
 ];
 
-export const DetailsInYourCovens: Story = () => (
+export const DetailsInYourCupboards: Story = () => (
   <Details
     detail={FULL}
     listHref={'/compendium' as Route}
@@ -652,7 +652,7 @@ export const DetailsInYourCovens: Story = () => (
     covens={HOLDING}
   />
 );
-DetailsInYourCovens.meta = { iframed: true };
+DetailsInYourCupboards.meta = { iframed: true };
 
 // The same, to a member of one coven that holds it.
 export const DetailsInOneCoven: Story = () => (

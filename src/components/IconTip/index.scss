@@ -50,14 +50,14 @@
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
-    transform: translateX(2px);
+    transform: translateX($icon-tip-travel);
   }
 
   // Closed: faded back out the way it came, over `$icon-tip-fade`, before the
   // component takes it out of the page.
   &--closing {
     opacity: 0;
-    transform: translateX(2px);
+    transform: translateX($icon-tip-travel);
   }
 }
 
@@ -70,12 +70,12 @@
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateY($icon-tip-travel);
   }
 
   &.icon-tip__bubble--closing {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateY($icon-tip-travel);
   }
 }
 
@@ -87,12 +87,12 @@
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
-    transform: translateY(-2px);
+    transform: translateY(-$icon-tip-travel);
   }
 
   &.icon-tip__bubble--closing {
     opacity: 0;
-    transform: translateY(-2px);
+    transform: translateY(-$icon-tip-travel);
   }
 }
 
@@ -117,95 +117,9 @@
   }
 }
 
-// A compendium card's plus (Add to My Ingredients), M9.12: Edit's size and green, since adding
-// is constructive. The spinner a press shows takes the glyph's size, as `svg` does in the mixin.
-.icon-tip__add {
-  @include icon-button($icon-size-large, $glyph-size-large);
-  @include icon-button-edit;
-}
-
-// Its check (In All Covens): the same box and green, but a status mark whose press only opens its
-// tip (the owner's calls, 2026-10-20), so no pointer and no wash under it: it acts on nothing.
-.icon-tip__held {
-  @include icon-button($icon-size-large, $glyph-size-large, $cursor: default);
-
-  color: $accent;
-
-  &:hover {
-    background-color: transparent;
-    color: $accent;
-  }
-}
-
-.icon-tip__add .spinner,
 .icon-tip__edit .spinner {
   width: $glyph-size-large;
   height: $glyph-size-large;
-}
-
-// The plus after an add (the owner's call, 2026-10-20): the spinner turns into the check, drawn
-// along its stroke, which holds, then cross-fades back to the plus (`returning`); AddIcon
-// sets `data-state` and times the hold. While the check shows, the plus wears the held mark's
-// look, no wash under it and the default cursor, so where the add left every coven holding the
-// entry the page's held mark takes its place with nothing moving. Under reduced motion nothing is
-// drawn or faded: the check and then the plus simply appear.
-.icon-tip__add[data-state] {
-  cursor: default;
-
-  &:hover,
-  &:focus-visible,
-  &[aria-expanded='true'] {
-    background-color: transparent;
-  }
-}
-
-// The check and the plus stacked in one cell, so one fades into the other in place.
-.icon-tip__glyphs {
-  display: grid;
-
-  > * {
-    display: flex;
-    grid-area: 1 / 1;
-  }
-}
-
-// The check's path, `M3 8.5l3.5 3.5L13 4.5`, is a little under 15 units long (4.95 + 9.92), so a
-// dash of 15 hides it whole and running its offset to nothing draws it from the left end.
-.icon-tip__check path {
-  animation: icon-tip-draw $arrive-duration ease-out both;
-  stroke-dasharray: 15;
-
-  @include reduced-motion {
-    animation: none;
-  }
-}
-
-[data-state='returning'] .icon-tip__check {
-  animation: icon-tip-fade-out $arrive-duration ease-in both;
-
-  @include reduced-motion {
-    animation: none;
-  }
-}
-
-.icon-tip__plus {
-  @include arrived;
-}
-
-@keyframes icon-tip-draw {
-  from {
-    stroke-dashoffset: 15;
-  }
-
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes icon-tip-fade-out {
-  to {
-    opacity: 0;
-  }
 }
 
 // A list row's lone bin (a coven card's Delete or Remove, M8.17): the same

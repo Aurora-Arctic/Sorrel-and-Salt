@@ -78,7 +78,7 @@ describe('the /account page', () => {
   it('links each section from its nav', async () => {
     await renderPage();
 
-    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
     expect(links).toHaveLength(4);
     // Each link lands on the section headed by its own words.

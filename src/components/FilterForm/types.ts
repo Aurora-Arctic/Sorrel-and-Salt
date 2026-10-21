@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 export type FilterValue = string | readonly string[] | boolean | null | undefined;
 
 export interface FilterFormProps {
-  /** The form's accessible name: "Filter Users". */
+  /** The row's accessible name, on its `<search>`: "Filter Users". */
   label: string;
   /** The page itself, which the form submits to natively before hydration, and the unfiltered first page Clear opens. */
   action: Route;

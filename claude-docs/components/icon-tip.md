@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                                                                                                                                                                                                                                                                                      |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                                                                                    |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip; `AnnotateLink`; and `QuickLookLink`, an entry's Quick Look eye                                                                                                                                                                                                       |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `CheckIcon`, a tick for a compendium card's In All Covens (M9.12), `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient), and `MysticEyeIcon` (Quick Look) |
+| File            | What it holds                                                                                                                                                                                                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                                                                                        |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip; `AnnotateLink`; and `QuickLookLink`, an entry's Quick Look eye                                                                                                                                                                                                           |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `CheckIcon`, a tick for a compendium card's In Every Cupboard (M9.12), `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient), and `MysticEyeIcon` (Quick Look) |
 
 ## The props contract
 
@@ -53,7 +53,7 @@ follows `href` as before.
   `AnnotateIcon`, an open book with a filled pencil,
   drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
   (M8.17, 2026-10-19).
-- **Add and held on a compendium card** (`CompendiumCards`' `AddIcon` and `HeldMark`, M9.12): `PlusIcon` on a button tipped "Add to My Ingredients", `.icon-tip__add` (Edit's size and green), and `CheckIcon` in `.icon-tip__held`, the same box and green, a status mark named and tipped "In All Covens" on a button that does nothing else when pressed, there so the keyboard reaches its tip (the owner's call of 2026-10-20), and whose press opens the tip (`opensOnPress`, below), at the card's bottom right, ahead of a curator's pencil. The button shows the shared spinner in the plus's place while it works.
+- **Add and held on a compendium card** (`CompendiumCards`' `AddIcon` and `HeldMark`, M9.12): `PlusIcon` on a button tipped and named "Add to My Ingredients" and then the entry (MB.120), `.add-icon` (Edit's size and green; its styles are [`add-icon.md`](add-icon.md)'s, MB.120), and `CheckIcon` in `.add-icon--held`, the same box and green, a status mark tipped and named "In Every Cupboard" and then the entry (MB.120) on a button that does nothing else when pressed, there so the keyboard reaches its tip (the owner's call of 2026-10-20), and whose press opens the tip (`opensOnPress`, below), at the card's bottom right, ahead of a curator's pencil. The button shows the shared spinner in the plus's place while it works.
 - **More on a coven's list** (`CovenCards`' `CardMore`): `DotsIcon`, three
   vertical dots, inside a `MenuButton` with `.icon-tip__edit`, tipped
   "More", where the card holds two or more choices; and, where its one
@@ -89,8 +89,8 @@ goes faster:
   ignored: the menu says what the control does (the owner's call of
   2026-10-20 put a menu under the three dots).
 - **A status mark's press opens it too** (`opensOnPress`, the owner's call,
-  2026-10-20), as a tap or a click does on InfoTip's ⓘ. The card's In All
-  Covens check and the entry page's In Your Cupboard shelf are buttons that do
+  2026-10-20), as a tap or a click does on InfoTip's ⓘ. The card's In Every
+  Cupboard check and the entry page's In Your Cupboard shelf are buttons that do
   nothing else, and on touch there is no hover, and a tap focuses no button in
   Safari, so without it the word would never show there. The click is heard on
   the wrapper as it bubbles up, and opens rather than toggles: on touch the

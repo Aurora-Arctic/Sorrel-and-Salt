@@ -53,7 +53,7 @@ const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
 const heldCompendiumEntry = vi.fn();
 const ingredientDetailOf = vi.fn();
-// The viewer's own covens that hold the open entry, for the details' In Your Covens (M12.5).
+// The viewer's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
 // Mocked so no real query runs here; which covens it admits is
 // tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
@@ -418,7 +418,7 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ source: 'local', entry: 'a1' });
     expect(getIngredient).toHaveBeenCalledWith(session, 'a1', COVEN.id);
     const dialog = details('Testwort')!;
-    expect(within(dialog).getByRole('link', { name: 'See in My Ingredients' })).toHaveAttribute(
+    expect(within(dialog).getByRole('link', { name: 'See in Your Cupboard' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/a1',
     );
@@ -450,7 +450,7 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ entry: 'a1' });
     // The details opened, so Edit's absence is the role's, not a missing dialog.
     const dialog = details('Testwort')!;
-    expect(within(dialog).getByRole('link', { name: 'See in My Ingredients' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: 'See in Your Cupboard' })).toBeInTheDocument();
     expect(within(dialog).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
     expect(within(dialog).queryByRole('button', { name: /^Edit\b/ })).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
@@ -463,7 +463,7 @@ describe("the coven Ingredients page's details modal", () => {
       'b2',
     );
     const dialog = details('House Salt')!;
-    expect(within(dialog).getByRole('link', { name: 'See in My Ingredients' })).toHaveAttribute(
+    expect(within(dialog).getByRole('link', { name: 'See in Your Cupboard' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/b2',
     );
@@ -493,8 +493,8 @@ describe("the coven Ingredients page's details modal", () => {
     // and the other coven, where the member may add, lacks the entry.
     const dialog = details('House Salt')!;
     expect(within(dialog).getByRole('button', { name: 'More for House Salt' })).toBeInTheDocument();
-    expect(within(dialog).queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-    expect(within(dialog).queryByRole('button', { name: 'In All Covens' })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
 
     // Nor the check, once every coven holds it.
     cleanup();
@@ -508,10 +508,10 @@ describe("the coven Ingredients page's details modal", () => {
       within(details('House Salt')!).getByRole('button', { name: 'More for House Salt' }),
     ).toBeInTheDocument();
     expect(
-      within(details('House Salt')!).queryByRole('button', { name: 'In All Covens' }),
+      within(details('House Salt')!).queryByRole('button', { name: /^In Every Cupboard: / }),
     ).toBeNull();
     expect(
-      within(details('House Salt')!).queryByRole('button', { name: 'Add to My Ingredients' }),
+      within(details('House Salt')!).queryByRole('button', { name: /^Add to My Ingredients: / }),
     ).toBeNull();
   });
 
@@ -523,7 +523,7 @@ describe("the coven Ingredients page's details modal", () => {
     await renderPage({ entry: 'b2' });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(session, 'b2');
-    const covens = within(details('House Salt')!).getByRole('list', { name: 'In Your Covens' });
+    const covens = within(details('House Salt')!).getByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Other Coven' })).toHaveAttribute(
       'href',
       '/coven/other-coven/ingredients/b2',

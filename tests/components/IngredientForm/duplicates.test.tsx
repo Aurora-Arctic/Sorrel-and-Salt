@@ -261,6 +261,27 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(sent).not.toHaveBeenCalled();
   });
 
+  // The notice turns from ochre to red when a save is held, which colour alone
+  // does not tell (MB.120): the words say it too.
+  it('says in words that the save is on hold once it is, where a near match only asked a question', async () => {
+    renderName();
+    offerDuplicates([TOMENTOSA]);
+
+    type("Cat's Claw");
+    settle();
+    await within(warning()).findByRole('link');
+    expect(within(warning()).getByText('Did you mean one of these?')).toBeInTheDocument();
+    expect(within(warning()).queryByText(/on hold/)).not.toBeInTheDocument();
+
+    save();
+    await waitFor(() => expect(name()).toBeInvalid());
+
+    expect(within(warning()).queryByText('Did you mean one of these?')).not.toBeInTheDocument();
+    expect(within(warning()).getByText(/save is on hold/)).toBeInTheDocument();
+    // The same words are what the name and Create Anyway are described by.
+    expect(createAnyway()).toHaveAccessibleDescription(expect.stringMatching(/save is on hold/));
+  });
+
   it('checks a name saved before its typing settles, and holds on what it finds', async () => {
     const sent = renderName();
     const calls = offerDuplicates([TOMENTOSA]);

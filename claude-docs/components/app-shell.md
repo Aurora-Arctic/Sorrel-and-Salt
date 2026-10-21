@@ -98,7 +98,8 @@ bar is `position: sticky; top: $top-inset` at `layer('shell')`, exactly
 `$shell-bar-height` tall, with `margin-bottom: 0` (the layout layer gives every `header` a bottom margin; zeroed, so a context row meets the bar edge to edge and a page that fits the window does not scroll by it), on `$surface-card` with a `$hairline` bottom edge,
 and its inner column is `$wide-column` wide, centred. The site links fill the
 bar's height, square, and the current one is told by weight and the
-`$rule-heavy` accent rule along the bar's foot, with `aria-current="page"`
+`$rule-heavy` accent rule along the bar's foot (the `nav-current` mixin, a
+border and not a box-shadow, so forced colours keeps it, MB.120), with `aria-current="page"`
 and no fill, so a hover's quiet wash still shows on it. Controls are
 `$control-height` tall. At or under `$shell-tablet-width` the site nav
 leaves the bar and the account button is an avatar alone; at or under

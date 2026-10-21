@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
 import { useEffect, useId, useLayoutEffect, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -26,6 +27,7 @@ import type { CitationFields } from '../../lib/types';
 import { ComboboxEntry } from '../Combobox';
 import Modal from '../Modal';
 import IngredientForm from '.';
+import { NameField } from './duplicates';
 import { substituteSummary } from './substitute-summary';
 import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
 import { useHangingFetch } from '../../../.ladle/hanging-fetch';
@@ -1477,3 +1479,59 @@ export const LoadingSubstituteSummary: Story = () => {
     </div>
   );
 };
+
+// The duplicates notice in its two states: the warning while a name is typed
+// against, and the same notice once a save is held on it, told apart by their
+// words as well as their colour. Built from fixed state rather than the
+// lookup, so both show at once.
+const NEAR_MATCHES = CATS_CLAW.map((match) => ({
+  ...match,
+  isGlobal: true,
+  inCupboard: false,
+}));
+
+const noop = async () => false;
+
+function HeldNameField({ blocking }: { blocking: boolean }) {
+  const methods = useForm<IngredientFormValues>({
+    defaultValues: { ...EMPTY_VALUES, name: "Cat's Claws" },
+  });
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={(event) => event.preventDefault()}>
+        <NameField
+          warning={{
+            shown: NEAR_MATCHES,
+            blocking,
+            pending: false,
+            exact: [],
+            check: noop,
+            dismiss: () => undefined,
+          }}
+          hrefOf={covenDuplicateHref}
+          onUse={() => undefined}
+          ref={null}
+        />
+      </form>
+    </FormProvider>
+  );
+}
+
+function Duplicates() {
+  return (
+    <div className="page-column">
+      <h2>Typing: A Question</h2>
+      <HeldNameField blocking={false} />
+      <h2>Save Pressed: On Hold</h2>
+      <HeldNameField blocking />
+    </div>
+  );
+}
+
+export const DuplicatesNotice: Story = () => <Duplicates />;
+
+export const DuplicatesNoticePhoneDark: Story = () => <Duplicates />;
+DuplicatesNoticePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const DuplicatesNoticePhoneLight: Story = () => <Duplicates />;
+DuplicatesNoticePhoneLight.meta = { theme: 'light', width: 375 };

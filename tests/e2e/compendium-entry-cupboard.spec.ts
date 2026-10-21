@@ -24,9 +24,12 @@ test.beforeAll(async () => {
 const ADD = 'Add to My Ingredients';
 const SHELF = 'In Your Cupboard';
 // What a held coven's check in the plus's menu stands for, joined to its name.
-const HELD_MARK = 'in My Ingredients';
+const HELD_MARK = 'in its cupboard';
 const NAME = 'Fixture Shelfwort';
-const HELD = 'In All Covens';
+// The plus and the check are tipped and named by their words and then the entry (MB.120); a
+// role name matches in part, so ADD and HELD find them. HELD keeps the colon, so it finds only
+// the check, never the shelf, which is named In Your Cupboard alone (SHELF, matched exactly).
+const HELD = 'In Every Cupboard:';
 
 test('a member adds the entry from its public page, and the three dots then offer its removal', async ({
   page,
@@ -72,7 +75,7 @@ test('a member adds the entry from its public page, and the three dots then offe
   const menu = () => page.getByRole('button', { name: `More for ${NAME}`, exact: true });
   const bin = () => page.getByRole('button', { name: `Remove ${NAME}`, exact: true });
   const remove = () => page.getByRole('menuitem', { name: 'Remove', exact: true });
-  const shelf = () => page.getByRole('button', { name: SHELF });
+  const shelf = () => page.getByRole('button', { name: SHELF, exact: true });
   const check = () => page.getByRole('main').getByRole('button', { name: HELD });
 
   // Why the add is this test's: the entry is live and public, and the coven does not hold it.
@@ -120,7 +123,7 @@ test('a member adds the entry from its public page, and the three dots then offe
     try {
       await visitor.goto(address);
       await expect(visitor.getByRole('heading', { level: 1 })).toContainText(NAME);
-      await expect(visitor.getByRole('button', { name: SHELF })).toHaveCount(0);
+      await expect(visitor.getByRole('button', { name: SHELF, exact: true })).toHaveCount(0);
       await expect(visitor.getByRole('main').getByRole('button', { name: ADD })).toHaveCount(0);
     } finally {
       await visitor.close();
@@ -211,7 +214,7 @@ test('a member of two covens chooses from the plus’s menu, the holding coven t
     );
   const add = () => page.getByRole('main').getByRole('button', { name: ADD });
   const addMenu = page.getByRole('menu', { name: ADD });
-  const shelf = () => page.getByRole('button', { name: SHELF });
+  const shelf = () => page.getByRole('button', { name: SHELF, exact: true });
   const edit = () => page.getByRole('button', { name: `More for ${NAME_TWO}`, exact: true });
 
   // Why the menu is this test's: B may write in both, and neither coven holds the entry.
@@ -325,7 +328,7 @@ test('the Quick Look window has the plus, then the check, on a compendium list f
       await expect(details()).toBeVisible();
       // Why a missing plus is not a window still loading: the pencil or the page link is there.
       await expect(
-        details().getByRole('link', { name: /^See in (Compendium|My Ingredients)$/ }),
+        details().getByRole('link', { name: /^See in (Compendium|Your Cupboard)$/ }),
       ).toBeVisible();
     };
 

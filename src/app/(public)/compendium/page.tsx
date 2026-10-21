@@ -14,7 +14,6 @@ import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
 import IngredientSummary from '../../../components/IngredientEntry/summary';
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
-import PageHeader from '../../../components/PageHeader';
 import { Forbidden } from '../../../lib/errors';
 import { listJsonLd } from '../../../lib/json-ld';
 import { publicPageMetadata } from '../../../lib/page-metadata';
@@ -228,7 +227,17 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           dangerouslySetInnerHTML={{ __html: listJsonLd() }}
         />
       )}
-      <PageHeader title="Compendium" />
+      {/* A head as the coven pages carry (MB.119): the eyebrow names the section, the lede says
+          what it is for. A `header` inside `main` is no banner landmark, and takes the layout's
+          space beneath it (signed off in MB.120, 2026-10-20). */}
+      <header className="header">
+        <p className="eyebrow">Reference</p>
+        <h1>Compendium</h1>
+        <p className="lede">
+          Ingredients for spellwork: their formal and folk names, categories, deities and forms,
+          with the sources behind them.
+        </p>
+      </header>
       {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumCards
         entries={entries}
