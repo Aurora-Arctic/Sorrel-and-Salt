@@ -128,7 +128,7 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
 
   await test.step('a jar is a button too: Enter on it opens Edit Stock on that form, and Escape gives the focus back', async () => {
     const oil = stockOf(page).getByRole('button', {
-      name: 'Edit Stock, Rosemary, Oil',
+      name: 'Edit Stock, Rosemary, Salvia rosmarinus, Oil',
       exact: true,
     });
     await oil.focus();
@@ -157,7 +157,7 @@ test('a coven’s entry pages list its jars under Stock, and Edit Stock in the h
     await expect(lineOf(page, 'Root')).toContainText('4 piece');
     await expect(lowAmount(lineOf(page, 'Root'))).toHaveCount(0);
     await expect(outAmount(lineOf(page, 'Root'))).toHaveCount(0);
-    await expect(stockOf(page).getByRole('button', { name: /^Edit Stock/ })).toBeVisible();
+    await expect(stockEditor(stockOf(page), 'Testwort').open).toBeVisible();
   });
 
   await test.step('a compendium entry the coven does not hold has no Stock section', async () => {

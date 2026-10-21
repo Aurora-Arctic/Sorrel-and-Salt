@@ -426,8 +426,14 @@ export function stockEditor(row: Locator, name: string) {
   const title = `Edit Stock, ${name}`;
   const dialog = page.getByRole('dialog', { name: title });
   return {
-    // Exact: on an entry page the shelf's jar buttons begin with the same words ("Edit Stock, Rosemary, Oil").
-    open: row.getByRole('button', { name: title, exact: true }),
+    // The button is named for the entry as the card is: the name, then the formal name when it
+    // has one ("Edit Stock, Rosemary, Salvia rosmarinus"). On an entry page the shelf's jar
+    // buttons add the form after that ("..., Salvia rosmarinus, Oil"), so the name is matched
+    // whole: the title, then at most one more part. (An entry with no formal name would
+    // match a jar button too; none of these specs walks one.)
+    open: row.getByRole('button', {
+      name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(, [^,]+)?$`),
+    }),
     dialog,
     /**
      * Chooses a jar from the list, by its form. The button's name starts with the form and
