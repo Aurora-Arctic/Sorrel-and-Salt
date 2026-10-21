@@ -9,6 +9,7 @@ import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
+import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
 import type { StockData } from '../StockDialog/types';
 import type { StockDialogProps } from '../StockDialog/types';
@@ -62,6 +63,8 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /** Who last edited the entry in this coven and when (M6.18), from `lastEditsOf`; none draws no line. */
+  lastEdit?: LastEditProps | null;
   /** The entry and everything its page shows, as `ingredientDetailOf` assembles it. */
   detail: IngredientDetail;
   /**
@@ -295,6 +298,8 @@ export interface IngredientDetailsOpened {
    * no badge shows.
    */
   marks?: DetailsMarks;
+  /** Who last edited the entry in this coven and when (M6.18); drawn above the head's buttons. */
+  lastEdit?: LastEditProps | null;
   /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
   /**

@@ -24,6 +24,7 @@ import {
   ingredientDetailOf,
   isAnnotated,
   isRetired,
+  lastEditsOf,
   MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
 import type { CovenIngredientParams } from './types';
@@ -111,16 +112,19 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // entry again; the one the metadata shares is laid in.
   // The coven's jars are read alongside, whether or not the coven holds the entry, so the
   // page waits on no second round; they show only where it does (M12.29).
-  const [read, { viewer }, matches, cupboardEntry, opening, jars] = await Promise.all([
-    ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
-    viewerOf(),
-    compendiumMatchesOf(session, entry),
-    cupboardOf(slug, id),
-    // The viewer's covens this entry's page also opens in, for the layout's coven switcher to
-    // stay on it (M9.12). Per viewer, from their memberships, and never cached.
-    covensOpeningEntry(session, entry),
-    covenJarsOf(session, workspace.id, entry.id),
-  ]);
+  const [read, { viewer }, matches, cupboardEntry, opening, jars, [lastEdit = null]] =
+    await Promise.all([
+      ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
+      viewerOf(),
+      compendiumMatchesOf(session, entry),
+      cupboardOf(slug, id),
+      // The viewer's covens this entry's page also opens in, for the layout's coven switcher to
+      // stay on it (M9.12). Per viewer, from their memberships, and never cached.
+      covensOpeningEntry(session, entry),
+      covenJarsOf(session, workspace.id, entry.id),
+      // Who last edited it in this coven (M6.18): the cards' read, for the one entry.
+      lastEditsOf(session, workspace.id, [entry]),
+    ]);
   // A retired entry (M12.24) reads its children through its cupboard entry,
   // so its detail is read in the coven and carries that entry itself.
   const detail = { ...read, cupboardEntry: read.cupboardEntry ?? cupboardEntry };
@@ -188,6 +192,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       <CovenSwitchTargets path={own} slugs={opening.map((coven) => coven.slug)} />
       <IngredientEntry
         detail={detail}
+        lastEdit={lastEdit}
         hrefOf={hrefOf}
         back={{ href: ingredientsHref, label: 'Ingredients' }}
         edit={

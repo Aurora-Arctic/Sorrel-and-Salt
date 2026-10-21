@@ -157,19 +157,28 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   const jarsOf = () => covenJarsOf(session, membership.workspaceId, id);
+  // The same read the cards make, for the one entry (M6.18).
+  const lastEditOf = async () =>
+    (await lastEditsOf(session, membership.workspaceId, [entry]))[0] ?? null;
   if (entry.workspaceId === membership.workspaceId) {
-    const [detail, jars] = await Promise.all([detailOf(), jarsOf()]);
-    return { shown: entry, own: true, detail, covens: [], jars };
+    const [detail, jars, lastEdit] = await Promise.all([detailOf(), jarsOf(), lastEditOf()]);
+    return { shown: entry, own: true, detail, covens: [], jars, lastEdit };
   }
   const held = await heldCompendiumEntry(membership, id);
   if (!held) return undefined;
   // The viewer's covens that hold it, this one among them, for the details' links (M12.5).
-  const [read, covens, jars] = await Promise.all([detailOf(), covensHolding(id), jarsOf()]);
+  const [read, covens, jars, lastEdit] = await Promise.all([
+    detailOf(),
+    covensHolding(id),
+    jarsOf(),
+    lastEditOf(),
+  ]);
   return {
     shown: applyCupboardEntry(held.entry, held.cupboardEntry),
     own: false,
     detail: { ...read, cupboardEntry: read.cupboardEntry ?? held.cupboardEntry },
     covens,
     jars,
+    lastEdit,
   };
 }

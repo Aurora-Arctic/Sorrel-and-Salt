@@ -270,3 +270,17 @@
     transition: none;
   }
 }
+
+// The Quick Look head's buttons with the last edit stacked over them, right-aligned (the owner's
+// call, 2026-10-21); the row is what `.modal-dialog__formal-actions` is when it holds no line.
+.ingredient-details-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ingredient-details-actions__row {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+}
