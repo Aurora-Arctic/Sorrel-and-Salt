@@ -136,9 +136,13 @@ export type SearchSentenceLabels = Partial<
   Record<SearchSentenceLabelFacet, Readonly<Record<string, string>>>
 >;
 
-/** One piece of the sentence: plain text, or a chosen value the component links to the same filter without it. */
+/**
+ * One piece of the sentence: plain text, a chosen value, or a join, the bare word ("or",
+ * "and") that links two values in a list. A join is the word alone; the spaces round it are text.
+ */
 export type SearchSentenceFragment =
   | { kind: 'text'; text: string }
+  | { kind: 'join'; text: string }
   | { kind: 'value'; text: string; facet: SearchSentenceFacet; value: string };
 
 export interface SearchSentenceInput {

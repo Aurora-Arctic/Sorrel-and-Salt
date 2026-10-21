@@ -41,10 +41,10 @@ describe('buildSearchSentence', () => {
   it('joins two values with or and three with no serial comma', () => {
     const labels = { forms: { oil: 'Oil', resin: 'Resin', leaf: 'Leaf' } };
     expect(text({ forms: ['oil', 'resin'] }, 2, { labels })).toBe(
-      '2 ingredients, in the form Oil or Resin',
+      '2 ingredients, in the form oil or resin',
     );
     expect(text({ forms: ['oil', 'resin', 'leaf'] }, 2, { labels })).toBe(
-      '2 ingredients, in the form Oil, Resin or Leaf',
+      '2 ingredients, in the form oil, resin or leaf',
     );
   });
 
@@ -62,16 +62,16 @@ describe('buildSearchSentence', () => {
     const labels = { categories: { protection: 'Protection', healing: 'Healing' } };
     const categories = ['protection', 'healing'];
     expect(text({ categories }, 2, { labels })).toBe(
-      '2 ingredients, in the Protection and Healing categories',
+      '2 ingredients, in the protection and healing categories',
     );
     expect(text({ categories, categoryMode: 'all' }, 2, { labels })).toBe(
-      '2 ingredients, in the Protection and Healing categories',
+      '2 ingredients, in the protection and healing categories',
     );
     expect(text({ categories, categoryMode: 'any' }, 2, { labels })).toBe(
-      '2 ingredients, in the Protection or Healing category',
+      '2 ingredients, in the protection or healing category',
     );
     expect(text({ categories: ['protection'] }, 2, { labels })).toBe(
-      '2 ingredients, in the Protection category',
+      '2 ingredients, in the protection category',
     );
   });
 
@@ -100,12 +100,12 @@ describe('buildSearchSentence', () => {
       '1 ingredient, under Aries or Leo',
     );
     expect(text({ elements: ['fire', 'water'] }, 1, { labels })).toBe(
-      '1 ingredient, of the Fire or Water element',
+      '1 ingredient, of the fire or water element',
     );
   });
 
-  it('shows a form with no label in title case', () => {
-    expect(text({ forms: ['tincture'] }, 1)).toBe('1 ingredient, in the form Tincture');
+  it('shows a form with no label in lower case', () => {
+    expect(text({ forms: ['tincture'] }, 1)).toBe('1 ingredient, in the form tincture');
   });
 
   it('puts every kind in the fixed order', () => {
@@ -131,13 +131,13 @@ describe('buildSearchSentence', () => {
       withoutReferences: true,
     };
     expect(text(filter, 3, { labels, admin: true })).toBe(
-      '3 ingredients, matching “rue”, in the Protection and Healing categories, in the form Oil or Resin, linked to Isis, under Aries, ruled by the Sun or Mars, of the Fire element, that are not toxic, classified as botanical, without references',
+      '3 ingredients, matching “rue”, in the protection and healing categories, in the form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of the fire element, that are not toxic, classified as botanical, without references',
     );
   });
 
   it("names a coven list's source, in stock and low stock after toxic, before the admin clauses", () => {
-    expect(text({ source: 'local' }, 4)).toBe('4 ingredients, from the Local source');
-    expect(text({ source: 'compendium' }, 1)).toBe('1 ingredient, from the Compendium source');
+    expect(text({ source: 'local' }, 4)).toBe('4 ingredients, from the local source');
+    expect(text({ source: 'compendium' }, 1)).toBe('1 ingredient, from the compendium source');
     expect(text({ inStock: true }, 2)).toBe('2 ingredients, in stock');
     expect(text({ lowStockOnly: true }, 2)).toBe('2 ingredients, low or out of stock');
     expect(
@@ -153,7 +153,7 @@ describe('buildSearchSentence', () => {
         { admin: true },
       ),
     ).toBe(
-      '3 ingredients, that are toxic, from the Local source, in stock, low or out of stock, classified as botanical',
+      '3 ingredients, that are toxic, from the local source, in stock, low or out of stock, classified as botanical',
     );
   });
 
@@ -207,9 +207,96 @@ describe('buildSearchSentence', () => {
     expect(hasFilter).toBe(true);
     expect(fragments.filter((f) => f.kind === 'value')).toEqual([
       { kind: 'value', text: '“rue”', facet: 'query', value: 'rue' },
-      { kind: 'value', text: 'Oil', facet: 'forms', value: 'oil' },
+      { kind: 'value', text: 'oil', facet: 'forms', value: 'oil' },
       { kind: 'value', text: 'the Sun', facet: 'planets', value: 'sun' },
       { kind: 'value', text: 'toxic', facet: 'toxic', value: 'toxic' },
     ]);
+  });
+
+  it('sets the joining words apart as join fragments, with their spaces as text and commas plain', () => {
+    const labels = { forms: { oil: 'Oil', resin: 'Resin', leaf: 'Leaf' } };
+    const { fragments } = buildSearchSentence({
+      filter: { forms: ['oil', 'resin', 'leaf'] },
+      total: 2,
+      labels,
+    });
+    expect(fragments.filter((f) => f.kind === 'join')).toEqual([{ kind: 'join', text: 'or' }]);
+    const at = fragments.findIndex((f) => f.kind === 'join');
+    expect(fragments[at - 1]).toMatchObject({ kind: 'text' });
+    expect((fragments[at - 1] as { text: string }).text.endsWith(' ')).toBe(true);
+    expect(fragments[at + 1]).toEqual({ kind: 'text', text: ' ' });
+    expect(fragments[at + 2]).toEqual({
+      kind: 'value',
+      text: 'leaf',
+      facet: 'forms',
+      value: 'leaf',
+    });
+    // The comma between the first two values stays text, never a join.
+    expect(fragments.some((f) => f.kind === 'text' && f.text.includes(', '))).toBe(true);
+    expect(fragments.filter((f) => f.kind === 'join')).toHaveLength(1);
+  });
+
+  it('makes the word and a join in all-mode categories', () => {
+    const { fragments } = buildSearchSentence({
+      filter: { categories: ['a', 'b'], categoryMode: 'all' },
+      total: 2,
+    });
+    expect(fragments.filter((f) => f.kind === 'join')).toEqual([{ kind: 'join', text: 'and' }]);
+  });
+
+  it('draws no join for a single value or a lone clause', () => {
+    const { fragments } = buildSearchSentence({
+      filter: { forms: ['oil'], toxic: 'toxic' },
+      total: 1,
+    });
+    expect(fragments.some((f) => f.kind === 'join')).toBe(false);
+  });
+
+  it('shows categories, forms, elements, source and nomenclature in lower case', () => {
+    const labels = {
+      categories: { warding: 'Warding' },
+      forms: { oil: 'Oil' },
+      elements: { fire: 'Fire' },
+    };
+    expect(
+      text(
+        {
+          categories: ['warding'],
+          forms: ['oil'],
+          elements: ['fire'],
+          source: 'compendium',
+          nomenclature: 'Botanical',
+        },
+        1,
+        { labels, admin: true },
+      ),
+    ).toBe(
+      '1 ingredient, in the warding category, in the form oil, of the fire element, from the compendium source, classified as botanical',
+    );
+    expect(text({ source: 'local' }, 1)).toBe('1 ingredient, from the local source');
+    const shown = buildSearchSentence({
+      filter: { categories: ['warding'] },
+      total: 1,
+      labels,
+    }).fragments.filter((f) => f.kind === 'value');
+    // The value it removes keeps its own spelling; only the display is lowered.
+    expect(shown).toEqual([
+      { kind: 'value', text: 'warding', facet: 'categories', value: 'warding' },
+    ]);
+  });
+
+  it('keeps the capitals of deities, zodiac signs and planets', () => {
+    const labels = {
+      deities: { hecate: 'Hecate' },
+      zodiac: { scorpio: 'Scorpio' },
+      planets: { sun: 'Sun', mars: 'Mars' },
+    };
+    expect(
+      text({ deities: ['hecate'], zodiac: ['scorpio'], planets: ['sun', 'mars'] }, 1, { labels }),
+    ).toBe('1 ingredient, linked to Hecate, under Scorpio, ruled by the Sun or Mars');
+  });
+
+  it('shows the text query as typed', () => {
+    expect(text({ query: 'Rue' }, 1)).toBe('1 ingredient, matching “Rue”');
   });
 });
