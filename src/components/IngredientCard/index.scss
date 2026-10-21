@@ -273,12 +273,6 @@
   gap: space(1);
 }
 
-// The stock badge is its drawing alone in a square, so it keeps no padding of the
-// card's badge size (`.ingredient-card .badge`, below), which would squeeze the drawing.
-.ingredient-card .specimen__stock .stock-badge {
-  padding: 0;
-}
-
 // The actions' own addition to the primitive: above the stretched link, so each
 // button is its own target.
 .ingredient-card .specimen__actions {

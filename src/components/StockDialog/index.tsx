@@ -22,6 +22,7 @@ import { changed, openingRows, rowFieldOf, stockBatch } from './batch';
 import type {
   StockDialogFormProps,
   StockDialogProps,
+  StockJarButtonProps,
   StockDialogValues,
   StockForm,
   StockRow,
@@ -220,16 +221,18 @@ const StockDialogForm = ({
   ingredientId,
   forms,
   jars,
+  openOn,
   close,
 }: StockDialogFormProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const addId = useId();
-  const methods = useForm<StockDialogValues>({ defaultValues: { rows: openingRows(jars) } });
+  const methods = useForm<StockDialogValues>({ defaultValues: { rows: openingRows(jars, forms) } });
   const {
     control,
     handleSubmit,
     setError,
     setFocus,
+    getValues,
     setValue,
     formState: { errors, isDirty, isSubmitting },
   } = methods;
@@ -238,8 +241,10 @@ const StockDialogForm = ({
   const discard = useDiscardGuard(isDirty);
   const sent = useRef(false);
   // The chosen form, by its variant: a row's index moves when an added row
-  // before it goes. The first jar is chosen as the dialog opens.
-  const [chosenVariant, setChosenVariant] = useState<string | null>(jars[0]?.variantId ?? null);
+  // before it goes. The first row, the first form from A to Z, is chosen as the dialog opens.
+  const [chosenVariant, setChosenVariant] = useState<string | null>(
+    openOn ?? getValues('rows')[0]?.variantId ?? null,
+  );
   const [adding, setAdding] = useState('');
   // A form just added, whose Quantity takes the focus once its fields are drawn.
   const [focusAdded, setFocusAdded] = useState<string | null>(null);
@@ -251,6 +256,22 @@ const StockDialogForm = ({
   // removed before Save).
   const found = rows.findIndex((row) => row.variantId === chosenVariant);
   const chosen = found >= 0 ? found : rows.length > 0 ? 0 : -1;
+
+  // Opened on a form the coven holds no jar of: add it as Add Form would (the row is new,
+  // so the dialog is dirty from the start, as after pressing Add), and focus its Quantity.
+  // Once: the guard on the rows keeps a repeat run (strict mode's) from adding it twice.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current || openOn === undefined) return;
+    seeded.current = true;
+    if (!forms.some((form) => form.variantId === openOn)) return;
+    if (getValues('rows').some((row) => row.variantId === openOn)) return;
+    append(
+      { jarId: null, variantId: openOn, removed: false, ...EMPTY_STOCK },
+      { shouldFocus: false },
+    );
+    setFocusAdded(openOn);
+  }, [openOn, forms, getValues, append]);
 
   useEffect(() => {
     if (focusAdded === null) return;
@@ -445,6 +466,29 @@ export function StockDialogModal({
     </Modal>
   );
 }
+
+/**
+ * The same dialog behind a button of the caller's own, opening on one form
+ * (`openOn`): a jar on the entry page's shelf. One dialog, two doors, so what
+ * is saved and how it is refused cannot differ between them.
+ */
+export const StockJarButton = ({
+  ariaLabel,
+  className,
+  children,
+  ...props
+}: StockJarButtonProps): ReactElement => (
+  <ModalButton
+    label={children}
+    ariaLabel={ariaLabel}
+    className={className ?? ''}
+    eyebrow="Edit Stock"
+    title={props.ingredientName}
+    size="listed"
+  >
+    {(close) => <StockDialogForm {...props} close={close} />}
+  </ModalButton>
+);
 
 export default StockDialog;
 export type { StockData, StockDialogProps, StockForm, StockJar } from './types';

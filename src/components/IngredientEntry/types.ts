@@ -11,6 +11,7 @@ import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
 import type { StockData } from '../StockDialog/types';
+import type { StockDialogProps } from '../StockDialog/types';
 
 /** The part of an entry its edit modal names itself by and edits. */
 export type EditableEntry = Pick<IngredientRow, 'id' | 'name' | 'canonicalName' | 'nomenclature'>;
@@ -141,6 +142,19 @@ export interface IngredientEntryProps {
    * name and nothing else; false for a visitor.
    */
   heldInCovens?: boolean;
+  /**
+   * The Stock section (M12.29), on a coven's page for an entry the coven has, its own or
+   * one in its cupboard: the coven's jars of it, as the Edit Stock dialog takes them, and
+   * whether the role may edit them, which draws the dialog's button in the heading. Left
+   * out, no section shows: the public page, and a compendium entry the coven does not hold.
+   */
+  stock?: EntryStock;
+}
+
+/** The coven's jars of the entry, for its Stock section (M12.29). */
+export interface EntryStock extends Pick<StockDialogProps, 'workspaceId' | 'forms' | 'jars'> {
+  /** The role permits `inventory: ['update']`: the heading carries Edit Stock. */
+  mayEdit: boolean;
 }
 
 /** One of the viewer's writable covens, as the public page's cupboard choices name it (M9.12). */

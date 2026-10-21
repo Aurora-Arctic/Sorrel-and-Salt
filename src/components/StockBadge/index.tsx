@@ -3,6 +3,7 @@
 import { type ReactElement, useId } from 'react';
 import IconTip from '../IconTip';
 import { stockState } from './stock-state';
+import { stockName, stockTip } from './stock-words';
 import type { StockBadgeProps } from './types';
 import './index.scss';
 
@@ -12,9 +13,11 @@ import './index.scss';
 // renders it every time and checks nothing.
 //
 // Each state is its drawing alone in a small square (the owner's call,
-// 2026-10-20), so neither can rest on colour: Low is a double chevron on the
-// muted low-stock tint and Out of Stock a slashed ring on a red tint of its own;
-// safety stays the only alarming badge (styling.md). The words moved to a button
+// 2026-10-20), so neither can rest on colour: Low is a double chevron and Out of
+// Stock a slashed ring. Neither is boxed any more (the owner's call, 2026-10-21):
+// the drawing is drawn in the colour of the matching jar on the entry's shelf, the
+// warning amber for Low and Out of Stock's red; safety stays the only boxed,
+// alarming badge (styling.md). The words moved to a button
 // name and a tip. Both states are buttons whose only job is to open that tip, and
 // they are icon tips (the owner's call, 2026-10-20): `IconTip`'s, which opens after
 // a rest of the pointer or at once on focus, fades, closes the moment the pointer
@@ -25,6 +28,8 @@ import './index.scss';
 // `IconTip`'s bubble is decoration, hidden from a screen reader and mounted only
 // while open, so Low's statement is also written once, out of sight, as the button's
 // description: a reader hears it with or without the tip.
+// The words themselves (the name, the tip) are `stock-words.ts`, shared with the entry
+// page's jar shelf, which tells Low and Out by the jar and a button on its amount.
 // claude-docs/components/stock-badge.md.
 
 const Drawing = ({ out }: { out: boolean }): ReactElement => (
@@ -50,25 +55,20 @@ const Drawing = ({ out }: { out: boolean }): ReactElement => (
   </svg>
 );
 
-/** A quantity and its unit as the jar line writes them: "6 g", or "6" when the row has no unit. */
-const withUnit = (amount: number, unit: string | null | undefined): string =>
-  unit ? `${amount} ${unit}` : `${amount}`;
-
 export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
   const descriptionId = useId();
   const state = stockState(quantity, threshold);
   if (state === 'ok') return null;
 
   const out = state === 'out';
-  // `low` means a quantity and a threshold above 0 both exist.
-  const tip = out ? 'Out of Stock' : `Low Stock at ${withUnit(threshold as number, unit)} or less`;
-  const name = out ? 'Out of Stock' : 'Low Stock';
+  const tip = stockTip(state, threshold, unit);
+  const name = stockName(state);
 
   return (
     <IconTip tip={tip}>
       <button
         type="button"
-        className={`badge stock-badge ${out ? 'badge--out-of-stock stock-badge--out' : 'badge--low-stock stock-badge--low'}`}
+        className={`stock-badge ${out ? 'stock-badge--out' : 'stock-badge--low'}`}
         aria-label={name}
         aria-describedby={out ? undefined : descriptionId}
       >

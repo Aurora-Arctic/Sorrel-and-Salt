@@ -430,7 +430,14 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
     name: coven ? `Edit Stock for ${coven}, ${name}` : title,
   });
   return {
-    open: row.getByRole('button', { name: title }),
+    // The button is named for the entry as the card is: the name, then the formal name when it
+    // has one ("Edit Stock, Rosemary, Salvia rosmarinus"). On an entry page the shelf's jar
+    // buttons add the form after that ("..., Salvia rosmarinus, Oil"), so the name is matched
+    // whole: the title, then at most one more part. (An entry with no formal name would
+    // match a jar button too; none of these specs walks one.)
+    open: row.getByRole('button', {
+      name: new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(, [^,]+)?$`),
+    }),
     dialog,
     /**
      * Chooses a jar from the list, by its form. The button's name starts with the form and

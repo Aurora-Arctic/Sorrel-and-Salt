@@ -87,14 +87,34 @@ const EntryPart = (): ReactElement => (
   </div>
 );
 
+// The entry's Stock section as the page lays it: a heading, then a shelf of jars on a
+// plank, each with its name and amount beneath. Three, the common case; the wait cannot
+// know how many forms the entry has, nor whether the coven holds any.
+const StockPart = (): ReactElement => (
+  <div className="skeleton__entry-section">
+    <span className="skeleton__heading" />
+    <div className="skeleton__stock">
+      {Array.from({ length: 3 }, (_, at) => (
+        <div key={at} className="skeleton__jar">
+          <span />
+          <span />
+          <span />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// In the entry's body box, so Details' columns and the forms lay out as the page's do.
 const EntrySections = (): ReactElement => (
-  <>
+  <div className="skeleton__entry-body">
     <EntryPart />
+    <StockPart />
     <div className="skeleton__entry-forms">
       <span className="skeleton__heading" />
       <EntryPart />
     </div>
-  </>
+  </div>
 );
 
 // The coven home below its head, as the page lays it: Contents, a list of

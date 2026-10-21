@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import StockDialog, { StockDialogModal } from '@/components/StockDialog';
+import StockDialog, { StockDialogModal, StockJarButton } from '@/components/StockDialog';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { SaveStockMutation, SaveStockMutationVariables } from '@/gql/graphql';
 import { choose, press, typeIn } from '../../support/interact';
@@ -147,6 +147,16 @@ describe('StockDialog', () => {
     expect(threshold('Flower')).toHaveValue(30);
     // Only the chosen jar's fields are drawn.
     expect(noQuantity('Oil')).toBeNull();
+  });
+
+  it('lists the jars by form from A to Z and opens on the first, whatever order they arrive in', () => {
+    open({ jars: [...PROPS.jars].reverse() });
+
+    expect(pick('Flower')).toHaveAttribute('aria-current', 'true');
+    expect(quantity('Flower')).toHaveValue(250);
+    // The list's buttons, in the order drawn.
+    const listed = inDialog().getAllByRole('button', { name: /^(Flower|Oil)\b/ });
+    expect(listed).toEqual([pick('Flower'), pick('Oil')]);
   });
 
   it('shows a form’s fields once it is chosen, and keeps what was typed into the last', () => {
@@ -553,5 +563,63 @@ describe('StockDialog', () => {
     expect(quantity('Oil')).toBeEnabled();
     expect(unit('Oil')).not.toHaveAttribute('aria-disabled');
     expect(removeButton('Oil')).toBeInTheDocument();
+  });
+});
+
+describe('StockDialog openOn (M12.29)', () => {
+  it('opens on the form it is given, a jar held, with the jars as they are', () => {
+    open({ openOn: OIL });
+
+    expect(pick('Oil')).toHaveAttribute('aria-current', 'true');
+    expect(pick('Flower')).not.toHaveAttribute('aria-current');
+    expect(quantity('Oil')).toHaveValue(50);
+    // Nothing was added: a held form needs no new row.
+    expect(queryPick('Resin')).toBeNull();
+    expect(save()).toBeDisabled();
+  });
+
+  it('adds a form the coven holds no jar of as a new row and chooses it, which is a change to save', async () => {
+    const calls = mockSaving();
+    open({ openOn: RESIN });
+
+    expect(pick('Resin')).toHaveAttribute('aria-current', 'true');
+    expect(pick('Flower')).not.toHaveAttribute('aria-current');
+    expect(quantity('Resin')).toHaveValue(null);
+    await waitFor(() => expect(quantity('Resin')).toHaveFocus());
+    // The one new row, not two, and the form is no longer on offer under Add Form.
+    expect(inDialog().getAllByRole('button', { name: /^Resin\b/ })).toHaveLength(1);
+    expect(save()).toBeEnabled();
+
+    typeIn(quantity('Resin'), '12');
+    choose('Unit, Resin', 'g');
+    const { input } = await sent(calls);
+    expect(input.create).toEqual([
+      { variantId: RESIN, input: { quantityOnHand: 12, unit: 'g', lowStockThreshold: null } },
+    ]);
+    expect(input.update).toEqual([]);
+    expect(input.delete).toEqual([]);
+  });
+
+  it('ignores a form the ingredient does not come in', () => {
+    open({ openOn: '00000000-0000-0000-0000-0000000000v9' });
+
+    expect(pick('Flower')).toHaveAttribute('aria-current', 'true');
+    expect(save()).toBeDisabled();
+  });
+});
+
+describe('StockJarButton (M12.29)', () => {
+  it('is a button of the given name that opens the same dialog on its form', () => {
+    render(
+      <StockJarButton {...PROPS} openOn={OIL} ariaLabel="Edit Stock, Testwort, Oil">
+        Oil
+      </StockJarButton>,
+    );
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Stock, Testwort, Oil' }));
+
+    expect(dialog()).toBeInTheDocument();
+    expect(pick('Oil')).toHaveAttribute('aria-current', 'true');
   });
 });

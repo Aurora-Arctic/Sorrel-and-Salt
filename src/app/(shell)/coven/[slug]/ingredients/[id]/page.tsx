@@ -11,8 +11,8 @@ import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
+import { covenJarsOf, stockDialogOf } from '@/app/coven-stock';
 import { entryValues } from '@/app/entry-values';
-import { readEntryStock, stockKey } from '@/app/entry-stock';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import { rolePermits } from '@/modules/coven';
 import {
@@ -109,7 +109,9 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // compendium entry. The compendium is public, so the links reveal nothing.
   // The detail is read without the coven so it does not read the cupboard
   // entry again; the one the metadata shares is laid in.
-  const [read, { viewer }, matches, cupboardEntry, opening] = await Promise.all([
+  // The coven's jars are read alongside, whether or not the coven holds the entry, so the
+  // page waits on no second round; they show only where it does (M12.29).
+  const [read, { viewer }, matches, cupboardEntry, opening, jars] = await Promise.all([
     ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
     viewerOf(),
     compendiumMatchesOf(session, entry),
@@ -117,6 +119,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
     // The viewer's covens this entry's page also opens in, for the layout's coven switcher to
     // stay on it (M9.12). Per viewer, from their memberships, and never cached.
     covensOpeningEntry(session, entry),
+    covenJarsOf(session, workspace.id, entry.id),
   ]);
   // A retired entry (M12.24) reads its children through its cupboard entry,
   // so its detail is read in the coven and carries that entry itself.
@@ -137,19 +140,21 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
     ? await plusCovensOf(await covensHolding(entry.id), workspace.id)
     : undefined;
 
-  // Edit Stock in the three dots (M9.12; the owner's call, 2026-10-21): the forms the entry comes
-  // in and this coven's jars of it, for a member whose role may update stock, on a compendium
-  // entry the coven holds and on the coven's own. Read per request, for this viewer, in the one
-  // call the pair needs, and never cached (CLAUDE.md rule 6). A retired entry this coven still
-  // holds is offered too (the owner's call, 2026-10-21: stock is per coven): its forms are read
-  // through this coven's proof, and a coven that does not hold it reads none.
+  // What the coven has of an entry it has, its own or one in its cupboard (M12.29), read once
+  // and used twice: by the Stock section, and by Edit Stock in the three dots (M9.12; the owner's
+  // call, 2026-10-21), which a role that may update stock is offered. A retired entry this coven
+  // still holds is offered too (stock is per coven): its forms come from the detail, which
+  // reads them through this coven's cupboard entry, and a coven that does not hold it has
+  // none. Read per request, for this viewer, never cached (CLAUDE.md rule 6).
   const mayStock = rolePermits(role, { inventory: ['update'] });
-  const stock =
-    mayStock && (isOwn || held)
-      ? (
-          await readEntryStock([{ workspaceId: workspace.id, ingredientId: entry.id, own: isOwn }])
-        ).get(stockKey(workspace.id, entry.id))
+  const stockData =
+    isOwn || held
+      ? stockDialogOf(
+          detail.variants.map(({ variant }) => variant),
+          jars,
+        )
       : undefined;
+  const stock = mayStock ? stockData : undefined;
 
   // Edit opens a dialog over this page from a bare `?edit`, and the form's
   // values are read only when it is asked for. A compendium entry offers it
@@ -267,6 +272,10 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 }
               : undefined
         }
+        // What the coven has of an entry it has, its own or one in its cupboard (M12.29): the
+        // lines for every member, Edit Stock for a role that may update stock. A compendium
+        // entry the coven does not hold has no section.
+        stock={stockData && { workspaceId: workspace.id, ...stockData, mayEdit: mayStock }}
         similar={
           matches.kind === 'similar' && matches.entries.length > 0
             ? {

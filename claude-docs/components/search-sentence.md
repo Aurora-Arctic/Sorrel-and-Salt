@@ -1,7 +1,7 @@
 # SearchSentence
 
 `src/components/SearchSentence/` — the sentence above a list that says what it is
-searching for (M12.4): "12 ingredients matching “rue”", and beneath it, opened,
+searching for (M12.4): "12 ingredients matching rue", and beneath it, opened,
 the filters that narrowed it. It draws the fragments `buildSearchSentence`
 returns ([`ingredient-search.md`](ingredient-search.md), "The search sentence") and
 does the loading animation that stands in for a spinner. A client component.
@@ -10,12 +10,12 @@ does the loading animation that stands in for a spinner. A client component.
 
 `SearchSentenceProps` (`types.ts`):
 
-| Prop        | What it is                                                                                           |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| `sentence`  | The `SearchSentence` from `buildSearchSentence`. Its values are drawn bold and are never links       |
-| `query`     | The text the person searched for, or "". It always shows in the closed line                          |
-| `pending`   | A search is on its way. Read as its two edges: true starts the typing, false is the search returning |
-| `className` | Added to the sentence's own class                                                                    |
+| Prop        | What it is                                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------------------- |
+| `sentence`  | The `SearchSentence` from `buildSearchSentence`. Its values are drawn in a hairline box and are never links |
+| `query`     | The text the person searched for, or "". It always shows in the closed line                                 |
+| `pending`   | A search is on its way. Read as its two edges: true starts the typing, false is the search returning        |
+| `className` | Added to the sentence's own class                                                                           |
 
 There is no `total` prop: the count is the sentence's own lead, so passing it as
 well would be a second copy to keep equal.
@@ -23,11 +23,24 @@ well would be a second copy to keep equal.
 ## Contracts
 
 - **Settled, it is one closed line.** The lead, the term and a chevron, with one
-  space at every join and no comma: "12 ingredients matching “rue”". The builder
+  space at every join and no comma: "12 ingredients matching rue". The builder
   writes a comma before each clause (the term's too), so the component takes the
   sentence apart (`parts.ts`) and keeps the commas for the clauses beneath only.
   A press opens the clauses and a second shuts them. With no clause to show (no
   filter) it is a plain line and has no chevron.
+- **Values are a quiet mark, joins the loud word.** A chosen value is a
+  `<span class="search-sentence__value">` (not a `<strong>`: it is a mark, not emphasis) at
+  the sentence's own weight (300, the body's) inside a 1px hairline box, like a key on a keyboard;
+  the search term is drawn the same way. A join, the bare "or" or "and" between two values
+  (`join` in `ClausePart`), is a `<span class="search-sentence__join">`: weight 600, in the accent
+  colour, a little letter-spaced and set apart, with no box. The count at the start of the lead
+  ("12", or "No") is a `<span class="search-sentence__count">` at 500. All are drawn while typing
+  too, so a join types out with its style on. A value's box is not drawn while it types: it keeps
+  its room (a transparent 1px edge and the padding, so the text never moves) and the edge fades in
+  over `$motion-short` (150ms, ease-out) once every letter of the value is there (`is-boxed`).
+  Backspacing a value drops the class and the box goes at once; reduced motion shows it with no
+  fade, and a settled sentence is drawn boxed from the first paint. The status region keeps plain text. The casing is the builder's
+  ([`ingredient-search.md`](ingredient-search.md), "The search sentence").
 - **Before hydration** it is a native `<details>`, closed, holding the whole
   clauses, so it opens without script; the tail is not clipped until the script
   runs.

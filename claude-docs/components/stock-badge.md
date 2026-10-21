@@ -73,18 +73,15 @@ jar states that both are tested against, so a change to one copy alone fails.
   and the tip carry the words. The drawing is hidden from assistive technology
   because the button's name is there.
 
+## Shared words
+
+The badge's words are written once, in `stock-words.ts` beside it: `stockName(state)` ("Low Stock" or "Out of Stock"), `stockTip(state, threshold, unit)` ("Low Stock at 10 g or less", or "Out of Stock") and `withUnit(amount, unit)` ("6 g", or "6" with no unit). They are plain strings, not a component, so a server component can call them. `StockBadge` and [`JarShelf`](jar-shelf.md) both use them: the shelf tells a Low or Out jar by the jar's own drawing and a button on its amount (the owner's call, 2026-10-21), with the same name, tip and description as the badge, and so cannot drift from it. The badge is still the card's jar lines and the Edit Stock dialog's, now unboxed and in the jars' colours ("Styling" below).
+
 ## Styling
 
-Low Stock wears `.badge--low-stock`, the muted tinted palette. Out of Stock wears
-`.badge--out-of-stock`, a muted red of its own, a tint of the sealing wax with its
-saturation pulled down; the owner chose it on 2026-10-18. Safety stays the only
-solid, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning
-never rests on colour: the two drawings differ, the slashed ring in place of the
-double chevron. Both badges are the same square, `$stock-badge-size` (24px; the jar lines inset it so it centres on the actions' icon below, see [`jar-lines.md`](jar-lines.md)) (the cards' `.badge` size
-rules would pad it, so `.ingredient-card .specimen__stock .stock-badge` zeroes the
-padding). Until 2026-10-20 they carried the words ("Low · 6 g", "Out of Stock"), and
-Out of Stock a 2px border and a heavier weight to tell it from Low; with the words
-gone the drawings do that.
+No box (the owner's call, 2026-10-21): no border, tint or padding. The badge is its drawing alone, drawn in the colour of the matching jar on the entry page's shelf ([`jar-shelf.md`](jar-shelf.md)): Low in the warning amber (`$warning`) and Out of Stock in the Out of Stock palette's ink (`badge-token('out-of-stock', 'fg')`). It is a button reset to bare (`button-reset(help)`, so the help cursor), with the app's normal focus ring. It is not a `.badge`: its own class, `.stock-badge`, is all that styles it, so neither the badge palettes nor the card's badge sizes reach it, and the card no longer zeroes its padding. Safety stays the only boxed, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning never rests on colour: the two drawings differ, the slashed ring in place of the double chevron. The drawing sits centred in the same square as before, `$stock-badge-size` (24px), so the jar lines' inset still centres it on the actions' icon below ([`jar-lines.md`](jar-lines.md)).
+
+The inks were checked as text on both surfaces of both themes, and clear 4.5:1: Low 7.55:1 on the dark card and 8.32:1 on the dark page, 5.44:1 on the light card and 4.89:1 on the light page; Out 6.40:1 and 7.04:1 dark, 7.45:1 and 6.70:1 light. The `out-of-stock` palette is now the `ink` treatment, its `fg` alone (`--badge-out-of-stock-fg`, read by this badge and by the jar shelf), and has no `.badge--out-of-stock` class; the `low-stock` palette is unchanged, since the tip bubble and the Compendium mark still use it ([`styling.md`](../styling.md), "Badge palettes"). Until 2026-10-21 the badge wore `.badge--low-stock` (the muted tinted palette) and `.badge--out-of-stock` (a tint of the sealing wax); until 2026-10-20 the badges carried the words ("Low · 6 g", "Out of Stock"), and Out of Stock a 2px border and a heavier weight.
 
 ## Stories
 
@@ -92,6 +89,8 @@ gone the drawings do that.
 `Surfaces / Stock Badge`: `Low`, `Out`, and `PhoneDark` and `PhoneLight` showing a jar line of each state at 375px.
 
 ## Testing
+
+`tests/components/JarShelf/` proves the shelf's amount buttons use these words.
 
 `tests/components/StockBadge/index.test.tsx` walks the shared jar states through
 `stockState`, checks which of the two badges shows (and that the other does not), that

@@ -66,7 +66,9 @@ describe('IngredientCardList density', () => {
 describe('ListBody with the cards shape', () => {
   it('shows the loading status, and not the content, while a page is on its way', () => {
     render(
-      <ListNavigationContext.Provider value={{ pending: true, go: () => undefined }}>
+      <ListNavigationContext.Provider
+        value={{ pending: true, searching: false, go: () => undefined }}
+      >
         <ListFrame>
           <ListBody shape="cards">
             <p>Fixture content</p>

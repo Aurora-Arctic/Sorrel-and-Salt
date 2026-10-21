@@ -38,6 +38,7 @@ const getCupboardEntry = vi.fn();
 const covensOpeningEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
+const stockOf = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
@@ -50,6 +51,8 @@ vi.mock('@/modules/ingredients', () => ({
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
   isAnnotated: () => false,
+  // The jars (M12.29) are the stock service's to scope; here only what the page asks it for.
+  stockOf,
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -65,14 +68,6 @@ vi.mock('@/app/entry-values', () => ({ entryValues }));
 const covensHolding = vi.fn();
 const plusCovensOf = vi.fn();
 vi.mock('@/app/plus-covens', () => ({ covensHolding, plusCovensOf }));
-
-// Edit Stock (M9.12) reads this coven's jars through entry-stock.ts, which is its own tests'.
-// Here only which entries ask, and that what comes back reaches the dots. Nothing unless a test says so.
-const readEntryStock = vi.fn();
-vi.mock('@/app/entry-stock', () => ({
-  readEntryStock,
-  stockKey: (workspaceId: string, ingredientId: string) => `${workspaceId}:${ingredientId}`,
-}));
 
 // The cupboard buttons (M12.17) are client parts that send mutations, so the page
 // renders under a query client.
@@ -164,7 +159,7 @@ beforeEach(() => {
   covensHolding.mockResolvedValue([]);
   covensOpeningEntry.mockResolvedValue([]);
   plusCovensOf.mockResolvedValue(undefined);
-  readEntryStock.mockResolvedValue(new Map());
+  stockOf.mockResolvedValue([[]]);
 });
 
 describe('the coven ingredient page', () => {
@@ -601,10 +596,110 @@ describe('the coven ingredient page title', () => {
   });
 });
 
+describe('the coven ingredient page’s stock (M12.29)', () => {
+  const VARIANT_ID = '00000000-0000-4000-8000-0000000000c1';
+  const STAMPS = {
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    createdBy: null,
+    updatedAt: new Date('2026-01-01T00:00:00Z'),
+    updatedBy: null,
+    deletedAt: null,
+    deletedBy: null,
+  };
+  // One form, Testroot, and one jar of it holding 5 g.
+  const withRoot = async (row: ReturnType<typeof compendiumRow>, detail: object = {}) => {
+    const variant = {
+      id: VARIANT_ID,
+      ingredientId: row.id,
+      workspaceId: null,
+      form: 'testroot',
+      formId: null,
+      description: null,
+      safetyNotes: null,
+      toxic: false,
+      elements: null,
+      celestialBodies: null,
+      zodiacSigns: null,
+      colors: null,
+      ...STAMPS,
+    };
+    stockOf.mockResolvedValue([
+      [
+        {
+          id: 'fixture-stock',
+          variantId: VARIANT_ID,
+          quantityOnHand: '5',
+          unit: 'g',
+          lowStockThreshold: null,
+        },
+      ],
+    ]);
+    getIngredient.mockResolvedValue(row);
+    ingredientDetailOf.mockResolvedValue({
+      ...entryDetail(),
+      entry: row,
+      ...detail,
+      variants: [{ variant, icon: null, categories: [], substitutes: [], references: [] }],
+    });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+  };
+  const stock = () => screen.queryByRole('region', { name: 'Stock' });
+  // The heading's button and the one jar's, each named for the ingredient; none for a viewer.
+  const editStock = () => screen.queryAllByRole('button', { name: /^Edit Stock\b/ });
+
+  it('asks for this coven’s jars of the entry alone, and lists them under Stock for a held entry', async () => {
+    getCupboardEntry.mockResolvedValue(HELD_ROW);
+    await withRoot(compendiumRow());
+
+    expect(stockOf).toHaveBeenCalledWith(SESSION, [
+      { ingredientId: compendiumRow().id, workspaceId: WORKSPACE.id },
+    ]);
+    expect(within(stock()!).getByRole('listitem')).toHaveTextContent('5 g');
+    expect(editStock()).toHaveLength(2);
+  });
+
+  it('draws no Stock for a compendium entry the coven does not hold, though the jars were read', async () => {
+    await withRoot(compendiumRow());
+
+    // Precondition: there was a jar to show, so the section is absent by the guard alone.
+    expect(stockOf).toHaveBeenCalled();
+    expect(stock()).not.toBeInTheDocument();
+  });
+
+  it('shows a viewer the coven’s own entry’s jars and no Edit Stock', async () => {
+    asRole('viewer');
+    await withRoot(covenRow());
+
+    expect(within(stock()!).getByRole('listitem')).toHaveTextContent('5 g');
+    expect(editStock()).toHaveLength(0);
+  });
+});
+
+// Edit Stock in the three dots (M9.12) is offered from the same jars and forms the Stock section
+// draws (M12.29), so a held entry's page reads them once.
 describe('the coven ingredient page’s Edit Stock', () => {
-  const STOCK = { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] };
+  const VARIANT_ID = '00000000-0000-4000-8000-0000000000c1';
+  // One form, Testroot, and no jar yet: the dots are offered from the forms alone.
+  const withForm = async (row: ReturnType<typeof compendiumRow>, detail: object = {}) => {
+    const variant = { id: VARIANT_ID, ingredientId: row.id, workspaceId: null, form: 'testroot' };
+    getIngredient.mockResolvedValue(row);
+    ingredientDetailOf.mockResolvedValue({
+      ...entryDetail(),
+      entry: row,
+      ...detail,
+      variants: [{ variant, icon: null, categories: [], substitutes: [], references: [] }],
+    });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+  };
   const held = () => getCupboardEntry.mockResolvedValue(HELD_ROW);
-  const gives = () => readEntryStock.mockResolvedValue(new Map([[`${WORKSPACE.id}:${ID}`, STOCK]]));
   // The dots on the heading are the cupboard's menu; Edit Stock is among their choices.
   const stockItem = () => {
     const dots = screen.queryByRole('button', { name: /^More for\b/ });
@@ -612,79 +707,55 @@ describe('the coven ingredient page’s Edit Stock', () => {
     return screen.queryByRole('menuitem', { name: 'Edit Stock' });
   };
 
-  it('asks for the stock of a compendium entry the coven holds, as held, and offers Edit Stock', async () => {
+  it('offers Edit Stock for a compendium entry the coven holds', async () => {
     held();
-    gives();
-    await open(compendiumRow());
+    await withForm(compendiumRow());
 
-    expect(readEntryStock).toHaveBeenCalledWith([
-      { workspaceId: WORKSPACE.id, ingredientId: ID, own: false },
-    ]);
     expect(stockItem()).toBeInTheDocument();
   });
 
-  it("asks for the coven's own entry's forms in the coven's tier, and offers Edit Stock", async () => {
-    gives();
-    await open(covenRow());
+  it("offers Edit Stock for the coven's own entry", async () => {
+    await withForm(covenRow());
 
-    expect(readEntryStock).toHaveBeenCalledWith([
-      { workspaceId: WORKSPACE.id, ingredientId: ID, own: true },
-    ]);
     expect(stockItem()).toBeInTheDocument();
   });
 
-  it('asks nothing, and offers no Edit Stock, for a compendium entry the coven does not hold', async () => {
-    gives();
-    await open(compendiumRow());
+  it('offers no Edit Stock for a compendium entry the coven does not hold', async () => {
+    await withForm(compendiumRow());
 
-    expect(readEntryStock).not.toHaveBeenCalled();
+    // Why it could have been offered: the jars were read and the role may update stock.
+    expect(stockOf).toHaveBeenCalled();
     expect(stockItem()).toBeNull();
   });
 
-  const retired = async (cupboardEntry: typeof HELD_ROW | null) => {
-    getIngredient.mockResolvedValue(compendiumRow());
-    ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true, cupboardEntry });
-    viewerOf.mockResolvedValue({
-      viewer: { name: 'Fixture Member', canCurate: false },
-      workspaces: [],
-    });
-    renderPage(await Page(params()));
+  // A retired entry (M12.24) reads its forms through the coven's cupboard entry, so the detail
+  // carries them for the coven that holds it and none for one that does not.
+  const retired = (cupboardEntry: typeof HELD_ROW | null) => {
+    getCupboardEntry.mockResolvedValue(cupboardEntry);
+    return withForm(compendiumRow(), { retired: true, cupboardEntry });
   };
 
-  it('asks for the stock of a retired entry the coven still holds, and offers Edit Stock', async () => {
-    gives();
+  it('offers Edit Stock for a retired entry the coven still holds', async () => {
     await retired({ ...HELD_ROW });
 
-    expect(readEntryStock).toHaveBeenCalledWith([
-      { workspaceId: WORKSPACE.id, ingredientId: ID, own: false },
-    ]);
     expect(stockItem()).toBeInTheDocument();
   });
 
-  it('asks nothing, and offers no Edit Stock, for a retired entry the coven does not hold', async () => {
-    // Why it could have been asked: the stock read would answer, and the role may update stock.
-    gives();
+  it('offers no Edit Stock for a retired entry the coven does not hold', async () => {
     await retired(null);
 
-    expect(readEntryStock).not.toHaveBeenCalled();
+    // Why it could have been offered: the jars were read, the role may update stock, and the
+    // detail carries a form.
+    expect(stockOf).toHaveBeenCalled();
     expect(stockItem()).toBeNull();
   });
 
-  it('asks nothing, and offers no Edit Stock, for a viewer, who may not update stock', async () => {
+  it('offers no Edit Stock to a viewer, who may not update stock', async () => {
     asRole('viewer');
     held();
-    gives();
-    await open(compendiumRow());
+    await withForm(compendiumRow());
 
-    expect(readEntryStock).not.toHaveBeenCalled();
-    expect(stockItem()).toBeNull();
-  });
-
-  it('offers no Edit Stock when the stock service refused the pair', async () => {
-    held();
-    await open(compendiumRow());
-
-    expect(readEntryStock).toHaveBeenCalled();
+    expect(stockOf).toHaveBeenCalled();
     expect(stockItem()).toBeNull();
   });
 });
