@@ -9,9 +9,9 @@ export default {
 };
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
-  { slug: 'my-own-grimoire', name: 'My Own Grimoire', canReadMembers: true },
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
+  { slug: 'my-own-grimoire', name: 'My Own Grimoire', canReadMembers: true, canInvite: true },
 ];
 
 // In a workspace: its name is the value.

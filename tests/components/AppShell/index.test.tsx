@@ -25,12 +25,20 @@ const MEMBER: ShellViewer = {
 const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', canCurate: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
 const COVENS: ShellWorkspace[] = [
-  { id: 'w1', slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canWrite: true },
+  {
+    id: 'w1',
+    slug: 'fixture-coven',
+    name: 'Fixture Coven',
+    canReadMembers: true,
+    canInvite: true,
+    canWrite: true,
+  },
   {
     id: 'w2',
     slug: 'testwort-circle',
     name: 'Testwort Circle',
     canReadMembers: true,
+    canInvite: false,
     canWrite: true,
   },
 ];
