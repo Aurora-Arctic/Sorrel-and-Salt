@@ -93,6 +93,7 @@ const coven = (slug: string, canWrite = true): ShellWorkspace => ({
   slug,
   name: slug === 'fixture-coven' ? 'Fixture Coven' : 'Testwort Circle',
   canReadMembers: true,
+  canInvite: false,
   canWrite,
 });
 const FIXTURE = coven('fixture-coven');

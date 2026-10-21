@@ -5,6 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { makeQueryClient } from '@/lib/graphql-client';
+import {
+  CovenSwitchProvider,
+  useCovenSwitchRegistration,
+} from '@/components/CovenSwitchTargets/context';
 import { entryDetail } from '../../../support/entry-detail';
 
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
@@ -30,6 +34,8 @@ const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
+// Which of the viewer's covens an entry opens in is the service's to say (M9.12); none unless a test says so.
+const covensOpeningEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
 const stockOf = vi.fn();
@@ -38,6 +44,7 @@ vi.mock('@/modules/ingredients', () => ({
   ingredientDetailOf,
   compendiumMatchesOf,
   getCupboardEntry,
+  covensOpeningEntry,
   isRetired,
   // The permission Make It Ours is offered on, as the service asserts it (M12.23).
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
@@ -64,8 +71,24 @@ vi.mock('@/app/plus-covens', () => ({ covensHolding, plusCovensOf }));
 
 // The cupboard buttons (M12.17) are client parts that send mutations, so the page
 // renders under a query client.
+// The coven layout holds the provider the switcher reads (M9.12); a probe stands in for the switcher.
+function Registration() {
+  const registration = useCovenSwitchRegistration();
+  return (
+    <p data-testid="switch-registration">{registration ? JSON.stringify(registration) : 'none'}</p>
+  );
+}
+const registered = () =>
+  JSON.parse(screen.getByTestId('switch-registration').textContent ?? 'null');
 const renderPage = (ui: ReactElement) =>
-  render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      <CovenSwitchProvider>
+        {ui}
+        <Registration />
+      </CovenSwitchProvider>
+    </QueryClientProvider>,
+  );
 
 const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/ingredients/[id]/page');
@@ -82,12 +105,13 @@ const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
 // Edit, a plain link when it is the only choice, or Edit Compendium Entry in the Edit menu
 // beside the cupboard's choices (the owner's call, 2026-10-19), opened here.
+// Edit is the compendium's edit; Edit Stock (M9.12) is a different choice and is asserted by its own tests.
 const edits = () => {
   const menu = screen.queryByRole('button', { name: /^Edit\b/, expanded: false });
   if (menu) fireEvent.click(menu);
   return [
-    ...screen.queryAllByRole('link', { name: /edit/i }),
-    ...screen.queryAllByRole('menuitem', { name: /edit/i }),
+    ...screen.queryAllByRole('link', { name: /edit(?! stock)/i }),
+    ...screen.queryAllByRole('menuitem', { name: /edit(?! stock)/i }),
   ];
 };
 
@@ -134,6 +158,7 @@ beforeEach(() => {
   getCupboardEntry.mockResolvedValue(null);
   compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0 });
   covensHolding.mockResolvedValue([]);
+  covensOpeningEntry.mockResolvedValue([]);
   plusCovensOf.mockResolvedValue(undefined);
   stockOf.mockResolvedValue([[]]);
 });
@@ -279,7 +304,7 @@ describe('the coven ingredient page', () => {
     expect(screen.getByRole('link', { name: /^Annotate\b/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^More for\b/ }));
     const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
-    expect(items).toEqual(['Make It Ours', 'Remove']);
+    expect(items).toEqual(['Edit Stock', 'Make It Ours', 'Remove']);
     expect(edits()).toHaveLength(0);
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();
@@ -583,7 +608,7 @@ describe('the coven ingredient page’s stock (M12.29)', () => {
     deletedBy: null,
   };
   // One form, Testroot, and one jar of it holding 5 g.
-  const withRoot = async (row: ReturnType<typeof compendiumRow>) => {
+  const withRoot = async (row: ReturnType<typeof compendiumRow>, detail: object = {}) => {
     const variant = {
       id: VARIANT_ID,
       ingredientId: row.id,
@@ -614,6 +639,7 @@ describe('the coven ingredient page’s stock (M12.29)', () => {
     ingredientDetailOf.mockResolvedValue({
       ...entryDetail(),
       entry: row,
+      ...detail,
       variants: [{ variant, icon: null, categories: [], substitutes: [], references: [] }],
     });
     viewerOf.mockResolvedValue({
@@ -651,5 +677,123 @@ describe('the coven ingredient page’s stock (M12.29)', () => {
 
     expect(within(stock()!).getByRole('listitem')).toHaveTextContent('5 g');
     expect(editStock()).toHaveLength(0);
+  });
+});
+
+// Edit Stock in the three dots (M9.12) is offered from the same jars and forms the Stock section
+// draws (M12.29), so a held entry's page reads them once.
+describe('the coven ingredient page’s Edit Stock', () => {
+  const VARIANT_ID = '00000000-0000-4000-8000-0000000000c1';
+  // One form, Testroot, and no jar yet: the dots are offered from the forms alone.
+  const withForm = async (row: ReturnType<typeof compendiumRow>, detail: object = {}) => {
+    const variant = { id: VARIANT_ID, ingredientId: row.id, workspaceId: null, form: 'testroot' };
+    getIngredient.mockResolvedValue(row);
+    ingredientDetailOf.mockResolvedValue({
+      ...entryDetail(),
+      entry: row,
+      ...detail,
+      variants: [{ variant, icon: null, categories: [], substitutes: [], references: [] }],
+    });
+    viewerOf.mockResolvedValue({
+      viewer: { name: 'Fixture Member', canCurate: false },
+      workspaces: [],
+    });
+    renderPage(await Page(params()));
+  };
+  const held = () => getCupboardEntry.mockResolvedValue(HELD_ROW);
+  // The dots on the heading are the cupboard's menu; Edit Stock is among their choices.
+  const stockItem = () => {
+    const dots = screen.queryByRole('button', { name: /^More for\b/ });
+    if (dots) fireEvent.click(dots);
+    return screen.queryByRole('menuitem', { name: 'Edit Stock' });
+  };
+
+  it('offers Edit Stock for a compendium entry the coven holds', async () => {
+    held();
+    await withForm(compendiumRow());
+
+    expect(stockItem()).toBeInTheDocument();
+  });
+
+  it("offers Edit Stock for the coven's own entry", async () => {
+    await withForm(covenRow());
+
+    expect(stockItem()).toBeInTheDocument();
+  });
+
+  it('offers no Edit Stock for a compendium entry the coven does not hold', async () => {
+    await withForm(compendiumRow());
+
+    // Why it could have been offered: the jars were read and the role may update stock.
+    expect(stockOf).toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
+  });
+
+  // A retired entry (M12.24) reads its forms through the coven's cupboard entry, so the detail
+  // carries them for the coven that holds it and none for one that does not.
+  const retired = (cupboardEntry: typeof HELD_ROW | null) => {
+    getCupboardEntry.mockResolvedValue(cupboardEntry);
+    return withForm(compendiumRow(), { retired: true, cupboardEntry });
+  };
+
+  it('offers Edit Stock for a retired entry the coven still holds', async () => {
+    await retired({ ...HELD_ROW });
+
+    expect(stockItem()).toBeInTheDocument();
+  });
+
+  it('offers no Edit Stock for a retired entry the coven does not hold', async () => {
+    await retired(null);
+
+    // Why it could have been offered: the jars were read, the role may update stock, and the
+    // detail carries a form.
+    expect(stockOf).toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
+  });
+
+  it('offers no Edit Stock to a viewer, who may not update stock', async () => {
+    asRole('viewer');
+    held();
+    await withForm(compendiumRow());
+
+    expect(stockOf).toHaveBeenCalled();
+    expect(stockItem()).toBeNull();
+  });
+});
+
+// The coven switcher stays on this page when the next coven opens it (M9.12). Which covens do is the
+// service's, per viewer; the page asks it once and passes the slugs up to the switcher.
+describe('the coven ingredient page’s coven switch', () => {
+  const ADDRESS = `/coven/${WORKSPACE.slug}/ingredients/${ID}`;
+
+  it('tells the switcher the covens the service says the entry opens in, at its own address', async () => {
+    const row = compendiumRow();
+    covensOpeningEntry.mockResolvedValue([
+      { id: WORKSPACE.id, slug: WORKSPACE.slug, name: WORKSPACE.name },
+      { id: 'w-testwort', slug: 'testwort-circle', name: 'Testwort Circle' },
+    ]);
+
+    await open(row);
+
+    expect(covensOpeningEntry).toHaveBeenCalledExactlyOnceWith(SESSION, row);
+    expect(registered()).toEqual({ path: ADDRESS, slugs: [WORKSPACE.slug, 'testwort-circle'] });
+  });
+
+  it("names only this coven for the coven's own entry, as the service answers it", async () => {
+    covensOpeningEntry.mockResolvedValue([
+      { id: WORKSPACE.id, slug: WORKSPACE.slug, name: WORKSPACE.name },
+    ]);
+
+    await open(covenRow());
+
+    expect(registered()).toEqual({ path: ADDRESS, slugs: [WORKSPACE.slug] });
+  });
+
+  it('asks nothing and registers nothing when the entry is refused', async () => {
+    getIngredient.mockRejectedValue(new NotFound('ingredient'));
+
+    await expect(Page(params())).rejects.toThrow('not-found');
+
+    expect(covensOpeningEntry).not.toHaveBeenCalled();
   });
 });

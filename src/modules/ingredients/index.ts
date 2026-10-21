@@ -17,6 +17,7 @@ export * from './services/ingredient-facets';
 export * from './services/replaced-entries';
 export * from './validation/cupboard-merge';
 export * from './services/cupboard-entries';
+export * from './services/entry-covens';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';

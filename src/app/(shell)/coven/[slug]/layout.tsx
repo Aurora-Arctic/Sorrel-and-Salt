@@ -3,6 +3,7 @@ import { rolePermits } from '@/modules/coven';
 import SectionBody from '../../../../components/SectionBody';
 import ContextRow from '../../../../components/ContextRow';
 import CovenNav from '../../../../components/CovenNav';
+import { CovenSwitchProvider } from '../../../../components/CovenSwitchTargets/context';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireCovenMembership } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
@@ -29,20 +30,22 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
 // `params`: a layout does not re-run on client-side navigation. The section
 // nav is here rather than on each page, so every page beneath has it (M9.15),
 // in the context row beside the coven switcher (MB.7). The switcher's list is
-// the shell's own cached lookup, so it costs no second query.
+// the shell's own cached lookup, so it costs no second query. The provider
+// carries what a page beneath says about the covens it opens in up to the
+// switcher, which cannot see its children (M9.12).
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
   const { membership } = await requireCovenMembership(slug);
   const { viewer, workspaces } = await viewerOf();
 
   return (
-    <>
+    <CovenSwitchProvider>
       <ContextRow lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}>
         <CovenNav slug={slug} canReadMembers={rolePermits(membership.role, { member: ['read'] })} />
       </ContextRow>
       <SectionBody region="coven" className="coven-layout">
         {children}
       </SectionBody>
-    </>
+    </CovenSwitchProvider>
   );
 }

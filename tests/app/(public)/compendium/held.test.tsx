@@ -15,6 +15,14 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
 
+// What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only which
+// (coven, entry) pairs it is asked for, and that its answer reaches the place.
+const readEntryStock = vi.fn();
+vi.mock('@/app/entry-stock', () => ({
+  readEntryStock,
+  stockKey: (workspaceId: string, ingredientId: string) => `${workspaceId}:${ingredientId}`,
+}));
+
 const heldCompendiumEntryIdsIn = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   heldCompendiumEntryIdsIn,
@@ -112,6 +120,8 @@ beforeEach(() => {
   );
   getSession.mockReset();
   heldCompendiumEntryIdsIn.mockReset();
+  readEntryStock.mockReset();
+  readEntryStock.mockResolvedValue(new Map());
   getSession.mockResolvedValue({ userId: 'user-b', role: 'user' });
   heldCompendiumEntryIdsIn.mockResolvedValue(new Map([['w-1', new Set(['id-held'])]]));
 });
@@ -236,6 +246,34 @@ describe('the public compendium page, for the cards’ held state', () => {
       const [held] = await entriesGiven();
 
       expect(placesOf(held).map(({ workspaceId }) => workspaceId)).toEqual(['w-1', 'w-2']);
+    });
+
+    it('reads the stock of the held entries in covens whose role may update it, in one call, and hands it on', async () => {
+      const STOCK = { forms: [{ variantId: 'v1', label: 'Leaf' }], jars: [] };
+      // w-view only views; w-1 and w-2 may update stock. Why it could have been read for w-view:
+      // it holds the entry too.
+      viewerIfSignedIn.mockResolvedValue(
+        shell(coven('w-view', 'aaa', true), coven('w-1', 'bbb', true)),
+      );
+      heldCompendiumEntryIdsIn.mockResolvedValue(
+        new Map([
+          ['w-view', new Set(['id-held'])],
+          ['w-1', new Set(['id-held'])],
+        ]),
+      );
+      readEntryStock.mockResolvedValue(new Map([['w-1:id-held', STOCK]]));
+
+      const [held, free] = await entriesGiven();
+
+      expect(readEntryStock).toHaveBeenCalledExactlyOnceWith([
+        { ingredientId: 'id-held', workspaceId: 'w-1' },
+      ]);
+      expect(
+        (held.places as { workspaceId: string; stock?: unknown }[]).map(
+          ({ workspaceId, stock }) => [workspaceId, stock],
+        ),
+      ).toEqual([['w-1', STOCK]]);
+      expect(placesOf(free)).toEqual([]);
     });
 
     it('names no coven where the role permits nothing, and none for a visitor', async () => {

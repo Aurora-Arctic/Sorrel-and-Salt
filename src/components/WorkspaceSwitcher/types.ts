@@ -4,6 +4,8 @@ export interface SwitcherWorkspace {
   name: string;
   /** The viewer's role there may read its members; false sends a switch from a people page to the index. */
   canReadMembers: boolean;
+  /** The viewer's role there may invite (an owner's alone); false sends a switch from invitations to the members page. */
+  canInvite: boolean;
 }
 
 export interface WorkspaceSwitcherProps {

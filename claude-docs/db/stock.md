@@ -200,6 +200,7 @@ checking membership first:
 | `saveStock(session, workspaceId, ingredientId, batch)` | `inventory: update` | One ingredient's creates, updates and deletes in one transaction (M9.9)            |
 | `getStock(session, workspaceId, id)`                   | `inventory: read`   | One jar, for any member of the coven, viewers included                             |
 | `stockOf(session, refs)`                               | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`                       |
+| `heldFormsOf(session, refs)`                           | `ingredient: read`  | The forms of compendium entries a coven holds, a retired one included (M9.12)      |
 
 The permission is the `inventory` statement in
 `src/modules/coven/services/access-control.ts`: viewers hold `read`, members

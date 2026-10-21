@@ -10,8 +10,10 @@ const getSession = vi.fn();
 const getMe = vi.fn();
 const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
-// What a role may do is the coven module's to say; here a viewer reads no members.
-const rolePermits = vi.fn((role: string) => role !== 'viewer');
+// What a role may do is the coven module's to say; here a viewer reads no members and only an owner invites.
+const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
+  statement?.member?.includes('invite') ? role === 'owner' : role !== 'viewer',
+);
 vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 // The switcher's order is the coven module's too; stood in for by the rule it states.
@@ -105,6 +107,7 @@ describe('viewerOf', () => {
         slug: 'fixture-coven',
         name: 'Fixture Coven',
         canReadMembers: true,
+        canInvite: false,
         canWrite: true,
       },
       {
@@ -112,6 +115,7 @@ describe('viewerOf', () => {
         slug: 'testwort-circle',
         name: 'Testwort Circle',
         canReadMembers: false,
+        canInvite: false,
         canWrite: false,
       },
     ]);
@@ -127,6 +131,22 @@ describe('viewerOf', () => {
       inventory: ['update'],
     });
     expect(workspaces[0]?.canWrite).toBe(false);
+  });
+
+  it('asks the role for the invite statement, so only an owner is offered the invitations page', async () => {
+    membershipsOf.mockResolvedValue([
+      [membership('own-coven', 'Own Coven', 'owner'), membership('other-coven', 'Other Coven')],
+    ]);
+
+    const { workspaces } = await viewerOf();
+
+    expect(rolePermits).toHaveBeenCalledWith('owner', { member: ['invite'] });
+    expect(
+      workspaces.map(({ slug, canReadMembers, canInvite }) => [slug, canReadMembers, canInvite]),
+    ).toEqual([
+      ['other-coven', true, false],
+      ['own-coven', true, true],
+    ]);
   });
 
   it('refuses to draw a shell from a refused lookup', async () => {

@@ -1,6 +1,6 @@
 # StockFields
 
-`src/components/StockFields/` — a jar's three amounts, Quantity, Unit and Low Stock At (the low-stock threshold), drawn inside whichever react-hook-form form holds a jar (M9.9). The chosen jar of the [`StockDialog`](stock-dialog.md) is the first user, at full size; M9.12's add dialog takes the same fields rather than writing its own.
+`src/components/StockFields/` — a jar's three amounts, Quantity, Unit and Low Stock At (the low-stock threshold), drawn inside whichever react-hook-form form holds a jar (M9.9). The chosen jar of the [`StockDialog`](stock-dialog.md) is the first user, at full size. M9.12's add dialog was retired (2026-10-21), so StockDialog is its only user.
 
 ## What it is
 

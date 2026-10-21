@@ -14,6 +14,9 @@ export interface StockJar extends StockOfJar {
   variantId: string;
 }
 
+/** What the dialog reads of an entry: every form it comes in, and the jars a coven holds of it. */
+export type StockData = Pick<StockDialogProps, 'forms' | 'jars'>;
+
 export interface StockDialogProps {
   workspaceId: string;
   ingredientId: string;

@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Route } from 'next';
 import type { CompendiumCardPlace } from '../../../components/CompendiumCards/types';
+import type { StockData } from '../../../components/StockDialog/types';
 import { covenRolesIfSignedIn } from '../../../lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import { MAKE_IT_OURS_PERMISSION } from '@/modules/ingredients';
@@ -20,6 +21,8 @@ export interface CardCoven {
   canAnnotate: boolean;
   canMakeOurs: boolean;
   canRemove: boolean;
+  /** The role may update stock: Edit Stock is offered where the coven holds the entry (2026-10-21). */
+  canStock: boolean;
 }
 
 /** A coven the viewer may write in: what the shell already read of it. */
@@ -45,6 +48,7 @@ export async function readCardCovens(
         canAnnotate: rolePermits(role, { ingredient: ['update'] }),
         canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
         canRemove: rolePermits(role, { ingredient: ['delete'] }),
+        canStock: rolePermits(role, { inventory: ['update'] }),
       },
     ];
   });
@@ -53,20 +57,26 @@ export async function readCardCovens(
 /**
  * The covens that hold an entry and let the viewer do something about it from the card: the
  * More's places. `entryPath` is the entry's public page, which Annotate leads to with that
- * coven's dialog open. None where no coven holds it, which draws no dots.
+ * coven's dialog open. `stockOf` answers the stock read for a coven that may update it
+ * (`readEntryStock`'s, per entry): Edit Stock is offered where it answers. None where no coven
+ * holds it, which draws no dots.
  */
 export function cardPlacesOf(
   covens: readonly CardCoven[],
   holds: (workspaceId: string) => boolean,
   entryPath: string,
+  stockOf?: (workspaceId: string) => StockData | undefined,
 ): CompendiumCardPlace[] {
-  return covens
-    .filter(
-      ({ workspaceId, canAnnotate, canMakeOurs, canRemove }) =>
-        holds(workspaceId) && (canAnnotate || canMakeOurs || canRemove),
-    )
-    .map((coven) => ({
-      ...coven,
-      annotateHref: `${entryPath}?annotate=${encodeURIComponent(coven.covenSlug)}` as Route,
-    }));
+  return covens.flatMap(({ canStock, ...coven }): CompendiumCardPlace[] => {
+    if (!holds(coven.workspaceId)) return [];
+    const stock = canStock ? stockOf?.(coven.workspaceId) : undefined;
+    if (!(coven.canAnnotate || coven.canMakeOurs || coven.canRemove || stock)) return [];
+    return [
+      {
+        ...coven,
+        annotateHref: `${entryPath}?annotate=${encodeURIComponent(coven.covenSlug)}` as Route,
+        ...(stock && { stock }),
+      },
+    ];
+  });
 }

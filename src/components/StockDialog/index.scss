@@ -213,10 +213,17 @@
   color: $text-muted;
 }
 
-// No form yet: the heading's line held empty, as tall as a jar's, which
-// Remove's button sets, so the shut fields stand where a jar's will.
+// No form yet: the heading's line held, so the shut fields stand where a jar's will. Its
+// height is the h3's own line box (a jar's too, which Remove's 32px button does not exceed),
+// so the minimum below never binds; it only keeps the line from collapsing.
 .stock-dialog__head.is-blank {
   min-height: $icon-size;
+}
+
+// The word "Form" in that line (the owner's call, 2026-10-21): plain text at the heading's own
+// size and weight, in the ink an input's placeholder wears, so it reads as not yet an answer.
+.stock-dialog__placeholder {
+  color: $text-placeholder;
 }
 
 // A narrow dialog (a phone): the list stacks above the fields.

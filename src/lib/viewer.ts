@@ -5,7 +5,7 @@ import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { getSession, requireSignedIn } from './request-session';
 import type { Session } from './session';
 import { curates } from './site-roles';
-import type { ShellContext, ShellViewer, ShellWorkspace } from './types';
+import type { ShellContext } from './types';
 
 // What the application shell draws and the coven layout's switcher lists: the
 // viewer, their covens, and how many coven invitations wait for them. Cached
@@ -50,6 +50,8 @@ async function viewerFor(session: Session): Promise<ShellContext> {
         slug,
         name,
         canReadMembers: rolePermits(role, { member: ['read'] }),
+        // The statement the invite service asserts: the switcher keeps a viewer on the invitations page only where it opens.
+        canInvite: rolePermits(role, { member: ['invite'] }),
         // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
         canWrite: rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
       }))
