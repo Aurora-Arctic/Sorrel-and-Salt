@@ -1048,7 +1048,7 @@ The lane brief is the README's: every field value traces to a source read during
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
+**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
 
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
@@ -1059,7 +1059,7 @@ _Acceptance criteria:_
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
 - Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty
+- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
 - Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
@@ -1072,7 +1072,7 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
+**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
 
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
@@ -1083,7 +1083,7 @@ _Acceptance criteria:_
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
 - Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty
+- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
 - Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
@@ -1096,7 +1096,7 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
+**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
 
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
@@ -1107,7 +1107,7 @@ _Acceptance criteria:_
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
 - Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty
+- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
 - Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
@@ -1120,7 +1120,7 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
+**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
 
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
@@ -1131,7 +1131,7 @@ _Acceptance criteria:_
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
 - Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty
+- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
 - Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
@@ -1161,7 +1161,7 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
+**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
 
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
@@ -1172,7 +1172,7 @@ _Acceptance criteria:_
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
 - Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty
+- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
 - Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
@@ -1183,7 +1183,7 @@ _Story:_ As the owner, I want the seeded compendium counted against the candidat
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It also starts after M14.1, which flags the entries a source calls poisonous, and counts the flagged entries and forms beside the seeded totals. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
 
-**It checks the safety notes across every shard** (the owner, 2026-10-21). Two rules hold over the whole seed, and this task shows they do. A `safetyNotes` value records a hazard only: none, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards, and where a source says only that the field is empty. And a note and the `toxic` flag agree: an entry or form whose note says it is poisonous, toxic or fatal if swallowed is flagged. Both can be checked by a test over the full `COMPENDIUM` rather than by reading: a note matching safe-wording fails unless it also names a hazard ("not safe in pregnancy" passes), and a note matching poison-wording on an unflagged entry or form fails. The task chooses the patterns and names their few exceptions in the PR body. Any entry an earlier part left in breach is repaired here, by the route the staging repair below takes, since the seed writes an entry once.
+**It checks the safety notes across every shard** (the owner, 2026-10-21). Two rules hold over the whole seed, and this task shows they do. A `safetyNotes` value records a hazard only: none, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards, and where a source says only that the field is empty. A note that mixes a safe claim with a hazard ("generally regarded as safe; avoid in pregnancy") keeps the hazard and loses the safe clause. And a note and the `toxic` flag agree: an entry or form whose note says it is poisonous, toxic or fatal if swallowed is flagged. Both can be checked by a test over the full `COMPENDIUM` rather than by reading: a note that makes a safety claim fails, whether or not a hazard sits beside it, while a phrase that states a hazard ("not safe in pregnancy") is not a safety claim and passes; and a note matching poison-wording on an unflagged entry or form fails. The task chooses the patterns and names their few exceptions in the PR body. Any entry an earlier part left in breach is repaired here, by the route the staging repair below takes, since the seed writes an entry once; the repair drops the safe clause from a mixed note and keeps the hazard text, and a note that only says "safe" becomes empty.
 
 **Staging is brought back in line with the literal.** The seed writes an entry once and skips it, with everything beneath it, on every later run (`claude-docs/db/compendium-seed/README.md`, "Write-once, and how a correction lands"). So an edit to a shard's literal made after a deploy seeded that entry never reaches staging. Two edits made during MB.115 are of that kind: commit `2aa282b5` rewrote 1,078 seed locator lines from "s.v." to "under", and `f007a51b` relinked Almond's Nut form from Apricot as a whole to Apricot's Seed form, since a form's linked substitute now names a form ([`design-decisions/mb.115-variant-substitutes-name-a-form.md`](../design-decisions/mb.115-variant-substitutes-name-a-form.md)). Any entry staging seeded before those commits still holds the old locators and the whole-ingredient link. This task lists what differs on staging and repairs it, by one of two routes, chosen and argued in the PR body: a correction list an admin works through on staging's compendium page, which is the README's own rule for a correction, or a one-off step that re-applies those two edits to entries already present. Staging's database has not been read for this entry, so the size of the drift is unknown until the task lists it.
 
@@ -1195,7 +1195,7 @@ Tests are written first:
 
 - every seeded entry has at least one live `reference_links` row on its `ingredient_id`
 - the seeded entries reconcile against `claude-docs/db/compendium-seed/candidates.md`, each candidate row seeded or listed as left out, read from the doc itself (no test reads it today)
-- no seeded `safetyNotes` value, on an entry or a form, says the thing is safe, GRAS, non-toxic or free of known hazards without also naming a hazard
+- no seeded `safetyNotes` value, on an entry or a form, makes a safety claim (safe, GRAS, non-toxic or free of known hazards), whether or not it also names a hazard; a phrase that states a hazard, such as "not safe in pregnancy", passes
 - no seeded entry or form is unflagged while its `safetyNotes` value says it is poisonous, toxic or fatal if swallowed
 - the "runs after the standard scenario" test in `tests/db/seed/compendium.test.ts`, which runs `seedCompendium` once, runs it twice and asserts the second run inserts nothing
 
@@ -1203,7 +1203,7 @@ _Acceptance criteria:_
 
 - The seeded, left-out and candidate counts are recorded and reconcile
 - The entries and forms flagged toxic are counted beside them
-- Across every shard, no `safetyNotes` value says the thing is safe, and every entry or form whose note calls it poisonous, toxic or fatal if swallowed is flagged `toxic`
+- Across every shard, no `safetyNotes` value makes a safety claim, and a mixed note keeps its hazard text with the safe clause removed; every entry or form whose note calls it poisonous, toxic or fatal if swallowed is flagged `toxic`
 - The tests above are green over the full `COMPENDIUM`
 - On staging, the admin compendium page's unsourced filter shows no seeded entry
 - On staging, every entry seeded before MB.115's two edits carries the literal's locators and links, and the PR body names the route taken
