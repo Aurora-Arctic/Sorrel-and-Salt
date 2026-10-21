@@ -105,12 +105,13 @@ const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
 // Edit, a plain link when it is the only choice, or Edit Compendium Entry in the Edit menu
 // beside the cupboard's choices (the owner's call, 2026-10-19), opened here.
+// Edit is the compendium's edit; Edit Stock (M9.12) is a different choice and is asserted by its own tests.
 const edits = () => {
   const menu = screen.queryByRole('button', { name: /^Edit\b/, expanded: false });
   if (menu) fireEvent.click(menu);
   return [
-    ...screen.queryAllByRole('link', { name: /edit/i }),
-    ...screen.queryAllByRole('menuitem', { name: /edit/i }),
+    ...screen.queryAllByRole('link', { name: /edit(?! stock)/i }),
+    ...screen.queryAllByRole('menuitem', { name: /edit(?! stock)/i }),
   ];
 };
 
@@ -303,7 +304,7 @@ describe('the coven ingredient page', () => {
     expect(screen.getByRole('link', { name: /^Annotate\b/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^More for\b/ }));
     const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
-    expect(items).toEqual(['Make It Ours', 'Remove']);
+    expect(items).toEqual(['Edit Stock', 'Make It Ours', 'Remove']);
     expect(edits()).toHaveLength(0);
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Retired' })).toBeInTheDocument();

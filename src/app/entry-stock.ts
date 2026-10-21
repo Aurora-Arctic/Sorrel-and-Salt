@@ -1,17 +1,17 @@
 import 'server-only';
 import type { StockData } from '@/components/StockDialog/types';
+import { stockDialogOf } from '@/app/coven-stock';
 import { getSession } from '@/lib/request-session';
 import { heldFormsOf, stockOf, variantsOf, type StockKey } from '@/modules/ingredients';
-import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 // What Edit Stock in the compendium's three dots reads (M9.12; the owner's call, 2026-10-21): the
 // forms an entry comes in and the jars a coven holds of it, so the dialog opens at once with
 // both. Per viewer, so read per request through the services and never inside the cached
 // compendium read (CLAUDE.md rule 6). One call to each service for the whole page, whatever the
 // number of entries and covens, so a longer page costs no more reads (a compendium entry's forms
-// are read per coven, through its proof, in one call). The same mapping as the
-// coven's Ingredients page makes for its pencil (`stockOf` in its `page.tsx`), kept apart so
-// that page stays as it is. claude-docs/components/stock-dialog.md.
+// are read per coven, through its proof, in one call). The mapping from rows to what the
+// dialog reads is `stockDialogOf`, shared with the coven's own pages (M12.29).
+// claude-docs/components/stock-dialog.md.
 
 /** The key a coven's stock of an entry is found under in what `readEntryStock` returns. */
 export const stockKey = (workspaceId: string, ingredientId: string): string =>
@@ -73,16 +73,7 @@ export async function readEntryStock(
     const held = jars[i];
     const variants = formsOf.get(stockKey(workspaceId, ingredientId));
     if (held instanceof Error || variants === undefined || variants instanceof Error) return;
-    found.set(stockKey(workspaceId, ingredientId), {
-      forms: variants.map(({ id, form }) => ({ variantId: id, label: formLabel(form) })),
-      jars: held.map((jar) => ({
-        id: jar.id,
-        variantId: jar.variantId,
-        quantity: jar.quantityOnHand === null ? null : Number(jar.quantityOnHand),
-        unit: jar.unit,
-        threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
-      })),
-    });
+    found.set(stockKey(workspaceId, ingredientId), stockDialogOf(variants, held));
   });
   return found;
 }
