@@ -11,15 +11,30 @@ request and draws [`AppShell`](app-shell.md) instead for a signed-in one, so
 - **A skip link** ("Skip to Content") first, targeting `#main`. Its styling is
   `.skip-link` from AppShell's stylesheet, which the layout always loads.
 - **A bar** with the site name linking to `/` (set in the heading face at `$brand-size`, as the shell's is), a `nav` named "Site" holding the
-  Compendium link, which carries `aria-current="page"` at or beneath `/compendium` (MB.120), a Sign In link (`/sign-in`, `.btn--solid.btn--medium`, the size the shell's Add Ingredient button takes) and the inline
+  Compendium link (a `PendingLink` carrying `siteLinkTarget('/compendium')`, so a press draws the list's skeleton, M12.47), which carries `aria-current="page"` at or beneath `/compendium` (MB.120), a Sign In link (`/sign-in`, `.btn--solid.btn--medium`, the size the shell's Add Ingredient button takes) and the inline
   theme toggle. At or under `$shell-brand-width` the brand reads "S&S" (the full
   name stays for a screen reader), as the shell's does, so the bar holds at 375px.
-- **`main#main`** round the page. Unlike the shell, whose `#main` is a wrapper,
-  the frame owns the `main` landmark, so a public page renders none. It is not a
-  `.page-frame`: the `(public)` layout puts the page in `.page-column`, the
-  top-left wide column `/admin/compendium` uses, so M8.18's page lands in it.
+- **`#main`**, a wrapper `div` round the page, as the shell's is, with the
+  shell's [`MainBody`](app-shell.md) inside it. The frame does not own the
+  `main` landmark: the `(public)` layout renders `<main>` round the page, in
+  `.page-column`, the top-left wide column `/admin/compendium` uses, so M8.18's
+  page lands in it. The wrapper was chosen over a frame-owned `main` whose
+  skeleton dropped its own, so that `MainBody` is reused unchanged: during a
+  wait it swaps the layout's `main` for the skeleton's, and a `main` on the
+  wrapper would have nested the two. The wrapper takes `tabIndex={-1}` so the
+  skip link moves focus to it, with no outline.
 
 Nothing here is workspace-shaped: no coven link, no Admin, no Add Ingredient.
+
+## The wait
+
+A press of a link that names a `main` target (the frame's Compendium link,
+`cards`; an ingredient card's name or an entry's own links, `page` with its
+jump menu) swaps the page for the destination's skeleton under the frame's
+bar, with one `main` and the hidden `<h1>Loading</h1>`, exactly as the shell
+does ([`loading.md`](../loading.md)). The skeleton draws in the destination's
+own frame. There is no `loading.tsx` and no route-level Suspense, so a direct
+request keeps its 404 or 308.
 
 ## Server-rendered
 
@@ -49,13 +64,15 @@ same mark from the same mixin.
 [`index.stories.tsx`](../../src/components/PublicFrame/index.stories.tsx) —
 `Default`, `PhoneDark` and `PhoneLight`, on the compendium so its link carries
 the current-page mark, and `NotOnTheCompendium`, on a page the nav does not
-name, so the link rests unmarked. Render-only.
+name, so the link rests unmarked. Render-only, bar
+`LoadingTheCompendium`, which presses the Compendium link from an entry's
+page and holds the wait, so the cards skeleton stands under the bar.
 
 ## Testing
 
 `tests/components/PublicFrame/index.test.tsx` asserts the landmarks, the skip
 link's target, the way in and the current-page mark (present at and beneath
-`/compendium`, absent elsewhere and on a path that only begins with its letters). `tests/app/(public)/layout.test.tsx` asserts which
+`/compendium`, absent elsewhere and on a path that only begins with its letters), and that pressing the Compendium link leaves one `main` holding one status, one h1, the bar standing and the link busy. `tests/app/(public)/layout.test.tsx` asserts which
 chrome each kind of visitor gets. `tests/e2e/public-frame.spec.ts` proves the
-chrome with script off, the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
-walks the visitor in.
+chrome with script off (the page's `main` inside `#main`), the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
+walks the visitor in. `tests/e2e/navigation-wait.spec.ts` ("signed out") proves the wait in a browser: the Compendium link from an entry and a card from the list each draw one wait under held answers, reduced motion leaves only the pulse with axe passing, and a direct request for an unknown entry still answers 404.

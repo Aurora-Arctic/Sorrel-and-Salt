@@ -269,6 +269,17 @@ and never centred in the window: `wide`, `with-nav` and `entry` use `page-column
 the tab track in the heading row. A navigation with no target, such as a
 refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 
+**The public pages wait the same way** (M12.47). A signed-out visitor's
+Compendium pages sit in `PublicFrame`, not the shell, and its body is the same
+`MainBody`, so a press of the frame's Compendium link (`siteLinkTarget('/compendium')`),
+a card or an entry's own links draws the destination's skeleton under the
+frame's bar. In both chromes `#main` is a wrapper `div`, the skip link's
+target, and the `(public)` layout renders the page's own `<main>` inside it:
+during a wait `MainBody` swaps that `main` for the skeleton's, so the page
+still has one `main` and one h1. A `main` on the wrapper would have nested the
+two. There is no `loading.tsx` here either, so a direct request for an unknown
+entry still answers 404 and a moved one 308.
+
 **The dot inside a `PendingLink`.** `LinkHint` reads Next's `useLinkStatus`,
 which only sees a navigation that Next's own `<Link>` started. A
 `PendingLink` navigates through the shared hook, so `useLinkStatus` never
