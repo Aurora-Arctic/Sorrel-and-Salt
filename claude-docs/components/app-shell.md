@@ -24,9 +24,9 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
 `(public)` is the sibling group for the public compendium (MB.80, MB.83). Its
 layout, `src/app/(public)/layout.tsx`, reads `viewerIfSignedIn()`: null for a
 signed-out visitor, who gets [`PublicFrame`](public-frame.md); otherwise the
-viewer and covens, drawn in this shell. It never redirects. Because the shell
-puts the page in a wrapper and `PublicFrame` puts it in a `main`, the layout owns the
-plain `<main>` in the signed-in branch (the page in `.page-column` inside it, as in the signed-out frame), so a public page
+viewer and covens, drawn in this shell. It never redirects. Both chromes put the
+page in a wrapper `div`, so the layout owns the plain `<main>` in both
+branches (the page in `.page-column` inside it), and a public page
 renders no landmark of its own. An unverified account is shown the shell's
 unverified chrome (brand text, the account menu, the Compendium link) rather
 than being sent to `/account/email`: the compendium is public, and nothing
@@ -93,7 +93,7 @@ one's own id) throws.
   ancestor, so a `tabindex="-1"` wrapper took every click on the page's
   text, and the next Tab restarted at the top of the page rather than going on
   from where the click was. [`PublicFrame`](public-frame.md) draws the same
-  span before its `main`. `tests/e2e/skip-target.spec.ts` walks both.
+  span before its page wrapper, `.public-frame__main`. `tests/e2e/skip-target.spec.ts` walks both.
 - **The context row** is the layouts' to render: the coven layout puts the
   switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).

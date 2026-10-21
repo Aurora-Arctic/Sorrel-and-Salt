@@ -273,8 +273,10 @@ refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBo
 Compendium pages sit in `PublicFrame`, not the shell, and its body is the same
 `MainBody`, so a press of the frame's Compendium link (`siteLinkTarget('/compendium')`),
 a card or an entry's own links draws the destination's skeleton under the
-frame's bar. In both chromes `#main` is a wrapper `div`, the skip link's
-target, and the `(public)` layout renders the page's own `<main>` inside it:
+frame's bar. In both chromes the page sits in a wrapper `div`
+(`.app-shell__main`, `.public-frame__main`), the skip link's target is an
+empty span just before it, and the `(public)` layout renders the page's own
+`<main>` inside the wrapper:
 during a wait `MainBody` swaps that `main` for the skeleton's, so the page
 still has one `main` and one h1. A `main` on the wrapper would have nested the
 two. There is no `loading.tsx` here either, so a direct request for an unknown

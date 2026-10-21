@@ -77,5 +77,5 @@ page and holds the wait, so the cards skeleton stands under the bar.
 link's target, the way in and the current-page mark (present at and beneath
 `/compendium`, absent elsewhere and on a path that only begins with its letters), and that pressing the Compendium link leaves one `main` holding one status, one h1, the bar standing and the link busy. `tests/app/(public)/layout.test.tsx` asserts which
 chrome each kind of visitor gets. `tests/e2e/public-frame.spec.ts` proves the
-chrome with script off (the page's `main` inside `#main`), the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
+chrome with script off (the page's `main` inside `.public-frame__main`, after the `span#main` target), the current-page mark signed out and in, the `X-Robots-Tag` header and axe at 375px; story 63
 walks the visitor in. `tests/e2e/navigation-wait.spec.ts` ("signed out") proves the wait in a browser: the Compendium link from an entry and a card from the list each draw one wait under held answers, reduced motion leaves only the pulse with axe passing, and a direct request for an unknown entry still answers 404.
