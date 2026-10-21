@@ -2,7 +2,7 @@
 
 import type { Route } from 'next';
 import { type ReactElement, useEffect, useRef, useState } from 'react';
-import { MoreMenu } from '../IconTip';
+import { MoreMenu, StockIcon } from '../IconTip';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import AnnotatePicker from '../IngredientEntry/annotate-picker';
 import EditStock, { type StockPlace } from '../IngredientEntry/edit-stock';
@@ -101,7 +101,14 @@ export default function CompendiumCardMore({
 
   const coven: MenuButtonItem[] = [
     ...(stockers.length > 0
-      ? [{ key: 'stock', label: 'Edit Stock', onSelect: () => setAsking('stock') }]
+      ? [
+          {
+            key: 'stock',
+            label: 'Edit Stock',
+            icon: <StockIcon />,
+            onSelect: () => setAsking('stock'),
+          },
+        ]
       : []),
     ...(annotators.length === 0
       ? []

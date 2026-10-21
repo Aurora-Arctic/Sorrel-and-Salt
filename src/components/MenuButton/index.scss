@@ -168,6 +168,19 @@
 // The check after a marked item's label (`mark`): HeldMark's green tick, at the glyph size,
 // standing on the label's line however muted the disabled label beside it is (the owner's
 // call, 2026-10-20).
+// An item's own glyph, before its label: at the glyph size and in the label's colour, set on
+// the label's line with a gap the width of a space(2) (the owner's call, 2026-10-21).
+.menu-button__icon {
+  display: inline-flex;
+  margin-inline-end: space(2);
+  vertical-align: middle;
+
+  svg {
+    width: $glyph-size;
+    height: $glyph-size;
+  }
+}
+
 .menu-button__mark {
   display: inline-flex;
   margin-inline-start: space(2);

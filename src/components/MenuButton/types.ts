@@ -15,6 +15,12 @@ export type MenuButtonItem = {
    * it first, wherever it is given.
    */
   primary?: boolean;
+  /**
+   * A glyph before the label, the same one the matching button wears: Edit Stock's jar. Hidden
+   * from assistive technology by the glyph itself (`aria-hidden`), so the label alone names the
+   * item (the owner's call, 2026-10-21).
+   */
+  icon?: ReactElement;
 } & (
   | {
       href: Route;

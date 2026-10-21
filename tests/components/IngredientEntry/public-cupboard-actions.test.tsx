@@ -411,6 +411,13 @@ describe('CupboardActions on the public page', () => {
       expect(choices()).toEqual(['Edit Stock', 'Annotate', 'Make It Ours', 'Remove']);
     });
 
+    it('wears the stock glyph, and is still named Edit Stock', () => {
+      show(props([place(1, { held: true, stock: stock(50) })]));
+      fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
+      const item = within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Edit Stock' });
+      expect(item.querySelector('svg')).not.toBeNull();
+    });
+
     it('is not offered for a coven that lacks the entry, or where the role may not update stock', () => {
       show(props([place(1, { held: true }), place(2, { held: false })]));
       expect(choices()).not.toContain('Edit Stock');

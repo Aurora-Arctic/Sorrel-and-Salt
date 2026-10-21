@@ -202,6 +202,7 @@ export default function MenuButton({
           item.onClick?.(event);
         }}
       >
+        {item.icon && <span className="menu-button__icon">{item.icon}</span>}
         {item.label}
       </Link>
     ) : (
@@ -223,6 +224,7 @@ export default function MenuButton({
           item.onSelect();
         }}
       >
+        {item.icon && <span className="menu-button__icon">{item.icon}</span>}
         {item.label}
         {item.mark && (
           <span className="menu-button__mark">

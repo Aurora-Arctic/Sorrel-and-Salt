@@ -89,6 +89,33 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
+  // An item’s icon (the owner’s call, 2026-10-21): a glyph before the label, hidden from
+  // assistive technology, so the item is still named by its label alone.
+  describe('an item with an icon', () => {
+    const withIcon = (): MenuButtonItem[] => [
+      { key: 'one', label: 'First Choice', onSelect: vi.fn(), icon: <svg aria-hidden="true" /> },
+      {
+        key: 'two',
+        label: 'Second Choice',
+        href: '/two' as Route,
+        icon: <svg aria-hidden="true" />,
+      },
+      { key: 'three', label: 'Third Choice', onSelect: vi.fn() },
+    ];
+
+    it('draws the glyph beside the label and keeps the label as its name, for an action and a link', () => {
+      draw(withIcon());
+      fireEvent.click(toggle());
+      const action = within(menu()).getByRole('menuitem', { name: 'First Choice' });
+      const link = within(menu()).getByRole('menuitem', { name: 'Second Choice' });
+      expect(action.querySelector('svg')).not.toBeNull();
+      expect(link.querySelector('svg')).not.toBeNull();
+      expect(
+        within(menu()).getByRole('menuitem', { name: 'Third Choice' }).querySelector('svg'),
+      ).toBeNull();
+    });
+  });
+
   // A disabled item (the owner's call of 2026-10-20: a coven that holds the entry is shown, not
   // left out): the APG menu pattern, so it stays in the roving and is read as unavailable, and
   // choosing it runs nothing and leaves the menu open.
