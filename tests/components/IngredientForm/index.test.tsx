@@ -19,6 +19,8 @@ import type {
   PossibleDuplicatesQueryVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
+import { ValidationError } from '@/lib/errors';
+import { maskError } from '@/graphql/errors';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import {
   box,
@@ -1126,15 +1128,31 @@ describe('IngredientForm', () => {
       slug: 'cats-claw-uncaria-tomentosa',
       isGlobal: true,
     };
+    /**
+     * Adds as the server does in a coven that already calls another entry by the
+     * name typed: any label sent is refused as taken, as Rose under "rosemary"
+     * was (the owner's report, M12.48).
+     */
     const accept = () => {
       const adds: AddCupboardEntryFromFormMutationVariables[] = [];
-      mockGraphQLMutation<
-        AddCupboardEntryFromFormMutation,
-        AddCupboardEntryFromFormMutationVariables
-      >('AddCupboardEntryFromForm', (variables) => {
-        adds.push(variables);
-        return { addCupboardEntry: { id: 'cupboard-1' } };
-      });
+      server.use(
+        graphqlLink.mutation<
+          AddCupboardEntryFromFormMutation,
+          AddCupboardEntryFromFormMutationVariables
+        >('AddCupboardEntryFromForm', ({ variables }) => {
+          adds.push(variables);
+          if (variables.input?.label != null) {
+            const taken = new ValidationError([
+              { path: ['label'], message: 'This coven already calls another entry that' },
+            ]);
+            return HttpResponse.json({
+              errors: [maskError(taken, 'Unexpected error.')],
+              data: null,
+            });
+          }
+          return HttpResponse.json({ data: { addCupboardEntry: { id: 'cupboard-1' } } });
+        }),
+      );
       return adds;
     };
 
@@ -1145,7 +1163,7 @@ describe('IngredientForm', () => {
       vi.useRealTimers();
     });
 
-    it('puts the entry in the cupboard under the typed label and description, creates nothing, and opens it', async () => {
+    it('puts the entry in the cupboard under its own name, the typed name sent as no label even where the coven already calls another entry that, creates nothing, and opens it', async () => {
       const creates = acceptCreate();
       const adds = accept();
       const onSaved = renderForm();
@@ -1162,28 +1180,15 @@ describe('IngredientForm', () => {
         {
           workspaceId: WORKSPACE_ID,
           ingredientId: 'claw-1',
-          input: expect.objectContaining({
-            label: 'Porch Claw',
-            description: 'Dried from the porch.',
-          }),
+          input: expect.objectContaining({ description: 'Dried from the porch.' }),
         },
       ]);
-      expect(onSaved.mock.calls[0]).toEqual([expect.objectContaining({ id: 'claw-1' }), 'open']);
-      expect(creates).toHaveLength(0);
-    });
-
-    it("sends no label when the typed name differs from the entry's only in case", async () => {
-      const adds = accept();
-      const onSaved = renderForm();
-      offerDuplicates([CLAW]);
-      offerCompendiumMatches([CLAW]);
-
-      type('Name', "  cat's claw ");
-      save();
-      fireEvent.click(await screen.findByRole('button', { name: /^Add to My Ingredients: / }));
-
-      await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(adds[0].input?.label).toBeUndefined();
+      expect(onSaved.mock.calls[0]).toEqual([
+        expect.objectContaining({ id: 'claw-1', name: "Cat's Claw" }),
+        'open',
+      ]);
+      expect(creates).toHaveLength(0);
     });
   });
 

@@ -1195,12 +1195,16 @@ block's id, the sentence and the list together, is what the button and the
 field are described by, so a focus landing on it still hears the names. It sets
 the entries aside and takes the focus the way the warning's does, so the next
 Save makes the coven's own entry as before. The + calls `addCupboardEntry`
-(no jar, no form) and sends the typed name as `label` only when it differs
-from the entry's own name, string for string, plus whichever of the
-description, safety notes, elements, celestial bodies, zodiac signs and
-colours were filled as the coven's overrides. It then reports the entry
-through `onSaved` as `'open'`, so the modal closes and the page routes to the
-entry's coven page; a refused label lands beside Name. A near match in the
+(no jar, no form) and adds the entry under its own name: the typed name is never
+sent as a `label` (M12.48, the owner's call, in place of M12.20's "with the typed
+label"). The typed name was the search that found the entry, and sent as a label
+it could clash with a label the coven already gives another entry, which refused
+the add: "rosemary" pressed on Rose, where the coven calls its Daisy Rosemary. The
+entry can be relabelled on its page. It sends whichever of the description,
+safety notes, elements, celestial bodies, zodiac signs and colours were filled
+as the coven's overrides, and then reports the entry, by its own name, through
+`onSaved` as `'open'`, so the modal closes and the page routes to the entry's
+coven page. A refusal is said at the form's head. A near match in the
 did-you-mean list gets the same + or eye at the right of its row when
 it is a compendium entry (`isGlobal`); the coven's own entry, which the
 cupboard holds by being the coven's, gets the eye and never a + (the owner's

@@ -474,20 +474,21 @@ const IngredientForm = ({
   };
 
   /**
-   * A compendium match's +: the typed name is the coven's label only
-   * when it differs from the entry's, and what else was typed rides as the
-   * coven's overrides. The page the entry is in opens, as a save's does.
+   * A compendium match's +: the entry goes in under its own name, and what else
+   * was typed rides as the coven's overrides. The typed name is never sent as a
+   * label: it was a search that found the entry, and as a label it could clash
+   * with one the coven already gives another entry, which refused the add (the
+   * owner's call, M12.48). The entry can be relabelled on its page. The page the
+   * entry is in opens, as a save's does.
    */
   const useEntry = async (match: Duplicate): Promise<void> => {
     if (workspaceId === null) return;
     const values = getValues();
-    const typed = values.name.trim();
     const listed = (entries: { value: string }[]): string[] | undefined => {
       const chosen = entries.map(({ value }) => value.trim()).filter((value) => value !== '');
       return chosen.length > 0 ? chosen : undefined;
     };
     const input = {
-      label: typed.toLowerCase() !== match.name.trim().toLowerCase() ? typed : undefined,
       description: values.description.trim() || undefined,
       safetyNotes: values.safetyNotes.trim() || undefined,
       elements: values.elements.length > 0 ? values.elements : undefined,
@@ -501,12 +502,11 @@ const IngredientForm = ({
         ingredientId: match.id,
         input,
       });
-      setSaved(typed);
-      onSaved?.({ id: match.id, name: typed, slug: match.slug }, 'open');
+      setSaved(match.name);
+      onSaved?.({ id: match.id, name: match.name, slug: match.slug }, 'open');
     } catch (error) {
-      placeServerIssues(error, setError, ({ path }) =>
-        path.includes('label') ? 'name' : undefined,
-      );
+      // Nothing sent comes from the name now, so every issue is said at the form's head.
+      placeServerIssues(error, setError, () => undefined);
     }
   };
 
