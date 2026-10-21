@@ -518,6 +518,12 @@ $skeleton-fade: 300ms;
       }
     }
 
+    // The Quick Look eye's place: its box, square, as the eye is.
+    .ingredient-form__shape--icon {
+      inline-size: $icon-size-large;
+      block-size: $icon-size-large;
+    }
+
     // The ◆ centred on the row, not on a line of text: a row here is as tall
     // as its Use It, its title centred in it. The row is the li's body, which
     // after the first row starts space(1) down (the rule above), so the
@@ -532,8 +538,9 @@ $skeleton-fade: 300ms;
     }
 
     // The title link in the body ink with the faded underline the entry
-    // page's links wear (`faded-underline`; the owner's call), never the Open It `.btn`.
-    a:not(.btn) {
+    // page's links wear (`faded-underline`; the owner's call): by its class,
+    // so neither Open It's `.btn` nor the Quick Look eye takes it.
+    .ingredient-form__title {
       color: $text-primary;
       @include faded-underline;
       @include theme-transition(color);

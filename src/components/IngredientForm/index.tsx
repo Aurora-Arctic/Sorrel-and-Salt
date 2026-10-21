@@ -190,6 +190,7 @@ const IngredientForm = ({
   onDeleted,
   onCancel,
   duplicateHref,
+  quickLookOf,
   entryHref,
   mayPromote = false,
 }: IngredientFormProps): ReactElement => {
@@ -635,6 +636,7 @@ const IngredientForm = ({
                         warning={duplicates}
                         hrefOf={duplicateHref}
                         onUse={workspaceId === null ? undefined : useEntry}
+                        quickLookOf={quickLookOf}
                         holds={!editing}
                         ref={createAnyway}
                       />

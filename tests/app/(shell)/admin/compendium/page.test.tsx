@@ -800,6 +800,29 @@ describe('the /admin/compendium details modal', () => {
     expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
   });
 
+  // A form's duplicates warning opens a match's details over the form (M12.48).
+  it('opens the details over an add form on ?entry= with ?new, closing back to the form, with no Edit', async () => {
+    await renderPage({ ...FILTERED, new: '', entry: TESTWORT.slug });
+
+    // Why it could have an Edit: the details alone carry one.
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new`);
+  });
+
+  it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: 'fixture-other' });
+
+    expect(within(details()).queryByRole('link', { name: /^Edit\b/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
+
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`);
+  });
+
   it('closes a stacked edit back to the list, not the details, once it has deleted the entry', async () => {
     // A delete first asks how many covens hold the entry, to say so.
     mockGraphQLQuery('CompendiumEntryUsers', () => ({ compendiumEntryUsers: 0 }));

@@ -47,6 +47,7 @@ foot, as the compendium's does ([`ingredient-entry.md`](ingredient-entry.md), "E
 | `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                                        |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
+| `quickLookOf`   | Given, each near match in the duplicate warning offers its Quick Look, opening the details `{ href, heading }` it names over the form ("Quick Look in the warning", under ["The duplicate warning"](#the-duplicate-warning)). The admin compendium's form passes it; the public search's and the coven's leave it out.                                                                                                                                                                     |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
 | `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true, and a coven's edit when the member's role may promote (M8.17). It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                            |
 
@@ -1202,6 +1203,24 @@ form leaves out, since it has no cupboard. Viewers never reach the modal.
 entry makes nothing new, so on an edit the warning names its matches and
 links them as above, but offers no Create Anyway and never holds Save: the
 form skips `check`, and `NameField` takes `holds={false}`.
+
+**Quick Look in the warning** (the owner's call, M12.48). In the admin
+compendium's form every match is a compendium entry, so each row gets the
+Quick Look eye (`DetailsLink`, [`ingredient-entry.md`](ingredient-entry.md))
+at its right, named "Quick Look" and the entry's label and formal name, as a
+list row's eye is. Its name still links the entry in a new tab, and there is
+no Use It. The form takes `quickLookOf`, which `CompendiumDialog` builds when
+the page passes `lookUnder`, the open form's `?new` or `?edit=<slug>`: the
+address is the list with `?entry=<slug>` and that form's parameter, so the
+details open over the form in their own modal place and close back to it. The
+form stays mounted beneath, keyed as before, so what was typed survives.
+Modals stack in the browser's top layer, so Escape closes the details alone,
+and the focus goes back to the eye. Details opened over another entry's form
+offer no Edit, which would replace that form and its typing; details under
+their own entry's edit, M12.5's way round, keep it. A reload of such an
+address draws the form over the details, since the order of the two in the
+address is not kept. The public search's form opens details by id, not
+slug, and offers no Quick Look.
 
 **The warning has to be answered before the form saves**, the owner's call,
 which corrects the issue's "does not block submission". While it is only

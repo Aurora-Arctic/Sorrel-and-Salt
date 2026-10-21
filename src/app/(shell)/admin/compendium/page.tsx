@@ -10,6 +10,7 @@ import { cardName } from '../../../../components/IngredientCard/card-name';
 import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
+import type { ListDialog } from '../../../../lib/types';
 import { single } from '../../../../lib/search-params';
 import { compendiumFacetCounts } from '../../../../components/CompendiumList/facets';
 import type {
@@ -112,6 +113,13 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
+  // The form open, if one is: a near match's Quick Look opens over it, and the details close back
+  // to it (the owner's call).
+  const form: ListDialog | undefined = adding
+    ? 'new'
+    : editing && place.editSlug
+      ? { edit: place.editSlug }
+      : undefined;
   const stamps = await editorStamps(
     session,
     page.edges.map(({ node }) => node),
@@ -158,7 +166,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       {/* The details a Quick Look opens, in their own place beneath the edit modal's,
           so an Edit pressed in them opens over them (M12.5). */}
       <DetailsDialog
-        closeHref={compendiumHref(list)}
+        closeHref={compendiumHref(list, form)}
         opened={
           detailed && {
             heading: detailsHeading(detailed),
@@ -166,11 +174,16 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
-            editAction: {
-              href: compendiumHref(here, { edit: detailed.slug }),
-              name: cardName(detailed.name, detailed.canonicalName),
-              heading: editHeading(detailed),
-            },
+            // No Edit in details opened over another entry's form, an add's or an edit's: it would
+            // put this entry's form in that one's place, and its typing with it. The edit of this
+            // entry is M12.5's, opened from here over them, so its Edit stays.
+            ...((!form || (form !== 'new' && form.edit === detailed.slug)) && {
+              editAction: {
+                href: compendiumHref(here, { edit: detailed.slug }),
+                name: cardName(detailed.name, detailed.canonicalName),
+                heading: editHeading(detailed),
+              },
+            }),
           }
         }
       />
@@ -181,6 +194,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           its form arrives in it (M9.18). */}
       <CompendiumDialog
         place={here}
+        lookUnder={form}
         opened={
           editing
             ? {

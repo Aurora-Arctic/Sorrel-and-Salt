@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -44,9 +45,13 @@ const MOCKLEAF: DuplicateNode = {
 /**
  * The name field and its warning; a save that the warning does not hold calls
  * `sent` with the name. `opened` is an edited entry's name, as the form opens with it;
- * `cupboard: false` is the admin's form, which has no cupboard to put an entry in.
+ * `cupboard: false` is the admin's form, which has no cupboard to put an entry in;
+ * `look` gives each match a Quick Look, as the admin's form does.
  */
-function renderName(opened?: string, { cupboard = true }: { cupboard?: boolean } = {}) {
+function renderName(
+  opened?: string,
+  { cupboard = true, look = false }: { cupboard?: boolean; look?: boolean } = {},
+) {
   const sent = vi.fn();
   const used = vi.fn();
   const Harness = () => {
@@ -71,6 +76,7 @@ function renderName(opened?: string, { cupboard = true }: { cupboard?: boolean }
             warning={warning}
             hrefOf={duplicateHref}
             onUse={cupboard ? used : undefined}
+            quickLookOf={look ? quickLookOf : undefined}
             ref={null}
           />
           <button type="submit">Save Ingredient</button>
@@ -81,6 +87,12 @@ function renderName(opened?: string, { cupboard = true }: { cupboard?: boolean }
   renderWithClient(<Harness />);
   return Object.assign(sent, { used });
 }
+
+/** A match's Quick Look, as the admin form's caller builds it: its details over the list. */
+const quickLookOf = (match: { slug: string; name: string }) => ({
+  href: `/admin/compendium?entry=${match.slug}&new` as Route,
+  heading: { title: match.name },
+});
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 /** Types into the Name box, the one field here. */
@@ -590,6 +602,36 @@ describe('NameField, with useDuplicateWarning', () => {
 
       expect(within(warning()).getAllByRole('list')).toHaveLength(1);
       expect(within(warning()).queryByRole('heading')).not.toBeInTheDocument();
+    });
+
+    // The owner's call: in the admin's form every match, being the
+    // compendium's, has its Quick Look, the details the admin's list opens.
+    it('gives every match its Quick Look where the form has one, beside its linked name, and nothing to add it with', async () => {
+      renderName(undefined, { cupboard: false, look: true });
+      offerDuplicates([UNUSED, USED]);
+
+      type('Cats Claw');
+      settle();
+      const rows = await within(warning()).findAllByRole('listitem');
+
+      expect(rows).toHaveLength(2);
+      expect(
+        within(rows[0]!).getByRole('link', { name: "Quick Look Cat's Claw, Uncaria tomentosa" }),
+      ).toHaveAttribute('href', quickLookOf(UNUSED).href);
+      expect(
+        within(rows[1]!).getByRole('link', { name: "Quick Look Cat's Claw, Felis catus" }),
+      ).toHaveAttribute('href', quickLookOf(USED).href);
+      // The name still links to the entry.
+      expect(within(rows[0]!).getByRole('link', { name: /new tab/ })).toHaveAttribute(
+        'href',
+        duplicateHref(UNUSED),
+      );
+      expect(within(warning()).queryByRole('link', { name: /^Open It/ })).not.toBeInTheDocument();
+      expect(
+        within(warning())
+          .getAllByRole('button')
+          .map((button) => button.textContent),
+      ).toEqual(['Create Anyway']);
     });
   });
 });

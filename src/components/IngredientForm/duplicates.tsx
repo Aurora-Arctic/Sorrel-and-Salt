@@ -17,6 +17,9 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
+import { MysticEyeIcon } from '../IconTip';
+import { cardName } from '../IngredientCard/card-name';
+import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 
@@ -42,6 +45,7 @@ const PossibleDuplicatesDocument = graphql(`
           id
           name
           canonicalName
+          nomenclature
           slug
           isGlobal
           inCupboard(workspaceId: $workspaceId)
@@ -61,6 +65,7 @@ const CompendiumMatchesDocument = graphql(`
           id
           name
           canonicalName
+          nomenclature
           slug
           isGlobal
           inCupboard(workspaceId: $workspaceId)
@@ -474,6 +479,17 @@ const isHeld = (match: Duplicate): boolean => !match.isGlobal || match.inCupboar
  * rows and closes round its last, as the region does round the whole notice,
  * so a group arriving or leaving under a warning already shown never jumps.
  */
+/**
+ * What a row offers at its right: the control, the same drawn as text alone
+ * for a row fading out over its successor, and the skeleton shape it stands
+ * as while another answer is on its way.
+ */
+interface Choice {
+  control: ReactElement;
+  ghost: ReactElement;
+  shape: 'button' | 'icon';
+}
+
 function MatchList({
   slide,
   list,
@@ -484,7 +500,7 @@ function MatchList({
   slide: ReturnType<typeof useSlidingRows>;
   list: RefObject<HTMLUListElement | null>;
   heading?: string;
-  choiceFor: (match: Duplicate) => ReactElement | null;
+  choiceFor: (match: Duplicate) => Choice | null;
   linkTo: (match: Duplicate) => ReactElement;
 }): ReactElement | null {
   const headingId = useId();
@@ -521,7 +537,7 @@ function MatchList({
                 className={`ingredient-form__row${gone ? ' ingredient-form__row--arriving' : ''}`}
               >
                 {linkTo(match)}
-                {choice}
+                {choice?.control}
               </span>
               {gone && (
                 <span
@@ -533,17 +549,15 @@ function MatchList({
                   aria-hidden="true"
                 >
                   <span className="ingredient-form__was">{titleOf(gone)}</span>
-                  {choiceFor(gone) && (
-                    <span className="btn btn--quiet btn--small">
-                      {gone.inCupboard ? 'Open It' : 'Use It'}
-                    </span>
-                  )}
+                  {choiceFor(gone)?.ghost}
                 </span>
               )}
               <span className="ingredient-form__shapes" aria-hidden="true">
                 <span className="ingredient-form__shape" />
                 {choice && (
-                  <span className="ingredient-form__shape ingredient-form__shape--button" />
+                  <span
+                    className={`ingredient-form__shape ingredient-form__shape--${choice.shape}`}
+                  />
                 )}
               </span>
             </div>
@@ -573,6 +587,7 @@ export function NameField({
   warning,
   hrefOf,
   onUse,
+  quickLookOf,
   holds = true,
   ref,
 }: NameFieldProps): ReactElement {
@@ -602,28 +617,50 @@ export function NameField({
   const open = rows.some((row) => row.phase !== 'leaving');
 
   /**
-   * What a compendium match offers, in either list: Use It, which puts it in
-   * the cupboard, or Open It, its coven page, once the cupboard holds it.
-   * Nothing for a coven's own entry, or where no cupboard is to be put into
-   * (the admin's form).
+   * What a match offers. Its Quick Look where the page under the form has
+   * details to open (the admin's form, every match being the compendium's;
+   * the owner's call). Otherwise, for a compendium match: Use It, which puts
+   * it in the cupboard, or Open It, its coven page, once the cupboard holds
+   * it. Nothing for a coven's own entry, or where neither applies.
    */
-  const choiceFor = (match: Duplicate): ReactElement | null => {
+  const choiceFor = (match: Duplicate): Choice | null => {
+    const look = quickLookOf?.(match);
+    if (look)
+      return {
+        control: <DetailsLink opens={look} name={cardName(match.name, match.canonicalName)} />,
+        ghost: (
+          <span className="icon-tip__look">
+            <MysticEyeIcon />
+          </span>
+        ),
+        shape: 'icon',
+      };
     if (!onUse || !match.isGlobal) return null;
     const name = <span className="visually-hidden"> {titleOf(match)}</span>;
-    return match.inCupboard ? (
-      <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
-        Open It{name}
-      </a>
-    ) : (
-      <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
-        Use It{name}
-      </button>
-    );
+    const verb = match.inCupboard ? 'Open It' : 'Use It';
+    return {
+      control: match.inCupboard ? (
+        <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
+          Open It{name}
+        </a>
+      ) : (
+        <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
+          Use It{name}
+        </button>
+      ),
+      ghost: <span className="btn btn--quiet btn--small">{verb}</span>,
+      shape: 'button',
+    };
   };
 
   /** A match's title, linked to its entry in a new tab. */
   const linkTo = (match: Duplicate): ReactElement => (
-    <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
+    <a
+      className="ingredient-form__title"
+      href={hrefOf(match)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       {titleOf(match)}
       <span className="visually-hidden"> (opens in a new tab)</span>
     </a>

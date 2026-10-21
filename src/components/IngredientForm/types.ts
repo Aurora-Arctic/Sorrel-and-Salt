@@ -1,4 +1,5 @@
 import type { ReactNode, Ref, RefObject } from 'react';
+import type { RouteModalLink } from '../Modal/types';
 import type { z } from 'zod';
 import type {
   CreateReferenceMutation,
@@ -41,6 +42,12 @@ interface IngredientFormCallbacks {
   onCancel?: () => void;
   /** Where a near match the duplicate warning names links: a coven's ingredient page, or the admin's compendium modal. */
   duplicateHref: (match: Duplicate) => string;
+  /**
+   * A match's Quick Look, the details its list opens over the form (the owner's
+   * call: the admin's form, every match being the compendium's); left out where
+   * the page under the form has no details to open.
+   */
+  quickLookOf?: (match: Duplicate) => RouteModalLink;
   /**
    * Where a linked substitute's summary links its entry, opened in a new tab;
    * undefined for an entry with no page to open. Left out, a summary links
@@ -611,6 +618,12 @@ export interface NameFieldProps {
   hrefOf: (match: Duplicate) => string;
   /** Puts a compendium match in the cupboard (Use It); left out where there is no cupboard, the admin's, and no match offers it. */
   onUse?: (match: Duplicate) => void;
+  /**
+   * A match's Quick Look, the details its list opens over the form (the owner's
+   * call: the admin's form, every match being the compendium's); left out where
+   * the page under the form has no details to open.
+   */
+  quickLookOf?: (match: Duplicate) => RouteModalLink;
   /** Whether a match holds a save, offering Create Anyway: a new entry's; an edit's only names its matches. True by default. */
   holds?: boolean;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */
