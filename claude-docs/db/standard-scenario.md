@@ -29,6 +29,8 @@ X sharing no member is what makes a cross-workspace denial test say something.
 
 **F is the curator (M11.20)**: the fixture that proves a curator reaches the compendium's writes and refuses the people ones, and, like E, belongs to no workspace. F is seeded with the flag `true`, since the CHECK that replaced MB.177's (`users_privileged_can_create_workspace`) refuses any non-`user` role without it.
 
+**Every fixture user is seeded with a verified email address (MB.268).** An unverified account reaches no page but `/account/email`, so an unverified fixture could not be used to browse the dev site signed in. The seed's system user (`…0001`) is the one unverified user, left so on purpose: it gives the dev site an account to try the unverified path with ([`seed-module.md`](seed-module.md), "minimal").
+
 **`canCreateWorkspace` follows the invite gate rather than convenience.** A–D
 are seeded `true` because each is in a workspace, and under §5 that is how the
 flag comes to be true — an invitation was accepted. E has never been invited,

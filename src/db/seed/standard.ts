@@ -521,7 +521,10 @@ async function insertMissingFixtureUsers(
   tx: SeedTransaction,
   wanted: readonly FixtureUser[],
 ): Promise<void> {
-  await insertMissingBy(tx, users, wanted, { columns: ['id'], toRow: (user) => user });
+  await insertMissingBy(tx, users, wanted, {
+    columns: ['id'],
+    toRow: (user) => ({ ...user, emailVerified: true }),
+  });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {

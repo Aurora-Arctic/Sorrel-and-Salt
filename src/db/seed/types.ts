@@ -33,7 +33,10 @@ export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>
 export type InsertStamps = StampField;
 
 /** Typed against the insert model, so a column renamed in users.ts fails here. */
-export type SeedUser = Pick<typeof users.$inferInsert, 'id' | 'name' | 'email' | 'role'>;
+export type SeedUser = Pick<
+  typeof users.$inferInsert,
+  'id' | 'name' | 'email' | 'role' | 'emailVerified'
+>;
 
 // `standard`: the fixture cast, W and X, and the compendium.
 
