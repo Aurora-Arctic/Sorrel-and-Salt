@@ -73,7 +73,7 @@ export const ChosenWithNothingBehindIt: Story = () => <Stateful initial={['earth
 // Every value counts nothing: the field stays, its list empty, as a facet the search leaves nothing in.
 export const AllZero: Story = () => (
   <Stateful
-    label="Planets"
+    label="Celestial Bodies"
     choices={[
       { value: 'sun', label: 'Test Sun', count: 0 },
       { value: 'moon', label: 'Test Moon', count: 0 },

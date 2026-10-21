@@ -230,6 +230,31 @@ describe('FacetCombobox', () => {
       expect(hidden(container)).toEqual(['spirit']);
     });
 
+    it('lists every choice of a group whose name is typed, and any choice whose own label holds the text', () => {
+      const choices = [
+        { value: 'a', label: 'Testaletheia', count: 2, group: 'Testish' },
+        { value: 'b', label: 'Testborros', count: 1, group: 'Testish' },
+        { value: 'c', label: 'Testcorvane', count: 4, group: 'Otherish' },
+        { value: 'd', label: 'Otherwise Testish', count: 3, group: 'Thirdish' },
+      ];
+      render(<Controlled typeahead choices={choices} />);
+
+      fireEvent.change(box(), { target: { value: ' TESTISH ' } });
+
+      // The whole group by its name, and the one choice by its own label.
+      expect(
+        within(screen.getByRole('group', { name: 'Testish' }))
+          .getAllByRole('option')
+          .map((row) => row.textContent),
+      ).toEqual(['Testaletheia 2', 'Testborros 1']);
+      expect(
+        within(screen.getByRole('group', { name: 'Thirdish' })).getByRole('option', {
+          name: 'Otherwise Testish 3',
+        }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Otherish' })).not.toBeInTheDocument();
+    });
+
     it('draws the native select with the groups as optgroups', () => {
       const markup = renderToString(<FacetCombobox {...PROPS} typeahead choices={GROUPED} />);
       const host = document.createElement('div');

@@ -397,8 +397,8 @@ describe('the /admin/compendium filter', () => {
     expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ deityIds: ['d-ro'] });
   });
 
-  it('reads ?zodiac=, ?planets= and ?toxic= into the variables the query takes', async () => {
-    await renderPage({ zodiac: ['Aries', 'Leo'], planets: 'Mars', toxic: 'not_toxic' });
+  it('reads ?zodiac=, ?celestialBodies= and ?toxic= into the variables the query takes', async () => {
+    await renderPage({ zodiac: ['Aries', 'Leo'], celestialBodies: 'Mars', toxic: 'not_toxic' });
 
     expect(lastFilter()).toEqual({
       zodiacSigns: ['Aries', 'Leo'],

@@ -58,7 +58,7 @@ const NO_FILTER: CompendiumListFilter = {
   categoryMode: 'all',
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   toxic: '',
 };
 
@@ -77,7 +77,7 @@ const CATEGORIES: CompendiumCategoryChoice[] = [
 ];
 
 // The choices each filter offers, with their counts: the forms some entry carries,
-// and every zodiac sign, planet, element and toxic setting.
+// and every zodiac sign, celestial body, element and toxic setting.
 const FACETS: CompendiumFacetCounts = {
   forms: ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name, i) => ({
     value: name,
@@ -97,7 +97,7 @@ const FACETS: CompendiumFacetCounts = {
     group,
   })),
   zodiac: [{ value: 'aries', label: 'Aries', count: 2 }],
-  planets: [{ value: 'mars', label: 'Mars', count: 2 }],
+  celestialBodies: [{ value: 'mars', label: 'Mars', count: 2 }],
   elements: INGREDIENT_ELEMENTS.map((value) => ({ value, label: capitalise(value), count: 1 })),
   toxic: [
     { value: 'toxic', label: 'Toxic', count: 1 },
@@ -215,7 +215,7 @@ export const Filtered: Story = () => (
         categoryMode: 'any',
         deities: ['hecate-roman'],
         zodiac: [],
-        planets: [],
+        celestialBodies: [],
         toxic: '',
       }}
       facets={FACETS}
@@ -253,7 +253,7 @@ export const NoMatch: Story = () => (
         categoryMode: 'all',
         deities: [],
         zodiac: [],
-        planets: [],
+        celestialBodies: [],
         toxic: '',
       }}
       facets={FACETS}

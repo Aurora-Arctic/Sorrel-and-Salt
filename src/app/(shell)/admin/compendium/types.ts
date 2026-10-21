@@ -15,7 +15,7 @@ export interface AdminCompendiumPageProps {
  * The page's address: every list page's name query, cursor and modal
  * (`list-page.ts`), and the compendium's own filters (the table in
  * CompendiumList/params.ts): the forms by their text, the deities by slug, the
- * zodiac signs and planets by name, the entries citing nothing, the elements
+ * zodiac signs and celestial bodies by name, the entries citing nothing, the elements
  * an entry holds, toxic or not, and the categories with how they combine.
  * Every one repeats for a list.
  */
@@ -28,7 +28,7 @@ export interface CompendiumSearchParams extends ListSearchParams {
   categoryMode?: string | string[];
   deities?: string | string[];
   zodiac?: string | string[];
-  planets?: string | string[];
+  celestialBodies?: string | string[];
   toxic?: string | string[];
   /** The entry whose details modal is open over the list, by slug (M12.5). */
   entry?: string | string[];

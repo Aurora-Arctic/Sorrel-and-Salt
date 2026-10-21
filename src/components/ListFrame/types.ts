@@ -18,6 +18,11 @@ export interface ListNavigation {
    * another page of the same one. A pager press leaves it false, so the search sentence does not retype.
    */
   searching: boolean;
+  /**
+   * The address a filter's soft navigation is opening, while it is pending: what is being searched
+   * for, where the page still shown is the previous search. Undefined when nothing is on its way.
+   */
+  target?: string;
   /** Opens another page of the list, filtered or paged, the way `kind` says; nothing while one is pending. */
   go: (href: string, kind: ListNavigationKind) => void;
   /** A pager end's press: the height in pixels the body had then, which its skeleton keeps (`index.tsx`). */

@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement } from 'react';
+import { Navigating } from '../../../.ladle/navigating';
 import { WorkshopPathname } from '../../../.ladle/navigation';
 import PublicFrame from '.';
 
@@ -16,7 +17,11 @@ export default {
 const Page = ({ open = '/compendium' }: { open?: string }): ReactElement => (
   <WorkshopPathname.Provider value={open}>
     <PublicFrame>
-      <h1>Compendium</h1>
+      <main>
+        <div className="page-column">
+          <h1>Compendium</h1>
+        </div>
+      </main>
     </PublicFrame>
   </WorkshopPathname.Provider>
 );
@@ -32,3 +37,12 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 
 // The bar on a page the nav does not name, so the Compendium link rests unmarked.
 export const NotOnTheCompendium: Story = () => <Page open="/" />;
+
+// Mid-wait: the nav's Compendium link already pressed, on an entry's page, so
+// the page has gone and the Compendium's cards stand in the frame's body
+// under the bar (M12.47). The wait never ends here; "Start Over" ends it.
+export const LoadingTheCompendium: Story = () => (
+  <Navigating press="Compendium">
+    <Page open="/compendium/ingredients/testwort" />
+  </Navigating>
+);

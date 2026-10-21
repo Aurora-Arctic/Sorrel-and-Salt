@@ -306,7 +306,7 @@ true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`)
 
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
 swaps the pair), then one clause per kind, always in this order whatever order
-the address holds them: text query, categories, forms, deities, zodiac, planets,
+the address holds them: text query, categories, forms, deities, zodiac, celestial bodies,
 elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
@@ -315,7 +315,7 @@ separated by a comma. An example with every kind:
 > the fire element, that are not toxic, classified as botanical, without references
 
 - **Joining.** Values are joined through `Intl.ListFormat` in `en-GB`, which has
-  no serial comma: "oil, resin or leaf". Forms, deities, zodiac, planets and
+  no serial comma: "oil, resin or leaf". Forms, deities, zodiac, celestial bodies and
   elements join with "or"; categories join with "and" in all-mode ("in the
   protection and healing categories") and "or" in any-mode ("in the protection or
   healing category"). `Intl.ListFormat` is Baseline Widely Available, so the
@@ -324,13 +324,13 @@ separated by a comma. An example with every kind:
   `text`, so the component can set the word apart. A comma stays plain text. A join
   is never a link and carries no facet.
 - **Casing.** A value is shown in lower case (`toLocaleLowerCase('en-GB')`): categories, forms,
-  elements, source and nomenclature. Deities, zodiac signs and planets keep their capitals
+  elements, source and nomenclature. Deities, zodiac signs and celestial bodies keep their capitals
   ("Hecate", "Scorpio", "the Sun"), since they are proper names. The text query is shown as
   typed. A value that is already a lower-case phrase ("not toxic", "in stock") is unchanged.
   The lowering is of the display text only: the fragment's `value` keeps its own spelling, so
   removing it still finds the filter.
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
-  planets, which belongs to the linked value ("the Sun").
+  celestial bodies, which belongs to the linked value ("the Sun").
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
 - **Source, In Stock and Low Stock Only** belong to a coven's list and are named
   whenever the filter holds them. `source` (`local` or `compendium`) reads "from

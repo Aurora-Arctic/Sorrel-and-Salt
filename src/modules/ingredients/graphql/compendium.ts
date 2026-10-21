@@ -38,8 +38,7 @@ export const facetArgs = builder.args((t) => ({
   }),
   celestialBodies: t.stringList({
     required: false,
-    description:
-      'Keeps entries listing any one of these planets or other celestial bodies, ignoring case.',
+    description: 'Keeps entries listing any one of these celestial bodies, ignoring case.',
   }),
   elements: t.field({
     type: [IngredientElementEnum],
