@@ -224,7 +224,7 @@ test(
 );
 
 test(
-  "a member adds a compendium entry to the coven, then gives it a form and a quantity in Edit Stock, and finds it stocked in the coven's list",
+  "a member adds a compendium entry to the coven, gives it a form and a quantity in Edit Stock from the same card, and finds it stocked in the coven's list",
   { tag: '@story-14' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fourteen Stock', 'story-14-add.test', {
@@ -275,13 +275,12 @@ test(
       await assertNoAccessibilityViolations(page);
     });
 
-    await test.step("the coven's list holds Comfrey with no stock, and Edit Stock gives it a form and a quantity", async () => {
-      await page.goto(`/coven/${coven.slug}/ingredients`);
-      const row = rowOf(ingredientList(page), 'Comfrey');
-      await expect(row).toBeVisible();
-      await expect(localBadge(row)).toHaveCount(0);
-      const editor = stockEditor(row, 'Comfrey');
-      await editor.open.click();
+    await test.step("Edit Stock, from the same card's three dots on the compendium, gives it a form and a quantity", async () => {
+      // The page is still the compendium: the card, now held, carries the three dots.
+      const card = rowOf(compendiumList(page), 'Comfrey');
+      await card.getByRole('button', { name: /^More for Comfrey/ }).click();
+      await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
+      const editor = stockEditor(card, 'Comfrey');
       await expect(editor.dialog).toContainText('No stock yet');
       await editor.add('Leaf');
       const leaf = editor.jar('Leaf');
@@ -292,6 +291,13 @@ test(
       // The default threshold is the weight one, 10 g, written on the row (M9.3, M9.8).
       expect(await heldRows()).toEqual([{ quantity: 50, unit: 'g', threshold: 10 }]);
       expect(await cupboardRows()).toHaveLength(1);
+    });
+
+    await test.step("the coven's list holds Comfrey, not local, with the stock just given", async () => {
+      await page.goto(`/coven/${coven.slug}/ingredients`);
+      const row = rowOf(ingredientList(page), 'Comfrey');
+      await expect(row).toBeVisible();
+      await expect(localBadge(row)).toHaveCount(0);
     });
 
     await test.step('the list shows the stock after a reload', async () => {
