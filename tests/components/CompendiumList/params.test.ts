@@ -108,7 +108,7 @@ describe('the deities parameter', () => {
 
 describe.each([
   ['zodiac', 'zodiacSigns', ['Aries', 'Black Moon Sign']],
-  ['planets', 'celestialBodies', ['Sun', 'Black Moon']],
+  ['celestialBodies', 'celestialBodies', ['Sun', 'Black Moon']],
 ] as const)('the %s parameter', (name, variable, values) => {
   const entry = entries[name];
 
@@ -203,7 +203,7 @@ describe('the whole table', () => {
       categoryMode: 'all',
       deities: [],
       zodiac: [],
-      planets: [],
+      celestialBodies: [],
       toxic: '',
     });
   });

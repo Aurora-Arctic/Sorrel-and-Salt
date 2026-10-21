@@ -110,7 +110,7 @@ const NO_FILTER: CompendiumListFilter = {
   categoryMode: 'all',
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   toxic: '',
 };
 
@@ -125,7 +125,7 @@ const SHOWN: CompendiumListFilter = {
   categoryMode: 'all',
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   toxic: '',
 };
 
@@ -152,7 +152,7 @@ const FACETS: CompendiumFacetCounts = {
     group,
   })),
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   elements: [],
   toxic: [],
   withoutReferences: 0,

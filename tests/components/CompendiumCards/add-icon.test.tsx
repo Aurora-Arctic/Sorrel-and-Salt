@@ -66,7 +66,7 @@ const props = (
     categoryMode: 'all',
     deities: [],
     zodiac: [],
-    planets: [],
+    celestialBodies: [],
     toxic: '',
   },
   facets: {
@@ -74,7 +74,7 @@ const props = (
     deities: [],
     categories: [],
     zodiac: [],
-    planets: [],
+    celestialBodies: [],
     elements: [],
     toxic: [],
     withoutReferences: 0,

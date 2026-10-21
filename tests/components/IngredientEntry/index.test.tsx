@@ -1237,7 +1237,7 @@ describe('IngredientEntry on a coven page', () => {
     expect(screen.getByText('A fixture herb.')).toBeInTheDocument();
     // A set list stands over the compendium's; an empty one shows as cleared.
     expect(rowOf('Elements')).toBe('Water');
-    expect(rowOf('Planets')).not.toBe('Fixture Moon');
+    expect(rowOf('Celestial Bodies')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
     // Annotated stands in place of Compendium (the owner's call, 2026-10-20); a
     // compendium entry is never Local. The next test is the precondition: held and

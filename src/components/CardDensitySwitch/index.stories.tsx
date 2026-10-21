@@ -35,7 +35,7 @@ const NO_FILTER: Filter = {
   categoryMode: 'all',
   deities: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   toxic: '',
 };
 
@@ -44,7 +44,7 @@ const NO_FACETS: CompendiumFacetCounts = {
   deities: [],
   categories: [],
   zodiac: [],
-  planets: [],
+  celestialBodies: [],
   elements: [],
   toxic: [],
   withoutReferences: 0,

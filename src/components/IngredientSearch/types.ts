@@ -88,7 +88,7 @@ export type SearchSentenceFacet =
   | 'forms'
   | 'deities'
   | 'zodiac'
-  | 'planets'
+  | 'celestialBodies'
   | 'elements'
   | 'toxic'
   | 'source'
@@ -109,7 +109,7 @@ export interface SearchSentenceFilter {
   /** Deity slugs. */
   deities?: readonly string[];
   zodiac?: readonly string[];
-  planets?: readonly string[];
+  celestialBodies?: readonly string[];
   elements?: readonly string[];
   /** The address's own choice: `toxic`, `not_toxic`, or `any` / left out for either. */
   toxic?: ToxicFilter | null;
@@ -129,7 +129,7 @@ export interface SearchSentenceFilter {
 
 /** The kinds that choose from a vocabulary, and so take display labels. */
 export type SearchSentenceLabelFacet =
-  'categories' | 'forms' | 'deities' | 'zodiac' | 'planets' | 'elements';
+  'categories' | 'forms' | 'deities' | 'zodiac' | 'celestialBodies' | 'elements';
 
 /** Display labels by chosen value. A value with no label is named by itself. */
 export type SearchSentenceLabels = Partial<

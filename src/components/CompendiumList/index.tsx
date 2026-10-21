@@ -172,7 +172,7 @@ export function emptyText(
     forms,
     deities,
     zodiac,
-    planets,
+    celestialBodies,
     toxic,
     withoutReferences,
     withoutForms,
@@ -210,9 +210,10 @@ export function emptyText(
         the {zodiac.length === 1 ? 'sign' : 'signs'} {orValues(zodiac)}
       </>
     ),
-    planets.length > 0 && (
+    celestialBodies.length > 0 && (
       <>
-        the {planets.length === 1 ? 'planet' : 'planets'} {orValues(planets)}
+        the {celestialBodies.length === 1 ? 'celestial body' : 'celestial bodies'}{' '}
+        {orValues(celestialBodies)}
       </>
     ),
     toxicLabel && <>the toxic setting {value(toxicLabel)}</>,

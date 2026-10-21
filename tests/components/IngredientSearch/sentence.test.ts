@@ -49,11 +49,11 @@ describe('buildSearchSentence', () => {
   });
 
   it('puts the before Sun and Moon only', () => {
-    const labels = { planets: { sun: 'Sun', moon: 'Moon', mars: 'Mars', venus: 'Venus' } };
-    expect(text({ planets: ['sun', 'mars'] }, 4, { labels })).toBe(
+    const labels = { celestialBodies: { sun: 'Sun', moon: 'Moon', mars: 'Mars', venus: 'Venus' } };
+    expect(text({ celestialBodies: ['sun', 'mars'] }, 4, { labels })).toBe(
       '4 ingredients, ruled by the Sun or Mars',
     );
-    expect(text({ planets: ['venus', 'moon'] }, 4, { labels })).toBe(
+    expect(text({ celestialBodies: ['venus', 'moon'] }, 4, { labels })).toBe(
       '4 ingredients, ruled by Venus or the Moon',
     );
   });
@@ -114,14 +114,14 @@ describe('buildSearchSentence', () => {
       forms: { oil: 'Oil', resin: 'Resin' },
       deities: { isis: 'Isis' },
       zodiac: { aries: 'Aries' },
-      planets: { sun: 'Sun', mars: 'Mars' },
+      celestialBodies: { sun: 'Sun', mars: 'Mars' },
       elements: { fire: 'Fire' },
     };
     const filter: SearchSentenceFilter = {
       // Given out of order on purpose.
       toxic: 'not_toxic',
       elements: ['fire'],
-      planets: ['sun', 'mars'],
+      celestialBodies: ['sun', 'mars'],
       zodiac: ['aries'],
       deities: ['isis'],
       forms: ['oil', 'resin'],
@@ -198,9 +198,9 @@ describe('buildSearchSentence', () => {
   });
 
   it('carries on each value fragment the facet and value that remove it', () => {
-    const labels = { forms: { oil: 'Oil' }, planets: { sun: 'Sun' } };
+    const labels = { forms: { oil: 'Oil' }, celestialBodies: { sun: 'Sun' } };
     const { fragments, hasFilter } = buildSearchSentence({
-      filter: { forms: ['oil'], planets: ['sun'], query: 'rue', toxic: 'toxic' },
+      filter: { forms: ['oil'], celestialBodies: ['sun'], query: 'rue', toxic: 'toxic' },
       total: 1,
       labels,
     });
@@ -208,7 +208,7 @@ describe('buildSearchSentence', () => {
     expect(fragments.filter((f) => f.kind === 'value')).toEqual([
       { kind: 'value', text: 'rue', facet: 'query', value: 'rue' },
       { kind: 'value', text: 'oil', facet: 'forms', value: 'oil' },
-      { kind: 'value', text: 'the Sun', facet: 'planets', value: 'sun' },
+      { kind: 'value', text: 'the Sun', facet: 'celestialBodies', value: 'sun' },
       { kind: 'value', text: 'toxic', facet: 'toxic', value: 'toxic' },
     ]);
   });
@@ -285,14 +285,16 @@ describe('buildSearchSentence', () => {
     ]);
   });
 
-  it('keeps the capitals of deities, zodiac signs and planets', () => {
+  it('keeps the capitals of deities, zodiac signs and celestial bodies', () => {
     const labels = {
       deities: { hecate: 'Hecate' },
       zodiac: { scorpio: 'Scorpio' },
-      planets: { sun: 'Sun', mars: 'Mars' },
+      celestialBodies: { sun: 'Sun', mars: 'Mars' },
     };
     expect(
-      text({ deities: ['hecate'], zodiac: ['scorpio'], planets: ['sun', 'mars'] }, 1, { labels }),
+      text({ deities: ['hecate'], zodiac: ['scorpio'], celestialBodies: ['sun', 'mars'] }, 1, {
+        labels,
+      }),
     ).toBe('1 ingredient, linked to Hecate, under Scorpio, ruled by the Sun or Mars');
   });
 
