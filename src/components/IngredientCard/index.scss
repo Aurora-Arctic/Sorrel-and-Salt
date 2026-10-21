@@ -266,6 +266,16 @@
   pointer-events: none;
 }
 
+// The plain category chips pass a click through to the name link's overlay (the owner,
+// 2026-10-21): the chip row's `list-reset` makes each `li` `position: relative`, which
+// paints it above the overlay, so a chip swallowed the click. Not a higher `z-index` on the
+// overlay, for the reason the forms line gives. Only the chips' `li`s, not the row: the
+// +N item is left out so its button keeps its press, hover and focus (it is raised above the
+// overlay in CategoryChips). A plain chip is text, not a link, button or tip, so nothing is lost.
+.ingredient-card .specimen__chips > li:not(.category-more-item) {
+  pointer-events: none;
+}
+
 .ingredient-card__item,
 .ingredient-card__form {
   display: inline-flex;
