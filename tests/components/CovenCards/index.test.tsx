@@ -353,6 +353,47 @@ describe('CovenCards', () => {
     expect(new URLSearchParams(sent(form)).get('inStock')).not.toBeNull();
   });
 
+  // The page still shows the previous search while the next one is read; the sentence typed out
+  // in the meantime names the coven facets of the address being opened, and none of the old ones.
+  it("types the sentence from the coven's own facets of the search being opened", async () => {
+    mockGraphQLQuery('CovenFacetCounts', () => ({
+      workspaceIngredientFacets: {
+        forms: [],
+        deities: [],
+        categories: [],
+        zodiacSigns: [],
+        celestialBodies: [],
+        elements: [],
+        toxic: [],
+        source: [],
+        inStock: 0,
+        lowStockOnly: 0,
+      },
+    }));
+    render(
+      <Navigating push={router.push}>
+        <Cards {...props({ filter: { ...FILTER, inStock: true } })} />
+      </Navigating>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
+    fireEvent.click(screen.getByRole('switch', { name: /^Low Stock Only/ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    });
+
+    const pushed = new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
+    expect(pushed.get('lowStockOnly')).not.toBeNull();
+    expect(pushed.get('inStock')).toBeNull();
+    // The sentence is typed out, hidden from assistive technology, while the search is on its way.
+    const typed = screen
+      .getAllByRole('group', { hidden: true })
+      .find((group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true');
+    expect(typed).toBeDefined();
+    expect(typed!.textContent).toContain('low or out of stock');
+    expect(typed!.textContent).not.toContain('in stock');
+  });
+
   it('reads Page X of Y between Previous and Next', () => {
     render(
       <Cards
