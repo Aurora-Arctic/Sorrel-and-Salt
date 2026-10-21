@@ -14,10 +14,11 @@
 
 // The values the sentence names are a quiet mark: the sentence's own weight, in a hairline
 // box like a key on a keyboard. There is no weight token, the scale is raw numbers. The
-// padding is the box's own geometry, trimmed by its 1px edge, so it stays off the spacing scale.
+// padding is the box's own geometry, in em so it follows the text size, so it stays off the
+// spacing scale. The bottom is deeper than the top so a descender (g, p, y) clears the edge.
 .search-sentence__value {
   font-weight: inherit;
-  padding: 0.02em 0.3em;
+  padding: 0.02em 0.3em 0.14em;
   border: 1px solid $hairline;
   border-radius: radius('sharp');
 }
@@ -54,6 +55,9 @@
 
 .search-sentence__first {
   margin: 0;
+  // A summary is not a <p>, so it missed the body copy's 1.65 and fell back to `normal`, too
+  // tight for the value boxes: a term that wraps would touch the box below it.
+  line-height: 1.65;
 }
 
 // The clauses beneath the first line open and close by height. Grid rows 0fr to 1fr is
