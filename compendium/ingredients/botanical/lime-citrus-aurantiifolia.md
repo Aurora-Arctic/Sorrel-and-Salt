@@ -54,7 +54,7 @@ references:
 variants:
   - form: Peel
     description: The peel is the part AHPA covers. Cunningham puts lime peel into love mixtures and incenses.
-    safetyNotes: The peel holds furanocoumarins that can cause phytophotodermatitis, a skin reaction set off when skin that has handled it is then exposed to sunlight; this is not expected from eating it. Allergic reactions to the peel after skin contact have been reported. Safety in pregnancy and while nursing has not been established.
+    safetyNotes: The peel holds furanocoumarins that can cause phytophotodermatitis, a skin reaction set off when skin that has handled it is then exposed to sunlight. Allergic reactions to the peel after skin contact have been reported. Safety in pregnancy and while nursing has not been established.
     references:
       - source: ahpa-safety
         locator: p. 227; p. xxii
