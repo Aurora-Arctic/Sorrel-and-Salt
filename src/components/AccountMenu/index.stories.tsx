@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { type ReactElement, useEffect, useRef } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import AccountMenu from '.';
+import { WorkshopPathname } from '../../../.storybook/navigation';
+import { press } from '../../../.storybook/press';
 import { route } from '../../../.storybook/route';
 
 // Render-only; behaviour is asserted in tests/components/AccountMenu. The
@@ -27,57 +29,76 @@ const Right = ({ children }: { children: ReactElement }) => (
   </div>
 );
 
-export const Default: Story = {
-  render: () => (
-    <Right>
-      <AccountMenu name="Fixture Member" verified />
-    </Right>
-  ),
-};
+const LINKS = [
+  { label: 'Your Coven', href: route('/coven/fixture-coven'), base: '/coven' },
+  { label: 'Admin', href: '/admin' as const, base: '/admin' },
+];
 
-// Opened once on mount, as a press on it would.
+// Opened once on mount, as a press on it would; `failSignOut` then presses Sign
+// Out, which the workshop does not serve, so it fails as a lost request does.
 const Opened = ({
-  verified,
+  name = 'Fixture Member',
+  verified = true,
   pendingInvitations,
+  failSignOut = false,
 }: {
-  verified: boolean;
+  name?: string;
+  verified?: boolean;
   pendingInvitations?: number;
+  failSignOut?: boolean;
 }): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector('button')?.click();
-  }, []);
+    if (!failSignOut) return;
+    const later = setTimeout(() => press('Sign Out'), 100);
+    return () => clearTimeout(later);
+  }, [failSignOut]);
   return (
     <div ref={ref}>
       <Right>
         <AccountMenu
-          name="Fixture Member"
+          name={name}
           verified={verified}
           pendingInvitations={pendingInvitations}
-          links={[
-            { label: 'Your Coven', href: route('/coven/fixture-coven'), base: '/coven' },
-            { label: 'Admin', href: '/admin', base: '/admin' },
-          ]}
+          links={LINKS}
         />
       </Right>
     </div>
   );
 };
 
-export const Open: Story = { render: () => <Opened verified /> };
-
-// Two coven invitations waiting (M10.32): the dot on the disc, the count beside Your Account.
-export const ClosedWithInvitations: Story = {
-  render: () => (
+// Each state is one menu, so one control chooses it. Closed has no links;
+// Closed With Invitations has two coven invitations waiting (M10.32): the dot
+// on the disc. Open With One Invitation reads "1 Coven Invitation", singular.
+// Open On The Admin Page marks Admin as the current page. Open Unverified is
+// Sign Out alone, the account page not yet being reachable.
+const STATES: Record<string, ReactNode> = {
+  Closed: (
+    <Right>
+      <AccountMenu name="Fixture Member" verified />
+    </Right>
+  ),
+  Open: <Opened />,
+  'Closed With Invitations': (
     <Right>
       <AccountMenu name="Fixture Member" verified pendingInvitations={2} />
     </Right>
   ),
+  'Open With Invitations': <Opened pendingInvitations={2} />,
+  'Open With One Invitation': <Opened pendingInvitations={1} />,
+  'Open On The Admin Page': (
+    <WorkshopPathname.Provider value="/admin">
+      <Opened />
+    </WorkshopPathname.Provider>
+  ),
+  'Open With A Long Name': <Opened name="A Long Named Fixture Herbalist of the Circle" />,
+  'Sign Out Failed': <Opened failSignOut />,
+  'Open Unverified': <Opened verified={false} />,
 };
 
-export const OpenWithInvitations: Story = {
-  render: () => <Opened verified pendingInvitations={2} />,
+export const States: Story = {
+  args: { state: 'Closed' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
-
-// Sign Out alone, the account page not yet being reachable.
-export const OpenUnverified: Story = { render: () => <Opened verified={false} /> };
