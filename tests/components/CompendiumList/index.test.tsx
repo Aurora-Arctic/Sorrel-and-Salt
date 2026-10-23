@@ -966,12 +966,12 @@ describe('CompendiumList filter', () => {
       await waitFor(() => expect(asked).toContainEqual([undefined, true]));
     });
 
-    it('says not held in, or in none of my covens, in the search sentence', () => {
+    it('says not held in, naming the covens or any of my covens, in the search sentence', () => {
       const { unmount } = publicFilter({ ...NO_FILTER, covens: ['coven-w'], covensNot: true });
       expect(listStatus()[0]).toHaveTextContent('not held in Testhollow');
       unmount();
       publicFilter({ ...NO_FILTER, covensNot: true });
-      expect(listStatus()[0]).toHaveTextContent('in none of my covens');
+      expect(listStatus()[0]).toHaveTextContent('not held in any of my covens');
     });
   });
 

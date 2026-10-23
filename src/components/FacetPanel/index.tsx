@@ -589,7 +589,7 @@ export default function FacetPanel({
                         choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
                         values={filter.covens ?? []}
                         // Removing the last coven switches the choice back to In (the owner's call,
-                        // 2026-10-23), so it never turns into "in none of my covens" unasked.
+                        // 2026-10-23), so it never turns into "not held in any of my covens" unasked.
                         onChange={(picked) =>
                           onChange(
                             picked.length === 0

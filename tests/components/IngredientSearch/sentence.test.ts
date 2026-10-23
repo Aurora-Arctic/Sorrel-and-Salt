@@ -353,11 +353,16 @@ describe('the In My Covens clause (M12.55)', () => {
       );
     });
 
-    it('says in none of my covens with no coven picked', () => {
+    it('says not held in any of my covens with no coven picked, the covens alone boxed', () => {
       const sentence = buildSearchSentence({ filter: { covensNot: true }, labels, total: 5 });
       expect(sentence.fragments.map((f) => f.text).join('')).toBe(
-        '5 ingredients, in none of my covens',
+        '5 ingredients, not held in any of my covens',
       );
+      // "not held in " is plain text, as it is with covens picked: the covens are the one value.
+      const values = sentence.fragments.filter((f) => f.kind === 'value');
+      expect(values).toEqual([
+        { kind: 'value', text: 'any of my covens', facet: 'covensNot', value: 'true' },
+      ]);
       expect(sentence.hasFilter).toBe(true);
     });
 
