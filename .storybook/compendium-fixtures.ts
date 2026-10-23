@@ -16,6 +16,8 @@ export const NO_FILTER: CompendiumListFilter = {
   deities: [],
   zodiac: [],
   celestialBodies: [],
+  covens: [],
+  covensNot: false,
   toxic: '',
 };
 

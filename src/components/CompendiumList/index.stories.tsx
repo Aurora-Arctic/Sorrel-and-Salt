@@ -207,6 +207,8 @@ const FilteredView = () => (
         deities: ['hecate-roman'],
         zodiac: [],
         celestialBodies: [],
+        covens: [],
+        covensNot: false,
         toxic: '',
       }}
       facets={FACETS}
@@ -248,6 +250,8 @@ const noMatchesNode = (
         deities: [],
         zodiac: [],
         celestialBodies: [],
+        covens: [],
+        covensNot: false,
         toxic: '',
       }}
       facets={FACETS}
