@@ -92,6 +92,15 @@ variants:
         supports:
           - form
           - description
+  - form: Bead
+    description: Kynes lists mala beads made from carved bodhi seeds among what is sold, and says to hang a string of them as high in the house as you can for peace and harmony.
+    references:
+      - source: kynes-plants
+        locator: under "Bodhi"
+        nameBasis: stated
+        supports:
+          - form
+          - description
 ---
 
 # Bodhi Tree
