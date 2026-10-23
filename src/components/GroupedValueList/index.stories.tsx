@@ -5,6 +5,7 @@ import Link from 'next/link';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { shellFrameParameters } from '../../../.storybook/shell-frame';
 import { FIXTURE_EDIT, GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
 import { ListNavigationContext } from '../ListFrame';
 import { groupedValuesHref } from './href';
@@ -91,17 +92,29 @@ const deity = (name: string, groupName: string, description: string) => {
 // the same for every kind, so only the categories show them; the other kinds
 // show what differs: the form's icon, the deity's tradition filter, the flat
 // kinds' missing group column and filter.
+// The Categories tab as the route draws it (`/admin/categories`): the app shell, the admin row, the
+// heading with its toggle and Add Category, then the Name and Group filters over the list.
 const defaultNode = (
-  <GroupedValueList
-    kind="category"
-    values={[
-      category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
-      category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
-      category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
-    ]}
-    filter={NO_FILTER}
-    groups={CATEGORY_GROUPS}
-  />
+  <AdminTabbedFrame
+    shell
+    page="categories"
+    action={
+      <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
+        Add Category
+      </Link>
+    }
+  >
+    <GroupedValueList
+      kind="category"
+      values={[
+        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+        category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
+        category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
+      ]}
+      filter={NO_FILTER}
+      groups={CATEGORY_GROUPS}
+    />
+  </AdminTabbedFrame>
 );
 
 // Next alone still sits at the right, where it is on every other page.
@@ -266,6 +279,7 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,

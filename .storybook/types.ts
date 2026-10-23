@@ -8,6 +8,11 @@ export interface AdminFrameProps {
   open?: string;
   /** False for a curator's nav, without People (M11.20); true by default. */
   managesPeople?: boolean;
+  /**
+   * Draw the app shell's bar above the admin row, as the site does, with the phone's bottom
+   * bar pinned. A story that sets it spreads `shellFrameParameters` into its `parameters`.
+   */
+  shell?: boolean;
   children?: ReactNode;
 }
 
@@ -19,6 +24,8 @@ export interface AdminTabbedFrameProps {
   open?: string;
   /** What the page header draws at the end of its line: the open tab's Add, say. */
   action?: ReactNode;
+  /** As `AdminFrame`'s `shell`. */
+  shell?: boolean;
   children: ReactNode;
 }
 

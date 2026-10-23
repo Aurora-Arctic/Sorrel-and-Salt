@@ -42,7 +42,7 @@ The table takes the `data-table--roomy` modifier: while it is a table, its cells
 `Admin / Group List`: one story, `States`, with a control that chooses, at the workshop's own
 width:
 
-- Default: three invented category groups in seeded pairs.
+- Default: the Groups tab of the Categories page as the route draws it (the app shell, the admin row, the heading with its toggle and Add Category Group), over three invented category groups in seeded pairs.
 - Form Groups: two groups with a next page and no search.
 - Traditions: three invented traditions under an empty search.
 - Traditions Searched: searched by a fragment, Clear drawn.

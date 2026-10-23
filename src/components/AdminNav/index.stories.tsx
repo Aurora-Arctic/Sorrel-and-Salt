@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
+import { shellFrameParameters } from '../../../.storybook/shell-frame';
 import { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
@@ -38,7 +39,7 @@ const curatorNode = <Frame open="/admin/compendium" managesPeople={false} />;
 // its heading and lede are copied here; the contents are the real part. Opened
 // at `/admin`, where the site marks no page current.
 const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElement => (
-  <Frame open="/admin" managesPeople={managesPeople}>
+  <Frame shell open="/admin" managesPeople={managesPeople}>
     <main>
       <h1>Admin</h1>
       <p className="lede">
@@ -69,6 +70,7 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'People Current' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,

@@ -240,6 +240,9 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   all inside the shell's `.app-shell__main`, which keeps the last row clear
   of the phone's bottom nav. Its optional `open` is the address the workshop
   pretends to be on, which decides the nav's current page.
+  Its `shell` flag draws the whole thing inside `ShellFrame` (the app bar above the admin row,
+  the phone's bottom bar pinned), as the site shows it; a story that sets it spreads
+  `shellFrameParameters`.
   `AdminTabbedFrame` is a tabbed admin page inside it, as its route draws
   it: heading and tabs from `ADMIN_PAGES`, and an `action`. It is the layout's
   markup only; the app's own layout reads the session.

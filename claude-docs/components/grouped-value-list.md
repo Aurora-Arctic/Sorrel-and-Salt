@@ -187,14 +187,14 @@ the filter reaches the admin pages, which the workshop does not serve. The
 category groups are four invented groups, so typing in a state's group filter
 shows its list narrowing.
 
-| State                       | Shows                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------ |
-| Default                     | Categories, a middle page: both pager ends live and "Page 2 of 3" between them |
-| First Page, Middle Page     | Categories, Next alone and "Page 1 of 2" beside it; and a middle page          |
-| Filtered, No Matches, Empty | Categories with a filter, with a filter that matches nothing, and with no rows |
-| Forms                       | A form's row, drawing its group's icon                                         |
-| Deities                     | Deities under invented traditions, slugged by `deitySlug`                      |
-| Celestial Bodies            | A flat kind, with no group column or filter                                    |
+| State                       | Shows                                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Default                     | The Categories page as the route draws it: the app shell, the admin row, the heading with its Categories and Groups toggle and Add Category, the Name and Group filters, and three categories |
+| First Page, Middle Page     | Categories, Next alone and "Page 1 of 2" beside it; and a middle page                                                                                                                         |
+| Filtered, No Matches, Empty | Categories with a filter, with a filter that matches nothing, and with no rows                                                                                                                |
+| Forms                       | A form's row, drawing its group's icon                                                                                                                                                        |
+| Deities                     | Deities under invented traditions, slugged by `deitySlug`                                                                                                                                     |
+| Celestial Bodies            | A flat kind, with no group column or filter                                                                                                                                                   |
 
 `Pending` is its own story: the page's pending state inside the admin frame. These stories stand for the page, in the admin layout's frame with the
 Categories page's heading and tabs, its Categories tab open, as

@@ -8,6 +8,7 @@ import { PendingLink } from '../src/lib/navigation';
 import ContextRow from '../src/components/ContextRow';
 import TabbedPage from '../src/components/TabbedPage';
 import { WorkshopPathname } from './navigation';
+import { ShellFrame } from './shell-frame';
 import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 
 // The admin layout's frame for a story, so the workshop shows a component as
@@ -37,31 +38,43 @@ const Opened = ({ at, children }: { at?: string; children: ReactNode }): ReactEl
 export const AdminFrame = ({
   open,
   managesPeople = true,
+  shell = false,
   children,
-}: AdminFrameProps): ReactElement => (
-  <Opened at={open}>
-    <div className="app-shell__main">
-      <RouteModalProvider>
-        <ContextRow
-          lead={
-            <PendingLink
-              href="/admin"
-              className="context-row__name"
-              navigationTarget={adminTarget('/admin')}
-            >
-              Admin
-            </PendingLink>
-          }
-        >
-          <AdminNav managesPeople={managesPeople} />
-        </ContextRow>
-        <SectionBody region="admin" className="page-column">
-          {children}
-        </SectionBody>
-      </RouteModalProvider>
-    </div>
-  </Opened>
-);
+}: AdminFrameProps): ReactElement =>
+  shell ? (
+    // The app shell's bar around the same row and column, as the site draws them.
+    <ShellFrame
+      area="admin"
+      role={managesPeople ? 'admin' : 'curator'}
+      viewer={{ canCurate: true }}
+      open={open}
+    >
+      {children}
+    </ShellFrame>
+  ) : (
+    <Opened at={open}>
+      <div className="app-shell__main">
+        <RouteModalProvider>
+          <ContextRow
+            lead={
+              <PendingLink
+                href="/admin"
+                className="context-row__name"
+                navigationTarget={adminTarget('/admin')}
+              >
+                Admin
+              </PendingLink>
+            }
+          >
+            <AdminNav managesPeople={managesPeople} />
+          </ContextRow>
+          <SectionBody region="admin" className="page-column">
+            {children}
+          </SectionBody>
+        </RouteModalProvider>
+      </div>
+    </Opened>
+  );
 
 /**
  * A tabbed admin page as its route draws it: the frame, the page's heading
@@ -73,9 +86,10 @@ export const AdminTabbedFrame = ({
   page,
   open = ADMIN_PAGES[page].tabs[0].href,
   action,
+  shell,
   children,
 }: AdminTabbedFrameProps): ReactElement => (
-  <AdminFrame open={open}>
+  <AdminFrame open={open} shell={shell}>
     <TabbedPage title={ADMIN_PAGES[page].label} tabs={ADMIN_PAGES[page].tabs} action={action}>
       {children}
     </TabbedPage>

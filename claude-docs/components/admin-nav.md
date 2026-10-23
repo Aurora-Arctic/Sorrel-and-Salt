@@ -116,7 +116,7 @@ frame, the `.page-column` primitive (`styling.md`, "The page column").
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx), `Admin / Nav`: `States` has a control that chooses People Current, Categories Current, Astrology Current, Invitations Current, Curator (no People, M11.20), Index Page (the `/admin` index under the nav, its heading and lede copied from the page and `AdminContents` real) and Index Page Curator. `NarrowPinned` is the row at a phone's width. Each sits in the admin layout as it is, through the workshop's `AdminFrame` ([`workshop.md`](../workshop.md), ".storybook/"): the context row led by "Admin" with the nav in it, above the `.page-column` column that holds the page. The tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx), `Admin / Nav`: `States` has a control that chooses People Current, Categories Current, Astrology Current, Invitations Current, Curator (no People, M11.20), Index Page (the `/admin` index under the nav, inside the app shell's bar, its heading and lede copied from the page and `AdminContents` real) and Index Page Curator. `NarrowPinned` is the row at a phone's width. Each sits in the admin layout as it is, through the workshop's `AdminFrame` ([`workshop.md`](../workshop.md), ".storybook/"): the context row led by "Admin" with the nav in it, above the `.page-column` column that holds the page. The tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. Render-only, no test ids, no snapshots.
 
 ## Testing
 

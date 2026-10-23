@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import type { Route } from 'next';
+import Link from 'next/link';
+import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { FIXTURE_EDIT, GROUP_NAMES } from '../../../.storybook/fixtures';
+import { shellFrameParameters } from '../../../.storybook/shell-frame';
 import GroupList from '.';
 import { slugify } from '../../lib/slugify';
 import { groupsHref } from './href';
@@ -41,7 +45,22 @@ const CategoryGroupsView = () => (
   />
 );
 
-const defaultNode = <CategoryGroupsView />;
+// The Groups tab as the route draws it (`/admin/category-groups`): the app shell, the admin row,
+// the Categories heading with its Categories and Groups toggle, and the tab's Add.
+const defaultNode = (
+  <AdminTabbedFrame
+    shell
+    page="categories"
+    open="/admin/category-groups"
+    action={
+      <Link className="btn btn--solid" href={'/admin/category-groups?new' as Route}>
+        Add Category Group
+      </Link>
+    }
+  >
+    <CategoryGroupsView />
+  </AdminTabbedFrame>
+);
 
 const formGroupsNode = (
   <GroupList
@@ -123,6 +142,7 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
