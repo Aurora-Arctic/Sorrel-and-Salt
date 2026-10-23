@@ -134,3 +134,22 @@ export const States: Story = {
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
+
+// The widths the comments above name, pinned so they do not wait on the
+// toolbar: the plus at the heading's end with the pills on its line, ...
+export const AddActionAt600: Story = {
+  globals: { viewport: { value: 'w600', isRotated: false } },
+  render: () => addActionLabelAndPlusNode,
+};
+
+// ... the label beneath the heading, where the plus gives way to it, ...
+export const AddActionAt382: Story = {
+  globals: { viewport: { value: 'w382', isRotated: false } },
+  render: () => addActionLabelAndPlusNode,
+};
+
+// ... and the loading skeleton's rows as cards.
+export const LoadingAt375: Story = {
+  globals: { viewport: { value: 'w375', isRotated: false } },
+  render: () => loadingStateNode,
+};
