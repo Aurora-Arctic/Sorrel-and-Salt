@@ -59,4 +59,4 @@ The page hands the `Membership` that guard returns to `readCovenIngredients`, wh
 
 ## Stories and tests
 
-Stories: `Default`, `Mid List`, `Empty`, `Empty for a Viewer`, `No Matches`, `With Edit`, `With Annotate`, `With More`, `With Lone Bin`. Tests: `tests/components/CovenCards/index.test.tsx`, `card-more.test.tsx` beside it, and `tests/app/(shell)/coven/[slug]/ingredients/page.test.tsx`; the browser flow for Annotate on the list is in `tests/e2e/coven-ingredients.spec.ts`.
+Stories: `States`, drawn inside the app shell with the coven switcher, nav and Ingredients heading, with a control that chooses Default, For A Viewer, Middle Page, Empty, Empty For A Viewer and No Matches; and `WithLoneBin` and `WithStock` (the full member foot: Edit or Annotate, Edit Stock, More). Tests: `tests/components/CovenCards/index.test.tsx`, `card-more.test.tsx` beside it, and `tests/app/(shell)/coven/[slug]/ingredients/page.test.tsx`; the browser flow for Annotate on the list is in `tests/e2e/coven-ingredients.spec.ts`.

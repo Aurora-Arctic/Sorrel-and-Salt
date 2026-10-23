@@ -31,7 +31,7 @@ Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for 
 
 A `PickerCategory` is the category's id, name, optional `description`, optional
 `count` (how many entries picking it would leave) and its
-`group`, a `PickerGroup`: id, name, `colorDark` and `colorLight`.
+`group`, a `PickerGroup`: id, name, `color`.
 
 ## Contracts
 
@@ -60,8 +60,7 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
   colour, the Combobox option's `colors` (the owner's call, M5.6b), so the colour
   a pick's chip will wear is seen before the pick.
 - **An entry's colour is its group's row.** Each pick is a `ComboboxEntry`
-  given its group as `colors`, so it wears the row's `colorDark` and
-  `colorLight` through `chipColors` as a solid fill (claude-docs/styling.md,
+  given its group as `colors`, so it wears the row's `color` through `chipColors` as a solid fill (claude-docs/styling.md,
   "Chips, badges and the solid-fill rule"). Its tooltip reads the name with
   its group in brackets on its first line, the entry's `qualifier`, as a
   picked deity reads with its tradition, since the colour alone cannot name
@@ -100,15 +99,7 @@ screen scrolls nothing sideways.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin /
-Category Picker`, over four of the seed's groups with their colour pairs and
-invented categories: `NothingPicked`, an empty box to focus and type in;
-`SomePicked`, three entries as chips in their groups' colours;
-`AnInvalidEntry`, one entry edged and named by an error beneath the box;
-`Loading`, with no categories yet and the pending state; and `CouldNotLoad`,
-with the status line that says the list failed; `WithCounts`, rows and a chip
-with counts and the zero rows left out; and `CountsLoading`, the chip's
-placeholder.
+[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin / Category Picker`, over four of the seed's groups with their colour pairs and invented categories. `States` has a control that chooses: Default (an empty box to focus and type in), Some Picked (three entries as chips in their groups' colours), An Invalid Entry (one entry edged and named by an error beneath the box), Loading (no categories yet, the pending state), Failed (the status line that says the list failed), With Counts (rows and a chip with counts, the zero rows left out), Counts Loading (the chip's placeholder) and Action And No Hint (the legend's action, a Copy From Ingredient button, with no hint tip).
 
 ## Testing
 

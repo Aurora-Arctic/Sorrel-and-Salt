@@ -170,15 +170,7 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx),
-`Admin / Compendium List`: `OnePageOfSeveral`, `FirstPage`, `Filtered`,
-`NoMatch` and `Empty`, and `PhoneDark` and `PhoneLight`, the middle page at
-375px with every row a card, and `FilteredPhoneDark` and `FilteredPhoneLight`,
-`Filtered` at 375px with the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every story is the page as
-`/admin/compendium` draws it: the admin layout's frame with the Compendium
-page current in its nav, then a `main` holding the page header with Add
-Ingredient, then the list. The filter reaches `/admin/compendium`, which the
-workshop does not serve. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx), `Ingredients / Compendium List`: one story, `States`, with a control that chooses Default (a middle page), First Page, Filtered, Chosen Values Counted, No Matches, Empty, Zodiac And Bodies Chosen, Without Forms, Match All Categories, Last Page, Single Page and Filter Panel Open. At 375px, from the toolbar viewport menu, every row is a card and Filtered shows the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every state is the page as `/admin/compendium` draws it: the admin layout's frame with the Compendium page current in its nav, then a `main` holding the page header with Add Ingredient, then the list. The filter reaches `/admin/compendium`, which the workshop does not serve. Render-only, no test ids, no snapshots.
 
 ## Testing
 

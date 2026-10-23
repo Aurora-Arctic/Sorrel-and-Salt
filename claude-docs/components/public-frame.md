@@ -65,8 +65,8 @@ same mark from the same mixin.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PublicFrame/index.stories.tsx) —
-`Default`, `PhoneDark` and `PhoneLight`, on the compendium so its link carries
-the current-page mark, and `NotOnTheCompendium`, on a page the nav does not
+`States`, with a control that chooses Default, on the compendium so its link carries
+the current-page mark, and Not On The Compendium, on a page the nav does not
 name, so the link rests unmarked. Render-only, bar
 `LoadingTheCompendium`, which presses the Compendium link from an entry's
 page and holds the wait, so the cards skeleton stands under the bar.

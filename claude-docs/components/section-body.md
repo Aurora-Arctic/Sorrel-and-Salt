@@ -60,4 +60,4 @@ switcher to mount, which focuses its box. See `workspace-switcher.md`.
 
 ## Stories
 
-`Shell / Section Body`: `AtRest`, `LoadingList`, `LoadingTabs` and `LoadingWithMenu`. The loading stories draw the wait with a title and filter, with the tab row, and with the contents menu.
+`Shell / Section Body`: `States`, with a control that chooses Loading List, Loading List With Action, Loading Tabs, Loading With Menu, Loading Entry and Loading Contents. The states draw the wait with a title and filter, with the tab row, and with the contents menu.

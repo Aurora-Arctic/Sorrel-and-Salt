@@ -182,7 +182,7 @@ jobs:
             # script as SQL. `*.sql` keeps Drizzle's meta/*.json out too.
             destructive_ddl_migrations:
               - 'src/db/migrations/*.sql'
-            # `tests/**`, `.ladle/config.mjs` and the configs are not under
+            # `tests/**`, `.storybook/main.ts` and the configs are not under
             # `src/**`, and a test-only PR is exactly what this job runs.
             # tests/e2e/ is Playwright's and nothing Vitest runs imports it.
             # The db image's inputs too, so a Postgres bump is tested on its own PR.
@@ -197,7 +197,7 @@ jobs:
               - 'src/**'
               - 'tests/**'
               - '!tests/e2e/**'
-              - '.ladle/config.mjs'
+              - '.storybook/main.ts'
               - 'vitest.config.mts'
               - 'codegen.ts'
               - 'package.json'
@@ -240,14 +240,14 @@ jobs:
               - 'next.config.ts'
               - 'package.json'
               - 'package-lock.json'
-            # The workshop specs measure a component in its Ladle story: the
-            # e2e image for the browser, Ladle's own config and stories, and
+            # The workshop specs measure a component in its workshop story: the
+            # e2e image for the browser, the workshop config (Storybook's) and stories, and
             # the components under src/**. No database and no Next build.
             workshop:
               - *shared
               - '.github/workflows/build-e2e-image.yml'
               - 'Docker/Dockerfile.e2e'
-              - '.ladle/**'
+              - '.storybook/**'
               - '**/*.stories.tsx'
               - 'src/**'
               - 'tests/e2e/workshop/**'
@@ -336,8 +336,8 @@ jobs:
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
 
   # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
-  # its Ladle story, `npm run e2e:workshop`. In the e2e image, as playwright.yml
-  # runs, for its browser; Ladle is the one server, so no database and no
+  # its workshop story, `npm run e2e:workshop`. In the e2e image, as playwright.yml
+  # runs, for its browser; Storybook is the one server, so no database and no
   # build. Never a required check: `continue-on-error`, so a red run shows
   # without blocking a merge. Under its own `workshop` filter, by a step-level
   # `if:` (see the header).
@@ -360,7 +360,7 @@ jobs:
         working-directory: /app
         shell: bash
     env:
-      # playwright.workshop.config.ts starts a fresh Ladle and retries under it.
+      # playwright.workshop.config.ts starts a fresh Storybook and retries under it.
       CI: true
     steps:
       - name: Checkout into /app

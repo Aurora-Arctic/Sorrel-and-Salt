@@ -1,4 +1,5 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import JarShelf from '.';
 import type { StockForm, StockJar } from '../StockDialog/types';
 import type { ShelfForm } from './types';
@@ -6,9 +7,12 @@ import type { ShelfForm } from './types';
 // Render-only; the vessel pick and the level are asserted in tests/components/JarShelf, and
 // the press in tests/components/IngredientEntry. In the workshop the dialog a press opens
 // reaches no server. Every name is invented.
-export default {
+const meta = {
   title: 'Ingredients / Jar Shelf',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const INGREDIENT = '00000000-0000-4000-8000-000000000002';
@@ -52,10 +56,26 @@ const edit = {
 };
 
 /** A role that may not edit: plain figures, no buttons. */
-export const Viewer: Story = () => <JarShelf forms={FORMS} seed={SEED} />;
+const viewerNode = <JarShelf forms={FORMS} seed={SEED} />;
 
 /** A role that may edit: each jar, the empty one too, opens Edit Stock on its form. */
-export const Editable: Story = () => <JarShelf forms={FORMS} seed={SEED} edit={edit} />;
+const defaultNode = <JarShelf forms={FORMS} seed={SEED} edit={edit} />;
 
 /** One form alone, as an entry with a single variant has. */
-export const OneForm: Story = () => <JarShelf forms={FORMS.slice(0, 1)} seed={SEED} />;
+const oneFormNode = <JarShelf forms={FORMS.slice(0, 1)} seed={SEED} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Viewer: viewerNode,
+  'One Form': oneFormNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

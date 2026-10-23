@@ -77,38 +77,29 @@ describe('seed(db, { scenario: "demo" })', () => {
     expect(forms.get('compendium|salvia rosmarinus')).toEqual(['Herb', 'Oil']);
   });
 
-  it('holds Garden Rosemary, House Chamomile and Ginger as cupboard rows with exactly their overrides, and no own row beside them', async () => {
+  it('holds the cupboard rows with exactly their overrides, and no own row beside them', async () => {
     const rows = await sql`
       select i.identity_key, c.label, c.description, c.safety_notes, c.elements,
              c.celestial_bodies, c.zodiac_signs, c.colors
       from workspace_compendium_entries c join ingredients i on i.id = c.ingredient_id
       where c.workspace_id = ${WORKSPACE_W_ID} and c.deleted_at is null
       order by i.identity_key`;
-    const none = { safety_notes: null, elements: null, celestial_bodies: null, zodiac_signs: null };
 
-    expect(rows).toEqual([
-      {
-        ...none,
-        identity_key: 'matricaria chamomilla',
-        label: 'House Chamomile',
-        description: null,
-        colors: ['white', 'yellow'],
-      },
-      {
-        ...none,
-        identity_key: 'salvia rosmarinus',
-        label: 'Garden Rosemary',
-        description: 'Cut from the bush by the back door, dried in bunches over the stove.',
-        colors: null,
-      },
-      {
-        ...none,
-        identity_key: 'zingiber officinale',
-        label: null,
-        description: null,
-        colors: null,
-      },
-    ]);
+    expect(rows).toEqual(
+      WORKSPACE_W_CUPBOARD.map((held) => ({
+        identity_key: identityOf(held.entry),
+        label: held.label ?? null,
+        description: held.description ?? null,
+        safety_notes: held.safetyNotes ?? null,
+        elements: held.elements ?? null,
+        celestial_bodies: held.celestialBodies ?? null,
+        zodiac_signs: held.zodiacSigns ?? null,
+        colors: held.colors ?? null,
+      })).sort((x, y) => (x.identity_key < y.identity_key ? -1 : 1)),
+    );
+    expect(
+      WORKSPACE_W_CUPBOARD.filter((held) => held.label ?? held.description).length,
+    ).toBeGreaterThan(4);
     const own = await sql`
       select identity_key from ingredients
       where workspace_id = ${WORKSPACE_W_ID} and deleted_at is null`;
@@ -217,8 +208,8 @@ describe('seed(db, { scenario: "demo" })', () => {
     // The moved slug beside the two `standard` seeds as fixtures.
     expect(all).toHaveLength(3);
   });
-  // The Edit Stock button and the jar lines show only on a card with stock, and
-  // no other scenario writes any (M9.9).
+  // The Edit Stock button and the jar lines show only on a card with stock;
+  // `standard` writes the compendium jars and `demo` adds its own (M9.9).
   describe("W's stock", () => {
     const stockRows = () => sql`
       select s.id, s.quantity_on_hand, s.unit, s.unit_dimension, s.low_stock_threshold,
@@ -233,7 +224,10 @@ describe('seed(db, { scenario: "demo" })', () => {
 
       expect(rows.map((row) => row.id).sort()).toEqual(DEMO_STOCK.map((jar) => jar.id).sort());
       const unmeasured = rows.filter((row) => row.quantity_on_hand === null);
-      expect(unmeasured.map((row) => [row.unit, row.low_stock_threshold])).toEqual([[null, null]]);
+      expect(unmeasured.map((row) => [row.unit, row.low_stock_threshold])).toEqual([
+        [null, null],
+        [null, null],
+      ]);
       // Below its threshold, the default one where the jar sets none.
       expect(
         rows.filter(

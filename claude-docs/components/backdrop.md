@@ -167,10 +167,7 @@ are recorded. Nothing else should reference the files.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/Backdrop/index.stories.tsx) —
-`Default` (the everyday size) and `FrontDoor` (inside a `.welcome-page`
-wrapper, the front door's size). Fixed to the viewport, so they appear in the
-preview's corners rather than in the story frame.
+[`index.stories.tsx`](../../src/components/Backdrop/index.stories.tsx) has one story, `States`, with a control that chooses Every Page (the everyday size) or Front Door (inside a `.welcome-page` wrapper, the front door's size). Fixed to the viewport, so they appear in the preview's corners rather than in the story frame. The toolbar's theme switch shows the dark and the light backdrop.
 
 ## Testing
 

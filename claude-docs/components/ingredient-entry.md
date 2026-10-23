@@ -125,25 +125,26 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/IngredientEntry/index.stories.tsx), under `Pages / Ingredient Entry`, each in a `main.page-column` as a route gives it:
+[`index.stories.tsx`](../../src/components/IngredientEntry/index.stories.tsx), under `Pages / Ingredient Entry`, each in a `main.page-column` as a route gives it, and `States` inside the app shell (`ShellFrame`; the frame goes bare by itself so the phone's bottom bar pins to the screen): a coven's switcher, nav and way back to Ingredients for the coven's states, and, for the public ones, the way back to the Compendium under the signed-out header (site name and Sign In) of a visitor with no session, or under the shell's bar for the two that need an account, Long Names Public (the pencil) and Held In A Coven. The public states are Default, the two Unknown states, Toxic, Long Names Public, Moved Away, Form Adds Nothing, Nothing Recorded and Held In A Coven. `States` has a control that chooses the entry page's states, and `QuickLook` (titled "Quick Look") the details modal's. Every state is an entry of one of those two controls; there are no other stories. The names below are the entries of those controls (more: Stock For Editor, Stock For Viewer and Held In A Coven for the stock shelf, Annotate Or Remove, Remove Is The Bin, Similar In The Compendium, Viewer Sees No Cupboard Buttons, Retired Offers Make It Ours, Compendium Entry In Coven):
 
-- `CompendiumEntry`: two forms, a toxic oil with its own caution and a typed bundle drawing the spoon.
-- `NoFormalName`, `UnknownWithName`, `UnknownWithoutName`: the formal-name line's three sentences.
-- `NothingRecorded`: every empty state, and a form that adds nothing.
-- `CovenEntry`: a coven's own entry, badged Local.
-- `FromTheCompendium`, `Annotated`: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared celestial bodies.
-- `NewWithBack`, `LongNames`, `NoFormalNameWithEdit`: the head's three lines (the owner's call, 2026-10-20): the way back with New and the safety badge after it, the pair ending flush with the pencil; long names wrapping with the pencil on the formal name's first line and Updated; and the pencil on the None line. `LongNamesPublic` is the long names on the public page, with no cupboard. At 390 the name wraps inside the column (the owner's call, 2026-10-20): the `h1` is capped at the column and breaks a word (`overflow-wrap: break-word`) only when the word cannot fit a line of its own; until then a word wider than the column ran 11px past its right edge.
-- `RetiredInCoven`: a retired compendium entry a coven still uses, marked Retired.
-- `CompendiumEntryForCurator`: Edit, and the link to the public page.
-- `MovedAway`: the notice for the entry that left this address.
-- `FormAddsNothing`: two forms adding nothing, one of them toxic.
-- `PhoneDark`, `PhoneLight`: the full entry at 375px.
-- `DetailsFromCovenList`, `DetailsFromCompendium`, `DetailsFromCompendiumForCurator`: the details modal (M12.5) over a coven's list with Edit, over `/compendium` with See in Compendium alone, and the same for a curator with Edit. Each opens in its own frame, and Open Again brings it back after it closes.
-- `DetailsInYourCupboards`: the details modal over `/compendium` for a member of four covens that hold the entry, with the In Your Cupboards links last, each led by the shelf, one name long enough to wrap. `DetailsInOneCoven` is the same for one coven.
-- `DetailsLongDescription`: a long description cut to its first six lines, fading into the Show More bar; the sparse story's short one has no toggle.
-- `DetailsLongName`, `DetailsLongWord`, `DetailsNoFormalName`, `DetailsNewAndCautioned`: the head with a name that wraps, a word longer than the line (the one case that breaks a word), no formal name, and a new cautioned entry.
-- `DetailsSparse`, `DetailsNothingRecorded`, `DetailsToxic`: the details modal's body with only what is recorded, with nothing ("Nothing recorded yet."), and a toxic entry's caution naming two cautioned forms.
-- `DetailsPhoneDark`, `DetailsPhoneLight`: the coven's details modal at 375px.
+- Default: two forms, an oil with its own caution (the head badge reads Caution; Toxic is its own state) and a typed bundle drawing the spoon.
+- No Formal Name, Unknown With Name, Unknown Without Name: the formal-name line's three sentences.
+- Nothing Recorded (on `States`): every empty state, and a form that adds nothing.
+- Annotated In Stock: an annotated entry the coven holds with its jars, so the held mark, Annotate and the three dots stand together. Annotated With Stock And Compendium Panel adds the In the Compendium block beside it.
+- Coven Entry: a coven's own entry, badged Local.
+- From The Compendium, Annotated: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared celestial bodies.
+- New With Back, Long Names, No Formal Name: the head's three lines (the owner's call, 2026-10-20): the way back with New and the safety badge after it, the pair ending flush with the pencil; long names wrapping with the pencil on the formal name's first line and Updated; and the pencil on the None line. Long Names Public is the long names on the public page, with no cupboard. At 390 the name wraps inside the column (the owner's call, 2026-10-20): the `h1` is capped at the column and breaks a word (`overflow-wrap: break-word`) only when the word cannot fit a line of its own; until then a word wider than the column ran 11px past its right edge.
+- Retired In Coven: a retired compendium entry a coven still uses, marked Retired.
+- Compendium Entry For Curator: Edit, and the link to the public page.
+- Moved Away: the notice for the entry that left this address.
+- Form Adds Nothing: two forms adding nothing, one of them toxic.
+- From Coven List, From Compendium, From Compendium For Curator: the details modal (M12.5) over a coven's list with Edit, over `/compendium` with See in Compendium alone, and the same for a curator with Edit. Each opens in its own frame, and Open Again brings it back after it closes.
+- In Your Cupboards: the details modal over `/compendium` for a member of four covens that hold the entry, with the In Your Cupboards links last, each led by the shelf, one name long enough to wrap. In One Coven is the same for one coven.
+- Long Description: a long description cut to its first six lines, fading into the Show More bar; the Sparse state's short one has no toggle.
+- Long Name, Long Word, No Formal Name, New And Cautioned: the head with a name that wraps, a word longer than the line (the one case that breaks a word), no formal name, and a new cautioned entry.
+- Local Replacing Compendium Entry and Local Replacing Several (on `States`): the In the Compendium block with one link, and with three and See All past them.
+- With Stock Dialog (on `QuickLook`): the modal with the Edit Stock dialog open.
+- Sparse, Nothing Recorded, Toxic: the details modal's body with only what is recorded, with nothing ("Nothing recorded yet."), and a toxic entry's caution naming two cautioned forms.
 
 ## Testing
 

@@ -124,7 +124,7 @@ the `(name, id)` keyset the list pages on
 
 Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
 
-Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+Foundations (`.storybook/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
 ## Styling
 
@@ -144,18 +144,17 @@ The computed styles were checked identical to the pixel values the tokens replac
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:
-the kinds (`Compendium`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
-`RetiredCaution`, `NewWithoutSafety`), the stress cases for the name (`LongName`, `OneLongWord`,
-`MineralName`, `NoFormalName`, `NewLongName`), the other marks and chips (`ManyForms`,
-`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`,
-`CompactLongName`) and the recency marks (`NewEntry`, `UpdatedEntry`).
+[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Ingredients / Ingredient Card`:
+one story, `States`, a grid of the kinds (Own With Jars, In Cupboard, Retired, Compendium), the safety states (Caution, New Without Safety), the stress cases for the name (Long Name, which is also retired, cautioned and
+Updated; One Long Word, Mineral Name, No Formal Name), the other marks and chips (Many Forms, No Forms Line,
+Many Categories, Last Edited), the actions (With Actions, With Start Actions), the compact look (Compact)
+and the recency marks (New And Updated).
 
 ## Testing
 
 `tests/components/IngredientCard/index.test.tsx`: the card's name and link, the category chips, safety,
 the cupboard marks, the jar-line slot, the actions, the navigation (the whole card is one target for the
-name link) and the recency marks. Layout and the drawer's look are checked in Ladle and in the page
+name link) and the recency marks. Layout and the drawer's look are checked in Storybook and in the page
 specs that place the card, not in jsdom, which has no layout. For the same reason, whether a press
 reaches the overlay is proved in a browser: `tests/e2e/card-click.spec.ts` (MB.272) presses each
 card on the formal name, its padding, the gap between the foot's controls, the New mark (on

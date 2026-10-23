@@ -32,7 +32,7 @@ depend on the session.
 **Every link is `next/link`.** `landing` is typed as Next's `Route`
 (`signedInLanding` returns one), so `typedRoutes` checks it, now that
 `/coven` has a page. In the workshop, `next/link`
-is aliased to a plain anchor (`.ladle/UnoptimizedLink.tsx`), as Ladle's
+is aliased to a plain anchor (`.storybook/UnoptimizedLink.tsx`), as Storybook's
 Next.js guide prescribes.
 
 ## Copy
@@ -67,9 +67,8 @@ so the component sets no type of its own.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Welcome/index.stories.tsx) —
-`Default` (signed out), `SignedIn` (the `/coven` landing), and `PhoneDark`
-and `PhoneLight` at 375px. Each renders inside the page's real
-`main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)).
+`States`, with a control that chooses Default (signed out) or Signed In (the `/coven` landing). Each renders inside the page's real
+`main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)), with the layout's corner `Backdrop` beside it, at the front door's size.
 Render-only, no test ids, no snapshots.
 
 ## Testing

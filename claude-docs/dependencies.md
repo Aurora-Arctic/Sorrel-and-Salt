@@ -37,7 +37,6 @@ msw 3.0.3 is out and the move is small: subpath imports and one renamed option (
 
 `npm audit` reports 21 findings (17 high, 4 moderate), all in devDependencies and none with a real fix:
 
-- **braces up to 3.0.3, GHSA-vfj7-8cjw-p6xm** (CVSS 8.7, September 2026): a deeply nested brace pattern from an attacker exhausts the stack. No patched version exists. It is reached through `micromatch`, `fast-glob` and `globby` under `stylelint`, `@graphql-codegen/cli` and `@ladle/react`, each at its latest release, and none takes glob patterns from users. **Revisit when** a patched `braces` is published.
+- **braces up to 3.0.3, GHSA-vfj7-8cjw-p6xm** (CVSS 8.7, September 2026): a deeply nested brace pattern from an attacker exhausts the stack. No patched version exists. It is reached through `micromatch`, `fast-glob` and `globby` under `stylelint` and `@graphql-codegen/cli`, each at its latest release, and none takes glob patterns from users. **Revisit when** a patched `braces` is published.
 - **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/orm-version.md`](db/orm-version.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
-- **Ladle 5.1.1** (November 2025): the install's `ERESOLVE` warning is its `react-inspector@6` peer on React 18 or earlier (open issue #597). It carries its own Vite 6 beside the root's Vite 8, and `vite-tsconfig-paths` pulls in `tsconfck`, marked unmaintained. **Revisit when** Ladle publishes a release after 5.1.1.
 - `node-domexception` is deprecated and reached through `@graphql-codegen/cli` and `sync-fetch` to `node-fetch@3`. It is upstream's to fix.
