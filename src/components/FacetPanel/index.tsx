@@ -74,6 +74,13 @@ function sourceOptions(
   ];
 }
 
+// In My Covens' two ways (M12.55): In, held in a picked coven, or Not In, held in none of them.
+// Not In submits as covensNot=1; In submits an empty value, which the address reads as absent.
+const COVENS_NOT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: '', label: 'In' },
+  { value: '1', label: 'Not In' },
+];
+
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'any', label: 'Any' },
@@ -160,6 +167,9 @@ export default function FacetPanel({
   ].reduce((total, list) => total + list.length, 0);
   const count =
     chosen +
+    // Not In with covens picked is a mode of them, as Match is; with none picked it is a filter
+    // of its own, in none of the viewer's covens.
+    (filter.covensNot && !filter.covens?.length ? 1 : 0) +
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
     (admin && filter.withoutForms ? 1 : 0) +
@@ -497,6 +507,15 @@ export default function FacetPanel({
                       </div>
                     )}
                     <div className="facet-panel__quick">
+                      {covens.length > 0 && (
+                        <ChoiceChip
+                          legend="Covens"
+                          name="covensNot"
+                          options={COVENS_NOT_OPTIONS}
+                          value={filter.covensNot ? '1' : ''}
+                          onChange={(value) => onChange({ covensNot: value === '1' })}
+                        />
+                      )}
                       <ChoiceChip
                         legend="Toxic"
                         name="toxic"

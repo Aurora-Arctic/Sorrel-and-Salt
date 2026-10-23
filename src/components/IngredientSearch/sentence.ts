@@ -106,9 +106,21 @@ export function buildSearchSentence({
   // Named by label only (M12.55): a label is a coven the viewer is in, and the read drops
   // any other id, so an id with none filters nothing and is not named. A coven's name keeps
   // its capitals, as a deity's does.
+  // Not In reads "not held in A or B". With no coven in the address at all it reads "in none of my
+  // covens", for a viewer with covens to name; covens in the address that all go unnamed filter
+  // nothing, under In or Not In, so they say nothing.
   const covens = picked(filter.covens).filter((id) => labels.covens?.[id] !== undefined);
   if (covens.length > 0) {
-    clause(text('held in '), ...valueList('covens', covens, OR, (v) => label('covens', v)));
+    clause(
+      text(filter.covensNot ? 'not held in ' : 'held in '),
+      ...valueList('covens', covens, OR, (v) => label('covens', v)),
+    );
+  } else if (
+    filter.covensNot &&
+    picked(filter.covens).length === 0 &&
+    Object.keys(labels.covens ?? {}).length > 0
+  ) {
+    clause({ kind: 'value', text: 'in none of my covens', facet: 'covensNot', value: 'true' });
   }
 
   const categories = picked(filter.categories);

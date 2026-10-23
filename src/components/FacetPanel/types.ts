@@ -9,6 +9,11 @@ import type { CompendiumFacetCounts } from '../CompendiumList/types';
 export interface FacetPanelFilter {
   /** The public compendium only (M12.55): the ids of the viewer's covens an entry must be held in, any one of them. */
   covens?: readonly string[];
+  /**
+   * The public compendium only (M12.55): Not In, so the entries none of the picked covens hold, or
+   * with none picked none of the viewer's covens. Left out or false, In.
+   */
+  covensNot?: boolean;
   categories: readonly string[];
   /** Whether an entry needs every chosen category (`all`) or any of them (`any`). */
   categoryMode: CategoryMode;

@@ -913,6 +913,66 @@ describe('CompendiumList filter', () => {
       publicFilter({ ...NO_FILTER, covens: ['coven-w'] });
       expect(screen.getByRole('button', { name: 'Filters 1' })).toBeInTheDocument();
     });
+
+    it('applies Not In to the address as covensNot=1, keeping the picked covens', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w'] });
+      openPanel();
+      fireEvent.click(
+        within(within(panel()).getByRole('group', { name: 'Covens' })).getByRole('radio', {
+          name: 'Not In',
+        }),
+      );
+      applyFilters();
+      expect(router.push.mock.calls).toEqual([['/compendium?covens=coven-w&covensNot=1']]);
+    });
+
+    it('leaves covensNot out of the address when In is chosen again', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w'], covensNot: true });
+      openPanel();
+      fireEvent.click(
+        within(within(panel()).getByRole('group', { name: 'Covens' })).getByRole('radio', {
+          name: 'In',
+        }),
+      );
+      applyFilters();
+      expect(router.push.mock.calls).toEqual([['/compendium?covens=coven-w']]);
+    });
+
+    it('asks for the held counts under Not In with covensNot', async () => {
+      const asked: unknown[] = [];
+      mockGraphQLQuery('CompendiumFacetCounts', (variables) => {
+        asked.push([variables.covenIds, variables.covensNot]);
+        return {
+          compendiumFacets: {
+            forms: [],
+            deities: [],
+            categories: [],
+            zodiacSigns: [],
+            celestialBodies: [],
+            elements: [],
+            toxic: [],
+            withoutReferences: 0,
+            withoutForms: 0,
+          },
+        };
+      });
+      publicFilter();
+      openPanel();
+      fireEvent.click(
+        within(within(panel()).getByRole('group', { name: 'Covens' })).getByRole('radio', {
+          name: 'Not In',
+        }),
+      );
+      await waitFor(() => expect(asked).toContainEqual([undefined, true]));
+    });
+
+    it('says not held in, or in none of my covens, in the search sentence', () => {
+      const { unmount } = publicFilter({ ...NO_FILTER, covens: ['coven-w'], covensNot: true });
+      expect(listStatus()[0]).toHaveTextContent('not held in Testhollow');
+      unmount();
+      publicFilter({ ...NO_FILTER, covensNot: true });
+      expect(listStatus()[0]).toHaveTextContent('in none of my covens');
+    });
   });
 
   describe('the match mode', () => {

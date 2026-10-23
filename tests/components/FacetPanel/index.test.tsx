@@ -496,6 +496,57 @@ describe('FacetPanel', () => {
       expect(sent).toEqual(['coven-w', 'coven-v']);
       expect(filtersButton()).toHaveAccessibleName('Filters 2');
     });
+
+    it('offers In and Not In beside In My Covens, only with covens, on In by default', () => {
+      const { unmount } = open();
+      expect(screen.queryByRole('group', { name: 'Covens' })).toBeNull();
+      unmount();
+      open({ covens: [] }, { covens: COVENS });
+      const choice = screen.getByRole('group', { name: 'Covens' });
+      const box = screen.getByRole('combobox', { name: 'In My Covens' });
+      const toxic = screen.getByRole('group', { name: 'Toxic' });
+      expect(choice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+      expect(choice.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(
+        within(choice)
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['', '1']);
+      expect(within(choice).getByRole('radio', { name: 'In' })).toBeChecked();
+    });
+
+    it('reports Not In as covensNot: true, and In as covensNot: false', () => {
+      const onChange = vi.fn();
+      const { unmount } = open({ covens: [] }, { covens: COVENS, onChange });
+      fireEvent.click(screen.getByRole('radio', { name: 'Not In' }));
+      expect(onChange).toHaveBeenLastCalledWith({ covensNot: true });
+      unmount();
+      open({ covens: [], covensNot: true }, { covens: COVENS, onChange });
+      fireEvent.click(screen.getByRole('radio', { name: 'In' }));
+      expect(onChange).toHaveBeenLastCalledWith({ covensNot: false });
+    });
+
+    it('submits Not In as covensNot=1 through the GET form around it', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel {...props({ covens: ['coven-w'], covensNot: true }, { covens: COVENS })} />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('covensNot')).toEqual(['1']);
+      expect(data.getAll('covens')).toEqual(['coven-w']);
+    });
+
+    it('counts Not In on the Filters button only when no coven is picked', () => {
+      // With covens picked, Not In is a mode of them, as Match is of the categories.
+      const { unmount } = open({ covens: ['coven-w'], covensNot: true }, { covens: COVENS });
+      expect(filtersButton()).toHaveAccessibleName('Filters 1');
+      unmount();
+      // With none picked, Not In is a filter of its own: in none of my covens.
+      open({ covens: [], covensNot: true }, { covens: COVENS });
+      expect(filtersButton()).toHaveAccessibleName('Filters 1');
+    });
   });
 
   describe("the coven's Source, In Stock and Low Stock Only controls (M9.7, M9.8)", () => {

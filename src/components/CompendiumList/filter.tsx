@@ -63,6 +63,7 @@ const whereOf = ({
 /** The facets of a filter, the part the panel shows; a coven's adds its three choices. */
 const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
   covens: filter.covens ?? [],
+  covensNot: filter.covensNot ?? false,
   categories: filter.categories,
   categoryMode: filter.categoryMode,
   forms: filter.forms,
@@ -83,6 +84,7 @@ const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
 /** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
 const noFacets = (coven: boolean): FacetPanelFilter => ({
   covens: [],
+  covensNot: false,
   categories: [],
   categoryMode: 'all',
   forms: [],
@@ -99,6 +101,7 @@ const noFacets = (coven: boolean): FacetPanelFilter => ({
 /** The panel's facets as filter values. */
 const changeOf = (panel: FacetPanelFilter) => ({
   covens: [...(panel.covens ?? [])],
+  covensNot: panel.covensNot ?? false,
   categories: [...panel.categories],
   forms: [...panel.forms],
   deities: [...panel.deities],

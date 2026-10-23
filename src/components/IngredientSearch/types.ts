@@ -85,6 +85,7 @@ export interface IngredientSearchBoxProps {
 export type SearchSentenceFacet =
   | 'query'
   | 'covens'
+  | 'covensNot'
   | 'categories'
   | 'forms'
   | 'deities'
@@ -104,6 +105,8 @@ export interface SearchSentenceFilter {
   query?: string | null;
   /** The public compendium only (M12.55): ids of the viewer's covens an entry is held in, any of them. */
   covens?: readonly string[];
+  /** Not In (M12.55): held in none of the picked covens, or with none picked none of the viewer's. */
+  covensNot?: boolean;
   /** Category slugs. */
   categories?: readonly string[];
   /** `all` (the default) lists entries in every category, `any` in at least one. */

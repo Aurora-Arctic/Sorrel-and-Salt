@@ -342,4 +342,38 @@ describe('the In My Covens clause (M12.55)', () => {
       value: 'v-id',
     });
   });
+
+  describe('under Not In', () => {
+    it('says not held in, naming the picked covens, joined by or', () => {
+      expect(text({ covens: ['w-id'], covensNot: true }, 2, { labels })).toBe(
+        '2 ingredients, not held in Testhollow',
+      );
+      expect(text({ covens: ['w-id', 'v-id'], covensNot: true }, 3, { labels })).toBe(
+        '3 ingredients, not held in Testhollow or Testwren',
+      );
+    });
+
+    it('says in none of my covens with no coven picked', () => {
+      const sentence = buildSearchSentence({ filter: { covensNot: true }, labels, total: 5 });
+      expect(sentence.fragments.map((f) => f.text).join('')).toBe(
+        '5 ingredients, in none of my covens',
+      );
+      expect(sentence.hasFilter).toBe(true);
+    });
+
+    it('says nothing when the address names covens and none has a label, as the read applies nothing', () => {
+      const sentence = buildSearchSentence({
+        filter: { covens: ['x-id'], covensNot: true },
+        labels,
+        total: 4,
+      });
+      expect(sentence.fragments.map((f) => f.text).join('')).toBe('4 ingredients');
+      expect(sentence.hasFilter).toBe(false);
+    });
+
+    it('says nothing for a viewer with no covens to name, as the read ignores it', () => {
+      expect(text({ covensNot: true }, 4)).toBe('4 ingredients');
+      expect(text({ covensNot: true }, 4, { labels: { covens: {} } })).toBe('4 ingredients');
+    });
+  });
 });
