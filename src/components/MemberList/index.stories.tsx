@@ -104,12 +104,30 @@ const SoleOwnerPage = () => (
 
 const soleOwnerNode = <SoleOwnerPage />;
 
+// An owner's view where an address is not on file and the editor's name is withheld.
+const gapsNode = (
+  <MemberList
+    members={[
+      { ...MEMBERS[0], email: null },
+      { ...MEMBERS[1], email: null, updatedBy: null, updatedAt: null },
+      MEMBERS[2],
+    ]}
+    currentUserId="u-ada"
+    showEmail
+  />
+);
+
+// An owner's view with the addresses but no controls, as a viewer's page draws it.
+const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" showEmail />;
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'With Actions': withActionsNode,
   'Sole Owner': soleOwnerNode,
+  'Gaps In The Record': gapsNode,
+  'Addresses Without Actions': addressesOnlyNode,
 };
 
 export const States: Story = {
