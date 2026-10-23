@@ -3,12 +3,18 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useNavigationState } from '../../lib/navigation';
 import Skeleton from '../Skeleton';
-import { SkeletonOverlay, skeletonFadeHost, useLeavingSkeleton } from '../SkeletonFade';
+import {
+  SkeletonCover,
+  SkeletonOverlay,
+  heldPage,
+  skeletonFadeHost,
+  useLeavingSkeleton,
+} from '../SkeletonFade';
 
 // The shell's body while a site-level navigation is on its way (M12.33): the
-// page that was there gives way to one skeleton, in a `main` of its own so the
-// page keeps its landmark during the wait (the pages draw their own `main`,
-// which the skeleton replaces). Only a `main` target is answered here; a
+// page that was there is hidden and one skeleton stands over it, in a `main`
+// of its own so the page keeps its landmark during the wait (the pages draw
+// their own `main`, which is hidden with the page). Only a `main` target is answered here; a
 // `coven` or `admin` target is `SectionBody`'s, and no target at all (a refresh) leaves the
 // page standing. The page's own heading goes with it, so the wait carries a
 // hidden one: a page without a level-one heading fails the accessibility scan.
@@ -55,15 +61,19 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   // What stays over the arrived page while it fades: the frame without the
   // hidden heading, since the page has its own.
   const leaving = useLeavingSkeleton(frame ? <main className={className}>{frame}</main> : null);
+  // The page is held beneath the skeleton rather than swapped for it, so the
+  // scroll position the browser saves for Back is the page's (MB.271;
+  // claude-docs/components/skeleton-fade.md).
   return (
     <div className={skeletonFadeHost(leaving !== null)}>
-      {frame ? (
-        <main className={className}>
-          <h1 className="visually-hidden">Loading</h1>
-          {frame}
-        </main>
-      ) : (
-        children
+      <div {...heldPage(frame !== null)}>{children}</div>
+      {frame && (
+        <SkeletonCover>
+          <main className={className}>
+            <h1 className="visually-hidden">Loading</h1>
+            {frame}
+          </main>
+        </SkeletonCover>
       )}
       {leaving && <SkeletonOverlay>{leaving}</SkeletonOverlay>}
     </div>
