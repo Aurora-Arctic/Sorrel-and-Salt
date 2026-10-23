@@ -3,6 +3,7 @@ import type { Route } from 'next';
 import { type ReactNode, useEffect } from 'react';
 import { FIXTURE_COVEN, FIXTURE_WORKSPACE_ID } from '../../../.storybook/fixtures';
 import { Reopenable } from '../../../.storybook/reopenable';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
 import StockDialog from '../StockDialog';
 import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
@@ -262,16 +263,35 @@ const CUPBOARD = {
 // The way back every entry page has, so the head shows its badge row beside it as the site does.
 const COMPENDIUM_BACK = { href: '/compendium' as Route, label: 'Compendium' };
 
+// The head's three lines (the owner's call, 2026-10-20): the way back with New, the safety
+// badge just right of New; the formal name with the Edit pencil at its end; the name alone.
+const BACK = { href: '/coven/fixture-coven/ingredients' as Route, label: 'Ingredients' };
+
+// An entry page in a coven, as src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx draws it:
+// the shell with the switcher and the coven's nav (and the phone's bottom bar), then the page
+// with its way back to Ingredients. Most states are this one.
 const Entry = (props: Partial<IngredientEntryProps>) => (
-  <Page>
-    <IngredientEntry detail={FULL} hrefOf={hrefOf} back={COMPENDIUM_BACK} {...props} />
-  </Page>
+  <ShellFrame area="coven" open="/coven/fixture-coven/ingredients">
+    <Page>
+      <IngredientEntry detail={FULL} hrefOf={hrefOf} back={BACK} {...props} />
+    </Page>
+  </ShellFrame>
+);
+
+// The compendium's public page for someone signed in: the shell's bar without a coven's row
+// (src/app/(public)/layout.tsx), the way back to the Compendium.
+const PublicEntry = (props: Partial<IngredientEntryProps>) => (
+  <ShellFrame area="none" open="/compendium">
+    <Page>
+      <IngredientEntry detail={FULL} hrefOf={hrefOf} back={COMPENDIUM_BACK} {...props} />
+    </Page>
+  </ShellFrame>
 );
 
 // A compendium entry with two forms: the oil with its own caution (so the head shows Caution, as a
 // cautioned entry does on the site; Toxic is its own state), the
 // bundle typed, so its heading takes the spoon.
-const defaultNode = <Entry />;
+const defaultNode = <PublicEntry />;
 
 // No naming system names it: a sentence where the formal name would be, with the
 // cupboard buttons beside the name.
@@ -305,7 +325,7 @@ const covenEntryNode = (
 
 // Unsettled, with a name recorded: upright, and marked unconfirmed.
 const unknownWithNameNode = (
-  <Entry
+  <PublicEntry
     detail={{
       ...FULL,
       entry: entryRow({ canonicalName: 'Fixtura incerta', nomenclature: 'unknown' }),
@@ -315,7 +335,7 @@ const unknownWithNameNode = (
 
 // Unsettled, and nobody has looked it up yet.
 const unknownWithoutNameNode = (
-  <Entry
+  <PublicEntry
     detail={{
       ...FULL,
       entry: entryRow({ canonicalName: null, nomenclature: 'unknown' }),
@@ -325,7 +345,7 @@ const unknownWithoutNameNode = (
 
 // Empty everywhere it can be: each block says so rather than standing blank.
 const nothingRecordedNode = (
-  <Entry
+  <PublicEntry
     detail={{
       entry: entryRow({
         name: 'Fixture Spar',
@@ -387,10 +407,6 @@ const removeIsTheBinNode = (
   />
 );
 
-// The head's three lines (the owner's call, 2026-10-20): the way back with New, the safety
-// badge just right of New; the formal name with the Edit pencil at its end; the name alone.
-const BACK = { href: '/coven/fixture-coven/ingredients' as Route, label: 'Ingredients' };
-
 const newWithBackNode = (
   <Entry
     detail={{
@@ -422,7 +438,7 @@ const longNamesNode = (
 
 // The same long names on the public page, for a curator: the pencil and no shelf.
 const longNamesPublicNode = (
-  <Entry
+  <PublicEntry
     detail={{
       ...FULL,
       entry: entryRow({
@@ -544,7 +560,7 @@ const localReplacingSeveralNode = (
 
 // Another entry moved off this address while its redirect's window is open.
 const movedAwayNode = (
-  <Entry
+  <PublicEntry
     movedAway={{
       name: 'Fixture Movedwort',
       href: '/compendium/ingredients/fixture-movedwort' as Route,
@@ -554,7 +570,7 @@ const movedAwayNode = (
 
 // A form held but adding nothing: its section still stands, saying so.
 const formAddsNothingNode = (
-  <Entry
+  <PublicEntry
     detail={{ ...FULL, variants: [variant('root'), variant('dried leaf', { toxic: true })] }}
   />
 );
@@ -976,9 +992,9 @@ const annotatedWithStockAndPanelNode = (
   />
 );
 // A toxic entry: the head's badge reads Toxic rather than Caution.
-const toxicNode = <Entry detail={{ ...FULL, entry: { ...FULL.entry, toxic: true } }} />;
+const toxicNode = <PublicEntry detail={{ ...FULL, entry: { ...FULL.entry, toxic: true } }} />;
 
-const heldInCovenNode = <Entry heldInCovens />;
+const heldInCovenNode = <PublicEntry heldInCovens />;
 
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
@@ -1015,6 +1031,7 @@ const STATES_STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
