@@ -11,6 +11,18 @@ import { assertNoAccessibilityViolations } from '../axe';
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
 
+// The placements are the states of one `States` story, chosen by its `state`
+// control; Then Succeeds is a story of its own.
+const STATE_OF: Record<string, string> = {
+  default: 'Resting',
+  bordered: 'Bordered',
+  borderless: 'Borderless',
+  'near-right-edge': 'Near+Right+Edge',
+  pinned: 'Pinned',
+};
+const storyPath = (story: string) =>
+  story in STATE_OF ? `states&args=state:${STATE_OF[story]}` : story;
+
 /**
  * The story in Storybook's bare preview (`iframe.html`), in `theme`, with its text in the web
  * font: measured before the font arrives, on a cold Storybook, a control is
@@ -21,7 +33,7 @@ const THEMES = ['dark', 'light'] as const;
 async function openStory(page: Page, story: string, theme: string, width: number) {
   await page.setViewportSize({ width, height: 800 });
   await page.goto(
-    `/iframe.html?id=surfaces-click-feedback--${story}&viewMode=story&globals=theme:${theme}`,
+    `/iframe.html?id=surfaces-click-feedback--${storyPath(story)}&viewMode=story&globals=theme:${theme}`,
   );
   await expect(page.locator('.workshop-story-frame button').first()).toBeVisible();
   await page.evaluate(async () => {
