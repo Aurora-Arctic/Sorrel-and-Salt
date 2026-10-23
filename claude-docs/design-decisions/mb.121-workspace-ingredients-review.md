@@ -9,31 +9,32 @@ the research each change rests on. The task is MB.121 in
 [`styling.md`](../styling.md), "Designing a section".
 
 The owner answered the review's questions on 2026-10-23; each answer is written
-where the question was, and listed in "The owner's answers", below. One item
-still waits for the owner: Proposal P1, marked **AWAITING THE OWNER**.
-Everything else is done and committed on
+where the question was, and listed in "The owner's answers", below. The
+owner chose P1 on 2026-10-23. The review as a whole is **AWAITING THE OWNER'S
+SIGN-OFF**: the owner will look it over on their own computer first. The work
+is done and committed on
 `feature/mb.121-design-review-the-workspace-ingredients-page`.
 
 ## The owner's answers (2026-10-23)
 
-| Question                                        | Answer                                                                         |
-| ----------------------------------------------- | ------------------------------------------------------------------------------ |
-| Keep the focus-ring commit                      | Keep it                                                                        |
-| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                           |
-| A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch       |
-| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                       |
-| Proposal P1, the symbol on the shelf            | **AWAITING THE OWNER**: the owner asked for a phone-width mock before deciding |
+| Question                                        | Answer                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------ |
+| Keep the focus-ring commit                      | Keep it                                                                  |
+| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                     |
+| A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch |
+| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                 |
+| Proposal P1, the symbol on the shelf            | P1, the symbol. The mocks stay until the sign-off                        |
 
 ## What was changed
 
-| Change                                                                                            | Kind               | Can be dropped alone |
-| ------------------------------------------------------------------------------------------------- | ------------------ | -------------------- |
-| The entry page's Stock section loses its `.panel` box                                             | Required by MB.121 | No                   |
-| Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring      | Accessibility fix  | Yes                  |
-| The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition         | No                   |
-| Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal           | Yes                  |
-| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks              | Yes                  |
-| A viewer's empty cupboard says which roles can add                                                | Owner's answer     | No                   |
+| Change                                                                                            | Kind                          | Can be dropped alone |
+| ------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------- |
+| The entry page's Stock section loses its `.panel` box                                             | Required by MB.121            | No                   |
+| Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring      | Accessibility fix             | Yes                  |
+| The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition                    | No                   |
+| Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal, chosen by the owner | Yes                  |
+| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks                         | Yes                  |
+| A viewer's empty cupboard says which roles can add                                                | Owner's answer                | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
 differs. The viewer's added line changes what a viewer reads, nothing else.
@@ -79,12 +80,16 @@ symbol, and the tip names the state in words. P1b would be clearer to a newcomer
 but adds a line of text under every flagged jar. P1c does not meet 1.4.1 by
 itself.
 
-**AWAITING THE OWNER: P1, P1b, P1c, or none.** On 2026-10-23 the owner asked for
-a mock at phone width before deciding; P1 and the `Proposals / MB.121` stories
-stay as they are until then. On 2026-10-21 the owner ruled out
-"an extra word and an icon" on the shelf. P1 goes against the icon half of
-that call, for the reason above. It is its own commit, so it can be dropped.
-The mocks show each option in both themes at 1280px and 375px.
+**The owner's answer (2026-10-23): P1, the symbol.** The owner first asked for
+a mock at phone width, then chose P1. This replaces the owner's call of
+2026-10-21, which ruled out "an extra word and an icon" on the shelf: the
+icon is now in, and the word (P1b) stays out.
+
+**The mocks stay for now.** The Storybook stories under `Proposals / MB.121`
+(`.storybook/mb121-proposals.stories.tsx` and its stylesheet, with the token
+`$mb121-mock-mark-stroke` that only P1c uses) are kept until the owner signs
+the review off. They show the shelf before P1, P1, P1b, P1c and a viewer's empty
+cupboard, in both themes at 1280px and 375px.
 
 ## The accessibility audit
 
@@ -213,7 +218,7 @@ not;[^baymard] the sentence is that overview. No change.
 | The DRY merges are listed                                                 | "The DRY merges", above                                                                                   |
 | Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                             |
 | The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                            |
-| Low and Out are never shown by colour alone                               | In words to a screen reader already; by sight only with P1 or P1b (AWAITING THE OWNER)                    |
+| Low and Out are never shown by colour alone                               | In words to a screen reader; by sight, the symbol before the amount (P1)                                  |
 | Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                             |
 | Each change names its source in Chicago form                              | The notes below                                                                                           |
 
