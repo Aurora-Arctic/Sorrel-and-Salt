@@ -114,3 +114,7 @@ variants:
 # Liquorice
 
 Liquorice is a herbaceous perennial of the bean family, Fabaceae, native to West Asia, tropical Asia, North Africa and southern Europe. It grows to about a metre tall, with pinnate leaves of nine to seventeen leaflets, loose clusters of purple to pale whitish-blue flowers and oblong pods holding several seeds. Its roots yield a sweet, aromatic flavouring that now goes into confectionery, tobacco, drinks and medicines. The root was a medicine across the ancient world from Europe to the Far East; Roman soldiers are said to have chewed it before battle, and the Egyptians laid it in tombs. In England it was grown from Queen Elizabeth's reign at Pontefract, Worksop, Godalming and Mitcham, and it was long a favourite remedy for coughs; Pontefract is also where it was first mixed with sugar into sweets. Many cultures held it to be an aphrodisiac, and in Europe it went into love charms and charms to keep a lover faithful, while in hoodoo the root is used to dominate another person. In magical practice the root, not the sweet, is chewed to kindle passion and as a help in giving up smoking; it is added to love and lust sachets, carried to draw love and used in fidelity spells, and its sticks serve as wands. Kynes adds knot magic worked with a liquorice lace, and binding two roots together in a love spell.
+
+#### Edit Notes for Claude
+
+- Deity gap: Brahma (Kynes's Plants, under "Licorice"), not in the vocabulary; link once M14.15 adds it.

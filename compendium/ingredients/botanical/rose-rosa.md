@@ -272,3 +272,7 @@ seedUpdate: 8acfd60625f812a0e86f55d927c8232a041e86a297b269ecb891c17091dafebb
 # Rose
 
 Roses are the woody perennial shrubs and climbers of the genus Rosa, in the family Rosaceae, with more than three hundred species and tens of thousands of cultivars. Most species come from Asia, with fewer from Europe, North America and north-west Africa; many carry sharp prickles on their stems, and their flowers, five-petalled in most species, are usually white or pink. Grieve traces the cultivated rose to Persia, whence it reached Greece and then southern Italy; the Romans strewed its petals at banquets, and a rose hung over a table once meant that what was said there stayed secret. The petals yield rose oil, or attar, for perfume, and rose water for cooking, cosmetics, medicine and worship, while the hips, rich in vitamin C, make jams, syrups and tea. The flower belonged to Aphrodite in Greece and later to the Virgin Mary. Kynes tells of petals scattered on Roman graves at the Rosalia, of dried rose hips as a charm against enchantment in medieval Germany, Belgium and France, and of the Germanic name Frigg's thorn. Cunningham and Kynes both give it to Venus and water, and to love, healing, protection, psychic powers and divination; Cunningham's uses include chaplets of roses in love spells and rose water in love baths, and Kynes adds Cancer, Libra, Sagittarius and Taurus, and banishing, communication and dream work.
+
+#### Edit Notes for Claude
+
+- Deity gap: Aurora (Cunningham's Herbs, under "Rose"; p. 266), not in the vocabulary; link once M14.15 adds it.

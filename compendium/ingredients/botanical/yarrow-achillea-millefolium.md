@@ -144,3 +144,7 @@ seedUpdate: 781addf03f74a0a273eb963762e6f7eabb6d11702fd8f2df8af8b843a0d2d565
 # Yarrow
 
 Yarrow is an upright perennial native to the temperate Northern Hemisphere, across Europe, Asia and North America, growing from about twenty centimetres to a metre tall and spreading by rhizomes. Its feathery leaves are divided so finely that they gave the plant the names milfoil and thousand leaf, and its tiny white to pink flowers gather in flat-topped clusters from spring into autumn. It carries a spicy scent that lasts after drying. The genus takes its name from Achilles, who in legend treated his soldiers' wounds with it, and many old names, such as soldier's woundwort and knight's milfoil, recall its use in stanching blood. Linnaeus recorded that the people of Dalecarlia in Sweden steeped it in beer, and its flowers and leaves still go into some liqueurs and bitters. In China its dried stalks are cast for I Ching divination. Across the British Isles it was used to divine a future sweetheart, often slept on under the pillow, and at Midsummer it was hung over doors and cradles, strewn on thresholds against witches and kept against the evil eye. In magical practice it is worn for protection, held to dispel fear, hung over the marriage bed to keep love lasting, and drunk as a flower tea to sharpen psychic powers.
+
+#### Edit Notes for Claude
+
+- Deity gap: Achilles (Kynes's Plants, under "Yarrow"), not in the vocabulary; link once M14.15 adds it.

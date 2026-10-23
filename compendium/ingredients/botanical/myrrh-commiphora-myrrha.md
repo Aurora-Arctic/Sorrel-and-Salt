@@ -151,3 +151,7 @@ Myrrh is the aromatic gum resin of Commiphora myrrha, a very spiny tree of the B
 <!-- audit:wikipedia-incense:Incense -->
 
 Does wikipedia-incense under "Incense", cited on the entry, describe Commiphora myrrha? It may mean Boswellia sacra instead. The audit found: "Incense" is the folk name of ingredients/botanical/frankincense-boswellia-sacra.md (Boswellia sacra). "Incense" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+- Deity gap: Marian (Cunningham's Herbs, under "Myrrh"), not in the vocabulary; link once M14.15 adds it.
