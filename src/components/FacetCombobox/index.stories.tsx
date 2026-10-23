@@ -43,6 +43,8 @@ function Stateful({
   loading?: boolean;
   typeahead?: boolean;
   hideZeros?: boolean;
+  hint?: string;
+  emptyPlaceholder?: string;
 }) {
   const [values, setValues] = useState(initial);
   return (
@@ -90,6 +92,18 @@ const zerosListedNode = <Stateful hideZeros={false} />;
 
 const withFormIconsNode = <Stateful label="Forms" choices={FORMS} initial={['leaf', 'oil']} />;
 
+// A line under the label.
+const withHintNode = <Stateful hint="Counts follow the other filters." initial={['fire']} />;
+
+// Every count is nothing and none is chosen: the placeholder says so in its own words.
+const customEmptyNode = (
+  <Stateful
+    label="Celestial Bodies"
+    choices={[{ value: 'sun', label: 'Test Sun', count: 0 }]}
+    emptyPlaceholder="None In These Results"
+  />
+);
+
 // Narrow, as on a phone: the chips wrap inside the control.
 export const Narrow: Story = {
   render: () => (
@@ -127,6 +141,8 @@ const STATES: Record<string, ReactNode> = {
   'Zeros Listed': zerosListedNode,
   'With Form Icons': withFormIconsNode,
   Grouped: groupedNode,
+  'With Hint': withHintNode,
+  'Custom Empty Text': customEmptyNode,
 };
 
 export const States: Story = {

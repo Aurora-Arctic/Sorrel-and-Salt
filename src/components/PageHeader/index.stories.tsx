@@ -60,12 +60,29 @@ const Long = () => (
 
 const longHeadingWithActionNode = <Long />;
 
+// The entry page's mark before the heading, on its own line.
+const withLeadNode = (
+  <InAdminLayout open="/admin/compendium">
+    <main>
+      <PageHeader
+        title="Testwort"
+        lead={<span>In Your Cupboard</span>}
+        action={<AddIngredient />}
+      />
+    </main>
+  </InAdminLayout>
+);
+
+// The long heading again at a phone's width, where it wraps beside the action.
+const AtPhoneWidth = () => <Long />;
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Heading Alone': headingAloneNode,
   'Long Heading With Action': longHeadingWithActionNode,
+  'With Lead': withLeadNode,
 };
 
 export const States: Story = {
@@ -74,4 +91,10 @@ export const States: Story = {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
+
+// Pinned to a phone's width, since the wrap is what it shows.
+export const Narrow: Story = {
+  globals: { viewport: { value: 'w375', isRotated: false } },
+  render: () => <AtPhoneWidth />,
 };
