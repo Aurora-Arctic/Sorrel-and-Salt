@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Navigating } from '../../../.storybook/navigating';
 import { PendingLink } from '../../lib/navigation';
 import type { NavigationTarget } from '../../lib/navigation';
@@ -16,70 +16,75 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => (
-    <SectionBody region="coven" className="coven-layout">
-      <main>
-        <h1>Ingredients</h1>
-        <p>Testwort</p>
-      </main>
-    </SectionBody>
-  ),
-};
-
-const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): ReactElement => (
-  <Navigating press={name}>
-    <p>
-      <PendingLink href={route('/coven/fixture-coven')} navigationTarget={target}>
-        {name}
-      </PendingLink>
-    </p>
-    <SectionBody region={target.region as 'coven' | 'admin'} className="coven-layout">
-      <main>
-        <h1>{name}</h1>
-      </main>
-    </SectionBody>
-  </Navigating>
+const Resting = (
+  <SectionBody region="coven" className="coven-layout">
+    <main>
+      <h1>Ingredients</h1>
+      <p>Testwort</p>
+    </main>
+  </SectionBody>
 );
 
-// The coven's Ingredients: its heading, filter and cards in the wide column.
-export const LoadingList: Story = {
-  render: () => (
+// Each region has its own frame class, as its layout gives it: the coven's
+// `coven-layout`, the admin area's `page-column`.
+const FRAME = { coven: 'coven-layout', admin: 'page-column' } as const;
+
+const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): ReactElement => {
+  const region = target.region as keyof typeof FRAME;
+  return (
+    <Navigating press={name}>
+      <p>
+        <PendingLink href={route('/coven/fixture-coven')} navigationTarget={target}>
+          {name}
+        </PendingLink>
+      </p>
+      <SectionBody region={region} className={FRAME[region]}>
+        <main>
+          <h1>{name}</h1>
+        </main>
+      </SectionBody>
+    </Navigating>
+  );
+};
+
+// Resting is the page itself. The rest are a wait, each in the skeleton of the
+// destination it names: the coven's Ingredients (heading, filter and cards in
+// the wide column) with and without an Add action, its Members (the heading
+// with the tab row, then the table), its Overview (the page with its contents
+// menu beside it), an ingredient's page (the wide column with a side menu), and
+// the admin index (a heading and line, then titled lists of links, no cards).
+// The account page is aimed at the shell's body, not this one: see Main Body.
+const STATES: Record<string, ReactNode> = {
+  Resting,
+  'Loading List': (
     <Waiting
       name="Ingredients"
       target={{ region: 'coven', shape: 'cards', title: true, filter: true }}
     />
   ),
-};
-
-// The coven's Members: its heading with the tab row, then the table.
-export const LoadingTabs: Story = {
-  render: () => (
+  'Loading List With Action': (
+    <Waiting
+      name="Grimoire"
+      target={{ region: 'coven', shape: 'cards', title: true, action: true, filter: true }}
+    />
+  ),
+  'Loading Tabs': (
     <Waiting name="Members" target={{ region: 'coven', shape: 'table', title: true, tabs: true }} />
   ),
-};
-
-// The coven's home: the page with its contents menu beside it.
-export const LoadingWithMenu: Story = {
-  render: () => (
+  'Loading With Menu': (
     <Waiting
       name="Overview"
       target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' }}
     />
   ),
-};
-
-// The account page: a title alone over its menu and panels.
-export const LoadingAccount: Story = {
-  render: () => (
-    <Waiting
-      name="Account"
-      target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'title' }}
-    />
+  'Loading Entry': (
+    <Waiting name="Testwort" target={{ region: 'coven', shape: 'page', frame: 'entry' }} />
   ),
+  'Loading Contents': <Waiting name="Admin" target={{ region: 'admin', shape: 'contents' }} />,
 };
 
-// The admin index: its heading and line, then titled lists of links (no cards).
-export const LoadingContents: Story = {
-  render: () => <Waiting name="Admin" target={{ region: 'admin', shape: 'contents' }} />,
+export const States: Story = {
+  args: { state: 'Resting' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
