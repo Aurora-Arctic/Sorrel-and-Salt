@@ -28,79 +28,88 @@ Each shard is `src/db/seed/compendium/<shard>.ts`, its doc `claude-docs/db/compe
 
 ### An entry, field by field
 
-The literal's type is `SeedCompendiumEntry`, which MB.242 adds to `src/db/seed/types.ts`. The shape below is the plan's; if MB.242 names a field differently, it corrects this section in its own pull request.
+An entry is one markdown file, `compendium/ingredients/<nomenclature>/<slug>.md`, where the slug is `ingredientSlug(name, canonicalName)` (`src/lib/slugify.ts`) and the folder is the entry's naming system (`botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `none` or `unknown`). The file holds a YAML frontmatter block, a `# Name` heading, the description, and two optional sections for the owner and the curator. The decision, the full key table, the hash and the update path are in [`design-decisions/m14.4-compendium-markdown-files.md`](../../design-decisions/m14.4-compendium-markdown-files.md); the plan is [`m14.4-plan.md`](../../design-decisions/m14.4-plan.md). The loader and guard that read these files are M14.6's, so until M14.6 lands this section describes the format and not yet code that checks it.
 
-A worked example, **invented**, as the repo's fixtures are (CLAUDE.md, Testing). Testwort, _Fixtura testalis_, does not exist, and nor do its sources.
+**The TypeScript shards remain the seed source until M14.10 cuts over.** M14.9 converts them into these files without changing what they say, and between M14.9 and M14.10 the shard lanes make no commits. The shard names and counts under "What is seeded, and where" are those shards'; from M14.10 the files replace them.
 
-```ts
-// In the shard's SOURCES: the per-entry pages this shard cites, under short handles.
-// Works several shards share (Cunningham, Kynes, Hall, Grieve, ...) are declared once
-// in src/db/seed/compendium/works.ts and named by the same kind of handle.
-export const SOURCES = {
-  'wikipedia-testwort': {
-    kind: 'entry',
-    container: 'Wikipedia',
-    title: 'Testwort',
-    url: 'https://en.wikipedia.org/w/index.php?title=Testwort&oldid=0000000000',
-    accessed: '2026-10-11',
-  },
-};
+A worked example, **invented**, as the repo's fixtures are (CLAUDE.md, Testing). Testwort, _Fixtura testalis_, does not exist, and nor do its sources. It is `compendium/ingredients/botanical/testwort-fixtura-testalis.md`. The real examples are in `compendium/` ([`aspen-populus-tremuloides.md`](../../../compendium/ingredients/botanical/aspen-populus-tremuloides.md), [`agate-quartz-var-agate.md`](../../../compendium/ingredients/mineral/agate-quartz-var-agate.md) and the template, [`base.md`](../../../compendium/ingredients/base.md)), which M14.6, M14.9 and M14.12 bring to this format.
 
-// In the shard's entry list.
-{
-  name: 'Testwort',
-  canonicalName: 'Fixtura testalis',
-  nomenclature: 'botanical',
-  description: '100 to 250 words, written fresh: what the plant is, where it grows, how it has been used ...',
-  elements: ['earth'],
-  celestialBodies: ['Saturn'],
-  zodiacSigns: ['Capricorn'],
-  colors: ['green'],
-  safetyNotes: 'Only what a safety source says, in plain words.',
-  folkNames: ['Fixture Herb'],
-  deities: ['Hecate'],
-  categories: ['Protection', 'Grounding'],
-  substitutes: [
-    { identity: 'fixtura exemplaris' }, // an entry in this shard or an earlier one
-    { name: 'Sampleroot' }, // typed text: its entry is in a later shard
-  ],
-  references: [
-    // `supports` names the fields this source backs. Every populated field above must be
-    // named by at least one citation, or the guard fails the shard.
-    {
-      source: 'invented-herbal', // a handle from works.ts
-      locator: 'p. 112',
-      supports: ['canonicalName', 'description', 'elements', 'celestialBodies', 'deities', 'categories', 'substitutes'],
-    },
-    {
-      source: 'wikipedia-testwort',
-      supports: ['description', 'zodiacSigns', 'colors', 'folkNames', 'safetyNotes'],
-    },
-  ],
-  variants: [
-    {
-      form: 'Leaf',
-      references: [{ source: 'invented-herbal', locator: 'p. 112', supports: ['form'] }],
-    },
-    {
-      form: 'Oil',
-      description: 'At most 120 words on what this form adds.',
-      safetyNotes: 'A caution particular to the oil.',
-      references: [
-        { source: 'invented-safety-handbook', locator: 'p. 418', supports: ['form', 'description', 'safetyNotes'] },
-      ],
-    },
-  ],
-}
+```md
+---
+status: approved
+nomenclature: botanical
+canonicalName: Fixtura testalis
+elements:
+  - earth
+celestialBodies:
+  - Saturn
+zodiacSigns:
+  - Capricorn
+colours:
+  - green
+safetyNotes: Only what a safety source says, in plain words.
+folkNames:
+  - Fixture Herb
+deities:
+  - Hecate
+categories:
+  - Protection
+  - Grounding
+substitutes:
+  - identity: fixtura exemplaris # an entry that has a file
+  - name: Sampleroot # typed text: no file has this identity
+references:
+  # `supports` names the fields this source backs. Every populated field must be named by
+  # at least one citation, or the guard fails the file.
+  - source: invented-herbal # a handle from works.ts, or a file in compendium/sources/
+    locator: p. 112
+    nameBasis: stated # the source prints "Fixtura testalis" under this heading
+    supports:
+      [canonicalName, description, elements, celestialBodies, deities, categories, substitutes]
+  - source: wikipedia-testwort # compendium/sources/wikipedia-testwort.yaml
+    nameBasis: resolved # the source heads a common name, so two more keys say how it was mapped
+    headedAs: Testwort
+    resolvedBy: invented-flora # another registered source that maps "Testwort" to this one name
+    supports: [description, zodiacSigns, colours, folkNames, safetyNotes]
+variants:
+  - form: Leaf
+    references:
+      - { source: invented-herbal, locator: p. 112, nameBasis: stated, supports: [form] }
+  - form: Oil
+    description: At most 120 words on what this form adds.
+    safetyNotes: A caution particular to the oil.
+    references:
+      - source: invented-safety-handbook
+        locator: p. 418
+        nameBasis: stated
+        supports: [form, description, safetyNotes]
+---
+
+# Testwort
+
+100 to 250 words, written fresh: what the plant is, where it grows, how it has been used. A blank line starts a new paragraph, and a single line break inside a paragraph is read as a space.
+
+#### Questions for the Curator
+
+Left out when there is no doubt. Where a source's name could mean another species, the doubt is written here and the file's `status` is `needs-review`.
+
+#### Edit Notes for Claude
+
+Left out when there is nothing to ask. The owner writes an edit here; Claude acts on it and clears it. It is never seeded and never hashed.
 ```
 
 What the example shows:
 
+- **The body is the name and the description.** The `# Testwort` heading is the entry's `name`, the text up to the first `####` heading is its `description`, and no other H1, H2 or H3 is allowed. A `needs-review` file must have a non-empty Questions section. `status` is `draft`, `needs-review` or `approved`, and the seed writes `approved` files only.
 - **Every entry cites at least one source of its own, and so does every form.** The admin's "unsourced" filter counts only entry-level links (`citesNothing('ingredientId')` in `src/db/repository/ingredients.ts`), so a source cited only on a form would leave the entry on the admin's to-do list.
+- **Every citation of an entry that has a `canonicalName` says how its source's name was matched** (`nameBasis`), as "Formal names" below sets out. An entry with no formal name is exempt.
 - **A form adds to its entry and never overrides it** (MB.215). Put a property on the entry when every form has it, and on a form when only that form does. Deities and folk names belong to the entry alone.
 - **Every entry carries at least its primary form as a variant.** A further form is added only where a source the lane read attaches something to that form: a description, a caution, a use.
 - **A work is cited once on an entry or a form.** `reference_links` holds one live link per work per row, so two passages of one book are one citation whose locator names both (`under "Mugwort"; p. 266`). The guard refuses a work cited twice on one row. The pilot ([`pilot.md`](pilot.md), "Decisions the lanes inherit") records the other rules it settled: categories by the source's own word, deities by the curated row, colours.
-- **A substitute links an entry only in its own shard or an earlier one**, by its identity key (the formal name, lower-cased, or the label where there is none). An entry in a later shard does not exist yet when this shard is seeded, so it is written as typed text, `{ name }`, which the substitutes table allows.
+- **A substitute names an entry by its identity key when that entry has a file**, the formal name lower-cased or the label where there is none. `{ name }` typed text is allowed only when no file has that identity. The seed inserts every entry before it resolves substitutes, so the order of files does not matter.
+- **Colours are `colours` in a file**, as a key and in a `supports` list. The loader writes them to the database's `colors` column.
+- **Blank values read as absent.** A key with nothing after it, an empty list item, `[null]` and `[""]` are the same as leaving the key out, so the template's empty `deities:` is valid.
+- **The key order in a file is free.** The converter writes one fixed order with `status` first.
 
 ### What `supports` may name
 
@@ -190,33 +199,68 @@ The database enforces the pairing: `nomenclature = 'unknown' or (nomenclature = 
 
 `standard`'s descriptions are deliberately thin test data, not research; nothing in them is a source.
 
+**A formal name is a unique identifier, and a common name never is** (the owner, 2026-10-23, from the Aspen entry; [`m14.4-compendium-markdown-files.md`](../../design-decisions/m14.4-compendium-markdown-files.md)). Grieve's "Poplar, Trembling" is the European aspen, _Populus tremula_, and had been cited under the American aspen, _Populus tremuloides_, because both are called aspen. So a source is cited on an entry only when:
+
+1. **it states the formal name**: the source prints this entry's formal name under the cited heading (`nameBasis: stated`); or
+2. **it is resolved**: the source heads a common name, and another registered source maps that common name to exactly this one formal name (`nameBasis: resolved`, with `headedAs` for the heading and `resolvedBy` for that other source).
+
+A common name alone is never a match. Where doubt remains, the citation is `unresolved`, the doubt goes under `#### Questions for the Curator`, and the file is `status: needs-review` for the owner. It is never `approved` while a citation is `unresolved`, and only `approved` files are seeded. `nameBasis` is required on every citation of an entry that has a `canonicalName`; an entry with none is exempt.
+
 ### How an entry is sourced
 
 These are the lane brief's hard rules, repeated in every content task:
 
 1. **Every field value traces to a source read during the task**: a page of one of the owner's books (below), or a web page the lane fetched. Never from memory, and never from another seed or doc in this repo.
-2. **A claim with no source is left out.** An entry that cannot be sourced to the depth below goes to the shard doc's "What is left out, and why", with the reason.
+2. **A claim with no source is left out.** An entry that cannot be sourced to the depth below is not written as an `approved` file; the reason goes in the file's Questions section and the entry is `needs-review`, or it is left off the list and the reason recorded with the lane's notes.
 3. **Never invent a page, a URL, an edition or a year.** A locator is only what was read: the page the passage is on, or the entry heading it is under.
 4. **`accessed` is the real date of the fetch**, never a guess.
 5. **No prose is copied from any source**, public domain or not. A description is written fresh, 100 to 250 words for an entry and at most 120 for a form (the owner may change either), in British spelling, from what the sources say.
 6. **Correspondences are cited entry by entry, never transcribed as a table.** The candidate list and the correspondences are drawn from several works, so the seed mirrors no single book's selection.
 7. **Every citation names the edition in hand.** A book from the library is cited as the file it is, below, not as some other printing.
+8. **Every citation of an entry that has a formal name carries a `nameBasis`**, under the rule in "Formal names". A source is never cited under a common name that could mean another species.
 
 **Which sources stand where.** Academic and reference sources are preferred where they cover the field: POWO for plant names, Mindat for mineral names, NCBI's LiverTox and NCCIH for safety, the _AHPA Botanical Safety Handbook_ in the library. Wikipedia is a valid source beside the others, never a last resort. Grieve's _A Modern Herbal_ (1931, read at botanical.com), Culpeper's _Complete Herbal_ (1653, Project Gutenberg #49513), Kunz, Folkard, Dyer and the owner's books are all first-class for lore and correspondences.
 
 **Wikipedia is cited as an encyclopaedia entry**, as the sources seed already cites it 64 times (`src/db/seed/sources.ts`; [`../references.md`](../references.md), "The renderer"): `kind: 'entry'`, `container: 'Wikipedia'`, the article's title as `title`. The compendium seed adds one thing to that precedent: `url` is the **revision permalink**, `https://en.wikipedia.org/w/index.php?title=<Title>&oldid=<revision id>`, so the citation points at the text the lane read and not at whatever the article says later, and `accessed` is the day it was fetched. The revision id is the "Permanent link" in the article's Tools menu, or `revisions[0].revid` from `https://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=ids&format=json&titles=<Title>`.
 
-**Each shard doc records its sources** in the shape of the deity seed doc ([`../deity-vocabulary-seed.md`](../deity-vocabulary-seed.md)): its scope; its bibliography in Chicago form; **one line per entry** naming which source supports which fields; and "What is left out, and why". The literal is the source of truth, so the doc does not repeat the entries' fields.
+**A per-entry source is a file of its own**, `compendium/sources/<handle>.yaml`, holding the citation's fields (`kind`, `container`, `title`, `url`, `accessed`). The nine works several entries share (Cunningham, Kynes, Hall, Grieve and the rest) stay in `src/db/seed/compendium/works.ts`. A file's citation names a source by handle and, if it needs one, a locator. The entry's hash covers the handle and the locator only, so editing a source file changes no entry's hash.
+
+**What a source is recorded in.** Until M14.10, each shard's doc records its sources, in the shape of the deity seed doc ([`../deity-vocabulary-seed.md`](../deity-vocabulary-seed.md)): its scope; its bibliography in Chicago form; **one line per entry** naming which source supports which fields; and "What is left out, and why". M14.10 moves those docs to `claude-docs/archive/`, since each file's citations then say which source supports which fields.
 
 ### Write-once, and how a correction lands
 
-The seed writes each entry once. The run that inserts an entry writes everything beneath it in the same pass: its forms, folk names, deities, categories, substitutes and source links. On every later run, an entry already present is skipped along with everything beneath it. Present means any of:
+The seed has two ways to meet an entry. Both apply to `approved` files only; a `draft` or `needs-review` file is never written. (This describes the seed from M14.7. Until then, and until M14.10 makes the files its source, the seed is write-once over the TypeScript shards: it inserts an entry once and skips it on every later run.)
+
+**Insert.** An entry that is absent is inserted, with everything beneath it written in the same pass: its forms, folk names, deities, categories, substitutes and source links. The seed stores the entry's content hash on the row (`seed_content_hash`). An entry is present when any of these holds:
 
 - a row carrying the entry's seed key (`seed_key`, which MB.241 adds: the identity key as the seed wrote it, the formal name lower-cased or the label where there is none), live or deleted;
 - a live compendium row with the same identity, an admin's or the `standard` fixture's;
 - a live compendium row already holding the entry's address (its slug).
 
-This keeps a reseed from undoing an admin's work: an entry an admin renamed, deleted or unfiled from a category stays as the admin left it. **The cost: correcting a shard's literal after it has landed changes nothing on staging or production.** A correction is made in the admin's compendium page, and the literal is then edited to match, so that a fresh local database agrees with production.
+**Update.** A present entry is changed only by a file that the owner has marked. Editing a file does nothing on its own. The owner reads the change, runs `npm run seed:mark <file>` (M14.7), and that writes `seedUpdate: <hash>` into the file's frontmatter, the hash of the file as it stands. On the next seed run the entry is updated when `seedUpdate` equals the file's hash and the file's hash differs from the row's stored hash. If the file changed again after the mark, the two differ and the entry stays `PENDING`, which is counted in the run's summary and is not an error. A stale `seedUpdate` fails CI until `seed:mark` is run again or the line is removed.
+
+**The hash** is a SHA-256 over the fields that reach the database: scalars, lists, substitutes, the title, the description, the forms, and each citation's source handle and locator. It leaves out `status`, `seedUpdate`, `overwriteEditor`, `supports`, the provenance keys, Edit Notes and Questions, so a note or a reordered key never reads as a change (the rules are in the decision record).
+
+**Refusals.** An update is refused, and the entry changes in no way, when:
+
+1. **the row is curator-reviewed** (`curator_reviewed_at` is set);
+2. **an editor has touched the row**: it was last updated by anyone but the bootstrap user;
+3. **an editor has touched or deleted a child**: a form, folk name, deity link, category link, substitute or reference link stamped by a person or soft-deleted;
+4. **there is no baseline**: the stored hash is null and the entry could not be adopted (below);
+5. **the update would change identity**: its `name`, `canonicalName` or slug. That is the admin's to change, since a slug's retirement belongs to the admin service;
+6. **a form is in use**: the update removes a form that stock or a spell layer holds.
+
+Refusals 1 to 3 are overridden only by `overwriteEditor: true` beside `seedUpdate`. An `overwriteEditor` update that lands also clears the curator mark, because the seed is not a curator and the content is no longer what was reviewed (a stated assumption the owner confirms; see the decision record). A refused entry is skipped and the rest of the run applies. The run prints one line per `UPDATED`, `REFUSED`, `PENDING` and `RETIRED` entry, follows each `REFUSED` line with the fields that differ, and exits 1 if any entry was refused. `migrate.yml` then posts the `REFUSED` block as a comment on the pull request the deploying commit came from. An entry a curator soft-deleted is `RETIRED`: the seed never revives it, and the run still exits 0.
+
+**Adoption.** The rows seeded before the hash existed have no stored hash. The conversion (M14.9) writes `compendium/.converted-hashes.json`, the hash of each converted file. While it exists, a seed run stores that hash, never the current file's, on a row whose hash is null and whose row and children are all stamped with the bootstrap user, so a file edited after conversion still reads as changed. Every other null stays null and is refused until `overwriteEditor`. `db:seed:compendium -- --adopt --dry-run` lists what would be adopted, what would be refused, and any value that differs from its file, since a row written once can hold content older than a later correction to its literal. A later task deletes the manifest once production has adopted.
+
+**The review queue.** A file marked `status: needs-review` is the owner's queue, and the owner reads its `#### Questions for the Curator` section. `npm run seed:queue` (which M14.7 adds) lists those files. CI allows `needs-review` on any branch, and fails a `draft` file on `staging` and `main`.
+
+**A change reaches production within the hour.** The compendium read is cached and revalidates every hour (`COMPENDIUM_REVALIDATE_SECONDS = 3600` in `src/lib/compendium-cache.ts`). Nothing in CI can expire that cache, so after a seed update on production the old text can show until the hour is up.
+
+**`nameBasis` and the `unaudited` ratchet.** The conversion marks every citation `nameBasis: unaudited`, because it copied each from the shards without checking it against the formal-name rule. `unaudited` is accepted only in the files listed in `compendium/unaudited.txt`; a listed file with no `unaudited` citation fails as stale, and the list may only shrink. A test (M14.11) asserts that the count never rises. New files cannot use `unaudited` at all.
+
+**A correction of an entry on the site is the other route.** An admin or curator editing an entry in the admin's compendium page marks it reviewed, and the seed then leaves it alone. Correcting a file to match is still done, so a fresh local database agrees with production.
 
 ### The library
 
