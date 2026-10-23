@@ -387,26 +387,6 @@ export default function FacetPanel({
                 </button>
               </div>
 
-              {/* The viewer's own covens (M12.55), first since they are the viewer's own context, and
-                  only for a viewer in one. No counts: the counts the rest read are the cached,
-                  public ones, and a count per coven would make them the viewer's (rule 6). */}
-              {covens.length > 0 && (
-                <div className="facet-panel__line">
-                  <div className="facet-panel__grow">
-                    <FacetCombobox
-                      label="In My Covens"
-                      name="covens"
-                      placeholder="Add Coven"
-                      removeNoun="Coven"
-                      loading={loading}
-                      choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
-                      values={filter.covens ?? []}
-                      onChange={(picked) => onChange({ covens: picked })}
-                    />
-                  </div>
-                </div>
-              )}
-
               <div className="facet-panel__line">
                 <div className="facet-panel__grow">
                   {!hydrated ? (
@@ -479,6 +459,24 @@ export default function FacetPanel({
                     onChange={(forms) => onChange({ forms })}
                   />
                 </div>
+                {/* The viewer's own covens (M12.55), between Forms and Toxic on their line (the owner's
+                    call, 2026-10-23), and only for a viewer in one. No counts: the counts the rest
+                    read are the cached, public ones, and a count per coven would make them the
+                    viewer's (rule 6). */}
+                {covens.length > 0 && (
+                  <div className="facet-panel__grow">
+                    <FacetCombobox
+                      label="In My Covens"
+                      name="covens"
+                      placeholder="Add Coven"
+                      removeNoun="Coven"
+                      loading={loading}
+                      choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                      values={filter.covens ?? []}
+                      onChange={(picked) => onChange({ covens: picked })}
+                    />
+                  </div>
+                )}
                 <div className="facet-panel__quick">
                   <ChoiceChip
                     legend="Toxic"

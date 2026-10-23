@@ -457,14 +457,14 @@ describe('FacetPanel', () => {
       expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
     });
 
-    it('lists the viewer’s covens by name, with no counts, first in the panel', () => {
+    it('lists the viewer’s covens by name, with no counts, after Forms and before Toxic', () => {
       open({ covens: [] }, { covens: COVENS });
       const box = screen.getByRole('combobox', { name: 'In My Covens' });
-      // First: before the Categories field in the panel.
-      const categories = screen.getByRole('group', { name: 'Categories' });
-      expect(
-        box.compareDocumentPosition(categories) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      // Between Forms and Toxic, on their line (the owner's call, 2026-10-23).
+      const forms = screen.getByRole('combobox', { name: 'Forms' });
+      const toxic = screen.getByRole('group', { name: 'Toxic' });
+      expect(box.compareDocumentPosition(forms) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+      expect(box.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       fireEvent.click(box);
       expect(screen.getByRole('option', { name: 'Testhollow' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Testwren' })).toBeInTheDocument();
