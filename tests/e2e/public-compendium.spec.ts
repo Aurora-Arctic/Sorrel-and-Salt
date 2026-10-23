@@ -223,6 +223,12 @@ test('the page is accessible and holds at 375px', async ({ page }) => {
 const searchRow = (page: Page) => page.getByRole('search');
 const searchForm = (page: Page) => searchRow(page).locator('form');
 
+// Both frames carry a sticky bar, so the row sticks under whichever bar the page has.
+const barBottom = async (page: Page) => {
+  const bar = await page.locator('.app-shell__bar, .public-frame__bar').first().boundingBox();
+  return bar!.y + bar!.height;
+};
+
 async function expectStuckRow(page: Page, offset: () => Promise<number>) {
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
@@ -249,10 +255,10 @@ async function expectStuckRow(page: Page, offset: () => Promise<number>) {
   expect(settled!.y + settled!.height).toBeLessThanOrEqual(viewport!.height + 1);
 }
 
-test('signed out, the search row sticks to the top of the window and its tray stays in view', async ({
+test('signed out, the search row sticks under the top bar and its tray stays in view', async ({
   page,
 }) => {
-  await expectStuckRow(page, async () => 0);
+  await expectStuckRow(page, () => barBottom(page));
 });
 
 test('signed in, the search row sticks under the top bar and its tray stays in view', async ({
@@ -262,10 +268,7 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
     A: 'owner',
   });
   await signInAgainAs(page, coven.users.A);
-  await expectStuckRow(page, async () => {
-    const bar = await page.locator('.app-shell__bar').boundingBox();
-    return bar!.y + bar!.height;
-  });
+  await expectStuckRow(page, () => barBottom(page));
 });
 
 // Under the narrow column the row is two lines, the search box and then Filters beside Clear All,
@@ -280,7 +283,7 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   await page.evaluate(() => window.scrollTo(0, 1500));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
   const row = await searchRow(page).boundingBox();
-  expect(row?.y).toBeCloseTo(0, 0);
+  expect(row?.y).toBeCloseTo(await barBottom(page), 0);
   // The Filters button sticks with the search box, inside the window and under the box.
   const box = await searchForm(page).locator(':scope > :first-child').boundingBox();
   const filters = await page.getByRole('button', { name: /^Filters/ }).boundingBox();
