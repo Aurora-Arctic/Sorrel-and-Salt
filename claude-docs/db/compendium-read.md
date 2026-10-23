@@ -251,19 +251,15 @@ precision`, and while the keyset casts its sort back to `real`, the score
   a curator has checked. The public page drops `?reviewed=` from its address
   before it reads, and a coven's parameter table has no `reviewed`.
 
-**The review mark is never on a row a finder returns** (M14.8). The
-compendium's reads are cached and shared by every viewer (CLAUDE.md, rule 6),
-and a server page passes a row whole to client components, so every finder
-over `ingredients` selects `readColumns(ingredients)` from
-`src/db/repository/unread-columns.ts`, which leaves out `curator_reviewed_at`
-and `curator_reviewed_by`; the row types leave them out too
-(`UnreadIngredientColumn`). The one read of the mark is
-**`findCompendiumReview(curator, id)`** in `ingredients.ts`, which takes the
-`Curator` proof and returns `{ reviewedAt }` (null once cleared) for a live
-compendium entry, and nothing for a coven's own entry or a missing id. Its
-service is `readCompendiumReview(session, id)`, which throws `Forbidden` for
-anyone who does not curate and `NotFound` for an id it does not find. The
-reviewer's id is never read out at all.
+**The review date is on the row; the reviewer never is** (M14.8, corrected 2026-10-23). A
+curator's mark is shown to everyone as a date, so `curator_reviewed_at` rides on the cached
+compendium read and is the same for every viewer (CLAUDE.md, rule 6). The reviewer's id is not:
+every finder over `ingredients` selects `readColumns(ingredients)` from
+`src/db/repository/unread-columns.ts`, which leaves out `curator_reviewed_by`, and the row types
+leave it out too (`UnreadIngredientColumn`). The mutation `setCompendiumEntryReviewed` calls
+`expireCompendium()`, so a change shows at once. The admin's switch reads the mark with
+**`findCompendiumReview(curator, id)`** through `readCompendiumReview(session, id)`, which throws
+`Forbidden` for anyone who does not curate. The Reviewed filter and its counts stay curator-only.
 
 Names order under the database's own collation (`en_US.utf8` in the image).
 M8.14's `(lower(name), identity_key, id)` declares its parts on the same

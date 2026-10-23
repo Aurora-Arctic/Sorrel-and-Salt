@@ -1899,6 +1899,10 @@ A way to sign in that the site holds itself, for someone who wants one beside th
 
 `note_reports` (`noteId`, `reporterId`, `reason`, `resolvedAt`, `resolvedBy`). Pointless before there are enough users to need it.
 
+### Showing who reviewed a compendium entry
+
+v1 shows everyone whether a curator has reviewed a compendium entry and on what day (M14.8), and never who; showing the reviewer is v2 (the owner's call, 2026-10-23).
+
 ### Saved spell notes
 
 The nullable `spellId` on `notes` already accommodates it.
