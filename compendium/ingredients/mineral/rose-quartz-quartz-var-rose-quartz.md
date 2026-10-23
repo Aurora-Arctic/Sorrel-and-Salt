@@ -30,7 +30,7 @@ references:
       - categories
       - description
   - source: wikipedia-rose-quartz
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -45,7 +45,7 @@ variants:
         supports:
           - form
       - source: wikipedia-rose-quartz
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Charm
@@ -57,6 +57,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2fcd5ee7b68ad97dca31beece7bcc2579050f0e4d4969272c75bdcc64681ae39
 ---
 
 # Rose Quartz

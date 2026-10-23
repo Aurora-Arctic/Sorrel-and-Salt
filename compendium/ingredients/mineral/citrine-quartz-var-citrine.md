@@ -49,13 +49,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Citrine"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Citrine
+    resolvedBy: wikipedia-citrine
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-citrine
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -67,13 +69,16 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Citrine"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Citrine
+        resolvedBy: wikipedia-citrine
         supports:
           - form
       - source: wikipedia-citrine
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 30774f36f2f90f4c4ce4cae53eb75817467718bd6db14343343e8d3fa347d2c9
 ---
 
 # Citrine

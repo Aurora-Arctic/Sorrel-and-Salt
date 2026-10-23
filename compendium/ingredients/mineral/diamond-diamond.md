@@ -58,13 +58,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Diamond"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Diamond
+    resolvedBy: wikipedia-diamond
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-diamond
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -75,7 +77,7 @@ variants:
     description: Rough diamonds most often grow as octahedra, plain or twinned, and some come coated in an opaque, gum-like skin. Cunningham says diamonds were long worn simply polished, before faceting brought out their fire; he recommends a six-sided cut for protection and luck, and scrying by candlelight into a faceted stone. Hall describes the cut gem as small, clear and transparent, and costly.
     references:
       - source: wikipedia-diamond
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -86,10 +88,13 @@ variants:
           - description
       - source: hall-crystal-bible
         locator: under "Diamond"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Diamond
+        resolvedBy: wikipedia-diamond
         supports:
           - form
           - description
+seedUpdate: 11af8be364d4e7c3be94336f3ee874ae16420233ed751afe0319c9781cf0170f
 ---
 
 # Diamond

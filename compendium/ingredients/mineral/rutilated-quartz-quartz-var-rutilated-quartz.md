@@ -34,7 +34,7 @@ references:
       - categories
       - description
   - source: wikipedia-rutilated-quartz
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -58,6 +58,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 7e4f9ec4789e1128aa1d5f55758b1f93168bd6089f708b87cf573f94ebaf710f
 ---
 
 # Rutilated Quartz

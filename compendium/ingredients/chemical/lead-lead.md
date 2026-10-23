@@ -27,7 +27,7 @@ references:
       - categories
       - description
   - source: wikipedia-lead
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -46,9 +46,10 @@ variants:
           - form
           - description
       - source: wikipedia-lead
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: a1b07eba1e8cb91290ef38683d42935cdba4336a30fa4e901bf1f52a4f4627fd
 ---
 
 # Lead

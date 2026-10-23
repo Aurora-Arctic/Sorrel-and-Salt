@@ -146,6 +146,67 @@ export function taxoboxTaxon(page: string): string | undefined {
   return undefined;
 }
 
+/** A title or name as the own-article check compares it: no disambiguator, no case, one apostrophe. */
+function nameKey(value: string): string {
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/[\u2019\u2018]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Whether a Wikipedia page is the article on exactly the formal name given,
+ * for a mineral or a chemical, which have no taxobox to say so.
+ *
+ * A plain name ("Iron", "Beryl") needs the page title, or its infobox's name,
+ * to equal it, and the page to be a mineral, a chemical element or a chembox
+ * compound: a rock ("Marble"), a group ("Garnet", "Tourmaline") and a page
+ * with no infobox to say what it is do not count. A variety ("Quartz var.
+ * amethyst") needs the page to be the variety's own article and its infobox,
+ * or failing that its first sentence, to say it is a variety of the named
+ * mineral. Anything less stays a doubt for a person to settle.
+ */
+export function pageNamesEntry(page: string, title: string, canonicalName: string): boolean {
+  const templates = templatesIn(page);
+  const kindOf = (name: string) => name.replace(/_/g, ' ').trim();
+  const infobox = templates.find((template) =>
+    /^(infobox mineral|chembox)$/.test(kindOf(template.name)),
+  );
+  const infoboxName = infobox ? parametersOf(infobox.body).get('name') : undefined;
+  const firstLine = leadOf(page)
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line.startsWith("'''"));
+  const sentence = firstLine ? plain(firstLine.split(/(?<=\.)\s/)[0]!) : '';
+  const shortDescription = templates.find((template) => template.name === 'short description');
+  const isNamed = (name: string) =>
+    nameKey(title) === nameKey(name) ||
+    (infoboxName ? nameKey(infoboxName) === nameKey(name) : false);
+
+  const variety = /^(.+?) var\. (.+)$/i.exec(canonicalName);
+  if (variety) {
+    if (!isNamed(variety[2]!)) return false;
+    const of = new RegExp(
+      String.raw`\bvariety\b[^.]*\b${variety[1]!.replace(/[.*+?^${}()|[\]\\]/g, '\\/** The templates that point a reader at another subject: the hatnotes. */')}\b`,
+      'i',
+    );
+    const status = templates
+      .filter((template) => /^infobox mineral$/.test(kindOf(template.name)))
+      .map((template) => parametersOf(template.body).get('imastatus') ?? '');
+    return [...status, sentence].some((text) => of.test(text));
+  }
+
+  if (!isNamed(canonicalName)) return false;
+  if (!infobox && !/\bchemical element\b/.test(sentence)) return false;
+  const group =
+    /\b(?:is|are) (?:a|an|the) group\b/i.test(sentence) ||
+    /\bgroup\b/i.test(shortDescription?.body ?? '');
+  return !group;
+}
+
 /** The templates that point a reader at another subject: the hatnotes. */
 const HATNOTE = /^(about|for|for-multi|other uses\d*|redirect\w*|distinguish|see also)$/;
 
@@ -360,6 +421,10 @@ export function auditCompendium(
       const taxon = page === undefined ? undefined : taxoboxTaxon(page);
       if (taxon && taxon.toLowerCase() === canonicalName.toLowerCase()) {
         stated.push({ path: file.path, source: citation.source, citedOn, taxon });
+        continue;
+      }
+      if (page !== undefined && pageNamesEntry(page, articleTitle(source), canonicalName)) {
+        stated.push({ path: file.path, source: citation.source, citedOn, taxon: canonicalName });
         continue;
       }
     }

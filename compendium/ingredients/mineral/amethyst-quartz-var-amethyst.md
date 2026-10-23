@@ -47,14 +47,16 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Amethyst"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Amethyst
+    resolvedBy: wikipedia-amethyst
     supports:
       - colours
       - safetyNotes
       - categories
       - description
   - source: wikipedia-amethyst
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -66,15 +68,18 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Amethyst"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Amethyst
+        resolvedBy: wikipedia-amethyst
         supports:
           - form
           - description
       - source: wikipedia-amethyst
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 3addc98d3e8b9c261d8c3a10ba4c7d90352bd10f8fada6ff965b73a5a91f9ce6
 ---
 
 # Amethyst

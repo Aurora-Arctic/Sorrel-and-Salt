@@ -12,7 +12,7 @@ folkNames:
   - Table sugar
 references:
   - source: wikipedia-sucrose
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -36,7 +36,7 @@ variants:
     safetyNotes: Sugar burns easily in a flame, so handling sugar powder in bulk carries a risk of dust explosion; ignited sugar dust destroyed most of a Georgia refinery in 2008, killing 14 people.
     references:
       - source: wikipedia-sucrose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -54,6 +54,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 90bb4ec9ac6f60cf7a6b0c68a8b9197a97411360998eabb842ce5c4a119af6a0
 ---
 
 # Sugar

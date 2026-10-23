@@ -24,7 +24,7 @@ references:
       - celestialBodies
       - categories
   - source: wikipedia-potassium-alum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,17 +41,18 @@ variants:
         supports:
           - form
       - source: wikipedia-potassium-alum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Powder
     description: Ground potassium alum is sold as alum powder in the spice section of many American grocery shops. Its main use in the kitchen is in pickling, where it helps keep fruit and vegetables crisp.
     references:
       - source: wikipedia-potassium-alum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 3e93b5aeb41729f36d207e4f80a92e38e45a52d56dbc5b448b8126e73f98939c
 ---
 
 # Alum

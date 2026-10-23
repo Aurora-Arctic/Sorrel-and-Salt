@@ -41,13 +41,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Ruby"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ruby
+    resolvedBy: wikipedia-ruby
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-ruby
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -60,7 +62,9 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Ruby"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ruby
+        resolvedBy: wikipedia-ruby
         supports:
           - form
           - description
@@ -69,6 +73,7 @@ variants:
         nameBasis: unaudited
         supports:
           - description
+seedUpdate: 9a320585c54b7fb9f3a54eb9318c93330d3daaf895598dd9d1802219c67c5197
 ---
 
 # Ruby

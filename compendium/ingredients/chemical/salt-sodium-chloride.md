@@ -31,7 +31,7 @@ references:
       - categories
       - description
   - source: wikipedia-sodium-chloride
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -70,6 +70,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 39464958261abd2e89cd29bb20dece8a3e4b2dc5ad24cde2414a672ab3423ce8
 ---
 
 # Salt

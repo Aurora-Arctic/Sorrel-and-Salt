@@ -25,7 +25,7 @@ references:
       - categories
       - description
   - source: wikipedia-gold
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -42,7 +42,7 @@ variants:
           - form
           - description
       - source: wikipedia-gold
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -55,6 +55,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: c2e578a2a6c9d55596b1f185b68decbde96e6c9aef3a6724b6afda3130af0df5
 ---
 
 # Gold

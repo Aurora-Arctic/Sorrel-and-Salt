@@ -26,7 +26,7 @@ references:
       - categories
       - description
   - source: wikipedia-chrysoberyl
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,9 +41,10 @@ variants:
         supports:
           - form
       - source: wikipedia-chrysoberyl
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 7bc667f20c95561127a5c11013ae8a0e3e975c9ee2c5211560ce0380b92e49e2
 ---
 
 # Chrysoberyl

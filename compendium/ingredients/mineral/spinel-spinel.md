@@ -37,13 +37,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Spinel"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Spinel
+    resolvedBy: wikipedia-spinel
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-spinel
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -56,7 +58,9 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Spinel"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Spinel
+        resolvedBy: wikipedia-spinel
         supports:
           - form
           - description
@@ -66,10 +70,11 @@ variants:
         supports:
           - description
       - source: wikipedia-spinel
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: e57437f49540b5a08497c2b18f2e7cba4736dc3a93a6b473d92f2aabc6ce24ac
 ---
 
 # Spinel

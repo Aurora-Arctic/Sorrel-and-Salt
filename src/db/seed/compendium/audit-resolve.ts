@@ -8,6 +8,7 @@ import {
   isWikipedia,
   nameUses,
   readingsOf,
+  pageNamesEntry,
   taxoboxTaxon,
   wikiKey,
 } from './audit';
@@ -76,7 +77,8 @@ const sourcesOf = (loaded: Pick<LoadedCompendium, 'sources'>): Sources => ({
 
 /**
  * The Wikipedia sources a file holds for its own formal name: those cited
- * as `stated`, and those whose fetched page's taxobox names the file's formal
+ * as `stated`, and those whose fetched page's taxobox (or, for a mineral or chemical, its
+ * infobox and title: `pageNamesEntry`) names the file's formal
  * name, which is what the audit reports as stated before a lane writes it.
  */
 function ownArticles(file: SeedCompendiumFile, sources: Sources, wiki: WikiPages) {
@@ -88,7 +90,8 @@ function ownArticles(file: SeedCompendiumFile, sources: Sources, wiki: WikiPages
     const page = wiki.get(wikiKey(title));
     const taxon = page === undefined ? undefined : taxoboxTaxon(page);
     const named = taxon?.toLowerCase() === file.entry.canonicalName?.toLowerCase();
-    if (citation.nameBasis === 'stated' || named) found.set(citation.source, title);
+    const names = page !== undefined && pageNamesEntry(page, title, file.entry.canonicalName ?? '');
+    if (citation.nameBasis === 'stated' || named || names) found.set(citation.source, title);
   }
   return found;
 }

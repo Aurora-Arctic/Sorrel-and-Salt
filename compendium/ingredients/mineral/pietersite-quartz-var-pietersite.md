@@ -21,14 +21,16 @@ categories:
 references:
   - source: hall-crystal-bible
     locator: under "Pietersite"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Pietersite
+    resolvedBy: wikipedia-pietersite
     supports:
       - colours
       - folkNames
       - categories
       - description
   - source: wikipedia-pietersite
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -39,13 +41,16 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Pietersite"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Pietersite
+        resolvedBy: wikipedia-pietersite
         supports:
           - form
       - source: wikipedia-pietersite
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 8e0b63285a6fbeb5e7ad2b314832c4251c58ca926fc6f2a4e67f6480ba67f8c6
 ---
 
 # Pietersite

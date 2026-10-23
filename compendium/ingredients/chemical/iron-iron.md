@@ -28,7 +28,7 @@ references:
       - categories
       - description
   - source: wikipedia-iron
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -49,7 +49,7 @@ variants:
         supports:
           - form
       - source: wikipedia-iron
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Nail
@@ -71,6 +71,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: b9256824fd913fb84c65e3f8a6a99e55c4855bc09f965670035edcf75086c98c
 ---
 
 # Iron

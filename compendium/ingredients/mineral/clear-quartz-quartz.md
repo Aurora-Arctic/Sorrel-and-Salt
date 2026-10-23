@@ -43,13 +43,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Quartz"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Quartz
+    resolvedBy: wikipedia-quartz
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-quartz
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -62,11 +64,13 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Quartz"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Quartz
+        resolvedBy: wikipedia-quartz
         supports:
           - form
       - source: wikipedia-quartz
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Charm
@@ -78,6 +82,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 42e654e91d4bb7160433454a14a09eeecf93ad77460ad6a7510ca3abc07a0701
 ---
 
 # Clear Quartz

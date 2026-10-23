@@ -43,13 +43,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Chrysoprase"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Chrysoprase
+    resolvedBy: wikipedia-chrysoprase
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-chrysoprase
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -62,7 +64,9 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Chrysoprase"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Chrysoprase
+        resolvedBy: wikipedia-chrysoprase
         supports:
           - form
           - description
@@ -83,6 +87,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: 23bdfc3077fdceb6912d2ba1eef9884a6d45b2307b188854fad261c211e6779f
 ---
 
 # Chrysoprase

@@ -32,7 +32,7 @@ references:
       - categories
       - description
   - source: wikipedia-smoky-quartz
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -47,9 +47,10 @@ variants:
         supports:
           - form
       - source: wikipedia-smoky-quartz
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 0b4996e74e796993aaf72a2bf345517f0588838f2e87425bb3b4e44bff889bf1
 ---
 
 # Smoky Quartz

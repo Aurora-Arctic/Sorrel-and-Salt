@@ -37,14 +37,16 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Hematite"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Hematite
+    resolvedBy: wikipedia-hematite
     supports:
       - colours
       - safetyNotes
       - categories
       - description
   - source: wikipedia-hematite
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -57,7 +59,9 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Hematite"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Hematite
+        resolvedBy: wikipedia-hematite
         supports:
           - form
           - description
@@ -68,7 +72,7 @@ variants:
           - form
           - description
       - source: wikipedia-hematite
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Pigment
@@ -77,11 +81,12 @@ variants:
       - red
     references:
       - source: wikipedia-hematite
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
+seedUpdate: 3cea7d26400c9fdac97387e563eedd27beadf74a5a73e86cc0839a589272c854
 ---
 
 # Hematite

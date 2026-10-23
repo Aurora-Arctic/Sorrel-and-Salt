@@ -23,7 +23,7 @@ references:
       - substitutes
       - description
   - source: wikipedia-aluminium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,9 +41,10 @@ variants:
           - form
           - description
       - source: wikipedia-aluminium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 660a5cb3bdbd430e695467fddfb6784eddaa2638880f204a0f36d88a8d59fded
 ---
 
 # Aluminium

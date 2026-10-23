@@ -40,13 +40,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Onyx"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Onyx
+    resolvedBy: wikipedia-onyx
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-onyx
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -58,19 +60,21 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Onyx"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Onyx
+        resolvedBy: wikipedia-onyx
         supports:
           - form
           - description
       - source: wikipedia-onyx
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Bead
     description: For jewellery, onyx is mostly shaped into beads or cabochons.
     references:
       - source: wikipedia-onyx
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -87,10 +91,11 @@ variants:
           - description
           - categories
       - source: wikipedia-onyx
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 623b553aac76efa32af4ca69e2454c0cd22a12c92bb00cf13b265ee52a4660e4
 ---
 
 # Onyx

@@ -31,7 +31,7 @@ references:
       - categories
       - description
   - source: wikipedia-silver
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -46,7 +46,7 @@ variants:
         supports:
           - form
       - source: wikipedia-silver
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Coin
@@ -76,6 +76,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2ea7760d82d224e5e8229434fbce5cb413d2055723ce0c0594906d33dd8f41bc
 ---
 
 # Silver

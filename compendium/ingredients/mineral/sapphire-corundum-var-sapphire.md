@@ -54,13 +54,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Sapphire"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Sapphire
+    resolvedBy: wikipedia-sapphire
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-sapphire
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -72,10 +74,13 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Sapphire"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sapphire
+        resolvedBy: wikipedia-sapphire
         supports:
           - form
           - description
+seedUpdate: 6b832c11afc3761dad39e0f51d81ebbdaceff62501b4ee822cfee9a8e04af009
 ---
 
 # Sapphire

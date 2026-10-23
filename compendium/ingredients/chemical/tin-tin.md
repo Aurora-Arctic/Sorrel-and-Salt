@@ -20,7 +20,7 @@ references:
       - categories
       - description
   - source: wikipedia-tin
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -35,7 +35,7 @@ variants:
         supports:
           - form
       - source: wikipedia-tin
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Charm
@@ -47,6 +47,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: b9c2c31dea174eaee52aa68c884baafdc30c0a61d9b16788384021a26bb16f3c
 ---
 
 # Tin

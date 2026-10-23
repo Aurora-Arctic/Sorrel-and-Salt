@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   auditCompendium,
   flaggedCandidates,
+  pageNamesEntry,
   taxoboxTaxon,
   wikiKey,
 } from '@/db/seed/compendium/audit';
@@ -298,5 +299,88 @@ describe('taxoboxTaxon', () => {
     expect(taxoboxTaxon('{{Automatic taxobox\n|taxon = Fixtura (alga) testalis\n}}')).toBe(
       'Fixtura testalis',
     );
+  });
+});
+
+describe('pageNamesEntry', () => {
+  const mineral = (name: string, extra = '') =>
+    `{{Infobox mineral\n| name = ${name}\n${extra}}}\n'''${name}''' is a [[mineral]] of testium.`;
+  const variety = (name: string, of: string) =>
+    `{{Infobox mineral\n| name = ${name}\n| IMAstatus = [[Mineral variety|Variety]] of ${of}\n}}\n'''${name}''' is a pink variety of [[${of}]].`;
+
+  it('accepts a mineral article whose title or infobox name is the formal name', () => {
+    expect(pageNamesEntry(mineral('Testium'), 'Testium', 'Testium')).toBe(true);
+    expect(pageNamesEntry(mineral('Testium'), 'Testium_(mineral)', 'testium')).toBe(true);
+    expect(pageNamesEntry(mineral('Testium'), 'Testium', 'Samplium')).toBe(false);
+  });
+
+  it('accepts a chemical element or a chembox compound on the same terms', () => {
+    const element =
+      "{{Infobox testium}}\n'''Testium''' is a [[chemical element]]; it has symbol '''Ts'''.";
+    expect(pageNamesEntry(element, 'Testium', 'Testium')).toBe(true);
+    const compound =
+      "{{Chembox\n| name = Testium chloride\n}}\n'''Testium chloride''' is a compound.";
+    expect(pageNamesEntry(compound, 'Testium_chloride', 'Testium chloride')).toBe(true);
+  });
+
+  it('refuses a rock, a group, and an article with no infobox to say what it is', () => {
+    expect(
+      pageNamesEntry(
+        "{{Infobox rock\n| name = Testrock\n}}\n'''Testrock''' is a rock.",
+        'Testrock',
+        'Testrock',
+      ),
+    ).toBe(false);
+    expect(
+      pageNamesEntry(
+        "{{Infobox mineral\n| name = Testgroup\n}}\n'''Testgroups''' are a group of silicate minerals.",
+        'Testgroup',
+        'Testgroup',
+      ),
+    ).toBe(false);
+    expect(
+      pageNamesEntry(
+        "{{Short description|Cyclosilicate mineral group}}\n{{Infobox mineral\n| name = Testgroup\n}}\n'''Testgroup''' is a crystalline mineral.",
+        'Testgroup',
+        'Testgroup',
+      ),
+    ).toBe(false);
+    expect(pageNamesEntry("'''Teststone''' is a type of rock.", 'Teststone', 'Teststone')).toBe(
+      false,
+    );
+  });
+
+  it('accepts a mineral that only belongs to a group, as Spinel and Zircon do', () => {
+    const page =
+      "{{Infobox mineral\n| name = Testium\n}}\n'''Testium''' is a mineral belonging to the group of testates.";
+    expect(pageNamesEntry(page, 'Testium', 'Testium')).toBe(true);
+  });
+
+  it('accepts the variety’s own article when it says it is a variety of the named mineral', () => {
+    expect(pageNamesEntry(variety('Pinkite', 'Testium'), 'Pinkite', 'Testium var. pinkite')).toBe(
+      true,
+    );
+    // The lead sentence will do when there is no infobox field.
+    expect(
+      pageNamesEntry(
+        "'''Pinkite''' is a variety of [[testium]] with needles.",
+        'Pinkite',
+        'Testium var. pinkite',
+      ),
+    ).toBe(true);
+  });
+
+  it('refuses a variety whose page is another mineral’s, or a variety of another mineral', () => {
+    expect(pageNamesEntry(mineral('Testium'), 'Testium', 'Testium var. pinkite')).toBe(false);
+    expect(pageNamesEntry(variety('Pinkite', 'Samplium'), 'Pinkite', 'Testium var. pinkite')).toBe(
+      false,
+    );
+    expect(
+      pageNamesEntry(
+        "'''Pinkite''' is a form of [[testium]] with needles.",
+        'Pinkite',
+        'Testium var. pinkite',
+      ),
+    ).toBe(false);
   });
 });

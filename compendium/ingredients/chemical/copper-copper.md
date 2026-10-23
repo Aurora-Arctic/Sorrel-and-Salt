@@ -29,7 +29,7 @@ references:
       - categories
       - description
   - source: wikipedia-copper
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -44,7 +44,7 @@ variants:
         supports:
           - form
       - source: wikipedia-copper
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Coin
@@ -56,6 +56,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4059edb8ff883981e41a1dae08b4fcfe2e0a266c48e43963b1d2fe7505c3f6a8
 ---
 
 # Copper

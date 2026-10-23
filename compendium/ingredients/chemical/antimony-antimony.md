@@ -24,7 +24,7 @@ references:
       - categories
       - description
   - source: wikipedia-antimony
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,9 +41,10 @@ variants:
         supports:
           - form
       - source: wikipedia-antimony
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 68722169b8cd8f63106548d0f9253f0cecd320fe2e02288202732e769b12cf8b
 ---
 
 # Antimony

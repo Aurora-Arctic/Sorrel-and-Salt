@@ -23,13 +23,15 @@ categories:
 references:
   - source: hall-crystal-bible
     locator: under "Ametrine"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ametrine
+    resolvedBy: wikipedia-ametrine
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-ametrine
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,13 +43,16 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Ametrine"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ametrine
+        resolvedBy: wikipedia-ametrine
         supports:
           - form
       - source: wikipedia-ametrine
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 45fa7230eced542cd755f1f7c6eb1280d9c1e9c603837ec9d9f7f1af0d751d07
 ---
 
 # Ametrine

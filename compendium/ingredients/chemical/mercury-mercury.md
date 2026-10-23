@@ -30,7 +30,7 @@ references:
       - categories
       - description
   - source: wikipedia-mercury-element
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -48,9 +48,10 @@ variants:
         supports:
           - form
       - source: wikipedia-mercury-element
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
+seedUpdate: 22138822df91d5be5fcfa95b8403003ec1c19906a95e4250d282af8c2a10e582
 ---
 
 # Mercury

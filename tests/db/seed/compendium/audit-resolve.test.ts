@@ -252,4 +252,31 @@ describe('the entry’s own article', () => {
     const without = resolveCitations(loadedOf(files, WIKI_SOURCES), lookup(pages));
     expect(without.resolutions).toEqual([]);
   });
+
+  it('counts a mineral article that names the formal name as the entry’s own', () => {
+    const entry = { ...TESTWORT, canonicalName: 'Testium' };
+    const files = [citing(entry, [own('unaudited'), under('Proofleaf')]), citing(SAMPLEWORT, [])];
+    const pages = { Testium: { title: 'Testium' }, Proofleaf: { title: 'Testium' } };
+    const page = "{{Infobox mineral\n| name = Testium\n}}\n'''Testium''' is a [[mineral]].";
+    const sources = {
+      'fixture-wikipedia-testwort': {
+        ...WIKI_SOURCES['fixture-wikipedia-testwort'],
+        title: 'Testium',
+        url: 'https://en.wikipedia.org/w/index.php?title=Testium&oldid=1',
+      },
+    };
+    const withPage = resolveCitations(
+      loadedOf(files, sources),
+      lookup(pages),
+      new Map([[wikiKey('Testium'), page]]),
+    );
+    expect(withPage.resolutions.map((r) => r.headedAs)).toEqual(['Proofleaf']);
+    const group = page.replace('is a [[mineral]]', 'are a group of silicate minerals');
+    const refused = resolveCitations(
+      loadedOf(files, sources),
+      lookup(pages),
+      new Map([[wikiKey('Testium'), group]]),
+    );
+    expect(refused.resolutions).toEqual([]);
+  });
 });

@@ -56,13 +56,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Topaz"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Topaz
+    resolvedBy: wikipedia-topaz
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-topaz
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -75,15 +77,18 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Topaz"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Topaz
+        resolvedBy: wikipedia-topaz
         supports:
           - form
           - description
       - source: wikipedia-topaz
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: ba8715bbd687a7c7a5e6ca8e4d252f612e9acca3add602c4b41943ce5ddfdbce
 ---
 
 # Topaz

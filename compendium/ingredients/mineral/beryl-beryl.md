@@ -44,13 +44,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Beryl"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Beryl
+    resolvedBy: wikipedia-beryl
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-beryl
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -62,11 +64,13 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Beryl"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Beryl
+        resolvedBy: wikipedia-beryl
         supports:
           - form
       - source: wikipedia-beryl
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Mirror
@@ -78,6 +82,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: bcede0af906c875da6332af78541814102d3db07c975dea7eedbd2e3ff2bc1db
 ---
 
 # Beryl

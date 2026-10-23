@@ -232,7 +232,6 @@ ingredients/fungal/fairy-ring-mushroom-marasmius-oreades.md
 ingredients/fungal/fly-agaric-amanita-muscaria.md
 ingredients/mineral/alexandrite-chrysoberyl-var-alexandrite.md
 ingredients/mineral/amethyst-quartz-var-amethyst.md
-ingredients/mineral/ametrine-quartz-var-ametrine.md
 ingredients/mineral/aquamarine-beryl-var-aquamarine.md
 ingredients/mineral/aventurine-aventurine.md
 ingredients/mineral/beryl-beryl.md
@@ -257,7 +256,6 @@ ingredients/mineral/jasper-quartz-var-jasper.md
 ingredients/mineral/marble-marble.md
 ingredients/mineral/moss-agate-quartz-var-moss-agate.md
 ingredients/mineral/onyx-quartz-var-onyx.md
-ingredients/mineral/pietersite-quartz-var-pietersite.md
 ingredients/mineral/pipestone-catlinite.md
 ingredients/mineral/pumice-pumice.md
 ingredients/mineral/rose-quartz-quartz-var-rose-quartz.md

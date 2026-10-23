@@ -47,13 +47,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Carnelian"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Carnelian
+    resolvedBy: wikipedia-carnelian
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-carnelian
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -66,19 +68,21 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Carnelian"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Carnelian
+        resolvedBy: wikipedia-carnelian
         supports:
           - form
           - description
       - source: wikipedia-carnelian
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Bead
     description: Carnelian has been drilled and strung for thousands of years. Beads cut with many facets come from the Varna cemetery in Bulgaria, around the middle of the fifth millennium BC; bow drills bored it at Mehrgarh; and the Indus Valley Civilization made carnelian beads etched with white designs in the third millennium BC, some of which reached Susa.
     references:
       - source: wikipedia-carnelian
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -95,10 +99,11 @@ variants:
           - description
           - categories
       - source: wikipedia-carnelian
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: acd9b595c9a32869d7c15935541133af66e12d2b2e9c61c662d14c18b1bf27be
 ---
 
 # Carnelian

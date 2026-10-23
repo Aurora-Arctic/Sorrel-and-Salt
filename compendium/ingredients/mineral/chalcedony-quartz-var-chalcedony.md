@@ -38,13 +38,15 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Chalcedony"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Chalcedony
+    resolvedBy: wikipedia-chalcedony
     supports:
       - colours
       - categories
       - description
   - source: wikipedia-chalcedony
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -55,11 +57,13 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Chalcedony"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Chalcedony
+        resolvedBy: wikipedia-chalcedony
         supports:
           - form
       - source: wikipedia-chalcedony
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Bead
@@ -93,11 +97,12 @@ variants:
       - yellow
     references:
       - source: wikipedia-chalcedony
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
+seedUpdate: f80fae8e591ef6a94bd4b2896ad05d9bdb24651c892de031f2be6a4b6ecdf434
 ---
 
 # Chalcedony

@@ -38,7 +38,7 @@ references:
       - substitutes
       - description
   - source: wikipedia-zircon
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -48,17 +48,18 @@ variants:
   - form: Crystal
     references:
       - source: wikipedia-zircon
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Sand
     description: Zircon's resistance to weathering, heat and chemical attack lets its grains survive into most sands and build up in heavy-mineral sand deposits, where it is mined commercially. Industry uses the grains chiefly to make ceramics opaque, and also in refractories, as an aggregate for foundry sand casting, and as the raw material for zirconium metal and zirconium dioxide.
     references:
       - source: wikipedia-zircon
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 2dbcf2751df7147cca1df3e77d70b94260721132136c3c3688abb121c29d5cd1
 ---
 
 # Zircon

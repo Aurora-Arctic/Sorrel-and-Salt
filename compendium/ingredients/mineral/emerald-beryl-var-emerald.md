@@ -47,14 +47,16 @@ references:
       - description
   - source: hall-crystal-bible
     locator: under "Emerald"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Emerald
+    resolvedBy: wikipedia-emerald
     supports:
       - colours
       - safetyNotes
       - categories
       - description
   - source: wikipedia-emerald
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -66,7 +68,9 @@ variants:
     references:
       - source: hall-crystal-bible
         locator: under "Emerald"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Emerald
+        resolvedBy: wikipedia-emerald
         supports:
           - form
           - description
@@ -76,10 +80,11 @@ variants:
         supports:
           - description
       - source: wikipedia-emerald
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 530d65a0cedd6ca52a12b6f67124731ac0a1393e6cf40c8e4da695c62919094d
 ---
 
 # Emerald

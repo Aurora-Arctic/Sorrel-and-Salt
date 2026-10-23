@@ -27,7 +27,7 @@ references:
       - categories
       - description
   - source: wikipedia-blue-lace-agate
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -43,6 +43,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: da731f575ef59626bb7dce194567ae1a2a2b142e00c4c0b529e4aecbed38b19d
 ---
 
 # Blue Lace Agate
