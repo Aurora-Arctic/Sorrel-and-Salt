@@ -47,7 +47,8 @@
     "library:text": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/library-text.ts",
     "codegen": "graphql-codegen --config codegen.ts",
     "workshop": "storybook dev --port 61000 --host 0.0.0.0 --no-open --disable-telemetry",
-    "workshop:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-workshop.ts"
+    "workshop:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-workshop.ts",
+    "build:components": "vite build --config vite.components.config.ts"
   },
   "pre-commit": [
     "pre-commit:staged"

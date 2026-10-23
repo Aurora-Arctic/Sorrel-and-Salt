@@ -486,6 +486,23 @@ directory is given, and turns telemetry off. Storybook's CLI exits non-zero on a
 to it. Storybook's static build links its own files relative to the page, so it
 needs no `--base` to be served under `/workshop/`.
 
+## The library build
+
+`npm run build:components` turns `src/components/` into a library in `dist/`, which is
+gitignored. It writes one JavaScript module per component folder (named after the
+folder, such as `dist/Modal.mjs`), a `tokens.mjs` entry, shared chunks, and one
+stylesheet, `dist/sorrel-and-salt.css`. That stylesheet holds the global theme
+tokens from `src/app/globals.scss` and every component's own Sass module. The
+Claude Design sync reads this build together with the Storybook workshop.
+
+It runs Vite's library mode through `vite.components.config.ts`, not a `tsc` emit,
+because the components import their Sass from TypeScript and only a bundler
+compiles that. Vite is already a dependency (Storybook uses it), so nothing was
+added. React, `react-dom`, `next/*`, `react-hook-form`, `downshift` and `zod` stay
+external: the consumer supplies them. Everything else, including the `@/` paths,
+is bundled in. The stylesheet needs `scripts/library-tokens.ts` as its entry,
+because Vite will not take a stylesheet as an entry on its own.
+
 ## Stopgaps to unwind
 
 The workshop's font plumbing substitutes, Vite-side, for what `next/font` +
