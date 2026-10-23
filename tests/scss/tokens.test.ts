@@ -255,10 +255,16 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const placeholder = mixed(toHex(tokens['--text-muted'], theme), card, 0.85);
     row('the placeholder on the field', placeholder, card, 4.5);
 
-    // The last-edit line (M6.18, `LastEdit/index.scss`): the placeholder on a card, where it
-    // is faint enough; on the page-coloured entry page and Quick Look the placeholder falls
-    // under 4.5:1, so it takes the muted ink there.
-    row('the last-edit line on the page', tokens['--text-muted'], page, 4.5);
+    // The last-edit line (M6.18, `LastEdit/index.scss`), in `$last-edit-ink` (M12.56): the
+    // placeholder mix in dark, the muted ink in light, where the mix is 4.22:1 on the page.
+    const lastEdit = tokens['--last-edit-ink'].startsWith('color-mix')
+      ? placeholder
+      : toHex(
+          tokens['--last-edit-ink'].replace('var(--text-muted)', tokens['--text-muted']),
+          theme,
+        );
+    row('the last-edit line on the card', lastEdit, card, 4.5);
+    row('the last-edit line on the page', lastEdit, page, 4.5);
 
     // A notice (`.notice`, _primitives.scss): a bar down its start edge and a
     // tint of the bar's colour, `--notice-tint` of it over whatever holds the

@@ -1095,6 +1095,7 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
   --drawer-shade-edge: #{$drawer-shade-edge-dark};
   --dismiss-ink: #{$dismiss-ink-dark};
   --card-more-ink: #{$card-more-ink-dark};
+  --last-edit-ink: color-mix(in srgb, var(--text-muted) 85%, var(--surface-card));
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -1132,6 +1133,7 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
   --drawer-shade-edge: #{$drawer-shade-edge-light};
   --dismiss-ink: var(--text-primary);
   --card-more-ink: #{$iron-gall};
+  --last-edit-ink: var(--text-muted);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 

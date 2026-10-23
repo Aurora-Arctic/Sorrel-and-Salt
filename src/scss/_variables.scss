@@ -438,6 +438,9 @@ $drawer-shade-fade: var(--drawer-shade-fade);
 $drawer-shade-edge: var(--drawer-shade-edge);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
+// The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in
+// light, where the placeholder mix is 4.22:1 on the page and falls short (M12.56).
+$last-edit-ink: var(--last-edit-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks
