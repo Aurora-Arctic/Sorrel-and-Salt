@@ -105,4 +105,4 @@ Turmeric is the rhizome of Curcuma longa, ground into the deep orange-yellow spi
 
 #### Edit Notes for Claude
 
-Deity gap: Ganish (Kynes, under "Turmeric"), not in the vocabulary; link once M14.15 adds it.
+- Other name: Ganish (Kynes, under "Turmeric") is a spelling of Ganesha; link once M14.23 seeds it as an other name.

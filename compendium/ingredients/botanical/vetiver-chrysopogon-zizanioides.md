@@ -107,4 +107,4 @@ Vetiver is a perennial bunchgrass of the grass family, Poaceae, commonly known a
 
 #### Edit Notes for Claude
 
-Deity gap: Ganesh (Kynes, under "Vetiver"), not in the vocabulary; link once M14.15 adds it.
+- Other name: Ganesh (Kynes, under "Vetiver") is a spelling of Ganesha; link once M14.23 seeds it as an other name.

@@ -100,4 +100,4 @@ Stinging nettle is a herbaceous perennial of the family Urticaceae, native to Eu
 
 #### Edit Notes for Claude
 
-- Deity gap: Woden (Kynes, under "Nettle"), not in the vocabulary; link once M14.15 adds it.
+- Other name: Woden (Kynes, under "Nettle") is another name of Odin; link once M14.23 seeds it as an other name.
