@@ -3,15 +3,27 @@ import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import ListFrame, { ListBody } from '../ListFrame';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import {
+  AnnotateButton,
+  AnnotateIcon,
+  AnnotateLink,
+  BinButton,
+  BinIcon,
+  CheckIcon,
+  CompendiumEditLink,
   CopyIcon,
+  DotsIcon,
   EditLink,
   LinkIcon,
+  MoreMenu,
   MysticEyeIcon,
   PencilIcon,
   PlusIcon,
+  QuickLookButton,
   QuickLookLink,
   RedoIcon,
+  StockIcon,
   UndoIcon,
 } from '.';
 
@@ -67,18 +79,75 @@ const Rows = (): ReactElement => (
   </ListFrame>
 );
 
-// Every glyph the wrapper's icons file draws, at the icon button's glyph size:
-// the history pair, Restore Original and Copy From Ingredient use undo, redo
-// and copy, and Quick Look the eye.
-export const Default: Story = {
+const GLYPHS = {
+  Annotate: AnnotateIcon,
+  Bin: BinIcon,
+  Check: CheckIcon,
+  Copy: CopyIcon,
+  Dots: DotsIcon,
+  Link: LinkIcon,
+  'Mystic Eye': MysticEyeIcon,
+  Pencil: PencilIcon,
+  Plus: PlusIcon,
+  Redo: RedoIcon,
+  Stock: StockIcon,
+  Undo: UndoIcon,
+};
+
+const NOOP = (): void => undefined;
+const HEADING = { title: 'Testwort' };
+
+// Every glyph the wrapper's icons file draws, at the icon button's glyph size,
+// then every control that wears one with its tip (hover or focus it): the
+// edit, compendium edit, annotate and quick look links; the bin, annotate and
+// quick look buttons; and the three dots' menu, in its Compendium and Coven
+// sections.
+export const States: Story = {
   render: () => (
-    <p style={{ display: 'flex', gap: '1rem', fontSize: '1rem' }}>
-      {[CopyIcon, LinkIcon, MysticEyeIcon, PencilIcon, PlusIcon, RedoIcon, UndoIcon].map(
-        (Glyph, at) => (
-          <Glyph key={at} />
+    <StatesGrid
+      cell="12rem"
+      states={{
+        ...Object.fromEntries(
+          Object.entries(GLYPHS).map(([name, Glyph]) => [
+            `${name} Icon`,
+            <p key={name} style={{ fontSize: '1rem' }}>
+              <Glyph />
+            </p>,
+          ]),
         ),
-      )}
-    </p>
+        'Edit Link': <EditLink href="#edit" name="Testwort" heading={HEADING} />,
+        'Compendium Edit Link': (
+          <CompendiumEditLink href="#edit" name="Testwort" heading={HEADING} />
+        ),
+        'Annotate Link': <AnnotateLink href="#annotate" name="Testwort" heading={HEADING} />,
+        'Quick Look Link': <QuickLookLink href="#look" name="Testwort" heading={HEADING} />,
+        'Bin Button': <BinButton verb="Delete Ingredient" name="Testwort" onClick={NOOP} />,
+        'Annotate Button': <AnnotateButton name="Testwort" onClick={NOOP} />,
+        'Quick Look Button': <QuickLookButton name="Testwort" onClick={NOOP} />,
+        'More Menu': (
+          <MoreMenu
+            name="Testwort"
+            sections={[
+              {
+                key: 'compendium',
+                label: 'Compendium',
+                items: [
+                  { key: 'edit', label: 'Edit in Compendium', onSelect: NOOP, primary: true },
+                ],
+              },
+              {
+                key: 'coven',
+                label: 'Coven',
+                items: [
+                  { key: 'annotate', label: 'Annotate', onSelect: NOOP },
+                  { key: 'remove', label: 'Remove', onSelect: NOOP, destructive: true },
+                ],
+              },
+            ]}
+          />
+        ),
+      }}
+    />
   ),
 };
 
