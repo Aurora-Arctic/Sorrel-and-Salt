@@ -111,7 +111,7 @@ test.describe('an entry’s tooltip', () => {
   const tooltip = (page: Page) => page.getByRole('tooltip');
 
   test.beforeEach(async ({ page }) => {
-    await openStory(page, 'default');
+    await openStory(page, 'folk-name-list');
     // The list opens on mount; closed, so it covers nothing hovered below.
     await page.getByRole('combobox', { name: 'Folk Name' }).press('Escape');
     await expect(page.getByRole('listbox')).toBeHidden();

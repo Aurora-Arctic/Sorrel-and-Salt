@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import FormIcon from '../FormIcon';
 import { FieldShell, fieldDescription } from '../Field';
 import { MagnifierIcon } from '../Field/icons';
@@ -12,6 +13,8 @@ import Combobox, {
 } from '.';
 import { ComboboxTypeahead } from './typeahead';
 import type { ComboboxOption } from './types';
+
+const noop = () => {};
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
 // suggestions are fixed, so typing filters nothing: the rows are the shape
@@ -210,7 +213,7 @@ const ListView = () => {
   );
 };
 
-export const Default: Story = { render: ListView };
+export const FolkNameList: Story = { render: ListView };
 
 /**
  * A list whose order means something (MB.170): each chip moved by its handle,
@@ -545,4 +548,177 @@ export const LoadingSelect: Story = {
       </Labelled>
     );
   },
+};
+
+const GROUPED: ComboboxOption[] = [
+  {
+    value: 'Testward',
+    heading: 'Wards & Fixtures',
+    colors: { colorDark: '#8fb4e8', colorLight: '#2a5aa0' },
+    count: 12,
+  },
+  {
+    value: 'Mockward',
+    heading: 'Wards & Fixtures',
+    colors: { colorDark: '#8fb4e8', colorLight: '#2a5aa0' },
+    count: 3,
+  },
+  {
+    value: 'Stubleaf',
+    heading: 'Herbs',
+    colors: { colorDark: '#9ad39a', colorLight: '#2d6a2d' },
+    count: 7,
+  },
+  {
+    value: 'Fixturewort',
+    heading: 'Herbs',
+    colors: { colorDark: '#9ad39a', colorLight: '#2d6a2d' },
+    disabled: true,
+    note: 'Already on this list.',
+  },
+];
+
+/**
+ * An open list in rows of every kind: buckets under a category group's heading,
+ * each row edged in the group's colour, a count, a disabled row with its reason,
+ * the typed row led by its own mark, the first row highlighted as a closed
+ * set's type-ahead has it, and the box marked required.
+ */
+export const GroupedRows: Story = {
+  render: () => {
+    const [value, setValue] = useState('te');
+    usePressOnMount('Show Category categories');
+    return (
+      <Labelled label="Category">
+        {(ids) => (
+          <Combobox
+            {...ids}
+            label="Category"
+            noun="categorie"
+            value={value}
+            onChange={setValue}
+            onPick={setValue}
+            suggestions={{ options: GROUPED, pending: false }}
+            highlightFirst
+            required
+            typedIcon={<span aria-hidden="true">+</span>}
+            placeholder="Add a category"
+          />
+        )}
+      </Labelled>
+    );
+  },
+};
+
+const GLYPH = <span aria-hidden="true">*</span>;
+
+/**
+ * One chip of a list in each of its forms: plain, a linked entry opening its
+ * summary, outlined, with a count and while the count is loading, naming what
+ * it removes, flagged by its list's error, carrying an action of its own, with
+ * a group icon, and coloured by its group.
+ */
+export const EntryChips: Story = {
+  render: () => (
+    <StatesGrid
+      cell="20rem"
+      states={{
+        Plain: (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Hedge Fixture" onRemove={noop} />
+          </ul>
+        ),
+        'With A Summary': (
+          <ul className="combobox__entries">
+            <ComboboxEntry
+              value="Mockwort"
+              onRemove={noop}
+              summary={{
+                label: 'About Mockwort (Fixtura vulgaris)',
+                content: () => <p>A fixture herb, used in tests.</p>,
+              }}
+            />
+          </ul>
+        ),
+        Outlined: (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Water" outlined onRemove={noop} />
+          </ul>
+        ),
+        'With A Count': (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Water" count={7} onRemove={noop} />
+          </ul>
+        ),
+        'Count Loading': (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Water" loading onRemove={noop} />
+          </ul>
+        ),
+        'Naming What It Removes': (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Water" removeNoun="Element" onRemove={noop} />
+          </ul>
+        ),
+        'Named By The List Error': (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Hedge Fixture" errorId="folk-name-error" onRemove={noop} />
+          </ul>
+        ),
+        'With An Action': (
+          <ul className="combobox__entries">
+            <ComboboxEntry
+              value="Hedge Fixture"
+              onRemove={noop}
+              action={{
+                label: 'Make Hedge Fixture the Display Name',
+                tip: 'Make Display Name',
+                icon: GLYPH,
+                onClick: noop,
+              }}
+            />
+          </ul>
+        ),
+        'With An Action Shut': (
+          <ul className="combobox__entries">
+            <ComboboxEntry
+              value="Hedge Fixture"
+              onRemove={noop}
+              action={{
+                label: 'Make Hedge Fixture the Display Name',
+                tip: 'Make Display Name',
+                icon: GLYPH,
+                onClick: noop,
+                disabled: true,
+              }}
+            />
+          </ul>
+        ),
+        'With An Icon': (
+          <ul className="combobox__entries">
+            <ComboboxEntry value="Wax" icon={<FormIcon name="animal" />} onRemove={noop} />
+          </ul>
+        ),
+        'With A Qualifier And Detail': (
+          <ul className="combobox__entries">
+            <ComboboxEntry
+              value="Testward"
+              qualifier="Wards & Fixtures"
+              detail="Dried leaf · Compendium entry"
+              onRemove={noop}
+            />
+          </ul>
+        ),
+        'Coloured By Its Group': (
+          <ul className="combobox__entries">
+            <ComboboxEntry
+              value="Testward"
+              colors={{ colorDark: '#8fb4e8', colorLight: '#2a5aa0' }}
+              onRemove={noop}
+            />
+          </ul>
+        ),
+      }}
+    />
+  ),
 };
