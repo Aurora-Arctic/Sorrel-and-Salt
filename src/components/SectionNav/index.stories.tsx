@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactNode } from 'react';
 import { type ReactElement, type ReactNode } from 'react';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
