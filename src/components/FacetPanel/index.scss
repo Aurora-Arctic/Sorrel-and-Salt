@@ -133,9 +133,18 @@
   }
 }
 
-// The other half of the public compendium's Forms line (`halves` in index.tsx): a line of its
-// own inside the outer one, so it takes half beside Forms and stacks below the tablet width as
-// every line does. Toxic keeps to its end, where it stands with In My Covens beside it or not.
+// The other part of the public compendium's Forms line (`halves` in index.tsx): a line of its
+// own inside the outer one, so it stacks below the tablet width as every line does. From the
+// tablet width up it takes 60% of the line beside Forms' 40% (the owner's call, 2026-10-23): both
+// start from a basis of 0 and share what the gap leaves 1 : 1.5, as `2fr 3fr` grid tracks would,
+// so the split holds at every width with no length of its own. Toxic keeps to its end, where it
+// stands with In My Covens beside it or not.
+.facet-panel__line > .facet-panel__half {
+  @media (min-width: $shell-tablet-width) {
+    flex-grow: 1.5;
+  }
+}
+
 .facet-panel__half > .facet-panel__quick {
   @media (min-width: $shell-tablet-width) {
     margin-inline-start: auto;
