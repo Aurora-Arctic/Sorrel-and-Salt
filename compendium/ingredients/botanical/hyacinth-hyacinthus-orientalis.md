@@ -93,3 +93,7 @@ variants:
 # Hyacinth
 
 The common hyacinth, also called the garden or Dutch hyacinth, is a bulb plant of the asparagus family with strongly scented flowers. Wikipedia says it is native to western Asia, from southern Turkey through Syria and Lebanon to northern Israel, and reached Europe in the 16th century. It reports that all parts are toxic to humans and animals if eaten. Kynes says handling the bulbs may irritate the skin. She records that the Greeks dedicated it to Demeter, that it was a flower of death used on memorials though brides also wore crowns of it, and that in parts of England it was unlucky indoors. Cunningham lists it as a love and protection flower: sachets to ease childbirth pain, a plant in the bedroom to guard against nightmares, and the fresh flowers sniffed to relieve grief and depression. Kynes suggests pink or red flowers for love, a white one on the altar for grief, and bulbs in the bedroom to draw off bad dreams.
+
+#### Edit Notes for Claude
+
+- Other name: Hyacinthos (Kynes, under "Hyacinth") is a spelling of Hyacinthus; link once M14.23 seeds it as an other name.
