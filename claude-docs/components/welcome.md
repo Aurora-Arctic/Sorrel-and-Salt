@@ -12,7 +12,7 @@ The page reads the session with **`getSession()`, never `requireSession()`**.
 `/` is in the proxy's `PUBLIC_ROUTES` and must stay reachable signed out;
 `requireSession()` would redirect exactly the visitors the page exists for.
 The session decides one thing: a signed-out visitor is offered **Sign In**
-(`/sign-in`), a signed-in one **Continue** to where they belong —
+(`/sign-in`), a signed-in one **Continue** to where they belong (for an unverified account, the email page with that place as its `next`) —
 `signedInLanding(session)` (`src/lib/landing.ts`), the rule a sign-in with no
 return path lands by: `/admin` for a curator or an admin (MB.113, M11.20), the first coven the
 switcher lists for a member, and `/coven`, the post-sign-in landing (M2.8),

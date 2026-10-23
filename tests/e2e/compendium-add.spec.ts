@@ -9,6 +9,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
@@ -23,8 +24,6 @@ test.beforeAll(async () => {
 
 // Each is tipped and named by its words and then the entry (MB.120); a role name matches in part, so these
 // find a card's plus and check, and the full names are asserted once where the add lands.
-const ADD = 'Add to My Ingredients';
-const HELD = 'In Every Cupboard';
 const NAME = 'Fixture Holdwort';
 const COVEN = 'Fixture Coven Add';
 
@@ -62,8 +61,7 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
         where e.workspace_id = ${workspaceId} and i.name = ${NAME} and e.deleted_at is null`,
     );
   const card = (target: typeof page) => {
-    const found = rowOf(compendiumList(target), NAME);
-    return found;
+    return rowOf(compendiumList(target), NAME);
   };
   const open = async (target: typeof page) => {
     await target.goto(`/compendium?query=${encodeURIComponent(NAME)}`);

@@ -469,9 +469,13 @@ the tests [`tests.md`](tests.md).
   the card, a verified account gets a quiet button to the account page,
   reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
-- **No other page shows an unverified account anything.** `requireSession()`
+- **The front page offers it directly.** `/` is public, and for an unverified
+  signed-in account its Continue points at `/account/email?next=<landing>`
+  rather than at a page that would send it there.
+- **No other protected page shows an unverified account anything.** The public
+  pages, `/` and the compendium, are open to it. `requireSession()`
   sends a session whose row is unverified to
-  `/account/email?next=<its own path>` from every page but that one
+  `/account/email?next=<its own path>` from every protected page but that one
   (`isEmailPage`, exact on the pathname), so the after-hook's landing is
   not the only way there: a bookmark, a back button or a typed URL all end
   on the email page until the address is proved. A link followed inside the
@@ -528,7 +532,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
 - **The email page stays, for the flows that are not a visit to the
-  account.** Every unverified sign-in lands there, it is the only page a
+  account.** Every unverified sign-in lands there, it is the only protected page a
   provisional account can reach, a mailed link lands on its confirmed view,
   and a link opened from the wrong browser is explained there. Its way
   across, offered to a verified account, is a quiet "Continue to Account"

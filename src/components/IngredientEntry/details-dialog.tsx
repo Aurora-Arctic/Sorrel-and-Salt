@@ -53,15 +53,15 @@ export function headingOf({
       )}
     </>
   );
+  // The entry's name as the card names it, for Edit and for the plus.
+  const name = editAction?.name ?? heading.title;
   // The coven card's own controls where the page gave them; else the compendium card's Edit,
   // named as the card names the entry.
-  const edit =
-    controls ??
-    (editAction && <EditAction {...editAction} name={editAction.name ?? heading.title} />);
+  const edit = controls ?? (editAction && <EditAction {...editAction} name={name} />);
   // The plus, or the check once every coven the viewer may add in holds the entry, stands left of
   // the pencil, the entry page's own pair (PlusMark; the owner's call, 2026-10-20).
   const add = plus && ingredientId && (
-    <PlusMark plus={plus} ingredientId={ingredientId} name={editAction?.name ?? heading.title} />
+    <PlusMark plus={plus} ingredientId={ingredientId} name={name} />
   );
   // The compendium card's order: the plus, Edit in Compendium, then the three dots.
   const buttons = (add || edit || more) && (

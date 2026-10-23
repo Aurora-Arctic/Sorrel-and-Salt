@@ -4,6 +4,7 @@ import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
 import AddIngredientButton from './add-ingredient-button';
+import BrandName from './brand-name';
 import MainBody from './main-body';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
@@ -17,12 +18,10 @@ import './index.scss';
 // the account menu and the current-page marking are client code.
 // See claude-docs/components/app-shell.md.
 
-const BRAND = 'Sorrel & Salt';
-
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
   // The Compendium is public (MB.80), so its link is everyone's, an
-  // unverified account's included: it leads to no page that sends them to the
-  // email page. The other two are for a verified curator or admin.
+  // unverified account's included: it leads to a page that never sends them to
+  // the email page. The other two are for a verified curator or admin.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const links: SiteLink[] =
     viewer.verified && viewer.canCurate
@@ -36,16 +35,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           { label: 'Admin', href: '/admin', base: '/admin' },
         ]
       : [compendium];
-  const brand = (
-    <>
-      <span className="app-shell__brand-full">{BRAND}</span>
-      {/* The initials stand in at a phone's width; the full name above stays
-          for a screen reader, which is why this one is hidden from it. */}
-      <span className="app-shell__brand-short" aria-hidden="true">
-        S&amp;S
-      </span>
-    </>
-  );
+  const brand = <BrandName block="app-shell" />;
 
   return (
     <div className="app-shell">
@@ -54,19 +44,15 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
       </a>
       <header className="app-shell__bar">
         <div className="app-shell__bar-inner">
-          {/* Plain text while the address is unverified: every page the
-              brand could lead to would send the viewer back to the email page. */}
-          {viewer.verified ? (
-            <PendingLink
-              href="/"
-              className="app-shell__brand"
-              navigationTarget={{ region: 'main', shape: 'page' }}
-            >
-              {brand}
-            </PendingLink>
-          ) : (
-            <span className="app-shell__brand">{brand}</span>
-          )}
+          {/* The brand leads to `/`, which is public, so every viewer gets the link,
+              an unverified one included. */}
+          <PendingLink
+            href="/"
+            className="app-shell__brand"
+            navigationTarget={{ region: 'main', shape: 'page' }}
+          >
+            {brand}
+          </PendingLink>
           <SiteNav links={links} />
           <div className="app-shell__end">
             {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
