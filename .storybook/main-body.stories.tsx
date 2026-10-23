@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../src/lib/navigation';
 import { Navigating } from './navigating';
 import { ShellFrame } from './shell-frame';
@@ -62,73 +62,81 @@ const Page = (): ReactElement => (
           Form
         </PendingLink>
       </li>
+      <li>
+        <PendingLink
+          href="/compendium/ingredients/testwort"
+          navigationTarget={{ region: 'main', shape: 'page', frame: 'entry' }}
+        >
+          Entry
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/account/sign-in-methods"
+          navigationTarget={{
+            region: 'main',
+            shape: 'table',
+            frame: 'wide',
+            title: true,
+            tabs: true,
+            action: true,
+            filter: true,
+          }}
+        >
+          Tabs And Action
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/account/email"
+          navigationTarget={{ region: 'main', shape: 'page', head: 'eyebrow' }}
+        >
+          Eyebrow Head
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/account/name"
+          navigationTarget={{ region: 'main', shape: 'page', head: 'title' }}
+        >
+          Title Head
+        </PendingLink>
+      </li>
     </ul>
   </main>
 );
 
-// At rest the body shows its page. Press the link to see it swap.
-export const Default: Story = {
-  render: () => (
-    <Navigating bar>
-      <ShellFrame area="none">
-        <Page />
-      </ShellFrame>
-    </Navigating>
-  ),
+// Each state is the same page; all but the first are opened with one link
+// already pressed, so the page has gone and the skeleton stands in a `main`
+// of its own, under the page bar, in the frame that link's destination sits in
+// (top-aligned, never centred down the window): the standard frame, the wide
+// column of the Compendium's cards, the forms' column of the coven index, the
+// account's jump menu beside its sections, Create Coven's form on its panel, an
+// ingredient's page with its menu, a table with tabs and an action, and the two
+// heads. Resting is the page at rest: press a link to see it swap.
+const waiting = (press?: string): ReactElement => (
+  <Navigating bar press={press}>
+    <ShellFrame area="none">
+      <Page />
+    </ShellFrame>
+  </Navigating>
+);
+
+const STATES: Record<string, ReactNode> = {
+  Resting: waiting(),
+  Compendium: waiting('Compendium'),
+  Wide: waiting('Wide'),
+  Narrow: waiting('Narrow'),
+  'With Menu': waiting('With Menu'),
+  Form: waiting('Form'),
+  Entry: waiting('Entry'),
+  'Tabs And Action': waiting('Tabs And Action'),
+  'Eyebrow Head': waiting('Eyebrow Head'),
+  'Title Head': waiting('Title Head'),
 };
 
-// The same page, opened with its link already pressed: the page has gone and
-// the skeleton stands in a `main` of its own, under the page bar.
-export const LoadingPage: Story = {
-  render: () => (
-    <Navigating bar press="Compendium">
-      <ShellFrame area="none">
-        <Page />
-      </ShellFrame>
-    </Navigating>
-  ),
-};
-
-// The wait is drawn in the destination's own frame, top-aligned, never
-// centred down the window: the wide column of the Compendium's cards, the forms'
-// column of the coven index, the account's jump menu beside its sections, and
-// Create Coven's form on its panel.
-export const LoadingWide: Story = {
-  render: () => (
-    <Navigating bar press="Wide">
-      <ShellFrame area="none">
-        <Page />
-      </ShellFrame>
-    </Navigating>
-  ),
-};
-
-export const LoadingNarrow: Story = {
-  render: () => (
-    <Navigating bar press="Narrow">
-      <ShellFrame area="none">
-        <Page />
-      </ShellFrame>
-    </Navigating>
-  ),
-};
-
-export const LoadingWithMenu: Story = {
-  render: () => (
-    <Navigating bar press="With Menu">
-      <ShellFrame area="none">
-        <Page />
-      </ShellFrame>
-    </Navigating>
-  ),
-};
-
-export const LoadingForm: Story = {
-  render: () => (
-    <Navigating bar press="Form">
-      <ShellFrame area="none">
-        <Page />
-      </ShellFrame>
-    </Navigating>
-  ),
+export const States: Story = {
+  args: { state: 'Resting' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
