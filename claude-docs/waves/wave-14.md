@@ -21,3 +21,5 @@
 **M14.22 and M14.23 joined on 2026-10-23**, the owner's call: a deity's other names, stored as rows (M14.22) and then edited, shown, searched and seeded (M14.23), the way an entry has common names. They sit **after M14.14 and ahead of M14.15**, so that M14.15 links a source's other name, Ashtoreth or Woden, to its deity rather than to a name written only in a description ([`tasks/m14.md`](../tasks/m14.md)).
 
 **M14.24 joined on 2026-10-23**, the owner's call: a sourcing score on each compendium entry, shown to curators with the facts behind it. It sits **after MB.249**, so curators have it when they review the finished seed ([`tasks/m14.md`](../tasks/m14.md)).
+
+**M14.25 joined on 2026-10-23**, the owner's call: the categories the seed lanes found in their sources and the vocabulary lacked are mapped or added, then linked. It sits **after M14.15 and ahead of M14.16 to M14.21**, so the addendum lanes link the new categories as they write their files ([`tasks/m14.md`](../tasks/m14.md)).
