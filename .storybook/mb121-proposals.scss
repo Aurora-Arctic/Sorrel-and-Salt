@@ -1,0 +1,32 @@
+@use '../src/scss/variables' as *;
+
+// MB.121's mocks of the options the owner did not take up yet, each scoped to its own
+// wrapper so nothing here reaches a real story or the app. They restyle the real shelf
+// rather than copying it, so each mock is the shipped shelf with one difference
+// (claude-docs/design-decisions/mb.121-workspace-ingredients-review.md).
+
+// Every mock starts from the shelf before proposal P1: no symbol beside the amount.
+.mb121-mock .jar-shelf__amount-icon {
+  display: none;
+}
+
+// P1b: the state's word on its own line under the amount.
+.mb121-mock--word {
+  .jar-shelf__jar--low .jar-shelf__amount::after,
+  .jar-shelf__jar--out .jar-shelf__amount::after {
+    flex-basis: 100%;
+  }
+
+  .jar-shelf__jar--low .jar-shelf__amount::after {
+    content: 'Low';
+  }
+
+  .jar-shelf__jar--out .jar-shelf__amount::after {
+    content: 'Out';
+  }
+}
+
+// P1c: Low's threshold mark drawn heavier, and nothing else added.
+.mb121-mock--mark .jar-shelf__jar--low .jar-shelf__mark {
+  stroke-width: $mb121-mock-mark-stroke;
+}
