@@ -1,5 +1,6 @@
 # The entry files whose citations still carry `nameBasis: unaudited` (M14.9).
-# Remove a line once that file has been audited (M14.4).
+# Remove a line once that file has been audited (M14.4), and remove it from
+# tests/db/seed/compendium/unaudited-baseline.txt too: the ratchet (M14.11).
 ingredients/botanical/adam-and-eve-root-aplectrum-hyemale.md
 ingredients/botanical/adders-tongue-erythronium-americanum.md
 ingredients/botanical/african-violet-streptocarpus-ionanthus.md
