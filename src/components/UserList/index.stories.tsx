@@ -87,11 +87,19 @@ const defaultNode = (
     <TabbedPage
       title={ADMIN_PAGES.people.label}
       tabs={ADMIN_PAGES.people.tabs}
-      action={<PauseControl paused={false} canToggle />}
+      action={<PauseControl paused={false} canToggle={false} />}
     >
       <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
     </TabbedPage>
   </ShellFrame>
+);
+
+// The same page for the primary admin, the one admin who may pause: the switch
+// is a usable red Pause Admin Changes rather than the dashed, locked resting button.
+const primaryAdminNode = (
+  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
+    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+  </AdminTabbedFrame>
 );
 
 const FilteredView = () => (
@@ -261,6 +269,7 @@ const adminChangesNotPrimaryNode = (
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const LISTED_STATES: Record<string, ReactNode> = {
   'Without Filters': defaultNode,
+  'Primary Admin': primaryAdminNode,
   'Awaiting Approval And Query': filteredNode,
   'Middle Page': middlePageNode,
   'Role Filter': roleFilterNode,

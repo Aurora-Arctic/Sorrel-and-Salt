@@ -420,8 +420,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
 `Admin / User List`, every story inside the admin layout's frame (the nav in its
 context row above the column) and the People page with its Users tab open:
 
-- **States**, one story with a control that chooses: Without Filters, the page as signed off at MB.115, its tab's
-  Pause Admin Changes and each row's Impersonate opening their
+- **States**, one story with a control that chooses: Without Filters, the page as a signed-in admin who is not the primary one sees it (the site's resting state: Pause Admin Changes dashed and locked, in the app shell); Primary Admin, the same page with a usable Pause Admin Changes and each row's Impersonate opening their
   confirmations; Awaiting Approval And Query; Role Filter; No Matches, with every filter set, so the
   sentence names all three; Without Impersonation, where impersonation is
   not registered; Unverified Approval, Admin Roles, Admin Changes Paused
