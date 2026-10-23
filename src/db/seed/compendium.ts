@@ -2,11 +2,8 @@ import { isNull } from 'drizzle-orm';
 import { beginSeedTransaction, insertStamped, requireFrom } from './idempotent';
 import { insertMissingReferences } from './reference-rows';
 import { identityOf } from './standard';
-import { COMPENDIUM } from './compendium/index';
-import { contentHash } from './compendium/content-hash';
-import { checkCompendium, checkCompendiumFiles } from './compendium/guard';
-import { readConversionManifest, type LoadedCompendium } from './compendium/load';
-import { entryFilePath } from './compendium/parse-entry';
+import { checkCompendiumFiles } from './compendium/guard';
+import { loadCompendium, readConversionManifest, type LoadedCompendium } from './compendium/load';
 import { emptyReport, type SeedCompendiumReport } from './compendium/report';
 import {
   categoryRows,
@@ -41,7 +38,6 @@ import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredie
 import { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type {
   SeedCompendiumEntry,
-  SeedCompendiumShard,
   SeedCompendiumVariant,
   SeedDatabase,
   SeedTransaction,
@@ -57,9 +53,6 @@ import type {
 // see minimal.ts. The rows an entry becomes are ./compendium/rows.ts's; the
 // decision and the update are ./compendium/update.ts's.
 
-/** What the seed takes: the shard literals (until M14.10), or the loaded files. */
-export type SeedCompendiumInput = readonly SeedCompendiumShard[] | LoadedCompendium;
-
 export interface SeedCompendiumOptions {
   /**
    * The conversion manifest, identity to hash (load.ts). `seedCompendium`
@@ -71,51 +64,31 @@ export interface SeedCompendiumOptions {
   dryRun?: boolean;
 }
 
-const isLoaded = (input: SeedCompendiumInput): input is LoadedCompendium => !Array.isArray(input);
-
-/** The guard's issues over `input`: the literal rules for shards, those and the file rules for files, with what the loader could not read. */
-function issuesOf(input: SeedCompendiumInput): string[] {
-  return isLoaded(input)
-    ? [...input.issues, ...checkCompendiumFiles(input)]
-    : checkCompendium(input);
-}
-
-/** Throws, listing every issue, when `input` fails the guard; writes nothing. */
-export function assertCompendiumValid(input: SeedCompendiumInput): void {
-  const issues = issuesOf(input);
+/** Throws, listing every issue, when the files fail the guard (with what the loader could not read); writes nothing. */
+export function assertCompendiumValid(input: LoadedCompendium): void {
+  const issues = [...input.issues, ...checkCompendiumFiles(input)];
   if (issues.length > 0) {
     throw new Error(`The compendium seed fails its guard:\n- ${issues.join('\n- ')}`);
   }
 }
 
 /**
- * Each entry the seed writes, with where it came from and its hash. A shard
- * literal is taken as approved and never marked, so a changed literal reads
- * as `PENDING` until the cutover to files; a file is taken only when
- * `approved`, with its mark.
+ * Each entry the seed writes, with where it came from and its hash: the
+ * `approved` files only, each with its mark. A `draft` or `needs-review`
+ * file is not seeded, wherever it runs.
  */
-export function seedItems(input: SeedCompendiumInput): SeedItem[] {
-  if (isLoaded(input)) {
-    const sources = { ...WORKS, ...input.sources };
-    return input.files
-      .filter((file) => file.status === 'approved')
-      .map((file) => ({
-        entry: file.entry,
-        sources,
-        where: file.path,
-        hash: file.hash,
-        seedUpdate: file.seedUpdate,
-        overwriteEditor: file.overwriteEditor,
-      }));
-  }
-  return input.flatMap((shard) =>
-    shard.entries.map((entry) => ({
-      entry,
-      sources: { ...WORKS, ...shard.sources },
-      where: entryFilePath(entry),
-      hash: contentHash(entry),
-    })),
-  );
+export function seedItems(input: LoadedCompendium): SeedItem[] {
+  const sources = { ...WORKS, ...input.sources };
+  return input.files
+    .filter((file) => file.status === 'approved')
+    .map((file) => ({
+      entry: file.entry,
+      sources,
+      where: file.path,
+      hash: file.hash,
+      seedUpdate: file.seedUpdate,
+      overwriteEditor: file.overwriteEditor,
+    }));
 }
 
 /** Thrown inside the transaction to roll a dry run back, and caught outside it. */
@@ -126,14 +99,15 @@ class DryRunRollback extends Error {
 }
 
 /**
- * Checks `input` against the guard, then seeds it in a transaction of its
+ * Checks `input`, by default the files under `compendium/`, against the
+ * guard, then seeds it in a transaction of its
  * own and returns what the run did. An issue throws before the transaction
  * opens, so an invalid corpus writes nothing; a dry run rolls back after
  * deciding, so it writes nothing either.
  */
 export async function seedCompendium(
   db: SeedDatabase,
-  input: SeedCompendiumInput = COMPENDIUM,
+  input: LoadedCompendium = loadCompendium(),
   { manifest = readConversionManifest(), dryRun = false }: SeedCompendiumOptions = {},
 ): Promise<SeedCompendiumReport> {
   assertCompendiumValid(input);
@@ -160,7 +134,7 @@ export async function seedCompendium(
  */
 export async function seedCompendiumContent(
   tx: SeedTransaction,
-  input: SeedCompendiumInput,
+  input: LoadedCompendium,
   { manifest = null }: Pick<SeedCompendiumOptions, 'manifest'> = {},
 ): Promise<SeedCompendiumReport> {
   const report = emptyReport();

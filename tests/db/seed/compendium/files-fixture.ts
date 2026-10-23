@@ -2,7 +2,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { stringify } from 'yaml';
-import { entryFilePath } from '@/db/seed/compendium/parse-entry';
+import type { LoadedCompendium } from '@/db/seed/compendium/load';
+import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
 import { renderEntryFile, type RenderableEntryFile } from '@/db/seed/compendium/render-entry';
 import { FIXTURE_SHARD } from '../compendium-fixture';
 import type {
@@ -102,3 +103,34 @@ export function fileFor(
     throw new Error(`${path} was not loaded; loaded: ${files.map((f) => f.path).join(', ')}`);
   return file;
 }
+
+/** A file's text through the real parser, so a test holds the hash the seed will compute. */
+export function parsed(file: RenderableEntryFile): SeedCompendiumFile {
+  const { file: loaded, issues } = parseEntryFile(entryFilePath(file.entry), renderEntryFile(file));
+  if (!loaded) throw new Error(issues.join('\n'));
+  return loaded;
+}
+
+/**
+ * `files` as `loadCompendium` would return them, without a folder on disk:
+ * each rendered and parsed, under the fixture's sources and any `more`.
+ */
+export function loadedOf(
+  files: readonly RenderableEntryFile[],
+  more: SeedCompendiumShard['sources'] = {},
+): LoadedCompendium {
+  const loaded = files.map(parsed);
+  const sources = { ...FILE_SOURCES, ...more };
+  return {
+    root: 'compendium-test',
+    files: loaded,
+    sources,
+    shards: [{ name: 'compendium', sources, entries: loaded.map((file) => file.entry) }],
+    unaudited: [],
+    issues: [],
+  };
+}
+
+/** The two fixture entries as `approved` files, loaded. */
+export const fixtureFiles = (): LoadedCompendium =>
+  loadedOf([fileOf(TESTWORT), fileOf(SAMPLEWORT)]);

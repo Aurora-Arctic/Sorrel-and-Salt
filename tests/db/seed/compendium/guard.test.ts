@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { checkCompendium } from '@/db/seed/compendium/guard';
-import { COMPENDIUM } from '@/db/seed/compendium/index';
-import { SOURCES } from '@/db/seed/sources';
-import { FIXTURE_SHARD, wordsOf } from './compendium-fixture';
+import { FIXTURE_SHARD, wordsOf } from '../compendium-fixture';
 import type { SeedCompendiumEntry, SeedCompendiumShard } from '@/db/seed/types';
 
 // MB.242: the compendium seed's guard, database-free. Each rule is broken
 // once on the invented fixture, which passes whole, so the issue a case
 // finds is the one its edit made. The rules are
 // claude-docs/db/compendium-seed/README.md's; what each says is the guard's.
+// The files' own rules are guard-files.test.ts's, and the real corpus is
+// checked in ../compendium-files.test.ts (M14.10).
 
 /** The fixture with `edit` applied to a deep copy. */
 function edited(edit: (shard: SeedCompendiumShard) => void): SeedCompendiumShard[] {
@@ -31,34 +31,10 @@ function nameless(name: string): SeedCompendiumEntry {
   };
 }
 
-/** Every `locator` a seed literal holds, at any depth. */
-function locatorsIn(value: unknown): string[] {
-  if (Array.isArray(value)) return value.flatMap(locatorsIn);
-  if (value === null || typeof value !== 'object') return [];
-  return Object.entries(value).flatMap(([key, inner]) =>
-    key === 'locator' && typeof inner === 'string' ? [inner] : locatorsIn(inner),
-  );
-}
-
-// Chicago's 18th edition (14.130) cites a reference-work entry "under" its
-// headword, where the 17th wrote the Latin "s.v.": a seed list written before
-// the change fails here when it merges.
-describe('the seed locators', () => {
-  it('cite an entry "under" its headword, never "s.v."', () => {
-    const locators = locatorsIn([COMPENDIUM, SOURCES]);
-    expect(locators.filter((locator) => locator.startsWith('under "'))).not.toEqual([]);
-    expect(locators.filter((locator) => /\bs\.\s*v\./i.test(locator))).toEqual([]);
-  });
-});
-
 describe('checkCompendium', () => {
   // The precondition every case below rests on.
   it('passes the fixture whole', () => {
     expect(checkCompendium([FIXTURE_SHARD])).toEqual([]);
-  });
-
-  it('passes the production list', () => {
-    expect(checkCompendium(COMPENDIUM)).toEqual([]);
   });
 
   describe('identity and naming', () => {

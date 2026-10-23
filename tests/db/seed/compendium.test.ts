@@ -16,11 +16,10 @@ import {
   seedCompendiumContent,
   type SeedCompendiumOptions,
 } from '@/db/seed/compendium';
-import { COMPENDIUM } from '@/db/seed/compendium/index';
-import type { LoadedCompendium } from '@/db/seed/compendium/load';
-import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
+import { loadCompendium } from '@/db/seed/compendium/load';
+import { entryFilePath } from '@/db/seed/compendium/parse-entry';
 import { emptyReport, hasRefusals } from '@/db/seed/compendium/report';
-import { renderEntryFile, type RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
 import { REASONS } from '@/db/seed/compendium/update';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedDeities } from '@/db/seed/deities';
@@ -29,14 +28,23 @@ import { SOURCES, seedSources } from '@/db/seed/sources';
 import { FIXTURE_USERS, identityOf } from '@/db/seed/standard';
 import { citationText } from '@/lib/citation';
 import { entryRecency } from '@/lib/entry-recency';
-import { FIXTURE_SHARD, wordsOf } from './compendium-fixture';
-import { FILE_SOURCES, SAMPLEWORT, TESTWORT, fileOf } from './compendium/files-fixture';
-import type { SeedCompendiumEntry, SeedCompendiumShard } from '@/db/seed/types';
+import { wordsOf } from './compendium-fixture';
+import {
+  FILE_SOURCES,
+  SAMPLEWORT,
+  TESTWORT,
+  fileOf,
+  fixtureFiles,
+  loadedOf,
+  parsed,
+} from './compendium/files-fixture';
+import type { SeedCompendiumEntry } from '@/db/seed/types';
 
 // MB.242: the compendium seed writes each entry whole, once, on the invented
-// fixture shard, against the real tables emptied first. The shape every seed
+// fixture entries, read from files, against the real tables emptied first. The shape every seed
 // shares — stamps, a second run a no-op, nothing resurrected — is
-// index.test.ts's; the guard's rules are compendium-literals.test.ts's.
+// index.test.ts's; the guard's rules are compendium/guard.test.ts's and
+// compendium/guard-files.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -103,7 +111,7 @@ describe('seedCompendium', () => {
   describe('on an empty compendium', () => {
     beforeEach(async () => {
       await seedVocabularies();
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
     });
 
     it('writes each entry keyed by its identity, with its forms picked from the curated rows', async () => {
@@ -231,7 +239,7 @@ describe('seedCompendium', () => {
         select seed_key from "references" where title in ('A Fixture Herbal', 'Samplewort')
       `;
       expect(keyed.map((row) => row.seed_key).sort()).toEqual(
-        Object.values(FIXTURE_SHARD.sources).map(citationText).sort(),
+        Object.values(FILE_SOURCES).map(citationText).sort(),
       );
     });
   });
@@ -244,14 +252,18 @@ describe('seedCompendium', () => {
       await countOf('references', `where seed_key = '${citationText(shared).replace(/'/g, "''")}'`),
     ).toBe(1);
 
-    const shard: SeedCompendiumShard = structuredClone(FIXTURE_SHARD);
-    shard.sources['the-shared-work'] = shared;
-    shard.entries[0].references.push({
-      source: 'the-shared-work',
-      locator: 'under "Testwort"',
-      supports: ['description'],
-    });
-    await seedCompendium(db, [shard]);
+    const testwort = fileOf(TESTWORT, (file) =>
+      file.entry.references.push({
+        source: 'the-shared-work',
+        locator: 'under "Testwort"',
+        supports: ['description'],
+        nameBasis: 'stated',
+      }),
+    );
+    await seedCompendium(
+      db,
+      loadedOf([testwort, fileOf(SAMPLEWORT)], { 'the-shared-work': shared }),
+    );
 
     expect(
       await countOf('references', `where seed_key = '${citationText(shared).replace(/'/g, "''")}'`),
@@ -278,7 +290,7 @@ describe('seedCompendium', () => {
 
     it('by its seed key, after an admin renamed and retired it', async () => {
       await seedVocabularies();
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
       const testwort = await ingredientId('fixtura testalis');
       await sql`
         update ingredients set canonical_name = 'Fixtura renamia', slug = 'testwort-fixtura-renamia',
@@ -287,7 +299,7 @@ describe('seedCompendium', () => {
       `;
       const before = await compendiumRows();
 
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
 
       expect(await compendiumRows()).toEqual(before);
     });
@@ -296,7 +308,7 @@ describe('seedCompendium', () => {
       await seedVocabularies();
       await insertAdminEntry('Admin Testwort', 'Fixtura testalis');
 
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
 
       const [admin] = await sql<{ id: string; seed_key: string | null }[]>`
         select id, seed_key from ingredients where identity_key = 'fixtura testalis'
@@ -311,7 +323,7 @@ describe('seedCompendium', () => {
       await seedVocabularies();
       await insertAdminEntry('Testwort', 'Fixtura-testalis');
 
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
 
       expect(await countOf('ingredients', `where seed_key = 'fixtura testalis'`)).toBe(0);
       expect(await countOf('ingredients', `where seed_key = 'fixtura exemplaris'`)).toBe(1);
@@ -323,7 +335,7 @@ describe('seedCompendium', () => {
     await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'oil'`;
     await sql`update deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'hecate'`;
 
-    await seedCompendium(db, [FIXTURE_SHARD]);
+    await seedCompendium(db, fixtureFiles());
 
     const testwort = await ingredientId('fixtura testalis');
     const forms = await sql<
@@ -347,16 +359,15 @@ describe('seedCompendium', () => {
     await seedAstrology(db);
     await seedDeities(db);
 
-    await expect(seedCompendium(db, [FIXTURE_SHARD])).rejects.toThrow();
+    await expect(seedCompendium(db, fixtureFiles())).rejects.toThrow();
 
     expect(await countOf('ingredients')).toBe(0);
   });
 
-  it('refuses a literal that fails its guard before opening a transaction', async () => {
-    const shard = structuredClone(FIXTURE_SHARD);
-    shard.entries[0].references = [];
+  it('refuses a file that fails its guard before opening a transaction', async () => {
+    const unsourced = fileOf(TESTWORT, (file) => (file.entry.references = []));
 
-    await expect(seedCompendium(db, [shard])).rejects.toThrow();
+    await expect(seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)]))).rejects.toThrow();
 
     // Not even the bootstrap user the transaction opens with.
     expect(await countOf('users')).toBe(0);
@@ -371,7 +382,9 @@ describe('seedCompendium', () => {
         >`select identity_key from ingredients where workspace_id is null`
       ).map((row) => row.identity_key),
     );
-    const entries = COMPENDIUM.flatMap((shard) => shard.entries);
+    const entries = loadCompendium()
+      .files.filter((file) => file.status === 'approved')
+      .map((file) => file.entry);
     // Precondition: the two overlap, so a skip by identity is exercised.
     expect(entries.some((entry) => standard.has(identityOf(entry)))).toBe(true);
 
@@ -396,7 +409,7 @@ describe('a freshly seeded compendium (accepted: every entry reads New)', () => 
   it('marks every entry New', async () => {
     await truncateAllTables(sql);
     await seedVocabularies();
-    await seedCompendium(db, [FIXTURE_SHARD]);
+    await seedCompendium(db, fixtureFiles());
 
     const stamps = await sql<{ created_at: Date; updated_at: Date }[]>`
       select created_at, updated_at from ingredients where workspace_id is null and deleted_at is null`;
@@ -416,30 +429,6 @@ describe('a freshly seeded compendium (accepted: every entry reads New)', () => 
 describe('the update path (M14.7)', () => {
   const PATH = entryFilePath(TESTWORT);
   const A_ID = FIXTURE_USERS.A.id;
-
-  /** A file's text through the real parser, so a test holds the hash the seed will compute. */
-  function parsed(file: RenderableEntryFile) {
-    const { file: loaded, issues } = parseEntryFile(
-      entryFilePath(file.entry),
-      renderEntryFile(file),
-    );
-    if (!loaded) throw new Error(issues.join('\n'));
-    return loaded;
-  }
-
-  function loadedOf(files: RenderableEntryFile[]): LoadedCompendium {
-    const loaded = files.map(parsed);
-    return {
-      root: 'compendium-test',
-      files: loaded,
-      sources: FILE_SOURCES,
-      shards: [
-        { name: 'compendium', sources: FILE_SOURCES, entries: loaded.map((file) => file.entry) },
-      ],
-      unaudited: [],
-      issues: [],
-    };
-  }
 
   /** The two entries as the first run read them. */
   const baseline = (): RenderableEntryFile[] => [fileOf(TESTWORT), fileOf(SAMPLEWORT)];

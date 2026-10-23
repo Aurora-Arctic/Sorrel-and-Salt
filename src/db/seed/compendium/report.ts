@@ -5,7 +5,7 @@
 
 /** One entry the run met, by its file's path, with the fields the file and the row disagree on. */
 export interface EntryOutcome {
-  /** The entry file's path under the compendium root, which a shard literal is given too. */
+  /** The entry file's path under the compendium root. */
   where: string;
   /** The top-level fields that differ between the file and the row, `description` or `categories`; empty when none. */
   differs: string[];

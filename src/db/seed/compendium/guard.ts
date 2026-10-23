@@ -21,10 +21,13 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The compendium seed's guard (MB.242): every rule the shards are written to
-// that a function can check, run by a database-free test and again by
-// `seedCompendium` before its transaction opens, so a literal that breaks one
-// never reaches staging or production. It returns every issue rather than
+// The compendium seed's guard (MB.242): every rule the entry files under
+// `compendium/` are written to that a function can check, run by a
+// database-free test and again by `seedCompendium` before its transaction
+// opens, so a file that breaks one never reaches staging or production. The
+// entries' own rules (`checkCompendium`) take a list of shards, a name and
+// its entries, because they were first written for the TypeScript lists M14.10
+// replaced; the loader hands them the files as one shard. It returns every issue rather than
 // throwing at the first, so a lane sees its whole list at once. The rules are
 // claude-docs/db/compendium-seed/README.md's.
 

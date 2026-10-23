@@ -123,6 +123,7 @@ jobs:
             src/db/seed/reference-rows.ts \
             src/db/seed/compendium.ts \
             src/db/seed/compendium/ \
+            compendium/ \
             src/db/seed/idempotent.ts \
             src/lib/citation.ts \
             claude-docs/db/deity-vocabulary-seed.md \

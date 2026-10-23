@@ -224,8 +224,9 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
   'ingredientId' | 'ingredientVariantId'
 >]['table'];
 
-// The compendium seed (MB.242): the production compendium's entries, sharded,
-// each field traced to a source its citations name.
+// The compendium seed (MB.242): the production compendium's entries, read
+// from the files under `compendium/` (M14.10), each field traced to a source
+// its citations name.
 
 /** A compendium entry's fields a citation may support, by the literal's own names. */
 export type CompendiumEntryField =
@@ -258,8 +259,9 @@ export type CompendiumVariantField =
   | 'substitutes';
 
 /**
- * One citation: a source by its handle — a shared work in `WORKS` or one of
- * the shard's own `sources` — where in it, and which fields it backs.
+ * One citation: a source by its handle — a shared work in `WORKS` or
+ * a source file under `compendium/sources/` — where in it, and which fields
+ * it backs.
  */
 export interface SeedCitation<Field extends string> {
   source: string;
@@ -269,7 +271,7 @@ export interface SeedCitation<Field extends string> {
   /**
    * How the source's name was matched to the entry's formal name (M14.4,
    * "nameBasis"). A file writes it on every citation of an entry with a
-   * formal name (M14.6); a shard literal carries none. Never stored or hashed.
+   * formal name (M14.6). Never stored or hashed.
    */
   nameBasis?: NameBasis;
   /** The common name the source heads, when `nameBasis` is `resolved`. */
@@ -289,7 +291,7 @@ export type NameBasis = 'stated' | 'resolved' | 'unresolved' | 'unaudited';
 /**
  * What may stand in: an entry the seed writes, by its identity — the formal
  * name lower-cased, or the label without one — and optionally one of its
- * forms; or a name typed for an entry a later shard writes.
+ * forms; or a name typed for an entry no file writes yet.
  */
 export type SeedSubstitute = { identity: string; form?: string } | { name: string };
 
@@ -376,7 +378,11 @@ export interface SeedCompendiumFile {
   sections: CompendiumFileSections;
 }
 
-/** One shard: its entries and the per-entry pages they cite, by handle. */
+/**
+ * A named list of entries and the per-entry pages they cite, by handle: the
+ * shape the guard's content rules take. The loader builds one, `compendium`,
+ * from the files; the TypeScript shards it was named for are gone (M14.10).
+ */
 export interface SeedCompendiumShard {
   name: string;
   sources: Record<string, CitationFields>;

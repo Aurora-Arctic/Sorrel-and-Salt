@@ -51,14 +51,14 @@ import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from
 // otherwise. Folk names, deities, substitutes and reference links are
 // soft-deleted; category links are hard-deleted, as the table is (MB.34).
 
-/** One approved entry as the seed takes it, from a file or, until M14.10, a shard literal. */
+/** One approved entry file as the seed takes it. */
 export interface SeedItem {
   entry: SeedCompendiumEntry;
   /** The works and per-entry sources its citations may name, by handle. */
   sources: Record<string, CitationFields>;
   /** The entry file's path under the compendium root, which names the entry in the report. */
   where: string;
-  /** `contentHash(entry)`: the file's, or the literal's. */
+  /** `contentHash(entry)`, computed when the file was read. */
   hash: string;
   /** The hash the owner marked for update, when the file carries one. */
   seedUpdate?: string;
