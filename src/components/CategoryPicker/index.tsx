@@ -166,6 +166,9 @@ const CategoryPicker = ({
           if (option) add(option.category);
         }}
         onCommit={commit}
+        // Each pick adds a chip, so the list stays open for the next, in the facet and in a
+        // form alike (M12.54).
+        keepOpen
         onRemoveLast={() => {
           const last = value[value.length - 1];
           if (last !== undefined) remove(last);
