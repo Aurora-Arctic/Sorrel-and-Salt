@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { type ReactNode, useId, useState } from 'react';
+import { type ReactNode, createRef, useEffect, useId, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
 import {
   FORM_GROUP_ICONS,
@@ -11,9 +11,13 @@ import {
   FieldShell,
   FilterSelectField,
   FormActions,
+  FormHistoryButtons,
+  FormHistoryContext,
+  type FormHistory,
   ReasonField,
   SearchField,
   RadioGroupField,
+  SelectField,
   SwitchField,
   TextField,
   fieldDescription,
@@ -32,10 +36,20 @@ type Story = StoryObj<typeof meta>;
 
 interface Values {
   name: string;
+  group: string;
 }
 
+// An error is shown once the form has been submitted, or its field edited and
+// left, so the form is submitted on mount against a resolver that finds it.
 const Form = ({ errors, children }: { errors?: FieldErrors<Values>; children: ReactNode }) => {
-  const methods = useForm<Values>({ defaultValues: { name: 'Testwort' }, errors });
+  const methods = useForm<Values>({
+    defaultValues: { name: 'Testwort', group: '' },
+    resolver: async (values) => (errors ? { values: {}, errors } : { values, errors: {} }),
+  });
+  const { handleSubmit } = methods;
+  useEffect(() => {
+    if (errors) void handleSubmit(() => {})();
+  }, [errors, handleSubmit]);
   return (
     <FormProvider {...methods}>
       <form className="form" style={{ maxWidth: '32rem', marginTop: '5rem' }}>
@@ -44,6 +58,24 @@ const Form = ({ errors, children }: { errors?: FieldErrors<Values>; children: Re
     </FormProvider>
   );
 };
+
+const GROUP_OPTIONS = [
+  { value: 'fixture-substance', label: 'Fixture Substance' },
+  { value: 'testwort-wards', label: 'Testwort Wards' },
+  { value: 'mockish', label: 'Mockish' },
+];
+const ICON_OPTIONS = GROUP_OPTIONS.map((option) => ({
+  ...option,
+  icon: <span aria-hidden="true">*</span>,
+}));
+const NOTED_OPTIONS = [
+  GROUP_OPTIONS[0],
+  { ...GROUP_OPTIONS[1], disabled: true, note: 'Already held by this coven.' },
+  GROUP_OPTIONS[2],
+];
+
+// An error found away from the field itself, as a server's refusal is.
+const TAKEN = { name: { type: 'server', message: 'Testwort is already taken.' } };
 
 // Pending: its text being looked up, the spinner inside the box at its right end. With Note: shut
 // while something else is checked.
@@ -88,7 +120,7 @@ export const States: Story = {
           </Form>
         ),
         'With Error': (
-          <Form errors={{ name: { type: 'server', message: 'Testwort is already taken.' } }}>
+          <Form errors={TAKEN}>
             <TextField<Values> name="name" label="Name" required autoComplete="off" />
           </Form>
         ),
@@ -100,6 +132,123 @@ export const States: Story = {
         Disabled: (
           <Form>
             <TextField<Values> name="name" label="Name" disabled />
+          </Form>
+        ),
+        'With Label Suffix': (
+          <Form>
+            <TextField<Values> name="name" label="Quantity" labelSuffix="Flower" />
+          </Form>
+        ),
+        'With Placeholder': (
+          <Form>
+            <TextField<Values> name="name" label="Name" placeholder="Add a name" />
+          </Form>
+        ),
+        'Tall Multiline': (
+          <Form>
+            <TextField<Values> name="name" label="Description" multiline rows={10} />
+          </Form>
+        ),
+        'Date Type': (
+          <Form>
+            <TextField<Values> name="name" label="Retrieved" type="date" />
+          </Form>
+        ),
+        'Number Type': (
+          <Form>
+            <TextField<Values> name="name" label="Quantity" type="number" />
+          </Form>
+        ),
+        'With Action': (
+          <Form>
+            <TextField<Values>
+              name="name"
+              label="Name"
+              action={
+                <button type="button" className="btn btn--small btn--quiet">
+                  Copy From Ingredient
+                </button>
+              }
+            />
+          </Form>
+        ),
+        'With Content After The Error': (
+          <Form errors={TAKEN}>
+            <TextField<Values>
+              name="name"
+              label="Name"
+              after={<p>A similar name is held in the compendium.</p>}
+            />
+          </Form>
+        ),
+        'Described By Another Element': (
+          <Form>
+            <p id="held-warning">Another entry holds this name.</p>
+            <TextField<Values> name="name" label="Name" describedBy="held-warning" />
+          </Form>
+        ),
+        'Marked Invalid Without An Error': (
+          <Form>
+            <TextField<Values> name="name" label="Name" invalid />
+          </Form>
+        ),
+        'Select With Placeholder': (
+          <Form>
+            <SelectField<Values>
+              name="group"
+              label="Group"
+              placeholder="Choose a group"
+              options={GROUP_OPTIONS}
+            />
+          </Form>
+        ),
+        'Select With Option Icons': (
+          <Form>
+            <SelectField<Values> name="group" label="Group" options={ICON_OPTIONS} />
+          </Form>
+        ),
+        'Select With A Disabled Option': (
+          <Form>
+            <SelectField<Values>
+              name="group"
+              label="Group"
+              placeholder="Choose a group"
+              options={NOTED_OPTIONS}
+            />
+          </Form>
+        ),
+        'Select Disabled': (
+          <Form>
+            <SelectField<Values>
+              name="group"
+              label="Group"
+              placeholder="Choose a group"
+              options={GROUP_OPTIONS}
+              disabled
+            />
+          </Form>
+        ),
+        'Select With Typeahead': (
+          <Form>
+            <SelectField<Values>
+              name="group"
+              label="Tradition"
+              placeholder="Type a tradition"
+              options={GROUP_OPTIONS}
+              typeahead
+            />
+          </Form>
+        ),
+        'Select Required With Hint': (
+          <Form>
+            <SelectField<Values>
+              name="group"
+              label="Group"
+              hint="Which group the ingredient sits in."
+              placeholder="Choose a group"
+              options={GROUP_OPTIONS}
+              required
+            />
           </Form>
         ),
       }}
@@ -290,6 +439,7 @@ export const Actions: Story = {
       <FormActions noun="Group" dirty={false} submitting={false} onCancel={noop} />
       <FormActions noun="Group" dirty submitting={false} onCancel={noop} onDelete={noop} />
       <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} />
+      <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} holdCancel />
       <FormActions
         noun="Invitation"
         label="Send Invitation"
@@ -298,7 +448,57 @@ export const Actions: Story = {
         submitting={false}
         onCancel={noop}
       />
+      <FormActions noun="Group" dirty submitting={false} onSave={noop} onCancel={noop}>
+        <button type="button" className="btn">
+          Save And Add Another
+        </button>
+      </FormActions>
+      <FormActions
+        noun="Annotation"
+        dirty
+        submitting={false}
+        onCancel={noop}
+        saveValue="annotate"
+        aside={
+          <button type="button" className="btn btn--quiet">
+            More
+          </button>
+        }
+      />
     </div>
+  ),
+};
+
+// A form's Undo and Redo, which read the form's history from its context and
+// draw nothing without one: both ready, then neither.
+const history = (canUndo: boolean, canRedo: boolean): FormHistory => ({
+  undo: noop,
+  redo: noop,
+  canUndo,
+  canRedo,
+  clear: noop,
+  announcement: '',
+  undoButton: createRef<HTMLButtonElement>(),
+  redoButton: createRef<HTMLButtonElement>(),
+});
+
+export const HistoryButtons: Story = {
+  render: () => (
+    <StatesGrid
+      cell="12rem"
+      states={{
+        'Both Ready': (
+          <FormHistoryContext.Provider value={history(true, true)}>
+            <FormHistoryButtons />
+          </FormHistoryContext.Provider>
+        ),
+        'Nothing To Undo Or Redo': (
+          <FormHistoryContext.Provider value={history(false, false)}>
+            <FormHistoryButtons />
+          </FormHistoryContext.Provider>
+        ),
+      }}
+    />
   ),
 };
 
