@@ -28,7 +28,7 @@ viewer and covens, drawn in this shell. It never redirects. Both chromes put the
 page in a wrapper `div`, so the layout owns the plain `<main>` in both
 branches (the page in `.page-column` inside it), and a public page
 renders no landmark of its own. An unverified account is shown the shell's
-unverified chrome (brand text, the account menu, the Compendium link) rather
+unverified chrome (the brand link, the account menu, the Compendium link) rather
 than being sent to `/account/email`: the compendium is public, and nothing
 there is workspace data.
 
@@ -60,10 +60,9 @@ one's own id) throws.
   the account menu and the theme disc. The disc stays in the bar at every
   width, a phone's included (the owner's call, M10.32): the account panel holds
   no theme switch.
-- **The brand** is a link to `/`, the front page, for every verified viewer,
+- **The brand** is a link to `/`, the front page, for every viewer, an unverified one included (`/` is public),
   now that Your Coven and Admin sit in the site nav; `/` reads the session
-  and offers a signed-in visitor their landing, without redirecting. It is
-  plain text for an unverified viewer. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
+  and offers a signed-in visitor their landing, without redirecting. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
   `/coven` landing (M2.8) for someone in none, which offers the create page or
   explains the invitation. The links go into the coven themselves rather than
   to `/coven`, which would only redirect a member there and leave the browser
@@ -78,7 +77,7 @@ one's own id) throws.
 - **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a plain button for one destination (the compendium for a curator, each coven they may write to), a split button with a menu of them all, each “to” its name, for two or more, and nothing without one. The menu draws the places in two labelled groups, **Compendium** and **Coven**, when the viewer may add to both, and as a plain list when to one kind alone (the owner’s call, 2026-10-20). The side the viewer is on comes first, learned from the address alone (`usePathname()`): a coven’s pages (`covenSlugOf`) put the covens first, any other page the compendium, as the bar has always led with it. The groups are made by the shared `sectionsFor` ([`menu-button.md`](menu-button.md), "Sections"); the bar’s menu is its own, so it draws them itself, with the same markup (a `role="group"` named by its visible heading, a `role="separator"` between) and look, and the arrow keys run through both groups as one list. A coven opens a modal headed by its name over “Add Ingredient”, named “Add Ingredient to” the coven; the compendium navigates to `/admin/compendium?new` (claude-docs/components/modal.md, "Add Ingredient").
   Its target will follow the area: a coven page adds to that coven, an admin
   page to the compendium, anywhere else to the viewer's only coven or a choice.
-- **An unverified viewer** gets the brand as text, the account menu with Sign
+- **An unverified viewer** gets the brand link, the account menu with Sign
   Out alone, and the theme disc, a site nav holding the Compendium alone, and no Add Ingredient. (The
   theme disc stays because the root's corner toggle is hidden on shell pages;
   without it the viewer could not change the theme.)

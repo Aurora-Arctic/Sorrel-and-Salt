@@ -20,8 +20,8 @@ import './index.scss';
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
   // The Compendium is public (MB.80), so its link is everyone's, an
-  // unverified account's included: it leads to no page that sends them to the
-  // email page. The other two are for a verified curator or admin.
+  // unverified account's included: it leads to a page that never sends them to
+  // the email page. The other two are for a verified curator or admin.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const links: SiteLink[] =
     viewer.verified && viewer.canCurate
@@ -44,19 +44,15 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
       </a>
       <header className="app-shell__bar">
         <div className="app-shell__bar-inner">
-          {/* Plain text while the address is unverified: every page the
-              brand could lead to would send the viewer back to the email page. */}
-          {viewer.verified ? (
-            <PendingLink
-              href="/"
-              className="app-shell__brand"
-              navigationTarget={{ region: 'main', shape: 'page' }}
-            >
-              {brand}
-            </PendingLink>
-          ) : (
-            <span className="app-shell__brand">{brand}</span>
-          )}
+          {/* The brand leads to `/`, which is public, so every viewer gets the link,
+              an unverified one included. */}
+          <PendingLink
+            href="/"
+            className="app-shell__brand"
+            navigationTarget={{ region: 'main', shape: 'page' }}
+          >
+            {brand}
+          </PendingLink>
           <SiteNav links={links} />
           <div className="app-shell__end">
             {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
