@@ -201,3 +201,4 @@ Rowan, or mountain ash, is a small tree or shrub of the rose family, native to m
 
 - Deity gap: Brigantia (Kynes's Plants, under "Rowan"), not in the vocabulary; link once M14.15 adds it.
 - Deity gap: Ran (Kynes's Plants, under "Rowan"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Luna (Kynes's Plants, under "Rowan"), not in the vocabulary; link once M14.15 adds it.

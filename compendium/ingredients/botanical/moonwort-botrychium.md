@@ -90,3 +90,4 @@ Moonworts are the small ferns of the genus Botrychium, in the family Ophioglossa
 
 - Deity gap: Ariadne (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
 - Deity gap: Nanna (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Luna (Kynes's Plants, under "Moonwort"), not in the vocabulary; link once M14.15 adds it.
