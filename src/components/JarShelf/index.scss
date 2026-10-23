@@ -95,7 +95,7 @@ $-shake-duration: 500ms;
     content: none;
   }
 
-  svg {
+  > svg {
     display: block;
     transform-origin: 50% 100%;
     width: $-drawing-width;
@@ -154,7 +154,8 @@ $-shake-duration: 500ms;
 // is not left with a jar stuck mid-shake. Keyboard focus does both too (the owner,
 // 2026-10-21), as `:focus-visible` so a mouse click does not repeat it; those rules sit
 // outside the hover query, since a keyboard on a touch device has no hover to wait for.
-// The shake moves the whole `svg`, not the level inside it, which has its own
+// The shake moves the jar's whole `svg` (the cell's own child, never the amount's Low or Out
+// symbol), not the level inside it, which has its own
 // transform transition (`__rise`). The drawing pivots on its base, the plank.
 .jar-shelf__press .jar-shelf__name {
   // Inline-block, since a transform has no effect on an inline box. The scale grows
@@ -168,12 +169,12 @@ $-shake-duration: 500ms;
     transform: scale($-name-grow);
   }
 
-  .jar-shelf__jar:has(.jar-shelf__press:hover) svg {
+  .jar-shelf__jar:has(.jar-shelf__press:hover) > svg {
     animation: jar-shelf-shake $-shake-duration ease-out;
   }
 
   @include reduced-motion {
-    .jar-shelf__jar:has(.jar-shelf__press:hover) svg {
+    .jar-shelf__jar:has(.jar-shelf__press:hover) > svg {
       animation: none;
     }
   }
@@ -182,7 +183,7 @@ $-shake-duration: 500ms;
 // Keyboard focus on a jar the coven can edit: the same shake and growth as the hover.
 // `:focus-visible` and not `:focus`, which a click would set as well as the hover.
 .jar-shelf__jar:has(.jar-shelf__press:focus-visible) {
-  svg {
+  > svg {
     animation: jar-shelf-shake $-shake-duration ease-out;
   }
 
@@ -197,7 +198,7 @@ $-shake-duration: 500ms;
     transition: none;
   }
 
-  .jar-shelf__jar:has(.jar-shelf__press:focus-visible) svg {
+  .jar-shelf__jar:has(.jar-shelf__press:focus-visible) > svg {
     animation: none;
   }
 }
@@ -238,10 +239,21 @@ $-shake-duration: 500ms;
 
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
 
   &:focus-visible {
     @include focus-ring;
   }
+}
+
+// The badge's Low or Out drawing before the amount (MB.121, proposal P1), one line of the
+// caption tall, in the amount's own ink, so the state is a symbol as well as a colour.
+.jar-shelf__amount-icon {
+  inline-size: 1em;
+  block-size: 1em;
+  flex: none;
 }
 
 // The drawing's paint. Ink is the text colour, the level and wave the accent.

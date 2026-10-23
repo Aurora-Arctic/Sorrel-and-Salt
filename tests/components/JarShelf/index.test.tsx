@@ -184,8 +184,9 @@ describe('JarShelf', () => {
   it('hides every drawing from a screen reader and gives each its own clip', () => {
     const { container } = render(<JarShelf forms={FORMS} seed="Testwort" />);
 
+    // Four jars, and the Out of Stock symbol beside the oil's amount.
     const drawings = container.querySelectorAll('svg');
-    expect(drawings).toHaveLength(4);
+    expect(drawings).toHaveLength(5);
     for (const drawing of drawings) expect(drawing).toHaveAttribute('aria-hidden', 'true');
     const ids = [...container.querySelectorAll('clipPath')].map((clip) => clip.id);
     expect(new Set(ids).size).toBe(ids.length);

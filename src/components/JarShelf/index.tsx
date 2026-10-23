@@ -1,6 +1,6 @@
 import { type ReactElement, useId } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { StockTip } from '../StockBadge';
+import { StockIcon, StockTip } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText, stockName } from '../StockBadge/stock-words';
 import { StockJarButton } from '../StockDialog';
@@ -26,7 +26,9 @@ import './index.scss';
  * The amount of a Low or Out jar, as the button that opens its tip: the badge's
  * `StockTip`, on text and not a box. Its name is the amount and the state
  * ("40 g, Low Stock"), so a screen reader has both without opening the tip, and Low's
- * statement is its description, as on the badge.
+ * statement is its description, as on the badge. The badge's drawing sits before the amount,
+ * so Low and Out are told by a symbol as well as by colour, the same symbol the card shows
+ * (MB.121, proposal P1; WCAG 1.4.1).
  */
 function AmountTip({ jar, state }: { jar: HeldJar; state: 'low' | 'out' }): ReactElement {
   const amount = amountText(jar.quantity, jar.unit);
@@ -38,6 +40,7 @@ function AmountTip({ jar, state }: { jar: HeldJar; state: 'low' | 'out' }): Reac
       ariaLabel={`${amount}, ${stockName(state)}`}
       className="jar-shelf__amount-tip"
     >
+      <StockIcon out={state === 'out'} className="jar-shelf__amount-icon" />
       {amount}
     </StockTip>
   );

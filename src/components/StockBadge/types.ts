@@ -26,3 +26,10 @@ export interface StockTipProps {
   /** What the button shows: the badge's drawing, or the shelf's amount. */
   children: ReactNode;
 }
+
+export interface StockIconProps {
+  /** True draws Out of Stock's slashed ring; false draws Low's double chevron. */
+  out: boolean;
+  /** The class that sizes it; the badge's own by default. */
+  className?: string;
+}

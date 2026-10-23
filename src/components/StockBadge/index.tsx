@@ -4,7 +4,7 @@ import { type ReactElement, useId } from 'react';
 import IconTip from '../IconTip';
 import { stockState } from './stock-state';
 import { stockName, stockTip } from './stock-words';
-import type { StockBadgeProps, StockTipProps } from './types';
+import type { StockBadgeProps, StockTipProps, StockIconProps } from './types';
 import './index.scss';
 
 // A jar's Low Stock or Out of Stock badge (M9.8, story 23): per jar, in the
@@ -34,9 +34,17 @@ import './index.scss';
 // button with one name and one description (MB.121's repetition check).
 // claude-docs/components/stock-badge.md.
 
-const Drawing = ({ out }: { out: boolean }): ReactElement => (
+/**
+ * The drawing that tells Low from Out without colour: a double chevron for Low, a slashed ring
+ * for Out. Exported so the entry page's shelf puts the same symbol beside a Low or Out amount
+ * and the two places can never draw the states differently (MB.121, proposal P1).
+ */
+export const StockIcon = ({
+  out,
+  className = 'stock-badge__icon',
+}: StockIconProps): ReactElement => (
   <svg
-    className="stock-badge__icon"
+    className={className}
     viewBox="0 0 16 16"
     fill="none"
     stroke="currentColor"
@@ -105,7 +113,7 @@ export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): Reac
       ariaLabel={stockName(state)}
       className={`stock-badge ${out ? 'stock-badge--out' : 'stock-badge--low'}`}
     >
-      <Drawing out={out} />
+      <StockIcon out={out} />
     </StockTip>
   );
 };
