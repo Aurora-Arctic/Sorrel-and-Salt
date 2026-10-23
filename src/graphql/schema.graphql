@@ -1079,6 +1079,11 @@ type Query {
     """
     celestialBodies: [String!]
 
+    """
+    Counts only entries a cupboard of any one of these covens holds, by id. A coven the viewer is not in is ignored.
+    """
+    covenIds: [ID!]
+
     """Keeps entries linked to any one of these curated deities, by id."""
     deityIds: [ID!]
 

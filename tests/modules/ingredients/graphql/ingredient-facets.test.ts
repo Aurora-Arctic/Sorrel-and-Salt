@@ -5,6 +5,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertStock } from '../../../support/db/insert-stock';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -308,5 +309,42 @@ describe('workspaceIngredientFacets', () => {
     expect(result.data).toBeNull();
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+  });
+});
+
+describe('compendiumFacets covenIds (M12.55)', () => {
+  const heldToxic = async (session: Session | null) => {
+    const result = await runOperation<{ compendiumFacets: Facets }>(
+      session,
+      `query ($covenIds: [ID!]) { compendiumFacets(covenIds: $covenIds) { toxic { value count } } }`,
+      { covenIds: [WORKSPACE_W_ID] },
+    );
+    expect(result.errors).toBeUndefined();
+    return result.data?.compendiumFacets.toxic;
+  };
+
+  beforeEach(async () => {
+    const [{ id }] = await sql`select id from ingredients where name = 'Betawort'`;
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: id as string },
+      A.id,
+    );
+  });
+
+  it("counts only the entries the viewer's picked coven holds", async () => {
+    expect(await heldToxic(asUser(B))).toEqual([
+      { value: 'toxic', count: 0 },
+      { value: 'not_toxic', count: 1 },
+    ]);
+  });
+
+  it('ignores the covens signed out, and for a viewer not in them', async () => {
+    const whole = [
+      { value: 'toxic', count: 1 },
+      { value: 'not_toxic', count: 1 },
+    ];
+    expect(await heldToxic(null)).toEqual(whole);
+    expect(await heldToxic(asUser(D))).toEqual(whole);
   });
 });
