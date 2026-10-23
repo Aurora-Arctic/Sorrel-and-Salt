@@ -396,22 +396,21 @@ A story whose component asks the server gets an answer from Mock Service Worker 
 ### Rebuilding the workshop container (after M12.53)
 
 `make docker-workshop` runs the `workshop` compose service, on 61000 with hot
-reload. The service keeps its own `node_modules` volume, filled the first time it
-is mounted, so it still holds the packages from before Storybook and has no Storybook until
-the image and that volume are renewed. **`make docker-rebuild` does this and also
-deletes the database volume (`down -v`), so do not use it for this.** From the
-host, in the repository:
+reload. The service keeps its own `node_modules` volume, filled from the image only the
+first time it is mounted, so it still holds the packages from before Storybook.
+`Docker/ensure-deps.sh`, the service's entrypoint, sees that `package-lock.json`
+no longer matches the hash saved in the volume and runs `npm ci` on start, so
+recreating the container is enough. From the host, in the repository:
 
 ```sh
 docker compose -f Docker/docker-compose.yaml --profile workshop rm -sf workshop
-docker volume rm sorrel-and-salt_node_modules_workshop
 docker compose -f Docker/docker-compose.yaml --profile workshop build workshop
 make docker-workshop
 ```
 
-The volume name is the compose project (`sorrel-and-salt`) and the volume
-(`node_modules_workshop`). The `app` service keeps its own volume and is not
-touched. Then open `http://localhost:61000`. If edits on the host do not reach
+The first start takes as long as an `npm ci`. `make docker-rebuild` also works but
+deletes the database volume (`down -v`), so do not use it for this. The `app`
+service keeps its own volume and reinstalls the same way on its next start. Then open `http://localhost:61000`. If edits on the host do not reach
 the page, set `CHOKIDAR_USEPOLLING=1` on the service (`Docker/docker-compose.yaml`).
 Nothing in the container setup has been run by the author of this change, which had
 no Docker: the compose edits are reasoned from Storybook's and Vite's behaviour.

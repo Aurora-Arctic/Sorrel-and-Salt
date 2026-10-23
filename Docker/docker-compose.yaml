@@ -19,7 +19,11 @@ name: sorrel-and-salt
 volumes:
   # The container's `npm ci` result, shadowing the host's `node_modules`. One
   # per service, never shared: two services populating one fresh volume from
-  # their images race. Only `make docker-rebuild` (`down -v`) clears them.
+  # their images race. Docker fills a volume from the image only when it is
+  # first created, after which it hides a rebuilt image's packages; so
+  # Docker/ensure-deps.sh, the entrypoint of every service below that mounts
+  # one, runs `npm ci` when package-lock.json has changed. `make
+  # docker-rebuild` (`down -v`) still clears them.
   node_modules_app:
   node_modules_workshop:
   node_modules_e2e:
@@ -80,6 +84,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # ensure-deps.sh first: see the `volumes:` note above. Setting `entrypoint`
+    # clears the image's CMD, so every service below names its `command`.
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
     command: ['sh', '-c', 'npm run db:migrate && npm run db:seed']
 
   app:
@@ -112,8 +119,10 @@ services:
       # stops `app` on a failed migration.
       db-init:
         condition: service_completed_successfully
-    # No `command:` — the Dockerfile CMD binds 0.0.0.0:8000, and `next dev`
-    # needs no BETTER_AUTH_SECRET.
+    # Same command as the Dockerfile CMD, written out because `entrypoint` clears
+    # that CMD. It binds 0.0.0.0:8000, and `next dev` needs no BETTER_AUTH_SECRET.
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
+    command: ['npm', 'run', 'dev']
     networks:
       default:
         aliases:
@@ -161,6 +170,7 @@ services:
       GIT_CONFIG_COUNT: '1'
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: /app
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
     # `npm run workshop` already passes `--host 0.0.0.0`, which Storybook needs to
     # be reachable from the host; the Vite dev server under it reloads the page
     # over a websocket on the same port. No file-watch polling is set; the bind
@@ -192,6 +202,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
     # The `db:studio` script passes `--host 0.0.0.0`.
     command: ['npm', 'run', 'db:studio']
 
@@ -229,6 +240,7 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_healthy
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
     command: ['npm', 'run', 'e2e']
 
   playwright-server:
@@ -250,9 +262,12 @@ services:
       - ..:/app:cached
       - node_modules_playwright_server:/app/node_modules
     init: true
-    # The image's own ENTRYPOINT, by its bind-mounted path, so the display
-    # bring-up is visible here.
-    entrypoint: ['/app/Docker/playwright-entrypoint.sh']
+    # ensure-deps.sh first, which then runs the image's own ENTRYPOINT by its
+    # bind-mounted path (so the display bring-up is visible here) and then the
+    # command. The browsers live outside `node_modules` (/ms-playwright, in the
+    # image), so a Playwright version bump still needs an image rebuild.
+    entrypoint:
+      ['sh', '/app/Docker/ensure-deps.sh', '/app/Docker/playwright-entrypoint.sh']
     environment:
       # `docker compose exec` gets the container's initial environment, not
       # the entrypoint's `export DISPLAY`.
