@@ -37,7 +37,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Allspice"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Allspice
+    resolvedBy: wikipedia-allspice
     supports:
       - canonicalName
       - elements
@@ -48,7 +50,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Allspice"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Allspice
+    resolvedBy: wikipedia-allspice
     supports:
       - canonicalName
       - elements
@@ -66,7 +70,9 @@ references:
       - folkNames
       - safetyNotes
   - source: grieve-allspice
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Allspice
+    resolvedBy: wikipedia-allspice
     supports:
       - folkNames
       - description
@@ -88,11 +94,15 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Allspice"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Allspice
+        resolvedBy: wikipedia-allspice
         supports:
           - form
       - source: grieve-allspice
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Allspice
+        resolvedBy: wikipedia-allspice
         supports:
           - form
           - substitutes
@@ -104,13 +114,17 @@ variants:
     description: Allspice oil is distilled from the fruit, which holds three to four and a half per cent of it. Grieve describes a yellow to yellowish-red liquid that darkens as it is kept, smelling much like oil of cloves, and made up largely of eugenol, sixty to seventy-five per cent. It has been used to scent soap and, two or three drops on sugar, as an old remedy for wind.
     references:
       - source: grieve-allspice
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Allspice
+        resolvedBy: wikipedia-allspice
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Allspice"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Allspice
+        resolvedBy: wikipedia-allspice
         supports:
           - form
   - form: Leaf
@@ -123,7 +137,9 @@ variants:
           - description
       - source: kynes-plants
         locator: under "Allspice"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Allspice
+        resolvedBy: wikipedia-allspice
         supports:
           - form
           - description

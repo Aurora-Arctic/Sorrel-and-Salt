@@ -38,7 +38,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Sloe"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Sloe
+    resolvedBy: wikipedia-prunus-spinosa
     supports:
       - canonicalName
       - elements
@@ -49,7 +51,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Blackthorn"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Blackthorn
+    resolvedBy: wikipedia-prunus-spinosa
     supports:
       - canonicalName
       - elements
@@ -92,7 +96,9 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Blackthorn"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackthorn
+        resolvedBy: wikipedia-prunus-spinosa
         supports:
           - form
           - colours
@@ -116,14 +122,18 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Sloe"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sloe
+        resolvedBy: wikipedia-prunus-spinosa
         supports:
           - form
           - categories
           - description
       - source: kynes-plants
         locator: under "Blackthorn"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackthorn
+        resolvedBy: wikipedia-prunus-spinosa
         supports:
           - form
           - description
@@ -137,7 +147,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Blackthorn"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackthorn
+        resolvedBy: wikipedia-prunus-spinosa
         supports:
           - form
           - description
@@ -153,7 +165,9 @@ variants:
           - safetyNotes
       - source: cunningham-herbs
         locator: under "Sloe"; p. 266
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sloe
+        resolvedBy: wikipedia-prunus-spinosa
         supports:
           - safetyNotes
       - source: culpeper-herbal

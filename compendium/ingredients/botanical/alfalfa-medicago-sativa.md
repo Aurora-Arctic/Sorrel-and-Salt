@@ -18,7 +18,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Alfalfa"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Alfalfa
+    resolvedBy: wikipedia-alfalfa
     supports:
       - elements
       - celestialBodies
@@ -78,7 +80,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Alfalfa"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Alfalfa
+        resolvedBy: wikipedia-alfalfa
         supports:
           - form
           - description

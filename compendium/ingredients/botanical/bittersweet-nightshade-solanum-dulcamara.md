@@ -61,7 +61,9 @@ references:
       - toxic
   - source: culpeper-herbal
     locator: under "Amara Dulcis"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Amara Dulcis
+    resolvedBy: wikipedia-solanum-dulcamara
     supports:
       - celestialBodies
       - folkNames
@@ -104,7 +106,9 @@ variants:
           - description
       - source: culpeper-herbal
         locator: under "Amara Dulcis"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Amara Dulcis
+        resolvedBy: wikipedia-solanum-dulcamara
         supports:
           - form
           - description

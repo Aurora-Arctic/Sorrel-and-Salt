@@ -47,7 +47,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Basil"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Basil
+    resolvedBy: wikipedia-basil
     supports:
       - canonicalName
       - elements
@@ -59,7 +61,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Basil"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Basil
+    resolvedBy: wikipedia-basil
     supports:
       - canonicalName
       - elements
@@ -123,12 +127,16 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Basil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Basil
+        resolvedBy: wikipedia-basil
         supports:
           - form
       - source: cunningham-herbs
         locator: under "Basil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Basil
+        resolvedBy: wikipedia-basil
         supports:
           - form
   - form: Oil
@@ -137,7 +145,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Basil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Basil
+        resolvedBy: wikipedia-basil
         supports:
           - form
           - description
@@ -155,7 +165,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Basil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Basil
+        resolvedBy: wikipedia-basil
         supports:
           - form
           - description
@@ -172,7 +184,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Basil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Basil
+        resolvedBy: wikipedia-basil
         supports:
           - form
           - description

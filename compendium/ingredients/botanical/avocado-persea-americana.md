@@ -30,7 +30,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Avocado"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Avocado
+    resolvedBy: wikipedia-avocado
     supports:
       - elements
       - celestialBodies
@@ -40,7 +42,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Avocado"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Avocado
+    resolvedBy: wikipedia-avocado
     supports:
       - canonicalName
       - elements
@@ -62,12 +66,16 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Avocado"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Avocado
+        resolvedBy: wikipedia-avocado
         supports:
           - form
       - source: kynes-plants
         locator: under "Avocado"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Avocado
+        resolvedBy: wikipedia-avocado
         supports:
           - form
       - source: wikipedia-avocado
@@ -81,7 +89,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Avocado"; p. 266
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Avocado
+        resolvedBy: wikipedia-avocado
         supports:
           - form
           - description
@@ -98,7 +108,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Avocado"; p. 266
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Avocado
+        resolvedBy: wikipedia-avocado
         supports:
           - form
           - description
@@ -108,7 +120,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Avocado"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Avocado
+        resolvedBy: wikipedia-avocado
         supports:
           - form
           - description

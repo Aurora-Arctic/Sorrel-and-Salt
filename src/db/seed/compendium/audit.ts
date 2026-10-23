@@ -59,11 +59,11 @@ const titleIsHeading = (source: CitationFields | undefined) =>
   source?.kind === 'entry' || source?.kind === 'web_page';
 
 /** A source that is a Wikipedia article. */
-const isWikipedia = (source: CitationFields | undefined) =>
+export const isWikipedia = (source: CitationFields | undefined) =>
   source?.container === 'Wikipedia' || /\bwikipedia\.org\//.test(source?.url ?? '');
 
 /** The article a Wikipedia source cites: the url's `title=` or `/wiki/` path, else the source's title. */
-function articleTitle(source: CitationFields): string {
+export function articleTitle(source: CitationFields): string {
   const url = source.url ?? '';
   const query = /[?&]title=([^&#]+)/.exec(url);
   const path = /\/wiki\/([^?#]+)/.exec(url);
@@ -208,7 +208,7 @@ function hatnoteTaxa(page: string, genera: ReadonlySet<string>): string[] {
 }
 
 /** One citation as the audit reads it: where on the file, and under which heading. */
-interface Reading {
+export interface Reading {
   file: SeedCompendiumFile;
   citation: SeedCitation<string>;
   citedOn: string;
@@ -218,7 +218,7 @@ interface Reading {
 }
 
 /** Each heading a citation is read under: every `under "X"` in its locator, else the source's title. */
-function readingsOf(
+export function readingsOf(
   file: SeedCompendiumFile,
   citation: SeedCitation<string>,
   citedOn: string,
@@ -241,7 +241,7 @@ function readingsOf(
 }
 
 /** Every citation on a file, the entry's first, then each variant's under its form. */
-function citationsOf(
+export function citationsOf(
   file: SeedCompendiumFile,
 ): { citation: SeedCitation<string>; citedOn: string }[] {
   return [
@@ -253,7 +253,7 @@ function citationsOf(
 }
 
 /** Where a name was found in the corpus, for a collision's evidence. */
-interface NameUse {
+export interface NameUse {
   canonicalName: string;
   path: string;
   field: string;
@@ -264,7 +264,7 @@ interface NameUse {
  * names. Not the headings it is cited under, since a page cited for context
  * by many entries ("Incense") is a topic, not a name for any one of them.
  */
-function nameUses(files: readonly SeedCompendiumFile[]): Map<string, NameUse[]> {
+export function nameUses(files: readonly SeedCompendiumFile[]): Map<string, NameUse[]> {
   const uses = new Map<string, NameUse[]>();
   const add = (name: string, use: NameUse) => {
     const key = headingKey(name);

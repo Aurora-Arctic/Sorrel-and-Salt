@@ -3,6 +3,13 @@ import { join } from 'node:path';
 import type { AuditReport } from '../types';
 import { auditCompendium, flaggedCandidates, wikiKey } from './audit';
 import { applyAudit } from './audit-apply';
+import {
+  applyResolutions,
+  resolveCitations,
+  type PageLookup,
+  type Resolution,
+  type ResolveReport,
+} from './audit-resolve';
 import { loadCompendium } from './load';
 
 // The attribution audit's reading and writing (M14.11): the fetched Wikipedia
@@ -89,4 +96,46 @@ export function runAudit(options: AuditRunOptions): AuditRunResult {
     }
   }
   return { report, changed, issues };
+}
+
+export interface ResolveRunOptions {
+  /** The compendium folder. */
+  root: string;
+  lookup: PageLookup;
+  /** The fetched Wikipedia pages, read for a taxobox naming an entry's own article. */
+  wiki?: ReadonlyMap<string, string>;
+  /** Settle and report, writing no file. */
+  dryRun?: boolean;
+}
+
+export interface ResolveRunResult extends ResolveReport {
+  /** The files written, relative to the root. */
+  changed: string[];
+  issues: string[];
+}
+
+/** `--resolve` over the files under `root`: each resolvable citation written back as `resolved`. */
+export function runResolve(options: ResolveRunOptions): ResolveRunResult {
+  const loaded = loadCompendium(options.root);
+  if (loaded.issues.length > 0) {
+    return { resolutions: [], unresolved: [], changed: [], issues: loaded.issues };
+  }
+  const report = resolveCitations(loaded, options.lookup, options.wiki);
+  const byPath = new Map<string, Resolution[]>();
+  for (const resolution of report.resolutions) {
+    byPath.set(resolution.path, [...(byPath.get(resolution.path) ?? []), resolution]);
+  }
+  const changed: string[] = [];
+  const issues: string[] = [];
+  for (const [path, resolutions] of byPath) {
+    const file = join(options.root, path);
+    const text = readFileSync(file, 'utf8');
+    const result = applyResolutions(path, text, resolutions);
+    if ('issue' in result) issues.push(result.issue);
+    else if (result.text !== text) {
+      if (!options.dryRun) writeFileSync(file, result.text);
+      changed.push(path);
+    }
+  }
+  return { ...report, changed, issues };
 }

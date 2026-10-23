@@ -37,7 +37,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Barley"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Barley
+    resolvedBy: wikipedia-barley
     supports:
       - elements
       - celestialBodies
@@ -59,7 +61,9 @@ references:
       - description
   - source: culpeper-herbal
     locator: under "Barley"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Barley
+    resolvedBy: wikipedia-barley
     supports:
       - celestialBodies
   - source: ahpa-safety
@@ -91,7 +95,9 @@ variants:
           - form
       - source: cunningham-herbs
         locator: under "Barley"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Barley
+        resolvedBy: wikipedia-barley
         supports:
           - form
       - source: wikipedia-barley
@@ -103,7 +109,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Barley"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Barley
+        resolvedBy: wikipedia-barley
         supports:
           - form
           - description
@@ -118,13 +126,17 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Barley"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Barley
+        resolvedBy: wikipedia-barley
         supports:
           - form
           - description
       - source: culpeper-herbal
         locator: under "Barley"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Barley
+        resolvedBy: wikipedia-barley
         supports:
           - description
       - source: wikipedia-barley

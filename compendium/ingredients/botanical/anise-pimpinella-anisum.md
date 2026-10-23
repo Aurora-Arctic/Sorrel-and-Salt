@@ -37,7 +37,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Anise"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Anise
+    resolvedBy: wikipedia-anise
     supports:
       - canonicalName
       - elements
@@ -48,7 +50,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Anise"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Anise
+    resolvedBy: wikipedia-anise
     supports:
       - canonicalName
       - elements
@@ -65,7 +69,9 @@ references:
       - canonicalName
       - safetyNotes
   - source: grieve-anise
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Anise
+    resolvedBy: wikipedia-anise
     supports:
       - canonicalName
       - description
@@ -91,18 +97,24 @@ variants:
         supports:
           - form
       - source: grieve-anise
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - form
           - substitutes
       - source: kynes-plants
         locator: under "Anise"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - form
       - source: cunningham-herbs
         locator: under "Anise"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - form
   - form: Leaf
@@ -110,18 +122,24 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Anise"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Anise"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - form
           - description
       - source: grieve-anise
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - description
   - form: Oil
@@ -135,7 +153,9 @@ variants:
           - description
       - source: kynes-plants
         locator: under "Anise"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Anise
+        resolvedBy: wikipedia-anise
         supports:
           - form
           - description

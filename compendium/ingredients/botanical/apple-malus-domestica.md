@@ -56,7 +56,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Apple"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Apple
+    resolvedBy: wikipedia-apple
     supports:
       - elements
       - celestialBodies
@@ -68,7 +70,9 @@ references:
       - toxic
   - source: kynes-plants
     locator: under "Apple"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Apple
+    resolvedBy: wikipedia-apple
     supports:
       - canonicalName
       - elements
@@ -80,7 +84,9 @@ references:
       - description
       - safetyNotes
   - source: grieve-apple
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Apple
+    resolvedBy: wikipedia-apple
     supports:
       - description
   - source: wikipedia-apple
@@ -101,13 +107,17 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Apple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Apple
+        resolvedBy: wikipedia-apple
         supports:
           - form
           - description
           - colours
       - source: grieve-apple
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Apple
+        resolvedBy: wikipedia-apple
         supports:
           - form
       - source: wikipedia-apple
@@ -122,13 +132,17 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Apple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Apple
+        resolvedBy: wikipedia-apple
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Apple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Apple
+        resolvedBy: wikipedia-apple
         supports:
           - colours
       - source: wikipedia-apple
@@ -141,13 +155,17 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Apple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Apple
+        resolvedBy: wikipedia-apple
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Apple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Apple
+        resolvedBy: wikipedia-apple
         supports:
           - form
           - description

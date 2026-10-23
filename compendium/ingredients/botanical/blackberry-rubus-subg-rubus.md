@@ -50,7 +50,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Blackberry"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Blackberry
+    resolvedBy: wikipedia-blackberry
     supports:
       - elements
       - celestialBodies
@@ -60,7 +62,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Blackberry"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Blackberry
+    resolvedBy: wikipedia-blackberry
     supports:
       - elements
       - celestialBodies
@@ -77,7 +81,9 @@ references:
       - zodiacSigns
       - description
   - source: grieve-blackberry
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Blackberry
+    resolvedBy: wikipedia-blackberry
     supports:
       - folkNames
       - description
@@ -99,19 +105,25 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Blackberry"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Blackberry"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - colours
           - description
       - source: grieve-blackberry
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
@@ -133,13 +145,17 @@ variants:
           - safetyNotes
       - source: cunningham-herbs
         locator: under "Blackberry"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Blackberry"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
       - source: culpeper-herbal
@@ -148,7 +164,9 @@ variants:
         supports:
           - description
       - source: grieve-blackberry
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
@@ -157,18 +175,24 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Blackberry"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Blackberry"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
       - source: grieve-blackberry
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description
@@ -185,7 +209,9 @@ variants:
     description: 'Grieve lists the root among the parts used and calls it more astringent than the leaf: the bark, peeled and dried, was boiled in water or milk as a remedy for diarrhoea. Culpeper gives a decoction of the root for gravel and stones in the kidneys.'
     references:
       - source: grieve-blackberry
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Blackberry
+        resolvedBy: wikipedia-blackberry
         supports:
           - form
           - description

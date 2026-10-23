@@ -48,7 +48,9 @@ references:
       - toxic
   - source: kynes-plants
     locator: under "Uva Ursi"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Uva Ursi
+    resolvedBy: wikipedia-arctostaphylos-uva-ursi
     supports:
       - canonicalName
       - elements
@@ -92,7 +94,9 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Uva Ursi"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Uva Ursi
+        resolvedBy: wikipedia-arctostaphylos-uva-ursi
         supports:
           - form
       - source: wikipedia-arctostaphylos-uva-ursi
@@ -104,7 +108,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Uva Ursi"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Uva Ursi
+        resolvedBy: wikipedia-arctostaphylos-uva-ursi
         supports:
           - form
           - description

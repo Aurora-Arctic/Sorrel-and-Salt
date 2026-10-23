@@ -43,7 +43,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Almond"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Almond
+    resolvedBy: wikipedia-almond
     supports:
       - elements
       - celestialBodies
@@ -54,7 +56,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Almond"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Almond
+    resolvedBy: wikipedia-almond
     supports:
       - canonicalName
       - elements
@@ -71,7 +75,9 @@ references:
     supports:
       - safetyNotes
   - source: grieve-almonds
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Almonds
+    resolvedBy: wikipedia-almond
     supports:
       - description
   - source: wikipedia-almond
@@ -93,11 +99,15 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Almond"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Almond
+        resolvedBy: wikipedia-almond
         supports:
           - form
       - source: grieve-almonds
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Almonds
+        resolvedBy: wikipedia-almond
         supports:
           - substitutes
   - form: Oil
@@ -109,13 +119,17 @@ variants:
           - form
           - description
       - source: grieve-almonds
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Almonds
+        resolvedBy: wikipedia-almond
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Almond"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Almond
+        resolvedBy: wikipedia-almond
         supports:
           - form
           - description
@@ -124,7 +138,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Almond"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Almond
+        resolvedBy: wikipedia-almond
         supports:
           - form
           - description
