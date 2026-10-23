@@ -397,4 +397,45 @@ describe('CompendiumCards', () => {
     expect(form).toHaveAttribute('action', '/compendium');
     expect(new URLSearchParams(sent(form)).has('withoutReferences')).toBe(false);
   });
+
+  // M12.55: the viewer's covens, every role, for the In My Covens field, apart from the
+  // writable ones the plus's menu lists; and each card's holding covens, counted on its mark.
+  describe('the viewer’s covens (M12.55)', () => {
+    const MINE = [
+      { id: 'coven-w', name: 'Testhollow' },
+      { id: 'coven-v', name: 'Testwren' },
+    ];
+
+    it('offers In My Covens with every coven of the viewer’s, and none without them', () => {
+      const { unmount } = render(<Cards {...props()} />);
+      fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+      expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
+      unmount();
+
+      render(<Cards {...props({ myCovens: MINE })} />);
+      fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+      fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
+      expect(screen.getByRole('option', { name: 'Testhollow' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Testwren' })).toBeInTheDocument();
+    });
+
+    it('counts and names the covens holding an entry on its plus and on its check', () => {
+      const entries = [
+        { ...ENTRIES[0], holding: ['Testhollow', 'Testwren'] },
+        { ...ENTRIES[1], held: true, holding: ['Testhollow'] },
+        ENTRIES[2],
+      ];
+      render(<Cards {...props({ entries, action: 'add' })} />);
+      const plus = screen.getByRole('button', {
+        name: 'Add to My Ingredients: Testwort, Fixtura testalis. In 2 covens: Testhollow, Testwren',
+      });
+      expect(plus.querySelector('.add-icon__count')).toHaveTextContent('2');
+      const check = screen.getByRole('button', {
+        name: 'In Every Cupboard: Testwort, Fixtura alteralis. In 1 coven: Testhollow',
+      });
+      expect(check.querySelector('.add-icon__count')).toHaveTextContent('1');
+      const bare = screen.getByRole('button', { name: 'Add to My Ingredients: Fixture Salt' });
+      expect(bare.querySelector('.add-icon__count')).toBeNull();
+    });
+  });
 });
