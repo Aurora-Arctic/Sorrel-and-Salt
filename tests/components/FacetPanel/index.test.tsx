@@ -295,6 +295,25 @@ describe('FacetPanel', () => {
     expect(sent('categoryMode')).toEqual(['any']);
   });
 
+  // M12.54: the Categories facet keeps its list open after a pick, as Forms and Deities do.
+  it('keeps the Categories list open after a pick, with the focus in the box, and applies the pick', () => {
+    stubViewport(true);
+    const onChange = vi.fn();
+    render(<FacetPanel {...props({}, { onChange })} />);
+    fireEvent.click(filtersButton());
+    const box = screen.getByRole('combobox', { name: 'Category' });
+
+    box.focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+    fireEvent.click(screen.getByRole('option', { name: /^Testwarding/ }));
+
+    expect(onChange).toHaveBeenCalledWith({ categories: ['warding'] });
+    expect(box).toHaveAttribute('aria-expanded', 'true');
+    expect(box).toHaveFocus();
+    fireEvent.keyDown(box, { key: 'Escape' });
+    expect(box).toHaveAttribute('aria-expanded', 'false');
+  });
+
   it('keeps Match below two categories, on All, disabled and with a hint, and enables it at two', async () => {
     stubViewport(true);
     const { rerender } = render(

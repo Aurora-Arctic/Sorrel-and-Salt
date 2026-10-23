@@ -10,7 +10,8 @@ import type { ComboboxChoice, ComboboxOption } from '../Combobox/types';
 // chosen values as chips ahead of the text, for a set long enough to want
 // narrowing (Forms) or sorted under headings (Deities by tradition). The
 // select-style multi-select cannot type or group, so this is not an option on
-// it. It offers only what is not yet chosen and leaves a zero out. See
+// it. It offers only what is not yet chosen and leaves a zero out, and a pick
+// leaves the list open for the next (M12.54). See
 // claude-docs/components/facet-combobox.md, "Typeahead".
 
 export function FacetTypeahead({
@@ -83,6 +84,7 @@ export function FacetTypeahead({
         setText('');
       }}
       offerTyped={false}
+      keepOpen
       highlightFirst
       empty="No Matches"
       noun={label.toLowerCase()}

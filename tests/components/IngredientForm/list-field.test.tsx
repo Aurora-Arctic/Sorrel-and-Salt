@@ -398,6 +398,26 @@ describe('ListField', () => {
     });
   });
 
+  // M12.54: a list takes several picks in one visit to its list, as the
+  // multi-select does; Escape still closes it.
+  it('keeps the list open after a pick, with the focus in the box, for the next', () => {
+    const { entry, legend } = PICK_ONLY;
+    renderList(PICK_ONLY);
+
+    box(entry).focus();
+    fireEvent.keyDown(box(entry), { key: 'ArrowDown' });
+    fireEvent.click(screen.getByRole('option', { name: 'First Fixture' }));
+
+    expect(entries(legend)).toEqual(['Remove First Fixture']);
+    expect(box(entry)).toHaveAttribute('aria-expanded', 'true');
+    expect(box(entry)).toHaveFocus();
+    fireEvent.click(screen.getByRole('option', { name: 'Second Fixture' }));
+    expect(entries(legend)).toEqual(['Remove First Fixture', 'Remove Second Fixture']);
+
+    fireEvent.keyDown(box(entry), { key: 'Escape' });
+    expect(box(entry)).toHaveAttribute('aria-expanded', 'false');
+  });
+
   // The ingredient's own name is no folk name: refused at the box as a
   // repeat is, and left out of the source, as the name is typed.
   it('refuses a folk name repeating the name, at the box, and offers it from no source', () => {

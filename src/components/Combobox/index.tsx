@@ -133,26 +133,34 @@ function arrange<O extends ComboboxOption>(
  * Downshift would select the highlighted row on blur, and empty a closed box
  * on Escape; neither is wanted. A pick leaves the text alone too: the caller
  * sets it, so a list can empty its box rather than show what it just added.
+ * With `keepOpen`, a pick of a row leaves the list open for the next, as the
+ * multi-select box's `keepChoosing` does; the action row still closes it,
+ * since what it opens is somewhere else.
  */
-function keepText<O extends ComboboxOption>(
-  state: { inputValue: string; selectedItem: Item<O> | null },
-  { type, changes }: UseComboboxStateChangeOptions<Item<O>>,
-) {
-  switch (type) {
-    case useCombobox.stateChangeTypes.InputBlur:
-    case useCombobox.stateChangeTypes.InputKeyDownEscape:
-      return { ...changes, inputValue: state.inputValue, selectedItem: state.selectedItem };
-    case useCombobox.stateChangeTypes.ItemClick:
-    case useCombobox.stateChangeTypes.InputKeyDownEnter:
-    // Downshift remembers the last row picked, so with `selectedItem` held at
-    // null the next pick reads as the prop changing, and it would write
-    // the null item's text, '', into the box.
-    case useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem:
-      return { ...changes, inputValue: state.inputValue };
-    default:
-      return changes;
-  }
-}
+const keepText =
+  (keepOpen: boolean) =>
+  <O extends ComboboxOption>(
+    state: { inputValue: string; selectedItem: Item<O> | null },
+    { type, changes }: UseComboboxStateChangeOptions<Item<O>>,
+  ) => {
+    switch (type) {
+      case useCombobox.stateChangeTypes.InputBlur:
+      case useCombobox.stateChangeTypes.InputKeyDownEscape:
+        return { ...changes, inputValue: state.inputValue, selectedItem: state.selectedItem };
+      case useCombobox.stateChangeTypes.ItemClick:
+      case useCombobox.stateChangeTypes.InputKeyDownEnter: {
+        const stays = keepOpen && changes.selectedItem != null && !isAction(changes.selectedItem);
+        return { ...changes, inputValue: state.inputValue, ...(stays && { isOpen: true }) };
+      }
+      // Downshift remembers the last row picked, so with `selectedItem` held at
+      // null the next pick reads as the prop changing, and it would write
+      // the null item's text, '', into the box.
+      case useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem:
+        return { ...changes, inputValue: state.inputValue };
+      default:
+        return changes;
+    }
+  };
 
 function statusOf(
   isOpen: boolean,
@@ -187,6 +195,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   action,
   offerTyped = true,
   highlightFirst = false,
+  keepOpen = false,
   noun = 'suggestion',
   placeholder,
   required,
@@ -266,7 +275,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     defaultHighlightedIndex: highlightFirst ? 0 : undefined,
     itemToString: (item) => item?.value ?? '',
     itemToKey: (item) => (item === null ? null : keyOf(item)),
-    stateReducer: keepText,
+    stateReducer: keepText(keepOpen),
     onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
     onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
     onSelectedItemChange: ({ selectedItem }) => {
