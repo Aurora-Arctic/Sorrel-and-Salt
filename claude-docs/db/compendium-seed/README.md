@@ -207,7 +207,7 @@ The database enforces the pairing: `nomenclature = 'unknown' or (nomenclature = 
 
 `standard`'s descriptions are deliberately thin test data, not research; nothing in them is a source.
 
-**A formal name is a unique identifier, and a common name never is** (the owner, 2026-10-23, from the Aspen entry; [`m14.4-compendium-markdown-files.md`](../../design-decisions/m14.4-compendium-markdown-files.md)). Grieve's "Poplar, Trembling" is the European aspen, _Populus tremula_, and had been cited under the American aspen, _Populus tremuloides_, because both are called aspen. So a source is cited on an entry only when:
+**A formal name is a unique identifier, and a common name never is** (the owner, 2026-10-23, from the Aspen entry; [`m14.4-compendium-markdown-files.md`](../../design-decisions/m14.4-compendium-markdown-files.md)). The Aspen entry, the American aspen _Populus tremuloides_, carried European lore from Kynes's joint "Aspen" entry, which heads both the European _Populus tremula_ and the American tree, because both are called aspen. (The rule was first raised about Grieve's "Poplar, Trembling", but M14.12 read the page: it is headed _Populus tremuloides_, so it names this entry's formal name.) So a source is cited on an entry only when:
 
 1. **it states the formal name**: the source prints this entry's formal name under the cited heading (`nameBasis: stated`); or
 2. **it is resolved**: the source heads a common name, and another registered source maps that common name to exactly this one formal name (`nameBasis: resolved`, with `headedAs` for the heading and `resolvedBy` for that other source).
