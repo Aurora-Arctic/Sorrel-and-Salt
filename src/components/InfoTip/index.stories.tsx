@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
 import InfoTip from '.';
 
@@ -14,8 +14,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Field = (): ReactElement => {
-  usePressOnMount('About Classification');
+const HINT =
+  'Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.';
+// Several sentences, to see a tip that runs long.
+const LONG = [HINT, HINT, HINT].join(' ');
+
+const Field = ({
+  open = true,
+  children,
+}: {
+  open?: boolean;
+  children?: ReactNode;
+}): ReactElement => {
+  usePressOnMount(open ? 'About Classification' : 'Nothing To Press');
   return (
     <div className="field" style={{ maxWidth: '32rem', marginTop: '5rem' }}>
       <div className="field__label-row">
@@ -23,8 +34,7 @@ const Field = (): ReactElement => {
           Classification
         </label>
         <InfoTip id="story-tip" label="Classification">
-          Botanical for a plant, mineral for a stone, and so on. &ldquo;Unknown&rdquo; if you are
-          not sure which, with or without a formal name. &ldquo;None&rdquo; takes no formal name.
+          {children}
         </InfoTip>
       </div>
       <input id="story-control" className="input" aria-describedby="story-tip" />
@@ -32,4 +42,16 @@ const Field = (): ReactElement => {
   );
 };
 
-export const Default: Story = { render: () => <Field /> };
+const INFO_STATES: Record<string, ReactNode> = {
+  Open: <Field>{HINT}</Field>,
+  Closed: <Field open={false}>{HINT}</Field>,
+  'Long Text': <Field>{LONG}</Field>,
+};
+
+export const States: Story = {
+  args: { state: 'Open' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(INFO_STATES), mapping: INFO_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

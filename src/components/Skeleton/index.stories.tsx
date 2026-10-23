@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Skeleton from '.';
+import SwapPanel from './swap-panel';
 
 // Render-only; the skeleton announces itself once, as a status, and the shapes
 // are hidden from assistive technology. Each story is one shape.
@@ -30,12 +31,33 @@ const cardsWithTitleAndFilterNode = <Skeleton shape="cards" title action filter 
 
 const contentsNode = <Skeleton shape="contents" />;
 
+const tabsNode = <Skeleton shape="table" title action tabs filter />;
+
+const entryNode = <Skeleton shape="page" menu entry />;
+
+const eyebrowHeadNode = <Skeleton shape="page" head="eyebrow" />;
+
+const titleHeadNode = <Skeleton shape="page" head="title" />;
+
+const contentsEyebrowNode = <Skeleton shape="contents" head="eyebrow" />;
+
+const fewRowsNode = <Skeleton shape="table" count={3} />;
+
+const manyCardsNode = <Skeleton shape="cards" count={8} />;
+
+// What a panel shows while the next one loads: the skeleton in the panel's own place.
+const swapPendingNode = (
+  <SwapPanel pending className="tabbed-page__panel" shape="table" filter>
+    <p>The content that replaces it.</p>
+  </SwapPanel>
+);
+
 const pageWithMenuNode = <Skeleton shape="page" menu />;
 
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
-const STATES_STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
+const SKELETON_STATES: Record<string, ReactNode> = {
+  Table: defaultNode,
   'Table With Filter': tableWithFilterNode,
   Cards: cardsNode,
   'Cards With Filter': cardsWithFilterNode,
@@ -46,12 +68,20 @@ const STATES_STATES: Record<string, ReactNode> = {
   'Cards With Title And Filter': cardsWithTitleAndFilterNode,
   Contents: contentsNode,
   'Page With Menu': pageWithMenuNode,
+  'Tabbed Page': tabsNode,
+  'Entry With Menu': entryNode,
+  'Page With Eyebrow Head': eyebrowHeadNode,
+  'Page With Title Head': titleHeadNode,
+  'Contents With Eyebrow Head': contentsEyebrowNode,
+  'Table With Three Rows': fewRowsNode,
+  'Cards With Eight': manyCardsNode,
+  'Swap Panel Pending': swapPendingNode,
 };
 
 export const States: Story = {
-  args: { state: 'Default' },
+  args: { state: 'Table' },
   argTypes: {
-    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+    state: { control: 'select', options: Object.keys(SKELETON_STATES), mapping: SKELETON_STATES },
   },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
