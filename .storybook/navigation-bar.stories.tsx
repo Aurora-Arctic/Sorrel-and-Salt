@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react';
 import { BAR_FADE_MS, LOADING_DELAY_MS } from '../src/lib/navigation/timing';
 import '../src/lib/navigation/navigation-bar.scss';
-import { ShellFrame } from './shell-frame';
+import { ShellFrame, shellFrameParameters } from './shell-frame';
 
 // The page bar's look, as static markup: the component's own timers and the
 // navigation store are not needed to see how it is drawn. It is fixed along the
@@ -15,6 +15,7 @@ import { ShellFrame } from './shell-frame';
 // in devtools (Rendering tab). The theme follows the workshop's toolbar switch.
 const meta = {
   title: 'Feedback / Navigation Bar',
+  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -22,6 +22,13 @@ import type { ShellFrameProps } from './types';
 // `role` is the admin area's: an admin sees People in its nav, a curator does
 // not, as the layout reads it from the session.
 
+/**
+ * The story parameter every story that draws the app shell spreads into its `parameters`,
+ * which tells the workshop frame (preview.tsx) to drop its padding, transform and clip so the
+ * phone's fixed bottom bar pins to the screen (./story-frame.scss).
+ */
+export const shellFrameParameters = { shellFrame: true } as const;
+
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
   canCurate: false,

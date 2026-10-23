@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { press, pressLast, useSteps } from '../../../.storybook/press';
 import { route } from '../../../.storybook/route';
-import { ShellFrame } from '../../../.storybook/shell-frame';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import DeleteWorkspaceButton from '../DeleteWorkspaceButton';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
@@ -220,6 +220,7 @@ const OVERVIEW_STATES: Record<string, ReactNode> = {
 
 // The whole page, one story with a control to choose the caller's role.
 export const Overview: ChosenStory = {
+  parameters: shellFrameParameters,
   args: { state: 'Owner' },
   argTypes: {
     state: { control: 'select', options: Object.keys(OVERVIEW_STATES), mapping: OVERVIEW_STATES },

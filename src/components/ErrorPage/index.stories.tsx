@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ShellFrame } from '../../../.storybook/shell-frame';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
 import NotAuthorized from '../NotAuthorized';
 import ErrorPage from '.';
 
@@ -9,6 +9,7 @@ import ErrorPage from '.';
 // carries its own `main.page-frame`, as the component does.
 const meta = {
   title: 'Pages / Error Page',
+  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).

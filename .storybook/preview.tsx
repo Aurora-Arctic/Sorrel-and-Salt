@@ -71,10 +71,13 @@ const useSimulatedReducedMotion = (enabled: boolean): void => {
 const Frame = ({
   theme,
   reducedMotion,
+  bare,
   children,
 }: {
   theme: Theme;
   reducedMotion: boolean;
+  /** The story draws the whole app shell, so the frame gets out of its way (story-frame.scss). */
+  bare: boolean;
   children: ReactNode;
 }): ReactElement => {
   useLayoutEffect(() => {
@@ -95,9 +98,13 @@ const Frame = ({
     else frame.setAttribute('role', 'main');
   });
 
-  const frameClassName = reducedMotion
-    ? 'workshop-story-frame workshop-story-frame--reduced-motion'
-    : 'workshop-story-frame';
+  const frameClassName = [
+    'workshop-story-frame',
+    reducedMotion && 'workshop-story-frame--reduced-motion',
+    bare && 'workshop-story-frame--bare',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   // `key` remounts the story on every theme change (see the header).
   // A component that uses TanStack Query needs the app's client, and one that
@@ -119,6 +126,8 @@ const withWorkshopFrame: Decorator = (Story, context) => (
     theme={(context.globals.theme as Theme | undefined) ?? 'dark'}
     // A story pins it with `parameters: { reducedMotion: true }`.
     reducedMotion={context.parameters.reducedMotion === true}
+    // A story that draws the app shell spreads `shellFrameParameters` (./shell-frame.tsx).
+    bare={context.parameters.shellFrame === true}
   >
     <Story />
   </Frame>

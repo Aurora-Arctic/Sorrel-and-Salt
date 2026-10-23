@@ -200,7 +200,12 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   navigate, and the `workshop-story-frame--reduced-motion` rule the
   `reducedMotion` parameter toggles — a `!important` blanket over every transition
   in the frame, not just the ones the app's own `reduced-motion` mixin reaches,
-  since the real media feature zeroes transitions app-wide too.
+  since the real media feature zeroes transitions app-wide too. The
+  `workshop-story-frame--bare` rule is for a story that draws the whole app shell: it drops the
+  frame's padding, `transform` and clip, because a transformed ancestor would otherwise pin the
+  phone's `position: fixed` bottom bar to the end of the page and not the screen. A story turns it
+  on with `parameters: shellFrameParameters` (exported by `shell-frame.tsx`), on its meta or on a
+  single story; `preview.tsx` reads the `shellFrame` parameter it sets.
 - **`typography.scss`, `layout.scss`, `primitives.scss`** — each `@include`s
   its `src/scss/` `*-base` mixin into `:where(.workshop-story-frame)`, so a story
   gets the identical prose, document structure and class layer a page does
