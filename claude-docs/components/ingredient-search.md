@@ -306,7 +306,7 @@ true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`)
 
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
 swaps the pair), then one clause per kind, always in this order whatever order
-the address holds them: text query, categories, forms, deities, zodiac, celestial bodies,
+the address holds them: text query, the viewer’s covens (the public compendium only, M12.55), categories, forms, deities, zodiac, celestial bodies,
 elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
@@ -331,6 +331,7 @@ separated by a comma. An example with every kind:
   removing it still finds the filter.
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   celestial bodies, which belongs to the linked value ("the Sun").
+- **The viewer’s covens** (M12.55) read "held in Hearthside or Moonwell", each coven by its name with its capitals kept, joined with "or", and each a chip that drops that coven from the address. Only an id with a label is named: the page labels the viewer’s own covens alone, and the read ignores any other id, so a foreign or malformed id in the address filters nothing and says nothing. The fragments carry the facet `covens` and the coven’s id as `value`.
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
 - **Source, In Stock and Low Stock Only** belong to a coven's list and are named
   whenever the filter holds them. `source` (`local` or `compendium`) reads "from

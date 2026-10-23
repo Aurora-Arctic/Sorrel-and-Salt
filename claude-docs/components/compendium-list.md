@@ -48,6 +48,7 @@ different groups, so the page offers each name once, whatever its case.
 ## Contracts
 
 - **The public page shares the filter.** `CompendiumListFilter` takes `audience` (`'admin'`, the default, or `'public'`). The public audience filters at `/compendium`, draws no No Refs control and no Classification facet, and words its empty sentence through the exported `emptyText(..., whenEmpty)`. The cards that page draws are [`compendium-cards.md`](compendium-cards.md).
+- **In My Covens, on the public page alone (M12.55).** `CompendiumListFilter` takes `covens`, the viewer’s covens as `{ id, name }`, every membership a viewer’s included, and hands them to [`FacetPanel`](facet-panel.md), which draws In My Covens first, above Categories, as a combobox of the covens by name with no counts. Picked, the list holds only the entries a cupboard of any one of them holds (a live `workspace_compendium_entries` row); none picked filters nothing. The address carries the ids as a repeated `covens` parameter (`COMPENDIUM_PARAMS.covens`, `textListParam('covens', 'covenIds')`), which counts as a filter, so the page is `noindex`. The sentence names them "held in A or B" ([`ingredient-search.md`](ingredient-search.md), "The search sentence"). The page passes no `covens` for a visitor or an account in no coven, and the admin and coven lists pass none, so the field is not drawn there. How the page reads the narrowed list is [`compendium-cards.md`](compendium-cards.md), "In My Covens".
 - **A coven’s Ingredients page shares it too (M9.6).** `audience="coven"`, with `covenSlug` and `workspaceId`, filters at `/coven/<slug>/ingredients` (`covenIngredientsHref`, `href.ts`), is labelled Filter Ingredients, and draws no No Refs control and no Classification facet. The filter it is given also carries `source`, `inStock` and `lowStockOnly`, so the panel draws Source, In Stock and Low Stock Only. The name search suggests from the coven’s cupboard and a pick opens `/coven/<slug>/ingredients/<id>`. The live counts ask `workspaceIngredientFacets` (the `CovenFacetCounts` document) with `workspaceId`, and the sentence names the three choices. The cards are [`coven-cards.md`](coven-cards.md).
 
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178),
@@ -145,6 +146,7 @@ as variables, built through `COMPENDIUM_PARAMS.variables` from the `categories` 
 never shown, and keeps the previous answer on screen while the next comes. The chips show
 their placeholder while the ask is out. `compendiumFacetCounts` turns the answer into the
 same labelled counts the page draws, using `vocabulary` for deity names and form icons.
+With covens held, the variables carry `covenIds`, and the service proves each id against the session the request carries, so the counts are of the entries those covens hold; with none, the answer is the cached, public one.
 The ask is off while the held filter equals the applied one, so the page's own counts
 show then. A failed ask leaves the page's counts in place. No resolver needed a
 DataLoader: the query is one request per ask.

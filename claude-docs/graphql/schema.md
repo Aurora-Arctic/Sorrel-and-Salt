@@ -852,13 +852,27 @@ type ToxicFacetCount {
 `compendiumFacets` is public like `compendium`: no `signedIn` scope and no
 session, and its service caches the answer under the `compendium` tag
 ([`db/compendium-cache.md`](../db/compendium-cache.md)).
+
+`compendiumFacets` also takes `covenIds: [ID!]` (M12.55, In My Covens on the
+public compendium): count only the entries that a live
+`workspace_compendium_entries` row of any one of these covens holds. The
+resolver hands it to `compendiumFacetsHeldIn` (`services/compendium-held-in.ts`),
+which deduplicates the ids, keeps the first 20, and asks
+`assertMembership` for each against the caller's session with
+`ingredient:read`, which every role holds, viewers included. An id the caller is not a member of, or one that is not a uuid, is
+dropped without an error, so a foreign coven's id narrows nothing and says
+nothing about that coven. With no id left, or none given, or no session, the
+answer is the cached, public one above. With at least one, it is read per
+request and never cached (rule 6). `compendium` itself takes no `covenIds`: the
+page reads the narrowed list through the service, `listCompendiumHeldIn` and
+`countCompendiumHeldIn`, never through the GraphQL list.
 `workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
 signed-out caller and a coven the caller is not in both answer `FORBIDDEN`,
 and any member, viewers included, may read it. It is never cached.
 
 `tests/modules/ingredients/graphql/ingredient-facets.test.ts` holds the
 transport's half: the arguments reaching each service, each value typed as
-its argument, the No Refs count with the switch on and off, and the refusal of a non-member naming a coven by id. The
+its argument, the No Refs count with the switch on and off, and the refusal of a non-member naming a coven by id; `covenIds` reaching the held-in service is its `compendiumFacets covenIds (M12.55)` block, and the membership proof, the foreign id included, is `tests/modules/ingredients/services/compendium-held-in.test.ts`. The
 signed-out answers are `tests/db/graphql-query-scopes.test.ts`'s, and a
 malformed `workspaceId` is `tests/db/graphql-workspace-ids.test.ts`'s.
 
