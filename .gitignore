@@ -83,3 +83,11 @@ tmp
 
 # Deliberate lint violations written by the tests/guards/lint-*-boundary.test.ts guards
 __lint-probe*__/
+
+# Claude Design sync (M12.53): build artifacts and scratch
+.design-sync/sb-reference/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+.ds-sync/
+ds-bundle/

@@ -273,6 +273,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.270 | The Search Sentence Types a Changed Term                                                                                 | Bugfixes | —                      |
 | MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
 | MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
+| MB.273 | Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook                                                | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1717,6 +1718,28 @@ _Acceptance criteria:_
 - Each other control keeps a target of at least 24 × 24 px (WCAG 2.5.8).
 - A Playwright spec clicks a card's body and its + on `/compendium`, and its body and its stock control on a coven's Ingredients page.
 - Docs: `claude-docs/components/compendium-cards.md` and `claude-docs/components/ingredient-card.md`.
+
+**MB.273 — Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook** · 3h
+
+_Story:_ As a designer using the Sorrel & Salt project in Claude Design, I want each component preview to look the same as its Storybook render, so that I can trust what the cards show.
+
+Found on 2026-10-23, locally, during the M12.53 design sync (the upload of every component to Claude Design), every time; cosmetic. Steps to reproduce:
+
+1. On a checkout of the feature branch, build the Claude Design bundle (the steps are in `.design-sync/NOTES.md`).
+2. Run `compare.mjs` against the Storybook reference in `.design-sync/sb-reference` on CompendiumList, AdminNav, CovenCards, ProviderMark, ContextRow, Welcome, SectionNav, PublicFrame, IngredientEntry and EntryMarks.
+3. Open each component's side-by-side sheet.
+
+Actual: the preview frame is about 48px narrower than Storybook's and capped at 700px tall. Columns and links are cut (the CompendiumList Categories column, the AdminNav Deities link), cards and chips wrap (the third CovenCards card, the ProviderMark Facebook chip), the bottom of tall stories is cut off (ContextRow, Welcome, IngredientEntry, EntryMarks), and SectionNav moves extra links into More in four stories. In PublicFrame "Loading The Compendium", Storybook is captured before the story's link press takes effect, so its reference shows no loading state.
+Expected: each preview renders at the Storybook frame's width and height and behaves the same, so every one of these stories grades "match".
+
+The owner accepted these "close" grades for M12.53 and asked for this follow-up.
+
+_Acceptance criteria:_
+
+- A regression check fails before the fix: a scoped `compare.mjs` run grades at least one listed story "close", and the cause is the frame size or the capture timing.
+- Every listed story grades "match" after the fix. Candidate fixes: `viewport` overrides in `.design-sync/config.json` (IngredientEntry 900x2000, EntryMarks 900x1000, ContextRow 900x1015, Welcome 900x760); a wider frame, or no body padding, for the shell and table stories; a PublicFrame `settleMs` of about 1000.
+- The fix and its reason are recorded in `.design-sync/NOTES.md`, and no other component's grade drops below what it is today.
+- The fixed components are re-uploaded to the Claude Design project, with `_ds_sync.json` written last.
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -4201,6 +4224,9 @@ _Acceptance criteria:_
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
+- Accessibility: the workspace ingredients page, `IngredientCard`, `StockFields`, the stock dialogs and the entry page's Stock section (`JarShelf`) pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
+- UX, with research: the review is backed by published UX guidance for jar lines, stock badges, filters and the Edit Stock dialog (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - A jar being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
@@ -4242,6 +4268,9 @@ _Acceptance criteria:_
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
+- Accessibility: the grimoire list, `SpellCard`, `SpellBuilder` with its step editor, the Record a Working dialog and the recipe page pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
+- UX, with research: the review is backed by published UX guidance for step reordering, the comparison panel, the warnings and the deduction preview (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
 - Reordering steps reads clearly by keyboard as well as by pointer
@@ -4268,6 +4297,9 @@ _Acceptance criteria:_
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
+- Accessibility: the 403, 404 and 500 pages, the skeletons and the empty states, and a read of the whole site pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
+- UX, with research: the review is backed by published UX guidance for error pages, skeletons, empty states and floating panels (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The 403, 404 and 500 pages share one design, and a thrown one looks the same drawn by the browser as the unmatched 404 drawn by the server
 - Every skeleton matches the layout it stands in for
