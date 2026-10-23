@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import { type ReactNode, useEffect } from 'react';
 import { FIXTURE_COVEN, FIXTURE_WORKSPACE_ID } from '../../../.storybook/fixtures';
