@@ -10,9 +10,10 @@ the research each change rests on. The task is MB.121 in
 
 The owner answered the review's questions on 2026-10-23; each answer is written
 where the question was, and listed in "The owner's answers", below. The
-owner chose P1 on 2026-10-23. The review as a whole is **AWAITING THE OWNER'S
-SIGN-OFF**: the owner will look it over on their own computer first. The work
-is done and committed on
+owner chose P1 on 2026-10-23, and **signed off the review as a whole on
+2026-10-23**, after looking it over live, including the side column standing
+outside the Details section. The design sync (`/design-sync`) is the owner's to
+run, not an agent's. The work is committed on
 `feature/mb.121-design-review-the-workspace-ingredients-page`.
 
 ## The owner's answers (2026-10-23)
