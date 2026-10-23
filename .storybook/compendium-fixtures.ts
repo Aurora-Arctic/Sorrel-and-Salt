@@ -19,6 +19,7 @@ export const NO_FILTER: CompendiumListFilter = {
   covens: [],
   covensNot: false,
   toxic: '',
+  reviewed: '',
 };
 
 export const NO_FACETS: CompendiumFacetCounts = {

@@ -95,6 +95,11 @@ type CompendiumFacets {
   """
   forms: [NameFacetCount!]!
 
+  """
+  Reviewed, then needing review, under the rest of the filter, reviewed left out. Null to anyone but a curator or an admin: the review mark is theirs alone.
+  """
+  reviewed: [ReviewFacetCount!]
+
   """toxic, then not_toxic, zeros included."""
   toxic: [ToxicFacetCount!]!
 
@@ -372,6 +377,11 @@ type Ingredient {
   A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
   """
   retired: Boolean!
+
+  """
+  When a curator marked a compendium entry reviewed: null while it needs review, and for a coven's own entry. The date only, shown to anyone; who marked it is never a field.
+  """
+  reviewedAt: DateTime
   safetyNotes: String
   slug: String!
 
@@ -873,6 +883,11 @@ type Mutation {
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
   """
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
+
+  """
+  Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
+  """
+  setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
 
@@ -1048,6 +1063,11 @@ type Query {
     query: String
 
     """
+    Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
+    """
+    reviewed: Boolean
+
+    """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
     """
     toxic: ToxicFilter
@@ -1103,6 +1123,11 @@ type Query {
     forms: [String!]
     nomenclature: Nomenclature
     query: String
+
+    """
+    Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
+    """
+    reviewed: Boolean
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1619,6 +1644,19 @@ type ReferenceLink {
 input ReferenceLinkInput {
   locator: String
   referenceId: ID!
+}
+
+"""A Reviewed setting, and how many entries it would list (M14.8)."""
+type ReviewFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """
+  true for the reviewed entries, false for the ones needing review, as reviewed takes it.
+  """
+  value: Boolean!
 }
 
 """

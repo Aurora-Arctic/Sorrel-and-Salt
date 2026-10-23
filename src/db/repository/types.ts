@@ -401,6 +401,14 @@ export interface AuditWriter {
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /**
+   * Sets the review mark of the one live compendium entry with this id: with
+   * `reviewed`, by `curator`, now, in one statement that keeps a mark the entry
+   * already has, so the original date and reviewer stand; without it, clears
+   * the mark (M14.8). The review switch's alone: no other writer touches the
+   * two columns.
+   */
+  setReviewInCompendium(curator: Curator, id: string, reviewed: boolean): Promise<IngredientRow[]>;
+  /**
    * Moves the one live compendium row's `updated_at` with no column changed,
    * for a parent whose child rows just changed (MB.106). The `set_updated_at()`
    * trigger leaves an UPDATE that changed nothing alone, so this publishes
@@ -773,6 +781,12 @@ export interface IngredientFilter {
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
   /**
+   * The compendium's only (M14.8): true keeps the entries a curator has marked
+   * reviewed, false the ones still needing review. Absent keeps both. The
+   * service lets only a curator set it.
+   */
+  reviewed?: boolean;
+  /**
    * The compendium only (M12.55): keep an entry when a live cupboard row of
    * any one of these covens names it. A proof each, so a coven the caller is
    * not in cannot be named; an empty list is no filter.
@@ -830,7 +844,16 @@ export interface WorkspaceIngredientFacets extends IngredientFacets {
 export interface CompendiumFacets extends IngredientFacets {
   withoutReferences: number;
   withoutForms: number;
+  /**
+   * How many entries are reviewed and how many need review, under the rest of
+   * the filter (M14.8). The repository always counts them; the service answers
+   * null to anyone but a curator, since the mark is the curators' alone.
+   */
+  reviewed: FacetCount<ReviewFacetValue>[] | null;
 }
+
+/** The Reviewed filter's two settings, as its facet counts them (M14.8). */
+export type ReviewFacetValue = 'reviewed' | 'needs_review';
 
 /**
  * What a compendium entry carries onto its edge: on a search, its rank — the
@@ -974,8 +997,30 @@ export interface CitingLink {
   reference: ReferenceRow;
 }
 
-/** An `ingredients` row, compendium entry or coven's, as a finder returns it. */
-export type IngredientRow = typeof ingredients.$inferSelect;
+/** The column `unread-columns.ts` leaves out of an `ingredients` row read. */
+export type UnreadIngredientColumn = 'curatorReviewedBy';
+
+/**
+ * An `ingredients` row, compendium entry or coven's, as a finder returns it: without the
+ * name of the curator who reviewed it, which no finder reads with the row
+ * (`unread-columns.ts`; M14.8). The review date is on the row.
+ */
+export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredientColumn>;
+
+/**
+ * A row as the generic finders read it: the table's whole row, less any column
+ * `unread-columns.ts` keeps out of reads. Writers' `returning()` still hold
+ * the whole row (M14.8).
+ */
+export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
+  ? IngredientRow
+  : TTable['$inferSelect'];
+
+/** When a curator last marked a compendium entry reviewed, as the curator's own read returns it. */
+export interface CompendiumReviewRow {
+  /** `null` once the mark is cleared: the entry needs review. */
+  reviewedAt: Date | null;
+}
 
 /** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;

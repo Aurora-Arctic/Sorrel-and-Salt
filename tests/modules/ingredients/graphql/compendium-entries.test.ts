@@ -1,10 +1,10 @@
-import { GraphQLInputObjectType, isNonNullType } from 'graphql';
+import { GraphQLInputObjectType, isNonNullType, isObjectType } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
@@ -368,66 +368,54 @@ describe('deleteCompendiumIngredient', () => {
   });
 });
 
-describe('compendiumEntryUsers', () => {
-  const USERS = 'query ($id: ID!) { compendiumEntryUsers(id: $id) }';
+describe('setCompendiumEntryReviewed', () => {
+  const REVIEWED =
+    'mutation ($id: ID!, $reviewed: Boolean!) { setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) { id } }';
 
-  it('answers the number of covens for a curator, and FORBIDDEN for a member of one of them', async () => {
+  it('marks and clears the entry for a curator, answering it, and is FORBIDDEN for a member', async () => {
     const id = await seed();
-    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: id }, A.id);
+    // Why the mark below is the mutation's: the seeded row has none.
+    expect((await rowOf(id)).curator_reviewed_at).toBeNull();
 
-    const curator = await run<{ compendiumEntryUsers: number }>(asUser(E), USERS, { id });
-    expect(curator.data).toEqual({ compendiumEntryUsers: 1 });
-    const member = await run(asUser(B), USERS, { id });
+    const marked = await run(asUser(F), REVIEWED, { id, reviewed: true });
+    expect(marked).toEqual({ data: { setCompendiumEntryReviewed: { id } } });
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_by: F.id });
+
+    const member = await run(asUser(B), REVIEWED, { id, reviewed: false });
     expect(member.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_by: F.id });
+
+    await run(asUser(F), REVIEWED, { id, reviewed: false });
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_at: null, curator_reviewed_by: null });
   });
 
-  it("is NOT_FOUND for a coven's ingredient", async () => {
+  it('shows anyone the date of the mark, signed in or not, and never who set it (M14.8)', async () => {
+    const id = await seed();
+    const READ = 'query ($id: ID!) { ingredient(id: $id) { reviewedAt } }';
+    expect(await run(null, READ, { id })).toEqual({ data: { ingredient: { reviewedAt: null } } });
+
+    await run(asUser(F), REVIEWED, { id, reviewed: true });
+    // Precondition: the row holds the mark the read below must reflect.
+    const { curator_reviewed_at: at } = await rowOf(id);
+    expect(at).not.toBeNull();
+
+    const seen = await run<{ ingredient: { reviewedAt: string } }>(null, READ, { id });
+    expect(new Date(seen.data!.ingredient.reviewedAt).getTime()).toBe(new Date(at).getTime());
+  });
+
+  it("is NOT_FOUND for a coven's ingredient, which stays unmarked", async () => {
     const id = await seed({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' });
 
-    expect((await run(asUser(E), USERS, { id })).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-  });
-});
-
-// MB.219 over the wire: a compendium entry's forms through the update input,
-// answered back on `Ingredient.variants`, and a form the compendium refuses
-// pathed to it. The matching and the curated rules are the service file's.
-describe('variants', () => {
-  const VARIANTS = `mutation ($id: ID!, $input: CompendiumIngredientUpdateInput!) {
-    updateCompendiumIngredient(id: $id, input: $input) { variants { form formChoice { id } } }
-  }`;
-
-  it('replaces its forms with the ones sent, answering each with its pick', async () => {
-    const id = await insertIngredient(sql, makeIngredient({ name: 'Testwort' }), A.id);
-    const oil = await curatedFormId(sql, 'Oil');
-
-    const result = await run<{ updateCompendiumIngredient: WorkspaceIngredientNode }>(
-      asUser(E),
-      VARIANTS,
-      { id, input: whole({ ...testwort(), variants: [formOf('Herb', herb), formOf('Oil', oil)] }) },
-    );
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.updateCompendiumIngredient.variants).toEqual([
-      { form: 'Herb', formChoice: { id: herb } },
-      { form: 'Oil', formChoice: { id: oil } },
-    ]);
+    const result = await run(asUser(F), REVIEWED, { id, reviewed: true });
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect((await rowOf(id)).curator_reviewed_at).toBeNull();
   });
 
-  it('answers a typed form as VALIDATION pathed to that form, changing nothing', async () => {
-    const id = await insertIngredient(sql, makeIngredient({ name: 'Testwort' }), A.id);
-
-    const result = await run(asUser(E), VARIANTS, {
-      id,
-      input: whole({ ...testwort(), variants: [formOf('Herb', herb), formOf('Testform', '')] }),
-    });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions).toMatchObject({
-      code: 'VALIDATION',
-      fieldErrors: [{ path: ['variants', 1, 'form'] }],
-    });
-    const forms = await sql`
-      select form from ingredient_variants where ingredient_id = ${id} and deleted_at is null`;
-    expect(forms).toEqual([{ form: 'Testform' }]);
+  it('answers the date on Ingredient and no field of the reviewer', () => {
+    const ingredient = schema.getType('Ingredient');
+    expect(isObjectType(ingredient)).toBe(true);
+    const fields = isObjectType(ingredient) ? Object.keys(ingredient.getFields()) : [];
+    expect(fields).toContain('reviewedAt');
+    expect(fields.filter((field) => /reviewedBy/i.test(field))).toEqual([]);
   });
 });

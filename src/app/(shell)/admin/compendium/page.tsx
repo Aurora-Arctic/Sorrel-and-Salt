@@ -9,6 +9,7 @@ import { editHeading } from '../../../../components/CompendiumList/heading';
 import { cardName } from '../../../../components/IngredientCard/card-name';
 import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
+import ReviewMark from '../../../../components/IngredientEntry/review-mark';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import type { ListDialog } from '../../../../lib/types';
 import { single } from '../../../../lib/search-params';
@@ -20,10 +21,14 @@ import type {
   CompendiumListFilter,
 } from '../../../../components/CompendiumList/types';
 import PageHeader from '../../../../components/PageHeader';
-import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
+import { DEFAULT_PAGE_SIZE, allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
-import { ingredientDetailOf, resolveCompendiumSlug } from '@/modules/ingredients';
+import {
+  ingredientDetailOf,
+  readCompendiumReview,
+  resolveCompendiumSlug,
+} from '@/modules/ingredients';
 import { requireCuratorSession } from '../../../../lib/request-session';
 import {
   readCategories,
@@ -79,8 +84,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // The entry whose details are open over the list, `?entry=` (M12.5).
   const entrySlug = single(params.entry);
   const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
-    readCompendium(variables, after, before),
-    readFacets(variables),
+    // The session, for the Reviewed filter and its counts, a curator's alone (M14.8).
+    readCompendium(variables, after, before, DEFAULT_PAGE_SIZE, session),
+    readFacets(variables, session),
     readFormIcons(),
     readEditPlace(place, readCompendiumEntry),
     entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug)) : undefined,
@@ -108,6 +114,10 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
   // The admin's or curator's own covens that hold it, and only those (M6.6; M12.5).
   const covens = summary ? await covensHolding(detailed.id) : [];
+  // The entry's review mark (M14.8), the admin's own read: the compendium's cached reads leave it out.
+  const review = summary
+    ? await readOrMissing(() => readCompendiumReview(session, detailed.id))
+    : undefined;
   // The plus beside the pencil (M9.12), for the covens the admin or curator is a member of and
   // may add in: none for one in no coven, so neither the plus nor its check shows.
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
@@ -174,6 +184,14 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
+            ...(review !== undefined && {
+              footControl: (
+                <ReviewMark
+                  ingredientId={detailed.id}
+                  reviewedAt={review?.reviewedAt.toISOString() ?? null}
+                />
+              ),
+            }),
             // No Edit in details opened over another entry's form, an add's or an edit's: it would
             // put this entry's form in that one's place, and its typing with it. The edit of this
             // entry is M12.5's, opened from here over them, so its Edit stays.

@@ -4,7 +4,7 @@ import {
   type SuggestionGroupTag,
   findIngredientSuggestions,
 } from '../../../db/repository';
-import type { ingredients } from '../schema/ingredients';
+import type { IngredientRow } from '../types';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
 import { assertMembership } from '@/modules/coven';
@@ -38,7 +38,7 @@ export async function suggestIngredients(
   query: string,
   page: PageRequest,
   form?: string,
-): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore & SuggestionGroupTag>[]> {
+): Promise<PageEntry<IngredientRow, CompendiumScore & SuggestionGroupTag>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   const filter = parseInput(CompendiumFilter, { query });
   return findIngredientSuggestions(membership, filter.query ?? '', page, form);

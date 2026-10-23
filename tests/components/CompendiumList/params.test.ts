@@ -181,6 +181,39 @@ describe('the No Form parameter (M12.30)', () => {
   });
 });
 
+describe('the Reviewed parameter (M14.8)', () => {
+  const reviewed = entries.reviewed;
+
+  it('reads 1 as reviewed and 0 as needs review, and anything else as no filter', () => {
+    expect(reviewed.read('1')).toBe('reviewed');
+    expect(reviewed.read('0')).toBe('needs_review');
+    expect(reviewed.read('true')).toBe('');
+    expect(reviewed.read(undefined)).toBe('');
+  });
+
+  it('round-trips through the address as 1 or 0, and no filter as nothing', () => {
+    for (const setting of ['reviewed', 'needs_review'] as const) {
+      const href = COMPENDIUM_PARAMS.href(PATH, { reviewed: setting });
+      const query = Object.fromEntries(new URL(href, 'http://x').searchParams);
+      expect(COMPENDIUM_PARAMS.read(query).reviewed).toBe(setting);
+    }
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: 'reviewed' })).toBe(
+      '/admin/compendium?reviewed=1',
+    );
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: 'needs_review' })).toBe(
+      '/admin/compendium?reviewed=0',
+    );
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: '' })).toBe('/admin/compendium');
+  });
+
+  it('is the reviewed variable, true or false, and absent for no filter', () => {
+    expect(reviewed.variable).toBe('reviewed');
+    expect(reviewed.toVariable('reviewed')).toBe(true);
+    expect(reviewed.toVariable('needs_review')).toBe(false);
+    expect(reviewed.toVariable('')).toBeUndefined();
+  });
+});
+
 describe('the classification parameter', () => {
   it('has left the table, so the address no longer reads or writes it', () => {
     expect(Object.keys(entries)).not.toContain('nomenclature');
@@ -205,6 +238,7 @@ describe('the whole table', () => {
       zodiac: [],
       celestialBodies: [],
       toxic: '',
+      reviewed: '',
       covens: [],
       covensNot: false,
     });

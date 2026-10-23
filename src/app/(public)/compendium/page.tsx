@@ -56,9 +56,11 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // else it opens nothing and reads nothing. The list's reads stay the cached, sessionless ones,
 // keyed by the address alone, whoever asks (rule 6).
 //
-// The address carries the admin list's filters, bar two: No Refs and No Form are the curators'
-// to-do lists, so `?withoutReferences=1` and `?withoutForms=1` are dropped before the table
-// reads them, and list what the unfiltered page lists.
+// The address carries the admin list's filters, bar three: No Refs, No Form and Reviewed are the
+// curators' to-do lists, so `?withoutReferences=1`, `?withoutForms=1` and `?reviewed=` (M14.8)
+// are dropped before the table reads them, and list what the unfiltered page lists. The services
+// refuse a review filter from anyone who does not curate, so dropping it here is what keeps the
+// page from failing on one.
 //
 // In My Covens (M12.55) narrows the list to the entries the viewer's picked covens hold, any
 // role, and Not In (`?covensNot=1`) to the entries none of them holds, or with none picked none
@@ -77,7 +79,7 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 
 /** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
-  const { withoutReferences: _refs, withoutForms: _forms, ...rest } = params;
+  const { withoutReferences: _refs, withoutForms: _forms, reviewed: _reviewed, ...rest } = params;
   return rest;
 };
 

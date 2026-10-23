@@ -82,10 +82,17 @@ builder.queryField('compendium', (t) =>
       withoutForms: t.arg.boolean({ required: false }),
       // The formal names still to look up are the `unknown` entries (M5.5).
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
+      // A curator's review mark (M14.8): FORBIDDEN to anyone else.
+      reviewed: t.arg.boolean({
+        required: false,
+        description:
+          'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
+      }),
     },
-    resolve: (_root, args, page) => listCompendium(filterOf(args), page),
+    // The session reaches the read for the Reviewed setting alone, a curator's (M14.8).
+    resolve: (_root, args, page, { session }) => listCompendium(filterOf(args), page, session),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
-    count: (_root, args, start) => countCompendium(filterOf(args), start),
+    count: (_root, args, start, { session }) => countCompendium(filterOf(args), start, session),
     edgeFields: (t) => ({
       score: t.float({
         nullable: true,
@@ -111,6 +118,12 @@ builder.queryField('compendiumFacets', (t) =>
       withoutReferences: t.arg.boolean({ required: false }),
       withoutForms: t.arg.boolean({ required: false }),
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
+      // A curator's review mark (M14.8): FORBIDDEN to anyone else.
+      reviewed: t.arg.boolean({
+        required: false,
+        description:
+          'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
+      }),
       // M12.55: the In My Covens filter, the viewer's own; signed out, or naming a coven
       // they are not in, it filters nothing and the counts are the cached public ones.
       covenIds: t.arg.idList({
@@ -160,6 +173,7 @@ function filterOf({
   withoutReferences,
   withoutForms,
   nomenclature,
+  reviewed,
 }: CompendiumFilterInput): CompendiumFilterInput {
   return {
     query,
@@ -174,5 +188,6 @@ function filterOf({
     withoutReferences,
     withoutForms,
     nomenclature,
+    reviewed,
   };
 }

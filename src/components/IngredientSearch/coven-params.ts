@@ -7,9 +7,13 @@ import { INGREDIENT_SOURCES } from '@/modules/ingredients/schema/ingredient-enum
 // filters only a coven has, because only a coven holds stock and entries of its own.
 // The compendium's entries are spread in as they are, so its table and every caller
 // of it are untouched; this is the "one new entry" the table promises
-// (claude-docs/components/ingredient-search.md, "The parameter table").
+// (claude-docs/components/ingredient-search.md, "The parameter table"). All bar
+// Reviewed (M14.8): the review mark is the curators' and a compendium entry's alone,
+// so a coven's address has no `reviewed` to read.
+const { reviewed: _reviewed, ...SHARED } = COMPENDIUM_PARAMS.entries;
+
 export const COVEN_PARAMS = defineSearchParams({
-  ...COMPENDIUM_PARAMS.entries,
+  ...SHARED,
   // Only the coven's own entries, `?source=local`, or only those it holds a jar of
   // from the compendium, `?source=compendium`. Left out for both, so a junk value
   // reads as both.

@@ -4,13 +4,14 @@ import {
   countCompendiumEntryUsers,
   createCompendiumEntry,
   deleteCompendiumEntry,
+  setCompendiumEntryReviewed,
   updateCompendiumEntry,
 } from '../services/compendium';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
-// The compendium's three writes (M5.5), the site admin's alone: scoped here
+// The compendium's writes (M5.5, M14.8), a curator's or an admin's: scoped here
 // and refused again by the service, which is the real gate, as M5.6's
 // category writes are. Neither input names a tier or a stamp — the
 // compendium is the mutation, and the stamps are the session's.
@@ -83,6 +84,25 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
       await deleteCompendiumEntry(sessionOf(context), id);
       return id;
     },
+  }),
+);
+
+// The curator's review mark (M14.8): set or cleared by hand, curator-scoped
+// here and refused again by the service. It answers the entry and never the
+// mark, which `Ingredient` does not carry: the admin page reads it through
+// the service, and a client refreshes after the write.
+builder.mutationField('setCompendiumEntryReviewed', (t) =>
+  t.field({
+    type: IngredientRef,
+    description:
+      'Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.',
+    args: {
+      id: t.arg.id({ required: true }),
+      reviewed: t.arg.boolean({ required: true }),
+    },
+    authScopes: { curator: true },
+    resolve: (_root, { id, reviewed }, context) =>
+      setCompendiumEntryReviewed(sessionOf(context), id, reviewed),
   }),
 );
 

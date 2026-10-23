@@ -5,7 +5,7 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
 import { DEMO_STOCK, WORKSPACE_W_CUPBOARD, WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
 import { COMPENDIUM_INGREDIENTS, WORKSPACE_W_ID, identityOf } from '@/db/seed/standard';
-import { COMPENDIUM } from '@/db/seed/compendium/index';
+import { loadCompendium } from '@/db/seed/compendium/load';
 
 // What running the `demo` scenario, `standard` inside it, leaves between an
 // entry and its forms (MB.216, MB.222): every seeded entry holds exactly the
@@ -141,7 +141,9 @@ describe('seed(db, { scenario: "demo" })', () => {
   });
 
   it('holds the curated compendium beside the fixtures, and a second run writes no further ingredient', async () => {
-    const curated = COMPENDIUM.flatMap((shard) => shard.entries);
+    const curated = loadCompendium()
+      .files.filter((file) => file.status === 'approved')
+      .map((file) => file.entry);
     const rows = await sql<{ identity_key: string }[]>`
       select identity_key from ingredients where workspace_id is null and deleted_at is null`;
     const held = new Set(rows.map((row) => row.identity_key));

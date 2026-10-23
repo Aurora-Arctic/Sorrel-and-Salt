@@ -163,6 +163,25 @@ describe('DetailsDialog', () => {
     expect(summary.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('stands a foot control beside the link, outside the body that scrolls (M14.8)', () => {
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{
+          heading: detailsHeading(ENTRY),
+          pageHref: PAGE,
+          children: <p>A summary</p>,
+          footControl: <button type="button">A control</button>,
+        }}
+      />,
+    );
+
+    const control = within(dialog()).getByRole('button', { name: 'A control' });
+    const open = within(dialog()).getByRole('link', { name: 'See in Compendium' });
+    expect(control.closest('.modal-dialog__body')).toBeNull();
+    expect(control.parentElement).toBe(open.parentElement);
+  });
+
   it("goes to the entry's page on a press of See in Compendium, as the site's link does", async () => {
     render(
       <Navigating push={router.push}>

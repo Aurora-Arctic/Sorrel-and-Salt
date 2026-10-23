@@ -7,7 +7,7 @@ import { spellCategories } from '../../modules/grimoire/schema/spell-categories'
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import { categoryIdByName } from './categories';
 import { assertCompendiumValid, seedCompendiumContent } from './compendium';
-import { COMPENDIUM } from './compendium/index';
+import { loadCompendium } from './compendium/load';
 import { ingredientSlug } from '../../lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -84,12 +84,20 @@ export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
 export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [HEARTH_ASH, CATS_CLAW];
 
 /**
- * A compendium entry, `standard` or the curated list, looked up at module load
- * so a layer naming a missing entry fails on import rather than at a foreign
- * key later.
+ * The curated compendium, read from the files under `compendium/` once, at
+ * module load, because the spells below look their entries up then.
+ */
+const CURATED_FILES = loadCompendium();
+
+/**
+ * A compendium entry, `standard` or an `approved` file, looked up at module
+ * load so a layer naming a missing entry fails on import rather than at a
+ * foreign key later. A file held back from `approved` is not seeded, so a
+ * layer may not name it.
  */
 function fromCompendium(name: string, canonicalName?: string): NamedIngredient {
-  const entry = [...COMPENDIUM_INGREDIENTS, ...COMPENDIUM.flatMap((shard) => shard.entries)].find(
+  const curated = CURATED_FILES.files.filter((file) => file.status === 'approved');
+  const entry = [...COMPENDIUM_INGREDIENTS, ...curated.map((file) => file.entry)].find(
     (candidate) =>
       candidate.name === name && (candidate.canonicalName ?? undefined) === canonicalName,
   );
@@ -240,8 +248,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
 ];
 
 export async function seedDemo(db: SeedDatabase): Promise<void> {
-  // Before the transaction opens, as seedCompendium does: an invalid literal writes nothing.
-  assertCompendiumValid(COMPENDIUM);
+  // Before the transaction opens, as seedCompendium does: an invalid file writes nothing.
+  assertCompendiumValid(CURATED_FILES);
   await beginSeedTransaction(db, async (tx) => {
     // Inside the same transaction: every spell points at rows `standard` writes.
     // A deity pick someone deleted stays deleted, as a spell does.
@@ -250,7 +258,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     // rows and a curated entry of the same identity is skipped. Demo is for a
     // person exploring the app; standard stays the test fixture cast
     // (claude-docs/db/demo-scenario.md).
-    await seedCompendiumContent(tx, COMPENDIUM);
+    await seedCompendiumContent(tx, CURATED_FILES);
 
     await insertMissingWorkspaceIngredients(tx);
     const own = await workspaceIngredientIds(tx);

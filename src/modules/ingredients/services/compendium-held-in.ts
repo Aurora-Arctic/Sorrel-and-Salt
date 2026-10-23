@@ -10,8 +10,8 @@ import {
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { parseInput } from '../../../lib/validation';
-import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
+import type { CompendiumFilterInput } from '../validation/compendium-filter';
+import { compendiumFilterFor, seesReview } from './compendium-filter';
 import { countCompendium, listCompendium } from './compendium';
 import { compendiumFacets } from './ingredient-facets';
 import type { CovenPick, IngredientRow } from '../types';
@@ -90,6 +90,7 @@ async function covenScope(
  * cupboard row of any picked coven names, or, under Not In, to the entries
  * none names. With no coven filter in effect, the cached `listCompendium`.
  *
+ * @throws {Forbidden} Reviewed is set and `session` does not curate (M14.8).
  * @throws {ValidationError} as `listCompendium` does.
  */
 export async function listCompendiumHeldIn(
@@ -99,8 +100,8 @@ export async function listCompendiumHeldIn(
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
   const scope = await covenScope(session, covens);
-  if (!scope) return listCompendium(filter, page);
-  return findCompendiumPage({ ...parseInput(CompendiumFilter, filter), ...scope }, page);
+  if (!scope) return listCompendium(filter, page, session);
+  return findCompendiumPage({ ...compendiumFilterFor(filter, session), ...scope }, page);
 }
 
 /**
@@ -116,8 +117,8 @@ export async function countCompendiumHeldIn(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const scope = await covenScope(session, covens);
-  if (!scope) return countCompendium(filter, start);
-  return findCompendiumCount({ ...parseInput(CompendiumFilter, filter), ...scope }, start);
+  if (!scope) return countCompendium(filter, start, session);
+  return findCompendiumCount({ ...compendiumFilterFor(filter, session), ...scope }, start);
 }
 
 /**
@@ -132,6 +133,10 @@ export async function compendiumFacetsHeldIn(
   filter: CompendiumFilterInput,
 ): Promise<CompendiumFacets> {
   const scope = await covenScope(session, covens);
-  if (!scope) return compendiumFacets(filter);
-  return findCompendiumFacets({ ...parseInput(CompendiumFilter, filter), ...scope });
+  if (!scope) return compendiumFacets(filter, session);
+  // The Reviewed filter and counts stay a curator's (M14.8) on this read as on the cached one.
+  return findCompendiumFacets(
+    { ...compendiumFilterFor(filter, session), ...scope },
+    seesReview(session),
+  );
 }

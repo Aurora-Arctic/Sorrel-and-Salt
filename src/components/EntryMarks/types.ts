@@ -41,6 +41,13 @@ export interface EntryMarksProps {
    * Not a badge: `RecencyMark`, which a caller with no badge row beside it draws alone.
    */
   recency?: EntryRecency | null;
+  /**
+   * The curators' review mark (M14.8), shown to everyone: the moment a curator marked the
+   * entry reviewed, as an ISO string, for a Reviewed By Curator badge with its date;
+   * `null` for Needs Review; left out, no badge. Never drawn on a coven's own entry. It is
+   * the date alone: who reviewed it is not shown (the owner's call, 2026-10-23).
+   */
+  reviewedAt?: string | null;
   /** The ingredient's own Toxic flag; it or any form's shows Toxic, last in the row. */
   toxic?: boolean | null;
   /** The ingredient's own safety notes; these or any form's show Caution, unless Toxic shows. */

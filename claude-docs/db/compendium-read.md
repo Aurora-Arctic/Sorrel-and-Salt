@@ -242,6 +242,24 @@ precision`, and while the keyset casts its sort back to `real`, the score
   read together, and only to choose which entries to list: what a single
   form reports about itself is still its own flag alone (DESIGN.md §5, "The
   toxic flag is the one exception").
+- **`reviewed`** is a curator's review mark (M14.8): `true` lists the entries
+  whose `curator_reviewed_at` is set, `false` the ones where it is null, and
+  absent is both. The finder takes it from anyone; the service decides who
+  may send it. `compendiumFilterFor` (`services/compendium-filter.ts`) refuses a
+  `reviewed` filter with `Forbidden` for a viewer who does not curate, so
+  the public page, a coven and a signed-out caller cannot learn which entries
+  a curator has checked. The public page drops `?reviewed=` from its address
+  before it reads, and a coven's parameter table has no `reviewed`.
+
+**The review date is on the row; the reviewer never is** (M14.8, corrected 2026-10-23). A
+curator's mark is shown to everyone as a date, so `curator_reviewed_at` rides on the cached
+compendium read and is the same for every viewer (CLAUDE.md, rule 6). The reviewer's id is not:
+every finder over `ingredients` selects `readColumns(ingredients)` from
+`src/db/repository/unread-columns.ts`, which leaves out `curator_reviewed_by`, and the row types
+leave it out too (`UnreadIngredientColumn`). The mutation `setCompendiumEntryReviewed` calls
+`expireCompendium()`, so a change shows at once. The admin's switch reads the mark with
+**`findCompendiumReview(curator, id)`** through `readCompendiumReview(session, id)`, which throws
+`Forbidden` for anyone who does not curate. The Reviewed filter and its counts stay curator-only.
 
 Names order under the database's own collation (`en_US.utf8` in the image).
 M8.14's `(lower(name), identity_key, id)` declares its parts on the same
@@ -272,7 +290,11 @@ see if I picked this value?" for every value of every search filter, so the
 filter panel can show a number beside each choice. It lives in
 `src/db/repository/ingredient-facets.ts` and returns a `CompendiumFacets`: seven
 lists of `{ value, count }`, one per filter kind — forms, deities, categories,
-zodiac signs, celestial bodies, elements and toxic — and the No Refs count. The
+zodiac signs, celestial bodies, elements and toxic — the No Refs count, and
+`reviewed`: how many entries are reviewed and how many need review, counted
+under the rest of the filter with its own setting left out (M14.8). The
+service `compendiumFacets(filter, viewer)` returns `reviewed` as null for a
+viewer who does not curate, the rest unchanged. The
 rules:
 
 - **A value's count is what the list would hold with that value as the only

@@ -60,8 +60,11 @@ const whereOf = ({
   return { path: audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH };
 };
 
-/** The facets of a filter, the part the panel shows; a coven's adds its three choices. */
-const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
+/**
+ * The facets of a filter, the part the panel shows; a coven's adds its three choices, and the
+ * admin's its Reviewed strip (M14.8).
+ */
+const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: filter.covens ?? [],
   covensNot: filter.covensNot ?? false,
   categories: filter.categories,
@@ -74,6 +77,7 @@ const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
   toxic: filter.toxic ?? '',
   withoutReferences: filter.withoutReferences,
   withoutForms: filter.withoutForms,
+  ...(admin && { reviewed: filter.reviewed ?? '' }),
   ...(coven && {
     source: filter.source ?? '',
     inStock: filter.inStock ?? false,
@@ -82,7 +86,7 @@ const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
 });
 
 /** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
-const noFacets = (coven: boolean): FacetPanelFilter => ({
+const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: [],
   covensNot: false,
   categories: [],
@@ -95,6 +99,7 @@ const noFacets = (coven: boolean): FacetPanelFilter => ({
   toxic: '',
   withoutReferences: false,
   withoutForms: false,
+  ...(admin && { reviewed: '' as const }),
   ...(coven && { source: '', inStock: false, lowStockOnly: false }),
 });
 
@@ -134,7 +139,10 @@ const hrefFor = (filter: Held, panel: FacetPanelFilter, query: string, where: Wh
     );
   }
   return compendiumHref(
-    COMPENDIUM_PARAMS.changed({ ...filter, query }, changeOf(panel)),
+    COMPENDIUM_PARAMS.changed(
+      { ...filter, reviewed: filter.reviewed ?? '', query },
+      { ...changeOf(panel), reviewed: panel.reviewed ?? '' },
+    ),
     undefined,
     where.path,
   );
@@ -145,6 +153,7 @@ const heldFilter = (filter: Held, panel: FacetPanelFilter, query: string): Held 
   ...filter,
   query,
   ...changeOf(panel),
+  ...(panel.reviewed !== undefined && { reviewed: panel.reviewed }),
   ...(panel.source !== undefined && {
     source: panel.source,
     inStock: panel.inStock ?? false,
@@ -177,7 +186,7 @@ const PanelFacets = ({
   const { pending } = useListNavigation();
   const where = whereOf({ audience, covenSlug });
   const coven = where.covenSlug !== undefined;
-  const shown = panelOf(filter, coven);
+  const shown = panelOf(filter, coven, audience === 'admin');
   const changed = JSON.stringify(panel) !== JSON.stringify(shown);
   const live = useLiveFacets({
     held: heldFilter(filter, panel, text.trim()),
@@ -202,7 +211,7 @@ const PanelFacets = ({
         if (changed) apply(hrefFor(filter, panel, filter.query, where));
       }}
       onClear={() => {
-        onPanel(noFacets(coven));
+        onPanel(noFacets(coven, audience === 'admin'));
         apply(where.path);
       }}
     />
@@ -224,7 +233,7 @@ const CompendiumListFilterRow = ({
   // The panel as held: the filter shown until something in it is changed, and the filter
   // shown again whenever a new list arrives (Back, Apply, Clear All). The row is not drawn
   // afresh for a facet, so the open panel and the focus in it survive.
-  const shown = panelOf(filter, coven);
+  const shown = panelOf(filter, coven, audience === 'admin');
   const [panel, setPanel] = useState(shown);
   const [seen, setSeen] = useState(JSON.stringify(shown));
   if (seen !== JSON.stringify(shown)) {
@@ -335,6 +344,7 @@ const CompendiumListFilterWithSentence = ({
         filter: {
           ...searched,
           toxic: searched.toxic || null,
+          reviewed: searched.reviewed || null,
           source: searched.source || null,
           inStock: searched.inStock ?? false,
           lowStockOnly: searched.lowStockOnly ?? false,

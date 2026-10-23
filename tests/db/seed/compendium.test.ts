@@ -2,25 +2,49 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
+import { asTouch } from '../../support/db/touch-row';
+import { insertStock } from '../../support/db/insert-stock';
+import { liveFolkNames } from '../../support/db/folk-names';
+import { variantIdOf, variantRowsOf } from '../../support/db/read-variants';
+import { makeWorkspace, workspaceColumns } from '../../support/fixtures';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { seed } from '@/db/seed/index';
 import { seedAstrology } from '@/db/seed/astrology';
 import { seedCategories } from '@/db/seed/categories';
-import { seedCompendium } from '@/db/seed/compendium';
-import { COMPENDIUM } from '@/db/seed/compendium/index';
+import {
+  seedCompendium,
+  seedCompendiumContent,
+  type SeedCompendiumOptions,
+} from '@/db/seed/compendium';
+import { loadCompendium } from '@/db/seed/compendium/load';
+import { entryFilePath } from '@/db/seed/compendium/parse-entry';
+import { emptyReport, hasRefusals } from '@/db/seed/compendium/report';
+import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
+import { REASONS } from '@/db/seed/compendium/update';
+import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { SOURCES, seedSources } from '@/db/seed/sources';
-import { identityOf } from '@/db/seed/standard';
+import { FIXTURE_USERS, identityOf } from '@/db/seed/standard';
 import { citationText } from '@/lib/citation';
 import { entryRecency } from '@/lib/entry-recency';
-import { FIXTURE_SHARD } from './compendium-fixture';
-import type { SeedCompendiumShard } from '@/db/seed/types';
+import { wordsOf } from './compendium-fixture';
+import {
+  FILE_SOURCES,
+  SAMPLEWORT,
+  TESTWORT,
+  fileOf,
+  fixtureFiles,
+  loadedOf,
+  parsed,
+} from './compendium/files-fixture';
+import type { SeedCompendiumEntry } from '@/db/seed/types';
 
 // MB.242: the compendium seed writes each entry whole, once, on the invented
-// fixture shard, against the real tables emptied first. The shape every seed
+// fixture entries, read from files, against the real tables emptied first. The shape every seed
 // shares — stamps, a second run a no-op, nothing resurrected — is
-// index.test.ts's; the guard's rules are compendium-literals.test.ts's.
+// index.test.ts's; the guard's rules are compendium/guard.test.ts's and
+// compendium/guard-files.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -87,7 +111,7 @@ describe('seedCompendium', () => {
   describe('on an empty compendium', () => {
     beforeEach(async () => {
       await seedVocabularies();
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
     });
 
     it('writes each entry keyed by its identity, with its forms picked from the curated rows', async () => {
@@ -114,6 +138,29 @@ describe('seedCompendium', () => {
         { seed_key: 'fixtura exemplaris', form: 'Root', picked: 'root' },
         { seed_key: 'fixtura testalis', form: 'Herb', picked: 'herb' },
         { seed_key: 'fixtura testalis', form: 'Oil', picked: 'oil' },
+      ]);
+    });
+
+    // M14.1: the two flags are the literal's, each its own, and off where the
+    // literal leaves them out.
+    it('flags an entry and a form toxic exactly where the literal says so', async () => {
+      const entries = await sql<{ seed_key: string; toxic: boolean }[]>`
+        select seed_key, toxic from ingredients order by seed_key
+      `;
+      expect(entries).toEqual([
+        { seed_key: 'fixtura exemplaris', toxic: false },
+        { seed_key: 'fixtura testalis', toxic: true },
+      ]);
+
+      const forms = await sql<{ seed_key: string; form: string; toxic: boolean }[]>`
+        select i.seed_key, v.form, v.toxic from ingredient_variants v
+        join ingredients i on i.id = v.ingredient_id
+        order by i.seed_key, v.form
+      `;
+      expect(forms).toEqual([
+        { seed_key: 'fixtura exemplaris', form: 'Root', toxic: false },
+        { seed_key: 'fixtura testalis', form: 'Herb', toxic: false },
+        { seed_key: 'fixtura testalis', form: 'Oil', toxic: true },
       ]);
     });
 
@@ -192,7 +239,7 @@ describe('seedCompendium', () => {
         select seed_key from "references" where title in ('A Fixture Herbal', 'Samplewort')
       `;
       expect(keyed.map((row) => row.seed_key).sort()).toEqual(
-        Object.values(FIXTURE_SHARD.sources).map(citationText).sort(),
+        Object.values(FILE_SOURCES).map(citationText).sort(),
       );
     });
   });
@@ -205,14 +252,18 @@ describe('seedCompendium', () => {
       await countOf('references', `where seed_key = '${citationText(shared).replace(/'/g, "''")}'`),
     ).toBe(1);
 
-    const shard: SeedCompendiumShard = structuredClone(FIXTURE_SHARD);
-    shard.sources['the-shared-work'] = shared;
-    shard.entries[0].references.push({
-      source: 'the-shared-work',
-      locator: 'under "Testwort"',
-      supports: ['description'],
-    });
-    await seedCompendium(db, [shard]);
+    const testwort = fileOf(TESTWORT, (file) =>
+      file.entry.references.push({
+        source: 'the-shared-work',
+        locator: 'under "Testwort"',
+        supports: ['description'],
+        nameBasis: 'stated',
+      }),
+    );
+    await seedCompendium(
+      db,
+      loadedOf([testwort, fileOf(SAMPLEWORT)], { 'the-shared-work': shared }),
+    );
 
     expect(
       await countOf('references', `where seed_key = '${citationText(shared).replace(/'/g, "''")}'`),
@@ -239,7 +290,7 @@ describe('seedCompendium', () => {
 
     it('by its seed key, after an admin renamed and retired it', async () => {
       await seedVocabularies();
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
       const testwort = await ingredientId('fixtura testalis');
       await sql`
         update ingredients set canonical_name = 'Fixtura renamia', slug = 'testwort-fixtura-renamia',
@@ -248,7 +299,7 @@ describe('seedCompendium', () => {
       `;
       const before = await compendiumRows();
 
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
 
       expect(await compendiumRows()).toEqual(before);
     });
@@ -257,7 +308,7 @@ describe('seedCompendium', () => {
       await seedVocabularies();
       await insertAdminEntry('Admin Testwort', 'Fixtura testalis');
 
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
 
       const [admin] = await sql<{ id: string; seed_key: string | null }[]>`
         select id, seed_key from ingredients where identity_key = 'fixtura testalis'
@@ -272,7 +323,7 @@ describe('seedCompendium', () => {
       await seedVocabularies();
       await insertAdminEntry('Testwort', 'Fixtura-testalis');
 
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, fixtureFiles());
 
       expect(await countOf('ingredients', `where seed_key = 'fixtura testalis'`)).toBe(0);
       expect(await countOf('ingredients', `where seed_key = 'fixtura exemplaris'`)).toBe(1);
@@ -284,7 +335,7 @@ describe('seedCompendium', () => {
     await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'oil'`;
     await sql`update deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'hecate'`;
 
-    await seedCompendium(db, [FIXTURE_SHARD]);
+    await seedCompendium(db, fixtureFiles());
 
     const testwort = await ingredientId('fixtura testalis');
     const forms = await sql<
@@ -308,16 +359,15 @@ describe('seedCompendium', () => {
     await seedAstrology(db);
     await seedDeities(db);
 
-    await expect(seedCompendium(db, [FIXTURE_SHARD])).rejects.toThrow();
+    await expect(seedCompendium(db, fixtureFiles())).rejects.toThrow();
 
     expect(await countOf('ingredients')).toBe(0);
   });
 
-  it('refuses a literal that fails its guard before opening a transaction', async () => {
-    const shard = structuredClone(FIXTURE_SHARD);
-    shard.entries[0].references = [];
+  it('refuses a file that fails its guard before opening a transaction', async () => {
+    const unsourced = fileOf(TESTWORT, (file) => (file.entry.references = []));
 
-    await expect(seedCompendium(db, [shard])).rejects.toThrow();
+    await expect(seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)]))).rejects.toThrow();
 
     // Not even the bootstrap user the transaction opens with.
     expect(await countOf('users')).toBe(0);
@@ -332,7 +382,9 @@ describe('seedCompendium', () => {
         >`select identity_key from ingredients where workspace_id is null`
       ).map((row) => row.identity_key),
     );
-    const entries = COMPENDIUM.flatMap((shard) => shard.entries);
+    const entries = loadCompendium()
+      .files.filter((file) => file.status === 'approved')
+      .map((file) => file.entry);
     // Precondition: the two overlap, so a skip by identity is exercised.
     expect(entries.some((entry) => standard.has(identityOf(entry)))).toBe(true);
 
@@ -357,7 +409,7 @@ describe('a freshly seeded compendium (accepted: every entry reads New)', () => 
   it('marks every entry New', async () => {
     await truncateAllTables(sql);
     await seedVocabularies();
-    await seedCompendium(db, [FIXTURE_SHARD]);
+    await seedCompendium(db, fixtureFiles());
 
     const stamps = await sql<{ created_at: Date; updated_at: Date }[]>`
       select created_at, updated_at from ingredients where workspace_id is null and deleted_at is null`;
@@ -367,5 +419,478 @@ describe('a freshly seeded compendium (accepted: every entry reads New)', () => 
     expect(stamps.map((row) => entryRecency(row.created_at, row.updated_at))).toEqual(
       stamps.map(() => 'new'),
     );
+  });
+});
+
+// M14.7: a present entry is updated only when its file says so (`seedUpdate`,
+// the hash of the file as read) and nobody's work on the site stands in the
+// way. Every case seeds the two fixture entries from files, then runs the
+// seed again on an edited copy, and reads the rows back.
+describe('the update path (M14.7)', () => {
+  const PATH = entryFilePath(TESTWORT);
+  const A_ID = FIXTURE_USERS.A.id;
+
+  /** The two entries as the first run read them. */
+  const baseline = (): RenderableEntryFile[] => [fileOf(TESTWORT), fileOf(SAMPLEWORT)];
+
+  /** A copy of `entry`'s file with `edit` applied, marked for update unless `mark` is false. */
+  function edited(
+    entry: SeedCompendiumEntry,
+    edit: (entry: SeedCompendiumEntry) => void,
+    { mark = true, overwrite = false }: { mark?: boolean; overwrite?: boolean } = {},
+  ): RenderableEntryFile {
+    const file = fileOf(entry, (draft) => edit(draft.entry));
+    if (mark) file.seedUpdate = parsed(file).hash;
+    if (overwrite) file.overwriteEditor = true;
+    return file;
+  }
+
+  const run = (files: RenderableEntryFile[], options: SeedCompendiumOptions = {}) =>
+    seedCompendium(db, loadedOf(files), { manifest: null, ...options });
+
+  const reword = (words: number) => (entry: SeedCompendiumEntry) => {
+    entry.description = wordsOf(words);
+  };
+
+  /** Everything the first edit of case 3 changes at once. */
+  function bigEdit(entry: SeedCompendiumEntry): void {
+    entry.description = wordsOf(121);
+    entry.folkNames = ['Proofleaf', 'Newleaf Proof'];
+    entry.categories = [...(entry.categories ?? []), 'Healing'];
+    entry.variants.push({
+      form: 'Root',
+      references: [
+        { source: 'fixture-herbal', locator: 'p. 14', nameBasis: 'stated', supports: ['form'] },
+      ],
+    });
+  }
+
+  async function testwortRow() {
+    const [row] = await sql<
+      {
+        id: string;
+        description: string;
+        seed_content_hash: string | null;
+        updated_by: string;
+        // A string: drizzle(sql) switches this client's timestamp parsing off.
+        updated_at: string;
+        curator_reviewed_at: Date | null;
+        deleted_at: Date | null;
+      }[]
+    >`
+      select id, description, seed_content_hash, updated_by, updated_at, curator_reviewed_at, deleted_at
+      from ingredients where seed_key = ${identityOf(TESTWORT)}`;
+    return row;
+  }
+
+  /** The file's hash, which is what the row stores once the file is read. */
+  const hashOf = (entry: SeedCompendiumEntry, edit: (entry: SeedCompendiumEntry) => void) =>
+    parsed(fileOf(entry, (draft) => edit(draft.entry))).hash;
+
+  let first: Awaited<ReturnType<typeof run>>;
+
+  beforeEach(async () => {
+    await seedVocabularies();
+    first = await run(baseline());
+    await sql`
+      insert into users (id, name, email, created_by, updated_by)
+      values (${A_ID}, 'Fixture Person A', ${`${A_ID}@users.test`}, ${A_ID}, ${A_ID})`;
+  });
+
+  it('stores each file hash on insert, and a second run changes nothing', async () => {
+    expect(first.inserted).toBe(2);
+    const stored = await sql<{ seed_key: string; seed_content_hash: string }[]>`
+      select seed_key, seed_content_hash from ingredients order by seed_key`;
+    expect(stored).toEqual([
+      { seed_key: identityOf(SAMPLEWORT), seed_content_hash: parsed(fileOf(SAMPLEWORT)).hash },
+      { seed_key: identityOf(TESTWORT), seed_content_hash: parsed(fileOf(TESTWORT)).hash },
+    ]);
+    const before = await compendiumRows();
+
+    const second = await run(baseline());
+
+    expect(second).toEqual({ ...emptyReport(), skipped: 2 });
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('reports an edit that is not marked as pending, and writes nothing', async () => {
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, reword(121), { mark: false }), fileOf(SAMPLEWORT)]);
+
+    expect(report.pending).toEqual([PATH]);
+    expect(report.updated).toEqual([]);
+    expect(report.refused).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('reports a mark gone stale, an edit made after marking, as pending', async () => {
+    const before = await compendiumRows();
+    const marked = edited(TESTWORT, reword(121));
+    // The file moved on after the mark was written.
+    marked.entry.description = wordsOf(123);
+    expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
+
+    // Below the guard: seedCompendium refuses a stale mark before it gets here
+    // (the next case), so the pending outcome is the content layer's.
+    const loaded = loadedOf([marked, fileOf(SAMPLEWORT)]);
+    const report = await beginSeedTransaction(db, (tx) =>
+      seedCompendiumContent(tx, loaded, { manifest: null }),
+    );
+
+    expect(report.pending).toEqual([PATH]);
+    expect(report.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('refuses to run at all on a mark gone stale, because the guard fails it', async () => {
+    const before = await compendiumRows();
+    const marked = edited(TESTWORT, reword(121));
+    marked.entry.description = wordsOf(123);
+    expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
+
+    await expect(run([marked, fileOf(SAMPLEWORT)])).rejects.toThrow(/stale seedUpdate/);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('applies a marked edit to the entry and its children, keeping the forms it keeps', async () => {
+    const row = await testwortRow();
+    const herb = await variantIdOf(sql, row.id, 'Herb');
+    const oil = await variantIdOf(sql, row.id, 'Oil');
+
+    const report = await run([edited(TESTWORT, bigEdit), fileOf(SAMPLEWORT)]);
+
+    expect(report.updated).toEqual([PATH]);
+    expect(report.refused).toEqual([]);
+    expect(report.skipped).toBe(1);
+
+    const after = await testwortRow();
+    expect(after.description).toBe(wordsOf(121));
+    expect(after.seed_content_hash).toBe(hashOf(TESTWORT, bigEdit));
+    expect(after.updated_by).toBe(BOOTSTRAP_USER_ID);
+    expect(Date.parse(after.updated_at)).toBeGreaterThan(Date.parse(row.updated_at));
+
+    expect((await liveFolkNames(sql, row.id)).map((name) => name.name)).toEqual([
+      'Newleaf Proof',
+      'Proofleaf',
+    ]);
+    const [gone] = await sql<{ deleted_at: Date | null; deleted_by: string | null }[]>`
+      select deleted_at, deleted_by from ingredient_folk_names
+      where ingredient_id = ${row.id} and name = 'Fixture Herb'`;
+    expect(gone.deleted_at).not.toBeNull();
+    expect(gone.deleted_by).toBe(BOOTSTRAP_USER_ID);
+
+    const categories = await sql<{ category: string }[]>`
+      select c.seed_key as category from ingredient_categories ic
+      join categories c on c.id = ic.category_id
+      where ic.ingredient_id = ${row.id} and ic.variant_id is null order by c.seed_key`;
+    expect(categories.map((c) => c.category)).toEqual(['healing', 'protection', 'warding']);
+
+    const forms = (await variantRowsOf(sql, row.id)).filter((v) => v.deleted_at === null);
+    expect(forms.map((v) => v.form)).toEqual(['Herb', 'Oil', 'Root']);
+    expect(await variantIdOf(sql, row.id, 'Herb')).toBe(herb);
+    expect(await variantIdOf(sql, row.id, 'Oil')).toBe(oil);
+    expect(
+      await countOf(
+        'reference_links',
+        `where ingredient_variant_id = '${await variantIdOf(sql, row.id, 'Root')}' and deleted_at is null`,
+      ),
+    ).toBe(1);
+
+    // What the seed itself soft-deleted is not an editor's work: the next edit lands too.
+    const again = (entry: SeedCompendiumEntry) => {
+      bigEdit(entry);
+      entry.description = wordsOf(122);
+    };
+    const next = await run([edited(TESTWORT, again), fileOf(SAMPLEWORT)]);
+    expect(next.refused).toEqual([]);
+    expect(next.updated).toEqual([PATH]);
+    expect((await testwortRow()).description).toBe(wordsOf(122));
+  });
+
+  it('soft-deletes a form the file no longer lists, when no coven holds it', async () => {
+    const { id } = await testwortRow();
+    const dropOil = (entry: SeedCompendiumEntry) => {
+      entry.variants = entry.variants.filter((variant) => variant.form !== 'Oil');
+    };
+
+    const report = await run([edited(TESTWORT, dropOil), fileOf(SAMPLEWORT)]);
+
+    expect(report.updated).toEqual([PATH]);
+    const rows = await variantRowsOf(sql, id);
+    const oil = rows.find((v) => v.form === 'Oil');
+    expect(oil?.deleted_at).not.toBeNull();
+    expect(oil?.deleted_by).toBe(BOOTSTRAP_USER_ID);
+    expect(rows.find((v) => v.form === 'Herb')?.deleted_at).toBeNull();
+  });
+
+  it('refuses to remove a form a coven holds in stock, until the stock is gone', async () => {
+    const { id } = await testwortRow();
+    const oil = await variantIdOf(sql, id, 'Oil');
+    const [workspace] = await sql<{ id: string }[]>`
+      insert into workspaces ${sql({
+        ...workspaceColumns(makeWorkspace({ name: 'Fixture Lapsed Coven' })),
+        created_by: A_ID,
+        updated_by: A_ID,
+      })} returning id`;
+    const stock = await insertStock(
+      sql,
+      { workspaceId: workspace.id, ingredientId: id, variantId: oil },
+      A_ID,
+    );
+    const dropOil = (entry: SeedCompendiumEntry) => {
+      entry.variants = entry.variants.filter((variant) => variant.form !== 'Oil');
+    };
+    const files = () => [edited(TESTWORT, dropOil), fileOf(SAMPLEWORT)];
+    // Why the refusal could have been something else: the file is marked and
+    // nothing else stands in the way.
+    expect(
+      await countOf('inventory_items', `where variant_id = '${oil}' and deleted_at is null`),
+    ).toBe(1);
+    const before = await compendiumRows();
+
+    const report = await run(files());
+
+    expect(report.refused).toHaveLength(1);
+    expect(report.refused[0]).toMatchObject({ where: PATH, reason: REASONS.formInUse });
+    expect(report.updated).toEqual([]);
+    expect(await variantIdOf(sql, id, 'Oil')).toBe(oil);
+    expect(await compendiumRows()).toEqual(before);
+
+    await sql`update inventory_items set deleted_at = now(), deleted_by = ${A_ID} where id = ${stock}`;
+    const retry = await run(files());
+
+    expect(retry.refused).toEqual([]);
+    expect(retry.updated).toEqual([PATH]);
+    expect((await variantRowsOf(sql, id)).find((v) => v.form === 'Oil')?.deleted_at).not.toBeNull();
+  });
+
+  describe('refuses an entry someone worked on at the site, unless the file says to overwrite', () => {
+    /** Refused with `reason` and nothing written; then the same file with `overwriteEditor` lands. */
+    async function expectRefusedThenOverwritten(reason: string | RegExp): Promise<void> {
+      const before = await compendiumRows();
+
+      const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+      expect(report.refused).toHaveLength(1);
+      expect(report.refused[0].where).toBe(PATH);
+      if (typeof reason === 'string') expect(report.refused[0].reason).toBe(reason);
+      else expect(report.refused[0].reason).toMatch(reason);
+      expect(report.refused[0].differs).toContain('description');
+      expect(hasRefusals(report)).toBe(true);
+      expect(report.updated).toEqual([]);
+      expect(await compendiumRows()).toEqual(before);
+
+      const forced = await run([
+        edited(TESTWORT, reword(121), { overwrite: true }),
+        fileOf(SAMPLEWORT),
+      ]);
+
+      expect(forced.refused).toEqual([]);
+      expect(forced.updated).toEqual([PATH]);
+      expect((await testwortRow()).description).toBe(wordsOf(121));
+    }
+
+    it('a curator-reviewed entry', async () => {
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = ${identityOf(TESTWORT)}`;
+      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+
+      await expectRefusedThenOverwritten(REASONS.reviewed);
+
+      expect((await testwortRow()).curator_reviewed_at).toBeNull();
+    });
+
+    it('an entry a person last changed', async () => {
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
+      });
+      expect((await testwortRow()).updated_by).toBe(A_ID);
+
+      await expectRefusedThenOverwritten(REASONS.edited);
+    });
+
+    it('an entry whose form a person last changed', async () => {
+      const { id } = await testwortRow();
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredient_variants set updated_by = ${A_ID}
+          where ingredient_id = ${id} and form = 'Herb'`;
+      });
+      // The entry row itself is the seed's, so the child is what is refused on.
+      expect((await testwortRow()).updated_by).toBe(BOOTSTRAP_USER_ID);
+
+      await expectRefusedThenOverwritten(`child ${REASONS.edited}: ingredient_variants`);
+    });
+
+    it('an entry whose folk name a person deleted', async () => {
+      const { id } = await testwortRow();
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredient_folk_names set deleted_at = now(), deleted_by = ${A_ID}
+          where ingredient_id = ${id} and name = 'Proofleaf'`;
+      });
+      expect((await testwortRow()).updated_by).toBe(BOOTSTRAP_USER_ID);
+
+      await expectRefusedThenOverwritten(`child ${REASONS.edited}: ingredient_folk_names`);
+    });
+  });
+
+  it('refuses an update when the row has no baseline hash and no manifest names it', async () => {
+    await sql`update ingredients set seed_content_hash = null where seed_key = ${identityOf(TESTWORT)}`;
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.refused).toHaveLength(1);
+    expect(report.refused[0]).toMatchObject({ where: PATH, reason: REASONS.noBaseline });
+    expect(report.refused[0].differs).toContain('description');
+    expect(report.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  describe('adoption of a hash the conversion manifest holds', () => {
+    const manifestOf = () => ({ [identityOf(TESTWORT)]: parsed(fileOf(TESTWORT)).hash });
+
+    async function withoutHash(): Promise<void> {
+      await sql`update ingredients set seed_content_hash = null where seed_key = ${identityOf(TESTWORT)}`;
+    }
+
+    it('takes the manifest hash as the baseline of an untouched row, writing nothing else', async () => {
+      await withoutHash();
+      const before = await testwortRow();
+
+      const report = await run(baseline(), { manifest: manifestOf() });
+
+      expect(report.adopted).toEqual([{ where: PATH, differs: [] }]);
+      expect(report.skipped).toBe(2);
+      expect(report.refused).toEqual([]);
+      const after = await testwortRow();
+      expect(after.seed_content_hash).toBe(manifestOf()[identityOf(TESTWORT)]);
+      expect(after.updated_at).toEqual(before.updated_at);
+      expect(after.updated_by).toBe(before.updated_by);
+    });
+
+    it('adopts and then applies a marked edit in the same run', async () => {
+      await withoutHash();
+
+      const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)], {
+        manifest: manifestOf(),
+      });
+
+      expect(report.adopted).toHaveLength(1);
+      expect(report.adopted[0].where).toBe(PATH);
+      expect(report.adopted[0].differs).toContain('description');
+      expect(report.updated).toEqual([PATH]);
+      const after = await testwortRow();
+      expect(after.description).toBe(wordsOf(121));
+      expect(after.seed_content_hash).toBe(hashOf(TESTWORT, reword(121)));
+    });
+
+    it('does not adopt a row a person has worked on', async () => {
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredients set seed_content_hash = null, updated_by = ${A_ID}
+          where seed_key = ${identityOf(TESTWORT)}`;
+      });
+
+      const report = await run(baseline(), { manifest: manifestOf() });
+
+      expect(report.adopted).toEqual([]);
+      expect(report.refused).toHaveLength(1);
+      expect(report.refused[0]).toMatchObject({ where: PATH, reason: REASONS.noBaseline });
+      expect((await testwortRow()).seed_content_hash).toBeNull();
+    });
+  });
+
+  it('refuses a change of identity, which is the admin screens, even with the overwrite flag', async () => {
+    const rename = (entry: SeedCompendiumEntry) => {
+      entry.name = 'Testwort Proper';
+    };
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, rename, { overwrite: true }), fileOf(SAMPLEWORT)]);
+
+    expect(report.refused).toHaveLength(1);
+    expect(report.refused[0]).toMatchObject({
+      where: entryFilePath({ ...TESTWORT, name: 'Testwort Proper' }),
+      reason: REASONS.identity,
+    });
+    expect(report.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  // M14.8: the seed never sets the curator mark. A row it inserts, and a row it
+  // updates, both come out unreviewed; only a curator's switch marks an entry.
+  const markOf = async () => {
+    const [row] = await sql<{ at: Date | null; by: string | null }[]>`
+      select curator_reviewed_at as at, curator_reviewed_by as by
+      from ingredients where seed_key = ${identityOf(TESTWORT)}`;
+    return row;
+  };
+
+  it('leaves a row it inserted unreviewed', async () => {
+    expect(await markOf()).toEqual({ at: null, by: null });
+  });
+
+  it('leaves a row it updated unreviewed', async () => {
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.updated).toEqual([PATH]);
+    expect((await testwortRow()).description).toBe(wordsOf(121));
+    expect(await markOf()).toEqual({ at: null, by: null });
+  });
+
+  it('refuses to update a marked row, and keeps its mark', async () => {
+    await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+      where seed_key = ${identityOf(TESTWORT)}`;
+    const marked = await markOf();
+    expect(marked.at).not.toBeNull();
+
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.updated).toEqual([]);
+    expect(report.refused).toMatchObject([{ where: PATH, reason: REASONS.reviewed }]);
+    expect(await markOf()).toEqual(marked);
+  });
+
+  it('applies the entries it may and refuses the others, in one report', async () => {
+    await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+      where seed_key = ${identityOf(TESTWORT)}`;
+    const testwort = await testwortRow();
+
+    const report = await run([edited(TESTWORT, reword(121)), edited(SAMPLEWORT, reword(111))]);
+
+    const samplewortPath = entryFilePath(SAMPLEWORT);
+    expect(report.updated).toEqual([samplewortPath]);
+    expect(report.refused.map((r) => ({ where: r.where, reason: r.reason }))).toEqual([
+      { where: PATH, reason: REASONS.reviewed },
+    ]);
+    expect(hasRefusals(report)).toBe(true);
+    const [sample] = await sql<{ description: string }[]>`
+      select description from ingredients where seed_key = ${identityOf(SAMPLEWORT)}`;
+    expect(sample.description).toBe(wordsOf(111));
+    expect((await testwortRow()).description).toBe(testwort.description);
+  });
+
+  it('leaves an entry a curator retired retired, however its file changes', async () => {
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where seed_key = ${identityOf(TESTWORT)}`;
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.retired).toEqual([PATH]);
+    expect(report.refused).toEqual([]);
+    expect(report.updated).toEqual([]);
+    expect((await testwortRow()).deleted_at).not.toBeNull();
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('decides and reports a dry run, then writes nothing', async () => {
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, bigEdit), fileOf(SAMPLEWORT)], { dryRun: true });
+
+    expect(report.updated).toEqual([PATH]);
+    expect(await compendiumRows()).toEqual(before);
+    expect((await testwortRow()).seed_content_hash).toBe(parsed(fileOf(TESTWORT)).hash);
   });
 });

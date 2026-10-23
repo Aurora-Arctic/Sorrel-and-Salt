@@ -416,6 +416,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     { input: WHOLE_INGREDIENT },
   ),
   deleteCompendiumIngredient: write(`mutation { deleteCompendiumIngredient(id: "${NOWHERE}") }`),
+  setCompendiumEntryReviewed: write(
+    `mutation { setCompendiumEntryReviewed(id: "${NOWHERE}", reviewed: true) { id } }`,
+  ),
   createReference: write(
     `mutation { createReference(workspaceId: "${WORKSPACE_W_ID}", input: ${REFERENCE}) { id } }`,
   ),
@@ -492,6 +495,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   createCompendiumIngredient: { governs: 'compendium' },
   updateCompendiumIngredient: { governs: 'compendium' },
   deleteCompendiumIngredient: { governs: 'compendium' },
+  setCompendiumEntryReviewed: { governs: 'compendium' },
   // A null `workspaceId` is the compendium's tier (MB.153); a coven's is the
   // member's, below.
   createReference: {

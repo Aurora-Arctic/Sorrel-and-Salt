@@ -224,8 +224,9 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
   'ingredientId' | 'ingredientVariantId'
 >]['table'];
 
-// The compendium seed (MB.242): the production compendium's entries, sharded,
-// each field traced to a source its citations name.
+// The compendium seed (MB.242): the production compendium's entries, read
+// from the files under `compendium/` (M14.10), each field traced to a source
+// its citations name.
 
 /** A compendium entry's fields a citation may support, by the literal's own names. */
 export type CompendiumEntryField =
@@ -238,6 +239,7 @@ export type CompendiumEntryField =
   | 'zodiacSigns'
   | 'colors'
   | 'safetyNotes'
+  | 'toxic'
   | 'folkNames'
   | 'deities'
   | 'categories'
@@ -248,6 +250,7 @@ export type CompendiumVariantField =
   | 'form'
   | 'description'
   | 'safetyNotes'
+  | 'toxic'
   | 'elements'
   | 'celestialBodies'
   | 'zodiacSigns'
@@ -256,20 +259,39 @@ export type CompendiumVariantField =
   | 'substitutes';
 
 /**
- * One citation: a source by its handle — a shared work in `WORKS` or one of
- * the shard's own `sources` — where in it, and which fields it backs.
+ * One citation: a source by its handle — a shared work in `WORKS` or
+ * a source file under `compendium/sources/` — where in it, and which fields
+ * it backs.
  */
 export interface SeedCitation<Field extends string> {
   source: string;
   /** `p. 112`, `under "Mugwort"`: required of a book or a chapter. */
   locator?: string;
   supports: readonly Field[];
+  /**
+   * How the source's name was matched to the entry's formal name (M14.4,
+   * "nameBasis"). A file writes it on every citation of an entry with a
+   * formal name (M14.6). Never stored or hashed.
+   */
+  nameBasis?: NameBasis;
+  /** The common name the source heads, when `nameBasis` is `resolved`. */
+  headedAs?: string;
+  /** The registered source that maps `headedAs` to this formal name, when `resolved`. */
+  resolvedBy?: string;
 }
+
+/**
+ * The four answers a citation gives about the formal name: the source prints
+ * it (`stated`), heads a common name an authority maps to it (`resolved`),
+ * leaves doubt (`unresolved`, which blocks `approved`), or was copied from the
+ * TypeScript before the rule existed (`unaudited`, the shrinking legacy list).
+ */
+export type NameBasis = 'stated' | 'resolved' | 'unresolved' | 'unaudited';
 
 /**
  * What may stand in: an entry the seed writes, by its identity — the formal
  * name lower-cased, or the label without one — and optionally one of its
- * forms; or a name typed for an entry a later shard writes.
+ * forms; or a name typed for an entry no file writes yet.
  */
 export type SeedSubstitute = { identity: string; form?: string } | { name: string };
 
@@ -281,6 +303,12 @@ export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert,
       'description' | 'safetyNotes' | 'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
     >
   > & {
+    /**
+     * On when a source says this form is poisonous (M14.1). `true` alone: a
+     * written `false` would claim the form is safe, which needs a source of
+     * its own; left out means not flagged, the column's default.
+     */
+    toxic?: true;
     categories?: string[];
     substitutes?: SeedSubstitute[];
     references: SeedCitation<CompendiumVariantField>[];
@@ -303,6 +331,12 @@ export type SeedCompendiumEntry = Pick<
   | 'colors'
   | 'safetyNotes'
 > & {
+  /**
+   * On when a source says any part of the plant is poisonous (M14.1); its
+   * own flag, never read into a form or out of one (DESIGN.md §5, "The toxic
+   * flag is the one exception"). `true` alone, as on a form.
+   */
+  toxic?: true;
   folkNames?: string[];
   deities?: string[];
   categories?: string[];
@@ -311,9 +345,94 @@ export type SeedCompendiumEntry = Pick<
   variants: SeedCompendiumVariant[];
 };
 
-/** One shard: its entries and the per-entry pages they cite, by handle. */
+/**
+ * Where an entry file stands (M14.4): `approved` is what the seed writes,
+ * `needs-review` the owner's queue, `draft` unfinished and refused on the
+ * release branches. Never stored or hashed.
+ */
+export type CompendiumFileStatus = 'draft' | 'needs-review' | 'approved';
+
+/** The two trailing sections an entry file may end with, neither hashed nor seeded. */
+export interface CompendiumFileSections {
+  /** `#### Questions for the Curator`: the doubt a `needs-review` file asks the owner to settle. */
+  questions?: string;
+  /** `#### Edit Notes for Claude`: the owner's instructions for the next edit. */
+  editNotes?: string;
+}
+
+/**
+ * One entry file as the loader read it (M14.6): the entry the seed writes,
+ * and what the file says about it that the seed does not store.
+ */
+export interface SeedCompendiumFile {
+  /** Relative to the compendium root: `ingredients/botanical/aspen-populus-tremuloides.md`. */
+  path: string;
+  status: CompendiumFileStatus;
+  /** The hash the owner marked for update, when the file carries one (M14.7). */
+  seedUpdate?: string;
+  /** Only beside `seedUpdate`: the update may overwrite an editor's or curator's work. */
+  overwriteEditor?: true;
+  entry: SeedCompendiumEntry;
+  /** `contentHash(entry)`, as the file stands. */
+  hash: string;
+  sections: CompendiumFileSections;
+}
+
+/**
+ * A named list of entries and the per-entry pages they cite, by handle: the
+ * shape the guard's content rules take. The loader builds one, `compendium`,
+ * from the files; the TypeScript shards it was named for are gone (M14.10).
+ */
 export interface SeedCompendiumShard {
   name: string;
   sources: Record<string, CitationFields>;
   entries: SeedCompendiumEntry[];
+}
+
+/** One of the audit's three ways a citation becomes a candidate (M14.11). */
+export type AuditHeuristic = 'collision' | 'hatnote' | 'no-binomial';
+
+/**
+ * A citation the attribution audit (M14.11) doubts: one source cited under
+ * one heading on one file, wherever on the entry it is cited (the entry, a
+ * variant, or both), since one answer settles them all.
+ */
+export interface AuditCandidate {
+  /** The file, relative to the compendium root. */
+  path: string;
+  /** The entry's formal name, which the source must print or resolve to. */
+  canonicalName: string;
+  source: string;
+  /** The heading the source is cited under, from the locator or the source's title; absent only when neither gives one. */
+  headedAs?: string;
+  /** Where on the entry it is cited: `entry`, or a variant's form. */
+  citedOn: string[];
+  /** Which heuristics marked it, in a fixed order. */
+  heuristics: AuditHeuristic[];
+  /** The other formal names the heading may mean, from the corpus and the hatnotes. */
+  candidates: string[];
+  /** One plain line per heuristic, saying what it found. */
+  evidence: string[];
+  /** The rank: higher is likelier another taxon's citation. */
+  score: number;
+}
+
+/** A citation of a Wikipedia article whose taxobox names the entry's formal name: `stated`, for a lane to write (M14.11). */
+export interface AuditStated {
+  path: string;
+  source: string;
+  citedOn: string[];
+  /** The taxon the article's `{{Speciesbox}}` or `{{Automatic taxobox}}` names. */
+  taxon: string;
+}
+
+/** The audit's findings over a corpus (M14.11). */
+export interface AuditReport {
+  /** How many files with a formal name were read. */
+  files: number;
+  /** How many citations were checked: those not yet `stated` or `resolved`. */
+  citations: number;
+  /** Ranked, highest score first. */
+  candidates: AuditCandidate[];
+  stated: AuditStated[];
 }

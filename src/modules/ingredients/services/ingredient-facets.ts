@@ -8,8 +8,8 @@ import {
 import { cachedCompendiumRead } from '../../../lib/compendium-cache';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
+import { compendiumFilterFor, seesReview } from './compendium-filter';
 import {
-  CompendiumFilter,
   type CompendiumFilterInput,
   WorkspaceIngredientFilter,
   type WorkspaceIngredientFilterInput,
@@ -28,14 +28,23 @@ const cachedFacets = cachedCompendiumRead('compendium-facets', findCompendiumFac
  * chosen one, most entries first and then by value; every live zodiac sign
  * and celestial body by name, every element and both toxic settings, zeros
  * included; and how many entries cite no live reference, the No Refs
- * switch's count, the same with the switch on or off. Takes no session: the compendium is the public surface (MB.80).
+ * switch's count, the same with the switch on or off. Needs no session: the compendium is the public surface (MB.80).
  * Parsed as `listCompendium` parses, so it counts the rows that list holds.
+ * The Reviewed counts (M14.8) are a curator's alone: `viewer` must curate to
+ * set the filter, and for anyone else the counts are not read at all and the
+ * answer is null.
  *
+ * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the
  * toxic setting is not one of `TOXIC_FILTERS`.
  */
-export async function compendiumFacets(filter: CompendiumFilterInput): Promise<CompendiumFacets> {
-  return cachedFacets(parseInput(CompendiumFilter, filter));
+export async function compendiumFacets(
+  filter: CompendiumFilterInput,
+  viewer: Session | null = null,
+): Promise<CompendiumFacets> {
+  // The Reviewed counts are read only for a viewer who sees them (M14.8); the
+  // flag is part of the cache key, so the two answers are held apart.
+  return cachedFacets(compendiumFilterFor(filter, viewer), seesReview(viewer));
 }
 
 /**

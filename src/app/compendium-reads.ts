@@ -41,7 +41,9 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 // (`/admin/compendium`, M5.5) and the public cards (`/compendium`, M8.18).
 // Each is a service read with no session, held in the data cache under the
 // `compendium` tag by the service, and wrapped in React's `cache` here so a
-// second call in one request reads once.
+// second call in one request reads once. The list and its counts take the viewer
+// only for the review filter (M14.8), which the service lets a curator alone ask
+// for: the admin page passes its session, the public page none.
 
 // The page and GraphQL's `compendium` end at the same service, paged by the
 // same helper (CLAUDE.md rule 1, rule 8); the writes are the modal's, through
@@ -56,14 +58,15 @@ export const readCompendium = cache(
     before: string | undefined,
     // The admin table pages by the default; the public cards by `CARD_PAGE_SIZE`.
     size: number = DEFAULT_PAGE_SIZE,
+    viewer: Session | null = null,
   ) => {
     // Written by this page from the table a few lines below, and checked again by the service.
     const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
     // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
     const page = await readNumberedPage(
       { after, before },
-      (request) => listCompendium(filter, request),
-      (start) => countCompendium(filter, start),
+      (request) => listCompendium(filter, request, viewer),
+      (start) => countCompendium(filter, start, viewer),
       size,
     );
     return withForms(page);
@@ -240,9 +243,9 @@ export const readCategories = cache(async (): Promise<CompendiumCategoryChoice[]
 // address holds it: public, like the list, and keyed by the same JSON
 // of variables so a second render in the request reads once. The service
 // holds it in the data cache under the `compendium` tag.
-export const readFacets = cache(async (variables: string) => {
+export const readFacets = cache(async (variables: string, viewer: Session | null = null) => {
   const filter: Parameters<typeof compendiumFacets>[0] = JSON.parse(variables);
-  return compendiumFacets(filter);
+  return compendiumFacets(filter, viewer);
 });
 
 /**

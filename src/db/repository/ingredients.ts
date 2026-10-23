@@ -4,6 +4,7 @@ import {
   eq,
   gt,
   inArray,
+  isNotNull,
   isNull,
   lte,
   ne,
@@ -33,6 +34,7 @@ import {
   ingredientForms,
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
+import type { Curator } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import {
   findPageCountInScopeIncludingSoftDeleted,
@@ -55,11 +57,13 @@ import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
 import { curated, inLiveGroup } from './vocabularies';
 import type {
+  CompendiumReviewRow,
   CompendiumScore,
   CupboardEntryRow,
   IngredientFilter,
   IngredientIdentity,
   IngredientRow,
+  ReadRow,
   IngredientScoped,
   JoinedRow,
   ListColumns,
@@ -93,7 +97,7 @@ export function findManyOfIngredients<
   table: TTable,
   ingredientIds: readonly string[],
   heldBy?: Membership,
-): Promise<TTable['$inferSelect'][]> {
+): Promise<ReadRow<TTable>[]> {
   if (ingredientIds.length === 0) return Promise.resolve([]);
   return selectFrom(
     table,
@@ -145,7 +149,7 @@ export function findManyOfVariants<
   table: TTable,
   variantIds: readonly string[],
   heldBy?: Membership,
-): Promise<TTable['$inferSelect'][]> {
+): Promise<ReadRow<TTable>[]> {
   if (variantIds.length === 0) return Promise.resolve([]);
   return selectFrom(
     table,
@@ -582,6 +586,34 @@ export function findOneIngredient(
 }
 
 /**
+ * A live compendium entry's review mark, for a curator (M14.8): when it was
+ * last marked reviewed, `null` once cleared; `undefined` when `id` names no
+ * live compendium entry, a coven's own included. The one read of the mark,
+ * which every other finder leaves off the row (`unread-columns.ts`). The time
+ * is read as epoch milliseconds: a column inside an aggregate loses Drizzle's
+ * date mapping, and a Date holds no finer than that anyway.
+ */
+export async function findCompendiumReview(
+  _curator: Curator,
+  id: string,
+): Promise<CompendiumReviewRow | undefined> {
+  const [row] = await selectFrom(
+    ingredients,
+    and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.id, id)),
+    {
+      aggregate: {
+        reviewedAt: sql<
+          number | null
+        >`(extract(epoch from ${ingredients.curatorReviewedAt}) * 1000)::float8`,
+      },
+      over: {},
+    },
+  );
+  if (!row) return undefined;
+  return { reviewedAt: row.reviewedAt === null ? null : new Date(Number(row.reviewedAt)) };
+}
+
+/**
  * The live ingredients among these ids, in the compendium or in a coven one of
  * `memberships` proves, in no particular order — a loader's batch read, as
  * `findOneIngredient` is the single one. An id in a coven with no proof, or
@@ -667,6 +699,7 @@ export function compendiumList(
       filter.withoutReferences ? citesNowhere() : undefined,
       filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
+      reviewArm(filter.reviewed),
       filter.heldIn?.length ? heldInAnyOf(filter.heldIn) : undefined,
       filter.notHeldIn?.length ? heldInNoneOf(filter.notHeldIn) : undefined,
     ),
@@ -1058,6 +1091,18 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
     ),
   ) as SQL;
   return toxic === 'toxic' ? flagged : not(flagged);
+}
+
+/**
+ * A curator's review mark (M14.8): true keeps the entries holding one, false
+ * the ones without. Read off `curator_reviewed_at`, which a CHECK keeps set
+ * exactly when `curator_reviewed_by` is. Absent means any.
+ */
+export function reviewArm(reviewed: IngredientFilter['reviewed']): SQL | undefined {
+  if (reviewed === undefined) return undefined;
+  return reviewed
+    ? isNotNull(ingredients.curatorReviewedAt)
+    : isNull(ingredients.curatorReviewedAt);
 }
 
 /**

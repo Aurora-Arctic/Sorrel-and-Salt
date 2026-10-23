@@ -227,3 +227,47 @@ it('EntryMarks no longer draws New or Updated: the marker is its own component',
   expect(screen.queryByText('New', { exact: true })).toBeNull();
   expect(screen.queryByText('Updated', { exact: true })).toBeNull();
 });
+
+// The curators' review mark (M14.8), shown to everyone (the owner's call, 2026-10-23): the
+// date for a reviewed entry, Needs Review for one not; never who reviewed it, which the
+// component is not given. A coven's own entry has none; nobody reviews those.
+describe('the review mark', () => {
+  const AT = '2026-10-01T09:30:00.000Z';
+  const reviewed = () => screen.queryByText(/Reviewed By Curator/);
+  const needsReview = () => screen.queryByText('Needs Review', { exact: true });
+
+  it('says a reviewed compendium entry is, and on what day', () => {
+    render(<EntryMarks kind="compendium" reviewedAt={AT} />);
+
+    expect(reviewed()?.querySelector('time')).toHaveAttribute('datetime', AT);
+    expect(needsReview()).toBeNull();
+  });
+
+  it('says an unreviewed compendium entry needs review', () => {
+    render(<EntryMarks kind="compendium" reviewedAt={null} />);
+
+    expect(needsReview()).toBeInTheDocument();
+    expect(reviewed()).toBeNull();
+  });
+
+  it('is drawn on an entry a cupboard holds, beside Compendium', () => {
+    render(<EntryMarks kind="cupboard" reviewedAt={AT} />);
+
+    expect(reviewed()).toBeInTheDocument();
+    expect(held()).toBeInTheDocument();
+  });
+
+  it("is never drawn on a coven's own entry, even handed a date", () => {
+    render(<EntryMarks kind="own" reviewedAt={AT} />);
+
+    expect(local()).toBeInTheDocument();
+    expect(reviewed()).toBeNull();
+    expect(needsReview()).toBeNull();
+  });
+
+  it('is left out when the caller does not say', () => {
+    render(<EntryMarks kind="compendium" />);
+
+    expect(statuses()).toHaveLength(0);
+  });
+});

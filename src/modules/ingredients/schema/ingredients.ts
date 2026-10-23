@@ -6,11 +6,12 @@ import {
   pgEnum,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
-import { auditColumns } from '../../identity/schema/users';
+import { auditColumns, users } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { idColumn, liveUnique, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
 
@@ -92,6 +93,18 @@ export const ingredients = pgTable(
     // own, so this is the one property the union rule does not cover
     // (DESIGN.md §5, "The toxic flag is the one exception").
     toxic: boolean('toxic').notNull().default(false),
+    // The sha256 of the seeded fields of the markdown file this compendium
+    // entry was last written from (M14.5), so the seed can tell a changed file
+    // from an unchanged one and apply a correction (M14.7). Null until the seed
+    // writes it, and always on a coven's own entry. Not a stamp: the trigger
+    // leaves `updated_at` alone when only this changes (migration 0081).
+    seedContentHash: text('seed_content_hash'),
+    // When a curator last reviewed the entry and who (M14.5), both set or both
+    // null; a reviewed entry is one the seed never overwrites (M14.7). Written
+    // by M14.8's service alone. Like the hash, never a change to the content,
+    // so the trigger ignores both.
+    curatorReviewedAt: timestamp('curator_reviewed_at', { withTimezone: true }),
+    curatorReviewedBy: uuid('curator_reviewed_by').references(() => users.id),
     // Substitutes are the child table `ingredient_substitutes`, not the
     // `substitutes text[]` MB.141 dropped: a list of text cannot hold a link
     // (MB.138). Deities are `ingredient_deities` for the same reason: MB.167
@@ -116,6 +129,19 @@ export const ingredients = pgTable(
     check(
       'ingredients_canonical_name_not_blank',
       sql`canonical_name is null or btrim(canonical_name) <> ''`,
+    ),
+    // A hash is 64 lower-case hex characters or nothing (M14.5): a truncated
+    // or upper-cased one would never equal a file's and would queue a
+    // correction forever.
+    check(
+      'ingredients_seed_content_hash_is_sha256',
+      sql`seed_content_hash is null or seed_content_hash ~ '^[0-9a-f]{64}$'`,
+    ),
+    // A review mark is a time and a person together: one without the other
+    // says nothing a reader can trust.
+    check(
+      'ingredients_curator_review_both_or_neither',
+      sql`(curator_reviewed_at is null) = (curator_reviewed_by is null)`,
     ),
 
     // The formal name once per tier, whatever the form (MB.216): two forms of

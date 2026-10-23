@@ -108,7 +108,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - **Every slug comes from `src/lib/slugify.ts`** (M4.3), derived from the name and never written down beside it.
 - **Components and styling** follow `.claude/rules/components.md`: no styling past the tokens before the section's design review.
 - **Gitflow:** `feature/*` → `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` and `main-sync/*` as DESIGN.md §12 sets out; staging is protected like main.
-- **Document as you go** in `claude-docs/`, correcting a doc in the PR that makes it wrong (MB.31); `claude-docs/archive/` is frozen and never read. When a doc and the code disagree, establish which is wrong first.
+- **Document as you go** in `claude-docs/`, correcting a doc in the PR that makes it wrong (MB.31); `claude-docs/archive/` is frozen and never read, bar MB.249's one-off count of `compendium-seed-shards/` (`tasks/mb.md`). When a doc and the code disagree, establish which is wrong first.
 - **Write plainly, for developers of every level of experience** — in replies, docs, PR bodies and comments: say what a thing does before naming it, spell a term out on first use, and prefer the everyday word. Long form: `.claude/rules/writing.md`.
 - **A comment says what this is and why it is not the obvious alternative; the argument lives in `claude-docs/`** (MB.50). Never cut a fact the reader cannot recover, or a comment a tool reads (claude-docs/README.md, "Comments in code").
 - **Flag an architecture decision that costs more than it buys** — do not route around it, and do not change it unasked. Put it to the user with the code it made harder and the change you recommend, and keep to the rules meanwhile. An accepted change corrects `DESIGN.md` or this file and is recorded in `claude-docs/design-decisions/<id>-<slug>.md` in that task's PR.
@@ -136,7 +136,7 @@ Long form: claude-docs/token-efficiency.md.
 
 ## Out of scope for v1
 
-Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175), and linking a coven's own ingredient to the compendium: the Link dialog, This Is It, and splitting an entry across compendium entries (§13). A coven annotates a compendium entry or makes it its own, and that is the only direction in v1.
+Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175), physical uses (§13; M14.2), and linking a coven's own ingredient to the compendium: the Link dialog, This Is It, and splitting an entry across compendium entries (§13). A coven annotates a compendium entry or makes it its own, and that is the only direction in v1.
 
 Story numbers 35–46 are **not reused** — v1 is 52 stories, numbered 1–34 and 47–64.
 

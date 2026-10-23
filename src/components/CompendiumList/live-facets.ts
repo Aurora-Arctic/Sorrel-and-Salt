@@ -15,8 +15,7 @@ import type {
   CompendiumCategoryChoice,
   CompendiumFacetCounts,
   CompendiumFacetVocabulary,
-  CompendiumListFilter,
-  CovenListFilter,
+  CompendiumListFilterProps,
 } from './types';
 
 // The counts the open filter panel keeps current (M12.4). Changes in the panel are held, not
@@ -39,6 +38,7 @@ const CompendiumFacetCountsDocument = graphql(`
     $zodiacSigns: [String!]
     $celestialBodies: [String!]
     $toxic: ToxicFilter
+    $reviewed: Boolean
     $covenIds: [ID!]
     $covensNot: Boolean
   ) {
@@ -54,6 +54,7 @@ const CompendiumFacetCountsDocument = graphql(`
       zodiacSigns: $zodiacSigns
       celestialBodies: $celestialBodies
       toxic: $toxic
+      reviewed: $reviewed
       covenIds: $covenIds
       covensNot: $covensNot
     ) {
@@ -87,6 +88,10 @@ const CompendiumFacetCountsDocument = graphql(`
       }
       withoutReferences
       withoutForms
+      reviewed {
+        value
+        count
+      }
     }
   }
 `);
@@ -174,8 +179,7 @@ export function useLiveFacets({
   vocabulary,
   workspaceId,
 }: {
-  held: CompendiumListFilter &
-    Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
+  held: CompendiumListFilterProps['filter'];
   enabled: boolean;
   categories: readonly CompendiumCategoryChoice[];
   vocabulary: CompendiumFacetVocabulary;
@@ -188,7 +192,7 @@ export function useLiveFacets({
   };
   const variables = JSON.stringify(
     workspaceId === undefined
-      ? COMPENDIUM_PARAMS.variables(held, lookups)
+      ? COMPENDIUM_PARAMS.variables({ reviewed: '', ...held }, lookups)
       : {
           // The coven table needs the three choices only a coven has; a panel that left them out holds none.
           ...COVEN_PARAMS.variables(
@@ -234,7 +238,13 @@ export function useLiveFacets({
     }
     if (compendium.data) {
       const answer = compendium.data.compendiumFacets;
-      return compendiumFacetCounts({ ...answer, toxic: settings(answer.toxic) }, idsOf);
+      // The review counts come back keyed by the filter's own Boolean; null for anyone who does not curate.
+      const reviewed =
+        answer.reviewed?.map(({ value, count }) => ({
+          value: value ? ('reviewed' as const) : ('needs_review' as const),
+          count,
+        })) ?? null;
+      return compendiumFacetCounts({ ...answer, toxic: settings(answer.toxic), reviewed }, idsOf);
     }
     return undefined;
   }, [coven.data, compendium.data, vocabulary, categories]);

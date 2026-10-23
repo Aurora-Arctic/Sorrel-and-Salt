@@ -1,16 +1,4 @@
-import {
-  and,
-  asc,
-  count,
-  desc,
-  exists,
-  getTableColumns,
-  gt,
-  is,
-  lt,
-  sql,
-  type SQL,
-} from 'drizzle-orm';
+import { and, asc, count, desc, exists, gt, is, lt, sql, type SQL } from 'drizzle-orm';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
@@ -18,6 +6,7 @@ import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageCount, PageEntry } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
+import { hidesColumns, readColumns } from './unread-columns';
 import type {
   Aggregate,
   Derived,
@@ -30,6 +19,7 @@ import type {
   Similarity,
   SortColumn,
   SortPart,
+  ReadRow,
 } from './types';
 
 /**
@@ -63,17 +53,17 @@ type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
-): Promise<TTable['$inferSelect'][]>;
+): Promise<ReadRow<TTable>[]>;
 export function selectFrom<TTable extends PgTable, Carried extends object>(
   table: TTable,
   where: SQL | undefined,
   keyset: Keyset<Carried>,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]>;
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]>;
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
   similarity: Similarity,
-): Promise<TTable['$inferSelect'][]>;
+): Promise<ReadRow<TTable>[]>;
 export function selectFrom<TRow extends Record<string, unknown>>(
   derived: Derived<TRow>,
   where: SQL | undefined,
@@ -88,12 +78,12 @@ export function selectFrom<TTable extends PgTable, TJoined extends PgTable>(
   table: TTable,
   where: SQL | undefined,
   join: LeftJoin<TJoined>,
-): Promise<JoinedRow<TTable['$inferSelect'], TJoined['$inferSelect']>[]>;
+): Promise<JoinedRow<ReadRow<TTable>, ReadRow<TJoined>>[]>;
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
   locked: Locked,
-): Promise<TTable['$inferSelect'][]>;
+): Promise<ReadRow<TTable>[]>;
 export function selectFrom<TTable extends PgTable, TRow extends Record<string, unknown>>(
   table: TTable,
   where: SQL | undefined,
@@ -120,7 +110,8 @@ export async function selectFrom(
   // microseconds, and a cursor built from it would replay rows. A count reads
   // its two numbers instead, a tally its aggregates, and a left join both
   // rows, which Drizzle reads as null where every joined column is. A derived
-  // relation names its own columns.
+  // relation names its own columns. A table with a column no finder reads
+  // (`unread-columns.ts`) is read by name, without it.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,
@@ -131,7 +122,7 @@ export async function selectFrom(
             : keyset
               ? {
                   ...carried(keyset.carry),
-                  row: getTableColumns(relation),
+                  row: readColumns(relation),
                   key: sql<string[]>`array[${sql.join(
                     keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
                     sql`, `,
@@ -140,12 +131,13 @@ export async function selectFrom(
                   // the row: a table keyed on a pair breaks ties on one of its
                   // columns, not on an `id` it does not have.
                   keyId: sql<string>`cast(${keyset.id} as text)`,
-                  ...(keyset.leftJoined && { joined: getTableColumns(keyset.leftJoined.leftJoin) }),
+                  ...(keyset.leftJoined && { joined: readColumns(keyset.leftJoined.leftJoin) }),
                 }
-              : joined && {
-                  row: getTableColumns(relation),
-                  joined: getTableColumns(joined.leftJoin),
-                },
+              : joined
+                ? { row: readColumns(relation), joined: readColumns(joined.leftJoin) }
+                : hidesColumns(relation)
+                  ? readColumns(relation)
+                  : undefined,
       ]
     : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
@@ -230,7 +222,7 @@ export async function selectFrom(
 export async function selectOne<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
-): Promise<TTable['$inferSelect'] | undefined> {
+): Promise<ReadRow<TTable> | undefined> {
   const [row] = await selectFrom(table, where);
   return row;
 }

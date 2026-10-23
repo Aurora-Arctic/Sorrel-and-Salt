@@ -218,6 +218,13 @@ address cannot reject it the way `listParam` rejects a word outside its set.
 | `zodiac`            | text list              | `zodiacSigns`       | Sign names                                 |
 | `planets`           | text list              | `celestialBodies`   | Celestial body names                       |
 | `toxic`             | `toxic` or `not_toxic` | `toxic`             | Absent is any                              |
+| `reviewed`          | `1` or `0`             | `reviewed`          | Admin list only (M14.8); see below         |
+
+`reviewed` (M14.8) reads `1` as `'reviewed'` and `0` as `'needs_review'`, and
+anything else as no filter; the query sends `true` or `false`. Only a curator or
+an admin may send it, and the service refuses anyone else. So the coven's table,
+`COVEN_PARAMS` in `coven-params.ts`, is the compendium's with `reviewed`
+taken out, and the public page strips `?reviewed=` before it reads.
 
 There is no `nomenclature` entry: the compendium search no longer filters by
 classification. The GraphQL query and the service still accept the argument,
@@ -307,7 +314,7 @@ true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`)
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
 swaps the pair), then one clause per kind, always in this order whatever order
 the address holds them: text query, the viewer’s covens (the public compendium only, M12.55), categories, forms, deities, zodiac, celestial bodies,
-elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
+elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature, No Refs, No Form and Reviewed. Clauses are
 separated by a comma. An example with every kind:
 
 > 3 ingredients, matching rue, in the protection and healing categories, in the
@@ -341,6 +348,9 @@ separated by a comma. An example with every kind:
   them as plain text, so they remove nothing; a filter is removed in the panel. The coven's list passes `noun` as it likes.
 - **Nomenclature, No Refs and No Form** ("without forms") are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
+- **Reviewed** (M14.8) is named only when `admin` is true, the same way: `reviewed`
+  says "reviewed by a curator" and `needs_review` says "needing review". Its
+  fragment carries the facet `reviewed` with that setting as its `value`.
 - **A value with no label** is named by its raw value, so a stale link still reads.
   Blank values and empty lists are not chosen.
 

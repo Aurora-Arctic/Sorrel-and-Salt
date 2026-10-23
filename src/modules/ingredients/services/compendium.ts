@@ -5,6 +5,7 @@ import {
   findCompendiumEntryByIdentity,
   findCompendiumEntryBySlug,
   findCompendiumPage,
+  findCompendiumReview,
   findCompendiumSlugRedirect,
   countCovensUsing,
   findOneIngredient,
@@ -17,11 +18,12 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
+import { compendiumFilterFor } from './compendium-filter';
 import { heldCompendiumEntry } from './cupboard-entries';
 import { ingredientDetailOf } from './ingredient-detail';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
-import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
+import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
@@ -34,7 +36,7 @@ import {
   writeChildren,
 } from './ingredient-rows';
 import { readersOf } from '@/modules/coven';
-import { assertCurator } from '@/modules/identity';
+import { type Curator, assertCurator } from '@/modules/identity';
 import {
   type CuratedField,
   curatedSpellings,
@@ -51,6 +53,7 @@ import type {
 } from '../../../lib/types';
 import type {
   CompendiumAddress,
+  CompendiumReview,
   CompendiumEntryPage,
   CompendiumWrite,
   DeityRecord,
@@ -79,29 +82,37 @@ const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount
  * malformed id would come back as "Invalid cursor". A query shorter than
  * `MIN_QUERY_LENGTH` is no search.
  *
+ * `viewer` is needed only for the Reviewed setting (M14.8), which a curator
+ * alone may set; the rest of the list takes no session.
+ *
+ * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the
  * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function listCompendium(
   filter: CompendiumFilterInput,
   page: PageRequest,
+  viewer: Session | null = null,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  return cachedPage(parseInput(CompendiumFilter, filter), page);
+  return cachedPage(compendiumFilterFor(filter, viewer), page);
 }
 
 /**
  * How many entries the compendium holds under `filter`, and how many come
  * before `start` — a page's first row, none on an empty page. Parsed as
- * `listCompendium` parses, so it counts the rows that list's pages hold.
+ * `listCompendium` parses, so it counts the rows that list's pages hold, and
+ * refused the Reviewed setting as it refuses it.
  *
+ * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the
  * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function countCompendium(
   filter: CompendiumFilterInput,
   start: Cursor | undefined,
+  viewer: Session | null = null,
 ): Promise<PageCount> {
-  return cachedCount(parseInput(CompendiumFilter, filter), start);
+  return cachedCount(compendiumFilterFor(filter, viewer), start);
 }
 
 /**
@@ -301,6 +312,56 @@ export async function promoteCompendiumFolkName(
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
   return written;
+}
+
+/**
+ * Marks a compendium entry reviewed by this curator, or clears the mark, so it
+ * needs review again (M14.8). This is the only function that writes the mark
+ * (the owner, 2026-10-23): creating, editing or promoting leaves it as it was.
+ * Marking an entry already reviewed keeps its original date and reviewer. The
+ * seed never overwrites a reviewed entry
+ * (claude-docs/db/compendium-seed/README.md). The mark is the only change: the
+ * `set_updated_at` trigger leaves `updated_at` and `updated_by` as they were
+ * (M14.5), so the entry is not shown as Updated.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} no live compendium entry has this id — a coven's
+ * ingredient, one deleted and an id that is not one included.
+ */
+export async function setCompendiumEntryReviewed(
+  session: Session,
+  id: string,
+  reviewed: boolean,
+): Promise<IngredientRow> {
+  const curator = assertCurator(session);
+  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const written = await withAudit(session, async (write) => {
+    const [row] = await write.setReviewInCompendium(curator, id, reviewed);
+    if (!row) throw new NotFound('No such compendium entry');
+    return row;
+  });
+  expireCompendium();
+  return written;
+}
+
+/**
+ * When a curator last marked a compendium entry reviewed, `null` while it
+ * needs review: the admin's own read of the mark, which every compendium read
+ * leaves out (M14.8). Uncached, since the compendium's cached reads are the
+ * public ones; the reviewer is not read at all.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} no live compendium entry has this id — a coven's
+ * ingredient and an id that is not one included.
+ */
+export async function readCompendiumReview(
+  session: Session,
+  id: string,
+): Promise<CompendiumReview | null> {
+  const curator = assertCurator(session);
+  const found = RowId.safeParse(id).success ? await findCompendiumReview(curator, id) : undefined;
+  if (!found) throw new NotFound('No such compendium entry');
+  return found.reviewedAt ? { reviewedAt: found.reviewedAt } : null;
 }
 
 /**

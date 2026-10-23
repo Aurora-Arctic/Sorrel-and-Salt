@@ -9,10 +9,13 @@ const PATH = '/coven/test-coven/ingredients';
 const BLANK = COVEN_PARAMS.read({});
 
 describe('the coven parameter table', () => {
-  it('keeps every compendium entry as it was', () => {
-    for (const [key, entry] of Object.entries(COMPENDIUM_PARAMS.entries)) {
-      expect(COVEN_PARAMS.entries[key as keyof typeof COMPENDIUM_PARAMS.entries]).toBe(entry);
+  it('keeps every compendium entry as it was, bar Reviewed, which is the curators alone', () => {
+    const { reviewed: _reviewed, ...shared } = COMPENDIUM_PARAMS.entries;
+    for (const [key, entry] of Object.entries(shared)) {
+      expect(COVEN_PARAMS.entries[key as keyof typeof shared]).toBe(entry);
     }
+    expect(Object.keys(COVEN_PARAMS.entries)).not.toContain('reviewed');
+    expect(COVEN_PARAMS.read({ reviewed: '1' })).toEqual(BLANK);
   });
 
   it('leaves the compendium table without the coven filters', () => {

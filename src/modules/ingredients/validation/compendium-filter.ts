@@ -94,6 +94,13 @@ export const CompendiumFilter = z.object({
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
+  // A curator's review mark (M14.8): true keeps the reviewed entries, false the
+  // ones needing review; null or missing is no filter. The service refuses it
+  // without a curator's session, so the coven list never picks it.
+  reviewed: z
+    .boolean()
+    .nullish()
+    .transform((reviewed) => reviewed ?? undefined),
   // How the entries are classified; `unknown` is the formal names still to look up (M5.5).
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)

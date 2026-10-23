@@ -4,6 +4,7 @@ import type {
   CompendiumFacets,
   FacetCount,
   IngredientFacets,
+  ReviewFacetValue,
   WorkspaceIngredientFacets,
 } from '../types';
 import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
@@ -156,6 +157,20 @@ export const IngredientFacetsRef = builder
     }),
   });
 
+export const ReviewFacetCountRef = builder
+  .objectRef<FacetCount<ReviewFacetValue>>('ReviewFacetCount')
+  .implement({
+    description: 'A Reviewed setting, and how many entries it would list (M14.8).',
+    fields: (t) => ({
+      value: t.boolean({
+        description:
+          'true for the reviewed entries, false for the ones needing review, as reviewed takes it.',
+        resolve: (count) => count.value === 'reviewed',
+      }),
+      count: t.exposeInt('count', { description: COUNT_DESCRIPTION }),
+    }),
+  });
+
 export const CompendiumFacetsRef = builder
   .objectRef<CompendiumFacets>('CompendiumFacets')
   .implement({
@@ -169,6 +184,13 @@ export const CompendiumFacetsRef = builder
       withoutForms: t.exposeInt('withoutForms', {
         description:
           'How many entries have no live form, under the rest of the filter: the same whether withoutForms is chosen or not.',
+      }),
+      reviewed: t.field({
+        type: [ReviewFacetCountRef],
+        nullable: true,
+        description:
+          'Reviewed, then needing review, under the rest of the filter, reviewed left out. Null to anyone but a curator or an admin: the review mark is theirs alone.',
+        resolve: (facets) => facets.reviewed,
       }),
     }),
   });

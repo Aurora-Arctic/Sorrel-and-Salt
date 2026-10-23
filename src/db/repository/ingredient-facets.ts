@@ -19,6 +19,7 @@ import {
   listHolds,
   pairIsLive,
   stated,
+  reviewArm,
   toxicArm,
   workspaceListScopeIncludingSoftDeleted,
 } from './ingredients';
@@ -32,6 +33,7 @@ import type {
   IngredientFacets,
   IngredientFilter,
   ListColumns,
+  ReviewFacetValue,
   WorkspaceIngredientFacets,
 } from './types';
 
@@ -62,14 +64,21 @@ import type {
  * `withoutReferences` is set to true for it, so the count is the same whether
  * the switch is on or off. `withoutForms` is the same for the No Form switch:
  * how many entries have no live form (M12.30). Both come from one read.
+ *
+ * `withReview` is whether to read the Reviewed counts (M14.8), a curator's
+ * alone: false sends no statement for them and answers `reviewed: null`.
  */
-export async function findCompendiumFacets(filter: IngredientFilter): Promise<CompendiumFacets> {
+export async function findCompendiumFacets(
+  filter: IngredientFilter,
+  withReview = true,
+): Promise<CompendiumFacets> {
   const scope = readableInTiers([], ingredients);
-  const [facets, switches] = await Promise.all([
+  const [facets, switches, reviewed] = await Promise.all([
     readFacets(filter, scope),
     switchCounts(filter, scope),
+    withReview ? reviewFacet(filter, scope) : Promise.resolve(null),
   ]);
-  return { ...facets, ...switches };
+  return { ...facets, ...switches, reviewed };
 }
 
 /**
@@ -413,6 +422,29 @@ async function switchCounts(
     over,
   });
   return row;
+}
+
+/**
+ * How many entries are reviewed and how many need review (M14.8), in one pass
+ * under the rest of the filter, the Reviewed setting left out as each strip's
+ * own is.
+ */
+async function reviewFacet(
+  filter: IngredientFilter,
+  scope: SQL | undefined,
+): Promise<FacetCount<ReviewFacetValue>[]> {
+  const { where, over } = listed({ ...filter, reviewed: undefined }, scope);
+  const [row] = await selectFrom(ingredients, where, {
+    aggregate: {
+      reviewed: countWhere(reviewArm(true)),
+      needsReview: countWhere(reviewArm(false)),
+    },
+    over,
+  });
+  return [
+    { value: 'reviewed', count: row.reviewed },
+    { value: 'needs_review', count: row.needsReview },
+  ];
 }
 
 /** How many of the read's rows `arm` holds. `filter` has no builder. */

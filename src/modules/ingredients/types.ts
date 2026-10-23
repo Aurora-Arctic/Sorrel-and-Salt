@@ -7,6 +7,7 @@ import type {
   IngredientFacets,
   IngredientRow,
   ReferenceRow,
+  ReviewFacetValue,
   StockRow,
   WorkspaceIngredientFacets,
 } from '../../db/repository';
@@ -29,6 +30,7 @@ export type {
   IngredientFacets,
   IngredientRow,
   ReferenceRow,
+  ReviewFacetValue,
   StockRow,
   WorkspaceIngredientFacets,
 };
@@ -266,6 +268,11 @@ export type ReferenceValues = z.input<typeof ReferenceInput>;
  * redirect.
  */
 export type CompendiumWrite = z.input<typeof CompendiumIngredientInput> & { endRedirect?: boolean };
+
+/** A compendium entry's review mark, as a curator reads it (M14.8): when it was marked reviewed. */
+export interface CompendiumReview {
+  reviewedAt: Date;
+}
 
 /** What a compendium address answers: the entry there, or the slug it moved to. */
 export type CompendiumAddress =

@@ -1,6 +1,8 @@
 ---
+status:
 nomenclature:
 canonicalName:
+toxic:
 safetyNotes:
 categories:
   -
@@ -14,9 +16,12 @@ elements:
   -
 folkNames:
   -
+substitutes:
+  -
 references:
   - source:
     locator:
+    nameBasis:
     supports:
       -
 variants:
@@ -25,6 +30,7 @@ variants:
     references:
       - source:
         locator:
+        nameBasis:
         supports:
           -
 zodiacSigns:

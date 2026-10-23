@@ -38,6 +38,7 @@ import { entryRecency } from '@/lib/entry-recency';
 import EntryDialog from './entry-dialog';
 import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
+import { reviewedAtOf } from './review-date';
 import { cardName } from '../IngredientCard/card-name';
 import type { IngredientEntryProps } from './types';
 import {
@@ -258,6 +259,8 @@ const IngredientEntry = ({
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
+  // The curators' review mark, shown to everyone on a compendium entry (M14.8).
+  const reviewedAt = reviewedAtOf(detail);
   // Either page's cupboard choices, which take the curator's Edit into their menu.
   const choices = cupboard ?? covens;
   // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
@@ -372,13 +375,14 @@ const IngredientEntry = ({
             }
           />
         </div>
-        {(local || held || cupboard || retired) && (
+        {(local || held || cupboard || retired || reviewedAt !== undefined) && (
           <div className="badges">
             <EntryMarks
               kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
               inCoven={cupboard !== undefined}
               annotated={held && isAnnotated(cupboardEntry)}
               retired={retired}
+              reviewedAt={reviewedAt}
               safety={false}
             />
           </div>
