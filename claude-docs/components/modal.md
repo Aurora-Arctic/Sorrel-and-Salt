@@ -90,7 +90,8 @@ is the wrapper every admin page opens it through (below).
   `aria-labelledby` points at the `<h2>`, or at the eyebrow then the
   `<h2>`, so `getByRole('dialog', { name })` finds it
   (["An edit dialog's head"](#an-edit-dialogs-head)). The Close button is `×`, hidden
-  from assistive technology, inside a button named "Close". It is a 2rem ×
+  from assistive technology, inside a button named "Close", which draws the shared
+  focus ring when the keyboard reaches it (MB.121; it drew the browser's own before). It is a 2rem ×
   in a 2rem square (`$close-target`, a 2.5rem one from M5.5 until the owner's call of
   2026-10-20, still past WCAG 2.5.8's 24px), taken out of the header's flow and set
   `$close-inset` (`space(5)`, 24px, the dialog's padding) in from the dialog's top and
