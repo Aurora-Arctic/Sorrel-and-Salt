@@ -3,7 +3,11 @@ import { beginSeedTransaction, insertStamped, requireFrom } from './idempotent';
 import { insertMissingReferences } from './reference-rows';
 import { identityOf } from './standard';
 import { COMPENDIUM } from './compendium/index';
-import { checkCompendium } from './compendium/guard';
+import { contentHash } from './compendium/content-hash';
+import { checkCompendium, checkCompendiumFiles } from './compendium/guard';
+import { readConversionManifest, type LoadedCompendium } from './compendium/load';
+import { entryFilePath } from './compendium/parse-entry';
+import { emptyReport, type SeedCompendiumReport } from './compendium/report';
 import {
   categoryRows,
   citing,
@@ -18,6 +22,14 @@ import {
   variantColumns,
   type Citing,
 } from './compendium/rows';
+import {
+  adoptHash,
+  applyUpdate,
+  decide,
+  readReferenceTexts,
+  readStates,
+  type SeedItem,
+} from './compendium/update';
 import { WORKS } from './compendium/works';
 import { ingredientSlug } from '../../lib/slugify';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
@@ -37,65 +49,195 @@ import type {
 
 // MB.242: the production compendium, seeded as reference data the way the
 // curated vocabularies are — `migrate.yml` runs it after them and after the
-// sources seed. Write-once per entry: the run that inserts an entry writes
-// everything beneath it, and an entry already present is skipped with all
-// of it, so a reseed never re-files a category an admin removed or puts back
-// a form an admin deleted (claude-docs/db/compendium-seed/README.md,
-// "Write-once, and how a correction lands"). Writes go through the handle
-// the caller gives, not `withAudit` — see minimal.ts. The rows an entry
-// becomes are built in ./compendium/rows.ts.
+// sources seed. An absent entry is inserted whole, with its content hash
+// stored; a present one is left alone unless its file is marked for update
+// (M14.7), when it is reconciled in place or refused, by the state table in
+// claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
+// lands". Writes go through the handle the caller gives, not `withAudit` —
+// see minimal.ts. The rows an entry becomes are ./compendium/rows.ts's; the
+// decision and the update are ./compendium/update.ts's.
 
-/** Throws, listing every issue, when `shards` fail the guard; writes nothing. */
-export function assertCompendiumValid(shards: readonly SeedCompendiumShard[]): void {
-  const issues = checkCompendium(shards);
+/** What the seed takes: the shard literals (until M14.10), or the loaded files. */
+export type SeedCompendiumInput = readonly SeedCompendiumShard[] | LoadedCompendium;
+
+export interface SeedCompendiumOptions {
+  /**
+   * The conversion manifest, identity to hash (load.ts). `seedCompendium`
+   * reads `compendium/.converted-hashes.json` when it is not given one;
+   * `seedCompendiumContent` adopts nothing unless given one.
+   */
+  manifest?: Record<string, string> | null;
+  /** Decide and report, then roll the transaction back. */
+  dryRun?: boolean;
+}
+
+const isLoaded = (input: SeedCompendiumInput): input is LoadedCompendium => !Array.isArray(input);
+
+/** The guard's issues over `input`: the literal rules for shards, those and the file rules for files, with what the loader could not read. */
+function issuesOf(input: SeedCompendiumInput): string[] {
+  return isLoaded(input)
+    ? [...input.issues, ...checkCompendiumFiles(input)]
+    : checkCompendium(input);
+}
+
+/** Throws, listing every issue, when `input` fails the guard; writes nothing. */
+export function assertCompendiumValid(input: SeedCompendiumInput): void {
+  const issues = issuesOf(input);
   if (issues.length > 0) {
     throw new Error(`The compendium seed fails its guard:\n- ${issues.join('\n- ')}`);
   }
 }
 
 /**
- * Checks `shards` against the guard, then seeds them in a transaction of its
- * own. An issue throws before the transaction opens, so an invalid literal
- * writes nothing.
+ * Each entry the seed writes, with where it came from and its hash. A shard
+ * literal is taken as approved and never marked, so a changed literal reads
+ * as `PENDING` until the cutover to files; a file is taken only when
+ * `approved`, with its mark.
+ */
+export function seedItems(input: SeedCompendiumInput): SeedItem[] {
+  if (isLoaded(input)) {
+    const sources = { ...WORKS, ...input.sources };
+    return input.files
+      .filter((file) => file.status === 'approved')
+      .map((file) => ({
+        entry: file.entry,
+        sources,
+        where: file.path,
+        hash: file.hash,
+        seedUpdate: file.seedUpdate,
+        overwriteEditor: file.overwriteEditor,
+      }));
+  }
+  return input.flatMap((shard) =>
+    shard.entries.map((entry) => ({
+      entry,
+      sources: { ...WORKS, ...shard.sources },
+      where: entryFilePath(entry),
+      hash: contentHash(entry),
+    })),
+  );
+}
+
+/** Thrown inside the transaction to roll a dry run back, and caught outside it. */
+class DryRunRollback extends Error {
+  constructor(readonly report: SeedCompendiumReport) {
+    super('dry run');
+  }
+}
+
+/**
+ * Checks `input` against the guard, then seeds it in a transaction of its
+ * own and returns what the run did. An issue throws before the transaction
+ * opens, so an invalid corpus writes nothing; a dry run rolls back after
+ * deciding, so it writes nothing either.
  */
 export async function seedCompendium(
   db: SeedDatabase,
-  shards: readonly SeedCompendiumShard[] = COMPENDIUM,
-): Promise<void> {
-  assertCompendiumValid(shards);
-  await beginSeedTransaction(db, (tx) => seedCompendiumContent(tx, shards));
+  input: SeedCompendiumInput = COMPENDIUM,
+  { manifest = readConversionManifest(), dryRun = false }: SeedCompendiumOptions = {},
+): Promise<SeedCompendiumReport> {
+  assertCompendiumValid(input);
+  try {
+    return await beginSeedTransaction(db, async (tx) => {
+      const report = await seedCompendiumContent(tx, input, { manifest });
+      if (dryRun) throw new DryRunRollback(report);
+      return report;
+    });
+  } catch (error) {
+    if (error instanceof DryRunRollback) return error.report;
+    throw error;
+  }
 }
 
 /**
  * The same seed inside a transaction the caller opened, after the curated
  * vocabularies it picks from. Present is any of: a row holding the entry's
  * seed key, live or deleted; a live compendium row of its identity; a live
- * compendium row at its slug. A present entry is untouched and nothing
- * beneath it written; a missing one is inserted whole, keyed. Assumes the GUC
- * is published and the bootstrap user exists.
+ * compendium row at its slug. A missing entry is inserted whole, keyed and
+ * hashed; a present one is decided by `decide` and updated only when its
+ * file is marked and nobody's work stands in the way. Assumes the GUC is
+ * published and the bootstrap user exists.
  */
 export async function seedCompendiumContent(
   tx: SeedTransaction,
-  shards: readonly SeedCompendiumShard[],
-): Promise<void> {
-  const present = await presentEntries(tx);
-  const missing = shards.flatMap((shard) =>
-    shard.entries
-      .filter(
-        (entry) =>
-          !present.has(identityOf(entry)) &&
-          !present.has(slugKey(ingredientSlug(entry.name, entry.canonicalName))),
-      )
-      .map((entry) => ({ entry, sources: { ...WORKS, ...shard.sources } })),
-  );
-  if (missing.length === 0) return;
+  input: SeedCompendiumInput,
+  { manifest = null }: Pick<SeedCompendiumOptions, 'manifest'> = {},
+): Promise<SeedCompendiumReport> {
+  const report = emptyReport();
+  const items = seedItems(input);
+  const present = await presentRows(tx);
+  const missing: SeedItem[] = [];
+  const met: { item: SeedItem; id: string }[] = [];
+  for (const item of items) {
+    const row = present(item.entry);
+    if (row === undefined) missing.push(item);
+    else met.push({ item, id: row.id });
+  }
 
   const picks = await readPicks(tx);
+  await insertEntries(tx, missing, picks);
+  report.inserted = missing.length;
+  if (met.length === 0) return report;
+
+  const rows = await tx.select().from(ingredients).where(isNull(ingredients.workspaceId));
+  const metIds = new Set(met.map(({ id }) => id));
+  const { states, inUse } = await readStates(
+    tx,
+    rows.filter((row) => metIds.has(row.id)),
+  );
+  const ctx = {
+    picks,
+    targets: await substituteTargets(tx),
+    referenceTexts: await readReferenceTexts(tx),
+    inUse,
+    manifest,
+  };
+
+  for (const { item, id } of met) {
+    const state = requireFrom(states, id, () => `${item.where} was present and then not.`);
+    const { adopt, outcome } = decide(item, state, ctx);
+    if (adopt) {
+      await adoptHash(tx, id, adopt.hash);
+      report.adopted.push({ where: item.where, differs: adopt.differs });
+    }
+    switch (outcome.kind) {
+      case 'skip':
+        report.skipped += 1;
+        break;
+      case 'retired':
+        report.retired.push(item.where);
+        break;
+      case 'pending':
+        report.pending.push(item.where);
+        break;
+      case 'refused':
+        report.refused.push({
+          where: item.where,
+          reason: outcome.reason,
+          differs: outcome.differs,
+        });
+        break;
+      case 'update':
+        await applyUpdate(tx, item, state, ctx, outcome.plan);
+        report.updated.push(item.where);
+        break;
+    }
+  }
+  return report;
+}
+
+/** Inserts `missing` whole: the entries, then everything beneath them, each list in one statement. */
+async function insertEntries(
+  tx: SeedTransaction,
+  missing: readonly SeedItem[],
+  picks: Awaited<ReturnType<typeof readPicks>>,
+): Promise<void> {
+  if (missing.length === 0) return;
 
   const inserted = await insertStamped(
     tx,
     ingredients,
-    missing.map(({ entry }) => entryRow(entry, picks, null)),
+    missing.map(({ entry, hash }) => entryRow(entry, picks, hash)),
   );
   const ingredientIds = new Map(inserted.map((row) => [row.seedKey as string, row.id]));
   const ingredientIdOf = (entry: SeedCompendiumEntry) =>
@@ -198,16 +340,17 @@ export async function seedCompendiumContent(
   );
 }
 
-/** A slug's key in the present set, apart from the identities, which share its alphabet. */
-const slugKey = (slug: string) => `slug:${slug}`;
-
 /**
- * The compendium tier's present entries: every seed key, live or deleted;
- * every live identity; every live slug.
+ * The compendium tier's present rows, and how an entry finds its own: a row
+ * holding its seed key, live or deleted, first; then a live row of its
+ * identity; then a live row at its slug.
  */
-async function presentEntries(tx: SeedTransaction): Promise<Set<string>> {
+async function presentRows(
+  tx: SeedTransaction,
+): Promise<(entry: SeedCompendiumEntry) => { id: string } | undefined> {
   const rows = await tx
     .select({
+      id: ingredients.id,
       seedKey: ingredients.seedKey,
       identityKey: ingredients.identityKey,
       slug: ingredients.slug,
@@ -216,10 +359,22 @@ async function presentEntries(tx: SeedTransaction): Promise<Set<string>> {
     .from(ingredients)
     .where(isNull(ingredients.workspaceId));
 
-  return new Set(
-    rows.flatMap(({ seedKey, identityKey, slug, deletedAt }) => [
-      ...(seedKey === null ? [] : [seedKey]),
-      ...(deletedAt === null ? [identityKey, slugKey(slug)] : []),
-    ]),
-  );
+  const bySeedKey = new Map<string, { id: string }>();
+  const liveByIdentity = new Map<string, { id: string }>();
+  const liveBySlug = new Map<string, { id: string }>();
+  for (const row of rows) {
+    if (row.seedKey !== null && !bySeedKey.has(row.seedKey)) bySeedKey.set(row.seedKey, row);
+    if (row.deletedAt === null) {
+      liveByIdentity.set(row.identityKey, row);
+      liveBySlug.set(row.slug, row);
+    }
+  }
+  return (entry) => {
+    const identity = identityOf(entry);
+    return (
+      bySeedKey.get(identity) ??
+      liveByIdentity.get(identity) ??
+      liveBySlug.get(ingredientSlug(entry.name, entry.canonicalName))
+    );
+  };
 }

@@ -238,6 +238,13 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   separately — one `job-summary` call each — so a failed seed does not read as
   a failed migration, and a failed seed blocks `deploy` for free, because it
   fails the job `deploy` already depends on.
+  One failure is reported a step further (M14.7): when the compendium seed
+  refuses an update, it exits 1 with a `REFUSED` line per entry and the
+  fields that differ, and three fail-only steps find the pull request the
+  deploying commit came from (`listPullRequestsAssociatedWithCommit`), cut
+  those lines out of `seed.log` and post them through `pr-comment`, which is
+  why the workflow holds `pull-requests: write`. A commit no pull request
+  carries gets the job summary alone.
 - **`deploy.yml`'s `seed-changed` job** diffs
   `github.event.before`..`github.sha` over the seeds' own files
   (`src/db/seed/categories.ts` and the `category-groups.ts` data it reads, `src/db/seed/forms.ts`,

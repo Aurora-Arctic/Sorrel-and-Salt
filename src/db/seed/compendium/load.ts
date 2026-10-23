@@ -168,3 +168,22 @@ export function loadCompendium(root: string = COMPENDIUM_ROOT): LoadedCompendium
     issues,
   };
 }
+
+/**
+ * The conversion manifest (M14.9): the content hash of each converted file by
+ * the entry's identity, which the seed stores as the baseline of a row seeded
+ * before the hash existed (M14.7, "Adoption"). A later task deletes it once
+ * production has adopted.
+ */
+export const CONVERSION_MANIFEST = '.converted-hashes.json';
+
+const manifestSchema = z.record(z.string().min(1), z.string().regex(/^[0-9a-f]{64}$/));
+
+/** The manifest under `root`, or `null` when the file is gone; a manifest that is not identity → hash throws. */
+export function readConversionManifest(
+  root: string = COMPENDIUM_ROOT,
+): Record<string, string> | null {
+  const path = join(resolve(root), CONVERSION_MANIFEST);
+  if (!existsSync(path)) return null;
+  return manifestSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
+}

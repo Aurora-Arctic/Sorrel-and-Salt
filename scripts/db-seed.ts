@@ -9,6 +9,7 @@
 //        npm run db:seed:categories | db:seed:forms | db:seed:astrology | db:seed:deities
 //        npm run db:seed:sources      # after the vocabularies it links
 //        npm run db:seed:compendium   # after the vocabularies and sources
+//        npm run db:seed:compendium -- --dry-run [--adopt]   # decide and report, write nothing
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -23,9 +24,16 @@ import { seedForms } from '../src/db/seed/forms.ts';
 import { seedDeities } from '../src/db/seed/deities.ts';
 import { seedSources } from '../src/db/seed/sources.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
+import { formatReport, hasRefusals } from '../src/db/seed/compendium/report.ts';
 import { dropSchema } from '../src/db/seed/reset.ts';
 
 const target = process.argv[2] ?? 'scenario';
+const flags = new Set(process.argv.slice(3));
+for (const flag of flags) {
+  if (flag !== '--dry-run' && flag !== '--adopt') {
+    throw new Error(`Unknown flag "${flag}": the compendium target takes --dry-run and --adopt.`);
+  }
+}
 
 try {
   if (target === 'categories') {
@@ -44,8 +52,18 @@ try {
     await seedSources(db);
     console.log("Seeded the vocabularies' sources and their links.");
   } else if (target === 'compendium') {
-    await seedCompendium(db);
-    console.log('Seeded the compendium: its entries, their forms and their sources.');
+    // M14.7: one line per entry the run updated, refused, left pending or
+    // found retired, then the totals; a refused entry exits 1, which fails
+    // the deploy's seed step so the refusal is read, not buried.
+    const dryRun = flags.has('--dry-run');
+    const report = await seedCompendium(db, undefined, { dryRun });
+    console.log(formatReport(report, { adopt: flags.has('--adopt') }));
+    if (hasRefusals(report)) process.exitCode = 1;
+    console.log(
+      dryRun
+        ? 'Dry run: the compendium was decided and nothing written.'
+        : 'Seeded the compendium: its entries, their forms and their sources.',
+    );
   } else if (target === 'drop') {
     // The one guard on the one destructive verb: nothing in CI calls it, so a
     // production URL in a local shell is refused rather than confirmed.
