@@ -362,8 +362,8 @@ Search "loading" in the workshop to find every one; they all sit under
 `Feedback`. The two below are not components of their own,
 so their stories live in `.storybook/`:
 
-- `Main Body` (`.storybook/main-body.stories.tsx`): `Default` shows a page inside the shell;
-  `LoadingPage` opens with its link already pressed, so the page has gone and the
+- `Main Body` (`.storybook/main-body.stories.tsx`): `States` holds one dropdown of pages inside the shell; the
+  ones that wait open with their link already pressed, so the page has gone and the
   `page` skeleton stands in its `main`, under the page bar.
 - `Pending Link` (`.storybook/pending-link.stories.tsx`): `Default` is a link with its
   hint; `Pending` opens pressed, with the dot showing and `aria-busy` set.

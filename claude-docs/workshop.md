@@ -25,7 +25,7 @@ without a page routed to it.
 - **A story pins a width only when the width is the state it shows**, and
   there are no `Phone` stories. Narrow any story with the toolbar's viewport
   menu (375, 382, 600 and 700px), or from a link:
-  [`/?path=/story/shell-account-menu--open&globals=theme:light;viewport:w375`](#opening-a-story-at-phone-width).
+  [`/?path=/story/shell-account-menu--states&args=state:Open&globals=theme:light;viewport:w375`](#opening-a-story-at-phone-width).
   The one pinned width is `SectionNav`'s `AdminOnAHiddenPage`, whose More-menu
   state exists only at tablet width (700px). A pin is
   `globals: { viewport: { value: 'w700', isRotated: false } }`.
@@ -76,7 +76,12 @@ without a page routed to it.
   4. **Titles name the piece as the screens do**, so `Coven`, never
      `Workspace` (`Coven / Leave Coven Button`); the file and component names
      stay as they are.
-  5. **A story is named for its state.** The one at rest is `Default`, and the
+  5. **A story is named for its state.** A piece with several states has one
+     story, `States`: a grid of every state for a small piece, or, for a page,
+     a list or a large piece, one story with a `state` dropdown in the Controls
+     panel. A state is reached by address with `&args=state:Open`, spaces as
+     `+`. A piece with nothing to merge keeps `Default` for its one story. A
+     state stays a story of its own only when a test needs it isolated. The
      same state has the same name everywhere: `Empty` (nothing to list),
      `NoMatches` (a filter found nothing), `Loading` (data on its way),
      `Pending` (an action on its way), `FirstPage`, `MiddlePage` and
@@ -85,9 +90,9 @@ without a page routed to it.
   "Draws" is read from the imports under `src/app` and `src/components`
   today, not from a plan: a piece moves to its kind in the PR that makes a
   second area draw it. Nothing sits loose at the top level. Within a group
-  the sidebar lists a piece's `Default` story first and the rest by name.
+  the sidebar lists a piece's `States` story first, then `Default`, and the rest by name.
   Storybook builds a story's id from its title and export name in kebab case
-  (`Shell / Account Menu` and `Open` give `shell-account-menu--open`), so a
+  (`Shell / Account Menu` and `States` give `shell-account-menu--states`), so a
   title change moves the id, and with it any link to the story.
 
 - `*.stories.tsx` and `.storybook/**/*.ts(x)` are type-checked by `tsc` like any
@@ -112,7 +117,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
 ```
 
 - `<story-id>` is the kebab-case title and export name above. A real one,
-  checked against this config: `/?path=/story/shell-account-menu--open&globals=theme:light;viewport:w375`
+  checked against this config: `/?path=/story/shell-account-menu--states&args=state:Open&globals=theme:light;viewport:w375`
   opens the account menu with its links, light, in a 375px preview.
 - Globals are separated by `;`, each as `name:value`. `theme` is `dark`, `light`
   or `auto`. `viewport` is `w375`, `w382`, `w600` or `w700` (`.storybook/preview.tsx`,

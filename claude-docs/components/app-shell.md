@@ -132,7 +132,7 @@ the coven layout's column, "Admin" in the admin layout's, "Your Account" or
 `Default`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
 context row, with no section nav), `AccountPage`, `Unverified` (the email page's
 bar). The toolbar viewport menu shows any of them at 375px. The body swap has its own, `Feedback / Main Body`
-(`.storybook/main-body.stories.tsx`): `Default`, `LoadingPage`, `LoadingWide`, `LoadingNarrow`, `LoadingWithMenu` and `LoadingForm` ([loading](../loading.md), "Stories").
+(`.storybook/main-body.stories.tsx`): `States`, one dropdown of the pages and the loading shapes ([loading](../loading.md), "Stories").
 
 ## Testing
 
