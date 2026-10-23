@@ -27,6 +27,8 @@ folkNames:
   - Qoqobala
   - Bird Weed
   - White Bird's Eye
+deities:
+  - Dian Cecht
 categories:
   - Fidelity
   - Love
@@ -55,6 +57,7 @@ references:
       - elements
       - celestialBodies
       - zodiacSigns
+      - deities
       - categories
       - folkNames
       - description
@@ -99,7 +102,3 @@ variants:
 # Chickweed
 
 Chickweed is a small sprawling annual with tiny white star-shaped flowers, found as a weed across much of the world. Cunningham calls it feminine, with the Moon and water, and gives fidelity and love: carry it, or use it in spells to attract a love or to keep a relationship. Kynes adds Gemini, Libra, Pisces and Jupiter, and the Irish god of healing Dian Cecht. She lists fertility, love, fidelity, purification and home blessing. In England its flowers served as weather divination, open for fair weather and shut before rain, and in the Fenlands it was grown in pots to attract luck. She sprinkles flowers in the bath to release anger, and places a sachet under the bed for fertility or fidelity.
-
-#### Edit Notes for Claude
-
-Deity gap: Dian Cecht (Kynes, under "Chickweed"), not in the vocabulary; link once M14.15 adds it.
