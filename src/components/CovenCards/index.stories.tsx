@@ -62,6 +62,9 @@ const ENTRIES = [
     kind: 'own',
     canonicalName: 'Fixtura testalis',
     nomenclature: 'botanical',
+    // A note on the ingredient shows the Caution badge; the line beneath the jars is its latest edit.
+    safetyNotes: 'Dilute before use.',
+    lastEdit: { by: 'Fixture A', at: new Date().toISOString() },
     variants: [
       { form: 'Dried Leaf', formChoice: { group: { icon: 'botanical' } } },
       { form: 'Oil', formChoice: { group: { icon: 'botanical' } } },
@@ -86,8 +89,6 @@ const BASE: CovenCardsProps = {
   total: ENTRIES.length,
   canAdd: true,
 };
-
-const defaultNode = <CovenCards {...BASE} />;
 
 // A viewer: the same jar lines, and no way to add.
 const forAViewerNode = <CovenCards {...BASE} canAdd={false} />;
@@ -141,30 +142,34 @@ const STOCK: Record<string, CovenCardEntry['stock']> = {
   },
 };
 
-export const WithStock: Story = {
-  render: () => (
-    <CovenCards
-      {...BASE}
-      entries={ENTRIES.map((shown) =>
-        shown.kind === 'own'
-          ? {
-              ...shown,
-              editHref: route(`/coven/fixture-coven/ingredients?edit=${shown.id}`),
-              editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-              mayDelete: true,
-              stock: STOCK[shown.id],
-            }
-          : {
-              ...shown,
-              annotateHref: route(`/coven/fixture-coven/ingredients?annotate=${shown.id}`),
-              mayMakeOurs: true,
-              mayRemove: true,
-              stock: { forms: [{ variantId: `${shown.id}-v`, label: 'Coarse' }], jars: [] },
-            },
-      )}
-    />
-  ),
-};
+const withStockNode = (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: route(`/coven/fixture-coven/ingredients?edit=${shown.id}`),
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+            mayDelete: true,
+            stock: STOCK[shown.id],
+          }
+        : {
+            ...shown,
+            annotateHref: route(`/coven/fixture-coven/ingredients?annotate=${shown.id}`),
+            mayMakeOurs: true,
+            mayRemove: true,
+            stock: { forms: [{ variantId: `${shown.id}-v`, label: 'Coarse' }], jars: [] },
+          },
+    )}
+  />
+);
+
+// A member of the coven, as the site shows the page to one: every foot control, Caution, and the
+// latest edit. The viewer's state keeps the plain entries.
+const defaultNode = withStockNode;
+
+export const WithStock: Story = { render: () => withStockNode };
 
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
