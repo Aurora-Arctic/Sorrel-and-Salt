@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Liquidambar styraciflua
 elements:
@@ -105,3 +105,13 @@ variants:
 # Sweet Gum
 
 Sweet gum is Liquidambar styraciflua, the American sweetgum, a deciduous tree of the warm temperate east of North America and the tropical mountains of Mexico and Central America, now placed in the family Altingiaceae. It is one of the commonest hardwoods of the south-eastern United States and is widely planted for its glossy, star-shaped, five-lobed leaves, which turn yellow, orange, red and purple in autumn. Its hard, spiny, ball-shaped fruits hang on through the winter and litter the ground below, where they are known as gumballs. Wounded bark gives a fragrant gum, called liquid amber or copalm balsam, which has often been confused with the liquid storax of its Turkish relative, L. orientalis. The genus name joins Latin and Arabic words for fluid amber, and the species name means flowing with storax. Juan de Grijalva told of the Maya presenting his party, in 1517, with reeds filled with dried herbs and liquid amber that gave off a pleasant smell when lit; the Aztecs flavoured tobacco with sweet gum, and in Yucatán it was burned as temple incense. In magical practice the seed pods are set on the altar or held during rites for protection against evil forces.
+
+#### Questions for the Curator
+
+<!-- audit:grieve-storax:Storax -->
+
+Does grieve-storax under "Storax", cited on the entry, the Resin, the Bark, describe Liquidambar styraciflua? It may mean Liquidambar orientalis instead. The audit found: "Storax" is the name of ingredients/botanical/storax-liquidambar-orientalis.md (Liquidambar orientalis). "Storax" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+<!-- audit:kynes-plants:Storax -->
+
+Does kynes-plants under "Storax", cited on the entry, the Pod, describe Liquidambar styraciflua? It may mean Liquidambar orientalis instead. The audit found: "Storax" is the name of ingredients/botanical/storax-liquidambar-orientalis.md (Liquidambar orientalis). "Storax" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

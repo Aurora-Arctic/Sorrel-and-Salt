@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Convolvulus arvensis
 toxic: true
@@ -92,3 +92,9 @@ variants:
 # Bindweed
 
 Field bindweed is a twining perennial of the morning-glory family, Convolvulaceae, native across Europe and Asia. Its stems, half a metre to two metres long, either clamber over whatever stands near or trail along the ground, and its roots can go several metres down, which makes it notoriously hard to clear. The leaves are arrow-shaped, and the small trumpet flowers, white or pale pink and marked with five darker stripes, last a single day. Probably carried to North America in contaminated crop seed, perhaps as early as 1739, it is now one of the costliest weeds of farmland there. Grieve counts it among Britain's three native bindweeds and notes that the whole family is purgative, and its leaves have served in folk medicine as a laxative and diuretic. Kynes traces its bad name to the way it strangles other plants and starves the soil: English witches were said to wind a stem nine times round a poppet to bewitch the person it stood for, and Scottish children were told that picking the flowers would call up a thunderstorm. Because the stems coil widdershins, she recommends it for widdershins work, knot magic and handfasting.
+
+#### Questions for the Curator
+
+<!-- audit:kynes-plants:Bindweed -->
+
+Does kynes-plants under "Bindweed", cited on the entry, the Stem, the Flower, describe Convolvulus arvensis? It may mean Ipomoea instead. The audit found: "Bindweed" is the folk name of ingredients/botanical/morning-glory-ipomoea.md (Ipomoea). "Bindweed" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

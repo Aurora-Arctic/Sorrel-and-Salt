@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Mandragora officinarum
 toxic: true
@@ -145,3 +145,13 @@ variants:
 # Mandrake
 
 Mandrake is a perennial of the nightshade family, Solanaceae, and the type species of its genus. It has almost no stem: its variable, often hairy leaves, up to about 45 centimetres long, lie in a rosette above a long, thick and often branched root. Bell-shaped flowers, greenish white to pale blue or violet, open between autumn and spring and are followed by glossy yellow to orange berries rather like small tomatoes. Botanists disagree on how widely to draw the species; taken broadly, it grows around the Mediterranean, from North Africa and southern Iberia through Italy, Greece and Turkey to the Levant, in light woodland, olive groves, fallow land and ruins. Its hallucinogenic alkaloids and the human shape of its roots have long tied it to ritual and magic. The root was used to put patients under for surgery in antiquity, and amulets made from it were thought to bring good fortune and cure sterility. Legend said the root screamed as it was pulled up, killing anyone who heard, so animals were tied to it to draw it out. Kynes notes that it has been prized as an aphrodisiac since the Egyptians, and that in Germany owning a root could see a woman executed for witchcraft. Cunningham keeps a whole root on the mantelpiece for the protection, fertility and prosperity of the house.
+
+#### Questions for the Curator
+
+<!-- audit:cunningham-herbs:Mandrake -->
+
+Does cunningham-herbs under "Mandrake", cited on the entry, the Root, describe Mandragora officinarum? It may mean Podophyllum peltatum instead. The audit found: "Mandrake" is the folk name of ingredients/botanical/mayapple-podophyllum-peltatum.md (Podophyllum peltatum). "Mandrake" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+<!-- audit:kynes-plants:Mandrake -->
+
+Does kynes-plants under "Mandrake", cited on the entry, the Root, the Leaf, describe Mandragora officinarum? It may mean Podophyllum peltatum instead. The audit found: "Mandrake" is the folk name of ingredients/botanical/mayapple-podophyllum-peltatum.md (Podophyllum peltatum). "Mandrake" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

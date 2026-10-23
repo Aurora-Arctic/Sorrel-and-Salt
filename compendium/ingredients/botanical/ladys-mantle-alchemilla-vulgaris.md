@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Alchemilla vulgaris
 safetyNotes: Considered safe to take when used appropriately (AHPA safety class 1, under the name Alchemilla xanthochlora), with no known contraindications, interactions or side effects; it contains about 6 to 16% tannins. No information on its safety in pregnancy or while nursing was found, and safety in either has not been conclusively established. Cunningham marks it as recognised as safe.
@@ -110,3 +110,13 @@ variants:
 # Lady's Mantle
 
 Lady's mantle is a herbaceous perennial of the family Rosaceae, native to Europe and introduced to the United States, found in unimproved grassland, on road verges and banks, on chalk downland and on mountain slopes. It grows in spreading mounds of rounded, pleated leaves with five to eleven shallow lobes, cupped so that they hold beads of rain and dew, and in Britain and Ireland it bears clusters of tiny yellowish-green flowers without true petals from June to September. Its aerial parts are gathered for herbal infusions. The genus name is traced to the Arabic word for alchemy, and medieval German alchemists thought the dew collected from its leaves especially potent for working metals. The Anglo-Saxons used it to cure bewitchment; in Scotland and Ireland it lifted faery enchantment and countered elf shot, the unseen weapon elves were thought to strike people with to cause disease; and it was held to ward off the evil eye. Scottish potions used it to restore a youthful look, and in Scandinavia a leaf slept on under the pillow was said to bring pleasant dreams. In magic it belongs above all to love, its herb going into love spells and sachets, and a leaf held between the hands is said to focus the mind before divination, while its flowers are set on the altar for full-moon and healing rituals.
+
+#### Questions for the Curator
+
+<!-- audit:cunningham-herbs:Lady's Mantle -->
+
+Does cunningham-herbs under "Lady's Mantle", cited on the entry, the Herb, describe Alchemilla vulgaris? It may mean Achillea millefolium or Cardamine pratensis instead. The audit found: "Lady's Mantle" is the folk name of ingredients/botanical/ladys-smock-cardamine-pratensis.md (Cardamine pratensis). "Lady's Mantle" is the folk name of ingredients/botanical/yarrow-achillea-millefolium.md (Achillea millefolium). "Lady's Mantle" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+<!-- audit:kynes-plants:Lady's Mantle -->
+
+Does kynes-plants under "Lady's Mantle", cited on the entry, the Leaf, the Flower, describe Alchemilla vulgaris? It may mean Achillea millefolium or Cardamine pratensis instead. The audit found: "Lady's Mantle" is the folk name of ingredients/botanical/ladys-smock-cardamine-pratensis.md (Cardamine pratensis). "Lady's Mantle" is the folk name of ingredients/botanical/yarrow-achillea-millefolium.md (Achillea millefolium). "Lady's Mantle" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

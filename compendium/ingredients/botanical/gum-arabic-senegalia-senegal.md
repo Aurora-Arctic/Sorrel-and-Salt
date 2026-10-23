@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Senegalia senegal
 elements:
@@ -126,3 +126,9 @@ variants:
 # Gum Arabic
 
 Gum arabic, also called gum acacia, is the hardened sap of acacia trees, above all Senegalia senegal, long known as Acacia senegal: a small, thorny, deciduous tree of 5 to 12 metres, native to the semi-desert lands of sub-Saharan Africa, Oman, Pakistan and western India. Gatherers cut or strip the bark, and the gum oozes out and dries into round tears; one tree gives some 200 to 300 grams. Sudan supplies most of the world's gum, and its hashab gum is reckoned the finest. The name does not fix a single botanical source: the Codex definition also admits the gum of Vachellia seyal, and Grieve records how Senegal gum, first a stand-in for the Sudanese gum, came to share its name. Soluble in water and edible, the gum binds and thickens foods, soft drinks, watercolour paints, inks, medicines and homemade incense cones. Cunningham places both the tree and its gum under the Sun and air. The wood fed sacred fires in India, a sprig over the bed was said to ward off evil, and the wood burned with sandalwood to stir psychic powers. The gum itself is smouldered alone on charcoal or added to incense to purify a space of negativity and evil. In the Sahel it stands for the purity of youth.
+
+#### Questions for the Curator
+
+<!-- audit:wikipedia-incense:Incense -->
+
+Does wikipedia-incense under "Incense", cited on the entry, describe Senegalia senegal? It may mean Boswellia sacra instead. The audit found: "Incense" is the folk name of ingredients/botanical/frankincense-boswellia-sacra.md (Boswellia sacra). "Incense" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

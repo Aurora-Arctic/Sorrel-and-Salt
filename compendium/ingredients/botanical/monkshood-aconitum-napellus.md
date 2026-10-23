@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Aconitum napellus
 toxic: true
@@ -105,3 +105,9 @@ variants:
 # Monkshood
 
 Monkshood is a hairless herbaceous perennial of the family Ranunculaceae, native to western and central Europe. It grows to about a metre and bears rounded leaves cut into five to seven deep lobes, topped by spikes of dark purple to bluish-purple flowers shaped like narrow helmets; gardeners grow it for these showy spikes and as a cut flower. It is reckoned the most poisonous plant in Europe, dangerous both eaten and touched, because it holds aconitine and related alkaloids that poison the heart. It was put on spears and arrows for hunting and war, the Romans used it to dispose of criminals and enemies until anyone growing it could be sentenced to death, and Dioscorides knew it only as a poison for killing wolves. The old English herbalists dreaded it, though Parkinson commended it to hunters for dipping their arrowheads. The Greeks dedicated the aconites to Hecate, and Ovid told how Medea's aconite sprang from the spittle of Cerberus. In medieval Europe it was counted a witches' plant and believed to go into flying ointment. In magical practice it is added to protection sachets against vampires and werewolves, guards a home when grown in its garden, and its seed, carried wrapped in a lizard's skin, was said to make the bearer invisible.
+
+#### Questions for the Curator
+
+<!-- audit:cunningham-herbs:Wolf's Bane -->
+
+Does cunningham-herbs under "Wolf's Bane", cited on the entry, the Seed, describe Aconitum napellus? It may mean Arnica montana instead. The audit found: "Wolf's Bane" is the folk name of ingredients/botanical/arnica-arnica-montana.md (Arnica montana). "Wolf's Bane" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

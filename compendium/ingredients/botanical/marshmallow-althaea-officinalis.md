@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Althaea officinalis
 safetyNotes: Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. It should be taken with plenty of liquid, at least 250 ml. Because it may slow the absorption of drugs taken by mouth, other medicines should be taken an hour before it or several hours after. Its safety in pregnancy and while nursing has not been established, although no concerns were identified.
@@ -141,3 +141,9 @@ variants:
 # Marshmallow
 
 Marshmallow is a herbaceous perennial of the mallow family, native to Europe, western Asia and North Africa, and grown both as a garden ornamental and for herbal use. It can stand up to about 1.8 metres tall with few side branches, and the whole plant is clothed in soft, star-shaped hairs. Its broad, toothed leaves are often shallowly lobed, and in August and September it bears pale pink flowers, followed by flat, round fruits known as cheeses. The name of the genus comes from a Greek word meaning to heal. The leaves, flowers and root, the last especially rich in mucilage, have long served in herbal medicine to soothe irritated mucous membranes, and country people used the plant against inflammation both inside and out. The Romans counted a dish of it among their delicacies, and in France the young tops went into spring salads. Kynes notes that the Egyptians wove it into funeral garlands, and that in medieval Europe the slippery sap of the root was rubbed on the hands and body of anyone facing trial by fire. In magical practice it belongs to protection rites, is burned as incense or carried in a sachet to stir the psychic powers, and is set on the altar to draw good spirits into a ritual.
+
+#### Questions for the Curator
+
+<!-- audit:kynes-plants:Mallow -->
+
+Does kynes-plants under "Mallow", cited on the entry, the Root, the Leaf, the Flower, describe Althaea officinalis? It may mean Malva sylvestris instead. The audit found: "Mallow" is the name of ingredients/botanical/mallow-malva-sylvestris.md (Malva sylvestris). "Mallow" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

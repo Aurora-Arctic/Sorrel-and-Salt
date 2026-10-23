@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Monarda didyma
 safetyNotes: 'AHPA safety class 2b, interaction class A, in its monograph on Monarda species, this one among them: traditionally used to bring on menstruation, so not to be taken during pregnancy unless a qualified practitioner oversees it. No other precautions, drug interactions or side effects are known, and its safety while nursing has not been conclusively established.'
@@ -131,3 +131,9 @@ variants:
 # Bee Balm
 
 Bee balm, Monarda didyma, is a perennial of the mint family, Lamiaceae, native to the east of North America, from Maine, Ontario and Michigan south to northern Georgia, where it grows thickly along stream banks, in damp thickets and in ditches. It stands sixty centimetres to a little over a metre tall on square stems, with paired, toothed leaves that smell of mint when bruised, and through the summer it carries rounded heads of ragged, tubular scarlet flowers whose nectar draws bees and hummingbirds. Its scent recalls the bergamot orange, which is why it is also called bergamot. The genus honours Nicolas Monardes, who in 1569 became the first European to write a description of the plants of the Americas. Many Indigenous nations used it as medicine; the Blackfoot made poultices of it for wounds and skin infections. The people of Oswego brewed its leaves, and the drink caught on among English settlers once the Boston Harbor protest cut off their tea, so it is still known as Oswego tea. In England its flowers were thought unlucky to bring indoors, though a leaf carried in a pocket or purse was believed to bring money. In magic it serves purification, clarity, peace and success.
+
+#### Questions for the Curator
+
+<!-- audit:kynes-plants:Bee Balm -->
+
+Does kynes-plants under "Bee Balm", cited on the entry, the Leaf, the Flower, the Oil, describe Monarda didyma? It may mean Melissa officinalis instead. The audit found: "Bee Balm" is the folk name of ingredients/botanical/lemon-balm-melissa-officinalis.md (Melissa officinalis). "Bee Balm" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

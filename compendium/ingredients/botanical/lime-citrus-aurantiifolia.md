@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Citrus × aurantiifolia
 elements:
@@ -114,3 +114,13 @@ variants:
 # Lime
 
 The Key lime, also called the West Indian or Mexican lime, is a thorny, shrubby tree up to about five metres tall that arose as a natural cross between a wild papeda, Citrus micrantha, and the citron. Its round fruit, three to six centimetres across, has a thin peel and very sour, juicy, fragrant flesh; it is usually picked green and turns yellow as it ripens. Native to South-east Asia, it travelled by way of the Middle East and North Africa to Sicily and Andalusia, and with Spanish explorers to the West Indies and the Florida Keys, which gave it its name and the pie it is best known for. Boiled in brine and dried, it becomes the black lime used as a seasoning across the Middle East. Kynes records limes used in Sumatra and elsewhere in South-east Asia to cleanse and consecrate, cut open in ceremony to drive out demons, and strung with red chillies in India to keep evil from houses and shops. In magical practice a fresh lime stuck with old nails and pins and thrown into a deep hole is said to carry off ills and hexes, the peel goes into love mixtures and incenses, twigs are carried against the evil eye, and the fruit purifies ritual space and consecrates tools.
+
+#### Questions for the Curator
+
+<!-- audit:cunningham-herbs:Lime -->
+
+Does cunningham-herbs under "Lime", cited on the entry, the Peel, the Fruit, describe Citrus × aurantiifolia? It may mean Tilia × europaea instead. The audit found: "Lime" is the folk name of ingredients/botanical/linden-tilia-europaea.md (Tilia × europaea). "Lime" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+<!-- audit:kynes-plants:Lime -->
+
+Does kynes-plants under "Lime", cited on the entry, the Fruit, the Oil, describe Citrus × aurantiifolia? It may mean Tilia × europaea instead. The audit found: "Lime" is the folk name of ingredients/botanical/linden-tilia-europaea.md (Tilia × europaea). "Lime" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Aquilaria malaccensis
 elements:
@@ -83,3 +83,9 @@ variants:
 # Agarwood
 
 Agarwood, also sold as aloeswood, eaglewood, gaharu and oud, is the dark, fragrant, resin-soaked heartwood of trees of the genus Aquilaria. Its main source is Aquilaria malaccensis, a lign-aloe tree of the family Thymelaeaceae found from India and Bangladesh through Myanmar, Thailand and Laos to Malaysia, Singapore, Indonesia and the Philippines; A. agallocha, the name Cunningham prints, is its synonym. Healthy heartwood is pale and nearly scentless. The fragrant resin forms only when the tree defends itself against infection by a mould, Phaeoacremonium parasitica, and the wood turns dense and dark as the resin fills it. First-grade agarwood is among the costliest natural raw materials in the world, and demand, overharvesting and illegal trade have left A. malaccensis critically endangered in the wild; it has been listed under CITES Appendix II since 1995. Ancient Egyptians burned it in funeral rites, the Vedas mention it, and the Bible names it in a perfume with myrrh and cassia and among the spices used at the burial of Jesus. It is revered in Hinduism, Buddhism and Chinese folk religion, and with sandalwood it is one of the two chief ingredients of Chinese and Japanese incense, savoured in the Japanese art of kōdō. Cunningham gives it to Venus and water and to love: it was used in Egypt to draw good fortune and burned in Renaissance rites of evocation, it is carried or worn to bring love, and a little is added to other mixtures to strengthen them.
+
+#### Questions for the Curator
+
+<!-- audit:wikipedia-incense:Incense -->
+
+Does wikipedia-incense under "Incense", cited on the entry, describe Aquilaria malaccensis? It may mean Boswellia sacra instead. The audit found: "Incense" is the folk name of ingredients/botanical/frankincense-boswellia-sacra.md (Boswellia sacra). "Incense" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.

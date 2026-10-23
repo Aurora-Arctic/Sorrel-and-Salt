@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Commiphora myrrha
 elements:
@@ -145,3 +145,9 @@ variants:
 # Myrrh
 
 Myrrh is the aromatic gum resin of Commiphora myrrha, a very spiny tree of the Burseraceae family that grows to about five metres, with a papery outer bark over a green inner layer. It is native to Somalia, Djibouti, Eritrea, the Somali regions of Ethiopia and Kenya, and Yemen and Oman, where it favours arid slopes and thin limestone soils; Somalia is now the largest producer. Cuts in the bark release a pale yellow resin that sets into reddish-brown tears, bitter and aromatic to the taste, which darken further with age. Several other Commiphora species yield resin sold under the same name. Myrrh has been traded for more than three thousand years. The Egyptians embalmed with it and burned it to Ra and in the temples of Isis; the Hebrew Bible puts it in the holy anointing oil and the temple incense, the Gospel of Matthew names it among the gifts of the Magi, and Orthodox, Catholic and Anglican churches still burn it and use it in preparing chrism. Greek myth has Adonis born from a myrrh tree, and medieval Europe burned it to drive out unwanted spirits. Magical practice seldom burns it alone, pairing it with frankincense to purify a space, bring peace, consecrate tools and amulets, and lend strength to healing and protective work; it is said to add power to any incense it joins.
+
+#### Questions for the Curator
+
+<!-- audit:wikipedia-incense:Incense -->
+
+Does wikipedia-incense under "Incense", cited on the entry, describe Commiphora myrrha? It may mean Boswellia sacra instead. The audit found: "Incense" is the folk name of ingredients/botanical/frankincense-boswellia-sacra.md (Boswellia sacra). "Incense" prints no formal name. Settle it as `stated` or `resolved` from the source, or replace the citation.
