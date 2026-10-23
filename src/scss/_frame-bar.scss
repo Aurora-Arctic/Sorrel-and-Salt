@@ -49,6 +49,8 @@
     flex: none;
     align-items: center;
     min-height: $control-height;
+    // A step of air on the right, between the name and the nav.
+    padding-right: space(1);
     color: $text-primary;
 
     @include heading-face;

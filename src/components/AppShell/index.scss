@@ -81,11 +81,6 @@
   }
 }
 
-// The shell's brand takes a step of air on its right, which the public frame's does not.
-.app-shell__brand {
-  padding-right: space(1);
-}
-
 .app-shell__theme {
   display: inline-flex;
 }
