@@ -45,17 +45,16 @@ const RESIN: StockJar = {
   threshold: null,
 };
 
-const Dialog = ({ jars }: { jars: StockJar[] }): ReactElement => (
+const Dialog = ({ jars, openOn }: { jars: StockJar[]; openOn?: string }): ReactElement => (
   <StockDialog
     workspaceId={WORKSPACE}
     ingredientId={INGREDIENT}
     ingredientName="Testwort"
     forms={FORMS}
     jars={jars}
+    openOn={openOn}
   />
 );
-
-export const Default: Story = { render: () => <Dialog jars={[LEAF, OIL]} /> };
 
 /** Sets a box's value as typing would, so react-hook-form hears it. */
 function type(box: HTMLInputElement | null | undefined, value: string): void {
@@ -158,11 +157,13 @@ const Pressed = ({
   remove = false,
   save = false,
   refuse = false,
+  openOn,
 }: {
   jars: StockJar[];
   remove?: boolean;
   save?: boolean;
   refuse?: boolean;
+  openOn?: string;
 }): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
   useRefusingApi(refuse ? REFUSAL : save ? NOT_FOUND : null);
@@ -192,7 +193,7 @@ const Pressed = ({
   }, [remove, save, refuse]);
   return (
     <div ref={root}>
-      <Dialog jars={jars} />
+      <Dialog jars={jars} openOn={openOn} />
     </div>
   );
 };
@@ -203,16 +204,22 @@ const openAllHeldNode = <Pressed jars={[LEAF, OIL, RESIN]} />;
 const openRefusedNode = <Pressed jars={[LEAF, OIL, RESIN]} refuse />;
 const openFailedNode = <Pressed jars={[LEAF, OIL]} save />;
 const openRemovingNode = <Pressed jars={[LEAF, OIL]} remove />;
+// `openOn` names the form chosen as the dialog opens; a form with no jar is added as a new row.
+const openOnAHeldFormNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[1].variantId} />;
+const openOnAFormNotHeldNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[2].variantId} />;
 
 // A modal draws in the page's own document, so its stories sit in a frame of
 // their own (claude-docs/workshop.md).
 
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
-const STATES_STATES: Record<string, ReactNode> = {
+const STOCK_STATES: Record<string, ReactNode> = {
   Open: openNode,
+  'Open On A Held Form': openOnAHeldFormNode,
+  'Open On A Form Not Held': openOnAFormNotHeldNode,
   'Open None Held': openNoneHeldNode,
   'Open All Held': openAllHeldNode,
+  // Refused rows carry the Needs a Fix flag in the form list.
   'Open Refused': openRefusedNode,
   'Open Failed': openFailedNode,
   'Open Removing': openRemovingNode,
@@ -221,7 +228,7 @@ const STATES_STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Open' },
   argTypes: {
-    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+    state: { control: 'select', options: Object.keys(STOCK_STATES), mapping: STOCK_STATES },
   },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
