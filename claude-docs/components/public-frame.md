@@ -42,8 +42,8 @@ request keeps its 404 or 308.
 ## Server-rendered
 
 The frame is a server component. Its two client parts are `ThemeToggle`, which
-works as a button after hydration, and `public-nav.tsx`, which reads
-`usePathname()` to mark the current page, as the shell's `SiteNav` does. Both
+works as a button after hydration, and the shell's `SiteNav` (`AppShell/site-nav.tsx`), which reads
+`usePathname()` to mark the current page, given the Compendium as its one link. Both
 still render on the server, so the chrome, the mark included, is in the HTML a
 crawler or a script-less browser receives. There is no client island that
 fetches and no `me` call ([`design-decisions/mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md)).
@@ -62,7 +62,7 @@ for the current page: weight and a `$rule-heavy` accent rule drawn as a border,
 which forced colours keeps and a box-shadow it drops. The shell's nav draws the
 same mark from the same mixin.
 
-The bar's parts that are the same in both frames (inner row, brand, initials, nav, end group, and their narrow-window rules) are one mixin, `frame-bar($block)` in `src/scss/_frame-bar.scss`, included by both stylesheets. What stays here is the sticky offset (`0px`), the unpinned bar, and the Compendium link's tighter padding at `$shell-phone-width`. The two brand spans are `BrandName` in `src/components/AppShell/brand-name.tsx`, used by both.
+The bar's parts that are the same in both frames (inner row, brand, initials, end group, and their narrow-window rules) are one mixin, `frame-bar($block)` in `src/scss/_frame-bar.scss`, included by both stylesheets. The nav is the shell's too: the frame renders `SiteNav` with the one Compendium link and takes its class, `.app-shell__nav`, styled in AppShell's sheet (which `PublicFrame` imports). What stays here is the sticky offset (`0px`), the unpinned bar, and two overrides under `.public-frame .app-shell__nav`: the nav stays in the bar under `$shell-tablet-width` (`display: block` over the shell's `display: none`), and the links sit closer (`0 space(2)`) at `$shell-phone-width`. The two brand spans are `BrandName` in `src/components/AppShell/brand-name.tsx`, used by both.
 
 ## Stories
 

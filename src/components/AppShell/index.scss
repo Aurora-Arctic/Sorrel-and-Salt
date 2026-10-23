@@ -60,8 +60,51 @@
   margin-bottom: 0;
 }
 
-// The bar's inner row, brand, nav and end group, shared with PublicFrame (_frame-bar.scss).
+// The bar's inner row, brand and end group, shared with PublicFrame (_frame-bar.scss).
 @include frame-bar(app-shell);
+
+// The links fill the bar's height, square, so the current one's rule sits along the bar's
+// foot and a hover washes a column of it, as the section nav's tabs do in the context row.
+.app-shell__nav {
+  align-self: stretch;
+
+  ul {
+    @include list-reset;
+
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    // The item stretches to the bar; the link has to be told to fill it.
+    height: 100%;
+    padding: 0 space(3);
+    color: $text-primary;
+    text-decoration: none;
+    white-space: nowrap;
+    @include theme-transition(background-color, color);
+
+    &:hover {
+      background-color: $fill-quiet;
+    }
+
+    // Inside the link, where the bar's edge would clip an outside ring.
+    &:focus-visible {
+      @include focus-ring($placement: inset);
+    }
+
+    &[aria-current='page'] {
+      @include nav-current;
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+}
 
 // The shell's brand takes a step of air on its right, which the public frame's does not.
 .app-shell__brand {

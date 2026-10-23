@@ -29,9 +29,15 @@
 // The bar's inner row, brand, nav and end group, shared with AppShell (_frame-bar.scss).
 @include frame-bar(public-frame);
 
-// The links sit closer at a phone's width, as the shell's do not (they leave the bar there).
+// The nav is the shell's (`SiteNav`, `.app-shell__nav`), whose two shell-only rules the public frame
+// does not take: the links stay in the bar under the tablet width (the shell moves them into the
+// account panel), and sit closer at a phone's width.
+.public-frame .app-shell__nav {
+  display: block;
+}
+
 @media (max-width: $shell-phone-width) {
-  .public-frame__nav a {
+  .public-frame .app-shell__nav a {
     padding: 0 space(2);
   }
 }

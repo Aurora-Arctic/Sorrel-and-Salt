@@ -3,10 +3,10 @@
 
 // The parts of the site's top bar that AppShell and PublicFrame draw alike, written once so a
 // change to the bar reaches both. `$block` is the frame's class (`app-shell`, `public-frame`):
-// the bar's inner row, the brand and its initials, the site nav, and the end group, with the
+// the bar's inner row, the brand and its initials, and the end group, with the
 // narrow-window media queries that shorten the row and swap the name for its initials. What
-// differs between the two frames (the shell's sticky bar and its tablet-width nav hiding, the
-// public frame's closer nav links at a phone's width) stays in each frame's own stylesheet.
+// differs between the two frames stays in each frame's own stylesheet. The site nav is one class,
+// `.app-shell__nav`, in AppShell's sheet, which both frames use (`SiteNav`).
 // claude-docs/components/public-frame.md, "Styling", sets out both lists.
 @mixin frame-bar($block) {
   .#{$block}__bar-inner {
@@ -41,49 +41,6 @@
 
   .#{$block}__brand-short {
     display: none;
-  }
-
-  // The links fill the bar's height, square, so the current one's rule sits along the bar's
-  // foot and a hover washes a column of it, as the section nav's tabs do in the context row.
-  .#{$block}__nav {
-    align-self: stretch;
-
-    ul {
-      @include list-reset;
-
-      display: flex;
-      align-items: stretch;
-      height: 100%;
-    }
-
-    a {
-      display: inline-flex;
-      align-items: center;
-      // The item stretches to the bar; the link has to be told to fill it.
-      height: 100%;
-      padding: 0 space(3);
-      color: $text-primary;
-      text-decoration: none;
-      white-space: nowrap;
-      @include theme-transition(background-color, color);
-
-      &:hover {
-        background-color: $fill-quiet;
-      }
-
-      // Inside the link, where the bar's edge would clip an outside ring.
-      &:focus-visible {
-        @include focus-ring($placement: inset);
-      }
-
-      &[aria-current='page'] {
-        @include nav-current;
-      }
-
-      @include reduced-motion {
-        transition: none;
-      }
-    }
   }
 
   .#{$block}__end {

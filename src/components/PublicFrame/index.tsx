@@ -3,8 +3,10 @@ import type { ReactElement } from 'react';
 import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
 import ThemeToggle from '../ThemeToggle';
-import PublicNav from './public-nav';
+import SiteNav from '../AppShell/site-nav';
+import type { SiteLink } from '../AppShell/types';
 import type { PublicFrameProps } from './types';
+import '../AppShell/index.scss';
 import './index.scss';
 
 // The frame round a public page for a visitor who is not signed in (MB.83):
@@ -13,12 +15,17 @@ import './index.scss';
 // A signed-in visitor gets `AppShell` from the same layout instead
 // (`src/app/(public)/layout.tsx`). `.skip-link` and `.skip-target` are
 // drawn by AppShell's stylesheet, which the layout always loads with it. A
-// server component; its nav is the one client part (`public-nav.tsx`, which
+// server component; its nav is the shell's `SiteNav`, the one client part (it
 // marks the current page), and renders on the server too, so the chrome is in
 // the HTML a crawler or a script-less browser receives.
 // The body is the shell's `MainBody` (M12.47), so a move between public pages
 // draws the destination's skeleton under the bar as the shell does.
 // See claude-docs/components/public-frame.md.
+
+// The one link the public bar holds; the shell's `SiteNav` draws it.
+const COMPENDIUM_LINK: readonly SiteLink[] = [
+  { label: 'Compendium', href: '/compendium', base: '/compendium' },
+];
 
 const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
   <div className="public-frame">
@@ -30,7 +37,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
         <Link href="/" className="public-frame__brand">
           <BrandName block="public-frame" />
         </Link>
-        <PublicNav />
+        <SiteNav links={COMPENDIUM_LINK} />
         <div className="public-frame__end">
           <Link className="btn btn--solid btn--medium" href="/sign-in">
             Sign In
