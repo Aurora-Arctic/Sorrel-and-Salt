@@ -100,6 +100,8 @@ one's own id) throws.
 
 ## Styling
 
+The bar's inner row, brand, initials, nav, end group and their narrow-window rules are the mixin `frame-bar($block)` in `src/scss/_frame-bar.scss`, shared with [`PublicFrame`](public-frame.md); this stylesheet keeps what is the shell's own (the sticky pin, the brand's right padding, hiding the nav under `$shell-tablet-width`, the theme and saved-message wrappers). The brand's two spans are `BrandName` in `brand-name.tsx`.
+
 Measurements come from the signed-off mock-up, as tokens
 ([`styling.md`](../styling.md), "The application shell and the layers"). The
 bar is `position: sticky; top: $top-inset` at `layer('shell')`, exactly

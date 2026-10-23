@@ -62,6 +62,8 @@ for the current page: weight and a `$rule-heavy` accent rule drawn as a border,
 which forced colours keeps and a box-shadow it drops. The shell's nav draws the
 same mark from the same mixin.
 
+The bar's parts that are the same in both frames (inner row, brand, initials, nav, end group, and their narrow-window rules) are one mixin, `frame-bar($block)` in `src/scss/_frame-bar.scss`, included by both stylesheets. What stays here is the sticky offset (`0px`), the unpinned bar, and the Compendium link's tighter padding at `$shell-phone-width`. The two brand spans are `BrandName` in `src/components/AppShell/brand-name.tsx`, used by both.
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PublicFrame/index.stories.tsx) —
