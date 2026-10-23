@@ -469,6 +469,9 @@ the tests [`tests.md`](tests.md).
   the card, a verified account gets a quiet button to the account page,
   reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
+- **The front page offers it directly.** `/` is public, and for an unverified
+  signed-in account its Continue points at `/account/email?next=<landing>`
+  rather than at a page that would send it there.
 - **No other protected page shows an unverified account anything.** The public
   pages, `/` and the compendium, are open to it. `requireSession()`
   sends a session whose row is unverified to
