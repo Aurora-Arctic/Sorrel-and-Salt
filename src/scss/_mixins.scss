@@ -982,6 +982,13 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
     color: $text-primary;
   }
 
+  // A button takes the shared ring; without it Chromium drew its own default one (MB.121).
+  // A link keeps the accent ring the typography gives every link, so the ring is set on a
+  // button alone, `:where()` keeping the selector no heavier than a class and a pseudo-class.
+  &:where(button):focus-visible {
+    @include focus-ring;
+  }
+
   @include reduced-motion {
     transition: none;
   }
