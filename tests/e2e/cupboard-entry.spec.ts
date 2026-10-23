@@ -85,8 +85,14 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
     page.getByRole('heading', { level: 1, name: 'Fixture Reference Wort' }),
   ).toBeVisible();
   // Every page holds an empty status region for click feedback (M12.31); it is
-  // the marks, a status with words in it, that the public page lacks.
-  await expect(page.getByRole('status').filter({ hasText: /\S/ })).toHaveCount(0);
+  // the coven's marks, a status with words in it, that the public page lacks. The review mark
+  // (M14.8) is the compendium's own, shown to everyone, so it is not one of them.
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: /\S/ })
+      .filter({ hasNotText: /Review/ }),
+  ).toHaveCount(0);
   await expect(page.getByText('Fixture Our Hedgewort')).toHaveCount(0);
 });
 
