@@ -108,3 +108,7 @@ variants:
 # Bean
 
 The common bean, Phaseolus vulgaris, is an annual of the legume family, Fabaceae, whose climbing or bushy vines bear leaves in three leaflets, small white, pink or purple flowers, and pods holding four to eight kidney-shaped seeds in a wide range of colours. Wild plants are native to the Americas, and it was domesticated on two separate occasions, once in Mesoamerica and once in the far south of the Andes, some eight thousand years ago; with maize and squash it formed the Three Sisters of Indigenous American farming. It reached Europe in the Columbian exchange, and Culpeper knew it as the French or kidney bean, a weak climber that fruits only when staked, and set it under Venus. Beans in general carry old lore of harvest and death. Cunningham calls them sacred to harvest goddesses and records Roman offerings of beans and pork to Cardea each first of June and beans shared at Roman funerals; Grieve notes that Italians gave beans to the poor each year on the date of a death. Telling fortunes with beans has its own name, favomancy. In magic a dried bean is carried against negativity and hostile sorcery, shaken in rattles to drive off spirits, rubbed on warts under a waning moon, laid with six others in a circle to draw a lover, and held in open palms while meditating on the truth of a matter.
+
+#### Edit Notes for Claude
+
+- Deity gap: Carna (Kynes, under "Bean"), not in the vocabulary; link once M14.15 adds it.
