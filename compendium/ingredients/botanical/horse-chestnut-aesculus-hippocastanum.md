@@ -3,7 +3,7 @@ status: needs-review
 nomenclature: botanical
 canonicalName: Aesculus hippocastanum
 toxic: true
-safetyNotes: Poisonous. Cunningham marks it Poison, and Kynes says the nuts of the horse chestnut are toxic if ingested. Wikipedia says the raw seed, leaf, bark and flower are toxic because of aesculin and should not be eaten. The AHPA handbook (Safety Class 1) says allergic reactions, including anaphylaxis, have been reported, and kidney and liver damage after injections of purified extracts.
+safetyNotes: Poisonous. Cunningham marks it Poison, and Kynes says the nuts of the horse chestnut are toxic if ingested. Wikipedia says the raw seed, leaf, bark and flower are toxic because of aesculin and should not be eaten. The AHPA handbook says allergic reactions, including anaphylaxis, have been reported, and kidney and liver damage after injections of purified extracts.
 elements:
   - fire
   - air

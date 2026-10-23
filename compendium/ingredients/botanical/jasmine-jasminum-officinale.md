@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Jasminum officinale
-safetyNotes: The AHPA handbook (Safety Class 1) lists no contraindications. It says an animal study found some anti-implantation activity at large doses but no adverse effects on developing fetuses, and a test in volunteers found 3 per cent jasmine absolute produced sensitisation in 2 of 25 when tested with other sensitising agents.
+safetyNotes: The AHPA handbook says an animal study found some anti-implantation activity at large doses but no adverse effects on developing fetuses, and a test in volunteers found 3 per cent jasmine absolute produced sensitisation in 2 of 25 when tested with other sensitising agents.
 elements:
   - air
   - earth
@@ -94,7 +94,7 @@ variants:
 
 # Jasmine
 
-Common jasmine, or poet's jasmine, is a climbing shrub of the olive family, adored for its fragrant star-shaped flowers. Wikipedia says it is native to the Caucasus and parts of Asia and is widely naturalised, and that its Latin epithet means useful. Kynes says the name comes from the Persian yasmin, that its scent is strongest at night, so it was called queen of the night in India, and that it was a bridal flower in India, Pakistan, Indonesia and sixteenth-century Italy. Cunningham adds dried flowers to sachets and love mixtures to draw a spiritual love, carries or burns them to draw money, and burns them in the bedroom for prophetic dreams. The AHPA handbook (Safety Class 1) lists no contraindications. Both magical books cover more than one jasmine, Cunningham with J. grandiflorum and J. odoratissimum and Kynes with winter jasmine, so those citations are left for the curator.
+Common jasmine, or poet's jasmine, is a climbing shrub of the olive family, adored for its fragrant star-shaped flowers. Wikipedia says it is native to the Caucasus and parts of Asia and is widely naturalised, and that its Latin epithet means useful. Kynes says the name comes from the Persian yasmin, that its scent is strongest at night, so it was called queen of the night in India, and that it was a bridal flower in India, Pakistan, Indonesia and sixteenth-century Italy. Cunningham adds dried flowers to sachets and love mixtures to draw a spiritual love, carries or burns them to draw money, and burns them in the bedroom for prophetic dreams. Both magical books cover more than one jasmine, Cunningham with J. grandiflorum and J. odoratissimum and Kynes with winter jasmine, so those citations are left for the curator.
 
 #### Questions for the Curator
 

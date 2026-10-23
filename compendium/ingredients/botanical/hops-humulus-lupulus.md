@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Humulus lupulus
-safetyNotes: The AHPA handbook (Safety Class 1) reports allergic reactions to hops, mainly in farm or brewery workers regularly exposed to fresh or dried hops. Wikipedia says handling hops can cause dermatitis, and estimates that about 1 in 30 people are affected.
+safetyNotes: The AHPA handbook reports allergic reactions to hops, mainly in farm or brewery workers regularly exposed to fresh or dried hops. Wikipedia says handling hops can cause dermatitis, and estimates that about 1 in 30 people are affected.
 elements:
   - air
   - earth

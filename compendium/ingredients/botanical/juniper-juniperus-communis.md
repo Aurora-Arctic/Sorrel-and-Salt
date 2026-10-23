@@ -1,9 +1,9 @@
 ---
-status: approved
+status: needs-review
 nomenclature: botanical
 canonicalName: Juniperus communis
 toxic: true
-safetyNotes: Large amounts of the berries are toxic. Kynes says ingesting large amounts of berries can be toxic. The AHPA handbook (Safety Classes 2b and 2d) says juniper is not for use in pregnancy except under the supervision of a qualified healthcare practitioner, not for use exceeding 6 weeks in succession, and to be used with caution in people with inflammatory kidney disease.
+safetyNotes: Kynes says "Ingesting large amounts of berries can be toxic". The AHPA handbook (Safety Classes 2b and 2d), whose text is written for the genus Juniperus (spp.) and not for Juniperus communis alone, says juniper is not for use in pregnancy except under the supervision of a qualified healthcare practitioner, not for use exceeding 6 weeks in succession, and to be used with caution in people with inflammatory kidney disease.
 elements:
   - earth
   - fire
@@ -46,7 +46,7 @@ references:
   - source: cunningham-herbs
     locator: under "Juniper"
     nameBasis: resolved
-    headedAs: Juniper
+    headedAs: Juniper (Juniperus communes)
     resolvedBy: wikipedia-juniperus-communis
     supports:
       - elements
@@ -71,7 +71,7 @@ references:
       - description
   - source: ahpa-safety
     locator: p. 487
-    nameBasis: stated
+    nameBasis: unresolved
     supports:
       - canonicalName
       - nomenclature
@@ -91,7 +91,7 @@ variants:
       - source: cunningham-herbs
         locator: under "Juniper"
         nameBasis: resolved
-        headedAs: Juniper
+        headedAs: Juniper (Juniperus communes)
         resolvedBy: wikipedia-juniperus-communis
         supports:
           - form
@@ -104,7 +104,7 @@ variants:
           - description
       - source: ahpa-safety
         locator: p. 487
-        nameBasis: stated
+        nameBasis: unresolved
         supports:
           - form
           - description
@@ -118,3 +118,9 @@ variants:
 # Juniper
 
 Common juniper is a small evergreen tree or shrub of the cypress family with the largest range of any woody plant, across the cool temperate Northern Hemisphere. Wikipedia says it has needle-like leaves in whorls of three, and berry-like cones that ripen over 18 months to purple-black, which flavour gin, whose name derives from an old French word for juniper, and certain beers. Kynes records that the Greeks and Romans burned it as incense, that Germans called the berries holy berries and burned it at cremations to ward off demons, and that cutting one down in Wales was believed to bring death within a year. Cunningham calls it masculine, ruled by the Sun and fire, and hangs it at the door against evil and theft, burns it in exorcism, wears a sprig against accidents and adds it to love mixtures. Kynes strings berries into a circle to attract a lover and keeps a sachet of berries for divination and dream work. Kynes warns that eating large amounts of berries can be toxic. The AHPA handbook (Safety Classes 2b and 2d) advises against use in pregnancy and for more than 6 weeks in a row.
+
+#### Questions for the Curator
+
+<!-- audit:ahpa-safety:Juniperus spp. -->
+
+Does ahpa-safety at p. 487, cited on the entry, describe Juniperus communis alone? The handbook's heading is "Juniperus spp." and lists Juniperus communis, J. monosperma, J. osteosperma, J. oxycedrus, so its safety text is written for the genus or the group, not for Juniperus communis alone. Settle it as `stated` or `resolved` from the source, or replace the citation.

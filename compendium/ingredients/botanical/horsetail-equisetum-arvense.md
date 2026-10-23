@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Equisetum arvense
-safetyNotes: The AHPA handbook (Safety Class 2d) says horsetail is not for use in persons with kidney disease, and that it is a diuretic. Its editors say the powdered herb is not recommended for children or for prolonged use because of its inorganic silica content, that chewing it may damage tooth enamel, and that it is often adulterated with Equisetum palustre, which contains the potentially toxic alkaloid palustrin. Wikipedia says Equisetum arvense is toxic to livestock, particularly horses.
+safetyNotes: The AHPA handbook (Safety Class 2d), whose text is written for the genus Equisetum (spp.) and not for Equisetum arvense alone, says horsetail is not for use in persons with kidney disease, and that it is a diuretic. Its editors say the powdered herb is not recommended for children or for prolonged use because of its inorganic silica content, that chewing it may damage tooth enamel, and that it is often adulterated with Equisetum palustre, which contains the potentially toxic alkaloid palustrin. Wikipedia says Equisetum arvense is toxic to livestock, particularly horses.
 elements:
   - earth
 celestialBodies:
@@ -31,7 +31,7 @@ references:
       - description
   - source: ahpa-safety
     locator: p. 339
-    nameBasis: stated
+    nameBasis: unresolved
     supports:
       - canonicalName
       - nomenclature
@@ -56,3 +56,7 @@ Horsetail, here field horsetail, is a fern relative found across the arctic and 
 <!-- audit:cunningham-herbs:Horsetail -->
 
 Does cunningham-herbs under "Horsetail", cited on the entry, describe Equisetum arvense alone? Cunningham's heading reads "Horsetail (Equisetum arvense; E. telmateia, E. spp.)" and adds E. hyemale as a poison, so his powers may belong to any of them. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+<!-- audit:ahpa-safety:Equisetum spp. -->
+
+Does ahpa-safety at p. 339, cited on the entry, describe Equisetum arvense alone? The handbook's heading is "Equisetum spp." and lists Equisetum arvense, E. telmateia, so its safety text is written for the genus or the group, not for Equisetum arvense alone. Settle it as `stated` or `resolved` from the source, or replace the citation.

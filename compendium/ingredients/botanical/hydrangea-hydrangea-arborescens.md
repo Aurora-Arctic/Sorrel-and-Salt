@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Hydrangea arborescens
 toxic: true
-safetyNotes: Toxic. The AHPA handbook (Safety Class 1) notes cyanogenic glycosides (hydrangin, about 1 to 3 per cent) and says the flower and leaf have been reported to cause toxic symptoms in humans. It also reports allergic contact dermatitis, and dizziness and a sense of oppression of the chest after an overdose.
+safetyNotes: Toxic. The AHPA handbook notes cyanogenic glycosides (hydrangin, about 1 to 3 per cent) and says the flower and leaf have been reported to cause toxic symptoms in humans. It also reports allergic contact dermatitis, and dizziness and a sense of oppression of the chest after an overdose.
 folkNames:
   - Seven Barks
   - Sevenbark

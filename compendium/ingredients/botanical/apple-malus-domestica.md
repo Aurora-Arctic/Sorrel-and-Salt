@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Malus domestica
 toxic: true
-safetyNotes: The seeds contain amygdalin, which releases cyanide once digested. A few seeds do no harm, but very large amounts can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.
+safetyNotes: The seeds contain amygdalin, which releases cyanide once digested. Very large amounts of seeds can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.
 elements:
   - water
   - air
