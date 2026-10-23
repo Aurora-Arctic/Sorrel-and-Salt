@@ -297,11 +297,11 @@ $formal-line: $icon-size;
   }
 }
 
-// Details, Stock, Forms and References. Past a tablet's width Details' text and
-// lists, and Stock after its text, run as two independent columns; the forms
-// then start below both (`entry-body`, `_mixins.scss`).
+// Stock, Details, the side column, Forms and References. Past a tablet's width the
+// side column stands beside Stock and Details (a grid); the forms then start
+// below (`entry-body`, `_mixins.scss`).
 .ingredient-entry__body {
-  @include entry-body('.ingredient-entry__text');
+  @include entry-body('#details', '.ingredient-entry__side');
 }
 
 // A section: its heading, its text (description and caution), then its side
@@ -332,7 +332,7 @@ $formal-line: $icon-size;
 }
 
 // Every section's h2 stands over a rule (`entry-heading-rule`): Details' here, Stock's on its
-// head row below, the forms' and the references' beside theirs.
+// head's h2 below, the forms' and the references' beside theirs.
 .ingredient-entry__section > h2 {
   @include entry-heading-rule;
 }
@@ -344,8 +344,8 @@ $formal-line: $icon-size;
 // The side column's blocks stand further apart than the text's parts, so
 // each heading reads as its own list and not as the last one's tail; under the
 // text it stands a clear step off it, beside the text past a tablet's width.
-// Details' floats down the right on its own; a form's stands level with that form's text.
-.ingredient-entry__body > .ingredient-entry__section > .ingredient-entry__side {
+// Details' stands in the body's right column, level with its first section; a form's stands level with that form's text.
+.ingredient-entry__body > .ingredient-entry__side {
   @include entry-column-side;
 }
 
@@ -398,10 +398,10 @@ $formal-line: $icon-size;
   justify-content: space-between;
   gap: space(2);
 
-  // The rule runs under the heading and its button as one row.
-  @include entry-heading-rule;
-
+  // The rule runs under the heading's text alone; the button stays at the row's end.
   > h2 {
+    @include entry-heading-rule;
+
     margin: 0;
   }
 

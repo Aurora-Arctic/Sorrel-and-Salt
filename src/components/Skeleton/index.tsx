@@ -65,25 +65,35 @@ const PageHead = ({
   </div>
 );
 
-// An ingredient's page below its head, as IngredientEntry lays it: Details,
-// its text beside a side column of headed lists, then Forms with a form's
-// section laid the same way. Bare bars on the page, with no card surface.
-const EntryPart = (): ReactElement => (
-  <div className="skeleton__entry-section">
+// An ingredient's page below its head, as IngredientEntry lays it: Stock, Details, its side
+// column of headed lists beside them, then Forms with a form's section laid the same way. Bare
+// bars on the page, with no card surface.
+const EntrySide = (): ReactElement => (
+  <div className="skeleton__entry-side">
+    {Array.from({ length: 4 }, (_, at) => (
+      <div key={at} className="skeleton__entry-block">
+        <span />
+        <span />
+      </div>
+    ))}
+  </div>
+);
+
+// `details` is the page's Details section, whose side column stands apart in the body
+// (`EntrySections`); a form's keeps its own inside.
+const EntryPart = ({ details = false }: { details?: boolean }): ReactElement => (
+  <div
+    className={
+      details ? 'skeleton__entry-section skeleton__entry-details' : 'skeleton__entry-section'
+    }
+  >
     <span className="skeleton__heading" />
     <div className="skeleton__entry-text">
       <span />
       <span />
       <span />
     </div>
-    <div className="skeleton__entry-side">
-      {Array.from({ length: 4 }, (_, at) => (
-        <div key={at} className="skeleton__entry-block">
-          <span />
-          <span />
-        </div>
-      ))}
-    </div>
+    {!details && <EntrySide />}
   </div>
 );
 
@@ -109,7 +119,8 @@ const StockPart = (): ReactElement => (
 const EntrySections = (): ReactElement => (
   <div className="skeleton__entry-body">
     <StockPart />
-    <EntryPart />
+    <EntryPart details />
+    <EntrySide />
     <div className="skeleton__entry-forms">
       <span className="skeleton__heading" />
       <EntryPart />

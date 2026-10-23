@@ -29,16 +29,18 @@ is done and committed on
 
 ## What was changed
 
-| Change                                                                                            | Kind                          | Can be dropped alone |
-| ------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------- |
-| The entry page's Stock section loses its `.panel` box                                             | Required by MB.121            | No                   |
-| Stock is the first section, above Details, and the jump menu follows (option C)                   | Owner's answer                | Yes                  |
-| Every section's h2 stands over a `$hairline` rule, `entry-heading-rule` (option A)                | Owner's answer                | Yes                  |
-| Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring      | Accessibility fix             | Yes                  |
-| The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition                    | No                   |
-| Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal, chosen by the owner | Yes                  |
-| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks, removed 2026-10-23     | Removed              |
-| A viewer's empty cupboard says which roles can add                                                | Owner's answer                | No                   |
+| Change                                                                                             | Kind                          | Can be dropped alone |
+| -------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------- |
+| The entry page's Stock section loses its `.panel` box                                              | Required by MB.121            | No                   |
+| Stock is the first section, above Details, and the jump menu follows (option C)                    | Owner's answer                | Yes                  |
+| Every section's h2 stands over a `$hairline` rule, `entry-heading-rule` (option A)                 | Owner's answer                | Yes                  |
+| The rule is the heading text's width plus 1rem, 0.25rem under the text                             | Owner's answer                | Yes                  |
+| The side column stands beside the first section, its first heading level at the bottom with the h2 | Owner's answer                | Yes                  |
+| Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring       | Accessibility fix             | Yes                  |
+| The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below)  | Repetition                    | No                   |
+| Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount              | Proposal, chosen by the owner | Yes                  |
+| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                    | Mocks, removed 2026-10-23     | Removed              |
+| A viewer's empty cupboard says which roles can add                                                 | Owner's answer                | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
 differs. The viewer's added line changes what a viewer reads, nothing else.
@@ -71,6 +73,32 @@ obvious way to set it apart, in a way the page's other sections can share.
   heading does, so on a tablet or wider it stops at the text column and never
   runs under Details' side column; the Forms and References headings span the
   whole body, so their rules do too.
+- **The rule is short** (owner, 2026-10-23). It is as wide as the heading's own
+  text plus `space(4)` (1rem) past it, starting at the heading's left edge, and
+  never wider than the column, so a long heading wraps and the rule keeps to the
+  column. It sits `space(1)` (0.25rem) under the text. For Stock it follows the
+  "Stock" h2 and not the head row, so the Edit Stock button stays where it was.
+  Measured at 1280, 1024, 768 and 375px: each rule is the text's width plus 16px.
+- **The side column stands beside the first section** (owner, 2026-10-23). The
+  side column (Correspondences, Folk Names, Categories, Substitutes, and "In the
+  Compendium" when shown) lines up with the top section, Stock if shown and
+  Details if not. The body is now a grid from the tablet width up; the side column
+  spans both rows in column 2, and row 2 is `1fr` so a long side column does not
+  push Stock or Details. To do this the side `div` moved out of the Details
+  `<section>` to stand after it in the body. **Cost:** the Details region no longer
+  contains the side blocks; they are plain blocks in the body, which screen readers
+  read straight after Details. The gap between Details and the side column on a
+  phone is `space(6)` (the body's gap), where it was `space(4)`. On a phone, and
+  below the tablet width generally (768px included), the page is one column: Stock,
+  Details, the side column, then the forms.
+- **Bottom to bottom** (owner, 2026-10-23). The bottom of the side column's first
+  heading's text is level with the bottom of the first section's h2 text. An h3 is
+  smaller than an h2, so level tops left it about 6px higher; the side column is
+  dropped by `calc(heading-size(2) * 1.2 - heading-size(3) * 1.225)`, 0.375rem
+  (6px). Measured in Chromium, text bottom to text bottom, at 1280, 1024 and
+  900px: 0px with Stock ("In the Compendium" first, and Correspondences first)
+  and 0px without Stock (Details' h2 against Correspondences). Before the drop the
+  h2 was 6.0px lower in all of them.
 
 Options not chosen: a tinted full-bleed band (it either fades the jar's shine
 or needs a new token, and it would be one different section again), and a
@@ -252,17 +280,17 @@ not;[^baymard] the sentence is that overview. No change.
 
 ## The acceptance criteria
 
-| Criterion                                                                 | How it is met                                                                                                       |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                             |
-| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add           |
-| The Stock section has no `.panel`, and the record says what sets it apart | Removed; it is the first section and every section's h2 has a hairline rule ("The Stock section without its panel") |
-| The DRY merges are listed                                                 | "The DRY merges", above                                                                                             |
-| Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                                       |
-| The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                                      |
-| Low and Out are never shown by colour alone                               | In words to a screen reader; by sight, the symbol before the amount (P1)                                            |
-| Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                                       |
-| Each change names its source in Chicago form                              | The notes below                                                                                                     |
+| Criterion                                                                 | How it is met                                                                                                                                             |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                                                                   |
+| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add                                                 |
+| The Stock section has no `.panel`, and the record says what sets it apart | Removed; it is the first section and every section's h2 has a short hairline rule, with the side column beside it ("The Stock section without its panel") |
+| The DRY merges are listed                                                 | "The DRY merges", above                                                                                                                                   |
+| Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                                                                             |
+| The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                                                                            |
+| Low and Out are never shown by colour alone                               | In words to a screen reader; by sight, the symbol before the amount (P1)                                                                                  |
+| Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                                                                             |
+| Each change names its source in Chicago form                              | The notes below                                                                                                                                           |
 
 ## Defects to mint
 

@@ -461,45 +461,45 @@ const IngredientEntry = ({
             <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
           </div>
-          {/* A plain div, not an aside: one complementary landmark per section
-            would be noise, and each block is already headed and labelled. */}
-          <div className="ingredient-entry__side">
-            {replaces && <ReplacesBlock replaces={replaces} />}
-            {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
-            <CorrespondenceBlock
-              block={blockOf('details', 'correspondences')}
-              rows={correspondences(shown, deities)}
-              level={3}
-            />
-            <ListBlock
-              block={blockOf('details', 'folk-names')}
-              title="Folk Names"
-              level={3}
-              empty="No folk names recorded."
-            >
-              {folkNames.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ListBlock>
-            <ListBlock
-              block={blockOf('details', 'categories')}
-              title="Categories"
-              level={3}
-              empty="No categories recorded."
-              className="ingredient-entry__chips"
-            >
-              {categoryItems(categories)}
-            </ListBlock>
-            <ListBlock
-              block={blockOf('details', 'substitutes')}
-              title="Substitutes"
-              level={3}
-              empty="No substitutes recorded."
-            >
-              {substituteItems(substitutes, hrefOf)}
-            </ListBlock>
-          </div>
         </section>
+        {/* A plain div, not an aside: one complementary landmark per section
+          would be noise, and each block is already headed and labelled. */}
+        <div className="ingredient-entry__side">
+          {replaces && <ReplacesBlock replaces={replaces} />}
+          {similar && <ReplacesBlock replaces={similar} heading="Similar in the Compendium" />}
+          <CorrespondenceBlock
+            block={blockOf('details', 'correspondences')}
+            rows={correspondences(shown, deities)}
+            level={3}
+          />
+          <ListBlock
+            block={blockOf('details', 'folk-names')}
+            title="Folk Names"
+            level={3}
+            empty="No folk names recorded."
+          >
+            {folkNames.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ListBlock>
+          <ListBlock
+            block={blockOf('details', 'categories')}
+            title="Categories"
+            level={3}
+            empty="No categories recorded."
+            className="ingredient-entry__chips"
+          >
+            {categoryItems(categories)}
+          </ListBlock>
+          <ListBlock
+            block={blockOf('details', 'substitutes')}
+            title="Substitutes"
+            level={3}
+            empty="No substitutes recorded."
+          >
+            {substituteItems(substitutes, hrefOf)}
+          </ListBlock>
+        </div>
 
         {/* The forms, headed so
           the forms read as one part of the page (the owner's call), each
