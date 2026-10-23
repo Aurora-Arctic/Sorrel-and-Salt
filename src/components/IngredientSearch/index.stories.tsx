@@ -1,12 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
-import { type ReactElement, useLayoutEffect } from 'react';
+import { useEffect, type ReactElement } from 'react';
+import {
+  IngredientSearchCupboardMatchesDocument,
+  IngredientSearchMatchesDocument,
+  type Nomenclature,
+} from '@/gql/graphql';
+import { answerQuery, useMockHandlers } from '../../../.storybook/mock-api';
 import IngredientSearch, { IngredientSearchForm } from '.';
 import type { IngredientSearchMatch } from './types';
 
 // Render-only; behaviour is asserted in tests/components/IngredientSearch. The
-// dropdown asks `/api/graphql`, which the workshop does not serve, so each
-// story stubs `window.fetch` for as long as it is mounted. Names are invented.
+// dropdown asks `/api/graphql`, which the workshop does not serve, so the
+// workshop's fake API answers it (.storybook/mock-api.ts). Names are invented.
 const meta = {
   title: 'Ingredients / Ingredient Search',
 } satisfies Meta;
@@ -23,41 +29,41 @@ const matches = (count: number): IngredientSearchMatch[] =>
     nomenclature: index % 2 === 0 ? 'botanical' : 'none',
   }));
 
-/**
- * Answers the dropdown's lookups with `rows`, the compendium's and a coven's
- * alike; the original `fetch` is put back on unmount.
- */
+// What the dropdown's lookups answer with: the rows the story's controls pick
+// now. The handlers read this on each request, so a change of control is heard
+// without a reload.
+const lookup: { rows: IngredientSearchMatch[]; hasNextPage: boolean } = {
+  rows: [],
+  hasNextPage: false,
+};
+
+const LOOKUPS = [
+  answerQuery(IngredientSearchMatchesDocument, () => ({
+    compendium: {
+      pageInfo: { hasNextPage: lookup.hasNextPage },
+      edges: lookup.rows.map((node) => ({
+        node: { ...node, nomenclature: node.nomenclature as Nomenclature },
+      })),
+    },
+  })),
+  answerQuery(IngredientSearchCupboardMatchesDocument, () => ({
+    workspaceIngredients: {
+      pageInfo: { hasNextPage: lookup.hasNextPage },
+      edges: lookup.rows.map((node) => ({
+        node: { ...node, nomenclature: node.nomenclature as Nomenclature, cupboardEntry: null },
+      })),
+    },
+  })),
+];
+
+/** Answers the dropdown's lookups with `rows`, the compendium's and a coven's alike. */
 function useCannedMatches(rows: IngredientSearchMatch[], hasNextPage: boolean): void {
-  useLayoutEffect(() => {
-    const original = window.fetch;
-    window.fetch = async (input, init) => {
-      const url = new URL(input instanceof Request ? input.url : String(input), location.href);
-      if (url.pathname === '/api/graphql' && typeof init?.body === 'string') {
-        const { operationName } = JSON.parse(init.body) as { operationName?: string };
-        const answer = (data: unknown): Response =>
-          new Response(JSON.stringify({ data }), {
-            headers: { 'content-type': 'application/json' },
-          });
-        if (operationName === 'IngredientSearchMatches') {
-          return answer({
-            compendium: { pageInfo: { hasNextPage }, edges: rows.map((node) => ({ node })) },
-          });
-        }
-        if (operationName === 'IngredientSearchCupboardMatches') {
-          return answer({
-            workspaceIngredients: {
-              pageInfo: { hasNextPage },
-              edges: rows.map((node) => ({ node: { ...node, cupboardEntry: null } })),
-            },
-          });
-        }
-      }
-      return original(input, init);
-    };
-    return () => {
-      window.fetch = original;
-    };
+  // The handlers read `lookup` when a request arrives, so an effect sets it before any can.
+  useEffect(() => {
+    lookup.rows = rows;
+    lookup.hasNextPage = hasNextPage;
   }, [rows, hasNextPage]);
+  useMockHandlers(LOOKUPS);
 }
 
 interface ShellProps {

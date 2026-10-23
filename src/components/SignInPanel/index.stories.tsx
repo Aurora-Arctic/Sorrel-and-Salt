@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import { hangAuth, refuseAuth } from '../../../.storybook/mock-api';
 import { usePressOnMount } from '../../../.storybook/press';
 import { authClient } from '../../lib/auth-client';
 import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '../../lib/sign-in';
@@ -66,6 +67,7 @@ const someUnavailableNode = <SomeUnavailableView />;
 // left unanswered: that button reads "Signing In" and the others are disabled,
 // as while the browser is on its way to the provider (M12.33).
 export const Pending: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {
     lastUsed(null);
     usePressOnMount('Continue with Google');
@@ -73,10 +75,12 @@ export const Pending: Story = {
   },
 };
 
-// Continue with Google pressed, as a person would: the workshop serves no
+// Continue with Google pressed, as a person would: the fake API refuses
 // /api/auth, so the sign-in fails before any redirect, into its callout under
 // that button, with the badge on it (claude-docs/components/click-feedback.md).
 export const Failed: Story = {
+  tags: ['expects-failed-request'],
+  beforeEach: ({ msw }) => msw.use(refuseAuth()),
   render: () => {
     lastUsed(null);
     usePressOnMount('Continue with Google');

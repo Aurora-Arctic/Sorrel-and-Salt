@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
-import { useEffect, useId, useLayoutEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import type {
   CommonNameSuggestionsQuery,
@@ -31,7 +31,7 @@ import IngredientForm from '.';
 import { NameField } from './duplicates';
 import { substituteSummary } from './substitute-summary';
 import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
-import { useHangingFetch } from '../../../.storybook/hanging-fetch';
+import { answerOperations, hangAllOperations, refusal } from '../../../.storybook/mock-api';
 import { press, setInputValue } from '../../../.storybook/press';
 import { Reopenable } from '../../../.storybook/reopenable';
 import type {
@@ -43,28 +43,18 @@ import type {
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
 // Render-only; behaviour is asserted in tests/components/IngredientForm. The
-// workshop has no API, and on staging its pages may not fetch at all
-// (claude-docs/workshop.md, "On staging"), so the story answers the form
-// itself: while it is mounted, a request to /api/graphql naming one of its
-// lookups is answered from the invented rows below, filtered by what was
-// typed, and a save is answered after a pause long enough to watch Save wait.
-// None of it leaves the page. "What to try" above the form says what to type
-// for each state. The TanStack Query client comes from the workshop's global provider
-// (.storybook/preview.tsx), as it does from the app's root layout.
+// workshop has no API, so the fake API (.storybook/mock-api.ts) answers: a
+// request naming one of the form's lookups gets the invented rows below,
+// filtered by what was typed, and a save is answered after a pause long enough
+// to watch Save wait. None of it leaves the page. "What to try" above the
+// form says what to type for each state. The TanStack Query client comes from
+// the workshop's global provider (.storybook/preview.tsx), as it does from the
+// app's root layout.
 const meta = {
   title: 'Ingredients / Ingredient Form',
-  // Every story but the ones that bring their own fetch stand-in (`cannedApi: false`)
-  // is answered from the rows below.
-  decorators: [
-    (Story, { parameters }) =>
-      parameters.cannedApi === false ? (
-        <Story />
-      ) : (
-        <CannedApi>
-          <Story />
-        </CannedApi>
-      ),
-  ],
+  // Every story is answered from the rows below, and the one that shows a wait
+  // for good (`hangAllOperations`) says so in its own `beforeEach`.
+  beforeEach: ({ msw }) => msw.use(CANNED_API),
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
@@ -403,6 +393,9 @@ function answer(operation: string, variables: Record<string, unknown>): object |
   const query = String(variables.query ?? variables.name ?? '');
   const first = Number(variables.first ?? 10);
   switch (operation) {
+    // The curator's delete question counts the covens holding the entry.
+    case 'CompendiumEntryUsers':
+      return { compendiumEntryUsers: 3 };
     case 'FormSuggestions':
       return {
         formSuggestions: page(
@@ -600,13 +593,12 @@ const SAVES = new Set([
 ]);
 
 /**
- * The refusal a save meets, in the body /api/graphql sends one in, or
- * undefined for a save that lands: a name holding "taken" is refused on the
- * name, one holding "refuse" as a whole, and one holding "retired" on its first
- * category picked, so each server error can be seen.
- * A new or edited reference is refused the same way by its title.
+ * The refusal a save meets, or undefined for a save that lands: a name holding
+ * "taken" is refused on the name, one holding "refuse" as a whole, and one
+ * holding "retired" on its first category picked, so each server error can be
+ * seen. A new or edited reference is refused the same way by its title.
  */
-function refusal(operation: string, variables: Record<string, unknown>): object | undefined {
+function saveRefusal(operation: string, variables: Record<string, unknown>) {
   const input = variables.input as
     { name?: string; title?: string; categoryIds?: string[] } | undefined;
   const field = operation.endsWith('Reference') ? 'title' : 'name';
@@ -618,113 +610,59 @@ function refusal(operation: string, variables: Record<string, unknown>): object 
     operation.endsWith('CompendiumIngredient') &&
     !variables.endRedirect
   ) {
-    return {
-      data: null,
-      errors: [
+    return refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [
         {
-          message: 'Validation failed',
-          extensions: {
-            code: 'VALIDATION',
-            fieldErrors: [
-              {
-                path: ['endRedirect'],
-                message:
-                  '"fixturewort-fixtura-vulgaris" redirects to "Fixturewort" (Fixtura vulgaris, whole root) until 4 April 2027, 00:00 UTC — confirm to end that redirect',
-              },
-            ],
-          },
+          path: ['endRedirect'],
+          message:
+            '"fixturewort-fixtura-vulgaris" redirects to "Fixturewort" (Fixtura vulgaris, whole root) until 4 April 2027, 00:00 UTC — confirm to end that redirect',
         },
       ],
-    };
+    });
   }
   if (/taken/i.test(name)) {
-    return {
-      data: null,
-      errors: [
-        {
-          message: 'Validation failed',
-          extensions: {
-            code: 'VALIDATION',
-            fieldErrors: [
-              field === 'title'
-                ? { path: ['title'], message: 'This coven already has a source by that title' }
-                : { path: ['name'], message: 'This coven already has an ingredient by that name' },
-            ],
-          },
-        },
+    return refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [
+        field === 'title'
+          ? { path: ['title'], message: 'This coven already has a source by that title' }
+          : { path: ['name'], message: 'This coven already has an ingredient by that name' },
       ],
-    };
+    });
   }
   // A retired category, picked before an admin deleted it: the first pick's.
   if (/retired/i.test(name) && input?.categoryIds?.length) {
-    return {
-      data: null,
-      errors: [
-        {
-          message: 'Validation failed',
-          extensions: {
-            code: 'VALIDATION',
-            fieldErrors: [{ path: ['categoryIds', 0], message: 'No such category' }],
-          },
-        },
-      ],
-    };
+    return refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['categoryIds', 0], message: 'No such category' }],
+    });
   }
   if (/refuse/i.test(name)) {
-    return {
-      data: null,
-      errors: [
-        {
-          message: `You can't add ${field === 'title' ? 'sources' : 'ingredients'} to this coven`,
-          extensions: { code: 'FORBIDDEN' },
-        },
-      ],
-    };
+    return refusal({
+      message: `You can't add ${field === 'title' ? 'sources' : 'ingredients'} to this coven`,
+      code: 'FORBIDDEN',
+    });
   }
   return undefined;
 }
 
 /**
- * Answers the form from the rows above while the story is mounted, in place
- * of `window.fetch`, which the GraphQL client looks up on every request; a save
- * after `SAVE_DELAY_MS`, refused or accepted. The original is put back on
- * unmount, so no other story sees the stub.
+ * Answers every lookup from the rows above, and a save after `SAVE_DELAY_MS`,
+ * refused or accepted. Set on the meta's `beforeEach`, so each story starts
+ * with it.
  */
-function useCannedApi(): void {
-  useLayoutEffect(() => {
-    const original = window.fetch;
-    window.fetch = async (input, init) => {
-      const url = new URL(input instanceof Request ? input.url : String(input), location.href);
-      if (url.pathname === '/api/graphql' && typeof init?.body === 'string') {
-        const { operationName, variables = {} } = JSON.parse(init.body) as {
-          operationName?: string;
-          variables?: Record<string, unknown>;
-        };
-        const data = operationName ? answer(operationName, variables) : undefined;
-        if (data) {
-          let body: object = { data };
-          if (operationName && SAVES.has(operationName)) {
-            await new Promise((resolve) => setTimeout(resolve, SAVE_DELAY_MS));
-            body = refusal(operationName, variables) ?? body;
-          }
-          return new Response(JSON.stringify(body), {
-            headers: { 'content-type': 'application/json' },
-          });
-        }
-      }
-      return original(input, init);
-    };
-    return () => {
-      window.fetch = original;
-    };
-  }, []);
-}
-
-/** Installs the canned API around a story, for the `decorators` of `meta`. */
-function CannedApi({ children }: { children: ReactNode }) {
-  useCannedApi();
-  return children;
-}
+const CANNED_API = answerOperations(
+  ({ operationName, variables }) => {
+    const data = answer(operationName, variables);
+    if (!data) return undefined;
+    return SAVES.has(operationName) ? (saveRefusal(operationName, variables) ?? data) : data;
+  },
+  { delayFor: (operationName) => (SAVES.has(operationName) ? SAVE_DELAY_MS : 0) },
+);
 
 type CompendiumFormProps =
   Extract<IngredientFormProps, { workspaceId: null }> extends infer P
@@ -1408,9 +1346,8 @@ export const PromoteQuestionCoven: Story = {
  * summary another story already read cannot answer from the cache.
  */
 export const LoadingSubstituteSummary: Story = {
-  parameters: { cannedApi: false },
+  beforeEach: ({ msw }) => msw.use(hangAllOperations()),
   render: () => {
-    useHangingFetch('/api/graphql');
     const id = useId();
     useEffect(() => {
       document

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
+import { hangAuth, refuseAuth } from '../../../.storybook/mock-api';
 import { usePressOnMount } from '../../../.storybook/press';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
@@ -157,16 +158,19 @@ const everyRowStateNode = <EveryRow />;
 // unanswered: the row's button reads "Adding" and waits, as it does while the
 // browser is on its way to the provider (M12.33).
 export const PendingAdd: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {
     usePressOnMount('Add Google');
     return <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
   },
 };
 
-// Remove pressed on Microsoft, as a person would: the workshop serves no
+// Remove pressed on Microsoft, as a person would: the fake API refuses
 // /api/auth, so the removal fails into its callout under Remove Microsoft,
 // with the badge on the button (claude-docs/components/click-feedback.md).
 export const FailedRemove: Story = {
+  tags: ['expects-failed-request'],
+  beforeEach: ({ msw }) => msw.use(refuseAuth()),
   render: () => {
     usePressOnMount('Remove Microsoft');
     return <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;

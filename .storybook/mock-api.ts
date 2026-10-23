@@ -17,6 +17,7 @@
 
 import { type TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type DocumentNode, getOperationAST } from 'graphql';
+import { useLayoutEffect } from 'react';
 import { delay, graphql, http, HttpResponse, type RequestHandler } from 'msw';
 import type { SetupWorker } from 'msw/browser';
 import { apiPath } from '@/lib/api-path';
@@ -31,7 +32,7 @@ export type MockError = {
   code?: string;
   /** Present on `VALIDATION`: which field, and what to say beside it. */
   fieldErrors?: readonly { path: readonly (string | number)[]; message: string }[];
-  /** Where in the request's variables the refusal is, for a batch. */
+  /** The GraphQL path of the failed field, as Yoga sends it (`['saveStock']`). */
   path?: readonly (string | number)[];
 };
 
@@ -101,6 +102,33 @@ export function answerMutation<Result, Variables extends object>(
   return answer('mutation', document, resolver, options);
 }
 
+/**
+ * Answers every operation from one function, for a story with many lookups
+ * (the Ingredient Form's). The function returns a result, a {@link refusal}, or
+ * undefined for an operation it has no answer to; that one goes on to the next
+ * handler, the default 501 that names it.
+ */
+export function answerOperations(
+  resolver: (info: {
+    operationName: string;
+    variables: Record<string, unknown>;
+  }) => object | Refusal | undefined | Promise<object | Refusal | undefined>,
+  { delayFor }: { delayFor?: (operationName: string) => number } = {},
+): RequestHandler {
+  return graphqlEndpoint.operation(async ({ operationName, variables }) => {
+    const result = await resolver({ operationName, variables });
+    if (result === undefined) return undefined;
+    const wait = delayFor?.(operationName);
+    if (wait) await delay(wait);
+    return HttpResponse.json(body(result));
+  });
+}
+
+/** Never answers any query or mutation, for a story that shows every wait for good. */
+export function hangAllOperations(): RequestHandler {
+  return graphqlEndpoint.operation(() => delay('infinite'));
+}
+
 /** Never answers a query or mutation, for a story that shows its loading or saving state for good. */
 export function hangOperation(
   kind: 'query' | 'mutation',
@@ -112,6 +140,13 @@ export function hangOperation(
 /** Never answers a request to the sign-in service, for a story that shows its waiting state for good. */
 export function hangAuth(): RequestHandler {
   return http.all(apiPath('/api/auth/*'), () => delay('infinite'));
+}
+
+/** Refuses a sign-in service call as it would an account it cannot reach: HTTP 403 with Better Auth's error shape. */
+export function refuseAuth(message = 'The sign-in service refused the request'): RequestHandler {
+  return http.post(apiPath('/api/auth/*'), () =>
+    HttpResponse.json({ message }, { status: 403, statusText: 'Forbidden' }),
+  );
 }
 
 /**
@@ -135,6 +170,35 @@ export const defaultHandlers: RequestHandler[] = [
   }),
 ];
 
+let runningWorker: SetupWorker | undefined;
+const mounted = new Set<readonly RequestHandler[]>();
+
+/**
+ * Answers for as long as the calling component is mounted, for a state that a
+ * story's `args` or a state control picks, which `beforeEach` cannot follow:
+ * it runs once, when the story loads. The handlers come off on unmount, so
+ * the next state does not inherit them. Pass a list that keeps its identity
+ * (a module constant, or `useMemo`). A story uses this or `beforeEach`'s
+ * `msw.use`, not both, because taking handlers off puts the worker back to
+ * its defaults and re-adds only these.
+ */
+export function useMockHandlers(handlers: readonly RequestHandler[]): void {
+  useLayoutEffect(() => {
+    const worker = runningWorker;
+    if (!worker) return;
+    const apply = () => {
+      worker.resetHandlers();
+      worker.use(...[...mounted].flat().reverse());
+    };
+    mounted.add(handlers);
+    apply();
+    return () => {
+      mounted.delete(handlers);
+      apply();
+    };
+  }, [handlers]);
+}
+
 /**
  * Starts the worker for `mswLoader` (msw-storybook-addon/csf3). The worker file
  * is looked up beside the page, `./mockServiceWorker.js`, so it is found under
@@ -145,6 +209,7 @@ export const defaultHandlers: RequestHandler[] = [
 export async function startMockWorker(): Promise<SetupWorker> {
   const { setupWorker } = await import('msw/browser');
   const worker = setupWorker(...defaultHandlers);
+  runningWorker = worker;
   await worker.start({
     quiet: true,
     serviceWorker: { url: './mockServiceWorker.js' },
