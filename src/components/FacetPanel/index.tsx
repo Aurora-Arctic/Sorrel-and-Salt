@@ -588,7 +588,15 @@ export default function FacetPanel({
                         counts={false}
                         choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
                         values={filter.covens ?? []}
-                        onChange={(picked) => onChange({ covens: picked })}
+                        // Removing the last coven switches the choice back to In (the owner's call,
+                        // 2026-10-23), so it never turns into "in none of my covens" unasked.
+                        onChange={(picked) =>
+                          onChange(
+                            picked.length === 0
+                              ? { covens: picked, covensNot: false }
+                              : { covens: picked },
+                          )
+                        }
                       />
                     </div>
                     <div className="facet-panel__quick">

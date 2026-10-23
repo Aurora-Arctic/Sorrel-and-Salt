@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import FacetPanel, { WIDE } from '@/components/FacetPanel';
@@ -522,6 +523,42 @@ describe('FacetPanel', () => {
       open({ covens: [], covensNot: true }, { covens: COVENS, onChange });
       fireEvent.click(screen.getByRole('radio', { name: 'In' }));
       expect(onChange).toHaveBeenLastCalledWith({ covensNot: false });
+    });
+
+    it('switches back to In when the last picked coven is removed under Not In', () => {
+      // The panel held as its caller holds it: each patch merged over the filter shown.
+      const reported = vi.fn();
+      const Held = () => {
+        const [filter, setFilter] = useState<FacetPanelFilter>({
+          ...NONE,
+          covens: ['coven-w'],
+          covensNot: true,
+        });
+        return (
+          <FacetPanel
+            {...props(filter, {
+              covens: COVENS,
+              onChange: (patch) => {
+                reported(patch);
+                setFilter((shown) => ({ ...shown, ...patch }));
+              },
+            })}
+          />
+        );
+      };
+      stubViewport(true);
+      render(<Held />);
+      fireEvent.click(filtersButton());
+      const choice = screen.getByRole('group', { name: 'Covens' });
+      // Before: one coven picked, under Not In.
+      expect(within(choice).getByRole('radio', { name: 'Not In' })).toBeChecked();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Coven: Testhollow' }));
+      expect(reported).toHaveBeenLastCalledWith({ covens: [], covensNot: false });
+      expect(within(choice).getByRole('radio', { name: 'In' })).toBeChecked();
+      // Not In chosen on purpose with nothing picked still holds: in none of my covens.
+      fireEvent.click(within(choice).getByRole('radio', { name: 'Not In' }));
+      expect(reported).toHaveBeenLastCalledWith({ covensNot: true });
+      expect(within(choice).getByRole('radio', { name: 'Not In' })).toBeChecked();
     });
 
     it('submits Not In as covensNot=1 through the GET form around it', () => {
