@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import AddAction from '../../app/(shell)/admin/add-action';
-import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { AdminFrame, AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { INVITATIONS } from '../../../.storybook/fixtures';
 import AdminInvitations, { InviteAdmin } from '../AdminInvitations';
 import { ADMIN_PAGES } from '../AdminNav/sections';
 import PrivilegeLedger from '../PrivilegeLedger';
+import TabbedPage from '.';
 import { TabSwitchContext } from './tab-switch';
 import type { TabSwitch } from './types';
 
@@ -58,57 +59,77 @@ const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
   </TabSwitchContext.Provider>
 );
 
-export const Default: Story = { render: () => <Invitations /> };
-
-export const LoadingState: Story = { render: () => <Loading /> };
+const invitationsNode = <Invitations />;
+const loadingStateNode = <Loading />;
 
 // A tab whose content opens with no filter on its way, Invitations: the same
 // skeleton without the filter row.
-export const LoadingUnfiltered: Story = {
-  render: () => <Loading tab={{ ...ON_ITS_WAY, target: ADMIN_PAGES.people.tabs[1] }} />,
-};
+const loadingUnfilteredNode = (
+  <Loading tab={{ ...ON_ITS_WAY, target: ADMIN_PAGES.people.tabs[1] }} />
+);
 
 // The last tab open, Privilege Changes, at 375px: the three pills fit under
 // the heading, and a row too wide for its line would scroll inside its track
 // to centre the open tab. Privilege Changes has no action, so the heading
 // line holds the heading and the pills alone.
-export const PrivilegeChangesTab: Story = {
-  render: () => (
-    <People open="/admin/privilege-changes" action={null}>
-      <PrivilegeLedger
-        filter={{}}
-        changes={[
-          {
-            id: 'c1',
-            at: new Date('2026-10-01T09:30:00Z'),
-            subject: { name: 'Ada Fixturewort', href: '/admin/users?q=ada' },
-            privilege: 'admin',
-            change: 'grant',
-            via: 'admin',
-            actor: { name: 'Bo Fixturewort' },
-            note: null,
-          },
-        ]}
-      />
-    </People>
-  ),
-};
+const privilegeChangesTabNode = (
+  <People open="/admin/privilege-changes" action={null}>
+    <PrivilegeLedger
+      filter={{}}
+      changes={[
+        {
+          id: 'c1',
+          at: new Date('2026-10-01T09:30:00Z'),
+          subject: { name: 'Ada Fixturewort', href: '/admin/users?q=ada' },
+          privilege: 'admin',
+          change: 'grant',
+          via: 'admin',
+          actor: { name: 'Bo Fixturewort' },
+          note: null,
+        },
+      ]}
+    />
+  </People>
+);
 
 // The Add the way a list page draws it (`AddAction`, which has a labelled
 // button and a plus for the narrow header), where Default has the plain
 // New Invitation link. Open it at 600px wide to see the plus at the heading's
 // end with the pills on its line, and at 382px for the label beneath the heading,
 // the width at which the plus gives way to it.
-export const AddActionLabelAndPlus: Story = {
-  render: () => (
-    <People
-      action={
-        <AddAction href="/admin/invitations?invite" heading={{ title: 'New Invitation' }}>
-          New Invitation
-        </AddAction>
-      }
-    >
-      <AdminInvitations invitations={INVITATIONS} />
-    </People>
-  ),
+const addActionLabelAndPlusNode = (
+  <People
+    action={
+      <AddAction href="/admin/invitations?invite" heading={{ title: 'New Invitation' }}>
+        New Invitation
+      </AddAction>
+    }
+  >
+    <AdminInvitations invitations={INVITATIONS} />
+  </People>
+);
+
+// A page with a single tab (a member who cannot invite sees only Members)
+// draws no row of pills.
+const singleTabNode = (
+  <AdminFrame open={ADMIN_PAGES.people.tabs[0].href}>
+    <TabbedPage title="People" tabs={[ADMIN_PAGES.people.tabs[0]]}>
+      <p>The tab's own content.</p>
+    </TabbedPage>
+  </AdminFrame>
+);
+
+const STATES: Record<string, ReactNode> = {
+  'Invitations Tab': invitationsNode,
+  'Privilege Changes Tab': privilegeChangesTabNode,
+  'Add Action Label And Plus': addActionLabelAndPlusNode,
+  'Single Tab': singleTabNode,
+  'Loading A Filtered Tab': loadingStateNode,
+  'Loading An Unfiltered Tab': loadingUnfilteredNode,
+};
+
+export const States: Story = {
+  args: { state: 'Invitations Tab' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

@@ -1,6 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
 import AdminNav from '../src/components/AdminNav';
 import { ADMIN_PAGES } from '../src/components/AdminNav/sections';
+import { adminTarget } from '../src/components/AdminNav/target';
+import { RouteModalProvider } from '../src/components/Modal/route-modal-provider';
+import SectionBody from '../src/components/SectionBody';
+import { PendingLink } from '../src/lib/navigation';
 import ContextRow from '../src/components/ContextRow';
 import TabbedPage from '../src/components/TabbedPage';
 import { WorkshopPathname } from './navigation';
@@ -9,8 +13,8 @@ import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 // The admin layout's frame for a story, so the workshop shows a component as
 // an admin page holds it: nine stories drew it by hand before MB.115. Not the
 // app's own `src/app/(shell)/admin/layout.tsx`, which is a server component that
-// reads the session; this is its markup alone, bar the route-modal provider,
-// which draws nothing. The layout puts the context row, "Admin" and the nav,
+// reads the session; this is its markup alone, with the route-modal provider and the
+// section body it draws. The layout puts the context row, "Admin" and the nav,
 // above the `.page-column` column that holds the page, so the frame does too,
 // all inside the shell's `.app-shell__main`, which keeps the last row clear of
 // the phone's bottom nav (_primitives.scss).
@@ -37,10 +41,24 @@ export const AdminFrame = ({
 }: AdminFrameProps): ReactElement => (
   <Opened at={open}>
     <div className="app-shell__main">
-      <ContextRow lead={<span className="context-row__name">Admin</span>}>
-        <AdminNav managesPeople={managesPeople} />
-      </ContextRow>
-      <div className="page-column">{children}</div>
+      <RouteModalProvider>
+        <ContextRow
+          lead={
+            <PendingLink
+              href="/admin"
+              className="context-row__name"
+              navigationTarget={adminTarget('/admin')}
+            >
+              Admin
+            </PendingLink>
+          }
+        >
+          <AdminNav managesPeople={managesPeople} />
+        </ContextRow>
+        <SectionBody region="admin" className="page-column">
+          {children}
+        </SectionBody>
+      </RouteModalProvider>
     </div>
   </Opened>
 );
