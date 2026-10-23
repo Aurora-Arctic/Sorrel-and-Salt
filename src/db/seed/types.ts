@@ -266,7 +266,25 @@ export interface SeedCitation<Field extends string> {
   /** `p. 112`, `under "Mugwort"`: required of a book or a chapter. */
   locator?: string;
   supports: readonly Field[];
+  /**
+   * How the source's name was matched to the entry's formal name (M14.4,
+   * "nameBasis"). A file writes it on every citation of an entry with a
+   * formal name (M14.6); a shard literal carries none. Never stored or hashed.
+   */
+  nameBasis?: NameBasis;
+  /** The common name the source heads, when `nameBasis` is `resolved`. */
+  headedAs?: string;
+  /** The registered source that maps `headedAs` to this formal name, when `resolved`. */
+  resolvedBy?: string;
 }
+
+/**
+ * The four answers a citation gives about the formal name: the source prints
+ * it (`stated`), heads a common name an authority maps to it (`resolved`),
+ * leaves doubt (`unresolved`, which blocks `approved`), or was copied from the
+ * TypeScript before the rule existed (`unaudited`, the shrinking legacy list).
+ */
+export type NameBasis = 'stated' | 'resolved' | 'unresolved' | 'unaudited';
 
 /**
  * What may stand in: an entry the seed writes, by its identity — the formal
@@ -324,6 +342,39 @@ export type SeedCompendiumEntry = Pick<
   references: SeedCitation<CompendiumEntryField>[];
   variants: SeedCompendiumVariant[];
 };
+
+/**
+ * Where an entry file stands (M14.4): `approved` is what the seed writes,
+ * `needs-review` the owner's queue, `draft` unfinished and refused on the
+ * release branches. Never stored or hashed.
+ */
+export type CompendiumFileStatus = 'draft' | 'needs-review' | 'approved';
+
+/** The two trailing sections an entry file may end with, neither hashed nor seeded. */
+export interface CompendiumFileSections {
+  /** `#### Questions for the Curator`: the doubt a `needs-review` file asks the owner to settle. */
+  questions?: string;
+  /** `#### Edit Notes for Claude`: the owner's instructions for the next edit. */
+  editNotes?: string;
+}
+
+/**
+ * One entry file as the loader read it (M14.6): the entry the seed writes,
+ * and what the file says about it that the seed does not store.
+ */
+export interface SeedCompendiumFile {
+  /** Relative to the compendium root: `ingredients/botanical/aspen-populus-tremuloides.md`. */
+  path: string;
+  status: CompendiumFileStatus;
+  /** The hash the owner marked for update, when the file carries one (M14.7). */
+  seedUpdate?: string;
+  /** Only beside `seedUpdate`: the update may overwrite an editor's or curator's work. */
+  overwriteEditor?: true;
+  entry: SeedCompendiumEntry;
+  /** `contentHash(entry)`, as the file stands. */
+  hash: string;
+  sections: CompendiumFileSections;
+}
 
 /** One shard: its entries and the per-entry pages they cite, by handle. */
 export interface SeedCompendiumShard {

@@ -28,7 +28,7 @@ Each shard is `src/db/seed/compendium/<shard>.ts`, its doc `claude-docs/db/compe
 
 ### An entry, field by field
 
-An entry is one markdown file, `compendium/ingredients/<nomenclature>/<slug>.md`, where the slug is `ingredientSlug(name, canonicalName)` (`src/lib/slugify.ts`) and the folder is the entry's naming system (`botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `none` or `unknown`). The file holds a YAML frontmatter block, a `# Name` heading, the description, and two optional sections for the owner and the curator. The decision, the full key table, the hash and the update path are in [`design-decisions/m14.4-compendium-markdown-files.md`](../../design-decisions/m14.4-compendium-markdown-files.md); the plan is [`m14.4-plan.md`](../../design-decisions/m14.4-plan.md). The loader and guard that read these files are M14.6's, so until M14.6 lands this section describes the format and not yet code that checks it.
+An entry is one markdown file, `compendium/ingredients/<nomenclature>/<slug>.md`, where the slug is `ingredientSlug(name, canonicalName)` (`src/lib/slugify.ts`) and the folder is the entry's naming system (`botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `none` or `unknown`). The file holds a YAML frontmatter block, a `# Name` heading, the description, and two optional sections for the owner and the curator. The decision, the full key table, the hash and the update path are in [`design-decisions/m14.4-compendium-markdown-files.md`](../../design-decisions/m14.4-compendium-markdown-files.md); the plan is [`m14.4-plan.md`](../../design-decisions/m14.4-plan.md). The loader (M14.6) is `loadCompendium(root)` in `src/db/seed/compendium/load.ts`: it reads every file under `ingredients/<nomenclature>/`, every `sources/<handle>.yaml` and `unaudited.txt`, and returns the files, their issues, and the one shard the seed and the guard take. `checkCompendiumFiles(loaded)` in `guard.ts` adds the files' own rules to `checkCompendium`'s: a file sits at the path its identity gives it, a `seedUpdate` names the current hash, a `needs-review` file has a Questions section, every citation of an entry with a formal name carries a `nameBasis` as "Formal names" sets out, and on `staging` and `main` (`releaseBranch()`, read from the CI branch variables) a `draft` file fails. The content rules, length, closed lists and sourcing, are held against `approved` files only; identity, path and format against every file.
 
 **The TypeScript shards remain the seed source until M14.10 cuts over.** M14.9 converts them into these files without changing what they say, and between M14.9 and M14.10 the shard lanes make no commits. The shard names and counts under "What is seeded, and where" are those shards'; from M14.10 the files replace them.
 
@@ -115,7 +115,7 @@ What the example shows:
 
 ### What `supports` may name
 
-A citation's `supports` lists the fields it backs, using the literal's own field names:
+A citation's `supports` lists the fields it backs, using the file's own field names (`colours`, which the loader writes as the column's `colors`):
 
 | On an entry       | On a form (variant) |
 | ----------------- | ------------------- |
@@ -125,8 +125,8 @@ A citation's `supports` lists the fields it backs, using the literal's own field
 | `description`     | `elements`          |
 | `elements`        | `celestialBodies`   |
 | `celestialBodies` | `zodiacSigns`       |
-| `zodiacSigns`     | `colors`            |
-| `colors`          | `categories`        |
+| `zodiacSigns`     | `colours`           |
+| `colours`         | `categories`        |
 | `safetyNotes`     | `substitutes`       |
 | `toxic`           | `toxic`             |
 | `folkNames`       |                     |
@@ -149,7 +149,7 @@ A compendium entry may only name values the curated vocabularies hold (MB.162, M
 | `zodiacSigns`     | 13 signs, Ophiuchus included                                                  | `src/db/seed/astrology.ts`, `ZODIAC_SIGNS`                                  |
 | `elements`        | `earth`, `air`, `fire`, `water`, `spirit`                                     | `src/modules/ingredients/schema/ingredient-enums.ts`, `INGREDIENT_ELEMENTS` |
 | `nomenclature`    | `botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none` | the same file, `NOMENCLATURE_KINDS`                                         |
-| `colors`          | a closed list of lower-case British colour names                              | `src/db/seed/compendium/colours.ts` (MB.242)                                |
+| `colours`         | a closed list of lower-case British colour names                              | `src/db/seed/compendium/colours.ts` (MB.242)                                |
 
 A value a source gives that is not on the list is left out of the field, and the shard doc's "What is left out, and why" names it, so the owner can decide whether the list should grow. A lane never adds to a curated list itself: a list is its own task.
 

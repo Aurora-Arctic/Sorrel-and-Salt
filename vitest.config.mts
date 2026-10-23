@@ -24,6 +24,7 @@ export const DB_FREE = [
   'tests/db/audit.test.ts',
   'tests/db/connection-url.test.ts',
   'tests/db/seed/compendium-literals.test.ts',
+  'tests/db/seed/compendium/**',
   'tests/modules/coven/schema/workspaces-schema.test.ts',
   'tests/modules/coven/services/access-control.test.ts',
   'tests/modules/identity/services/site-admin.test.ts',

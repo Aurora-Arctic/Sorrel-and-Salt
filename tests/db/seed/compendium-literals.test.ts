@@ -278,12 +278,19 @@ describe('checkCompendium', () => {
       expect(checkCompendium(shards)).toHaveLength(1);
     });
 
-    it('refuses a link to a later shard, which is written as a typed name instead', () => {
+    it('passes a link to an entry in a later shard: every entry is inserted before any link resolves', () => {
       const [shard] = edited(() => {});
       delete samplewort(shard).variants[0].substitutes;
       const earlier = { ...shard, name: 'earlier', entries: [samplewort(shard)] };
       const later = { ...shard, name: 'later', entries: [testwort(shard)] };
-      expect(checkCompendium([earlier, later])).toHaveLength(1);
+      expect(checkCompendium([earlier, later])).toEqual([]);
+    });
+
+    it('refuses a typed name that an entry has as its identity, which must be a link', () => {
+      const shards = edited((shard) => {
+        samplewort(shard).substitutes = [{ name: 'Fixtura testalis' }];
+      });
+      expect(checkCompendium(shards)).toHaveLength(1);
     });
   });
 
