@@ -1,12 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { press, pressLast, useSteps } from '../../../.storybook/press';
+import { route } from '../../../.storybook/route';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import InviteDialog from '../InviteDialog';
+import TabbedPage from '../TabbedPage';
 import PendingInvitations from '.';
 import type { PendingInvitationEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/PendingInvitations.
 const meta = {
   title: 'Coven / Invitations Sent',
+  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
@@ -49,7 +54,23 @@ const WithDeclinedView = () => (
 
 const withDeclinedNode = <WithDeclinedView />;
 
-const emptyNode = <PendingInvitations workspaceId="w" invitations={[]} />;
+// The page as the coven's people layout draws it for an owner: in the app shell, with the coven switcher,
+// the Members heading, the Members and Invitations toggle with Invitations open, and Invite at the end
+// of the heading line (src/app/(shell)/coven/[slug]/(people)/layout.tsx).
+const emptyNode = (
+  <ShellFrame area="coven" open="/coven/fixture-coven/invitations">
+    <TabbedPage
+      title="Members"
+      tabs={[
+        { href: route('/coven/fixture-coven/members'), label: 'Members' },
+        { href: route('/coven/fixture-coven/invitations'), label: 'Invitations' },
+      ]}
+      action={<InviteDialog workspaceId="w" />}
+    >
+      <PendingInvitations workspaceId="w" invitations={[]} />
+    </TabbedPage>
+  </ShellFrame>
+);
 
 // The middle page of three, both pager ends live.
 const pagedNode = (
