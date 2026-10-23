@@ -26,8 +26,9 @@ import {
 } from '../../../support/fixtures';
 import { curatedFormId } from '../../../support/db/curated-ids';
 
-// M14.8: a curator's review mark on a compendium entry. Set by hand through
-// `setCompendiumEntryReviewed`, and by every curator write to the entry; read
+// M14.8: a curator's review mark on a compendium entry. Set and cleared by hand through
+// `setCompendiumEntryReviewed` alone, and left as it was by every other curator
+// write to the entry; read
 // back only through the curator's own read, never through the public one.
 // The table is emptied per test, so every row read back is one this file wrote.
 
@@ -165,6 +166,19 @@ describe('setCompendiumEntryReviewed', () => {
     );
   });
 
+  it('keeps the original date and reviewer when an entry already reviewed is marked reviewed again', async () => {
+    const id = await seeded();
+    await setCompendiumEntryReviewed(asUser(E), id, true);
+    await sql`update ingredients set curator_reviewed_at = ${LONG_AGO} where id = ${id}`;
+    const first = await markOf(id);
+    // Why it could have moved: F is not E, and it is later than the first mark.
+    expect(first.curator_reviewed_by).toBe(E.id);
+
+    await setCompendiumEntryReviewed(asUser(F), id, true);
+
+    expect(await markOf(id)).toEqual(first);
+  });
+
   it('does not move updated_at or updated_by', async () => {
     const id = await seeded();
     await backdate(id);
@@ -179,31 +193,53 @@ describe('setCompendiumEntryReviewed', () => {
   });
 });
 
-describe('a curator write to an entry marks it reviewed', () => {
-  it('when it creates the entry', async () => {
+describe('a curator write to an entry leaves the mark as it was (the owner, 2026-10-23)', () => {
+  /** Reviewed by E at a date long past, or never reviewed. */
+  async function entry(reviewed: boolean): Promise<string> {
+    const created = await createCompendiumEntry(asUser(E), compendiumInput());
+    if (reviewed) {
+      await sql`update ingredients set curator_reviewed_at = ${LONG_AGO}, curator_reviewed_by = ${E.id}
+        where id = ${created.id}`;
+    }
+    return created.id;
+  }
+
+  it('when it creates the entry, which starts unreviewed', async () => {
     const created = await createCompendiumEntry(asUser(F), compendiumInput());
 
-    expect((await markOf(created.id)).curator_reviewed_by).toBe(F.id);
+    expect(await markOf(created.id)).toEqual({
+      curator_reviewed_at: null,
+      curator_reviewed_by: null,
+    });
   });
 
-  it('when it edits the entry, even with nothing else changed', async () => {
-    const created = await createCompendiumEntry(asUser(E), compendiumInput());
-    await setCompendiumEntryReviewed(asUser(E), created.id, false);
+  it.each([true, false])('when it edits the entry, reviewed being %s', async (reviewed) => {
+    const id = await entry(reviewed);
+    const before = await markOf(id);
+    // Why an edit could have moved it: the row changes and F is not E.
+    expect(before.curator_reviewed_by).toBe(reviewed ? E.id : null);
 
-    await updateCompendiumEntry(asUser(F), created.id, compendiumInput());
+    await updateCompendiumEntry(
+      asUser(F),
+      id,
+      compendiumInput({ description: 'A description written afresh by another curator.' }),
+    );
 
-    const mark = await markOf(created.id);
-    expect(mark.curator_reviewed_at).toBeInstanceOf(Date);
-    expect(mark.curator_reviewed_by).toBe(F.id);
+    expect(await markOf(id)).toEqual(before);
   });
 
-  it('when it promotes a folk name', async () => {
+  it.each([true, false])('when it promotes a folk name, reviewed being %s', async (reviewed) => {
     const id = await seeded({ name: 'Testleaf', folkNames: ['Testwort'] });
-    expect((await markOf(id)).curator_reviewed_at).toBeNull();
+    if (reviewed) {
+      await sql`update ingredients set curator_reviewed_at = ${LONG_AGO}, curator_reviewed_by = ${E.id}
+        where id = ${id}`;
+    }
+    const before = await markOf(id);
 
     await promoteFolkName(asUser(F), null, id, await folkIdOf(id, 'Testwort'));
 
-    expect((await markOf(id)).curator_reviewed_by).toBe(F.id);
+    expect((await getIngredient(asUser(F), id)).name).toBe('Testwort');
+    expect(await markOf(id)).toEqual(before);
   });
 
   it('never when a coven member promotes a folk name on its own entry', async () => {

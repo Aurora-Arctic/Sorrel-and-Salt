@@ -180,10 +180,7 @@ export async function createCompendiumEntry(
 
   const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(curator, at);
-    const [row] = await write.insertInCompendium(curator, ingredients, {
-      ...columns,
-      ...reviewMark(curator, at),
-    });
+    const [row] = await write.insertInCompendium(curator, ingredients, columns);
     await writeChildren(write, [], row.id, { ...lists, ...curated.children }, 'add');
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, undefined));
@@ -240,10 +237,7 @@ export async function updateCompendiumEntry(
 
   const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(curator, at);
-    const [row] = await write.updateByIdInCompendium(curator, ingredients, id, {
-      ...columns,
-      ...reviewMark(curator, at),
-    });
+    const [row] = await write.updateByIdInCompendium(curator, ingredients, id, columns);
     if (!row) throw new NotFound('No such compendium entry');
     if (moves) {
       await write.insertInCompendium(curator, retiredIngredientSlugs, {
@@ -305,7 +299,6 @@ export async function promoteCompendiumFolkName(
     const [row] = await write.updateByIdInCompendium(curator, ingredients, id, {
       name: fields.name,
       slug,
-      ...reviewMark(curator, at),
     });
     if (!row) throw new NotFound('No such compendium entry');
     if (moves) {
@@ -322,23 +315,11 @@ export async function promoteCompendiumFolkName(
 }
 
 /**
- * The review mark a curator's write to an entry leaves on it (M14.8; the
- * owner's decision 14): reviewed, by this curator, now. Spread into the values
- * of every service write to a compendium entry's row, here rather than in the
- * repository writer, which also writes the seed's rows and a coven's;
- * `tests/guards/compendium-review-mark.test.ts` fails a write without it.
- */
-const reviewMark = (curator: Curator, at: Date) => ({
-  curatorReviewedAt: at,
-  curatorReviewedBy: curator.userId,
-});
-
-/** The values that clear the mark: the entry needs review again. */
-const NEEDS_REVIEW = { curatorReviewedAt: null, curatorReviewedBy: null } as const;
-
-/**
  * Marks a compendium entry reviewed by this curator, or clears the mark, so it
- * needs review again (M14.8). The seed never overwrites a reviewed entry
+ * needs review again (M14.8). This is the only function that writes the mark
+ * (the owner, 2026-10-23): creating, editing or promoting leaves it as it was.
+ * Marking an entry already reviewed keeps its original date and reviewer. The
+ * seed never overwrites a reviewed entry
  * (claude-docs/db/compendium-seed/README.md). The mark is the only change: the
  * `set_updated_at` trigger leaves `updated_at` and `updated_by` as they were
  * (M14.5), so the entry is not shown as Updated.
@@ -355,12 +336,7 @@ export async function setCompendiumEntryReviewed(
   const curator = assertCurator(session);
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
   const written = await withAudit(session, async (write) => {
-    const [row] = await write.updateByIdInCompendium(
-      curator,
-      ingredients,
-      id,
-      reviewed ? reviewMark(curator, new Date()) : NEEDS_REVIEW,
-    );
+    const [row] = await write.setReviewInCompendium(curator, id, reviewed);
     if (!row) throw new NotFound('No such compendium entry');
     return row;
   });

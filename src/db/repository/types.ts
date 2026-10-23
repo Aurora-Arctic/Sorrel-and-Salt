@@ -401,6 +401,14 @@ export interface AuditWriter {
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /**
+   * Sets the review mark of the one live compendium entry with this id: with
+   * `reviewed`, by `curator`, now, in one statement that keeps a mark the entry
+   * already has, so the original date and reviewer stand; without it, clears
+   * the mark (M14.8). The review switch's alone: no other writer touches the
+   * two columns.
+   */
+  setReviewInCompendium(curator: Curator, id: string, reviewed: boolean): Promise<IngredientRow[]>;
+  /**
    * Moves the one live compendium row's `updated_at` with no column changed,
    * for a parent whose child rows just changed (MB.106). The `set_updated_at()`
    * trigger leaves an UPDATE that changed nothing alone, so this publishes

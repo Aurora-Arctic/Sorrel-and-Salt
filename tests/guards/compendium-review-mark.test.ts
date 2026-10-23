@@ -3,14 +3,17 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// M14.8: every curator write to a compendium entry's own row says whether the
-// entry is reviewed. A create, an edit or a promote marks it with
-// `reviewMark(...)`; the toggle that clears it writes `NEEDS_REVIEW`. The
-// behaviour is tests/modules/ingredients/services/compendium-review.test.ts's;
-// this sweep is what fails a new writer in the diff that adds it. Read as text
-// rather than run, so the `unit` project needs no database.
+// M14.8 (the owner's change of 2026-10-23): only the curator's switch,
+// `setCompendiumEntryReviewed`, writes a compendium entry's review mark. A
+// create, an edit or a promote leaves it as it was: no service write to an
+// entry names the mark's columns, and the one repository writer that sets them
+// is called from the switch alone. The behaviour is
+// tests/modules/ingredients/services/compendium-review.test.ts's; this sweep is
+// what fails a new writer in the diff that adds it. Read as text rather than
+// run, so the `unit` project needs no database.
 
 const SERVICES = 'src/modules';
+const MARK_COLUMNS = /\bcuratorReviewed(?:At|By)\b/;
 
 /** Every service file, by repo-relative path. */
 function serviceFiles(): string[] {
@@ -43,24 +46,49 @@ function callText(text: string, start: number): string {
   throw new Error('unbalanced call');
 }
 
-const writes = serviceFiles().flatMap((file) => {
-  const text = readFileSync(join(REPO_ROOT, file), 'utf8');
-  return [...text.matchAll(WRITE)].map((match) => ({
+/** `text` without its comments, which may name the columns. */
+const code = (text: string) => text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+
+const files = serviceFiles().map((file) => ({
+  file,
+  text: readFileSync(join(REPO_ROOT, file), 'utf8'),
+}));
+
+const writes = files.flatMap(({ file, text }) =>
+  [...text.matchAll(WRITE)].map((match) => ({
     where: `${file}:${text.slice(0, match.index).split('\n').length}`,
     call: callText(text, match.index),
-  }));
-});
+  })),
+);
 
 describe('the compendium review mark', () => {
   it('finds the writers it sweeps', () => {
-    // Create, edit, promote and the toggle: a sweep that finds fewer has lost its pattern.
-    expect(writes.length).toBeGreaterThanOrEqual(4);
+    // Create, edit and promote: a sweep that finds fewer has lost its pattern.
+    expect(writes.length).toBeGreaterThanOrEqual(3);
   });
 
   it.each(writes.map((write) => [write.where, write.call]))(
-    'is set or cleared by the write at %s',
+    'is not written by the call at %s',
     (_where, call) => {
-      expect(call).toMatch(/\breviewMark\(|\bNEEDS_REVIEW\b/);
+      expect(call).not.toMatch(MARK_COLUMNS);
     },
   );
+
+  it('is named by no service file: the repository writes it, for the switch alone', () => {
+    const named = files.filter(({ text }) => MARK_COLUMNS.test(code(text))).map(({ file }) => file);
+    expect(named).toEqual([]);
+  });
+
+  it('is set only from setCompendiumEntryReviewed', () => {
+    const callers = files.filter(({ text }) => /\bsetReviewInCompendium\(/.test(code(text)));
+    // Why this could fail: the switch calls it, so none found means the pattern broke.
+    expect(callers.map(({ file }) => file)).toEqual([
+      'src/modules/ingredients/services/compendium.ts',
+    ]);
+    const text = code(callers[0].text);
+    const start = text.indexOf('export async function setCompendiumEntryReviewed');
+    const end = text.indexOf('\n}\n', start);
+    expect(start).toBeGreaterThan(-1);
+    expect(text.slice(0, start) + text.slice(end)).not.toMatch(/\bsetReviewInCompendium\(/);
+  });
 });
