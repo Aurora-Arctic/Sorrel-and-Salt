@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { NO_FILTER } from '../../../.storybook/compendium-fixtures';
 import { FIXTURE_EDIT } from '../../../.storybook/fixtures';
+import { useSteps } from '../../../.storybook/press';
 import { AdminFrame } from '../../../.storybook/admin-frame';
 import AddAction from '../../app/(shell)/admin/add-action';
 import CompendiumList from '.';
@@ -270,6 +271,88 @@ const emptyNode = (
   </Page>
 );
 
+// Aries and Mars chosen, and the entries without a form: the three filters the other states skip.
+const zodiacAndBodiesNode = (
+  <Page>
+    <CompendiumList
+      entries={[entry('Mockroot', 'none', null, ['Powder'])]}
+      filter={{ ...NO_FILTER, zodiac: ['aries'], celestialBodies: ['mars'] }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={1}
+    />
+  </Page>
+);
+
+const withoutFormsNode = (
+  <Page>
+    <CompendiumList
+      entries={[entry('Fixture Salt', 'unknown', null, [])]}
+      filter={{ ...NO_FILTER, withoutForms: true }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={1}
+    />
+  </Page>
+);
+
+// Two categories, matched on all of them.
+const allCategoriesNode = (
+  <Page>
+    <CompendiumList
+      entries={[ENTRIES[0]]}
+      filter={{ ...NO_FILTER, categories: ['testward', 'testbane'], categoryMode: 'all' }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={1}
+    />
+  </Page>
+);
+
+// The last page: Previous alone, at the left.
+const lastPageNode = (
+  <Page>
+    <CompendiumList
+      entries={ENTRIES.slice(2)}
+      filter={NO_FILTER}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      previousHref={compendiumHref({ before: 'cursor' })}
+      position={{ page: 3, pages: 3 }}
+      total={ENTRIES.length}
+    />
+  </Page>
+);
+
+// Everything on one page: no pager at all.
+const singlePageNode = (
+  <Page>
+    <CompendiumList
+      entries={ENTRIES}
+      filter={NO_FILTER}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={ENTRIES.length}
+    />
+  </Page>
+);
+
+// Filters pressed once drawn, as a person would, on the wide layout (below it the sheet is modal).
+const FilterPanelOpenView = () => {
+  useSteps([() => document.querySelector<HTMLButtonElement>('.facet-panel__button')?.click()]);
+  return (
+    <div style={{ minHeight: '34rem' }}>
+      <PageOfSeveral />
+    </div>
+  );
+};
+const filterPanelOpenNode = <FilterPanelOpenView />;
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
@@ -279,6 +362,12 @@ const STATES: Record<string, ReactNode> = {
   'Chosen Values Counted': chosenValuesCountedNode,
   'No Matches': noMatchesNode,
   Empty: emptyNode,
+  'Zodiac And Bodies Chosen': zodiacAndBodiesNode,
+  'Without Forms': withoutFormsNode,
+  'Match All Categories': allCategoriesNode,
+  'Last Page': lastPageNode,
+  'Single Page': singlePageNode,
+  'Filter Panel Open': filterPanelOpenNode,
 };
 
 export const States: Story = {
