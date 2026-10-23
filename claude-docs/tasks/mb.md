@@ -1206,6 +1206,8 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 **The deploy and the seed say what they did.** `.github/workflows/deploy.yml` re-seeds only when a file on its watch list changed, and the list omits `src/db/seed/standard.ts`, which `compendium.ts` and `compendium/guard.ts` import `identityOf` from; the task adds it. `scripts/db-seed.ts` prints one fixed line for the compendium, so a deploy log cannot tell how many entries a run added; the seed prints the entries it inserted and the entries it skipped. And a seeded entry can stay out of the public pages for up to an hour, because the compendium reads are cached under the `compendium` tag for `COMPENDIUM_REVALIDATE_SECONDS` (3600, `src/lib/compendium-cache.ts`) and only an admin write clears the tag; the tag is revalidated after a seed run, and how is part of this task's scoping.
 
+**It closes the addendum too** (the owner, 2026-10-23). The roster widened to 1,111 rows (M14.14), and the reconciliation, the left-out view and the final count cover the addendum shards M14.16 to M14.21 as well, so it starts after each of their final parts has merged.
+
 The hours were re-estimated on review on 2026-10-12, from 1: the staging repair, the deploy and seed changes and two more tests join the reconciliation. They remain an estimate.
 
 Tests are written first:
@@ -1218,7 +1220,7 @@ Tests are written first:
 
 _Acceptance criteria:_
 
-- The seeded, left-out and candidate counts are recorded and reconcile
+- The seeded, left-out and candidate counts are recorded and reconcile, the addendum shards M14.16 to M14.21 included
 - The entries and forms flagged toxic are counted beside them
 - Across every shard, no `safetyNotes` value makes a safety claim, and a mixed note keeps its hazard text with the safe clause removed; every entry or form whose note calls it poisonous, toxic or fatal if swallowed is flagged `toxic`
 - The tests above are green over the full `COMPENDIUM`
