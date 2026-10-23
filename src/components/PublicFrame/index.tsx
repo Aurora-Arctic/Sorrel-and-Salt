@@ -63,7 +63,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
         a `main` because the layout's `main` gives way to the skeleton's own
         during a wait, and a `main` here would nest the two. */}
     <span id="main" className="skip-target" tabIndex={-1} />
-    <div className="public-frame__main">
+    <div className="app-shell__main">
       <MainBody>{children}</MainBody>
     </div>
   </div>

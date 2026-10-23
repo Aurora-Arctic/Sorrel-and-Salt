@@ -93,14 +93,14 @@ one's own id) throws.
   ancestor, so a `tabindex="-1"` wrapper took every click on the page's
   text, and the next Tab restarted at the top of the page rather than going on
   from where the click was. [`PublicFrame`](public-frame.md) draws the same
-  span before its page wrapper, `.public-frame__main`. `tests/e2e/skip-target.spec.ts` walks both.
+  span before its page wrapper, `.app-shell__main` too. `tests/e2e/skip-target.spec.ts` walks both.
 - **The context row** is the layouts' to render: the coven layout puts the
   switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).
 
 ## Styling
 
-The bar's inner row, brand, initials, end group and their narrow-window rules are the mixin `frame-bar($block)` in `src/scss/_frame-bar.scss`, shared with [`PublicFrame`](public-frame.md); this stylesheet keeps what is the shell's own (the sticky pin, the brand's right padding, hiding the nav under `$shell-tablet-width`, the theme and saved-message wrappers). The brand's two spans are `BrandName` in `brand-name.tsx`. The site nav is `.app-shell__nav` here, and `SiteNav` is also the public frame's nav (with the Compendium as its one link); the frame overrides the hiding under `$shell-tablet-width` and the link padding at `$shell-phone-width`, in its own sheet.
+The bar's inner row, brand, initials, end group and their narrow-window rules are the mixin `frame-bar($block)` in `src/scss/_frame-bar.scss`, shared with [`PublicFrame`](public-frame.md); this stylesheet keeps what is the shell's own (the sticky pin, the brand's right padding, hiding the nav under `$shell-tablet-width`, the theme and saved-message wrappers). The brand's two spans are `BrandName` in `brand-name.tsx`. The site nav is `.app-shell__nav` here, and `SiteNav` is also the public frame's nav (with the Compendium as its one link); the frame overrides the hiding under `$shell-tablet-width` in its own sheet.
 
 Measurements come from the signed-off mock-up, as tokens
 ([`styling.md`](../styling.md), "The application shell and the layers"). The

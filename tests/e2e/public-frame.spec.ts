@@ -30,7 +30,7 @@ test.describe('without script', () => {
     );
     await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
     // The skip link's target is an empty span; the wrapper after it holds the layout's main.
-    await expect(page.locator('span#main[tabindex="-1"] + .public-frame__main main')).toBeVisible();
+    await expect(page.locator('span#main[tabindex="-1"] + .app-shell__main main')).toBeVisible();
   });
 });
 

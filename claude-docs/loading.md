@@ -282,7 +282,7 @@ Compendium pages sit in `PublicFrame`, not the shell, and its body is the same
 `MainBody`, so a press of the frame's Compendium link (`siteLinkTarget('/compendium')`),
 a card or an entry's own links draws the destination's skeleton under the
 frame's bar. In both chromes the page sits in a wrapper `div`
-(`.app-shell__main`, `.public-frame__main`), the skip link's target is an
+(`.app-shell__main` in both frames), the skip link's target is an
 empty span just before it, and the `(public)` layout renders the page's own
 `<main>` inside the wrapper:
 during a wait `MainBody` hides that `main` (`aria-hidden`, `inert`) and lays
