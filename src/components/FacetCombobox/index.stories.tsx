@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import type { ComboboxChoice } from '../Combobox/types';
 import FormIcon from '../FormIcon';
@@ -60,39 +61,33 @@ function Stateful({
 }
 
 // Open the list: Testearth, with a count of nothing, is left out.
-export const Default: Story = { render: () => <Stateful /> };
+const defaultNode = <Stateful />;
 
 // Two chosen: their chips with counts, and the list open on the rest, the zero value still out.
-export const SomeChosen: Story = { render: () => <Stateful initial={['fire', 'water']} /> };
+const someChosenNode = <Stateful initial={['fire', 'water']} />;
 
 // Every chip holds a placeholder where its count will be, shimmering unless
 // the person asks for reduced motion.
-export const CountsLoading: Story = {
-  render: () => <Stateful initial={['fire', 'water']} loading />,
-};
+const countsLoadingNode = <Stateful initial={['fire', 'water']} loading />;
 
 // A chosen value with a count of nothing keeps its chip and its cross.
-export const ChosenWithNothingBehindIt: Story = { render: () => <Stateful initial={['earth']} /> };
+const chosenWithNothingBehindItNode = <Stateful initial={['earth']} />;
 
 // Every value counts nothing: the field stays, its list empty, as a facet the search leaves nothing in.
-export const AllZero: Story = {
-  render: () => (
-    <Stateful
-      label="Celestial Bodies"
-      choices={[
-        { value: 'sun', label: 'Test Sun', count: 0 },
-        { value: 'moon', label: 'Test Moon', count: 0 },
-      ]}
-    />
-  ),
-};
+const allZeroNode = (
+  <Stateful
+    label="Celestial Bodies"
+    choices={[
+      { value: 'sun', label: 'Test Sun', count: 0 },
+      { value: 'moon', label: 'Test Moon', count: 0 },
+    ]}
+  />
+);
 
 // hideZeros off: Testearth is listed with its count of nothing, and can be chosen.
-export const ZerosListed: Story = { render: () => <Stateful hideZeros={false} /> };
+const zerosListedNode = <Stateful hideZeros={false} />;
 
-export const WithFormIcons: Story = {
-  render: () => <Stateful label="Forms" choices={FORMS} initial={['leaf', 'oil']} />,
-};
+const withFormIconsNode = <Stateful label="Forms" choices={FORMS} initial={['leaf', 'oil']} />;
 
 // Narrow, as on a phone: the chips wrap inside the control.
 export const Narrow: Story = {
@@ -118,6 +113,23 @@ const DEITIES: ComboboxChoice[] = [
 ];
 
 // Each choice under its group's heading, as the Deities filter groups by tradition.
-export const Grouped: Story = {
-  render: () => <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />,
+const groupedNode = <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Some Chosen': someChosenNode,
+  'Counts Loading': countsLoadingNode,
+  'Chosen With Nothing Behind It': chosenWithNothingBehindItNode,
+  'All Zero': allZeroNode,
+  'Zeros Listed': zerosListedNode,
+  'With Form Icons': withFormIconsNode,
+  Grouped: groupedNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

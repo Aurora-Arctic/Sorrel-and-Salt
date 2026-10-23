@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { INVITATIONS } from '../../../.storybook/fixtures';
@@ -69,20 +69,18 @@ const PageTwo = (): ReactElement => (
   />
 );
 
-export const Default: Story = { render: () => <Frame invitations={INVITATIONS} /> };
+const defaultNode = <Frame invitations={INVITATIONS} />;
 
-export const Empty: Story = { render: () => <Frame invitations={[]} /> };
+const emptyNode = <Frame invitations={[]} />;
 
 // Filtered by part of an address and Expires in 24 Hrs: the fields hold the
 // filter shown, Clear is offered, and one invitation is left.
-export const Filtered: Story = {
-  render: () => <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />,
-};
+const filteredNode = <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />;
 
 // A filter that leaves none: the empty state names it.
-export const NoMatches: Story = { render: () => <Frame invitations={[]} filter={FILTER} /> };
+const noMatchesNode = <Frame invitations={[]} filter={FILTER} />;
 
-export const MiddlePage: Story = { render: () => <PageTwo /> };
+const middlePageNode = <PageTwo />;
 
 // New Invitation pressed: the form `?invite` opens over the list. Closing it
 // navigates to the list's address without `?invite`, which the workshop's
@@ -111,6 +109,21 @@ export const Inviting: Story = {
 
 // Paused, to an admin who is not the primary one: New Invitation and every
 // Revoke in view but locked, the pause as the reason in a tip.
-export const Paused: Story = {
-  render: () => <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />,
+const pausedNode = <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Empty: emptyNode,
+  Filtered: filteredNode,
+  'No Matches': noMatchesNode,
+  'Middle Page': middlePageNode,
+  Paused: pausedNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

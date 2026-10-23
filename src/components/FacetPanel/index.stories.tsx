@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
@@ -143,113 +144,97 @@ function Panel({
 }
 
 // Nothing chosen: Filters alone, no Clear All.
-export const Default: Story = { render: () => <Panel open={false} /> };
+const defaultNode = <Panel open={false} />;
 
 // The public compendium's panel: Categories with Match at its right, Forms with Toxic, and no
 // Source, In Stock or No Refs. Open on desktop.
-export const Public: Story = { render: () => <Panel /> };
+const publicNode = <Panel />;
 
 // Chosen values: the count on the button (every chosen value, so seven here; Match counts
 // none), Clear All beside it, Match with its hint for two categories.
-export const Chosen: Story = {
-  render: () => (
-    <Panel
-      start={{
-        ...NONE,
-        categories: ['warding', 'mending'],
-        forms: ['test-oil', 'test-resin'],
-        deities: ['testa-fixtura'],
-        elements: ['water'],
-        toxic: 'not_toxic',
-      }}
-    />
-  ),
-};
+const chosenNode = (
+  <Panel
+    start={{
+      ...NONE,
+      categories: ['warding', 'mending'],
+      forms: ['test-oil', 'test-resin'],
+      deities: ['testa-fixtura'],
+      elements: ['water'],
+      toxic: 'not_toxic',
+    }}
+  />
+);
 
 // Two forms and Toxic: the Filters button reads 3, one for each chosen value.
-export const FormsAndToxic: Story = {
-  render: () => <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />,
-};
+const formsAndToxicNode = (
+  <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />
+);
 
 // Two categories alone: Match appears, with its hint, and adds nothing to the Filters count.
-export const MatchShown: Story = {
-  render: () => (
-    <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
-  ),
-};
+const matchShownNode = (
+  <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
+);
 
 // A facet whose every value counts nothing keeps its field, with an empty list.
-export const AllZeroFacet: Story = {
-  render: () => (
-    <Panel
-      facets={{
-        ...FACETS,
-        celestialBodies: FACETS.celestialBodies.map((choice) => ({ ...choice, count: 0 })),
-      }}
-    />
-  ),
-};
+const allZeroFacetNode = (
+  <Panel
+    facets={{
+      ...FACETS,
+      celestialBodies: FACETS.celestialBodies.map((choice) => ({ ...choice, count: 0 })),
+    }}
+  />
+);
 
 // Fewer than two categories: the Match chip stays, on All, disabled and dashed, its hint saying
 // when it applies.
-export const MatchStuck: Story = {
-  render: () => <Panel start={{ ...NONE, categories: ['warding'] }} />,
-};
+const matchStuckNode = <Panel start={{ ...NONE, categories: ['warding'] }} />;
 
 // Either Toxic value counting nothing: every matching entry shares one toxicity, so the
 // chip rests on Any, is disabled, and says why in its hint.
-export const ToxicStuck: Story = {
-  render: () => (
-    <Panel
-      start={{ ...NONE, toxic: 'toxic' }}
-      facets={{
-        ...FACETS,
-        toxic: [
-          { value: 'toxic', label: 'Toxic', count: 0 },
-          { value: 'not_toxic', label: 'Not Toxic', count: 21 },
-        ],
-      }}
-    />
-  ),
-};
+const toxicStuckNode = (
+  <Panel
+    start={{ ...NONE, toxic: 'toxic' }}
+    facets={{
+      ...FACETS,
+      toxic: [
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 21 },
+      ],
+    }}
+  />
+);
 
 // Either source counting nothing: every matching entry comes from the other, so the chip rests
 // on All, is disabled, and says why when the pointer or focus is on it.
-export const SourceStuck: Story = {
-  render: () => (
-    <Panel
-      facets={{
-        ...COVEN_FACETS,
-        source: [
-          { value: 'local', label: 'Local', count: 18 },
-          { value: 'compendium', label: 'Compendium', count: 0 },
-        ],
-      }}
-      start={{ ...NONE, source: 'local', inStock: false }}
-    />
-  ),
-};
+const sourceStuckNode = (
+  <Panel
+    facets={{
+      ...COVEN_FACETS,
+      source: [
+        { value: 'local', label: 'Local', count: 18 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ],
+    }}
+    start={{ ...NONE, source: 'local', inStock: false }}
+  />
+);
 
 // The admin list also has the No Refs switch, after Toxic on the Forms row.
-export const Admin: Story = {
-  render: () => <Panel admin start={{ ...NONE, withoutReferences: true }} />,
-};
+const adminNode = <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
 // The coven's list also has a Source chip, the In Stock switch and the Low Stock Only switch, on the Forms row beside Toxic.
 // Their values count on the Filters button, so the three chosen here make 3.
-export const Coven: Story = {
-  render: () => (
-    <Panel
-      facets={COVEN_FACETS}
-      start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
-    />
-  ),
-};
+const covenNode = (
+  <Panel
+    facets={COVEN_FACETS}
+    start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
+  />
+);
 
 // The coven's controls with nothing chosen: Source rests on All and the switch is off.
-export const CovenEmpty: Story = {
-  render: () => <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />,
-};
+const covenEmptyNode = (
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
+);
 
 // The Match chip open, two categories chosen: the menu of radios fades in under the chip.
 export const MatchMenu: Story = {
@@ -274,3 +259,26 @@ export const SourceMenu: Story = {
 
 // The admin's Toxic chip open, with No Refs on the same row.
 export const ToxicMenu: Story = { render: () => <Panel menu="Toxic" admin start={NONE} /> };
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Public: publicNode,
+  Chosen: chosenNode,
+  'Forms And Toxic': formsAndToxicNode,
+  'Match Shown': matchShownNode,
+  'All Zero Facet': allZeroFacetNode,
+  'Match Stuck': matchStuckNode,
+  'Toxic Stuck': toxicStuckNode,
+  'Source Stuck': sourceStuckNode,
+  Admin: adminNode,
+  Coven: covenNode,
+  'Coven Empty': covenEmptyNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

@@ -170,24 +170,22 @@ const PageOfSeveral = (): ReactElement => (
   </Page>
 );
 
-export const Default: Story = { render: () => <PageOfSeveral /> };
+const defaultNode = <PageOfSeveral />;
 
 // Next alone still sits at the right, where it is on every other page.
-export const FirstPage: Story = {
-  render: () => (
-    <Page>
-      <CompendiumList
-        entries={ENTRIES.slice(0, 2)}
-        filter={NO_FILTER}
-        facets={FACETS}
-        categories={CATEGORIES}
-        vocabulary={VOCABULARY}
-        nextHref={compendiumHref({ after: 'cursor' })}
-        total={ENTRIES.length}
-      />
-    </Page>
-  ),
-};
+const firstPageNode = (
+  <Page>
+    <CompendiumList
+      entries={ENTRIES.slice(0, 2)}
+      filter={NO_FILTER}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      nextHref={compendiumHref({ after: 'cursor' })}
+      total={ENTRIES.length}
+    />
+  </Page>
+);
 
 // The admin's two to-do lists at once, the unknown kind and the unsourced,
 // narrowed to one form, a deity, two elements and two categories, the Filters button counting
@@ -217,62 +215,73 @@ const FilteredView = () => (
   </Page>
 );
 
-export const Filtered: Story = { render: FilteredView };
+const filteredNode = <FilteredView />;
 
 // Two forms and Toxic: the Filters button reads 3, one for each chosen value.
-export const ChosenValuesCounted: Story = {
-  render: () => (
-    <Page>
-      <CompendiumList
-        entries={[entry('Mockroot', 'none', null, ['Powder'])]}
-        filter={{ ...NO_FILTER, forms: ['Oil', 'Powder'], toxic: 'not_toxic' }}
-        facets={FACETS}
-        categories={CATEGORIES}
-        vocabulary={VOCABULARY}
-        total={1}
-      />
-    </Page>
-  ),
+const chosenValuesCountedNode = (
+  <Page>
+    <CompendiumList
+      entries={[entry('Mockroot', 'none', null, ['Powder'])]}
+      filter={{ ...NO_FILTER, forms: ['Oil', 'Powder'], toxic: 'not_toxic' }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={1}
+    />
+  </Page>
+);
+
+const noMatchesNode = (
+  <Page>
+    <CompendiumList
+      entries={[]}
+      filter={{
+        query: 'nothing',
+        forms: ['Oil'],
+        withoutReferences: false,
+        withoutForms: false,
+        elements: [],
+        categories: ['testbane'],
+        categoryMode: 'all',
+        deities: [],
+        zodiac: [],
+        celestialBodies: [],
+        toxic: '',
+      }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={0}
+    />
+  </Page>
+);
+
+const emptyNode = (
+  <Page>
+    <CompendiumList
+      entries={[]}
+      filter={NO_FILTER}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={0}
+    />
+  </Page>
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'First Page': firstPageNode,
+  Filtered: filteredNode,
+  'Chosen Values Counted': chosenValuesCountedNode,
+  'No Matches': noMatchesNode,
+  Empty: emptyNode,
 };
 
-export const NoMatches: Story = {
-  render: () => (
-    <Page>
-      <CompendiumList
-        entries={[]}
-        filter={{
-          query: 'nothing',
-          forms: ['Oil'],
-          withoutReferences: false,
-          withoutForms: false,
-          elements: [],
-          categories: ['testbane'],
-          categoryMode: 'all',
-          deities: [],
-          zodiac: [],
-          celestialBodies: [],
-          toxic: '',
-        }}
-        facets={FACETS}
-        categories={CATEGORIES}
-        vocabulary={VOCABULARY}
-        total={0}
-      />
-    </Page>
-  ),
-};
-
-export const Empty: Story = {
-  render: () => (
-    <Page>
-      <CompendiumList
-        entries={[]}
-        filter={NO_FILTER}
-        facets={FACETS}
-        categories={CATEGORIES}
-        vocabulary={VOCABULARY}
-        total={0}
-      />
-    </Page>
-  ),
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

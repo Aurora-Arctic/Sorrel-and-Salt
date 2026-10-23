@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import CovenCards from '.';
 import type { CovenCardEntry, CovenCardsProps } from './types';
@@ -85,37 +86,31 @@ const BASE: CovenCardsProps = {
   canAdd: true,
 };
 
-export const Default: Story = { render: () => <CovenCards {...BASE} /> };
+const defaultNode = <CovenCards {...BASE} />;
 
 // A viewer: the same jar lines, and no way to add.
-export const ForAViewer: Story = { render: () => <CovenCards {...BASE} canAdd={false} /> };
+const forAViewerNode = <CovenCards {...BASE} canAdd={false} />;
 
 // A page with a neighbour on each side.
-export const MiddlePage: Story = {
-  render: () => (
-    <CovenCards
-      {...BASE}
-      position={{ page: 2, pages: 3 }}
-      previousHref={route('/coven/fixture-coven/ingredients')}
-      nextHref={route('/coven/fixture-coven/ingredients?after=x')}
-    />
-  ),
-};
+const middlePageNode = (
+  <CovenCards
+    {...BASE}
+    position={{ page: 2, pages: 3 }}
+    previousHref={route('/coven/fixture-coven/ingredients')}
+    nextHref={route('/coven/fixture-coven/ingredients?after=x')}
+  />
+);
 
 // An empty cupboard: a member is offered the first add, a viewer reads the sentence alone.
-export const Empty: Story = { render: () => <CovenCards {...BASE} entries={[]} total={0} /> };
+const emptyNode = <CovenCards {...BASE} entries={[]} total={0} />;
 
-export const EmptyForAViewer: Story = {
-  render: () => <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />,
-};
+const emptyForAViewerNode = <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />;
 
 // A search that matched nothing: the region says only what to do, pointing at the filter row's
 // clears (the search sentence above already names the search), and hands the search to the Compendium.
-export const NoMatches: Story = {
-  render: () => (
-    <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
-  ),
-};
+const noMatchesNode = (
+  <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
+);
 
 // A role that may delete and nothing more: the coven's own entry's only choice is its bin.
 export const WithLoneBin: Story = {
@@ -168,4 +163,21 @@ export const WithStock: Story = {
       )}
     />
   ),
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'For AViewer': forAViewerNode,
+  'Middle Page': middlePageNode,
+  Empty: emptyNode,
+  'Empty For AViewer': emptyForAViewerNode,
+  'No Matches': noMatchesNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

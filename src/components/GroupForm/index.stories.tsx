@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { FIXTURE_GROUP_ID, GROUP_NAMES, asOptions } from '../../../.storybook/fixtures';
 import { InModal } from '../../../.storybook/in-modal';
 import { usePressOnMount } from '../../../.storybook/press';
@@ -39,13 +40,11 @@ const WARDS = {
 const done = () => {};
 
 // A category group adds its two colours.
-export const Default: Story = {
-  render: () => (
-    <InModal title="Add Category Group">
-      <GroupForm kind="category" groups={GROUPS} onDone={done} />
-    </InModal>
-  ),
-};
+const defaultNode = (
+  <InModal title="Add Category Group">
+    <GroupForm kind="category" groups={GROUPS} onDone={done} />
+  </InModal>
+);
 
 // Press Delete Group to see the move: a group to choose, then the confirmation.
 const EditingACategoryGroupView = () => (
@@ -54,41 +53,37 @@ const EditingACategoryGroupView = () => (
   </InModal>
 );
 
-export const EditingACategoryGroup: Story = { render: EditingACategoryGroupView };
+const editingACategoryGroupNode = <EditingACategoryGroupView />;
 
 // A form group adds its icon: six, and None last for the generic.
-export const AddingAFormGroup: Story = {
-  render: () => (
-    <InModal title="Add Form Group">
-      <GroupForm kind="form" groups={GROUPS} onDone={done} />
-    </InModal>
-  ),
-};
+const addingAFormGroupNode = (
+  <InModal title="Add Form Group">
+    <GroupForm kind="form" groups={GROUPS} onDone={done} />
+  </InModal>
+);
 
 const TRADITIONS = asOptions(GROUP_NAMES.tradition.slice(0, 2));
 
 // A tradition has neither colour nor icon. Press Delete Tradition to see the
 // move: its two deities to another tradition.
-export const EditingATradition: Story = {
-  render: () => (
-    <InModal eyebrow="Edit Tradition" title="Fixtural">
-      <GroupForm
-        kind="tradition"
-        group={{
-          id: TRADITIONS[0].id,
-          name: 'Fixtural',
-          description: 'An invented tradition, for the workshop.',
-          colorDark: '',
-          colorLight: '',
-          icon: '',
-        }}
-        groups={TRADITIONS}
-        memberCount={2}
-        onDone={done}
-      />
-    </InModal>
-  ),
-};
+const editingATraditionNode = (
+  <InModal eyebrow="Edit Tradition" title="Fixtural">
+    <GroupForm
+      kind="tradition"
+      group={{
+        id: TRADITIONS[0].id,
+        name: 'Fixtural',
+        description: 'An invented tradition, for the workshop.',
+        colorDark: '',
+        colorLight: '',
+        icon: '',
+      }}
+      groups={TRADITIONS}
+      memberCount={2}
+      onDone={done}
+    />
+  </InModal>
+);
 
 // Delete Group pressed once drawn, as a person would: the first step, where
 // its categories go, asked over the form, which is dimmed and held beneath it
@@ -98,4 +93,19 @@ export const AskingWhereToMove: Story = {
     usePressOnMount('Delete Group');
     return <EditingACategoryGroupView />;
   },
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Editing ACategory Group': editingACategoryGroupNode,
+  'Adding AForm Group': addingAFormGroupNode,
+  'Editing ATradition': editingATraditionNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

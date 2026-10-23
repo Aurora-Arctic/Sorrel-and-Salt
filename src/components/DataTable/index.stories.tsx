@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 
 import { asOptions, GROUP_NAMES } from '../../../.storybook/fixtures';
@@ -49,37 +50,45 @@ const Frame = ({ children }: ListBodyProps) => (
   </ListFrame>
 );
 
-export const Default: Story = {
-  render: () => (
-    <Frame>
-      <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
-    </Frame>
-  ),
+const defaultNode = (
+  <Frame>
+    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
+  </Frame>
+);
+
+const roomyNode = (
+  <Frame>
+    <StackTable
+      columns={COLUMNS}
+      rows={ROWS}
+      rowKey={(row) => row.id}
+      empty=""
+      className="data-table--roomy"
+    />
+  </Frame>
+);
+
+const emptyNode = (
+  <Frame>
+    <StackTable
+      columns={COLUMNS}
+      rows={[]}
+      rowKey={(row) => row.id}
+      empty="There are no groups yet. Add one with Add Group."
+    />
+  </Frame>
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Roomy: roomyNode,
+  Empty: emptyNode,
 };
 
-export const Roomy: Story = {
-  render: () => (
-    <Frame>
-      <StackTable
-        columns={COLUMNS}
-        rows={ROWS}
-        rowKey={(row) => row.id}
-        empty=""
-        className="data-table--roomy"
-      />
-    </Frame>
-  ),
-};
-
-export const Empty: Story = {
-  render: () => (
-    <Frame>
-      <StackTable
-        columns={COLUMNS}
-        rows={[]}
-        rowKey={(row) => row.id}
-        empty="There are no groups yet. Add one with Add Group."
-      />
-    </Frame>
-  ),
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

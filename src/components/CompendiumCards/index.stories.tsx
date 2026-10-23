@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
@@ -65,96 +66,103 @@ const BASE: CompendiumCardsProps = {
 // Someone who can add to one coven: the plus at each card's bottom right adds the entry to it
 // directly, until M9.12's dialog asks for a quantity. The workshop serves no /api/graphql,
 // so a press shows its refusal.
-export const CanAdd: Story = {
-  render: () => <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />,
-};
+const canAddNode = <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />;
 
 // The coven already holds the first two: a check link in the plus's place, the last still a plus.
-export const Held: Story = {
-  render: () => (
-    <CompendiumCards
-      {...BASE}
-      action="add"
-      workspaceId={WORKSPACE_ID}
-      entries={ENTRIES.map((entry, at) => (at < 2 ? { ...entry, held: true } : entry))}
-    />
-  ),
-};
+const heldNode = (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry, at) => (at < 2 ? { ...entry, held: true } : entry))}
+  />
+);
 
 // Someone who may write in two covens: the plus is a menu of both. The first card is in the
 // first coven already, so its menu shows that coven disabled; the last is in both, and shows
 // the check.
-export const InSeveralCovens: Story = {
-  render: () => (
-    <CompendiumCards
-      {...BASE}
-      action="add"
-      workspaceId={WORKSPACE_ID}
-      covens={COVENS}
-      entries={ENTRIES.map((entry, at) => ({
-        ...entry,
-        held: at === ENTRIES.length - 1,
-        heldIn:
-          at === 0 ? [WORKSPACE_ID] : at === ENTRIES.length - 1 ? [WORKSPACE_ID, SECOND_ID] : [],
-      }))}
-    />
-  ),
-};
+const inSeveralCovensNode = (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    covens={COVENS}
+    entries={ENTRIES.map((entry, at) => ({
+      ...entry,
+      held: at === ENTRIES.length - 1,
+      heldIn:
+        at === 0 ? [WORKSPACE_ID] : at === ENTRIES.length - 1 ? [WORKSPACE_ID, SECOND_ID] : [],
+    }))}
+  />
+);
 
 // A curator who is also a member of a coven that holds the entries: the foot's three icons, the
 // plus (a check where every coven holds it), Edit in Compendium, and the three dots, which hold
 // Annotate, Make It Ours and Remove (the owner's call, 2026-10-20).
-export const CanAddEditAndMore: Story = {
-  render: () => (
-    <CompendiumCards
-      {...BASE}
-      action="add"
-      workspaceId={WORKSPACE_ID}
-      entries={ENTRIES.map((entry, at) => ({
-        ...withEdit(entry),
-        held: at === 0,
-        heldIn: at === 0 ? [WORKSPACE_ID] : [],
-        places:
-          at === 0
-            ? [
-                {
-                  workspaceId: WORKSPACE_ID,
-                  covenSlug: FIXTURE_COVEN.slug,
-                  name: FIXTURE_COVEN.name,
-                  canAnnotate: true,
-                  canMakeOurs: true,
-                  canRemove: true,
-                  annotateHref:
-                    `/compendium/ingredients/${entry.slug}?annotate=${FIXTURE_COVEN.slug}` as Route,
-                },
-              ]
-            : undefined,
-      }))}
-    />
-  ),
-};
+const canAddEditAndMoreNode = (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    entries={ENTRIES.map((entry, at) => ({
+      ...withEdit(entry),
+      held: at === 0,
+      heldIn: at === 0 ? [WORKSPACE_ID] : [],
+      places:
+        at === 0
+          ? [
+              {
+                workspaceId: WORKSPACE_ID,
+                covenSlug: FIXTURE_COVEN.slug,
+                name: FIXTURE_COVEN.name,
+                canAnnotate: true,
+                canMakeOurs: true,
+                canRemove: true,
+                annotateHref:
+                  `/compendium/ingredients/${entry.slug}?annotate=${FIXTURE_COVEN.slug}` as Route,
+              },
+            ]
+          : undefined,
+    }))}
+  />
+);
 
 /** A curator's cards, each with Edit. */
-export const CuratorCanEdit: Story = {
-  render: () => <CompendiumCards {...BASE} entries={ENTRIES.map(withEdit)} />,
-};
+const curatorCanEditNode = <CompendiumCards {...BASE} entries={ENTRIES.map(withEdit)} />;
 
 // An account that only views, or a visitor with no account (who signs in through the header):
 // nothing beneath the card.
-export const Default: Story = { render: () => <CompendiumCards {...BASE} /> };
+const defaultNode = <CompendiumCards {...BASE} />;
 
 // A page with a neighbour on each side.
-export const MiddlePage: Story = {
-  render: () => (
-    <CompendiumCards
-      {...BASE}
-      action="add"
-      workspaceId={WORKSPACE_ID}
-      position={{ page: 2, pages: 3 }}
-      previousHref="/compendium"
-      nextHref="/compendium?after=x"
-    />
-  ),
+const middlePageNode = (
+  <CompendiumCards
+    {...BASE}
+    action="add"
+    workspaceId={WORKSPACE_ID}
+    position={{ page: 2, pages: 3 }}
+    previousHref="/compendium"
+    nextHref="/compendium?after=x"
+  />
+);
+
+const emptyNode = <CompendiumCards {...BASE} entries={[]} total={0} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Can Add': canAddNode,
+  Held: heldNode,
+  'In Several Covens': inSeveralCovensNode,
+  'Can Add Edit And More': canAddEditAndMoreNode,
+  'Curator Can Edit': curatorCanEditNode,
+  'Middle Page': middlePageNode,
+  Empty: emptyNode,
 };
 
-export const Empty: Story = { render: () => <CompendiumCards {...BASE} entries={[]} total={0} /> };
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

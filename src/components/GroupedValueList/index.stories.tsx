@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import GroupedValueList from '.';
@@ -89,54 +90,48 @@ const deity = (name: string, groupName: string, description: string) => {
 // the same for every kind, so only the categories show them; the other kinds
 // show what differs: the form's icon, the deity's tradition filter, the flat
 // kinds' missing group column and filter.
-export const Default: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="category"
-      values={[
-        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
-        category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
-        category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
-      ]}
-      filter={NO_FILTER}
-      groups={CATEGORY_GROUPS}
-    />
-  ),
-};
+const defaultNode = (
+  <GroupedValueList
+    kind="category"
+    values={[
+      category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+      category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
+      category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+    groups={CATEGORY_GROUPS}
+  />
+);
 
 // Next alone still sits at the right, where it is on every other page.
-export const FirstPage: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="category"
-      values={[
-        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
-      ]}
-      filter={NO_FILTER}
-      groups={CATEGORY_GROUPS}
-      nextHref={groupedValuesHref('category', { after: 'cursor' })}
-      position={{ page: 1, pages: 2 }}
-    />
-  ),
-};
+const firstPageNode = (
+  <GroupedValueList
+    kind="category"
+    values={[
+      category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+    ]}
+    filter={NO_FILTER}
+    groups={CATEGORY_GROUPS}
+    nextHref={groupedValuesHref('category', { after: 'cursor' })}
+    position={{ page: 1, pages: 2 }}
+  />
+);
 
-export const MiddlePage: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="category"
-      values={[
-        category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
-        category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
-        category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
-      ]}
-      filter={NO_FILTER}
-      groups={CATEGORY_GROUPS}
-      previousHref={groupedValuesHref('category', { before: 'cursor' })}
-      nextHref={groupedValuesHref('category', { after: 'cursor' })}
-      position={{ page: 2, pages: 3 }}
-    />
-  ),
-};
+const middlePageNode = (
+  <GroupedValueList
+    kind="category"
+    values={[
+      category('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+      category('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
+      category('Fixture Mending', 'Fixture Healing', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+    groups={CATEGORY_GROUPS}
+    previousHref={groupedValuesHref('category', { before: 'cursor' })}
+    nextHref={groupedValuesHref('category', { after: 'cursor' })}
+    position={{ page: 2, pages: 3 }}
+  />
+);
 
 // Narrowed by part of a name and by a group (MB.178): the form shows both.
 const FilteredView = () => (
@@ -151,56 +146,48 @@ const FilteredView = () => (
   />
 );
 
-export const Filtered: Story = { render: FilteredView };
+const filteredNode = <FilteredView />;
 
-export const NoMatches: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="category"
-      values={[]}
-      filter={{ query: 'nothing', group: 'fixture-healing' }}
-      groups={CATEGORY_GROUPS}
-    />
-  ),
-};
+const noMatchesNode = (
+  <GroupedValueList
+    kind="category"
+    values={[]}
+    filter={{ query: 'nothing', group: 'fixture-healing' }}
+    groups={CATEGORY_GROUPS}
+  />
+);
 
-export const Empty: Story = {
-  render: () => (
-    <GroupedValueList kind="category" values={[]} filter={NO_FILTER} groups={CATEGORY_GROUPS} />
-  ),
-};
+const emptyNode = (
+  <GroupedValueList kind="category" values={[]} filter={NO_FILTER} groups={CATEGORY_GROUPS} />
+);
 
 // A form's row draws its group's icon.
-export const Forms: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="form"
-      values={[
-        form('Testwort Shard', 'Fixture Mineral', 'An invented form, for the workshop.'),
-        form('Testwort Sliver', 'Fixture Substance', 'Another, thinner than the first.'),
-        form('Fixture Flake', 'Fixture Mineral', 'Invented too.'),
-      ]}
-      filter={NO_FILTER}
-      groups={FORM_GROUPS}
-    />
-  ),
-};
+const formsNode = (
+  <GroupedValueList
+    kind="form"
+    values={[
+      form('Testwort Shard', 'Fixture Mineral', 'An invented form, for the workshop.'),
+      form('Testwort Sliver', 'Fixture Substance', 'Another, thinner than the first.'),
+      form('Fixture Flake', 'Fixture Mineral', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+    groups={FORM_GROUPS}
+  />
+);
 
 // By tradition then name, as the service reads them.
-export const Deities: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="deity"
-      values={[
-        deity('Fixturo', 'Fixtural', 'Another, keeper of nothing in particular.'),
-        deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
-        deity('Mockra', 'Mockish', 'Invented too.'),
-      ]}
-      filter={NO_FILTER}
-      groups={TRADITIONS}
-    />
-  ),
-};
+const deitiesNode = (
+  <GroupedValueList
+    kind="deity"
+    values={[
+      deity('Fixturo', 'Fixtural', 'Another, keeper of nothing in particular.'),
+      deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
+      deity('Mockra', 'Mockish', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+    groups={TRADITIONS}
+  />
+);
 
 // The flat kinds (MB.95), here the celestial bodies: no group column and no
 // group filter. The zodiac signs draw the same.
@@ -218,19 +205,17 @@ const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: s
   };
 };
 
-export const CelestialBodies: Story = {
-  render: () => (
-    <GroupedValueList
-      kind="celestialBody"
-      values={[
-        flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.'),
-        flat('celestialBody', 'Fixture Comet', 'Another, with a longer tail than the first.'),
-        flat('celestialBody', 'Fixture Moonlet', 'Invented too.'),
-      ]}
-      filter={NO_FILTER}
-    />
-  ),
-};
+const celestialBodiesNode = (
+  <GroupedValueList
+    kind="celestialBody"
+    values={[
+      flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.'),
+      flat('celestialBody', 'Fixture Comet', 'Another, with a longer tail than the first.'),
+      flat('celestialBody', 'Fixture Moonlet', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+  />
+);
 
 // Inside the admin layout and the Categories page with its Categories tab
 // open, as the page draws it; at a phone's width, the tab's Add
@@ -264,3 +249,23 @@ const PendingView = () => (
 );
 
 export const Pending: Story = { render: () => <PendingView /> };
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'First Page': firstPageNode,
+  'Middle Page': middlePageNode,
+  Filtered: filteredNode,
+  'No Matches': noMatchesNode,
+  Empty: emptyNode,
+  Forms: formsNode,
+  Deities: deitiesNode,
+  'Celestial Bodies': celestialBodiesNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

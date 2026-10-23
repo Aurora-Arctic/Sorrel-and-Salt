@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { verifyErrorMessage } from '../../lib/account-email';
 import EmailForm from '.';
 import type { EmailFormProps } from './types';
@@ -27,44 +28,36 @@ const Page = (props: EmailFormProps) => (
 
 // The common first visit: the provider shared an address, the sign-up mail
 // has just gone, so the submit is counting the minute down.
-export const Default: Story = {
-  render: () => (
-    <Page email="ada@example.test" verified={false} landing="/coven" waitSeconds={45} />
-  ),
-};
+const defaultNode = (
+  <Page email="ada@example.test" verified={false} landing="/coven" waitSeconds={45} />
+);
 
 // The same visit once the minute has passed.
-export const ReadyToResend: Story = {
-  render: () => <Page email="ada@example.test" verified={false} landing="/coven" />,
-};
+const readyToResendNode = <Page email="ada@example.test" verified={false} landing="/coven" />;
 
 // A provider that shared no address: the field starts empty.
-export const NoEmail: Story = { render: () => <Page email="" verified={false} landing="/coven" /> };
+const noEmailNode = <Page email="" verified={false} landing="/coven" />;
 
 // A followed link's landing: the proved address and the way on, nothing to edit.
-export const Confirmed: Story = {
-  render: () => (
-    <Page email="ada@example.test" verified confirmed landing="/coven" accountPath="/account" />
-  ),
-};
+const confirmedNode = (
+  <Page email="ada@example.test" verified confirmed landing="/coven" accountPath="/account" />
+);
 
 // A verified account back to change its address: nothing to send until edited.
-export const ChangeLater: Story = {
-  render: () => <Page email="ada@example.test" verified landing="/coven" accountPath="/account" />,
-};
+const changeLaterNode = (
+  <Page email="ada@example.test" verified landing="/coven" accountPath="/account" />
+);
 
 // `error` reads the real mapping rather than a copied string, so this story
 // cannot go stale against src/lib/account-email.ts.
-export const Failed: Story = {
-  render: () => (
-    <Page
-      email="ada@example.test"
-      verified={false}
-      landing="/coven"
-      error={verifyErrorMessage('TOKEN_EXPIRED')}
-    />
-  ),
-};
+const failedNode = (
+  <Page
+    email="ada@example.test"
+    verified={false}
+    landing="/coven"
+    error={verifyErrorMessage('TOKEN_EXPIRED')}
+  />
+);
 
 // The account page's Email section (MB.88): the section heads it, so the
 // form has no heading of its own, and it never shows the confirmed view.
@@ -79,4 +72,21 @@ export const Embedded: Story = {
       </section>
     </main>
   ),
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Ready To Resend': readyToResendNode,
+  'No Email': noEmailNode,
+  Confirmed: confirmedNode,
+  'Change Later': changeLaterNode,
+  Failed: failedNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

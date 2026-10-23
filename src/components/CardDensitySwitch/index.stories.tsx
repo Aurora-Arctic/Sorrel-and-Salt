@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import CardDensitySwitch from '.';
 import type { CompendiumListFilter as Filter } from '../CompendiumList/types';
 import CompendiumListFilter from '../CompendiumList/filter';
@@ -71,10 +71,19 @@ const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
 );
 
 // No filter chosen, so no Clear All: the switch shares the Filters line.
-export const CovenRow: Story = {
-  render: () => <CovenSearchRow filter={NO_FILTER} />,
-};
+const covenRowNode = <CovenSearchRow filter={NO_FILTER} />;
 // A form chosen, so Clear All is drawn and the switch wraps beneath.
-export const CovenRowFiltered: Story = {
-  render: () => <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />,
+const covenRowFilteredNode = <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  'Coven Row': covenRowNode,
+  'Coven Row Filtered': covenRowFilteredNode,
+};
+
+export const States: Story = {
+  args: { state: 'Coven Row' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

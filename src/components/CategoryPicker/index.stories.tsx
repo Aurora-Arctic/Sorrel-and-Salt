@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import CategoryPicker from '.';
 import type { CategoryPickerProps, PickerCategory } from './types';
@@ -58,35 +59,29 @@ function Stateful({
 
 // Focus the box to list every category under its group, or type to narrow
 // them; a pick is a chip in its group's colour.
-export const Default: Story = { render: () => <Stateful /> };
+const defaultNode = <Stateful />;
 
-export const SomePicked: Story = {
-  render: () => (
-    <Stateful initial={[idOf('Testward 1'), idOf('Testcraft 2'), idOf('Fixture Mending 2')]} />
-  ),
-};
+const somePickedNode = (
+  <Stateful initial={[idOf('Testward 1'), idOf('Testcraft 2'), idOf('Fixture Mending 2')]} />
+);
 
 // The entry the error names is edged, and its x reads the error.
-export const AnInvalidEntry: Story = {
-  render: () => (
-    <Stateful
-      initial={[idOf('Testward 1'), idOf('Testcraft 4')]}
-      invalid={[idOf('Testcraft 4')]}
-      errorId="story-error"
-      error={
-        <p id="story-error" className="field__error">
-          Testcraft 4: No such category
-        </p>
-      }
-    />
-  ),
-};
+const anInvalidEntryNode = (
+  <Stateful
+    initial={[idOf('Testward 1'), idOf('Testcraft 4')]}
+    invalid={[idOf('Testcraft 4')]}
+    errorId="story-error"
+    error={
+      <p id="story-error" className="field__error">
+        Testcraft 4: No such category
+      </p>
+    }
+  />
+);
 
-export const Loading: Story = { render: () => <Stateful categories={[]} pending /> };
+const loadingNode = <Stateful categories={[]} pending />;
 
-export const Failed: Story = {
-  render: () => <Stateful categories={[]} status="The categories could not be loaded." />,
-};
+const failedNode = <Stateful categories={[]} status="The categories could not be loaded." />;
 
 // The filter's reading (M12.4): each row and chip carries how many entries it
 // would leave, a zero row is left out, and a chip whose count is
@@ -96,14 +91,28 @@ const counted = CATEGORIES.map((category, index) => ({
   count: index % 3 === 0 ? 0 : index * 2,
 }));
 
-export const WithCounts: Story = {
-  render: () => (
-    <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" hideZeros />
-  ),
+const withCountsNode = (
+  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" hideZeros />
+);
+
+const countsLoadingNode = (
+  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Some Picked': somePickedNode,
+  'An Invalid Entry': anInvalidEntryNode,
+  Loading: loadingNode,
+  Failed: failedNode,
+  'With Counts': withCountsNode,
+  'Counts Loading': countsLoadingNode,
 };
 
-export const CountsLoading: Story = {
-  render: () => (
-    <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
-  ),
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { FIXTURE_EDIT, GROUP_NAMES } from '../../../.storybook/fixtures';
 import GroupList from '.';
 import { slugify } from '../../lib/slugify';
@@ -39,31 +40,29 @@ const CategoryGroupsView = () => (
   />
 );
 
-export const Default: Story = { render: CategoryGroupsView };
+const defaultNode = <CategoryGroupsView />;
 
-export const FormGroups: Story = {
-  render: () => (
-    <GroupList
-      kind="form"
-      groups={GROUP_NAMES.form.slice(0, 2).map((name) => {
-        const slug = slugify(name);
-        return {
-          id: slug,
-          name,
-          slug,
-          description: 'An invented group, for the workshop.',
-          // The first has an icon; the second shows the generic.
-          icon: name === GROUP_NAMES.form[0] ? ('mineral' as const) : null,
-          ...FIXTURE_EDIT,
-          editHref: groupsHref('form', {}, { edit: slug }),
-          editHeading: { eyebrow: 'Edit Form Group', title: name },
-        };
-      })}
-      nextHref={groupsHref('form', { after: 'cursor' })}
-      position={{ page: 1, pages: 2 }}
-    />
-  ),
-};
+const formGroupsNode = (
+  <GroupList
+    kind="form"
+    groups={GROUP_NAMES.form.slice(0, 2).map((name) => {
+      const slug = slugify(name);
+      return {
+        id: slug,
+        name,
+        slug,
+        description: 'An invented group, for the workshop.',
+        // The first has an icon; the second shows the generic.
+        icon: name === GROUP_NAMES.form[0] ? ('mineral' as const) : null,
+        ...FIXTURE_EDIT,
+        editHref: groupsHref('form', {}, { edit: slug }),
+        editHeading: { eyebrow: 'Edit Form Group', title: name },
+      };
+    })}
+    nextHref={groupsHref('form', { after: 'cursor' })}
+    position={{ page: 1, pages: 2 }}
+  />
+);
 
 /** Invented traditions as the page lists them, each Edit keeping the search. */
 const traditions = (names: readonly string[], query = '') =>
@@ -81,15 +80,13 @@ const traditions = (names: readonly string[], query = '') =>
   });
 
 // The traditions take a name search (MB.115), empty until one is asked.
-export const Traditions: Story = {
-  render: () => (
-    <GroupList
-      kind="tradition"
-      groups={traditions(['Fixtural', 'Mockish', 'Testwort Rite'])}
-      filter={{ query: '' }}
-    />
-  ),
-};
+const traditionsNode = (
+  <GroupList
+    kind="tradition"
+    groups={traditions(['Fixtural', 'Mockish', 'Testwort Rite'])}
+    filter={{ query: '' }}
+  />
+);
 
 // Searched by a fragment of the name, Clear drawn at the row's end.
 const TraditionsSearchedView = () => (
@@ -100,16 +97,32 @@ const TraditionsSearchedView = () => (
   />
 );
 
-export const TraditionsSearched: Story = { render: TraditionsSearchedView };
+const traditionsSearchedNode = <TraditionsSearchedView />;
 
 // A search matching nothing says what to change.
-export const TraditionsNoMatches: Story = {
-  render: () => <GroupList kind="tradition" groups={[]} filter={{ query: 'nothing' }} />,
-};
+const traditionsNoMatchesNode = (
+  <GroupList kind="tradition" groups={[]} filter={{ query: 'nothing' }} />
+);
 
-export const Empty: Story = { render: () => <GroupList kind="form" groups={[]} /> };
+const emptyNode = <GroupList kind="form" groups={[]} />;
 
 // The traditions' empty message names them.
-export const TraditionsEmpty: Story = {
-  render: () => <GroupList kind="tradition" groups={[]} filter={{ query: '' }} />,
+const traditionsEmptyNode = <GroupList kind="tradition" groups={[]} filter={{ query: '' }} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Form Groups': formGroupsNode,
+  Traditions: traditionsNode,
+  'Traditions Searched': traditionsSearchedNode,
+  'Traditions No Matches': traditionsNoMatchesNode,
+  Empty: emptyNode,
+  'Traditions Empty': traditionsEmptyNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

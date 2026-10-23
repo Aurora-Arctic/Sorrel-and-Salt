@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
 import { AdminContents } from '.';
 
@@ -19,13 +19,11 @@ type Story = StoryObj<typeof meta>;
 // Wider than a tablet: six tabs along the row, People set apart by a hairline
 // and marked by weight and the heavy rule. The narrower shapes are
 // SectionNav's stories.
-export const Default: Story = { render: () => <Frame /> };
+const defaultNode = <Frame />;
 
 // A curator's nav: the five curation pages, and no People. Opened on the
 // compendium, since a curator never reaches the People page.
-export const Curator: Story = {
-  render: () => <Frame open="/admin/compendium" managesPeople={false} />,
-};
+const curatorNode = <Frame open="/admin/compendium" managesPeople={false} />;
 
 // The `/admin` index under the nav: a lede, then the table of contents in
 // the nav's sections. The page is a server component behind the guard, so
@@ -44,7 +42,22 @@ const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElem
   </Frame>
 );
 
-export const IndexPage: Story = { render: () => <Index /> };
+const indexPageNode = <Index />;
 
 // The index as a curator reads it: the Compendium section alone.
-export const IndexPageCurator: Story = { render: () => <Index managesPeople={false} /> };
+const indexPageCuratorNode = <Index managesPeople={false} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Curator: curatorNode,
+  'Index Page': indexPageNode,
+  'Index Page Curator': indexPageCuratorNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

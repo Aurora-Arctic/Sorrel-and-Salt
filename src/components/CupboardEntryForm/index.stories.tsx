@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { Reopenable } from '../../../.storybook/reopenable';
 import Modal from '../Modal';
 import CupboardEntryForm from '.';
@@ -52,19 +53,30 @@ const Shown = ({ overrides }: { overrides: CupboardOverrides }) => (
 
 // Nothing annotated yet: every field shows the Compendium's value, and no
 // Restore Original control.
-export const Default: Story = { render: () => <Shown overrides={NONE} /> };
+const defaultNode = <Shown overrides={NONE} />;
 
 // The coven's own label and description, and its celestial bodies cleared on purpose:
 // each changed field shows the Restore Original icon button at its label's end.
-export const Annotated: Story = {
-  render: () => (
-    <Shown
-      overrides={{
-        ...NONE,
-        label: 'Hedgewort',
-        description: 'What our coven makes of it.',
-        celestialBodies: [],
-      }}
-    />
-  ),
+const annotatedNode = (
+  <Shown
+    overrides={{
+      ...NONE,
+      label: 'Hedgewort',
+      description: 'What our coven makes of it.',
+      celestialBodies: [],
+    }}
+  />
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Annotated: annotatedNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

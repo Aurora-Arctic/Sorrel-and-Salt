@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import ErrorPage from '.';
 
@@ -10,15 +11,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => (
-    <ErrorPage title="Page Not Found" reason="There is nothing at this address.">
-      <Link className="btn btn--quiet" href="/">
-        Back to Sorrel &amp; Salt
-      </Link>
-    </ErrorPage>
-  ),
-};
+const defaultNode = (
+  <ErrorPage title="Page Not Found" reason="There is nothing at this address.">
+    <Link className="btn btn--quiet" href="/">
+      Back to Sorrel &amp; Salt
+    </Link>
+  </ErrorPage>
+);
 
 const SomethingWentWrongView = () => (
   <ErrorPage
@@ -35,4 +34,17 @@ const SomethingWentWrongView = () => (
   </ErrorPage>
 );
 
-export const SomethingWentWrong: Story = { render: SomethingWentWrongView };
+const somethingWentWrongNode = <SomethingWentWrongView />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Something Went Wrong': somethingWentWrongNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

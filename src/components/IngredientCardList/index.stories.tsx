@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import IngredientCard from '../IngredientCard';
 import { ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
@@ -66,6 +67,20 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
   </IngredientCardList>
 );
 
-export const Default: Story = { render: () => <CompendiumCards /> };
-export const CupboardGrid: Story = { render: () => <CupboardCards /> };
-export const CupboardGridCompact: Story = { render: () => <CupboardCards density="compact" /> };
+const defaultNode = <CompendiumCards />;
+const cupboardGridNode = <CupboardCards />;
+const cupboardGridCompactNode = <CupboardCards density="compact" />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Cupboard Grid': cupboardGridNode,
+  'Cupboard Grid Compact': cupboardGridCompactNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

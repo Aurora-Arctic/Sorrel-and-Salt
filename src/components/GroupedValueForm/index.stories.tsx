@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { FIXTURE_GROUP_ID, GROUP_NAMES, asOptions } from '../../../.storybook/fixtures';
 import { InModal } from '../../../.storybook/in-modal';
 import { usePressOnMount } from '../../../.storybook/press';
@@ -30,13 +31,11 @@ const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 
 const done = () => {};
 
-export const Default: Story = {
-  render: () => (
-    <InModal title="Add Category">
-      <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
-    </InModal>
-  ),
-};
+const defaultNode = (
+  <InModal title="Add Category">
+    <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
+  </InModal>
+);
 
 const EditingACategoryView = () => (
   <InModal eyebrow="Edit Category" title="Testcraft">
@@ -54,45 +53,39 @@ const EditingACategoryView = () => (
   </InModal>
 );
 
-export const EditingACategory: Story = { render: EditingACategoryView };
+const editingACategoryNode = <EditingACategoryView />;
 
-export const AddingAForm: Story = {
-  render: () => (
-    <InModal title="Add Form">
-      <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
-    </InModal>
-  ),
-};
+const addingAFormNode = (
+  <InModal title="Add Form">
+    <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
+  </InModal>
+);
 
 // Rename it to see the note by Save that the rename carries onto the
 // compendium, and the head keep the name it was saved under, its tradition
 // after it, as a deity's pills name it (MB.115).
-export const EditingADeity: Story = {
-  render: () => (
-    <InModal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural">
-      <GroupedValueForm
-        kind="deity"
-        value={{
-          id: FIXTURE_GROUP_ID,
-          name: 'Testra',
-          description: 'An invented deity, for the workshop.',
-          groupId: TRADITIONS[0].id,
-        }}
-        groups={TRADITIONS}
-        onDone={done}
-      />
-    </InModal>
-  ),
-};
+const editingADeityNode = (
+  <InModal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural">
+    <GroupedValueForm
+      kind="deity"
+      value={{
+        id: FIXTURE_GROUP_ID,
+        name: 'Testra',
+        description: 'An invented deity, for the workshop.',
+        groupId: TRADITIONS[0].id,
+      }}
+      groups={TRADITIONS}
+      onDone={done}
+    />
+  </InModal>
+);
 
 // A flat kind has no group field.
-export const AddingACelestialBody: Story = {
-  render: () => (
-    <InModal title="Add Celestial Body">
-      <GroupedValueForm kind="celestialBody" onDone={done} />
-    </InModal>
-  ),
-};
+const addingACelestialBodyNode = (
+  <InModal title="Add Celestial Body">
+    <GroupedValueForm kind="celestialBody" onDone={done} />
+  </InModal>
+);
 
 // Delete pressed once drawn, as a person would: the question over the form,
 // dimmed and held beneath it until Delete or Keep It answers (MB.115).
@@ -101,4 +94,20 @@ export const AskingToDelete: Story = {
     usePressOnMount('Delete Category');
     return <EditingACategoryView />;
   },
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Editing ACategory': editingACategoryNode,
+  'Adding AForm': addingAFormNode,
+  'Editing ADeity': editingADeityNode,
+  'Adding ACelestial Body': addingACelestialBodyNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
