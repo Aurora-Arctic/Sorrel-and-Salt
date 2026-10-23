@@ -31,3 +31,32 @@ export function setInputValue(input: HTMLInputElement, value: string): void {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
+
+/**
+ * Presses the last button named `name`: the confirm inside a dialog that
+ * opened over the button of the same name, which `press` would find first.
+ */
+export function pressLast(name: string): void {
+  [...document.querySelectorAll<HTMLButtonElement>('button')]
+    .filter((button) => button.textContent === name || button.ariaLabel === name)
+    .at(-1)
+    ?.click();
+}
+
+/**
+ * Runs `steps` once the story has mounted, a short wait between each, for a
+ * state reached by several presses and a typed value, as a person would.
+ */
+export function useSteps(steps: readonly (() => void)[], gap = 80): void {
+  useEffect(() => {
+    const timers = steps.map((step, i) => window.setTimeout(step, gap * (i + 1)));
+    return () => timers.forEach(window.clearTimeout);
+    // The steps are fixed for a story's life.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
+/** Submits the form holding `selector`, as Enter in a field does. */
+export function submitForm(selector: string): void {
+  document.querySelector<HTMLFormElement>(selector)?.requestSubmit();
+}
