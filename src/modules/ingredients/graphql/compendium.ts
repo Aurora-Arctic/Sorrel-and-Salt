@@ -118,9 +118,18 @@ builder.queryField('compendiumFacets', (t) =>
         description:
           'Counts only entries a cupboard of any one of these covens holds, by id. A coven the viewer is not in is ignored.',
       }),
+      covensNot: t.arg.boolean({
+        required: false,
+        description:
+          "Counts only entries none of the covenIds holds instead; with no covenIds, none of the viewer's covens. If every id given is ignored, nothing is filtered.",
+      }),
     },
-    resolve: (_root, { covenIds, ...args }, { session }) =>
-      compendiumFacetsHeldIn(session, covenIds ?? [], filterOf(args)),
+    resolve: (_root, { covenIds, covensNot, ...args }, { session }) =>
+      compendiumFacetsHeldIn(
+        session,
+        { covenIds: covenIds ?? [], covensNot: covensNot ?? undefined },
+        filterOf(args),
+      ),
   }),
 );
 

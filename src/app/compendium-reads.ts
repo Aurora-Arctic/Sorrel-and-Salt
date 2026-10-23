@@ -23,6 +23,7 @@ import {
   readCompendiumEntry,
   variantsOf,
 } from '@/modules/ingredients';
+import type { CovenPick } from '@/modules/ingredients';
 import {
   categoryGroupsOf,
   formChoicesOf,
@@ -72,8 +73,9 @@ export const readCompendium = cache(
 /**
  * `readCompendium` narrowed to the entries the viewer's picked covens hold (M12.55): the
  * `covenIds` in `variables`, the In My Covens filter, read with the session, which proves each
- * coven or drops it. Per viewer, so never in the data cache (rule 6); the page reads it only
- * with a coven picked and a session, and `readCompendium` otherwise.
+ * coven or drops it, and `covensNot`, its Not In. Per viewer, so never in the data cache
+ * (rule 6); the page reads it only with a coven picked or Not In, and a session, and
+ * `readCompendium` otherwise.
  */
 export const readCompendiumHeldIn = cache(
   async (
@@ -83,26 +85,34 @@ export const readCompendiumHeldIn = cache(
     before: string | undefined,
     size: number = DEFAULT_PAGE_SIZE,
   ) => {
-    const { covenIds, filter } = heldInOf(variables);
+    const { covens, filter } = heldInOf(variables);
     const page = await readNumberedPage(
       { after, before },
-      (request) => listCompendiumHeldIn(session, covenIds, filter, request),
-      (start) => countCompendiumHeldIn(session, covenIds, filter, start),
+      (request) => listCompendiumHeldIn(session, covens, filter, request),
+      (start) => countCompendiumHeldIn(session, covens, filter, start),
       size,
     );
     return withForms(page);
   },
 );
 
-/** The page's variables as the held-in reads take them: the picked covens apart from the rest. */
+/**
+ * The page's variables as the held-in reads take them: the picked covens and
+ * Not In apart from the rest.
+ */
 function heldInOf(variables: string): {
-  covenIds: readonly string[];
+  covens: CovenPick;
   filter: Parameters<typeof listCompendium>[0];
 } {
-  const { covenIds = [], ...filter } = JSON.parse(variables) as Parameters<
-    typeof listCompendium
-  >[0] & { covenIds?: readonly string[] };
-  return { covenIds, filter };
+  const {
+    covenIds = [],
+    covensNot,
+    ...filter
+  } = JSON.parse(variables) as Parameters<typeof listCompendium>[0] & {
+    covenIds?: readonly string[];
+    covensNot?: boolean;
+  };
+  return { covens: covensNot ? { covenIds, covensNot } : { covenIds }, filter };
 }
 
 /** A page of entries with each one's live forms and their icons, for the table and the cards. */
@@ -240,8 +250,8 @@ export const readFacets = cache(async (variables: string) => {
  * picked covens hold. Per viewer, so never in the data cache; `readFacets` with no coven picked.
  */
 export const readFacetsHeldIn = cache(async (session: Session, variables: string) => {
-  const { covenIds, filter } = heldInOf(variables);
-  return compendiumFacetsHeldIn(session, covenIds, filter);
+  const { covens, filter } = heldInOf(variables);
+  return compendiumFacetsHeldIn(session, covens, filter);
 });
 
 /**

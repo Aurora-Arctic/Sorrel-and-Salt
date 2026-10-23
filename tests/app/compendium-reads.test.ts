@@ -81,13 +81,13 @@ describe('readCompendiumHeldIn and readFacetsHeldIn (M12.55)', () => {
 
     expect(listCompendiumHeldIn).toHaveBeenCalledWith(
       SESSION,
-      ['w-1', 'w-2'],
+      { covenIds: ['w-1', 'w-2'] },
       { query: 'wort' },
       expect.anything(),
     );
     expect(countCompendiumHeldIn.mock.lastCall!.slice(0, 3)).toEqual([
       SESSION,
-      ['w-1', 'w-2'],
+      { covenIds: ['w-1', 'w-2'] },
       { query: 'wort' },
     ]);
     expect(page.edges.map((edge) => edge.node.id)).toEqual(['entry-1']);
@@ -97,8 +97,26 @@ describe('readCompendiumHeldIn and readFacetsHeldIn (M12.55)', () => {
   it('reads the facet counts with the session and the picked covens', async () => {
     compendiumFacetsHeldIn.mockResolvedValue({ toxic: [] });
     await expect(readFacetsHeldIn(SESSION, VARIABLES)).resolves.toEqual({ toxic: [] });
-    expect(compendiumFacetsHeldIn).toHaveBeenCalledWith(SESSION, ['w-1', 'w-2'], {
-      query: 'wort',
-    });
+    expect(compendiumFacetsHeldIn).toHaveBeenCalledWith(
+      SESSION,
+      { covenIds: ['w-1', 'w-2'] },
+      { query: 'wort' },
+    );
+  });
+
+  it('passes Not In on beside the picked covens, or with none picked', async () => {
+    compendiumFacetsHeldIn.mockResolvedValue({ toxic: [] });
+    await readFacetsHeldIn(SESSION, JSON.stringify({ query: 'wort', covensNot: true }));
+    expect(compendiumFacetsHeldIn).toHaveBeenLastCalledWith(
+      SESSION,
+      { covenIds: [], covensNot: true },
+      { query: 'wort' },
+    );
+    await readFacetsHeldIn(SESSION, JSON.stringify({ covenIds: ['w-1'], covensNot: true }));
+    expect(compendiumFacetsHeldIn).toHaveBeenLastCalledWith(
+      SESSION,
+      { covenIds: ['w-1'], covensNot: true },
+      {},
+    );
   });
 });

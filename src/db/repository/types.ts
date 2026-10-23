@@ -778,6 +778,12 @@ export interface IngredientFilter {
    * not in cannot be named; an empty list is no filter.
    */
   heldIn?: readonly Membership[];
+  /**
+   * The compendium only (M12.55, Not In): keep an entry when no live cupboard
+   * row of any of these covens names it. A proof each, as `heldIn`; an empty
+   * list is no filter.
+   */
+  notHeldIn?: readonly Membership[];
 }
 
 /** One facet value and how many entries the list would hold with it chosen (M12.3). */

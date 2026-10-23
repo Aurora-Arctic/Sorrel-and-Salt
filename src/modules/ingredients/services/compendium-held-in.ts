@@ -5,6 +5,7 @@ import {
   findCompendiumCount,
   findCompendiumFacets,
   findCompendiumPage,
+  type IngredientFilter,
 } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -13,8 +14,8 @@ import { parseInput } from '../../../lib/validation';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { countCompendium, listCompendium } from './compendium';
 import { compendiumFacets } from './ingredient-facets';
-import type { IngredientRow } from '../types';
-import { assertMembership, type Membership } from '@/modules/coven';
+import type { CovenPick, IngredientRow } from '../types';
+import { assertMembership, type Membership, membershipsOf } from '@/modules/coven';
 
 // M12.55: the compendium narrowed to the entries the viewer's covens hold, its
 // In My Covens filter. Each picked coven earns a proof or is dropped, so an
@@ -22,24 +23,24 @@ import { assertMembership, type Membership } from '@/modules/coven';
 // the page; with no proof left the read is the cached public one, unchanged.
 // With one, the read is the viewer's and never cached (CLAUDE.md rule 6),
 // and the coven filter is an arm of the list's own SQL (rule 7).
+//
+// Not In (the owner's extension) keeps the entries the proved covens do not
+// hold. With no coven in the address it proves every coven the viewer is in;
+// with ids in the address that were all dropped it applies nothing, so a
+// foreign id never changes the result.
 
 /** The most covens one read takes; past it the rest are dropped, as a foreign one is. */
 const MAX_PICKED_COVENS = 20;
 
 /**
- * A proof for each picked coven the viewer may read the ingredients of, viewers
+ * A proof for each coven the viewer may read the ingredients of, viewers
  * included. A coven they are not in, or an id that is not one, is dropped:
  * the address is the viewer's own to edit, and a refusal would say which ids
  * name a coven.
  */
-async function heldInProofs(
-  session: Session | null,
-  covenIds: readonly string[],
-): Promise<Membership[]> {
-  if (!session) return [];
-  const picked = [...new Set(covenIds)].slice(0, MAX_PICKED_COVENS);
+async function proofsOf(session: Session, covenIds: readonly string[]): Promise<Membership[]> {
   const proofs = await Promise.all(
-    picked.map((id) =>
+    covenIds.map((id) =>
       assertMembership(session, id, { ingredient: ['read'] }).catch((error: unknown) => {
         if (error instanceof Forbidden) return null;
         throw error;
@@ -49,22 +50,57 @@ async function heldInProofs(
   return proofs.filter((proof): proof is Membership => proof !== null);
 }
 
+/** The address's picked covens, proved, up to `MAX_PICKED_COVENS` of them. */
+const pickedProofs = (session: Session, covenIds: readonly string[]) =>
+  proofsOf(session, [...new Set(covenIds)].slice(0, MAX_PICKED_COVENS));
+
+/**
+ * Every coven the viewer is in, proved, viewers included: Not In's "none of my
+ * covens". Not capped, as the list is the viewer's own and not the address's.
+ */
+async function everyCovenProof(session: Session): Promise<Membership[]> {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  if (!memberships || memberships instanceof Error) return [];
+  return proofsOf(
+    session,
+    memberships.map(({ workspaceId }) => workspaceId),
+  );
+}
+
+/**
+ * The coven arm of the filter, or `undefined` for none, when the read is the
+ * cached public one.
+ */
+async function covenScope(
+  session: Session | null,
+  { covenIds, covensNot }: CovenPick,
+): Promise<Pick<IngredientFilter, 'heldIn' | 'notHeldIn'> | undefined> {
+  if (!session) return undefined;
+  if (covensNot) {
+    const proofs =
+      covenIds.length > 0 ? await pickedProofs(session, covenIds) : await everyCovenProof(session);
+    return proofs.length > 0 ? { notHeldIn: proofs } : undefined;
+  }
+  const proofs = await pickedProofs(session, covenIds);
+  return proofs.length > 0 ? { heldIn: proofs } : undefined;
+}
+
 /**
  * One page of the compendium under `filter`, kept to the entries a live
- * cupboard row of any picked coven names. With no coven proved, the cached
- * `listCompendium`.
+ * cupboard row of any picked coven names, or, under Not In, to the entries
+ * none names. With no coven filter in effect, the cached `listCompendium`.
  *
  * @throws {ValidationError} as `listCompendium` does.
  */
 export async function listCompendiumHeldIn(
   session: Session | null,
-  covenIds: readonly string[],
+  covens: CovenPick,
   filter: CompendiumFilterInput,
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  const heldIn = await heldInProofs(session, covenIds);
-  if (heldIn.length === 0) return listCompendium(filter, page);
-  return findCompendiumPage({ ...parseInput(CompendiumFilter, filter), heldIn }, page);
+  const scope = await covenScope(session, covens);
+  if (!scope) return listCompendium(filter, page);
+  return findCompendiumPage({ ...parseInput(CompendiumFilter, filter), ...scope }, page);
 }
 
 /**
@@ -75,27 +111,27 @@ export async function listCompendiumHeldIn(
  */
 export async function countCompendiumHeldIn(
   session: Session | null,
-  covenIds: readonly string[],
+  covens: CovenPick,
   filter: CompendiumFilterInput,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  const heldIn = await heldInProofs(session, covenIds);
-  if (heldIn.length === 0) return countCompendium(filter, start);
-  return findCompendiumCount({ ...parseInput(CompendiumFilter, filter), heldIn }, start);
+  const scope = await covenScope(session, covens);
+  if (!scope) return countCompendium(filter, start);
+  return findCompendiumCount({ ...parseInput(CompendiumFilter, filter), ...scope }, start);
 }
 
 /**
  * The facet counts beside `listCompendiumHeldIn`: each counts only the entries
- * the picked covens hold. With no coven proved, the cached `compendiumFacets`.
+ * the list holds. With no coven filter in effect, the cached `compendiumFacets`.
  *
  * @throws {ValidationError} as `compendiumFacets` does.
  */
 export async function compendiumFacetsHeldIn(
   session: Session | null,
-  covenIds: readonly string[],
+  covens: CovenPick,
   filter: CompendiumFilterInput,
 ): Promise<CompendiumFacets> {
-  const heldIn = await heldInProofs(session, covenIds);
-  if (heldIn.length === 0) return compendiumFacets(filter);
-  return findCompendiumFacets({ ...parseInput(CompendiumFilter, filter), heldIn });
+  const scope = await covenScope(session, covens);
+  if (!scope) return compendiumFacets(filter);
+  return findCompendiumFacets({ ...parseInput(CompendiumFilter, filter), ...scope });
 }

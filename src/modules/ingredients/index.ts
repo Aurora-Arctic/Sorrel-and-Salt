@@ -46,6 +46,7 @@ export type {
   CompendiumEntryPage,
   CompendiumFacets,
   CompendiumSlugEntry,
+  CovenPick,
   CupboardEntryKey,
   CupboardEntryRow,
   DeityDetail,

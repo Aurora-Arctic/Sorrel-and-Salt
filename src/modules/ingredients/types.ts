@@ -400,3 +400,12 @@ export interface LastEdit {
   by: string | null;
   at: string;
 }
+
+/**
+ * The In My Covens filter as the address gives it (M12.55): the picked coven
+ * ids, and whether the choice is Not In. Not In with no id is "none of my covens".
+ */
+export interface CovenPick {
+  covenIds: readonly string[];
+  covensNot?: boolean;
+}

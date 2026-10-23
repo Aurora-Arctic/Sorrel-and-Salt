@@ -1084,6 +1084,11 @@ type Query {
     """
     covenIds: [ID!]
 
+    """
+    Counts only entries none of the covenIds holds instead; with no covenIds, none of the viewer's covens. If every id given is ignored, nothing is filtered.
+    """
+    covensNot: Boolean
+
     """Keeps entries linked to any one of these curated deities, by id."""
     deityIds: [ID!]
 
