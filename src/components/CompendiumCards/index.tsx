@@ -50,9 +50,10 @@ const markOf = (
         ingredientId={entry.id}
         covens={covens ?? []}
         heldIn={entry.heldIn ?? []}
+        holding={entry.holding}
       />
     );
-  return <HeldMark name={nameOf(entry)} />;
+  return <HeldMark name={nameOf(entry)} holding={entry.holding} />;
 };
 
 // A curator's Edit in Compendium, where the page gave the entry an edit address (M8.17). Named
@@ -111,6 +112,7 @@ const CompendiumCards = ({
   action,
   workspaceId,
   covens,
+  myCovens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -122,6 +124,7 @@ const CompendiumCards = ({
         categories={categories}
         vocabulary={vocabulary}
         total={total}
+        covens={myCovens}
       />
     }
     previousHref={previousHref}

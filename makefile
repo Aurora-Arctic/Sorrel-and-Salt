@@ -132,7 +132,7 @@ db-psql:
 codegen:
 	npm run codegen
 
-## Ladle component workshop dev server on 61000
+## Storybook component workshop dev server on 61000
 workshop:
 	npm run workshop
 
@@ -154,7 +154,7 @@ docker-build:
 docker-up:
 	$(COMPOSE) up -d
 
-## Also start the Ladle workshop on 61000 (compose profile: workshop)
+## Also start the Storybook workshop on 61000 (compose profile: workshop)
 docker-workshop:
 	$(COMPOSE) --profile workshop up -d
 

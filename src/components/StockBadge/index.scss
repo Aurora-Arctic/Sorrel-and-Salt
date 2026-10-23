@@ -35,9 +35,9 @@
 }
 
 .stock-badge--low {
-  color: $warning;
+  color: $stock-low-ink;
 }
 
 .stock-badge--out {
-  color: #{badge-token('out-of-stock', 'fg')};
+  color: $stock-out-ink;
 }

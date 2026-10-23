@@ -1,7 +1,9 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import { type ReactNode, useEffect } from 'react';
-import { Reopenable } from '../../../.ladle/reopenable';
+import { FIXTURE_COVEN, FIXTURE_WORKSPACE_ID } from '../../../.storybook/fixtures';
+import { Reopenable } from '../../../.storybook/reopenable';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import StockDialog from '../StockDialog';
 import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
@@ -22,9 +24,12 @@ import type {
 
 // Render-only; what shows and when is asserted in tests/components/IngredientEntry.
 // Every name is invented. The links go nowhere in the workshop.
-export default {
+const meta = {
   title: 'Pages / Ingredient Entry',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -57,6 +62,8 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     safetyNotes: 'Not for use while pregnant.',
     toxic: false,
     seedKey: null,
+    curatorReviewedAt: null,
+    seedContentHash: null,
     ...STAMPS,
     ...overrides,
   };
@@ -161,7 +168,7 @@ const cupboardEntry = (
   overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {},
 ): NonNullable<IngredientDetail['cupboardEntry']> => ({
   id: nextId(),
-  workspaceId: '00000000-0000-4000-8000-0000000000c1',
+  workspaceId: FIXTURE_WORKSPACE_ID,
   ingredientId: '00000000-0000-4000-8000-000000000001',
   label: null,
   description: null,
@@ -199,7 +206,6 @@ const FULL: IngredientDetail = {
       {
         description: 'Pressed from the seed; thin and pale.',
         safetyNotes: 'Dilute before it touches skin.\nNever take by mouth.',
-        toxic: true,
         colors: ['Gold'],
       },
       {
@@ -238,18 +244,63 @@ const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
 );
 
+// The cupboard choices beside the title (M12.17). The workshop has no API, so
+// a press answers with the generic error, which shows in the failure callout
+// under the button (M12.31). A member sees the Annotate icon, More (Make It
+// Ours, M12.23) and the Remove bin once the coven holds the entry; a viewer sees none.
+// Adding is the plus's (AddIcon).
+const CUPBOARD = {
+  workspaceId: nextId(),
+  covenSlug: FIXTURE_COVEN.slug,
+  canAdd: true,
+  canAnnotate: true,
+  canRemove: true,
+  canMakeOurs: true,
+  annotate: {
+    href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
+    closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
+    opened: false,
+  },
+};
+
+// The way back every entry page has, so the head shows its badge row beside it as the site does.
+const COMPENDIUM_BACK = { href: '/compendium' as Route, label: 'Compendium' };
+
+// The head's three lines (the owner's call, 2026-10-20): the way back with New, the safety
+// badge just right of New; the formal name with the Edit pencil at its end; the name alone.
+const BACK = { href: '/coven/fixture-coven/ingredients' as Route, label: 'Ingredients' };
+
+// An entry page in a coven, as src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx draws it:
+// the shell with the switcher and the coven's nav (and the phone's bottom bar), then the page
+// with its way back to Ingredients. Most states are this one.
 const Entry = (props: Partial<IngredientEntryProps>) => (
-  <Page>
-    <IngredientEntry detail={FULL} hrefOf={hrefOf} {...props} />
-  </Page>
+  <ShellFrame area="coven" open="/coven/fixture-coven/ingredients">
+    <Page>
+      <IngredientEntry detail={FULL} hrefOf={hrefOf} back={BACK} {...props} />
+    </Page>
+  </ShellFrame>
 );
 
-// A compendium entry with two forms: the oil toxic with its own caution, the
-// bundle typed, so its heading takes the spoon.
-export const CompendiumEntry: Story = () => <Entry />;
+// The compendium's public page, `src/app/(public)/layout.tsx` giving it a frame by who looks: a
+// visitor with no session gets the site name and Sign In; someone signed in gets the shell's bar
+// without a coven's row. A state that only an account reaches (a held entry, an Edit pencil) is
+// drawn signed in; the rest are drawn as the visitor sees them.
+const PublicEntry = (props: Partial<IngredientEntryProps>) => (
+  <ShellFrame area="none" open="/compendium" signedOut={!props.heldInCovens && !props.edit}>
+    <Page>
+      <IngredientEntry detail={FULL} hrefOf={hrefOf} back={COMPENDIUM_BACK} {...props} />
+    </Page>
+  </ShellFrame>
+);
 
-// No naming system names it: a sentence where the formal name would be.
-export const NoFormalName: Story = () => (
+// A compendium entry with two forms: the oil with its own caution (so the head shows Caution, as a
+// cautioned entry does on the site; Toxic is its own state), the
+// bundle typed, so its heading takes the spoon.
+const defaultNode = <PublicEntry />;
+
+// No naming system names it: a sentence where the formal name would be, with the
+// cupboard buttons beside the name.
+const noFormalNameNode = (
   <Entry
     detail={{
       ...FULL,
@@ -259,24 +310,27 @@ export const NoFormalName: Story = () => (
         nomenclature: 'none',
       }),
       variants: [],
+      cupboardEntry: cupboardEntry(),
     }}
+    cupboard={CUPBOARD}
   />
 );
 
-// A coven's own entry with its latest editor, right-aligned above the icon row (M6.18).
-export const CovenEntryLastEdited: Story = () => (
+// A coven's own entry, badged Local, with its latest editor right-aligned above
+// the icon row (M6.18). Its Edit is M8.17's, so none yet.
+const covenEntryNode = (
   <Entry
     detail={{
       ...FULL,
-      entry: entryRow({ workspaceId: '00000000-0000-4000-8000-0000000000c1' }),
+      entry: entryRow({ workspaceId: FIXTURE_WORKSPACE_ID }),
     }}
     lastEdit={{ by: 'Fixture A', at: new Date(Date.now() - 3_600_000).toISOString() }}
   />
 );
 
 // Unsettled, with a name recorded: upright, and marked unconfirmed.
-export const UnknownWithName: Story = () => (
-  <Entry
+const unknownWithNameNode = (
+  <PublicEntry
     detail={{
       ...FULL,
       entry: entryRow({ canonicalName: 'Fixtura incerta', nomenclature: 'unknown' }),
@@ -285,8 +339,8 @@ export const UnknownWithName: Story = () => (
 );
 
 // Unsettled, and nobody has looked it up yet.
-export const UnknownWithoutName: Story = () => (
-  <Entry
+const unknownWithoutNameNode = (
+  <PublicEntry
     detail={{
       ...FULL,
       entry: entryRow({ canonicalName: null, nomenclature: 'unknown' }),
@@ -295,8 +349,8 @@ export const UnknownWithoutName: Story = () => (
 );
 
 // Empty everywhere it can be: each block says so rather than standing blank.
-export const NothingRecorded: Story = () => (
-  <Entry
+const nothingRecordedNode = (
+  <PublicEntry
     detail={{
       entry: entryRow({
         name: 'Fixture Spar',
@@ -309,6 +363,8 @@ export const NothingRecorded: Story = () => (
         colors: null,
         safetyNotes: null,
       }),
+      retired: false,
+      cupboardEntry: null,
       folkNames: [],
       categories: [],
       deities: [],
@@ -321,14 +377,12 @@ export const NothingRecorded: Story = () => (
 
 // A compendium entry this coven holds in its cupboard, with nothing changed
 // (M12.16): marked Compendium, and no Local badge.
-export const FromTheCompendium: Story = () => (
-  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />
-);
+const fromTheCompendiumNode = <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />;
 
 // The same, annotated: the coven's label heads the page with the compendium's
 // name beneath it, its own description stands, the celestial bodies are cleared on
 // purpose, and the rest is the compendium's.
-export const Annotated: Story = () => (
+const annotatedNode = (
   <Entry
     detail={{
       ...FULL,
@@ -341,53 +395,37 @@ export const Annotated: Story = () => (
   />
 );
 
-// The cupboard choices beside the title (M12.17). The workshop has no API, so
-// a press answers with the generic error, which shows in the failure callout
-// under the button (M12.31). A member sees the Annotate icon, More (Make It
-// Ours, M12.23) and the Remove bin once the coven holds the entry; a viewer sees none.
-// Adding is the plus's (AddIcon).
-const CUPBOARD = {
-  workspaceId: nextId(),
-  covenSlug: 'fixture-coven',
-  canAdd: true,
-  canAnnotate: true,
-  canRemove: true,
-  canMakeOurs: true,
-  annotate: {
-    href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
-    closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
-    opened: false,
-  },
-};
-
 // Annotate is the icon; Make It Ours and Remove are in the three dots, under the one Coven label
 // (the owner's call, 2026-10-20).
-export const AnnotateOrRemove: Story = () => (
-  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
+const annotateOrRemoveNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry({ label: 'Hedgewort' }) }}
+    cupboard={CUPBOARD}
+  />
 );
 
 // Remove the one choice left: no Make It Ours, no Annotate, so it is the bin and there are no dots.
-export const RemoveIsTheBin: Story = () => (
+const removeIsTheBinNode = (
   <Entry
     detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
     cupboard={{ ...CUPBOARD, canAnnotate: false, canMakeOurs: false }}
   />
 );
 
-// The head's three lines (the owner's call, 2026-10-20): the way back with New, the safety
-// badge just right of New; the formal name with the Edit pencil at its end; the name alone.
-const BACK = { href: '/coven/fixture-coven/ingredients' as Route, label: 'Ingredients' };
-
-export const NewWithBack: Story = () => (
+const newWithBackNode = (
   <Entry
-    detail={{ ...FULL, entry: entryRow({ createdAt: new Date() }), cupboardEntry: cupboardEntry() }}
+    detail={{
+      ...FULL,
+      entry: entryRow({ createdAt: new Date() }),
+      cupboardEntry: cupboardEntry(),
+    }}
     cupboard={CUPBOARD}
     back={BACK}
   />
 );
 
 // Both names long enough to wrap: the pencil keeps the formal name's first line.
-export const LongNames: Story = () => (
+const longNamesNode = (
   <Entry
     detail={{
       ...FULL,
@@ -404,8 +442,8 @@ export const LongNames: Story = () => (
 );
 
 // The same long names on the public page, for a curator: the pencil and no shelf.
-export const LongNamesPublic: Story = () => (
-  <Entry
+const longNamesPublicNode = (
+  <PublicEntry
     detail={{
       ...FULL,
       entry: entryRow({
@@ -421,23 +459,7 @@ export const LongNamesPublic: Story = () => (
   />
 );
 
-// No formal name: the line still stands, saying None, and the pencil keeps to it.
-export const NoFormalNameWithEdit: Story = () => (
-  <Entry
-    detail={{
-      ...FULL,
-      entry: entryRow({
-        name: 'Fixture Crossroads Dust',
-        canonicalName: null,
-        nomenclature: 'none',
-      }),
-      cupboardEntry: cupboardEntry(),
-    }}
-    cupboard={CUPBOARD}
-  />
-);
-
-export const ViewerSeesNoCupboardButtons: Story = () => (
+const viewerSeesNoCupboardButtonsNode = (
   <Entry
     detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
     cupboard={{
@@ -450,20 +472,10 @@ export const ViewerSeesNoCupboardButtons: Story = () => (
   />
 );
 
-// A coven's own entry, badged Local. Its Edit is M8.17's, so none yet.
-export const CovenEntry: Story = () => (
-  <Entry
-    detail={{
-      ...FULL,
-      entry: entryRow({ workspaceId: '00000000-0000-4000-8000-0000000000c1' }),
-    }}
-  />
-);
-
 // A compendium entry as a curator reads it on a coven's route: Edit opens the
 // compendium's edit modal over the page (it has no router here, so a press
 // follows the link), and the "In the Compendium" block linking its public page.
-export const CompendiumEntryForCurator: Story = () => (
+const compendiumEntryForCuratorNode = (
   <Entry
     edit={{
       href: '/compendium/ingredients/testwort-fixtura-testalis?edit' as Route,
@@ -476,17 +488,17 @@ export const CompendiumEntryForCurator: Story = () => (
 
 // A compendium entry seen from a coven: the same block, listing the entry
 // itself once, with no See All.
-export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_CASE} />;
+const compendiumEntryInCovenNode = <Entry replaces={COMPENDIUM_CASE} />;
 
 // A compendium entry the curators retired, read on a coven's route because the
 // coven's cupboard still names it (M12.24): marked, and with neither the
 // public link nor Edit, since the compendium no longer holds it.
-export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
+const retiredInCovenNode = <Entry detail={{ ...FULL, retired: true }} />;
 
 // The same, to a member: the icons offer Annotate and, in the three dots, Make It Ours
 // (M12.23) and Remove, and no Add, since the compendium no longer offers the entry (the
 // owner's decision, 2026-10-19).
-export const RetiredOffersMakeItOurs: Story = () => (
+const retiredOffersMakeItOursNode = (
   <Entry
     detail={{ ...FULL, retired: true, cupboardEntry: cupboardEntry() }}
     cupboard={{ ...CUPBOARD, canAdd: false }}
@@ -495,7 +507,7 @@ export const RetiredOffersMakeItOurs: Story = () => (
 
 // A coven's own entry whose formal name a compendium entry shares: the
 // "In the Compendium" block with its one link and the ⓘ saying why it is shown.
-export const LocalReplacingCompendiumEntry: Story = () => (
+const localReplacingCompendiumEntryNode = (
   <Entry
     replaces={{
       tip: LOCAL_TIP,
@@ -516,7 +528,7 @@ export const LocalReplacingCompendiumEntry: Story = () => (
 // An own entry with no formal name: the Similar block, a read-only list of the
 // compendium entries it might be. The second title is long, to show it wrapping
 // with the icon never alone on a line.
-export const SimilarInTheCompendium: Story = () => (
+const similarInTheCompendiumNode = (
   <Entry
     similar={{
       tip: SIMILAR_TIP,
@@ -536,7 +548,7 @@ export const SimilarInTheCompendium: Story = () => (
   />
 );
 
-export const LocalReplacingSeveral: Story = () => (
+const localReplacingSeveralNode = (
   <Entry
     replaces={{
       tip: LOCAL_TIP,
@@ -552,8 +564,8 @@ export const LocalReplacingSeveral: Story = () => (
 );
 
 // Another entry moved off this address while its redirect's window is open.
-export const MovedAway: Story = () => (
-  <Entry
+const movedAwayNode = (
+  <PublicEntry
     movedAway={{
       name: 'Fixture Movedwort',
       href: '/compendium/ingredients/fixture-movedwort' as Route,
@@ -562,17 +574,11 @@ export const MovedAway: Story = () => (
 );
 
 // A form held but adding nothing: its section still stands, saying so.
-export const FormAddsNothing: Story = () => (
-  <Entry
+const formAddsNothingNode = (
+  <PublicEntry
     detail={{ ...FULL, variants: [variant('root'), variant('dried leaf', { toxic: true })] }}
   />
 );
-
-export const PhoneDark: Story = () => <Entry />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Entry />;
-PhoneLight.meta = { theme: 'light', width: 375 };
 
 // The details modal (M12.5): an ingredient's name in a list opens IngredientSummary
 // in DetailsDialog, over the list. The workshop's router goes nowhere, so Close,
@@ -608,30 +614,40 @@ const Details = ({
 
 const COVEN_LIST = '/coven/fixture-coven/ingredients' as Route;
 
+/** The links of the modal opened from the public compendium. */
+const PUBLIC_LINKS = {
+  listHref: '/compendium' as Route,
+  pageHref: `/compendium/ingredients/${FULL.entry.slug}` as Route,
+};
+
 /** FULL as the coven's own entry, which its owner or member may edit. */
 const OWN: IngredientDetail = {
   ...FULL,
   entry: entryRow({
-    workspaceId: '00000000-0000-4000-8000-0000000000c1',
+    workspaceId: FIXTURE_WORKSPACE_ID,
     slug: 'testwort-fixtura-testalis',
   }),
+};
+
+/** Links of the modal opened from the coven's list. */
+const COVEN_LINKS = {
+  listHref: COVEN_LIST,
+  pageHref: `${COVEN_LIST}/${OWN.entry.id}` as Route,
 };
 
 // From the coven's list, its own entry: the page link and Edit in the header,
 // then the safety note with the line naming the form that carries its own, the
 // correspondences, folk names and categories.
-export const DetailsFromCovenList: Story = () => (
+const detailsFromCovenListNode = (
   <Details
     detail={OWN}
-    listHref={COVEN_LIST}
-    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    {...COVEN_LINKS}
     editAction={{
       href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
       heading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
     }}
   />
 );
-DetailsFromCovenList.meta = { iframed: true };
 
 // The same from the coven's list with its jars (M9.9): each form shows the coven's
 // jar of it: the oil low, the bundle unmeasured, the root out, and the leaf in
@@ -641,11 +657,10 @@ const STOCKED: IngredientDetail = {
   variants: [...OWN.variants, variant('root'), variant('dried leaf')],
 };
 const [OIL, BUNDLE, ROOT] = STOCKED.variants.map(({ variant }) => variant.id);
-export const DetailsWithStock: Story = () => (
+const detailsWithStockNode = (
   <Details
     detail={STOCKED}
-    listHref={COVEN_LIST}
-    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    {...COVEN_LINKS}
     jars={[
       { variantId: OIL, quantity: 4, unit: 'ml', threshold: 10 },
       { variantId: BUNDLE, quantity: null, unit: null, threshold: null },
@@ -653,19 +668,14 @@ export const DetailsWithStock: Story = () => (
     ]}
   />
 );
-DetailsWithStock.meta = { iframed: true };
-
 // Quick Look with the latest editor stacked over the buttons, right-aligned (M6.18).
-export const DetailsLastEdited: Story = () => (
+const detailsLastEditedNode = (
   <Details
     detail={STOCKED}
-    listHref={COVEN_LIST}
-    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    {...COVEN_LINKS}
     lastEdit={{ by: 'Fixture A', at: '2026-10-21T09:00:00.000Z' }}
   />
 );
-DetailsLastEdited.meta = { iframed: true };
-
 // The Edit Stock dialog opened from the window's own stock button (M9.9), as
 // on a coven's list: a modal over the details modal, which must sit centred
 // on the screen as the card's does, not inside the window it was opened from.
@@ -679,15 +689,14 @@ const PressStock = (): null => {
   }, []);
   return null;
 };
-export const DetailsWithStockDialog: Story = () => (
+const detailsWithStockDialogNode = (
   <>
     <Details
       detail={STOCKED}
-      listHref={COVEN_LIST}
-      pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+      {...COVEN_LINKS}
       actions={
         <StockDialog
-          workspaceId="00000000-0000-4000-8000-0000000000c1"
+          workspaceId={FIXTURE_WORKSPACE_ID}
           ingredientId={OWN.entry.id}
           ingredientName="Testwort"
           forms={JARRED}
@@ -713,25 +722,15 @@ export const DetailsWithStockDialog: Story = () => (
     <PressStock />
   </>
 );
-DetailsWithStockDialog.meta = { iframed: true };
-
 // From the public compendium, to anyone but a curator: the same summary, and
 // only the page link.
-export const DetailsFromCompendium: Story = () => (
-  <Details
-    detail={FULL}
-    listHref={'/compendium' as Route}
-    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
-  />
-);
-DetailsFromCompendium.meta = { iframed: true };
-
+const detailsFromCompendiumNode = <Details detail={FULL} {...PUBLIC_LINKS} />;
 // From the public compendium, to a member of four covens that hold the entry: a
 // last block, In Your Cupboards, links the entry in each by the coven's name, each
 // link led by the In Your Cupboard shelf (the owner's call, 2026-10-20). The
 // long name wraps, its shelf level with its first line.
 const HOLDING = [
-  { id: '00000000-0000-4000-8000-0000000000c1', slug: 'fixture-coven', name: 'Fixture Coven' },
+  { id: FIXTURE_WORKSPACE_ID, ...FIXTURE_COVEN },
   { id: '00000000-0000-4000-8000-0000000000c2', slug: 'testwort-circle', name: 'Testwort Circle' },
   {
     id: '00000000-0000-4000-8000-0000000000c3',
@@ -741,30 +740,14 @@ const HOLDING = [
   { id: '00000000-0000-4000-8000-0000000000c4', slug: 'stillroom', name: 'Stillroom' },
 ];
 
-export const DetailsInYourCupboards: Story = () => (
-  <Details
-    detail={FULL}
-    listHref={'/compendium' as Route}
-    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
-    covens={HOLDING}
-  />
-);
-DetailsInYourCupboards.meta = { iframed: true };
-
+const detailsInYourCupboardsNode = <Details detail={FULL} {...PUBLIC_LINKS} covens={HOLDING} />;
 // The same, to a member of one coven that holds it.
-export const DetailsInOneCoven: Story = () => (
-  <Details
-    detail={FULL}
-    listHref={'/compendium' as Route}
-    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
-    covens={HOLDING.slice(0, 1)}
-  />
+const detailsInOneCovenNode = (
+  <Details detail={FULL} {...PUBLIC_LINKS} covens={HOLDING.slice(0, 1)} />
 );
-DetailsInOneCoven.meta = { iframed: true };
-
 // A long description, cut to its first six lines (the owner's call, 2026-10-20), Show More opening the
 // rest in place; the sparse story's short one stands whole with no button.
-export const DetailsLongDescription: Story = () => (
+const detailsLongDescriptionNode = (
   <Details
     detail={{
       ...FULL,
@@ -778,30 +761,24 @@ export const DetailsLongDescription: Story = () => (
           'In the fixture covens it is laid under the threshold stone of a new house, burned with the year’s last fire, and steeped for the wash that clears a room after a quarrel.',
       }),
     }}
-    listHref={'/compendium' as Route}
-    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    {...PUBLIC_LINKS}
   />
 );
-DetailsLongDescription.meta = { iframed: true };
-
 // The same, to a curator: Edit opens the compendium's edit modal over the details.
-export const DetailsFromCompendiumForCurator: Story = () => (
+const detailsFromCompendiumForCuratorNode = (
   <Details
     detail={FULL}
-    listHref={'/compendium' as Route}
-    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    {...PUBLIC_LINKS}
     editAction={{
       href: `/compendium?edit=${FULL.entry.slug}` as Route,
       heading: { eyebrow: EDIT_ENTRY_EYEBROW, title: 'Testwort' },
     }}
   />
 );
-DetailsFromCompendiumForCurator.meta = { iframed: true };
-
 // Sparse: only what is recorded shows. One element and a folk name; the empty
 // correspondence rows, the categories and the safety note are left out, where
 // the page would say "None recorded".
-export const DetailsSparse: Story = () => (
+const detailsSparseNode = (
   <Details
     detail={{
       entry: entryRow({
@@ -827,10 +804,8 @@ export const DetailsSparse: Story = () => (
     pageHref={'/compendium/ingredients/fixture-reedling' as Route}
   />
 );
-DetailsSparse.meta = { iframed: true };
-
 // Every section empty: one line says so rather than leave the body blank.
-export const DetailsNothingRecorded: Story = () => (
+const detailsNothingRecordedNode = (
   <Details
     detail={{
       entry: entryRow({
@@ -857,11 +832,9 @@ export const DetailsNothingRecorded: Story = () => (
     pageHref={'/compendium/ingredients/fixture-spar' as Route}
   />
 );
-DetailsNothingRecorded.meta = { iframed: true };
-
 // A toxic entry: its own safety note heads the summary, and the line beneath
 // names the two forms that carry cautions of their own.
-export const DetailsToxic: Story = () => (
+const detailsToxicNode = (
   <Details
     detail={{
       ...FULL,
@@ -882,13 +855,11 @@ export const DetailsToxic: Story = () => (
     pageHref={'/compendium/ingredients/fixture-banewort' as Route}
   />
 );
-DetailsToxic.meta = { iframed: true };
-
 // The head with a name that wraps (the owner's calls, 2026-10-20): the safety
 // badge and the Edit pencil end the name's last line where they fit, else drop under it
 // (pencil first); the formal name stands on its
 // own line below, and the provenance badges in a row of their own, New first.
-export const DetailsLongName: Story = () => (
+const detailsLongNameNode = (
   <Details
     detail={{
       ...OWN,
@@ -899,19 +870,16 @@ export const DetailsLongName: Story = () => (
         safetyNotes: 'Poisonous in every part.',
       }),
     }}
-    listHref={COVEN_LIST}
-    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    {...COVEN_LINKS}
     editAction={{
       href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
       heading: { eyebrow: 'Edit Ingredient', title: 'Fixture Grey-Leaved Testwort' },
     }}
   />
 );
-DetailsLongName.meta = { iframed: true, width: 375 };
-
 // A compendium entry added today and cautioned: New first in the badge row, and the
 // safety badge beside the name.
-export const DetailsNewAndCautioned: Story = () => (
+const detailsNewAndCautionedNode = (
   <Details
     detail={{
       ...FULL,
@@ -922,19 +890,16 @@ export const DetailsNewAndCautioned: Story = () => (
         updatedAt: new Date(),
       }),
     }}
-    listHref={'/compendium' as Route}
-    pageHref={`/compendium/ingredients/${FULL.entry.slug}` as Route}
+    {...PUBLIC_LINKS}
     editAction={{
       href: `/compendium?edit=${FULL.entry.slug}` as Route,
       heading: { eyebrow: EDIT_ENTRY_EYEBROW, title: 'Testwort' },
     }}
   />
 );
-DetailsNewAndCautioned.meta = { iframed: true };
-
 // One word longer than the line: the one case where a word of the name breaks, after the
 // pencil and the badge have both dropped under it (the owner's call, 2026-10-20).
-export const DetailsLongWord: Story = () => (
+const detailsLongWordNode = (
   <Details
     detail={{
       ...OWN,
@@ -945,18 +910,15 @@ export const DetailsLongWord: Story = () => (
         safetyNotes: 'Poisonous in every part.',
       }),
     }}
-    listHref={COVEN_LIST}
-    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    {...COVEN_LINKS}
     editAction={{
       href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
       heading: { eyebrow: 'Edit Ingredient', title: 'Pseudotestworticulumfixturaceae' },
     }}
   />
 );
-DetailsLongWord.meta = { iframed: true, width: 375 };
-
 // No formal name: the pencil still ends the name's line, after the safety badge.
-export const DetailsNoFormalName: Story = () => (
+const detailsNoFormalNameNode = (
   <Details
     detail={{
       ...OWN,
@@ -967,32 +929,191 @@ export const DetailsNoFormalName: Story = () => (
         safetyNotes: 'Poisonous.',
       }),
     }}
-    listHref={COVEN_LIST}
-    pageHref={`${COVEN_LIST}/${OWN.entry.id}` as Route}
+    {...COVEN_LINKS}
     editAction={{
       href: `${COVEN_LIST}?edit=${OWN.entry.id}` as Route,
       heading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
     }}
   />
 );
-DetailsNoFormalName.meta = { iframed: true };
 
-export const DetailsPhoneDark: Story = () => <DetailsFromCovenList />;
-DetailsPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+// The coven's jars of the entry (M12.29): the oil low, the smoke bundle unmeasured. An editor
+// has Edit Stock in the heading; a viewer sees the same shelf without it.
+const [PAGE_OIL, PAGE_BUNDLE] = FULL.variants.map(({ variant }) => variant.id);
+const STOCK = {
+  workspaceId: FIXTURE_WORKSPACE_ID,
+  forms: [
+    { variantId: PAGE_OIL, label: 'Oil' },
+    { variantId: PAGE_BUNDLE, label: 'Smoke Bundle' },
+  ],
+  jars: [
+    {
+      id: '00000000-0000-4000-8000-0000000000f1',
+      variantId: PAGE_OIL,
+      quantity: 4,
+      unit: 'ml',
+      threshold: 10,
+    },
+    {
+      id: '00000000-0000-4000-8000-0000000000f2',
+      variantId: PAGE_BUNDLE,
+      quantity: null,
+      unit: null,
+      threshold: null,
+    },
+  ],
+};
+const stockForEditorNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    stock={{ ...STOCK, mayEdit: true }}
+  />
+);
+// Every state a jar can show on the shelf: the oil Out, the smoke bundle stocked. Low is
+// 'Stock For Editor' above. Low and Out are told by a symbol before the amount as well as by
+// colour (MB.121).
+const stockOutAndStockedNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    stock={{
+      ...STOCK,
+      mayEdit: true,
+      jars: [
+        { ...STOCK.jars[0], quantity: 0 },
+        { ...STOCK.jars[1], quantity: 40, unit: 'g', threshold: 10 },
+      ],
+    }}
+  />
+);
+// An entry with no form to hold: "No stock recorded." beside Edit Stock, with no box.
+const noStockRecordedNode = (
+  <Entry
+    detail={{ ...FULL, variants: [], cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    stock={{ ...STOCK, mayEdit: true, forms: [], jars: [] }}
+  />
+);
+const stockForViewerNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    stock={{ ...STOCK, mayEdit: false }}
+  />
+);
 
-export const DetailsPhoneLight: Story = () => <DetailsFromCovenList />;
-DetailsPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+// The public page for someone whose coven holds the entry: the shelf before the name.
+// An annotated entry the coven holds, with its jars: the check, Annotate and the three dots together
+// beside the title, the Annotated badge, and the stock shelf.
+const ANNOTATED_HELD = {
+  ...FULL,
+  cupboardEntry: cupboardEntry({ label: 'Hedgewort', description: 'What our coven makes of it.' }),
+};
+const annotatedInStockNode = (
+  <Entry detail={ANNOTATED_HELD} cupboard={CUPBOARD} stock={{ ...STOCK, mayEdit: true }} />
+);
+// The same with the In the Compendium panel beside it, as the site shows an annotated entry.
+const annotatedWithStockAndPanelNode = (
+  <Entry
+    detail={ANNOTATED_HELD}
+    cupboard={CUPBOARD}
+    stock={{ ...STOCK, mayEdit: true }}
+    replaces={COMPENDIUM_CASE}
+  />
+);
+// A toxic entry: the head's badge reads Toxic rather than Caution.
+const toxicNode = <PublicEntry detail={{ ...FULL, entry: { ...FULL.entry, toxic: true } }} />;
+
+const heldInCovenNode = <PublicEntry heldInCovens />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'No Formal Name': noFormalNameNode,
+  'Coven Entry': covenEntryNode,
+  'Unknown With Name': unknownWithNameNode,
+  'Unknown Without Name': unknownWithoutNameNode,
+  'From The Compendium': fromTheCompendiumNode,
+  Annotated: annotatedNode,
+  'Annotated In Stock': annotatedInStockNode,
+  'Annotated With Stock And Compendium Panel': annotatedWithStockAndPanelNode,
+  Toxic: toxicNode,
+  'Annotate Or Remove': annotateOrRemoveNode,
+  'Remove Is The Bin': removeIsTheBinNode,
+  'New With Back': newWithBackNode,
+  'Long Names': longNamesNode,
+  'Long Names Public': longNamesPublicNode,
+  'Viewer Sees No Cupboard Buttons': viewerSeesNoCupboardButtonsNode,
+  'Compendium Entry For Curator': compendiumEntryForCuratorNode,
+  'Compendium Entry In Coven': compendiumEntryInCovenNode,
+  'Retired In Coven': retiredInCovenNode,
+  'Retired Offers Make It Ours': retiredOffersMakeItOursNode,
+  'Similar In The Compendium': similarInTheCompendiumNode,
+  'Moved Away': movedAwayNode,
+  'Form Adds Nothing': formAddsNothingNode,
+  'Stock For Editor': stockForEditorNode,
+  'Stock Out And Stocked': stockOutAndStockedNode,
+  'No Stock Recorded': noStockRecordedNode,
+  'Stock For Viewer': stockForViewerNode,
+  'Held In A Coven': heldInCovenNode,
+  'Nothing Recorded': nothingRecordedNode,
+  'Local Replacing Compendium Entry': localReplacingCompendiumEntryNode,
+  'Local Replacing Several': localReplacingSeveralNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const DETAILS_STATES: Record<string, ReactNode> = {
+  'From Coven List': detailsFromCovenListNode,
+  'With Stock': detailsWithStockNode,
+  'Last Edited': detailsLastEditedNode,
+  'From Compendium': detailsFromCompendiumNode,
+  'In Your Cupboards': detailsInYourCupboardsNode,
+  'In One Coven': detailsInOneCovenNode,
+  'Long Description': detailsLongDescriptionNode,
+  'From Compendium For Curator': detailsFromCompendiumForCuratorNode,
+  Sparse: detailsSparseNode,
+  Toxic: detailsToxicNode,
+  'New And Cautioned': detailsNewAndCautionedNode,
+  'With Stock Dialog': detailsWithStockDialogNode,
+  'Nothing Recorded': detailsNothingRecordedNode,
+  'Long Name': detailsLongNameNode,
+  'Long Word': detailsLongWordNode,
+  'No Formal Name': detailsNoFormalNameNode,
+};
+
+export const QuickLook: Story = {
+  name: 'Quick Look',
+  args: { state: 'From Coven List' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(DETAILS_STATES), mapping: DETAILS_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
 
 // The admin's review switch (M14.8), in the foot of an entry's details on the
 // admin list: an entry no curator has reviewed, then one a curator has. The
 // workshop has no server, so the switch's change is refused and the switch goes back.
-export const ReviewMarkNeedsReview: Story = () => (
-  <ReviewMark ingredientId="00000000-0000-4000-8000-0000000000e1" reviewedAt={null} />
-);
+export const ReviewMarkNeedsReview: Story = {
+  render: () => (
+    <ReviewMark ingredientId="00000000-0000-4000-8000-0000000000e1" reviewedAt={null} />
+  ),
+};
 
-export const ReviewMarkReviewed: Story = () => (
-  <ReviewMark
-    ingredientId="00000000-0000-4000-8000-0000000000e1"
-    reviewedAt="2026-10-01T09:30:00.000Z"
-  />
-);
+export const ReviewMarkReviewed: Story = {
+  render: () => (
+    <ReviewMark
+      ingredientId="00000000-0000-4000-8000-0000000000e1"
+      reviewedAt="2026-10-01T09:30:00.000Z"
+    />
+  ),
+};

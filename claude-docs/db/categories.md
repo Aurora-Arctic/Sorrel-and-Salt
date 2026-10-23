@@ -9,7 +9,7 @@ pgEnum that could not take a ninth group.
 
 - **`categories`** — `groupId` an FK to `category_groups`; §6 seeds 52.
   **No colour of its own** — see below.
-- **`category_groups`** — `colorDark` and `colorLight`; §6 seeds eight, and
+- **`category_groups`** — `color`; §6 seeds eight, and
   an admin may add more.
 - **`ingredient_forms`** — as in the [identity section](identity-model.md), with `groupId`
   (FK to `ingredient_form_groups`) in place of the earlier `group` text.

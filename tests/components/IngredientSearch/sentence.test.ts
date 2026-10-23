@@ -324,3 +324,83 @@ describe('buildSearchSentence', () => {
     expect(text({ query: 'Rue' }, 1)).toBe('1 ingredient, matching Rue');
   });
 });
+
+describe('the In My Covens clause (M12.55)', () => {
+  const labels = { covens: { 'w-id': 'Testhollow', 'v-id': 'Testwren' } };
+
+  it('says held in, naming the covens by their own capitals, joined by or', () => {
+    expect(text({ covens: ['w-id'] }, 2, { labels })).toBe('2 ingredients, held in Testhollow');
+    expect(text({ covens: ['w-id', 'v-id'] }, 3, { labels })).toBe(
+      '3 ingredients, held in Testhollow or Testwren',
+    );
+  });
+
+  it('comes straight after the text query, as the field leads the panel', () => {
+    expect(
+      text({ toxic: 'toxic', categories: ['rue'], covens: ['w-id'], query: 'ab' }, 1, { labels }),
+    ).toBe('1 ingredient, matching ab, held in Testhollow, in the rue category, that are toxic');
+  });
+
+  it('names only a coven it has a label for: an id the viewer holds no coven by filters nothing', () => {
+    const sentence = buildSearchSentence({ filter: { covens: ['x-id'] }, labels, total: 4 });
+    expect(sentence.fragments.map((f) => f.text).join('')).toBe('4 ingredients');
+    expect(sentence.hasFilter).toBe(false);
+    expect(text({ covens: ['x-id', 'v-id'] }, 1, { labels })).toBe(
+      '1 ingredient, held in Testwren',
+    );
+  });
+
+  it('carries the facet and the id that remove it', () => {
+    const { fragments, hasFilter } = buildSearchSentence({
+      filter: { covens: ['v-id'] },
+      labels,
+      total: 1,
+    });
+    expect(hasFilter).toBe(true);
+    expect(fragments).toContainEqual({
+      kind: 'value',
+      text: 'Testwren',
+      facet: 'covens',
+      value: 'v-id',
+    });
+  });
+
+  describe('under Not In', () => {
+    it('says not held in, naming the picked covens, joined by or', () => {
+      expect(text({ covens: ['w-id'], covensNot: true }, 2, { labels })).toBe(
+        '2 ingredients, not held in Testhollow',
+      );
+      expect(text({ covens: ['w-id', 'v-id'], covensNot: true }, 3, { labels })).toBe(
+        '3 ingredients, not held in Testhollow or Testwren',
+      );
+    });
+
+    it('says not held in any of my covens with no coven picked, the covens alone boxed', () => {
+      const sentence = buildSearchSentence({ filter: { covensNot: true }, labels, total: 5 });
+      expect(sentence.fragments.map((f) => f.text).join('')).toBe(
+        '5 ingredients, not held in any of my covens',
+      );
+      // "not held in " is plain text, as it is with covens picked: the covens are the one value.
+      const values = sentence.fragments.filter((f) => f.kind === 'value');
+      expect(values).toEqual([
+        { kind: 'value', text: 'any of my covens', facet: 'covensNot', value: 'true' },
+      ]);
+      expect(sentence.hasFilter).toBe(true);
+    });
+
+    it('says nothing when the address names covens and none has a label, as the read applies nothing', () => {
+      const sentence = buildSearchSentence({
+        filter: { covens: ['x-id'], covensNot: true },
+        labels,
+        total: 4,
+      });
+      expect(sentence.fragments.map((f) => f.text).join('')).toBe('4 ingredients');
+      expect(sentence.hasFilter).toBe(false);
+    });
+
+    it('says nothing for a viewer with no covens to name, as the read ignores it', () => {
+      expect(text({ covensNot: true }, 4)).toBe('4 ingredients');
+      expect(text({ covensNot: true }, 4, { labels: { covens: {} } })).toBe('4 ingredients');
+    });
+  });
+});

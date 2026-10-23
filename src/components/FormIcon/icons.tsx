@@ -6,7 +6,7 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 // (`currentColor`) and read alike at a list row's size and a heading's. One
 // per form-group icon name, each a thing from its group: a sprig, a paw, a
 // cut gem, a mortar and stone pestle, a drop, a skeleton key. Signed off by
-// the owner in the Ladle story (claude-docs/components/form-icon.md, "The
+// the owner in the Storybook story (claude-docs/components/form-icon.md, "The
 // icons").
 /**
  * Scales a drawing about its own centre to sit at (12, 12), the stroke scaled

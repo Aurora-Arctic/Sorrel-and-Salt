@@ -1,5 +1,6 @@
 'use client';
 
+import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   type MouseEvent,
@@ -897,7 +898,7 @@ export function NameField({
       rel="noopener noreferrer"
     >
       {titleOf(match)}
-      <span className="visually-hidden"> (opens in a new tab)</span>
+      <NewTabHint />
     </a>
   );
 

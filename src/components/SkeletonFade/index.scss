@@ -45,3 +45,31 @@
     animation: none;
   }
 }
+
+// A wait (MB.271): the page stays where it was, at its full height, and the
+// skeleton is laid over it. `visibility` rather than `display: none`, which
+// would collapse the page and clamp the scroll before the browser saves it for
+// Back; `heldPage` puts the page out of reach as well (`inert`).
+.skeleton-held {
+  visibility: hidden;
+}
+
+// The box the cover is laid over, where the held frame is not itself the host
+// (`SectionBody`'s outer box). A plain block, so it changes no layout.
+.skeleton-cover-host {
+  position: relative;
+}
+
+// The waiting skeleton: over the held page's whole height, its frame pinned
+// just under the bar (the frames' `--sticky-top`), so it
+// is in the window however far down the page was scrolled. Unscrolled, it
+// sits at the page's top, where the swapped-in skeleton used to.
+.skeleton-cover {
+  position: absolute;
+  inset: 0;
+}
+
+.skeleton-cover__pin {
+  position: sticky;
+  top: var(--sticky-top, 0);
+}

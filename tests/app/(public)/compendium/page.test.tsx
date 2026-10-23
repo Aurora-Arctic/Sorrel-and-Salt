@@ -28,9 +28,14 @@ const readFacets = vi.fn();
 // The details a Quick Look opens (M12.5), by id with no session: what it admits is its own
 // test's (tests/app/compendium-reads.test.ts); here, what the page does with its answer.
 const readCompendiumDetails = vi.fn();
+// The reads narrowed to the viewer's picked covens (M12.55): uncached, with the session.
+const readCompendiumHeldIn = vi.fn();
+const readFacetsHeldIn = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
   readCompendium,
   readFacets,
+  readCompendiumHeldIn,
+  readFacetsHeldIn,
   readCompendiumDetails,
   readFormIcons: async () => new Map(),
   readDeities: async () => [],
@@ -123,6 +128,9 @@ beforeEach(() => {
   });
   readFacets.mockReset();
   readFacets.mockResolvedValue(NO_FACETS);
+  readCompendiumHeldIn.mockReset();
+  readFacetsHeldIn.mockReset();
+  readFacetsHeldIn.mockResolvedValue(NO_FACETS);
   viewerIfSignedIn.mockReset();
   viewerIfSignedIn.mockResolvedValue(null);
   covenRolesIfSignedIn.mockReset();
@@ -215,6 +223,64 @@ describe('the public compendium page', () => {
       expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
     },
   );
+});
+
+// M12.55: In My Covens. A pick reads the uncached reads with the session; none, and a visitor
+// whatever the address says, read the cached ones. Which ids those reads admit is
+// tests/modules/ingredients/services/compendium-held-in.test.ts's.
+describe('the public compendium page, narrowed to the viewer’s covens', () => {
+  beforeEach(async () => {
+    readCompendiumHeldIn.mockResolvedValue(await readCompendium());
+    readCompendium.mockClear();
+  });
+
+  it('reads the list and the counts through the cached reads when no coven is picked', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true, false));
+    await renderPage();
+    expect(readCompendium).toHaveBeenCalled();
+    expect(readFacets).toHaveBeenCalled();
+    expect(readCompendiumHeldIn).not.toHaveBeenCalled();
+    expect(readFacetsHeldIn).not.toHaveBeenCalled();
+  });
+
+  it('reads both through the session when covens are picked, every id the address names', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true, false));
+    await renderPage({ covens: ['w0', 'w1'] });
+    expect(readCompendium).not.toHaveBeenCalled();
+    expect(readFacets).not.toHaveBeenCalled();
+    const [session, variables, , , size] = readCompendiumHeldIn.mock.lastCall!;
+    expect(session).toBe(SESSION);
+    expect(JSON.parse(variables as string)).toMatchObject({ covenIds: ['w0', 'w1'] });
+    expect(size).toBe(CARD_PAGE_SIZE);
+    expect(readFacetsHeldIn).toHaveBeenCalledWith(SESSION, variables);
+  });
+
+  it('reads both through the session under Not In with no coven picked, carrying covensNot', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true, false));
+    await renderPage({ covensNot: '1' });
+    expect(readCompendium).not.toHaveBeenCalled();
+    expect(readFacets).not.toHaveBeenCalled();
+    const [session, variables] = readCompendiumHeldIn.mock.lastCall!;
+    expect(session).toBe(SESSION);
+    expect(JSON.parse(variables as string)).toMatchObject({ covensNot: true });
+    expect(readFacetsHeldIn).toHaveBeenCalledWith(SESSION, variables);
+  });
+
+  it('reads the cached list for a visitor under Not In', async () => {
+    getSession.mockResolvedValue(null);
+    await renderPage({ covensNot: '1' });
+    expect(readCompendiumHeldIn).not.toHaveBeenCalled();
+    expect(readFacetsHeldIn).not.toHaveBeenCalled();
+    expect(readCompendium).toHaveBeenCalled();
+  });
+
+  it('reads the cached list for a visitor, whatever covens the address names', async () => {
+    getSession.mockResolvedValue(null);
+    await renderPage({ covens: 'w0' });
+    expect(readCompendiumHeldIn).not.toHaveBeenCalled();
+    expect(readFacetsHeldIn).not.toHaveBeenCalled();
+    expect(readCompendium).toHaveBeenCalled();
+  });
 });
 
 // M8.17: a curator edits an entry from the search, in the compendium's edit dialog over the
@@ -551,6 +617,8 @@ describe('the public compendium page metadata', () => {
     { query: 'wort' },
     { forms: 'Fixture Herb' },
     { toxic: 'toxic' },
+    // M12.55: a view narrowed to the viewer's covens is filtered too, whoever asks.
+    { covens: 'w0' },
   ])(
     'keeps a filtered view (%o) out of search results, canonical to the unfiltered page',
     async (params) => {

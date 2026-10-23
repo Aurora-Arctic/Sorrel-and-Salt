@@ -32,6 +32,7 @@ const PAST_THE_FLOOR: PastTheFloor[] = [
   { feature: 'promise-try', pattern: /\bPromise\.try\b/ },
   { feature: 'regexp-escape', pattern: /\bRegExp\.escape\b/ },
   { feature: 'float16array', pattern: /\bFloat16Array\b|\bMath\.f16round\b/ },
+  { feature: 'navigation', pattern: /\bwindow\.navigation\b/ },
 ];
 
 /** Server-only by CLAUDE.md rules 1 and 2: the browser never receives them. */

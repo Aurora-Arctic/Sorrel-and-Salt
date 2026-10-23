@@ -2,7 +2,7 @@ import type { SeedCategoryGroup } from './types';
 
 // §6's eight groups and their colour pairs, apart from the seed that writes
 // them so the workshop can render them: this file imports nothing at runtime,
-// where categories.ts reaches the database (claude-docs/workshop.md, ".ladle/").
+// where categories.ts reaches the database (claude-docs/workshop.md, ".storybook/").
 
 /**
  * The eight groups in §6's order, each with its hex pair. These are the owner's

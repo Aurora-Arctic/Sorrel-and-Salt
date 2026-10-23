@@ -1,11 +1,14 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import SafetyNote, { ToxicMark } from '.';
 import type { SafetyVariant } from './types';
 
 // Render-only; what shows and when is asserted in tests/components/SafetyNote.
-export default {
-  title: 'Surfaces / Safety Note',
-};
+const meta = {
+  title: 'Ingredients / Safety Note',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const NOTES = 'Keep away from pets. Not for use while pregnant.';
 const VARIANTS: SafetyVariant[] = [
@@ -24,25 +27,16 @@ const VARIANTS: SafetyVariant[] = [
   { form: 'whole root', safetyNotes: '', toxic: false },
 ];
 
-export const Note: Story = () => <SafetyNote safetyNotes={NOTES} />;
-
-// The ingredient's notes, then each shown form's under its name; the root has none.
-export const WithForms: Story = () => <SafetyNote safetyNotes={NOTES} variants={VARIANTS} />;
-
-export const Toxic: Story = () => <ToxicMark toxic />;
-
-// As a consumer sets them side by side: the mark, then the note.
-const Together = () => (
-  <div
-    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}
-  >
-    <ToxicMark variants={VARIANTS} />
-    <SafetyNote safetyNotes={NOTES} variants={VARIANTS} />
-  </div>
-);
-
-export const PhoneDark: Story = () => <Together />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Together />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+// With Forms: the ingredient's notes, then each shown form's under its name; the root has none.
+export const States: Story = {
+  render: () => (
+    <StatesGrid
+      cell="20rem"
+      states={{
+        'Notes Only': <SafetyNote safetyNotes={NOTES} />,
+        'With Forms': <SafetyNote safetyNotes={NOTES} variants={VARIANTS} />,
+        Toxic: <ToxicMark toxic />,
+      }}
+    />
+  ),
+};

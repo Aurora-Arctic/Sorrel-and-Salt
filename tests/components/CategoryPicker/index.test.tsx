@@ -174,6 +174,25 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /^Zestwort/ })).not.toBeInTheDocument();
   });
 
+  // M12.54: each pick adds a chip, so the list stays open for the next, in the facet and a form alike.
+  it('keeps the list open after a pick, with the focus in the box, for the next', () => {
+    renderControlled();
+
+    box().focus();
+    open();
+    fireEvent.click(option('Ablefix'));
+
+    expect(removeButton('Ablefix')).toBeInTheDocument();
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+    expect(box()).toHaveFocus();
+    fireEvent.click(option('Testward'));
+    expect(removeButton('Testward')).toBeInTheDocument();
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.keyDown(box(), { key: 'Escape' });
+    expect(box()).toHaveAttribute('aria-expanded', 'false');
+  });
+
   // The ×, Backspace and the clear are Combobox's; what the picker does with
   // each is its own.
   it('reports the picks in order through onChange, as one is added, removed, taken by Backspace or cleared', () => {
