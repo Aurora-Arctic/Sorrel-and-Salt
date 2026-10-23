@@ -568,6 +568,13 @@
       "when": 1792604719436,
       "tag": "0080_astrology-position-expand",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1792737838320,
+      "tag": "0081_compendium-seed-state-expand",
+      "breakpoints": true
     }
   ]
 }

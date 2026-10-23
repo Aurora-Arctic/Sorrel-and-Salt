@@ -97,6 +97,9 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     safetyNotes: null,
     toxic: false,
     seedKey: null,
+    seedContentHash: null,
+    curatorReviewedAt: null,
+    curatorReviewedBy: null,
     ...STAMPS,
     ...overrides,
   };
