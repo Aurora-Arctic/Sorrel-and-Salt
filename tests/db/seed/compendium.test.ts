@@ -11,13 +11,18 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { seed } from '@/db/seed/index';
 import { seedAstrology } from '@/db/seed/astrology';
 import { seedCategories } from '@/db/seed/categories';
-import { seedCompendium, type SeedCompendiumOptions } from '@/db/seed/compendium';
+import {
+  seedCompendium,
+  seedCompendiumContent,
+  type SeedCompendiumOptions,
+} from '@/db/seed/compendium';
 import { COMPENDIUM } from '@/db/seed/compendium/index';
 import type { LoadedCompendium } from '@/db/seed/compendium/load';
 import { entryFilePath, parseEntryFile } from '@/db/seed/compendium/parse-entry';
 import { emptyReport, hasRefusals } from '@/db/seed/compendium/report';
 import { renderEntryFile, type RenderableEntryFile } from '@/db/seed/compendium/render-entry';
 import { REASONS } from '@/db/seed/compendium/update';
+import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { SOURCES, seedSources } from '@/db/seed/sources';
@@ -478,7 +483,8 @@ describe('the update path (M14.7)', () => {
         description: string;
         seed_content_hash: string | null;
         updated_by: string;
-        updated_at: Date;
+        // A string: drizzle(sql) switches this client's timestamp parsing off.
+        updated_at: string;
         curator_reviewed_at: Date | null;
         deleted_at: Date | null;
       }[]
@@ -507,8 +513,8 @@ describe('the update path (M14.7)', () => {
     const stored = await sql<{ seed_key: string; seed_content_hash: string }[]>`
       select seed_key, seed_content_hash from ingredients order by seed_key`;
     expect(stored).toEqual([
-      { seed_key: identityOf(TESTWORT), seed_content_hash: parsed(fileOf(TESTWORT)).hash },
       { seed_key: identityOf(SAMPLEWORT), seed_content_hash: parsed(fileOf(SAMPLEWORT)).hash },
+      { seed_key: identityOf(TESTWORT), seed_content_hash: parsed(fileOf(TESTWORT)).hash },
     ]);
     const before = await compendiumRows();
 
@@ -536,10 +542,25 @@ describe('the update path (M14.7)', () => {
     marked.entry.description = wordsOf(123);
     expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
 
-    const report = await run([marked, fileOf(SAMPLEWORT)]);
+    // Below the guard: seedCompendium refuses a stale mark before it gets here
+    // (the next case), so the pending outcome is the content layer's.
+    const loaded = loadedOf([marked, fileOf(SAMPLEWORT)]);
+    const report = await beginSeedTransaction(db, (tx) =>
+      seedCompendiumContent(tx, loaded, { manifest: null }),
+    );
 
     expect(report.pending).toEqual([PATH]);
     expect(report.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+  });
+
+  it('refuses to run at all on a mark gone stale, because the guard fails it', async () => {
+    const before = await compendiumRows();
+    const marked = edited(TESTWORT, reword(121));
+    marked.entry.description = wordsOf(123);
+    expect(marked.seedUpdate).not.toBe(parsed(marked).hash);
+
+    await expect(run([marked, fileOf(SAMPLEWORT)])).rejects.toThrow(/stale seedUpdate/);
     expect(await compendiumRows()).toEqual(before);
   });
 
@@ -558,7 +579,7 @@ describe('the update path (M14.7)', () => {
     expect(after.description).toBe(wordsOf(121));
     expect(after.seed_content_hash).toBe(hashOf(TESTWORT, bigEdit));
     expect(after.updated_by).toBe(BOOTSTRAP_USER_ID);
-    expect(after.updated_at.getTime()).toBeGreaterThan(row.updated_at.getTime());
+    expect(Date.parse(after.updated_at)).toBeGreaterThan(Date.parse(row.updated_at));
 
     expect((await liveFolkNames(sql, row.id)).map((name) => name.name)).toEqual([
       'Newleaf Proof',
