@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
+import { ADD, HELD as EVERY, HELD_MARK, SHELF } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
@@ -21,15 +22,11 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-const ADD = 'Add to My Ingredients';
-const SHELF = 'In Your Cupboard';
-// What a held coven's check in the plus's menu stands for, joined to its name.
-const HELD_MARK = 'in its cupboard';
 const NAME = 'Fixture Shelfwort';
 // The plus and the check are tipped and named by their words and then the entry (MB.120); a
 // role name matches in part, so ADD and HELD find them. HELD keeps the colon, so it finds only
 // the check, never the shelf, which is named In Your Cupboard alone (SHELF, matched exactly).
-const HELD = 'In Every Cupboard:';
+const HELD = `${EVERY}:`;
 
 test('a member adds the entry from its public page, and the three dots then offer its removal', async ({
   page,

@@ -12,6 +12,7 @@ import { BinButton, StockIcon } from '../IconTip';
 import Modal, { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { StockBadge } from '../StockBadge';
+import { amountText } from '../StockBadge/stock-words';
 import StockFields, {
   EMPTY_STOCK,
   type StockFormValues,
@@ -45,13 +46,6 @@ const SaveStockDocument = graphql(`
     }
   }
 `);
-
-/** A jar's amount as the card's jar line writes it: "250 g", "250", or "Unmeasured". */
-function amountText(row: StockRow): string {
-  const { quantityOnHand, unit } = stockAmountsOf(row);
-  if (quantityOnHand === null) return 'Unmeasured';
-  return unit ? `${quantityOnHand} ${unit}` : `${quantityOnHand}`;
-}
 
 interface PickProps {
   row: StockRow;
@@ -100,7 +94,9 @@ function Pick({ row, label, chosen, edited, flagged, onChoose }: PickProps): Rea
           )}
           <span className="spoken-separator">, </span>
         </span>
-        <span className="stock-dialog__amount">{amountText(row)}</span>
+        <span className="stock-dialog__amount">
+          {amountText(amounts.quantityOnHand, amounts.unit)}
+        </span>
       </button>
       {/* A jar on its way out is flagged by nothing but its strike. */}
       {!row.removed && (

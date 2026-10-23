@@ -14,6 +14,11 @@ export interface AddIconProps {
   covens: readonly CompendiumCoven[];
   /** The ids of those that already hold the entry. */
   heldIn: readonly string[];
+  /**
+   * The names of every coven of the viewer's that holds the entry, any role (M12.55): counted on
+   * the plus and named in its tip. Left out or empty, neither shows.
+   */
+  holding?: readonly string[];
 }
 
 /**

@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: mineral
 canonicalName: Catlinite
 elements:

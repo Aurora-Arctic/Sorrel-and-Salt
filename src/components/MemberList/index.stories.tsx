@@ -1,4 +1,5 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import MemberList from '.';
 import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
@@ -8,9 +9,12 @@ import type { MemberListEntry } from './types';
 // member's view leaves the addresses out; an owner's draws them (M11.19). The
 // controls are plain buttons standing in for the page's own, styled as the
 // admin user table styles its own: Change Role quiet, Remove destructive.
-export default {
+const meta = {
   title: 'Coven / Member List',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const MEMBERS: readonly MemberListEntry[] = [
   {
@@ -45,9 +49,9 @@ const MEMBERS: readonly MemberListEntry[] = [
   },
 ];
 
-export const ReadOnly: Story = () => <MemberList members={MEMBERS} currentUserId="u-bo" />;
+const defaultNode = <MemberList members={MEMBERS} currentUserId="u-bo" />;
 
-export const WithActions: Story = () => (
+const withActionsNode = (
   <MemberList
     members={MEMBERS}
     currentUserId="u-ada"
@@ -98,10 +102,38 @@ const SoleOwnerPage = () => (
   </ListFrame>
 );
 
-export const SoleOwner: Story = () => <SoleOwnerPage />;
+const soleOwnerNode = <SoleOwnerPage />;
 
-export const SoleOwnerPhoneDark: Story = () => <SoleOwnerPage />;
-SoleOwnerPhoneDark.meta = { theme: 'dark', width: 375 };
+// An owner's view where an address is not on file and the editor's name is withheld.
+const gapsNode = (
+  <MemberList
+    members={[
+      { ...MEMBERS[0], email: null },
+      { ...MEMBERS[1], email: null, updatedBy: null, updatedAt: null },
+      MEMBERS[2],
+    ]}
+    currentUserId="u-ada"
+    showEmail
+  />
+);
 
-export const SoleOwnerPhoneLight: Story = () => <SoleOwnerPage />;
-SoleOwnerPhoneLight.meta = { theme: 'light', width: 375 };
+// An owner's view with the addresses but no controls, as a viewer's page draws it.
+const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" showEmail />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'With Actions': withActionsNode,
+  'Sole Owner': soleOwnerNode,
+  'Gaps In The Record': gapsNode,
+  'Addresses Without Actions': addressesOnlyNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

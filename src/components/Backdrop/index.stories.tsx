@@ -1,18 +1,33 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import Backdrop from '.';
 
 // Render-only. The element is fixed to the viewport corner, so the story frame
-// itself is not where it appears — look at the bottom right of the preview.
-export default {
+// itself is not where it appears — look at the corners of the preview. Two
+// fixed layers cannot sit side by side, so the state is chosen with a control.
+// The theme is the toolbar's: choose Dark or Light there for the other view.
+const meta = {
   title: 'Layout / Backdrop',
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
+
+const BACKDROP_STATES: Record<string, ReactNode> = {
+  // The size every page but the front door gets.
+  'Every Page': <Backdrop />,
+  // The front door's size: `.welcome-page` on an ancestor is the hook, as on the real page.
+  'Front Door': (
+    <div className="welcome-page">
+      <Backdrop />
+    </div>
+  ),
 };
 
-// The size every page but the front door gets.
-export const Default: Story = () => <Backdrop />;
-
-// The front door's size: `.welcome-page` on an ancestor is the hook, as on the real page.
-export const FrontDoor: Story = () => (
-  <div className="welcome-page">
-    <Backdrop />
-  </div>
-);
+export const States: Story = {
+  args: { state: 'Every Page' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(BACKDROP_STATES), mapping: BACKDROP_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

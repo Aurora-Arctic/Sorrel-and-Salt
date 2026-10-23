@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
+import { apiPath } from './api-path';
 import { GraphQLClientError } from './graphql-client-error';
 import type { VariablesArg } from './types';
 
@@ -34,7 +35,7 @@ async function send<TResult, TVariables extends object>(
   // a story or test can stand in for `window.fetch` after the module loads.
   const response = await fetch(
     // `new URL` resolves the relative path against the page's origin.
-    new URL(ENDPOINT, window.location.origin).href,
+    new URL(apiPath(ENDPOINT), window.location.origin).href,
     {
       method: 'POST',
       headers: {

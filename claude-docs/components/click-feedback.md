@@ -65,7 +65,7 @@ row removes itself, is the control's own business and not this component's.
   does not close with it.
 - **Its listeners go on the control's own document** (`ownerDocument`), and
   what is ours is asked of the node rather than `instanceof Node`: a story
-  Ladle draws into an iframe runs its script in the page around the frame, so
+  Storybook draws into an iframe runs its script in the page around the frame, so
   the global `document` would hear neither the frame's keys nor its presses.
   The confirm overlay's focus return (`canFocus` in
   `src/components/Modal/confirm-overlay.tsx`) is asked the same way.
@@ -79,7 +79,7 @@ row removes itself, is the control's own business and not this component's.
 
 ## The status region
 
-`StatusRegionProvider`, in `src/app/layout.tsx` and the Ladle provider, draws
+`StatusRegionProvider`, in `src/app/layout.tsx` and the Storybook provider, draws
 one `<output>` (role `status`) with the page, so a screen reader is already
 listening when the first sentence arrives. The same sentence twice alternates a
 trailing no-break space, so it is read again. Without the provider `announce`
@@ -102,7 +102,7 @@ in one does not run past its edge (the owner's call, 2026-10-20): in the
 admin's user modal at a desktop's width, its start under Change Role's would
 leave the dialog, so its end stands under the button's end. The dialog is a
 measure only, and clips nothing of the fixed callout. The box is found and
-measured in the control's own document and window, since a story Ladle draws
+measured in the control's own document and window, since a story Storybook draws
 into an iframe (`meta.iframed`) runs its script in the page around the frame,
 where `instanceof Element` is false for the frame's nodes.
 
@@ -160,13 +160,13 @@ going back) never waits for the fade.
 
 - `tests/components/ClickFeedback/index.test.tsx` — opening, closing, focus,
   one alert at a time, the description, repeat reading, and the status region.
-- `tests/e2e/workshop/click-feedback.spec.ts` — measured in the Ladle stories,
+- `tests/e2e/workshop/click-feedback.spec.ts` — measured in the Storybook stories,
   since no page uses the component yet: the callout's place and both
   fallbacks, nothing moving as the callout and badge come and go, the badge's
   24px target covering no neighbour, the borderless badge beside its control,
   the fades and reduced motion, and axe, at 1280px and 375px in both themes.
 
-The workshop specs run in their own Playwright config against Ladle, with no
+The workshop specs run in their own Playwright config against Storybook, with no
 database: `npm run e2e:workshop`. Its server takes the slot block's next port
 (`WORKSHOP_PORT` in `tests/e2e/slots.ts`, 8102 by default, `E2E_PORT_BASE`
 plus 101), and its live-reload socket the one after (`WORKSHOP_HMR_PORT`,

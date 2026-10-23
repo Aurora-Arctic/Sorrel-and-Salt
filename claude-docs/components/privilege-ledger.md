@@ -91,14 +91,12 @@ icon.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PrivilegeLedger/index.stories.tsx),
-`Admin / Privilege Ledger`: `Everything`, `OneUser` (searched by address),
-`OneUserAdminOnly` (and by privilege), `Empty` and `EmptyForASearch`, on
-invented people, each story's rows what its filter would show: every route, a
+`Admin / Privilege Ledger`: `States`, with a control that chooses First Page (everything), Middle Page, Last Page, One User (searched by address),
+One User Admin Only (and by privilege), Empty and No Matches, on
+invented people, each state's rows what its filter would show: every route, a
 note on a role grant and the flag it set at one instant, a deleted subject and
-the seed's actor, unlinked. `PhoneDark` and `PhoneLight` show the page's
-header and every change as a card at 375px, inside the admin layout's frame and the People page with its Privilege Changes tab open,
-and `FilteredPhoneDark` and `FilteredPhoneLight` `OneUserAdminOnly` there, with
-Clear offered.
+the seed's actor, unlinked. Each sits inside the admin layout's frame and the People page with its Privilege Changes tab open;
+at 375px, from the toolbar viewport menu, the header and every change show as a card.
 Render-only, no test ids, no snapshots.
 
 ## Testing

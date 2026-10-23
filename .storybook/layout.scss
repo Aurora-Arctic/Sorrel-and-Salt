@@ -1,0 +1,8 @@
+// layout-base hung off the preview body, as the app hangs it off `body`; see
+// primitives.scss for why it is `body:where(.workshop-app)`.
+
+@use '../src/scss/layout' as *;
+
+body:where(.workshop-app) {
+  @include layout-base;
+}

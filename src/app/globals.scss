@@ -29,9 +29,9 @@ html {
   scroll-behavior: smooth;
 }
 
-// Inside the shell a scroll that brings a focused control into view lands
+// Inside either frame (the shell, or the public frame) a scroll that brings a focused control into view lands
 // it below the sticky bar, and on a phone above the fixed section bar.
-html:has(.app-shell) {
+html:has(:is(.app-shell, .public-frame)) {
   scroll-padding-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 

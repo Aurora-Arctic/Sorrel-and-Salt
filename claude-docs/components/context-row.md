@@ -58,14 +58,13 @@ The row is a named region (`section`, labelled "Context"), so its lead sits insi
 
 ## Stories
 
-`index.stories.tsx`, titled "Shell / Context Row", render-only:
+`index.stories.tsx`, titled "Shell / Context Row", render-only. `States` is a grid:
 
-- `Admin`: "Admin" as the lead, with `AdminNav` beside it.
-- `Coven`: the coven switcher as the lead, with `CovenNav` beside it as a
-  member sees it (Overview and Members).
-- `Phone`: the coven row at 375px, where the nav has left for the bottom bar
-  and the lead has the row.
-- `PhoneLongName`: a coven name long enough to wrap to two lines at 375px.
+- Admin: "Admin" as the lead, with `AdminNav` beside it. Curator is the same row as a curator sees it.
+- Coven: the coven switcher as the lead, with `CovenNav` beside it as a
+  member sees it (Overview and Members). Viewer's Coven is the viewer's row.
+- No Covens: the switcher with nothing to switch to.
+- Long Workspace Name: a coven name long enough to wrap to two lines at 375px, where the nav has left for the bottom bar and the lead has the row.
 
 ## Testing
 

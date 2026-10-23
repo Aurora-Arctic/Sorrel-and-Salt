@@ -255,14 +255,12 @@ are the primitives' (`.panel`, `.notice--error`, `.meta`,
 every story inside the page's own `main.page-frame.page-frame--narrow`, so the
 workshop shows what the page shows:
 
-- `Default` (every provider configured), `LastUsed` (Discord marked),
-  `WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
+- `States`, with a control that chooses Default (every provider configured), Last Used (Discord marked),
+  With Error, and Some Unavailable (the shape most local dev actually sees:
   one pair in `.env.local`, the rest greyed out);
-- `PhoneDark` and `PhoneLight`, at 375px with the error and the mark both
-  showing, the badge nearest the screen's edge;
-- `LoadingSignIn` and `FailedSignIn`, each pressing Continue with Google as a
+- `Pending` and `Failed`, each pressing Continue with Google as a
   person would: the first with the request held open by the workshop's server
-  (`.ladle/vite.config.ts`), the second answered by the workshop's 404, so the
+  (`.storybook/vite.config.ts`), the second answered by the workshop's 404, so the
   failure's callout opens under the button.
 
 The mark is read from the workshop's own cookie, which outlives the story that
