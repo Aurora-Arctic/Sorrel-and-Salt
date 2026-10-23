@@ -5,6 +5,7 @@ import {
   FORM_GROUP_ICONS,
   type FormGroupIcon,
 } from '../../modules/vocabulary/schema/form-group-icons';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import FormIcon from '../FormIcon';
 import {
   FieldShell,
@@ -44,78 +45,65 @@ const Form = ({ errors, children }: { errors?: FieldErrors<Values>; children: Re
   );
 };
 
-export const Default: Story = {
+// Pending: its text being looked up, the spinner inside the box at its right end. With Note: shut
+// while something else is checked.
+export const States: Story = {
   render: () => (
-    <Form>
-      <TextField<Values> name="name" label="Name" autoComplete="off" />
-    </Form>
-  ),
-};
-
-export const Required: Story = {
-  render: () => (
-    <Form>
-      <TextField<Values> name="name" label="Name" required autoComplete="off" />
-    </Form>
-  ),
-};
-
-/** Its text being looked up: the spinner inside the box at its right end. */
-export const Pending: Story = {
-  render: () => (
-    <Form>
-      <TextField<Values> name="name" label="Name" autoComplete="off" busy />
-    </Form>
-  ),
-};
-
-export const WithHint: Story = {
-  render: () => (
-    <Form>
-      <TextField<Values>
-        name="name"
-        label="Name"
-        hint="What the ingredient is called in this compendium. Its formal name is its identity."
-        autoComplete="off"
-      />
-    </Form>
-  ),
-};
-
-export const WithNote: Story = {
-  render: () => (
-    <Form>
-      <TextField<Values>
-        name="name"
-        label="Name"
-        note="Shut while the formal name is being checked."
-        disabled
-      />
-    </Form>
-  ),
-};
-
-export const WithError: Story = {
-  render: () => (
-    <Form errors={{ name: { type: 'server', message: 'Testwort is already taken.' } }}>
-      <TextField<Values> name="name" label="Name" required autoComplete="off" />
-    </Form>
-  ),
-};
-
-export const Multiline: Story = {
-  render: () => (
-    <Form>
-      <TextField<Values> name="name" label="Description" multiline />
-    </Form>
-  ),
-};
-
-export const Disabled: Story = {
-  render: () => (
-    <Form>
-      <TextField<Values> name="name" label="Name" disabled />
-    </Form>
+    <StatesGrid
+      cell="24rem"
+      states={{
+        Plain: (
+          <Form>
+            <TextField<Values> name="name" label="Name" autoComplete="off" />
+          </Form>
+        ),
+        Required: (
+          <Form>
+            <TextField<Values> name="name" label="Name" required autoComplete="off" />
+          </Form>
+        ),
+        Pending: (
+          <Form>
+            <TextField<Values> name="name" label="Name" autoComplete="off" busy />
+          </Form>
+        ),
+        'With Hint': (
+          <Form>
+            <TextField<Values>
+              name="name"
+              label="Name"
+              hint="What the ingredient is called in this compendium. Its formal name is its identity."
+              autoComplete="off"
+            />
+          </Form>
+        ),
+        'With Note': (
+          <Form>
+            <TextField<Values>
+              name="name"
+              label="Name"
+              note="Shut while the formal name is being checked."
+              disabled
+            />
+          </Form>
+        ),
+        'With Error': (
+          <Form errors={{ name: { type: 'server', message: 'Testwort is already taken.' } }}>
+            <TextField<Values> name="name" label="Name" required autoComplete="off" />
+          </Form>
+        ),
+        Multiline: (
+          <Form>
+            <TextField<Values> name="name" label="Description" multiline />
+          </Form>
+        ),
+        Disabled: (
+          <Form>
+            <TextField<Values> name="name" label="Name" disabled />
+          </Form>
+        ),
+      }}
+    />
   ),
 };
 

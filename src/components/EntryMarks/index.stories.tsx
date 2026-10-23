@@ -3,6 +3,7 @@ import IngredientCard from '../IngredientCard';
 import '../IngredientEntry/index.scss';
 import EntryMarks, { RecencyMark } from '.';
 import { route } from '../../../.storybook/route';
+import { StatesGrid } from '../../../.storybook/states-grid';
 
 // Render-only; what shows and when is asserted in tests/components/EntryMarks.
 const meta = {
@@ -15,44 +16,39 @@ const Row = ({ children }: { children: React.ReactNode }) => (
   <div className="badges">{children}</div>
 );
 
-export const Default: Story = {
+// A compendium entry no cupboard names carries no mark, so Not In Cupboard renders nothing.
+export const States: Story = {
   render: () => (
-    <Row>
-      <EntryMarks kind="own" />
-    </Row>
-  ),
-};
-
-export const InCupboard: Story = {
-  render: () => (
-    <Row>
-      <EntryMarks kind="cupboard" />
-    </Row>
-  ),
-};
-
-export const InCupboardAnnotated: Story = {
-  render: () => (
-    <Row>
-      <EntryMarks kind="cupboard" annotated />
-    </Row>
-  ),
-};
-
-export const Retired: Story = {
-  render: () => (
-    <Row>
-      <EntryMarks kind="cupboard" retired annotated />
-    </Row>
-  ),
-};
-
-// Renders nothing: a compendium entry no cupboard names carries no mark.
-export const NotInCupboard: Story = {
-  render: () => (
-    <Row>
-      <EntryMarks kind="compendium" />
-    </Row>
+    <StatesGrid
+      cell="14rem"
+      states={{
+        Own: (
+          <Row>
+            <EntryMarks kind="own" />
+          </Row>
+        ),
+        'In Cupboard': (
+          <Row>
+            <EntryMarks kind="cupboard" />
+          </Row>
+        ),
+        'In Cupboard Annotated': (
+          <Row>
+            <EntryMarks kind="cupboard" annotated />
+          </Row>
+        ),
+        Retired: (
+          <Row>
+            <EntryMarks kind="cupboard" retired annotated />
+          </Row>
+        ),
+        'Not In Cupboard': (
+          <Row>
+            <EntryMarks kind="compendium" />
+          </Row>
+        ),
+      }}
+    />
   ),
 };
 

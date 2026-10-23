@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import ChipColorField from '.';
 import type { ChipColorFieldProps } from './types';
 
@@ -41,22 +42,24 @@ const Field = ({
   );
 };
 
-export const Default: Story = { render: () => <Field column="colorDark" initial="#5d8ab1" /> };
-
-export const LightColour: Story = { render: () => <Field column="colorLight" initial="#286ba6" /> };
-
-// Too dark for the dark card: the ratio says so before any save.
-export const UnderTheFloor: Story = {
-  render: () => <Field column="colorDark" initial="#0c5393" />,
-};
-
-// A shade off another group's colour in the same theme: the warning names it.
-export const NearAnotherGroup: Story = {
+export const States: Story = {
   render: () => (
-    <Field
-      column="colorDark"
-      initial="#5f8cb3"
-      others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
+    <StatesGrid
+      cell="22rem"
+      states={{
+        'Dark Theme': <Field column="colorDark" initial="#5d8ab1" />,
+        'Light Theme': <Field column="colorLight" initial="#286ba6" />,
+        // Too dark for the dark card: the ratio says so before any save.
+        'Under The Floor': <Field column="colorDark" initial="#0c5393" />,
+        // A shade off another group's colour in the same theme: the warning names it.
+        'Near Another Group': (
+          <Field
+            column="colorDark"
+            initial="#5f8cb3"
+            others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
+          />
+        ),
+      }}
     />
   ),
 };

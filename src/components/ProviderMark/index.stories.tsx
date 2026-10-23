@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import ProviderMark from '.';
 import { ProviderUnavailableNote } from './unavailable-note';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
@@ -22,11 +23,16 @@ const Marks = () => (
   </div>
 );
 
-export const Default: Story = { render: () => <Marks /> };
-
-// Facebook's mark as a brand button draws it, on its blue chip.
-export const FacebookChip: Story = { render: () => <ProviderMark id="facebook" chip /> };
-
-export const UnavailableNote: Story = {
-  render: () => <ProviderUnavailableNote id="provider-mark-story-note" />,
+// Facebook Chip: Facebook's mark as a brand button draws it, on its blue chip.
+export const States: Story = {
+  render: () => (
+    <StatesGrid
+      cell="24rem"
+      states={{
+        Marks: <Marks />,
+        'Facebook Chip': <ProviderMark id="facebook" chip />,
+        'Unavailable Note': <ProviderUnavailableNote id="provider-mark-story-note" />,
+      }}
+    />
+  ),
 };

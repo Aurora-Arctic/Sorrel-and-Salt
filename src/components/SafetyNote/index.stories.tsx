@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import SafetyNote, { ToxicMark } from '.';
 import type { SafetyVariant } from './types';
 
@@ -26,11 +27,16 @@ const VARIANTS: SafetyVariant[] = [
   { form: 'whole root', safetyNotes: '', toxic: false },
 ];
 
-export const Default: Story = { render: () => <SafetyNote safetyNotes={NOTES} /> };
-
-// The ingredient's notes, then each shown form's under its name; the root has none.
-export const WithForms: Story = {
-  render: () => <SafetyNote safetyNotes={NOTES} variants={VARIANTS} />,
+// With Forms: the ingredient's notes, then each shown form's under its name; the root has none.
+export const States: Story = {
+  render: () => (
+    <StatesGrid
+      cell="20rem"
+      states={{
+        'Notes Only': <SafetyNote safetyNotes={NOTES} />,
+        'With Forms': <SafetyNote safetyNotes={NOTES} variants={VARIANTS} />,
+        Toxic: <ToxicMark toxic />,
+      }}
+    />
+  ),
 };
-
-export const Toxic: Story = { render: () => <ToxicMark toxic /> };

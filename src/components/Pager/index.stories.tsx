@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import ListFrame from '../ListFrame';
 import Pager from '.';
 
@@ -10,30 +11,31 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const FirstPage: Story = {
+export const States: Story = {
   render: () => (
-    <ListFrame>
-      <Pager nextHref="?after=cursor" />
-    </ListFrame>
-  ),
-};
-
-export const Default: Story = {
-  render: () => (
-    <ListFrame>
-      <Pager
-        previousHref="?before=cursor"
-        nextHref="?after=cursor"
-        position={{ page: 2, pages: 3 }}
-      />
-    </ListFrame>
-  ),
-};
-
-export const LastPage: Story = {
-  render: () => (
-    <ListFrame>
-      <Pager previousHref="?before=cursor" />
-    </ListFrame>
+    <StatesGrid
+      cell="24rem"
+      states={{
+        'First Page': (
+          <ListFrame>
+            <Pager nextHref="?after=cursor" />
+          </ListFrame>
+        ),
+        'Middle Page': (
+          <ListFrame>
+            <Pager
+              previousHref="?before=cursor"
+              nextHref="?after=cursor"
+              position={{ page: 2, pages: 3 }}
+            />
+          </ListFrame>
+        ),
+        'Last Page': (
+          <ListFrame>
+            <Pager previousHref="?before=cursor" />
+          </ListFrame>
+        ),
+      }}
+    />
   ),
 };

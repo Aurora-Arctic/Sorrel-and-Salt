@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { WorkshopPathname } from '../../../.storybook/navigation';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import WorkspaceSwitcher from '.';
 
 // Render-only; behaviour is asserted in tests/components/WorkspaceSwitcher.
@@ -16,29 +17,29 @@ const WORKSPACES = [
   { slug: 'my-own-grimoire', name: 'My Own Grimoire', canReadMembers: true, canInvite: true },
 ];
 
-// In a workspace: its name is the value.
-const InWorkspaceView = () => (
-  <WorkshopPathname.Provider value="/coven/testwort-circle/ingredients">
-    <WorkspaceSwitcher workspaces={WORKSPACES} />
-  </WorkshopPathname.Provider>
-);
-
-export const Default: Story = { render: InWorkspaceView };
-
-// Outside any workspace, on the account page: nothing chosen yet.
-export const OutsideWorkspace: Story = {
+// In a workspace: its name is the value. Outside any workspace, on the account page: nothing chosen
+// yet. Can Create: a viewer holding creation rights, so the list ends with Create Coven (M9.16).
+export const States: Story = {
   render: () => (
-    <WorkshopPathname.Provider value="/account">
-      <WorkspaceSwitcher workspaces={WORKSPACES} />
-    </WorkshopPathname.Provider>
-  ),
-};
-
-// A viewer holding creation rights: the list ends with Create Coven (M9.16).
-export const CanCreate: Story = {
-  render: () => (
-    <WorkshopPathname.Provider value="/coven/testwort-circle">
-      <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />
-    </WorkshopPathname.Provider>
+    <StatesGrid
+      cell="16rem"
+      states={{
+        'In Workspace': (
+          <WorkshopPathname.Provider value="/coven/testwort-circle/ingredients">
+            <WorkspaceSwitcher workspaces={WORKSPACES} />
+          </WorkshopPathname.Provider>
+        ),
+        'Outside Workspace': (
+          <WorkshopPathname.Provider value="/account">
+            <WorkspaceSwitcher workspaces={WORKSPACES} />
+          </WorkshopPathname.Provider>
+        ),
+        'Can Create': (
+          <WorkshopPathname.Provider value="/coven/testwort-circle">
+            <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />
+          </WorkshopPathname.Provider>
+        ),
+      }}
+    />
   ),
 };

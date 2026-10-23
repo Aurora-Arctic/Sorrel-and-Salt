@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import AddIcon from '.';
 import { HeldMark } from '../CompendiumCards/held-mark';
 import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
@@ -23,74 +24,78 @@ const COVENS = [
 ];
 const ADD = 'Add to My Ingredients';
 
-// One coven: a press adds there at once.
-export const Default: Story = {
+const pending = (
+  <IconTip tip={ADD}>
+    <button type="button" className="add-icon" aria-busy aria-disabled>
+      <Spinner />
+      <span className="visually-hidden">{`${ADD}: ${NAME}`}</span>
+    </button>
+  </IconTip>
+);
+
+const added = (
+  <IconTip tip={ADD}>
+    <button type="button" className="add-icon" data-state="added" aria-disabled>
+      <span className="add-icon__glyphs">
+        <span className="add-icon__check">
+          <CheckIcon />
+        </span>
+      </span>
+      <span className="visually-hidden">{`${ADD}: ${NAME}`}</span>
+    </button>
+  </IconTip>
+);
+
+const returning = (
+  <IconTip tip={ADD}>
+    <button type="button" className="add-icon" data-state="returning" aria-disabled>
+      <span className="add-icon__glyphs">
+        <span className="add-icon__check">
+          <CheckIcon />
+        </span>
+        <span className="add-icon__plus">
+          <PlusIcon />
+        </span>
+      </span>
+      <span className="visually-hidden">{`${ADD}: ${NAME}`}</span>
+    </button>
+  </IconTip>
+);
+
+// One coven: a press adds there at once. Two covens: the plus is a menu of both, and the first
+// already holds the entry, so it is disabled and marked in its cupboard. Pending: the spinner in
+// the plus's place, and the plus refusing presses. Added: the check drawn along its stroke, which
+// holds, then fades back to the plus. Returning: the check and the plus stacked, one fading into
+// the other. Held: every coven holds it, so CompendiumCards' check stands in the plus's place,
+// tipped In Every Cupboard and the entry's name.
+export const States: Story = {
   render: () => (
-    <AddIcon
-      name={NAME}
-      workspaceId={ONE}
-      ingredientId="fixture"
-      covens={[COVENS[0]]}
-      heldIn={[]}
+    <StatesGrid
+      cell="10rem"
+      states={{
+        'One Coven': (
+          <AddIcon
+            name={NAME}
+            workspaceId={ONE}
+            ingredientId="fixture"
+            covens={[COVENS[0]]}
+            heldIn={[]}
+          />
+        ),
+        'Several Covens': (
+          <AddIcon
+            name={NAME}
+            workspaceId={ONE}
+            ingredientId="fixture"
+            covens={COVENS}
+            heldIn={[ONE]}
+          />
+        ),
+        Pending: pending,
+        Added: added,
+        Returning: returning,
+        Held: <HeldMark name={NAME} />,
+      }}
     />
   ),
 };
-
-// Two covens: the plus is a menu of both, and the first already holds the entry, so it is
-// disabled and marked in its cupboard.
-export const SeveralCovens: Story = {
-  render: () => (
-    <AddIcon name={NAME} workspaceId={ONE} ingredientId="fixture" covens={COVENS} heldIn={[ONE]} />
-  ),
-};
-
-// While an add runs: the spinner in the plus's place, and the plus refusing presses.
-export const Pending: Story = {
-  render: () => (
-    <IconTip tip={ADD}>
-      <button type="button" className="add-icon" aria-busy aria-disabled>
-        <Spinner />
-        <span className="visually-hidden">{`${ADD}: ${NAME}`}</span>
-      </button>
-    </IconTip>
-  ),
-};
-
-// Just after an add: the check drawn along its stroke, which holds, then fades back to the plus.
-export const Added: Story = {
-  render: () => (
-    <IconTip tip={ADD}>
-      <button type="button" className="add-icon" data-state="added" aria-disabled>
-        <span className="add-icon__glyphs">
-          <span className="add-icon__check">
-            <CheckIcon />
-          </span>
-        </span>
-        <span className="visually-hidden">{`${ADD}: ${NAME}`}</span>
-      </button>
-    </IconTip>
-  ),
-};
-
-// The fade back: the check and the plus stacked, one fading into the other.
-export const Returning: Story = {
-  render: () => (
-    <IconTip tip={ADD}>
-      <button type="button" className="add-icon" data-state="returning" aria-disabled>
-        <span className="add-icon__glyphs">
-          <span className="add-icon__check">
-            <CheckIcon />
-          </span>
-          <span className="add-icon__plus">
-            <PlusIcon />
-          </span>
-        </span>
-        <span className="visually-hidden">{`${ADD}: ${NAME}`}</span>
-      </button>
-    </IconTip>
-  ),
-};
-
-// Every coven holds it: CompendiumCards' check stands in the plus's place, tipped In Every Cupboard
-// and the entry's name.
-export const Held: Story = { render: () => <HeldMark name={NAME} /> };

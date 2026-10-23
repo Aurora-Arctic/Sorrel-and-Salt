@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import BusyButton from '.';
 
 // Render-only; the busy state is asserted by the forms that use it (NameForm,
@@ -21,21 +22,19 @@ const Pair = ({ className }: { className: string }) => (
   </p>
 );
 
-const SolidView = () => <Pair className="btn btn--solid" />;
-
-export const Default: Story = { render: SolidView };
-
-const OutlineView = () => <Pair className="btn" />;
-
-export const Outline: Story = { render: OutlineView };
-
-const DestructiveView = () => <Pair className="btn btn--destructive" />;
-
-export const Destructive: Story = { render: DestructiveView };
-
-const SmallView = () => <Pair className="btn btn--small" />;
-
-export const Small: Story = { render: SmallView };
+export const States: Story = {
+  render: () => (
+    <StatesGrid
+      cell="22rem"
+      states={{
+        Solid: <Pair className="btn btn--solid" />,
+        Outline: <Pair className="btn" />,
+        Destructive: <Pair className="btn btn--destructive" />,
+        Small: <Pair className="btn btn--small" />,
+      }}
+    />
+  ),
+};
 
 // Busy without `disabled`, as Impersonate is: `aria-disabled` keeps the focus.
 export const BusyKeepingFocus: Story = {
