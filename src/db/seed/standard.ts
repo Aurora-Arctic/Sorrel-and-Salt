@@ -4,6 +4,7 @@ import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
@@ -125,6 +126,92 @@ const MEMBERSHIPS: SeedMembership[] = [
   // E and F are deliberately absent: "an admin has no access to any
   // workspace", and a curator none, is only assertable against one in none.
 ];
+
+/**
+ * A compendium entry W's cupboard holds, by the entry's formal name, with the
+ * coven's own say over it (M12.13). Each override is null, so the compendium's
+ * value shows, unless set here. An entry with none is in the cupboard and not
+ * annotated.
+ */
+export interface SeedCupboardEntry {
+  entry: { name: string; canonicalName: string };
+  label?: string;
+  description?: string;
+  safetyNotes?: string;
+  elements?: Array<'earth' | 'air' | 'fire' | 'water' | 'spirit'>;
+  celestialBodies?: string[];
+  zodiacSigns?: string[];
+  colors?: string[];
+}
+
+export const STANDARD_CUPBOARD: SeedCupboardEntry[] = [
+  // Rosemary the coven grows, under its own label and its own description.
+  {
+    entry: { name: 'Rosemary', canonicalName: 'Salvia rosmarinus' },
+    label: 'Garden Rosemary',
+    description: 'Cut from the bush by the back door, dried in bunches over the stove.',
+  },
+  // In the cupboard and not annotated: the row alone.
+  { entry: { name: 'Ginger', canonicalName: 'Zingiber officinale' } },
+  // Mugwort under the coven's label, with a safety note and a second celestial body.
+  {
+    entry: { name: 'Mugwort', canonicalName: 'Artemisia vulgaris' },
+    label: 'Hedgerow Mugwort',
+    safetyNotes: 'Not for anyone pregnant. Keep the smoke away from the cat.',
+    celestialBodies: ['Moon', 'Neptune'],
+  },
+  // Lavender with a description, an element the compendium lacks and a sign of its own.
+  {
+    entry: { name: 'Lavender', canonicalName: 'Lavandula angustifolia' },
+    description: 'Grown along the south wall and stripped into paper bags in July.',
+    elements: ['air', 'water'],
+    zodiacSigns: ['Pisces'],
+  },
+  // Only a safety note over the compendium's own text.
+  {
+    entry: { name: 'Comfrey', canonicalName: 'Symphytum officinale' },
+    safetyNotes: 'Never taken internally here. The leaf is for poultices and the compost heap.',
+  },
+  // An empty element list is an answer: the coven says Sea Salt has none.
+  {
+    entry: { name: 'Sea Salt', canonicalName: 'Sodium chloride' },
+    label: 'Kitchen Salt',
+    elements: [],
+    colors: ['grey', 'white'],
+  },
+];
+
+/**
+ * W's cupboard rows, keyed by the coven and the entry, ignoring `deleted_at` so
+ * a row the coven removed is not put back. The seed writes the rows directly,
+ * as it writes every other, not through the cupboard service. `demo` calls it
+ * with its own list, a superset of `STANDARD_CUPBOARD`.
+ */
+export async function insertMissingCupboardEntries(
+  tx: SeedTransaction,
+  held: readonly SeedCupboardEntry[],
+): Promise<void> {
+  const compendium = await tx
+    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
+    .from(ingredients)
+    .where(and(isNull(ingredients.workspaceId), isNull(ingredients.deletedAt)));
+  const ids = new Map(compendium.map((row) => [row.identityKey, row.id]));
+
+  await insertMissingBy(
+    tx,
+    workspaceCompendiumEntries,
+    held.map(({ entry, ...overrides }) => ({
+      workspaceId: WORKSPACE_W_ID,
+      ingredientId: requireFrom(
+        ids,
+        identityOf(entry),
+        () => `W's cupboard holds "${entry.name}", which is not in the compendium.`,
+      ),
+      ...overrides,
+    })),
+    { columns: ['workspaceId', 'ingredientId'], toRow: (row) => row },
+  );
+}
 
 /**
  * Every entry declares a `nomenclature`. The awkward ones are the point: five
@@ -469,6 +556,7 @@ export async function seedStandardContent(
   await insertMissingFolkNames(tx, ingredientIds);
   await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
+  await insertMissingCupboardEntries(tx, STANDARD_CUPBOARD);
 }
 
 /**

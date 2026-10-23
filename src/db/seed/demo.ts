@@ -15,12 +15,15 @@ import { COMPENDIUM } from './compendium/index';
 import { ingredientSlug } from '../../lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
+  STANDARD_CUPBOARD,
   WORKSPACE_W_ID,
   identityOf,
+  insertMissingCupboardEntries,
   insertMissingVariants,
   reslugIngredients,
   seedStandardContent,
 } from './standard';
+import type { SeedCupboardEntry } from './standard';
 import type {
   SeedDatabase,
   SeedLayerIngredient,
@@ -64,62 +67,16 @@ const CATS_CLAW: SeedWorkspaceIngredient = {
 };
 
 /**
- * A compendium entry W's cupboard holds, by the entry's formal name, with the
- * coven's own say over it (M12.13). Each override is null, so the compendium's
- * value shows, unless set here. An entry with none is in the cupboard and not
- * annotated.
+ * W's cupboard in `demo`: the `standard` rows, and the curated German Chamomile
+ * (which only `demo` seeds) relabelled, with a colour the compendium does not list.
  */
-export interface SeedCupboardEntry {
-  entry: { name: string; canonicalName: string };
-  label?: string;
-  description?: string;
-  safetyNotes?: string;
-  elements?: Array<'earth' | 'air' | 'fire' | 'water' | 'spirit'>;
-  celestialBodies?: string[];
-  zodiacSigns?: string[];
-  colors?: string[];
-}
-
 export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
-  // Rosemary the coven grows, under its own label and its own description.
-  {
-    entry: { name: 'Rosemary', canonicalName: 'Salvia rosmarinus' },
-    label: 'Garden Rosemary',
-    description: 'Cut from the bush by the back door, dried in bunches over the stove.',
-  },
+  ...STANDARD_CUPBOARD,
   // The compendium's German Chamomile, relabelled, with a colour it does not list.
   {
     entry: { name: 'German Chamomile', canonicalName: 'Matricaria chamomilla' },
     label: 'House Chamomile',
     colors: ['white', 'yellow'],
-  },
-  // In the cupboard and not annotated: the row alone.
-  { entry: { name: 'Ginger', canonicalName: 'Zingiber officinale' } },
-  // Mugwort under the coven's label, with a safety note and a second celestial body.
-  {
-    entry: { name: 'Mugwort', canonicalName: 'Artemisia vulgaris' },
-    label: 'Hedgerow Mugwort',
-    safetyNotes: 'Not for anyone pregnant. Keep the smoke away from the cat.',
-    celestialBodies: ['Moon', 'Neptune'],
-  },
-  // Lavender with a description, an element the compendium lacks and a sign of its own.
-  {
-    entry: { name: 'Lavender', canonicalName: 'Lavandula angustifolia' },
-    description: 'Grown along the south wall and stripped into paper bags in July.',
-    elements: ['air', 'water'],
-    zodiacSigns: ['Pisces'],
-  },
-  // Only a safety note over the compendium's own text.
-  {
-    entry: { name: 'Comfrey', canonicalName: 'Symphytum officinale' },
-    safetyNotes: 'Never taken internally here. The leaf is for poultices and the compost heap.',
-  },
-  // An empty element list is an answer: the coven says Sea Salt has none.
-  {
-    entry: { name: 'Sea Salt', canonicalName: 'Sodium chloride' },
-    label: 'Kitchen Salt',
-    elements: [],
-    colors: ['grey', 'white'],
   },
 ];
 
@@ -350,7 +307,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
         return ingredientId ? [{ ingredientId, variants: entry.variants }] : [];
       }),
     );
-    await insertMissingCupboardEntries(tx);
+    await insertMissingCupboardEntries(tx, WORKSPACE_W_CUPBOARD);
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
@@ -384,34 +341,6 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
       slug: ingredientSlug(entry.name, entry.canonicalName),
     }),
   });
-}
-
-/**
- * W's cupboard rows, keyed by the coven and the entry, ignoring `deleted_at` so
- * a row the coven removed is not put back. The seed writes the rows directly,
- * as it writes every other, not through the cupboard service.
- */
-async function insertMissingCupboardEntries(tx: SeedTransaction): Promise<void> {
-  const compendium = await tx
-    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
-    .from(ingredients)
-    .where(and(isNull(ingredients.workspaceId), isNull(ingredients.deletedAt)));
-  const ids = new Map(compendium.map((row) => [row.identityKey, row.id]));
-
-  await insertMissingBy(
-    tx,
-    workspaceCompendiumEntries,
-    WORKSPACE_W_CUPBOARD.map(({ entry, ...overrides }) => ({
-      workspaceId: WORKSPACE_W_ID,
-      ingredientId: requireFrom(
-        ids,
-        identityOf(entry),
-        () => `The demo cupboard holds "${entry.name}", which is not in the compendium.`,
-      ),
-      ...overrides,
-    })),
-    { columns: ['workspaceId', 'ingredientId'], toRow: (row) => row },
-  );
 }
 
 /**

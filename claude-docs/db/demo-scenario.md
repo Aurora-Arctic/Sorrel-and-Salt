@@ -54,9 +54,8 @@ by tier and identity, so the extra entries make none of them ambiguous.
   - **Sea Salt**, labelled `Kitchen Salt`, with `elements` an empty array (an
     answer, not an absence) and `colors` `grey` and `white`.
 
-  Only the `demo` scenario annotates anything: `standard` has no cupboard rows,
-  so a capture signed in as A against `standard` finds no Annotate action. The
-  action shows in a held entry's cupboard menu only for a role that may update
+  Six of the seven are `standard`'s rows ([standard-scenario.md](standard-scenario.md),
+  "W's cupboard"); `demo` adds German Chamomile. The Annotate action shows in a held entry's cupboard menu only for a role that may update
   ingredients.
 
   Every other column is null, so it reads as the compendium's value. These

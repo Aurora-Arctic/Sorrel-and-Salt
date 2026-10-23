@@ -124,12 +124,31 @@ rewritten. `tests/db/seed/demo.test.ts` proves, after a `demo` run with
 `standard` inside it, that every seeded entry holds exactly the live variants
 its literal names, Rosemary's `Herb` and `Oil` among them, and that a second run writes no variant.
 
-### No cupboard rows
+### W's cupboard
 
-`standard` seeds no `workspace_compendium_entries` rows (M12.26), and no coven
-ingredients: W and X start with empty cupboards, so a test that wants an entry
-in one inserts the row itself (`tests/support/db/insert-cupboard-entry.ts`).
-`demo` seeds W's ([demo-scenario.md](demo-scenario.md)).
+`standard` seeds six `workspace_compendium_entries` rows for W, five of them
+annotated, so a member of W who opens those compendium entries sees the Annotate
+action and an annotated entry (`STANDARD_CUPBOARD` in `src/db/seed/standard.ts`,
+written by `insertMissingCupboardEntries`, which keys on the coven and the entry
+and ignores `deleted_at`, so a row the coven removed stays removed):
+
+| Entry (formal name)                 | Row says                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| Rosemary (_Salvia rosmarinus_)      | label `Garden Rosemary`, a description                                               |
+| Ginger (_Zingiber officinale_)      | none: held and not annotated                                                         |
+| Mugwort (_Artemisia vulgaris_)      | label `Hedgerow Mugwort`, a safety note, celestial bodies `Moon` and `Neptune`       |
+| Lavender (_Lavandula angustifolia_) | a description, elements `air` and `water`, zodiac sign `Pisces`                      |
+| Comfrey (_Symphytum officinale_)    | a safety note                                                                        |
+| Sea Salt (_Sodium chloride_)        | label `Kitchen Salt`, elements `[]` (cleared on purpose), colours `grey` and `white` |
+
+Only compendium entries `standard` itself seeds can be named, since the curated
+shards are `demo`'s. X and every coven a test creates start with an empty
+cupboard, and no coven has any of its own ingredients, so a test that wants an
+entry in one inserts the row itself
+(`tests/support/db/insert-cupboard-entry.ts`). Until now `standard` seeded no
+cupboard rows (M12.26), so that tests start from an empty cupboard; a test that
+holds one of the six entries in W needs a coven of its own. `demo` adds German
+Chamomile to W's rows ([demo-scenario.md](demo-scenario.md)).
 
 ### One transaction, every vocabulary
 
