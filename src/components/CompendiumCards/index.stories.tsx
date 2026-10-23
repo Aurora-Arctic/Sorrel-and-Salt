@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import type { Route } from 'next';
+import { compendiumHref } from '../CompendiumList/href';
+import { detailsHeading } from '../IngredientEntry/details';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
@@ -31,6 +33,15 @@ const entry = (
   toxic: false,
   safetyNotes: null,
   recency: null,
+  // The Quick Look eye every card carries on the site (M12.5).
+  details: {
+    href: compendiumHref({ entry: slug }),
+    heading: detailsHeading({
+      name,
+      canonicalName,
+      nomenclature: canonicalName ? 'botanical' : 'none',
+    }),
+  },
 });
 
 // An entry as a curator sees it: Edit opens the compendium's edit dialog (M8.17).
