@@ -11,6 +11,7 @@ import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
+import { HoldingCount, holdingText } from './holding';
 import type { NamedAddIconProps } from './types';
 import './index.scss';
 
@@ -90,10 +91,12 @@ const AddIcon = ({
   ingredientId,
   covens,
   heldIn,
+  holding: holders = [],
 }: NamedAddIconProps): ReactElement => {
   // "Add to My Ingredients: Testwort, Formalis testis", the tip and the name alike, so the words
   // on screen are the name (WCAG 2.5.3), and a colon, since a formal name holds a comma of its own.
-  const label = `${ADD}: ${entry}`;
+  // Then how many of the viewer's covens hold it, and which (M12.55): nothing where none does.
+  const label = `${ADD}: ${entry}${holdingText(holders)}`;
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: label });
   const { anchorRef } = feedback;
@@ -160,7 +163,12 @@ const AddIcon = ({
             ref={plusRef}
             label={label}
             className="add-icon"
-            icon={glyph}
+            icon={
+              <>
+                {glyph}
+                <HoldingCount holding={holders} />
+              </>
+            }
             state={state}
             busy={busy && !state}
             busyLabel="Adding"
@@ -194,6 +202,7 @@ const AddIcon = ({
           }}
         >
           {glyph}
+          <HoldingCount holding={holders} />
           <span className="visually-hidden">{label}</span>
         </button>
       </IconTip>

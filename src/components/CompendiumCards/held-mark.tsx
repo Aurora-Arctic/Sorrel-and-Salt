@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { HoldingCount, holdingText } from '../AddIcon/holding';
 import IconTip, { CheckIcon } from '../IconTip';
 // The held check's look lives with the plus's, whose place it takes (claude-docs/components/add-icon.md).
 import '../AddIcon/index.scss';
@@ -24,12 +25,20 @@ export const HELD_ALL_TIP = 'In Every Cupboard';
  * so the keyboard reaches it (WCAG 2.1.1), and on a press, as InfoTip's ⓘ does, so a tap
  * shows it on touch (the owner's call, 2026-10-20). The press does nothing else.
  */
-export const HeldMark = ({ name }: { name: string }): ReactElement => {
-  const label = `${HELD_ALL_TIP}: ${name}`;
+export const HeldMark = ({
+  name,
+  holding = [],
+}: {
+  name: string;
+  /** Every coven of the viewer's that holds the entry, by name, any role: counted and named, as on the plus (M12.55). */
+  holding?: readonly string[];
+}): ReactElement => {
+  const label = `${HELD_ALL_TIP}: ${name}${holdingText(holding)}`;
   return (
     <IconTip tip={label} opensOnPress>
       <button type="button" className="add-icon--held" aria-label={label}>
         <CheckIcon />
+        <HoldingCount holding={holding} />
       </button>
     </IconTip>
   );
