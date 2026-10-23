@@ -11,7 +11,7 @@ import type {
 // function, so the component only draws it: it returns typed fragments, and the
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
-// text query, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
+// text query, the viewer's covens, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
 // then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
@@ -29,7 +29,7 @@ const text = (t: string): Part => ({ kind: 'text', text: t });
 
 // Values are shown in lower case, bar the three vocabularies whose entries are proper names
 // (deities, zodiac signs and celestial bodies), which keep their capitals. This is display only: the
-// fragment's `value` is untouched, so it still removes the right filter.
+// fragment's `value` keeps its own spelling.
 const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
 
 /** A list format's literal chunk: a bare word ("or") is a join, between its spaces; a comma stays text. */
@@ -101,6 +101,31 @@ export function buildSearchSentence({
   const query = filter.query?.trim();
   if (query) {
     clause(text('matching '), { kind: 'value', text: query, facet: 'query', value: query });
+  }
+
+  // Named by label only (M12.55): a label is a coven the viewer is in, and the read drops
+  // any other id, so an id with none filters nothing and is not named. A coven's name keeps
+  // its capitals, as a deity's does.
+  // Not In reads "not held in A or B". With no coven in the address at all it reads "not held in any of
+  // my covens", only the covens boxed, for a viewer with covens to name; covens in the address that all go unnamed filter
+  // nothing, under In or Not In, so they say nothing.
+  const covens = picked(filter.covens).filter((id) => labels.covens?.[id] !== undefined);
+  if (covens.length > 0) {
+    clause(
+      text(filter.covensNot ? 'not held in ' : 'held in '),
+      ...valueList('covens', covens, OR, (v) => label('covens', v)),
+    );
+  } else if (
+    filter.covensNot &&
+    picked(filter.covens).length === 0 &&
+    Object.keys(labels.covens ?? {}).length > 0
+  ) {
+    clause(text('not held in '), {
+      kind: 'value',
+      text: 'any of my covens',
+      facet: 'covensNot',
+      value: 'true',
+    });
   }
 
   const categories = picked(filter.categories);

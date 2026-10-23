@@ -13,13 +13,17 @@ import type { Session } from '../lib/session';
 
 import {
   compendiumFacets,
+  compendiumFacetsHeldIn,
   categoriesOf,
   countCompendium,
+  countCompendiumHeldIn,
   getIngredient,
   listCompendium,
+  listCompendiumHeldIn,
   readCompendiumEntry,
   variantsOf,
 } from '@/modules/ingredients';
+import type { CovenPick } from '@/modules/ingredients';
 import {
   categoryGroupsOf,
   formChoicesOf,
@@ -62,48 +66,98 @@ export const readCompendium = cache(
       (start) => countCompendium(filter, start),
       size,
     );
-    // Each entry's live forms, the Form column (MB.222): one batch for the
-    // page, through the read `Ingredient.variants` resolves through.
-    const forms = await variantsOf(
-      null,
-      page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
-    );
-    const variants = forms.map((answer) => {
-      // A compendium ref is never refused (MB.80).
-      if (answer instanceof Error) throw answer;
-      return answer;
-    });
-    // Each form's icon is its curated form's group's: two batches for the
-    // page, as `IngredientVariant.formChoice` reads them. A form that is
-    // only text, or whose form or group is retired, has none.
-    const choices = await formChoicesOf(variants.flat().flatMap(({ formId }) => formId ?? []));
-    const live = choices.flatMap((choice) => choice ?? []);
-    const groups = await formGroupsOf(live.map((choice) => choice.groupId));
-    const iconOfForm = new Map(
-      live.map((choice, i) => {
-        const group = groups[i];
-        return [choice.id, group === undefined || group instanceof Error ? null : group.icon];
-      }),
-    );
-    return {
-      ...page,
-      // The same forms for the public card, which wears the icon, the
-      // flag and the notes of each (M8.18).
-      variants: variants.map((own) =>
-        own.map(({ form, formId, toxic, safetyNotes }): SafetyVariant => {
-          const icon = (formId && iconOfForm.get(formId)) || null;
-          return { form, toxic, safetyNotes, formChoice: icon ? { group: { icon } } : null };
-        }),
-      ),
-      forms: variants.map((own) =>
-        own.map(({ form, formId }): CompendiumListForm => ({
-          name: form,
-          icon: (formId && iconOfForm.get(formId)) || null,
-        })),
-      ),
-    };
+    return withForms(page);
   },
 );
+
+/**
+ * `readCompendium` narrowed to the entries the viewer's picked covens hold (M12.55): the
+ * `covenIds` in `variables`, the In My Covens filter, read with the session, which proves each
+ * coven or drops it, and `covensNot`, its Not In. Per viewer, so never in the data cache
+ * (rule 6); the page reads it only with a coven picked or Not In, and a session, and
+ * `readCompendium` otherwise.
+ */
+export const readCompendiumHeldIn = cache(
+  async (
+    session: Session,
+    variables: string,
+    after: string | undefined,
+    before: string | undefined,
+    size: number = DEFAULT_PAGE_SIZE,
+  ) => {
+    const { covens, filter } = heldInOf(variables);
+    const page = await readNumberedPage(
+      { after, before },
+      (request) => listCompendiumHeldIn(session, covens, filter, request),
+      (start) => countCompendiumHeldIn(session, covens, filter, start),
+      size,
+    );
+    return withForms(page);
+  },
+);
+
+/**
+ * The page's variables as the held-in reads take them: the picked covens and
+ * Not In apart from the rest.
+ */
+function heldInOf(variables: string): {
+  covens: CovenPick;
+  filter: Parameters<typeof listCompendium>[0];
+} {
+  const {
+    covenIds = [],
+    covensNot,
+    ...filter
+  } = JSON.parse(variables) as Parameters<typeof listCompendium>[0] & {
+    covenIds?: readonly string[];
+    covensNot?: boolean;
+  };
+  return { covens: covensNot ? { covenIds, covensNot } : { covenIds }, filter };
+}
+
+/** A page of entries with each one's live forms and their icons, for the table and the cards. */
+async function withForms<Page extends { edges: readonly { node: { id: string } }[] }>(page: Page) {
+  // Each entry's live forms, the Form column (MB.222): one batch for the
+  // page, through the read `Ingredient.variants` resolves through.
+  const forms = await variantsOf(
+    null,
+    page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
+  );
+  const variants = forms.map((answer) => {
+    // A compendium ref is never refused (MB.80).
+    if (answer instanceof Error) throw answer;
+    return answer;
+  });
+  // Each form's icon is its curated form's group's: two batches for the
+  // page, as `IngredientVariant.formChoice` reads them. A form that is
+  // only text, or whose form or group is retired, has none.
+  const choices = await formChoicesOf(variants.flat().flatMap(({ formId }) => formId ?? []));
+  const live = choices.flatMap((choice) => choice ?? []);
+  const groups = await formGroupsOf(live.map((choice) => choice.groupId));
+  const iconOfForm = new Map(
+    live.map((choice, i) => {
+      const group = groups[i];
+      return [choice.id, group === undefined || group instanceof Error ? null : group.icon];
+    }),
+  );
+  return {
+    ...page,
+    // The same forms for the public card, which wears the icon, the
+    // flag and the notes of each (M8.18).
+    variants: variants.map((own) =>
+      own.map(({ form, formId, toxic, safetyNotes }): SafetyVariant => {
+        const icon = (formId && iconOfForm.get(formId)) || null;
+        return { form, toxic, safetyNotes, formChoice: icon ? { group: { icon } } : null };
+      }),
+    ),
+    forms: variants.map((own) =>
+      own.map(({ form, formId }): CompendiumListForm => ({
+        name: form,
+        icon: (formId && iconOfForm.get(formId)) || null,
+      })),
+    ),
+  };
+}
 
 /**
  * The group icon each curated form wears, by the form's name folded to lower
@@ -189,6 +243,15 @@ export const readCategories = cache(async (): Promise<CompendiumCategoryChoice[]
 export const readFacets = cache(async (variables: string) => {
   const filter: Parameters<typeof compendiumFacets>[0] = JSON.parse(variables);
   return compendiumFacets(filter);
+});
+
+/**
+ * `readFacets` beside `readCompendiumHeldIn` (M12.55): each count only over the entries the
+ * picked covens hold. Per viewer, so never in the data cache; `readFacets` with no coven picked.
+ */
+export const readFacetsHeldIn = cache(async (session: Session, variables: string) => {
+  const { covens, filter } = heldInOf(variables);
+  return compendiumFacetsHeldIn(session, covens, filter);
 });
 
 /**

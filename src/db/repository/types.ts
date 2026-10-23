@@ -772,6 +772,18 @@ export interface IngredientFilter {
   withoutForms?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
+  /**
+   * The compendium only (M12.55): keep an entry when a live cupboard row of
+   * any one of these covens names it. A proof each, so a coven the caller is
+   * not in cannot be named; an empty list is no filter.
+   */
+  heldIn?: readonly Membership[];
+  /**
+   * The compendium only (M12.55, Not In): keep an entry when no live cupboard
+   * row of any of these covens names it. A proof each, as `heldIn`; an empty
+   * list is no filter.
+   */
+  notHeldIn?: readonly Membership[];
 }
 
 /** One facet value and how many entries the list would hold with it chosen (M12.3). */

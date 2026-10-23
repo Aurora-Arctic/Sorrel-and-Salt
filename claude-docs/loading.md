@@ -53,13 +53,18 @@ arrives at once never flashes them. The wait is a CSS animation delay
 ### Region
 
 The region is the part of the page that is about to change. While it changes,
-the old content is taken away and the [`Skeleton`](components/skeleton.md) of
-the new content stands in its place. The skeleton has five shapes: `table`,
+the old content is hidden and put out of reach (`visibility: hidden`, `inert`,
+`aria-hidden`) and the [`Skeleton`](components/skeleton.md) of the new content
+stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the
+old page stays mounted at its full height beneath the skeleton rather than
+being swapped out, so the page does not shrink before the browser saves the
+scroll position that Back returns to (MB.271; [`SkeletonFade`](components/skeleton-fade.md),
+"The page is held, not swapped"). The skeleton has five shapes: `table`,
 `cards`, `form` and `page` for a whole page, and `line` for one line of text
 that is still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`SkeletonFade`](components/skeleton-fade.md)). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once, as `arrived` does.
 
 A skeleton shows **at once**, with no wait, because the press has already
-removed the old content: holding the skeleton back would leave an empty panel
+hidden the old content: holding the skeleton back would leave an empty panel
 for 100ms, which is the jump the skeleton is there to avoid. The Skeleton
 itself fades in over 150ms.
 
@@ -167,8 +172,9 @@ request failed ([React, `useOptimistic`](#references)). One component,
 router, and every navigation and refresh the site starts is a transition it
 opens. Nothing is ever settled by hand. The first version kept the transition
 in the component that pressed the link and cleared the wait when that component
-unmounted; `MainBody` and `SectionBody` swap their children for a skeleton,
-which unmounts the pressed link, so the wait ended at once and the old page came
+unmounted; `MainBody` and `SectionBody` then swapped their children for a
+skeleton (they now hold the page hidden beneath it, MB.271), which unmounted
+the pressed link, so the wait ended at once and the old page came
 back (the admin navigation, the coven home contents links and Create Coven
 were all hit). Owning the wait above every region removes that whole class of
 bug.
@@ -258,10 +264,12 @@ with the value already put back.
   provider navigate through the hook directly; they keep their own
   skeletons.
 
-**What `MainBody` replaces.** `MainBody` (`src/components/AppShell/main-body.tsx`)
-answers a `main` target by replacing everything inside `.app-shell__main` with one
-`<main>` holding the skeleton, so the page frame is replaced as well as the
-page's content. The `<main>` takes the frame the target names, top-aligned
+**What `MainBody` covers.** `MainBody` (`src/components/AppShell/main-body.tsx`)
+answers a `main` target by hiding everything inside `.app-shell__main` and laying
+one `<main>` holding the skeleton over it, so the page frame is covered as well
+as the page's content. The hidden page stays mounted at its full height, and the
+skeleton is pinned to the top of the window under the bar, wherever the page
+was scrolled to (MB.271). The `<main>` takes the frame the target names, top-aligned
 and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`,
 `narrow` uses `page-frame page-frame--narrow`, and no frame the standard
 `page-frame`. A narrow `form` sits on a `panel`, as the real form does.
@@ -277,8 +285,8 @@ frame's bar. In both chromes the page sits in a wrapper `div`
 (`.app-shell__main`, `.public-frame__main`), the skip link's target is an
 empty span just before it, and the `(public)` layout renders the page's own
 `<main>` inside the wrapper:
-during a wait `MainBody` swaps that `main` for the skeleton's, so the page
-still has one `main` and one h1. A `main` on the wrapper would have nested the
+during a wait `MainBody` hides that `main` (`aria-hidden`, `inert`) and lays
+the skeleton's over it, so the page still exposes one `main` and one h1. A `main` on the wrapper would have nested the
 two. There is no `loading.tsx` here either, so a direct request for an unknown
 entry still answers 404 and a moved one 308.
 

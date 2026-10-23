@@ -26,13 +26,14 @@ test.beforeAll(async () => {
 const ADD = 'Add to My Ingredients';
 const HELD = 'In Every Cupboard';
 const NAME = 'Fixture Holdwort';
+const COVEN = 'Fixture Coven Add';
 
 test('a member adds a compendium entry with the plus, the check shows, and the coven’s list shows it', async ({
   page,
   browser,
   baseURL,
 }) => {
-  const coven = await seedCoven(page, 'Fixture Coven Add', 'compendium-add.test', {
+  const coven = await seedCoven(page, COVEN, 'compendium-add.test', {
     A: 'owner',
     B: 'member',
     C: 'viewer',
@@ -89,7 +90,7 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
     );
     await card(page).getByRole('button', { name: ADD }).click();
     await expect(card(page).getByRole('button', { name: HELD })).toHaveAccessibleName(
-      `${HELD}: ${NAME}`,
+      `${HELD}: ${NAME}. In 1 coven: ${COVEN}`,
     );
     await expect(card(page).getByRole('button', { name: ADD })).toHaveCount(0);
     expect(await heldRows(coven.id)).toHaveLength(1);

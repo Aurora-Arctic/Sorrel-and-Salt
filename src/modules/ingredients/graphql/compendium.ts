@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
-import { compendiumFacets } from '../services/ingredient-facets';
+import { compendiumFacetsHeldIn } from '../services/compendium-held-in';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
@@ -111,8 +111,25 @@ builder.queryField('compendiumFacets', (t) =>
       withoutReferences: t.arg.boolean({ required: false }),
       withoutForms: t.arg.boolean({ required: false }),
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
+      // M12.55: the In My Covens filter, the viewer's own; signed out, or naming a coven
+      // they are not in, it filters nothing and the counts are the cached public ones.
+      covenIds: t.arg.idList({
+        required: false,
+        description:
+          'Counts only entries a cupboard of any one of these covens holds, by id. A coven the viewer is not in is ignored.',
+      }),
+      covensNot: t.arg.boolean({
+        required: false,
+        description:
+          "Counts only entries none of the covenIds holds instead; with no covenIds, none of the viewer's covens. If every id given is ignored, nothing is filtered.",
+      }),
     },
-    resolve: (_root, args) => compendiumFacets(filterOf(args)),
+    resolve: (_root, { covenIds, covensNot, ...args }, { session }) =>
+      compendiumFacetsHeldIn(
+        session,
+        { covenIds: covenIds ?? [], covensNot: covensNot ?? undefined },
+        filterOf(args),
+      ),
   }),
 );
 
