@@ -33,13 +33,15 @@
   }
 }
 
-// A story that draws the whole app shell (`shellFrameParameters`): the frame steps aside, since
-// the site has no gutter round the shell, and the phone's bottom bar is `position: fixed`. A
-// transformed ancestor is the containing block for a fixed box, so the default frame would pin the
-// bar to the end of the page rather than the screen. Not the default, because ThemeToggle and the
-// skip link rely on the frame's transform and clip to stay inside it; here the preview window is
-// the viewport they stand in for anyway.
-.workshop-story-frame--bare {
+// A state that draws the whole app shell (ShellFrame, ./shell-frame.tsx) or the signed-out frame
+// (`.public-frame`): the frame steps aside while it holds one, since the site has no gutter round
+// the shell, and the phone's bottom bar is `position: fixed`. A transformed ancestor is the
+// containing block for a fixed box, so the default frame would pin the bar to the end of the page
+// rather than the screen. Per state, not per story: a story whose dropdown also holds states with
+// no shell keeps the frame for those. Not the default, because ThemeToggle and the skip link rely
+// on the frame's transform and clip to stay inside it; here the preview window is the viewport
+// they stand in for anyway. `:has()` is Baseline Widely Available, the floor in package.json.
+.workshop-story-frame:has(.app-shell, .public-frame) {
   transform: none;
   overflow: visible;
   padding: 0;

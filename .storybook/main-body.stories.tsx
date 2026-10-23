@@ -3,7 +3,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../src/lib/navigation';
 import { Navigating } from './navigating';
 import { route } from './route';
-import { ShellFrame, shellFrameParameters } from './shell-frame';
+import { ShellFrame } from './shell-frame';
 
 // The shell's body (src/components/AppShell/main-body.tsx), drawn by the shell
 // itself: a page, and the one `page` skeleton that takes its place while a
@@ -11,7 +11,6 @@ import { ShellFrame, shellFrameParameters } from './shell-frame';
 // arrives (./navigating.tsx), so the wait stays; "Start Over" ends it.
 const meta = {
   title: 'Feedback / Main Body',
-  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).

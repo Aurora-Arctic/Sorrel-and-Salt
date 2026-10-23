@@ -1,11 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
-import {
-  FIXTURE_WORKSPACES,
-  ShellFrame,
-  shellFrameParameters,
-} from '../../../.storybook/shell-frame';
+import { FIXTURE_WORKSPACES, ShellFrame } from '../../../.storybook/shell-frame';
 
 // Render-only; behaviour is asserted in tests/components/AppShell. Each story
 // draws the shell as a layout does (.storybook/shell-frame.tsx), around a stub
@@ -13,7 +9,6 @@ import {
 // workshop's router goes nowhere, so a press only closes a list.
 const meta = {
   title: 'Shell / App Shell',
-  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).

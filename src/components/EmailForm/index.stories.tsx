@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import { verifyErrorMessage } from '../../lib/account-email';
 import EmailForm from '.';
 import type { EmailFormProps } from './types';
@@ -92,7 +92,6 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Ready To Resend' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,

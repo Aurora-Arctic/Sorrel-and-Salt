@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
-import { shellFrameParameters } from '../../../.storybook/shell-frame';
 import { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
@@ -70,7 +69,6 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'People Current' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,

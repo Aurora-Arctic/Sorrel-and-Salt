@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import { ADMIN_PAGES } from '../AdminNav/sections';
 import TabbedPage from '../TabbedPage';
 import UserList, { PauseControl } from '.';
@@ -27,7 +27,6 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
 // hover or focus an icon to see its tip.
 const meta = {
   title: 'Admin / User List',
-  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).

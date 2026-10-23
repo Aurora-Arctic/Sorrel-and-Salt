@@ -9,7 +9,7 @@ import {
   NO_FILTER as COMPENDIUM_NO_FILTER,
 } from '../../../.storybook/compendium-fixtures';
 import PageHeader from '../PageHeader';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import { route } from '../../../.storybook/route';
 
 // Render-only; what shows and when is asserted in tests/components/CovenCards. The filter
@@ -185,7 +185,6 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   // The page around the list, as src/app/(shell)/coven/[slug]/ingredients/page.tsx draws it: the

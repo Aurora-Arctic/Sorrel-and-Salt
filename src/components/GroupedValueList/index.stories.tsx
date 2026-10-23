@@ -5,7 +5,6 @@ import Link from 'next/link';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
-import { shellFrameParameters } from '../../../.storybook/shell-frame';
 import { FIXTURE_EDIT, GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
 import { ListNavigationContext } from '../ListFrame';
 import { groupedValuesHref } from './href';
@@ -279,7 +278,6 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,

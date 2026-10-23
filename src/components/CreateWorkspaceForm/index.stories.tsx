@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Notice from '../Notice';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import { setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import CreateWorkspaceForm from '.';
 
@@ -65,7 +65,6 @@ const CREATE_STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Empty' },
   argTypes: {
     state: { control: 'select', options: Object.keys(CREATE_STATES), mapping: CREATE_STATES },

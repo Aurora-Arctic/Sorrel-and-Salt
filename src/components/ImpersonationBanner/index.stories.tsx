@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { hangAuth, refuseAuth, useMockHandlers } from '../../../.storybook/mock-api';
 import { usePressOnMount } from '../../../.storybook/press';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import ImpersonationBanner from '.';
 
 // Render-only; behaviour is asserted in tests/components/ImpersonationBanner.
@@ -13,7 +13,6 @@ import ImpersonationBanner from '.';
 // emulate, it sits in the page's flow at the top, shown in full.
 const meta = {
   title: 'Layout / Impersonation Banner',
-  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;

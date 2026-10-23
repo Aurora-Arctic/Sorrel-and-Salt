@@ -4,7 +4,6 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { FIXTURE_EDIT, GROUP_NAMES } from '../../../.storybook/fixtures';
-import { shellFrameParameters } from '../../../.storybook/shell-frame';
 import GroupList from '.';
 import { slugify } from '../../lib/slugify';
 import { groupsHref } from './href';
@@ -142,7 +141,6 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { press, pressLast, useSteps } from '../../../.storybook/press';
 import { route } from '../../../.storybook/route';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import InviteDialog from '../InviteDialog';
 import TabbedPage from '../TabbedPage';
 import PendingInvitations from '.';
@@ -11,7 +11,6 @@ import type { PendingInvitationEntry } from './types';
 // Render-only; behaviour is asserted in tests/components/PendingInvitations.
 const meta = {
   title: 'Coven / Invitations Sent',
-  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
