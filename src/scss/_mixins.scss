@@ -534,8 +534,8 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
 
 // The box around the sections: a stack on a phone, and past a tablet's width
 // the one formatting context that Details' floats share and stay inside.
-// `$text` is the selector of a section's text, the first section's (Details)
-// floated left.
+// `$text` is the selector of a section's text, the one section that has it (Details,
+// whichever place it holds in the body) floated left.
 @mixin entry-body($text) {
   @include stack(6);
 
@@ -552,12 +552,22 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
       margin-block-start: space(6);
     }
 
-    > :first-child > #{$text} {
+    > * > #{$text} {
       float: left;
       clear: left;
       width: $-entry-text-column;
     }
   }
+}
+
+// The rule under an entry section's heading (MB.121, the owner's choice of 2026-10-23): a
+// hairline across the heading's own width, so each section starts on a visible line and
+// Stock, the shortest, reads as a section of its own without a box. The Stock, Details,
+// Forms and References headings all take it; it ends where the heading does, so it never
+// runs under Details' side column. claude-docs/design-decisions/mb.121-workspace-ingredients-review.md.
+@mixin entry-heading-rule {
+  padding-block-end: space(2);
+  border-block-end: 1px solid $hairline;
 }
 
 // A section of the body's two columns (Details, Stock): its heading, its text,

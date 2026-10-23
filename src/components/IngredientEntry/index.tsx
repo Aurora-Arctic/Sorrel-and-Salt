@@ -401,8 +401,8 @@ const IngredientEntry = ({
         <PageNav
           label="On This Page"
           entries={[
-            { href: '#details', label: 'Details' },
             ...(stock ? [{ href: '#stock' as const, label: 'Stock' }] : []),
+            { href: '#details', label: 'Details' },
             ...variants.map(({ variant }, at) => ({
               href: `#${anchors[at]}` as const,
               label: formLabel(variant.form),
@@ -435,6 +435,17 @@ const IngredientEntry = ({
       {/* One box round the sections, so past a tablet's width their text and
           their side columns run as two independent columns (`entry-body`). */}
       <div className="ingredient-entry__body">
+        {/* What the coven has of it, first, ahead of what the entry is (the owner chose this, MB.121). */}
+        {stock && (
+          <StockSection
+            stock={stock}
+            variants={variants}
+            ingredientId={entry.id}
+            name={cardName(shown.name, shown.canonicalName)}
+            formalName={entry.canonicalName}
+          />
+        )}
+
         <section
           id="details"
           className="ingredient-entry__section"
@@ -489,17 +500,6 @@ const IngredientEntry = ({
             </ListBlock>
           </div>
         </section>
-
-        {/* What the coven has of it, between what the entry is and the forms it comes in. */}
-        {stock && (
-          <StockSection
-            stock={stock}
-            variants={variants}
-            ingredientId={entry.id}
-            name={cardName(shown.name, shown.canonicalName)}
-            formalName={entry.canonicalName}
-          />
-        )}
 
         {/* The forms, headed so
           the forms read as one part of the page (the owner's call), each

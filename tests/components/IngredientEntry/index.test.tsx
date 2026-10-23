@@ -1397,6 +1397,31 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(lineOf('Testoil')).toHaveTextContent('No Jar');
   });
 
+  it('puts Stock first, above Details, in the page and in the jump menu (MB.121)', () => {
+    renderStock([jar(root, 250)]);
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(headings.slice(0, 3)).toEqual(['Stock', 'Details', 'Forms']);
+
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href'))
+        .slice(0, 2),
+    ).toEqual(['#stock', '#details']);
+  });
+
+  it('leaves Details first when the entry shows no Stock section', () => {
+    renderEntry();
+
+    expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('Details');
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(within(nav).getAllByRole('link')[0]).toHaveAttribute('href', '#details');
+  });
+
   const shelfOrder = () =>
     within(section())
       .getAllByRole('listitem')
@@ -1509,16 +1534,6 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(within(section()).queryByRole('listitem')).toBeNull();
     expect(within(section()).getByText('No stock recorded.')).toBeInTheDocument();
     expect(headingButton()).toBeInTheDocument();
-  });
-
-  it('lists Stock in the jump menu after Details', () => {
-    renderStock([jar(root, 250)]);
-
-    const nav = screen.getByRole('navigation', { name: 'On This Page' });
-    const links = within(nav)
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'));
-    expect(links.slice(0, 2)).toEqual(['#details', '#stock']);
   });
 
   it('draws no Stock section without stock, as for a compendium entry the coven does not hold', () => {

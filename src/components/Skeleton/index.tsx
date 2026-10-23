@@ -108,8 +108,8 @@ const StockPart = (): ReactElement => (
 // In the entry's body box, so Details' columns and the forms lay out as the page's do.
 const EntrySections = (): ReactElement => (
   <div className="skeleton__entry-body">
-    <EntryPart />
     <StockPart />
+    <EntryPart />
     <div className="skeleton__entry-forms">
       <span className="skeleton__heading" />
       <EntryPart />

@@ -17,20 +17,23 @@ is done and committed on
 
 ## The owner's answers (2026-10-23)
 
-| Question                                        | Answer                                                                   |
-| ----------------------------------------------- | ------------------------------------------------------------------------ |
-| Keep the focus-ring commit                      | Keep it                                                                  |
-| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                     |
-| A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch |
-| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                 |
-| Remove the mocks                                | Yes: removed 2026-10-23                                                  |
-| Proposal P1, the symbol on the shelf            | P1, the symbol                                                           |
+| Question                                        | Answer                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Keep the focus-ring commit                      | Keep it                                                                   |
+| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                      |
+| A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch  |
+| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                  |
+| Remove the mocks                                | Yes: removed 2026-10-23                                                   |
+| Proposal P1, the symbol on the shelf            | P1, the symbol                                                            |
+| Stock set apart more clearly                    | C plus A, 2026-10-23: Stock first, and a rule under every section heading |
 
 ## What was changed
 
 | Change                                                                                            | Kind                          | Can be dropped alone |
 | ------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------- |
 | The entry page's Stock section loses its `.panel` box                                             | Required by MB.121            | No                   |
+| Stock is the first section, above Details, and the jump menu follows (option C)                   | Owner's answer                | Yes                  |
+| Every section's h2 stands over a `$hairline` rule, `entry-heading-rule` (option A)                | Owner's answer                | Yes                  |
 | Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring      | Accessibility fix             | Yes                  |
 | The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition                    | No                   |
 | Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal, chosen by the owner | Yes                  |
@@ -43,10 +46,38 @@ differs. The viewer's added line changes what a viewer reads, nothing else.
 ## The Stock section without its panel
 
 The Stock section on the entry page sat in a `.panel` box, the only section
-there that did. The box is gone. What sets the section apart now is what sets
-every other section of the page apart: its `h2` heading, "Stock", and the
-page's section spacing. The shelf of jars beneath it is drawn and needs no box
-to read as one group ([`ingredient-entry.md`](../components/ingredient-entry.md)).
+there that did. The box is gone, because no other section is boxed and the
+jar's shine is drawn in the card colour, so it faded on a card-coloured panel.
+Without it, Stock looked like every other section: the same heading, the same
+spacing, and the smallest content on the page (two jars about 160px wide),
+between Details and Forms, which are both tall. The owner asked for a more
+obvious way to set it apart, in a way the page's other sections can share.
+
+**What sets it apart now** (the owner chose options C and A on 2026-10-23):
+
+- **C, Stock comes first.** It is the first section, directly under the title
+  block and above Details, at every width. The jump menu lists it first. Where
+  an entry has no Stock section (the public compendium, or a compendium entry
+  the coven does not hold) nothing else changes order. NN/g's eye-tracking
+  work finds people read "usually across the upper part of the content area"
+  and give the first lines more gazes than later ones.[^pernice]
+- **A, a rule under every section heading.** Stock, Details, Forms and
+  References each have a `$hairline` rule under their h2, from one mixin
+  (`entry-heading-rule` in `_mixins.scss`). GOV.UK's section break is "a
+  thematic break between sections of content", and can show "a separator
+  line".[^govuksection] NN/g warns that boxes added out of caution "can result
+  in busy, cluttered designs", and that whitespace and proximity are often
+  enough; a rule is the lighter cue.[^harleyregion] The rule ends where its
+  heading does, so on a tablet or wider it stops at the text column and never
+  runs under Details' side column; the Forms and References headings span the
+  whole body, so their rules do too.
+
+Options not chosen: a tinted full-bleed band (it either fades the jar's shine
+or needs a new token, and it would be one different section again), and a
+leading icon in every heading (it adds a mark but little weight). NN/g also
+warns that full-width bordered sections can create "false floors" that make
+people stop scrolling.[^harleyregion] The reasons given here are the design
+judgement of the person who built it, not findings of those sources.
 
 ## Proposal P1: a symbol beside a Low or Out amount
 
@@ -221,17 +252,17 @@ not;[^baymard] the sentence is that overview. No change.
 
 ## The acceptance criteria
 
-| Criterion                                                                 | How it is met                                                                                             |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                   |
-| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add |
-| The Stock section has no `.panel`, and the record says what sets it apart | Removed; its heading and spacing, as every section                                                        |
-| The DRY merges are listed                                                 | "The DRY merges", above                                                                                   |
-| Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                             |
-| The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                            |
-| Low and Out are never shown by colour alone                               | In words to a screen reader; by sight, the symbol before the amount (P1)                                  |
-| Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                             |
-| Each change names its source in Chicago form                              | The notes below                                                                                           |
+| Criterion                                                                 | How it is met                                                                                                       |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                             |
+| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add           |
+| The Stock section has no `.panel`, and the record says what sets it apart | Removed; it is the first section and every section's h2 has a hairline rule ("The Stock section without its panel") |
+| The DRY merges are listed                                                 | "The DRY merges", above                                                                                             |
+| Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                                       |
+| The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                                      |
+| Low and Out are never shown by colour alone                               | In words to a screen reader; by sight, the symbol before the amount (P1)                                            |
+| Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                                       |
+| Each change names its source in Chicago form                              | The notes below                                                                                                     |
 
 ## Defects to mint
 
@@ -255,3 +286,9 @@ and are fixed in this branch.
 [^kaplan]: Kate Kaplan, "Designing Empty States in Complex Applications: 3 Guidelines," Nielsen Norman Group, September 19, 2021, <https://www.nngroup.com/articles/empty-state-interface-design/>.
 
 [^baymard]: Kathryn Reeves, "Display 'Applied Filters' in an Overview (28% Don't)," Baymard Institute, October 6, 2020, updated May 13, 2026, <https://baymard.com/research-articles/how-to-design-applied-filters>.
+
+[^pernice]: Kara Pernice, "F-Shaped Pattern of Reading on the Web: Misunderstood, But Still Relevant (Even on Mobile)," Nielsen Norman Group, November 12, 2017, <https://www.nngroup.com/articles/f-shaped-pattern-reading-web-content/>.
+
+[^govuksection]: GOV.UK Design System, "Section Break," accessed October 23, 2026, <https://design-system.service.gov.uk/styles/section-break/>.
+
+[^harleyregion]: Aurora Harley, "The Principle of Common Region: Containers Create Groupings," Nielsen Norman Group, July 12, 2020, <https://www.nngroup.com/articles/common-region/>.

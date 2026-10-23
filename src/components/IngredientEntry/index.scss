@@ -331,6 +331,12 @@ $formal-line: $icon-size;
   margin: 0;
 }
 
+// Every section's h2 stands over a rule (`entry-heading-rule`): Details' here, Stock's on its
+// head row below, the forms' and the references' beside theirs.
+.ingredient-entry__section > h2 {
+  @include entry-heading-rule;
+}
+
 .ingredient-entry__text {
   @include stack(4);
 }
@@ -392,6 +398,9 @@ $formal-line: $icon-size;
   justify-content: space-between;
   gap: space(2);
 
+  // The rule runs under the heading and its button as one row.
+  @include entry-heading-rule;
+
   > h2 {
     margin: 0;
   }
@@ -416,6 +425,8 @@ $formal-line: $icon-size;
   @include entry-forms;
 
   > h2 {
+    @include entry-heading-rule;
+
     margin: 0;
   }
 }
@@ -509,6 +520,8 @@ $formal-line: $icon-size;
   scroll-margin-top: calc(#{$top-inset} + #{space(4)});
 
   > h2 {
+    @include entry-heading-rule;
+
     margin: 0;
   }
 }
