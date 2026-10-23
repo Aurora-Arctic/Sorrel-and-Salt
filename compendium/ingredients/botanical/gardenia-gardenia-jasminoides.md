@@ -111,3 +111,7 @@ seedUpdate: 9e1d410327953359f46f0219051303a8e1feef52507910f61b147e0ef4df4894
 # Gardenia
 
 Common gardenia, also called Cape jasmine, is a large shrub with glossy, lance-shaped leaves and creamy white flowers, either single with six to eight spreading petals or double and rather like a rose, whose scent recalls jasmine; the ribbed, oblong fruit ripens orange. It has been part of Traditional Chinese Medicine for more than two thousand years. The plant reached England in the middle of the eighteenth century and America soon afterwards, and its strong, heady fragrance made it hugely popular, both in perfume and as an emblem of the antebellum South. In magic it is a plant of the Moon and of healing, love and peace. Kynes brings its white flowers to esbat rituals for the power of Luna, holds a flower in spiritual meditation, and sprinkles the petals or diffuses the scent when working with spirit guides. Cunningham sets the fresh blossoms in sickrooms and on healing altars to help recovery, adds the dried petals to healing incenses and mixtures, scatters dried gardenia around a room to bring a peaceful atmosphere, and puts it into Moon incenses. He also uses gardenias in love spells and to draw good spirits during ritual, and credits them with very high spiritual vibrations.
+
+#### Edit Notes for Claude
+
+- Deity gap: Luna (Kynes, under "Gardenia"), not in the vocabulary; link once M14.15 adds it.
