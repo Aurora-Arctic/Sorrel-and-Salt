@@ -627,7 +627,7 @@
   // pages, the 403, the invitation. One column, its children a `space(6)`
   // apart, held below the top inset so a page with the impersonation banner
   // above it still fits the window; inside the application shell, below the
-  // shell's bar too (`.app-shell .page-frame`, next).
+  // shell's or the public frame's bar too (`:is(.app-shell, .public-frame) .page-frame`, next).
   // claude-docs/styling.md, "The page frame".
   .page-frame {
     box-sizing: border-box;
@@ -642,7 +642,7 @@
 
   // The shell's bar takes room above the frame, so the frame is shorter by it
   // and a centred page still fits the window without a scroll.
-  .app-shell .page-frame {
+  :is(.app-shell, .public-frame) .page-frame {
     min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height});
   }
 
@@ -659,7 +659,7 @@
   }
 
   // A jump to a section lands below the sticky bar, not under it.
-  .app-shell .page-frame__section {
+  :is(.app-shell, .public-frame) .page-frame__section {
     scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
   }
 

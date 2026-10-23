@@ -321,7 +321,7 @@ $formal-line: $icon-size;
   scroll-margin-top: calc(#{$top-inset} + #{space(4)});
 }
 
-.app-shell .ingredient-entry__section {
+:is(.app-shell, .public-frame) .ingredient-entry__section {
   scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 
@@ -516,7 +516,7 @@ $formal-line: $icon-size;
   }
 }
 
-.app-shell .ingredient-entry__references {
+:is(.app-shell, .public-frame) .ingredient-entry__references {
   scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 

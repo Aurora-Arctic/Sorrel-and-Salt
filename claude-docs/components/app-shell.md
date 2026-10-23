@@ -115,7 +115,7 @@ and no fill, so a hover's quiet wash still shows on it. Controls are
 leaves the bar and the account button is an avatar alone; at or under
 `$shell-brand-width` the brand shortens; the theme disc stays at every width.
 `_primitives.scss` takes the
-bar off `.page-frame`'s height and pads `.app-shell__main` for the bottom bar.
+bar off `.page-frame`'s height (for the public frame's bar too, `:is(.app-shell, .public-frame)`) and pads `.app-shell__main` for the bottom bar. The root's `scroll-padding-top` and the `scroll-margin-top` of `.page-frame__section` and the ingredient entry's sections are keyed the same way, so a jump or a focus lands below either frame's sticky bar.
 
 ## Accessibility
 

@@ -86,3 +86,19 @@ test('the signed-out page is accessible and holds at 375px', async ({ page }) =>
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
+
+// The public frame's bar is sticky, so a focused control or a jump target must land below it.
+// The page rules that do that were once the shell's alone; this proves the public page has them.
+test('the signed-out page keeps a scrolled-to control clear of the sticky bar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 700 });
+  await page.goto('/compendium');
+  const bar = page.getByRole('banner');
+  await expect(bar).toBeVisible();
+  const barBottom = (await bar.boundingBox())!.y + (await bar.boundingBox())!.height;
+  const padding = await page.evaluate(
+    () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+  );
+  expect(padding).toBeGreaterThan(barBottom);
+});
