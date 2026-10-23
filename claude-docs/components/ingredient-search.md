@@ -331,15 +331,15 @@ separated by a comma. An example with every kind:
   removing it still finds the filter.
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   celestial bodies, which belongs to the linked value ("the Sun").
-- **The viewer’s covens** (M12.55) read "held in Hearthside or Moonwell", each coven by its name with its capitals kept, joined with "or", and each a chip that drops that coven from the address. Only an id with a label is named: the page labels the viewer’s own covens alone, and the read ignores any other id, so a foreign or malformed id in the address filters nothing and says nothing. The fragments carry the facet `covens` and the coven’s id as `value`. Under Not In (`covensNot`) the same list reads "not held in Hearthside or Moonwell". With Not In and no coven in the address at all, for a viewer with covens to name, it reads "in none of my covens", one fragment with the facet `covensNot`. If the address names covens and none has a label, it says nothing, under In or Not In, as the read applies nothing.
+- **The viewer’s covens** (M12.55) read "held in Hearthside or Moonwell", each coven by its name with its capitals kept, joined with "or". Each is plain text, as every value in the sentence is (`SearchSentence` draws values as text, never links), and removes nothing: a coven is removed in the panel. Only an id with a label is named: the page labels the viewer’s own covens alone, and the read ignores any other id, so a foreign or malformed id in the address filters nothing and says nothing. The fragments carry the facet `covens` and the coven’s id as `value`. Under Not In (`covensNot`) the same list reads "not held in Hearthside or Moonwell". With Not In and no coven in the address at all, for a viewer with covens to name, it reads "in none of my covens", one fragment with the facet `covensNot`. If the address names covens and none has a label, it says nothing, under In or Not In, as the read applies nothing.
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
 - **Source, In Stock and Low Stock Only** belong to a coven's list and are named
   whenever the filter holds them. `source` (`local` or `compendium`) reads "from
   the local source" or "from the compendium source"; `inStock` reads "in stock";
   `lowStockOnly` reads "low or out of stock", the two badges it keeps. A false flag
   or a null source says nothing. Their fragments carry the facets `source`,
-  `inStock` and `lowStockOnly` (`value` `true` for the two flags), so the component's
-  link away drops just that one. The coven's list passes `noun` as it likes.
+  `inStock` and `lowStockOnly` (`value` `true` for the two flags). The component draws
+  them as plain text, so they remove nothing; a filter is removed in the panel. The coven's list passes `noun` as it likes.
 - **Nomenclature, No Refs and No Form** ("without forms") are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
 - **A value with no label** is named by its raw value, so a stale link still reads.
