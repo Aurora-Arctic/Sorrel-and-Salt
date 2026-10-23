@@ -8,8 +8,21 @@ the research each change rests on. The task is MB.121 in
 [`tasks/mb.md`](../tasks/mb.md); the review method is
 [`styling.md`](../styling.md), "Designing a section".
 
-Items marked **OWNER DECIDES** wait for the owner's call. Everything else is
-done and committed on `feature/mb.121-design-review-the-workspace-ingredients-page`.
+The owner answered the review's questions on 2026-10-23; each answer is written
+where the question was, and listed in "The owner's answers", below. One item
+still waits for the owner: Proposal P1, marked **AWAITING THE OWNER**.
+Everything else is done and committed on
+`feature/mb.121-design-review-the-workspace-ingredients-page`.
+
+## The owner's answers (2026-10-23)
+
+| Question                                        | Answer                                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| Keep the focus-ring commit                      | Keep it                                                                        |
+| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                           |
+| A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch       |
+| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                       |
+| Proposal P1, the symbol on the shelf            | **AWAITING THE OWNER**: the owner asked for a phone-width mock before deciding |
 
 ## What was changed
 
@@ -20,9 +33,10 @@ done and committed on `feature/mb.121-design-review-the-workspace-ingredients-pa
 | The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition         | No                   |
 | Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal           | Yes                  |
 | Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks              | Yes                  |
+| A viewer's empty cupboard says which roles can add                                                | Owner's answer     | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
-differs.
+differs. The viewer's added line changes what a viewer reads, nothing else.
 
 ## The Stock section without its panel
 
@@ -65,7 +79,9 @@ symbol, and the tip names the state in words. P1b would be clearer to a newcomer
 but adds a line of text under every flagged jar. P1c does not meet 1.4.1 by
 itself.
 
-**OWNER DECIDES: P1, P1b, P1c, or none.** On 2026-10-21 the owner ruled out
+**AWAITING THE OWNER: P1, P1b, P1c, or none.** On 2026-10-23 the owner asked for
+a mock at phone width before deciding; P1 and the `Proposals / MB.121` stories
+stay as they are until then. On 2026-10-21 the owner ruled out
 "an extra word and an icon" on the shelf. P1 goes against the icon half of
 that call, for the reason above. It is its own commit, so it can be dropped.
 The mocks show each option in both themes at 1280px and 375px.
@@ -101,9 +117,8 @@ The mocks show each option in both themes at 1280px and 375px.
   dialog's Close drew Chromium's own default ring, since nothing set one.
   Fixed: each now draws the shared focus ring
   ([`styling.md`](../styling.md), "The focus ring"). Icon links keep the
-  accent ring every link has. **OWNER DECIDES** whether to keep this commit;
-  I recommend keeping it, since every other control already draws the shared
-  ring.
+  accent ring every link has. **The owner's answer (2026-10-23): keep it.**
+  Every other control already draws the shared ring.
 - **Names a screen reader can tell apart:** every jar button is named for the
   ingredient, its formal name and the form, "Edit Stock, Rosemary, Salvia
   rosmarinus, Herb". A flagged amount is its own button, named for the
@@ -123,9 +138,10 @@ The mocks show each option in both themes at 1280px and 375px.
 - **The empty page speaks its state three times:** a hidden count "No
   ingredients", the search sentence's status "No ingredients", and the region
   "No Ingredients" holding "There are no ingredients here yet." and the Add
-  Ingredient button. **OWNER DECIDES** whether to trim it; I recommend leaving
-  it for now and writing it down for the M9.1 story audit, since the three come
-  from three components each correct alone.
+  Ingredient button. **The owner's answer (2026-10-23): leave it**, and note
+  it for the M9.1 story audit, the audit of the story suite still owed. The
+  three come from three components, each correct alone, so the audit is where
+  to judge whether one should go.
 
 ### The dialog and the Tab key
 
@@ -138,8 +154,7 @@ accessibility experts side with the guide, while Scott O'Hara calls the native
 behaviour "good behavior, not a bug".[^lawson] It is not a keyboard trap under WCAG 2.1.2, since focus can
 always leave and return.
 
-**OWNER DECIDES: keep the native behaviour, or wrap Tab by script.** I
-recommend keeping it: the page behind is inert, so focus never reaches it, and
+**The owner's answer (2026-10-23): keep the browser's own behaviour.** The page behind is inert, so focus never reaches it, and
 wrapping by hand is the trap code the Modal deliberately does without
 ([`modal.md`](../components/modal.md), "Contracts").
 
@@ -151,8 +166,16 @@ displayed, and how to populate the area".[^kaplan] A viewer cannot populate it,
 but can be told who can. The mock `Viewer Empty Cupboard` adds "A member or
 owner of this coven can add them."
 
-**OWNER DECIDES: the sentence alone, or the added line.** I recommend the added
-line: it tells a viewer the empty cupboard is not a fault and who to ask.
+**The owner's answer (2026-10-23): add the line.** It tells a viewer the empty
+cupboard is not a fault and who to ask. Built: `CovenCards/empty.tsx` draws it
+in the `No Ingredients` region in place of the Add Ingredient button when the
+viewer cannot add, and the `Empty For A Viewer` story shows it
+([`coven-cards.md`](../components/coven-cards.md), "The empty and no-match
+states"). The test checks that a viewer's region names the roles that can add
+and a member's does not: the roles named are the only thing that tells the
+state apart, which is the exception in
+[`layer-ownership.md`](../testing/layer-ownership.md), "What a test may
+assert", rule 2.
 
 ### Tags that are buttons
 
@@ -182,17 +205,17 @@ not;[^baymard] the sentence is that overview. No change.
 
 ## The acceptance criteria
 
-| Criterion                                                                 | How it is met                                                                                         |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                               |
-| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer's case is OWNER DECIDES |
-| The Stock section has no `.panel`, and the record says what sets it apart | Removed; its heading and spacing, as every section                                                    |
-| The DRY merges are listed                                                 | "The DRY merges", above                                                                               |
-| Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                         |
-| The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                        |
-| Low and Out are never shown by colour alone                               | In words to a screen reader already; by sight only with P1 or P1b (OWNER DECIDES)                     |
-| Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                         |
-| Each change names its source in Chicago form                              | The notes below                                                                                       |
+| Criterion                                                                 | How it is met                                                                                             |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                   |
+| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add |
+| The Stock section has no `.panel`, and the record says what sets it apart | Removed; its heading and spacing, as every section                                                        |
+| The DRY merges are listed                                                 | "The DRY merges", above                                                                                   |
+| Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                             |
+| The shelf works by keyboard alone                                         | "The shelf by keyboard", above                                                                            |
+| Low and Out are never shown by colour alone                               | In words to a screen reader already; by sight only with P1 or P1b (AWAITING THE OWNER)                    |
+| Contrast holds at 4.5:1, and nothing scrolls sideways at 375px            | axe in 56 runs, both themes, 1280px and 375px                                                             |
+| Each change names its source in Chicago form                              | The notes below                                                                                           |
 
 ## Defects to mint
 
