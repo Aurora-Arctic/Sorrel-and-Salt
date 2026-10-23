@@ -17,6 +17,8 @@ export const NO_FILTER: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  covens: [],
+  covensNot: false,
 };
 
 export const NO_FACETS: CompendiumFacetCounts = {
