@@ -113,6 +113,7 @@ const NO_FILTER: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   covens: [],
+  covensNot: false,
 };
 
 /** Every filter in use, as a page shows it. */
@@ -129,6 +130,7 @@ const SHOWN: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   covens: [],
+  covensNot: false,
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */

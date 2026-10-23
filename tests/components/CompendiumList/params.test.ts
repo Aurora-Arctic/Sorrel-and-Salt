@@ -206,6 +206,7 @@ describe('the whole table', () => {
       celestialBodies: [],
       toxic: '',
       covens: [],
+      covensNot: false,
     });
   });
 });
@@ -230,5 +231,26 @@ describe('the covens parameter (M12.55)', () => {
     expect(entries.covens.variable).toBe('covenIds');
     expect(entries.covens.toVariable(['w-id'])).toEqual(['w-id']);
     expect(entries.covens.toVariable([])).toBeUndefined();
+  });
+});
+
+describe('the covensNot parameter (M12.55, Not In)', () => {
+  it('is written 1 for Not In, and absent for In', () => {
+    expect(COMPENDIUM_PARAMS.href('/compendium', { covensNot: true })).toBe(
+      '/compendium?covensNot=1',
+    );
+    expect(COMPENDIUM_PARAMS.href('/compendium', { covensNot: false })).toBe('/compendium');
+  });
+
+  it('reads 1 as Not In, and anything else as In', () => {
+    expect(entries.covensNot.read('1')).toBe(true);
+    expect(entries.covensNot.read(undefined)).toBe(false);
+    expect(entries.covensNot.read('yes')).toBe(false);
+  });
+
+  it('is the covensNot variable, and none for In', () => {
+    expect(entries.covensNot.variable).toBe('covensNot');
+    expect(entries.covensNot.toVariable(true)).toBe(true);
+    expect(entries.covensNot.toVariable(false)).toBeUndefined();
   });
 });
