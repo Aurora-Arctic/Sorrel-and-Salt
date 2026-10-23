@@ -3,6 +3,7 @@ import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import type { ModalHeading } from '../Modal/types';
 import FormalName from './formal-name';
+import { reviewedAtOf } from './review-date';
 import type { DetailsMarks } from './types';
 
 // The details modal an ingredient's name opens over a list (M12.5): the
@@ -44,6 +45,7 @@ export function detailsMarks(detail: IngredientDetail, inCoven = false): Details
     inCoven,
     annotated: held && isAnnotated(cupboardEntry),
     retired,
+    reviewedAt: reviewedAtOf(detail),
     recency: local ? null : entryRecency(entry.createdAt, entry.updatedAt),
     toxic: entry.toxic,
     safetyNotes: applyCupboardEntry(entry, cupboardEntry).safetyNotes,

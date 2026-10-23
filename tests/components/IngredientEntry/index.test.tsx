@@ -76,6 +76,17 @@ const STAMPS = {
 
 const COVEN = '00000000-0000-4000-8000-0000000000c1';
 
+/**
+ * The status badges that say where an entry lives, Compendium; not the curators' review mark
+ * (Needs Review or Reviewed By Curator, M14.8), which every compendium entry wears and
+ * which the review-mark tests below own.
+ */
+const provenanceMarks = (): (string | null)[] =>
+  screen
+    .queryAllByRole('status')
+    .map((mark) => mark.textContent)
+    .filter((text) => !/Review/.test(text ?? ''));
+
 // Ids only need to differ, so each fixture row takes the next one.
 let serial = 0;
 const nextId = (): string => `00000000-0000-4000-8000-${(++serial).toString().padStart(12, '0')}`;
@@ -719,11 +730,13 @@ describe('IngredientEntry', () => {
   it('links the entry that moved off this address to where it is now', () => {
     const href = '/compendium/ingredients/fixture-movedwort' as Route;
     const { unmount } = renderEntry();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(provenanceMarks()).toEqual([]);
     unmount();
 
     renderEntry({ movedAway: { name: 'Fixture Movedwort', href } });
-    const notice = screen.getByRole('status');
+    const notice = screen
+      .getAllByRole('status')
+      .find((s) => s.textContent?.includes('Fixture Movedwort'))!;
     expect(within(notice).getByRole('link', { name: 'Fixture Movedwort' })).toHaveAttribute(
       'href',
       href,
@@ -1199,6 +1212,31 @@ describe('IngredientEntry edit', () => {
 
 // The three kinds of entry on a coven's page (M12.16): the coven's own, the
 // compendium's held in its cupboard, and the compendium's not held.
+describe("IngredientEntry's review mark (M14.8)", () => {
+  it('says a compendium entry needs review, to a visitor with no account', () => {
+    renderEntry();
+
+    expect(screen.getByText('Needs Review', { exact: true })).toBeInTheDocument();
+  });
+
+  it('says when a curator reviewed it, and names no one', () => {
+    const reviewed = detail({
+      entry: entryRow({ curatorReviewedAt: new Date('2026-10-01T09:30:00.000Z') }),
+    });
+    renderEntry({ detail: reviewed });
+
+    const badge = screen.getByText(/Reviewed By Curator/);
+    expect(badge.querySelector('time')).toHaveAttribute('datetime', '2026-10-01T09:30:00.000Z');
+    expect(screen.queryByText('Needs Review', { exact: true })).toBeNull();
+  });
+
+  it("is not drawn on a coven's own entry", () => {
+    renderEntry({ detail: detail({ entry: entryRow({ workspaceId: COVEN }) }) });
+
+    expect(screen.queryByText(/Needs Review|Reviewed By Curator/)).toBeNull();
+  });
+});
+
 describe('IngredientEntry on a coven page', () => {
   const held = (overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {}) =>
     ({
@@ -1246,7 +1284,7 @@ describe('IngredientEntry on a coven page', () => {
     // unannotated, it shows Compendium.
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
     expect(screen.queryByText('Compendium', { exact: true })).toBeNull();
-    expect(screen.queryAllByRole('status')).toHaveLength(0);
+    expect(provenanceMarks()).toEqual([]);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
@@ -1254,7 +1292,7 @@ describe('IngredientEntry on a coven page', () => {
     renderEntry({ detail: detail({ cupboardEntry: held() }) });
 
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
-    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual(['Compendium']);
+    expect(provenanceMarks()).toEqual(['Compendium']);
     expect(screen.getAllByText('Testwort')).toHaveLength(1);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
@@ -1274,7 +1312,7 @@ describe('IngredientEntry on a coven page', () => {
   it('renders a compendium entry the coven does not hold with neither mark', () => {
     renderEntry();
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(provenanceMarks()).toEqual([]);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
@@ -1282,7 +1320,7 @@ describe('IngredientEntry on a coven page', () => {
     renderEntry({ detail: detail({ entry: entryRow({ workspaceId: COVEN }) }) });
 
     expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(provenanceMarks()).toEqual([]);
   });
 });
 

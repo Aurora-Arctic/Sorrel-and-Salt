@@ -14,6 +14,15 @@ interface Mark {
   node: ReactNode;
 }
 
+/** The day, as LastEdit prints one, in UTC so the server's zone cannot move it. */
+const reviewDay = (at: string) =>
+  new Date(at).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+
 const TONES: readonly Tone[] = ['green', 'neutral', 'red'];
 
 // Green first and red last, each group in the order it was built (the owner's
@@ -35,6 +44,7 @@ const EntryMarks = ({
   inCoven = false,
   provenance = true,
   safety = true,
+  reviewedAt,
   recency,
   toxic,
   safetyNotes,
@@ -89,6 +99,27 @@ const EntryMarks = ({
         />
       ),
     });
+  }
+  // The curators' review mark (M14.8): green with its day once reviewed, in the attention
+  // colour while not. A coven's own entry is never reviewed, so it has neither.
+  if (kind !== 'own' && reviewedAt !== undefined) {
+    marks.push(
+      reviewedAt === null
+        ? {
+            key: 'review',
+            tone: 'red',
+            node: <output className="badge badge--attention">Needs Review</output>,
+          }
+        : {
+            key: 'review',
+            tone: 'green',
+            node: (
+              <output className="badge badge--local">
+                Reviewed By Curator <time dateTime={reviewedAt}>{reviewDay(reviewedAt)}</time>
+              </output>
+            ),
+          },
+    );
   }
   // One safety badge, Toxic over Caution, drawing nothing when neither holds. The
   // card draws its own beside the name (`safety={false}`).

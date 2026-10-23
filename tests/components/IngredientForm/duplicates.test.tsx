@@ -732,6 +732,7 @@ describe('NameField, with useDuplicateWarning', () => {
       toxic: false,
       isGlobal: true,
       retired: false,
+      reviewedAt: null,
       elements: ['fire'],
       celestialBodies: [],
       zodiacSigns: [],
@@ -835,6 +836,30 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(page).toHaveAttribute('target', '_blank');
       // Outside the live region, which would otherwise read the details out as a status.
       expect(warning()).not.toContainElement(look());
+    });
+
+    // The curators' review mark shows to everyone (M14.8; the owner's call, 2026-10-23).
+    it('says in its head whether a curator has reviewed the entry, and when', async () => {
+      mockGraphQLQuery<DuplicateQuickLookQuery, DuplicateQuickLookQueryVariables>(
+        'DuplicateQuickLook',
+        () => ({ ingredient: { ...LOOKED, reviewedAt: '2026-10-01T09:30:00.000Z' } }),
+      );
+      renderName();
+      await warned();
+      press(eye());
+
+      const badge = await within(look()).findByText(/Reviewed By Curator/);
+      expect(badge.querySelector('time')).toHaveAttribute('datetime', '2026-10-01T09:30:00.000Z');
+      expect(within(look()).queryByText('Needs Review')).toBeNull();
+    });
+
+    it('says an entry no curator has reviewed needs review', async () => {
+      offerLook();
+      renderName();
+      await warned();
+      press(eye());
+
+      expect(await within(look()).findByText('Needs Review')).toBeInTheDocument();
     });
 
     it('says so when the read fails, and reads again on Try Again', async () => {

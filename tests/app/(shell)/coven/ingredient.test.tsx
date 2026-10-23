@@ -478,7 +478,8 @@ describe('the coven ingredient page’s Annotate', () => {
 // Compendium on every compendium entry in a coven, and the shelf before the
 // name for one the cupboard holds (the owner's call, 2026-10-19).
 describe('the coven ingredient page’s marks', () => {
-  const compendiumMark = () => screen.queryByRole('status');
+  const compendiumMark = () =>
+    screen.queryAllByRole('status').find((s) => !/Review/.test(s.textContent ?? '')) ?? null;
   const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
   it('marks a compendium entry the coven does not hold as from the Compendium, with no shelf', async () => {

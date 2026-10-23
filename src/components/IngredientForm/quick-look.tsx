@@ -38,6 +38,7 @@ const DuplicateQuickLookDocument = graphql(`
       toxic
       isGlobal
       retired
+      reviewedAt
       elements
       celestialBodies
       zodiacSigns
@@ -115,6 +116,7 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
     entry: {
       ...looked,
       workspaceId: tier,
+      curatorReviewedAt: looked.reviewedAt,
       createdAt: looked.audit.createdAt,
       updatedAt: looked.audit.updatedAt,
     } as unknown as IngredientDetail['entry'],

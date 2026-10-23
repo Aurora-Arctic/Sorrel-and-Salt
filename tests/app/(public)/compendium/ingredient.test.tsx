@@ -157,7 +157,9 @@ describe('the compendium entry page', () => {
     readCompendiumEntry.mockResolvedValue(entryRead({ name: 'Oldwort', slug: 'testwort-old' }));
     await show();
 
-    expect(screen.getByRole('status')).toHaveTextContent('Oldwort');
+    expect(screen.getAllByRole('status').some((s) => s.textContent?.includes('Oldwort'))).toBe(
+      true,
+    );
     expect(screen.getByRole('link', { name: 'Oldwort' })).toHaveAttribute(
       'href',
       '/compendium/ingredients/testwort-old',
