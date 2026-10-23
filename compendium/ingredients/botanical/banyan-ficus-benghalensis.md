@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Ficus benghalensis
-safetyNotes: Cunningham lists the banyan as recognised as safe.
 elements:
   - air
 celestialBodies:
@@ -26,7 +25,6 @@ references:
       - celestialBodies
       - folkNames
       - description
-      - safetyNotes
   - source: wikipedia-ficus-benghalensis
     nameBasis: stated
     supports:
@@ -45,6 +43,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 54ac247ce0566049ba92cd01c196c04156dd82cf41f1aaffce5eee6136dd6e9a
 ---
 
 # Banyan

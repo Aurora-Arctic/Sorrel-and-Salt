@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Silybum marianum
-safetyNotes: Considered safe when used appropriately (AHPA safety class 1), with no known contraindications, and marked safe by Cunningham. Taken by mouth it is usually well tolerated; the commonest side effects are bloating, nausea and wind. Allergic reactions, including anaphylaxis, have been reported, especially in people allergic to related plants such as ragweed, chrysanthemum, marigold and daisy. It may change blood sugar control, so people with diabetes should watch their levels closely and talk to a qualified practitioner first. Limited studies of its extract silymarin in pregnancy and while nursing found no harm, but little is known about its safety at those times. Some supplements hold far more or less silymarin than the label says, or are contaminated with pesticides, microbes or mould toxins. Anyone taking medicines should ask a healthcare provider before using it.
+safetyNotes: Taken by mouth, the commonest side effects are bloating, nausea and wind. Allergic reactions, including anaphylaxis, have been reported, especially in people allergic to related plants such as ragweed, chrysanthemum, marigold and daisy. It may change blood sugar control, so people with diabetes should watch their levels closely and talk to a qualified practitioner first. Little is known about its safety in pregnancy and while nursing. Some supplements hold far more or less silymarin than the label says, or are contaminated with pesticides, microbes or mould toxins. Anyone taking medicines should ask a healthcare provider before using it.
 elements:
   - fire
 celestialBodies:
@@ -28,7 +28,6 @@ references:
       - celestialBodies
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Thistle"
     nameBasis: unaudited
@@ -78,6 +77,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: 624edef31624a09f02eda21be540d493a136d60325369bb9726f6bd02ba471a0
 ---
 
 # Milk Thistle

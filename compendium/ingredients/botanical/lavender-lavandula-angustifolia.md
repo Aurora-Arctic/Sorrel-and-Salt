@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Lavandula angustifolia
-safetyNotes: "Considered safe when used appropriately (AHPA safety class 1), with no known contraindications or drug interactions, and Cunningham's health code marks the flower as safe; NCCIH regards it as likely safe in the amounts used in food. Taken by mouth it may cause diarrhoea, headache, nausea or burping in some people. It may interact with sedative drugs or herbs: NCCIH calls the concern theoretical, and Kynes advises against using it while taking sedative medication. Little is known about its safety in pregnancy or while breastfeeding; AHPA found only a 1935 study in which lavender stimulated contractions of isolated pregnant guinea-pig uteruses. Skin products containing lavender can cause allergic reactions, and a few cases of breast swelling have been reported in children using them, though it is unclear whether lavender was the cause."
+safetyNotes: 'Taken by mouth it may cause diarrhoea, headache, nausea or burping in some people. It may interact with sedative drugs or herbs: NCCIH calls the concern theoretical, and Kynes advises against using it while taking sedative medication. Little is known about its safety in pregnancy or while breastfeeding; AHPA found only a 1935 study in which lavender stimulated contractions of isolated pregnant guinea-pig uteruses. Skin products containing lavender can cause allergic reactions, and a few cases of breast swelling have been reported in children using them, though it is unclear whether lavender was the cause.'
 elements:
   - air
 celestialBodies:
@@ -46,7 +46,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Lavender"
     nameBasis: unaudited
@@ -128,7 +127,7 @@ variants:
           - description
   - form: Oil
     description: Lavender essential oil is produced commercially for balms, salves, perfumes and cosmetics, and is diluted in a carrier oil for massage and aromatherapy. Cunningham records that centuries ago prostitutes wore lavender water or the oil both to advertise their trade and, by magic, to draw customers.
-    safetyNotes: Allergic contact dermatitis, confirmed by patch testing, has been reported in people exposed to lavender essential oil. Aromatherapy with the oil is considered possibly safe but may cause headache or coughing.
+    safetyNotes: Allergic contact dermatitis, confirmed by patch testing, has been reported in people exposed to lavender essential oil. Aromatherapy with the oil may cause headache or coughing.
     references:
       - source: kynes-plants
         locator: under "Lavender"
@@ -154,6 +153,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 459df5a6259fc5ba90b9c04bdb41383c12538505cb6b74ba2b2c6a03e569639e
 ---
 
 # Lavender

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Echinacea
-safetyNotes: Cunningham marks echinacea as recognised as safe, and AHPA puts the Echinacea species in safety class 1. Allergic reactions can occur in susceptible people; those reported include anaphylaxis and asthma attacks. Commission E advises against its use in systemic and autoimmune diseases such as tuberculosis, multiple sclerosis and HIV infection, though AHPA notes that this concern is theoretical. Limited human data have raised no safety concern in pregnancy, and its safety while nursing has not been conclusively established.
+safetyNotes: Allergic reactions can occur in susceptible people; those reported include anaphylaxis and asthma attacks. Commission E advises against its use in systemic and autoimmune diseases such as tuberculosis, multiple sclerosis and HIV infection, though AHPA notes that this concern is theoretical. Its safety while nursing has not been conclusively established.
 folkNames:
   - Black Sampson
   - Coneflower
@@ -16,7 +16,6 @@ references:
     supports:
       - folkNames
       - description
-      - safetyNotes
   - source: ahpa-safety
     locator: pp. 321–322
     nameBasis: unaudited
@@ -61,6 +60,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: 642e3e84df073706ad5b5fb24bd2320ba48fb605905bdea1bc4970af3a817c79
 ---
 
 # Echinacea

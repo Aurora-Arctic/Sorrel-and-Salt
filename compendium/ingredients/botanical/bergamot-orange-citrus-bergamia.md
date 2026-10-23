@@ -75,7 +75,7 @@ variants:
           - safetyNotes
   - form: Peel
     description: The rind is where the aromatic essence lies, and leftover peels were traditionally fashioned into little souvenir boxes and snuff boxes.
-    safetyNotes: AHPA safety class 1 for the peel, with a notice that it is photosensitising when applied to the skin. Bergapten-free products are sold. Safety in pregnancy and nursing has not been conclusively established.
+    safetyNotes: AHPA gives a notice that the peel is photosensitising when applied to the skin. Bergapten-free products are sold. Safety in pregnancy and nursing has not been conclusively established.
     references:
       - source: ahpa-safety
         locator: p. 234; p. xxii

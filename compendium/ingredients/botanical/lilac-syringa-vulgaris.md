@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Syringa vulgaris
-safetyNotes: Cunningham's health code G marks lilac as currently recognised as safe.
 elements:
   - water
 celestialBodies:
@@ -36,7 +35,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: kynes-plants
@@ -91,6 +89,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 0c92a1b66819aa0e1fdecf15fa568f1cef69ea4bede6ce28d513288d4de3e100
 ---
 
 # Lilac

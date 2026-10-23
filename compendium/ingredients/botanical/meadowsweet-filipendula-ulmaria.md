@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Filipendula ulmaria
-safetyNotes: 'Considered safe when used appropriately (AHPA safety class 1), and marked safe by Cunningham. People sensitive to aspirin or other salicylate-containing medicines, and people with G6PD deficiency, should take care: it contains salicylates and tannins. In laboratory tests on isolated animal uterine tissue an extract strengthened contractions, though what that means for human use is unknown, and its safety while nursing has not been established.'
+safetyNotes: 'People sensitive to aspirin or other salicylate-containing medicines, and people with G6PD deficiency, should take care: it contains salicylates and tannins. In laboratory tests on isolated animal uterine tissue an extract strengthened contractions, though what that means for human use is unknown, and its safety while nursing has not been established.'
 elements:
   - air
   - water
@@ -54,7 +54,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Meadowsweet"
     nameBasis: unaudited
@@ -123,6 +122,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: d6b4ce8ca326b4da7d4250d18772c2dcb18ae35a3d89ade3eca982c7097e197b
 ---
 
 # Meadowsweet

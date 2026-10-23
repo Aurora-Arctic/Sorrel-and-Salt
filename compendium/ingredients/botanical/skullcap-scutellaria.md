@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Scutellaria
-safetyNotes: "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected) for Virginian skullcap, Scutellaria lateriflora: no contraindications, precautions, drug interactions or side effects are known. Reports of liver damage from products sold as skullcap are most likely due to adulteration with germander (Teucrium), which is known to harm the liver. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe."
+safetyNotes: Reports of liver damage from products sold as skullcap are most likely due to adulteration with germander (Teucrium), which is known to harm the liver. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established.
 elements:
   - water
 celestialBodies:
@@ -33,7 +33,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: kynes-plants
@@ -83,6 +82,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ae8cbf647801aa1b033a8969628e87e86b1d248b4c948da765e79da57788971b
 ---
 
 # Skullcap

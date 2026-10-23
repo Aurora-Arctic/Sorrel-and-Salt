@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Thalictrum
-safetyNotes: Cunningham marks it as currently recognised as safe.
 folkNames:
   - Flute Plant
 categories:
@@ -18,7 +17,6 @@ references:
       - canonicalName
       - categories
       - folkNames
-      - safetyNotes
       - description
   - source: wikipedia-thalictrum
     nameBasis: stated
@@ -35,6 +33,7 @@ variants:
         resolvedBy: wikipedia-thalictrum
         supports:
           - form
+seedUpdate: 6f350b3d538ada9404561488b3a2af8cf5cdf28b7ebdaca21ae81aa49e3c0332
 ---
 
 # Meadow Rue

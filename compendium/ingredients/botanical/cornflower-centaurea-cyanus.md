@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Centaurea cyanus
-safetyNotes: AHPA places cornflower herb in safety class 1, with no known contraindications, interactions or side effects, and Cunningham marks it as recognised as safe. No information was found on its safety in pregnancy or while nursing, so its safety at those times has not been conclusively established.
+safetyNotes: No information was found on its safety in pregnancy or while nursing, so its safety at those times has not been conclusively established.
 elements:
   - water
   - earth
@@ -55,7 +55,6 @@ references:
       - folkNames
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Cornflower"
     nameBasis: resolved

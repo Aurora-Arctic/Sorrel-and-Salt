@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Tilia × europaea
-safetyNotes: Linden flower and leaf are AHPA safety class 1, and Cunningham marks both safe. Contact urticaria has been reported after use of a shampoo containing linden extract. Safety in pregnancy and while nursing has not been established.
+safetyNotes: Contact urticaria has been reported after use of a shampoo containing linden extract. Safety in pregnancy and while nursing has not been established.
 elements:
   - air
 celestialBodies:
@@ -56,7 +56,6 @@ references:
       - deities
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Linden"
     nameBasis: unaudited
@@ -160,6 +159,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 37390a7efa4eb83081a17c0af7ed070c6e1cc1a5b685baceb979f363465b2135
 ---
 
 # Linden

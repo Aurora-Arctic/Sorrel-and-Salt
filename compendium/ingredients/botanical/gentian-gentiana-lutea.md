@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Gentiana lutea
-safetyNotes: AHPA safety class 1. Use with caution where there is irritation of the digestive tract or a duodenal ulcer, and headaches may occasionally occur in people sensitive to bitter substances. Home collectors have repeatedly mistaken Veratrum species for gentian, and Veratrum causes adverse effects on the heart and digestive tract. Gentian has been used as an emmenagogue in the Unani tradition of India, though not in Europe, and its safety while nursing has not been conclusively established. Cunningham marks it not to be taken internally by anyone with ulcers, and notes that it may disturb the digestive system if taken internally.
+safetyNotes: Use with caution where there is irritation of the digestive tract or a duodenal ulcer, and headaches may occasionally occur in people sensitive to bitter substances. Home collectors have repeatedly mistaken Veratrum species for gentian, and Veratrum causes adverse effects on the heart and digestive tract. Gentian has been used as an emmenagogue in the Unani tradition of India, though not in Europe, and its safety while nursing has not been conclusively established. Cunningham marks it not to be taken internally by anyone with ulcers, and notes that it may disturb the digestive system if taken internally.
 elements:
   - fire
 celestialBodies:
@@ -54,6 +54,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 457de7d8f1afb118d1106efcc82e4753c399aa8512906b9f20bc4ee3647cb025
 ---
 
 # Gentian

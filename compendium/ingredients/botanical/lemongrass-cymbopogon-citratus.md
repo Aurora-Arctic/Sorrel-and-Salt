@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Cymbopogon citratus
-safetyNotes: 'Cunningham advises against taking it internally during pregnancy (health code P), and Kynes advises avoiding it during pregnancy and while breastfeeding. AHPA safety class 1, interaction class A: it notes that one Caribbean text records its use as an abortifacient, which no other reference it found repeats, and that safety while nursing has not been established. An animal study suggests it may alter blood sugar regulation, so people with diabetes should watch their blood sugar and consult a qualified practitioner before using it. Allergic contact dermatitis followed drinking the tea in one person repeatedly exposed to the essential oil.'
+safetyNotes: Cunningham advises against taking it internally during pregnancy (health code P), and Kynes advises avoiding it during pregnancy and while breastfeeding. AHPA notes that one Caribbean text records its use as an abortifacient, which no other reference it found repeats, and that safety while nursing has not been established. An animal study suggests it may alter blood sugar regulation, so people with diabetes should watch their blood sugar and consult a qualified practitioner before using it. Allergic contact dermatitis followed drinking the tea in one person repeatedly exposed to the essential oil.
 elements:
   - air
 celestialBodies:
@@ -117,6 +117,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f37df13919fd1c531bdd7f11fb50d9532764ce2ba6bdac4fafd8991cc9ae2ca9
 ---
 
 # Lemongrass

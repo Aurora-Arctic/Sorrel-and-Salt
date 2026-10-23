@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Gardenia jasminoides
-safetyNotes: Cunningham marks Gardenia jasminoides as recognised as safe, and AHPA puts the fruit in safety class 1. Allergic skin reactions to gardenia have been reported. No information was found on its safety in pregnancy or while nursing, so its safety at those times has not been conclusively established.
+safetyNotes: Allergic skin reactions to gardenia have been reported. No information was found on its safety in pregnancy or while nursing, so its safety at those times has not been conclusively established.
 elements:
   - water
 celestialBodies:
@@ -33,7 +33,6 @@ references:
       - celestialBodies
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Gardenia"
     nameBasis: unaudited
@@ -106,6 +105,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 9e1d410327953359f46f0219051303a8e1feef52507910f61b147e0ef4df4894
 ---
 
 # Gardenia

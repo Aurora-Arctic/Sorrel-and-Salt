@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Euphrasia officinalis
-safetyNotes: AHPA places eyebright herb in safety class 1, herbs that can be safely consumed when used appropriately, with no known contraindications or side effects; it contains about 12% tannins. An animal study suggests it may alter blood sugar control, so people with diabetes are advised to watch their blood sugar closely and talk to a qualified healthcare practitioner before using it. No information on its safety in pregnancy or while nursing was found, so safety then has not been established. Cunningham codes it as currently recognised as safe.
+safetyNotes: AHPA notes that eyebright herb contains about 12% tannins. An animal study suggests it may alter blood sugar control, so people with diabetes are advised to watch their blood sugar closely and talk to a qualified healthcare practitioner before using it. No information on its safety in pregnancy or while nursing was found, so safety then has not been established.
 elements:
   - air
 celestialBodies:
@@ -39,7 +39,6 @@ references:
       - celestialBodies
       - categories
       - folkNames
-      - safetyNotes
       - description
   - source: kynes-plants
     locator: under "Eyebright"

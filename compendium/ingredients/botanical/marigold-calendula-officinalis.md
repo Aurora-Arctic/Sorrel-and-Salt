@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Calendula officinalis
-safetyNotes: Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common. Allergic reactions, including anaphylaxis, are rare but have been reported, and so has contact dermatitis from handling the plant. Older references report that it acts as an emmenagogue, and a calendula extract stimulated contractions in isolated animal wombs, though how far that applies to people is unknown. Its safety while nursing has not been established.
+safetyNotes: People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common. Allergic reactions, including anaphylaxis, are rare but have been reported, and so has contact dermatitis from handling the plant. Older references report that it acts as an emmenagogue, and a calendula extract stimulated contractions in isolated animal wombs, though how far that applies to people is unknown. Its safety while nursing has not been established.
 elements:
   - fire
 celestialBodies:
@@ -59,7 +59,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Marigold"
     nameBasis: unaudited
@@ -141,6 +140,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f05ad771d7419db1845fb916df37197fc7579f0f2070aa8612e1f8be25b12913
 ---
 
 # Marigold

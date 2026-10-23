@@ -55,7 +55,7 @@ references:
       - description
 variants:
   - form: Root
-    safetyNotes: AHPA places the root of yellow dock and broad-leaf dock in safety class 1. It is 12 to 20% tannin and holds small amounts of anthraquinone glycosides, but its laxative effect is mild at most.
+    safetyNotes: The root of yellow dock and broad-leaf dock is 12 to 20% tannin and holds small amounts of anthraquinone glycosides, but its laxative effect is mild at most.
     references:
       - source: ahpa-safety
         locator: p. 758
@@ -104,6 +104,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 04183023a5312990066b67f20df135cf2df361fdc1cd48d33ebc562640190111
 ---
 
 # Dock

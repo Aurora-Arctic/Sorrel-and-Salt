@@ -92,7 +92,7 @@ references:
 variants:
   - form: Berry
     description: Carried, the berries are said to guard against evil and negativity, and a few beneath the pillow to bring peaceful sleep; Kynes adds dried berries to a pillow sachet for sleep and dream work and puts them in love charms.
-    safetyNotes: AHPA safety class 1 for the ripe fruit, a food and drink ingredient, with no known contraindications or drug interactions; its safety in pregnancy and while nursing has not been conclusively established. Cunningham codes the ripe fruit as currently recognised as safe.
+    safetyNotes: AHPA notes that safety in pregnancy and while nursing has not been conclusively established for the ripe fruit, a food and drink ingredient.
     colours:
       - black
     references:
@@ -108,7 +108,6 @@ variants:
         supports:
           - form
           - description
-          - safetyNotes
       - source: kynes-plants
         locator: under "Elder"
         nameBasis: unaudited
@@ -118,7 +117,7 @@ variants:
           - colours
   - form: Flower
     description: Cunningham says the white flowers made the elder sacred to many mother-goddess figures, and Kynes sets a picture of them on the altar to honour the Crone. Extracts of the cooked flowers are traditionally used to flavour drinks.
-    safetyNotes: AHPA safety class 1 for the flower, with no known contraindications or drug interactions; its safety in pregnancy and while nursing has not been conclusively established.
+    safetyNotes: Its safety in pregnancy and while nursing has not been conclusively established.
     colours:
       - white
     references:
@@ -164,6 +163,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 8f74bd5211624d3a87d657e06fbbfcbbfefd461e245910530a342c1004839b59
 ---
 
 # Elder

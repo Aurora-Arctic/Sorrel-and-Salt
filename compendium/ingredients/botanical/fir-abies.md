@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Abies
-safetyNotes: AHPA's monograph covers balsam fir (Abies balsamea), its bark, needles, sap and wood, and places it in safety class 1, herbs that can be safely consumed when used appropriately, with no known contraindications, drug interactions or adverse effects. No information on its safety in pregnancy or while nursing was found, so its safety then has not been established. No safety source read covers the other species of fir.
+safetyNotes: AHPA's monograph covers balsam fir (Abies balsamea), its bark, needles, sap and wood. No information on its safety in pregnancy or while nursing was found, so its safety then has not been established. No safety source read covers the other species of fir.
 elements:
   - air
   - earth
@@ -79,6 +79,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 1d743548887de631f9a257174aeb15a1e7c03861e73764a001ca90fa002ace2b
 ---
 
 # Fir

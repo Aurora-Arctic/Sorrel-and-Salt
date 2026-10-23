@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Betula pendula
-safetyNotes: 'AHPA safety class 1 and interaction class A: no contraindications, precautions, drug interactions or side effects are known, and it is noted as a diuretic. No concern was identified for use in pregnancy or while nursing, though safety in either has not been firmly proven. Cunningham marks it as recognised safe.'
+safetyNotes: AHPA notes it as a diuretic. Safety in pregnancy or while nursing has not been firmly proven.
 elements:
   - water
 celestialBodies:
@@ -58,7 +58,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Birch"
     nameBasis: unaudited
@@ -174,6 +173,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 138c626e50ec6de9326d5ae99fb93e53ef80087219658ec7b76d88349e49991a
 ---
 
 # Birch

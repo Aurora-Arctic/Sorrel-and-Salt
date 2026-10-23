@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Citrus × limon
-safetyNotes: 'Cunningham marks lemon as safe (health code G). AHPA found no information on its safety in pregnancy or while nursing: it identified no concern, but safety has not been conclusively established.'
+safetyNotes: AHPA found no information on its safety in pregnancy or while nursing, so safety has not been conclusively established.
 elements:
   - water
   - air
@@ -51,7 +51,6 @@ references:
       - celestialBodies
       - categories
       - folkNames
-      - safetyNotes
   - source: kynes-plants
     locator: under "Lemon"
     nameBasis: resolved
@@ -106,7 +105,7 @@ variants:
           - description
   - form: Peel
     description: The rind, whose coloured outer layer, the zest, carries the fruit’s oil. Cunningham adds the dried peel to love sachets and mixtures.
-    safetyNotes: 'AHPA safety class 1, interaction class A: no known contraindications, precautions, interactions or side effects. The peel contains furanocoumarins that can cause a phototoxic skin reaction when applied before sun exposure, but AHPA found no reported cases and expects none after eating it.'
+    safetyNotes: The peel contains furanocoumarins that can cause a phototoxic skin reaction when applied before sun exposure, but AHPA found no reported cases and expects none after eating it.
     references:
       - source: ahpa-safety
         locator: p. 236; p. xxii
@@ -195,6 +194,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: b6219c6263e0a9f25ac1e197837d9a6a0bea8141483127ed84dbe6128ed5fad0
 ---
 
 # Lemon

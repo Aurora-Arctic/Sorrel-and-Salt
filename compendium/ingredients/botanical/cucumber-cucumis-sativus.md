@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Cucumis sativus
-safetyNotes: Cunningham's health code marks cucumber as currently recognised as safe.
 elements:
   - water
 celestialBodies:
@@ -31,7 +30,6 @@ references:
       - folkNames
       - categories
       - description
-      - safetyNotes
   - source: northcote-herbs
     locator: p. 167
     nameBasis: unaudited
@@ -95,6 +93,7 @@ variants:
         nameBasis: stated
         supports:
           - description
+seedUpdate: 24a15ed04138142c793f00a430e5eb958e8cfce4bd11c562adf1b3a9881a6dad
 ---
 
 # Cucumber

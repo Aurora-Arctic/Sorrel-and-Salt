@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Melissa officinalis
-safetyNotes: 'Cunningham marks lemon balm as safe (health code G). AHPA safety class 1, interaction class A: no known contraindications or interactions, and clinical trials found it well tolerated taken internally or on the skin. Animal and laboratory studies suggest it may affect thyroid hormone levels, though no human cases are reported, and in animals its extracts strengthened the effect of barbiturate sedatives; Kynes cautions that it may interact with sedative and thyroid medication. Contact dermatitis has been reported from a cosmetic containing it. Its safety in pregnancy and while nursing has not been conclusively established.'
+safetyNotes: Animal and laboratory studies suggest it may affect thyroid hormone levels, though no human cases are reported, and in animals its extracts strengthened the effect of barbiturate sedatives; Kynes cautions that it may interact with sedative and thyroid medication. Contact dermatitis has been reported from a cosmetic containing it. Its safety in pregnancy and while nursing has not been conclusively established.
 elements:
   - water
   - air
@@ -48,7 +48,6 @@ references:
       - celestialBodies
       - categories
       - folkNames
-      - safetyNotes
   - source: kynes-plants
     locator: under "Lemon Balm"
     nameBasis: resolved
@@ -134,6 +133,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 53eb90bea6be73430da9a829ebe25859082693c724bb9594e6d8fb6967a1ce9f
 ---
 
 # Lemon Balm

@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Artemisia abrotanum
 toxic: true
-safetyNotes: "AHPA places southernwood in safety class 2b (not to be used in pregnancy) and interaction class A (no clinically relevant drug interactions expected): it is not for use in pregnancy except under a qualified practitioner, having been reported to bring on menstruation. Its safety while nursing has not been established. Kynes cautions that it is poisonous if eaten in large amounts, and Cunningham's health code says not to take it internally if pregnant."
+safetyNotes: "AHPA: it is not for use in pregnancy except under a qualified practitioner, having been reported to bring on menstruation. Its safety while nursing has not been established. Kynes cautions that it is poisonous if eaten in large amounts, and Cunningham's health code says not to take it internally if pregnant."
 elements:
   - air
 celestialBodies:
@@ -125,6 +125,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 0d5285d37dadfd5331a7283261c322cf3f4bbf4f3ded1fba66e1450ee8ebfbe4
 ---
 
 # Southernwood

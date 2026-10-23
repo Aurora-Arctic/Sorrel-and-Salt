@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Foeniculum vulgare
-safetyNotes: "AHPA places fennel in safety class 1, herbs that can be safely consumed when used appropriately, and Cunningham's code marks it as currently recognised as safe. Fennel has shown oestrogenic activity: four young girls given two to three cups of fennel tea a day for months or years developed early breast growth. Allergic reactions are rare but have been reported, and are associated with birch–mugwort–celery syndrome. In an animal study fennel reduced the absorption of the drug ciprofloxin. AHPA's editors consider fennel tea safe in pregnancy and while nursing, but Kynes's herbal advises avoiding fennel during pregnancy and with epilepsy or other seizure disorders, using it in moderation, and not giving it to children under six."
+safetyNotes: "Fennel has shown oestrogenic activity: four young girls given two to three cups of fennel tea a day for months or years developed early breast growth. Allergic reactions are rare but have been reported, and are associated with birch–mugwort–celery syndrome. In an animal study fennel reduced the absorption of the drug ciprofloxin. Kynes's herbal advises avoiding fennel during pregnancy and with epilepsy or other seizure disorders, using it in moderation, and not giving it to children under six."
 elements:
   - fire
 celestialBodies:
@@ -47,7 +47,6 @@ references:
       - deities
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Fennel"
     nameBasis: resolved
@@ -159,6 +158,7 @@ variants:
         nameBasis: stated
         supports:
           - description
+seedUpdate: 6aba59ed637cc3ece52d34c53a5637da65eb1449850c2eb5db51b4edcd706edf
 ---
 
 # Fennel

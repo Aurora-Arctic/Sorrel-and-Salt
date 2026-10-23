@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Centaurea benedicta
-safetyNotes: AHPA safety class 1. Allergic reactions have been reported, and anyone allergic to other daisy-family plants, such as feverfew or echinacea, should take care, since cross-reactions are common. Large doses, above about 5 g to a cup of tea, can upset the stomach and bring on vomiting. Cunningham marks it as not to be taken in pregnancy; AHPA finds safety in pregnancy and nursing not established.
+safetyNotes: Allergic reactions have been reported, and anyone allergic to other daisy-family plants, such as feverfew or echinacea, should take care, since cross-reactions are common. Large doses, above about 5 g to a cup of tea, can upset the stomach and bring on vomiting. Cunningham marks it as not to be taken in pregnancy; AHPA finds safety in pregnancy and nursing not established.
 elements:
   - fire
 celestialBodies:
@@ -89,6 +89,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: d28ea34c709c8a7eb47947e418a1226a852fa70183998a4d8a7d52393141a438
 ---
 
 # Blessed Thistle

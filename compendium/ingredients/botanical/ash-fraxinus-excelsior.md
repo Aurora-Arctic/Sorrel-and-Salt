@@ -100,7 +100,6 @@ references:
 variants:
   - form: Bark
     description: Cunningham records a garter of green ash bark once worn against the power of sorcerers and conjurers. Grieve describes the bark, taken from the trunk and preferably the root, as bitter and astringent; it was used to tan nets and given in decoction for intermittent fevers.
-    safetyNotes: Cunningham marks the bark as currently recognised as safe.
     references:
       - source: cunningham-herbs
         locator: under "Ash"; p. 266
@@ -108,7 +107,6 @@ variants:
         supports:
           - form
           - description
-          - safetyNotes
       - source: grieve-ash
         nameBasis: unaudited
         supports:
@@ -175,6 +173,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 1a551d79e80c250cbd348ba43cee82dd0f2aba5d36e7a3b0980ab57eeb19b258
 ---
 
 # Ash

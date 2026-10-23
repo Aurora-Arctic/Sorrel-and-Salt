@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Rhamphospermum nigrum
-safetyNotes: AHPA safety class 1 taken internally and class 2d used externally. Not to be put on the skin of children under six, or of anyone with varicose veins, severe circulatory damage or another vein disorder. A mustard plaster left on longer than a quarter to half an hour can blister the skin, sometimes leaving weeping, slow-healing ulcers and dead tissue, and the irritation lasts a day or two. Taken by mouth it can irritate the digestive tract, so people with a peptic ulcer or gastric bleeding should take care, and large doses can bring on enteritis, abdominal pain and diarrhoea. Allergic reactions, including hives and anaphylactic shock, have followed both internal and external use. Animal studies suggest the seed may alter blood sugar, so people with diabetes should consult a qualified practitioner first. Safety in pregnancy and while nursing is not established. Cunningham marks it as not to be abused internally or taken long term.
+safetyNotes: AHPA safety class 2d used externally. Not to be put on the skin of children under six, or of anyone with varicose veins, severe circulatory damage or another vein disorder. A mustard plaster left on longer than a quarter to half an hour can blister the skin, sometimes leaving weeping, slow-healing ulcers and dead tissue, and the irritation lasts a day or two. Taken by mouth it can irritate the digestive tract, so people with a peptic ulcer or gastric bleeding should take care, and large doses can bring on enteritis, abdominal pain and diarrhoea. Allergic reactions, including hives and anaphylactic shock, have followed both internal and external use. Animal studies suggest the seed may alter blood sugar, so people with diabetes should consult a qualified practitioner first. Safety in pregnancy and while nursing is not established. Cunningham marks it as not to be abused internally or taken long term.
 elements:
   - fire
 celestialBodies:
@@ -105,6 +105,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: edfd9b6b6b6ce35b7b57041a97ed5e91353338d5c1286d6ed7af318571830a5e
 ---
 
 # Black Mustard

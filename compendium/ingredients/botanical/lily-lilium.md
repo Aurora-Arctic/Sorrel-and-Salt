@@ -72,7 +72,7 @@ references:
 variants:
   - form: Bulb
     description: The scaly bulb is the part taken in Chinese medicine, where the bulbs of Brown's lily, the tiger lily and the coral lily all go by the name bai he. Lily bulbs are starchy and are cooked as a root vegetable in Chinese cooking, although some species have bulbs too bitter to eat.
-    safetyNotes: AHPA safety class 1 for the bulbs of Brown's lily, tiger lily and coral lily. Allergic reactions to these species have been reported, and their safety in pregnancy and while nursing has not been established. In animals, lily bulb given by mouth lengthened sleep brought on by barbiturates.
+    safetyNotes: Allergic reactions to the bulbs of Brown's lily, tiger lily and coral lily have been reported, and their safety in pregnancy and while nursing has not been established. In animals, lily bulb given by mouth lengthened sleep brought on by barbiturates.
     references:
       - source: ahpa-safety
         locator: p. 522; p. xxii
@@ -124,6 +124,7 @@ variants:
         nameBasis: stated
         supports:
           - colours
+seedUpdate: a8aeb6ef72d5a74aa775b1680efe77ba3e39111f09231b07d32663ed87a5afec
 ---
 
 # Lily

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Pimpinella anisum
-safetyNotes: AHPA safety class 1. Allergic reactions have been reported, among them occupational asthma, a case of eye and nose symptoms with stomach upset, and swelling of the tongue. Some herbals advise against taking it internally in pregnancy; AHPA records that infusions may be used then, but not alcohol extracts or the essential oil. Safety while nursing is not established.
+safetyNotes: Allergic reactions have been reported, among them occupational asthma, a case of eye and nose symptoms with stomach upset, and swelling of the tongue. Some herbals advise against taking it internally in pregnancy; AHPA records that infusions may be used then, but not alcohol extracts or the essential oil. Safety while nursing is not established.
 elements:
   - air
 celestialBodies:
@@ -164,6 +164,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 2fcf53e2ec76332c38b049f2ed526800ef38975434a706b177df42f4fff66712
 ---
 
 # Anise

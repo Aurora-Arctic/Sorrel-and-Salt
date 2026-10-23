@@ -86,7 +86,6 @@ variants:
           - form
   - form: Oil
     description: Coconut oil comes from the white flesh lining the nut. The refined, or fractionated, oil has neither scent nor colour; the unrefined, or virgin, oil is pale or whitish yellow, smells of coconut and turns solid below about 21 °C. It keeps almost indefinitely and is a common base for herb-infused salves.
-    safetyNotes: Kynes describes topical use as generally regarded as safe.
     references:
       - source: kynes-remedies
         locator: pp. 243–244
@@ -94,7 +93,6 @@ variants:
         supports:
           - form
           - description
-          - safetyNotes
       - source: wikipedia-coconut
         nameBasis: stated
         supports:
@@ -110,6 +108,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: a5a0006f939b8d0accf5874b24b5d9e39fbfec619544a896f1ca7a086cf7f058
 ---
 
 # Coconut

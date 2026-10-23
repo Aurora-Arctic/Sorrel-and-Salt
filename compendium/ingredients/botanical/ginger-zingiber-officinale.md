@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Zingiber officinale
-safetyNotes: AHPA places ginger rhizome in safety class 1, herbs that can be safely consumed when used appropriately. People with active gallstone disease should use it only under the supervision of a qualified healthcare practitioner. Heartburn and other digestive upsets occasionally follow its use, especially in large doses; allergic reactions have been reported, mainly in spice-factory workers; and excessive doses of fresh-ginger preparations have been reported to cause dry mouth, sore throat, nosebleeds and kidney inflammation. One human trial found that ginger taken with nifedipine slowed blood clotting more than the drug alone. Traditional Chinese texts caution against dried ginger in pregnancy, although clinical trials in pregnant women have not reported harm to pregnancy outcomes. Cunningham's codes say the dried root should not be used above normal food amounts, or at all in pregnancy or with gallstones, and that the fresh root is recognised as safe.
+safetyNotes: People with active gallstone disease should use it only under the supervision of a qualified healthcare practitioner. Heartburn and other digestive upsets occasionally follow its use, especially in large doses; allergic reactions have been reported, mainly in spice-factory workers; and excessive doses of fresh-ginger preparations have been reported to cause dry mouth, sore throat, nosebleeds and kidney inflammation. One human trial found that ginger taken with nifedipine slowed blood clotting more than the drug alone. Traditional Chinese texts caution against dried ginger in pregnancy, although clinical trials in pregnant women have not reported harm to pregnancy outcomes. Cunningham's codes say the dried root should not be used above normal food amounts, or at all in pregnancy or with gallstones.
 elements:
   - fire
   - earth
@@ -114,6 +114,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cce43af4da1c1c72acb64be7511bb8ad5f8b16db2fa267fd9c6bcc83b926b424
 ---
 
 # Ginger

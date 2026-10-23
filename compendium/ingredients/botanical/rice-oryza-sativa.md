@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Oryza sativa
-safetyNotes: Cunningham classes it as safe (health code G), with the warning not to eat it raw.
+safetyNotes: Cunningham warns not to eat it raw.
 elements:
   - air
   - earth
@@ -117,6 +117,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9fbf603585734516259c73dd8522f6ef99810952cae0de284db3a67794a0be41
 ---
 
 # Rice

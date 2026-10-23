@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Achillea millefolium
 toxic: true
-safetyNotes: Considered safe to take when used appropriately (AHPA safety class 1). People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common, and contact allergy and skin rashes from yarrow have been reported. Safety in pregnancy and while nursing is not established; one animal study at high doses showed lower fetal weight, and a herbal source advises against taking it internally when pregnant. It is reported to be toxic to dogs, cats and horses, and it can be mistaken for the deadly hemlock.
+safetyNotes: People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common, and contact allergy and skin rashes from yarrow have been reported. Safety in pregnancy and while nursing is not established; one animal study at high doses showed lower fetal weight, and a herbal source advises against taking it internally when pregnant. It is reported to be toxic to dogs, cats and horses, and it can be mistaken for the deadly hemlock.
 elements:
   - water
   - air
@@ -138,6 +138,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 781addf03f74a0a273eb963762e6f7eabb6d11702fd8f2df8af8b843a0d2d565
 ---
 
 # Yarrow

@@ -95,7 +95,7 @@ references:
       - description
 variants:
   - form: Berry
-    safetyNotes: 'AHPA safety class 1 for the fruit, which is traditionally eaten as food. The fruit may reduce blood clotting: an extract taken before surgery reduced bleeding. Small studies of fruit extract taken in pregnancy found no harm to mother or child.'
+    safetyNotes: 'The fruit may reduce blood clotting: an extract taken before surgery reduced bleeding.'
     colours:
       - blue
       - black
@@ -148,6 +148,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: 4d4ab09606e0e065191866d646d0ac26acf2c00a147ab2751358b79bf649d128
 ---
 
 # Bilberry

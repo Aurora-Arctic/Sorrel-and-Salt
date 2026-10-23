@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Citrus × aurantium
-safetyNotes: 'The fruit is AHPA safety class 1 but interaction class C: like grapefruit juice, its juice inhibits the drug-metabolising enzyme CYP3A4 and so raises blood levels of drugs it clears, with interactions confirmed for cyclosporine, felodipine, dextromethorphan and saquinavir. One Chinese medicine text cautions against the unripe fruit in pregnancy, and safety while nursing is not established. Concentrated fruit extracts standardised to synephrine are class 2d: combined with caffeine they are not advised for heavy or prolonged use, nor for people with heart irregularities, high blood pressure, insomnia or anxiety. Weight-loss supplements containing bitter orange have been linked in case reports to strokes, angina, ischaemic colitis and heart attacks.'
+safetyNotes: 'AHPA gives the fruit interaction class C: like grapefruit juice, its juice inhibits the drug-metabolising enzyme CYP3A4 and so raises blood levels of drugs it clears, with interactions confirmed for cyclosporine, felodipine, dextromethorphan and saquinavir. One Chinese medicine text cautions against the unripe fruit in pregnancy, and safety while nursing is not established. Concentrated fruit extracts standardised to synephrine are class 2d: combined with caffeine they are not advised for heavy or prolonged use, nor for people with heart irregularities, high blood pressure, insomnia or anxiety. Weight-loss supplements containing bitter orange have been linked in case reports to strokes, angina, ischaemic colitis and heart attacks.'
 folkNames:
   - Seville Orange
   - Sour Orange
@@ -111,6 +111,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 1a0890fbb19089df6c78a7c90101c0e2914b880066f3c128146c41163439e98e
 ---
 
 # Bitter Orange

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Chamaelirium luteum
-safetyNotes: AHPA places fairy wand (false unicorn) in safety class 1, herbs that can be safely consumed when used appropriately, and lists no contraindications or drug interactions. Large doses may cause vomiting. Its safety while nursing has not been established.
+safetyNotes: Large doses may cause vomiting. Its safety while nursing has not been established.
 elements:
   - earth
 celestialBodies:
@@ -72,6 +72,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f1fd4ad7815f5c9263c306bf8efe9fa7319fadeb32d208d8ccdf7bdba1410f2f
 ---
 
 # Fairy Wand

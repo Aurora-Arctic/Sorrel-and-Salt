@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Rosa
-safetyNotes: AHPA, treating the hips of the commonly used species together, gives safety class 1 (safe when used appropriately) and interaction class A, with no contraindications or drug interactions known; safety in pregnancy and while breastfeeding has not been established. Cunningham classes the petals as safe (health code G) but the green parts as not for internal use (X).
+safetyNotes: AHPA, treating the hips of the commonly used species together, notes that safety in pregnancy and while breastfeeding has not been established. Cunningham classes the green parts as not for internal use (X).
 elements:
   - water
 celestialBodies:
@@ -266,6 +266,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: 8acfd60625f812a0e86f55d927c8232a041e86a297b269ecb891c17091dafebb
 ---
 
 # Rose

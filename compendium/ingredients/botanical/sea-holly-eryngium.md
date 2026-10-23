@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Eryngium
-safetyNotes: "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected) for eryngo, plains eryngo and button eryngo: no contraindications, precautions or drug interactions are known. Large doses of button eryngo may cause nausea or vomiting. AHPA found no information on its use in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe."
+safetyNotes: Large doses of button eryngo may cause nausea or vomiting. AHPA found no information on its use in pregnancy or while nursing, so its safety then has not been established.
 elements:
   - water
 celestialBodies:
@@ -27,7 +27,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: ahpa-safety
@@ -68,6 +67,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: dee2cb82d1aaf32659aaf22e6792d063e1d34d4bbbbe461508c8751706c8287d
 ---
 
 # Sea Holly

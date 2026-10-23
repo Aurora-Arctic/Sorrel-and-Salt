@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Laurus nobilis
-safetyNotes: AHPA safety class 1. Foods and skin products containing the leaf or its essential oil have caused allergic skin reactions (contact dermatitis), confirmed by patch tests. Safety in pregnancy and while nursing has not been established; Kynes advises avoiding bay in pregnancy and while breastfeeding, and not taking it alongside pain or sedative medication. Cunningham codes it as currently recognised safe. Grieve warns against mistaking the leaves of the poisonous cherry laurel, which now usually takes the name laurel, for bay's.
+safetyNotes: Foods and skin products containing the leaf or its essential oil have caused allergic skin reactions (contact dermatitis), confirmed by patch tests. Safety in pregnancy and while nursing has not been established; Kynes advises avoiding bay in pregnancy and while breastfeeding, and not taking it alongside pain or sedative medication. Grieve warns against mistaking the leaves of the poisonous cherry laurel, which now usually takes the name laurel, for bay's.
 elements:
   - fire
   - air
@@ -79,7 +79,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Bay"
     nameBasis: unaudited
@@ -169,6 +168,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 5fc41c5897b384ee544213429ae31cf742fd5a427151198cd80672f9fb84d00f
 ---
 
 # Bay Laurel

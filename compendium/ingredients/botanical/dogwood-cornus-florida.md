@@ -3,7 +3,6 @@ status: approved
 nomenclature: botanical
 canonicalName: Cornus florida
 toxic: true
-safetyNotes: Cunningham codes dogwood as currently recognised as safe.
 elements:
   - air
   - earth
@@ -45,7 +44,6 @@ references:
       - nomenclature
       - folkNames
       - categories
-      - safetyNotes
       - description
   - source: kynes-plants
     locator: under "Dogwood"
@@ -126,6 +124,7 @@ variants:
           - form
           - description
           - toxic
+seedUpdate: 8d6fe4f777b7b65cc6c74d4c3b979dd3dc3de7ff47fcb12a0be690902838f306
 ---
 
 # Dogwood

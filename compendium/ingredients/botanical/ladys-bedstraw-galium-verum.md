@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Galium verum
-safetyNotes: Considered safe to take when used appropriately (AHPA safety class 1), with no known contraindications, interactions or side effects. No information on its safety in pregnancy or while nursing was found, and although none of concern was identified, safety in either has not been conclusively established.
+safetyNotes: No information on its safety in pregnancy or while nursing was found, and safety in either has not been conclusively established.
 elements:
   - water
 celestialBodies:
@@ -72,6 +72,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: 74e28f2d93b4ea801325933c5980925173c78cf99c14f2c73874647826dfffd3
 ---
 
 # Lady's Bedstraw

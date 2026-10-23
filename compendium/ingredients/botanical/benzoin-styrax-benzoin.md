@@ -84,7 +84,7 @@ references:
       - folkNames
 variants:
   - form: Resin
-    safetyNotes: 'The AHPA handbook rates benzoin gum resin Safety Class 1 and Interaction Class A: it can be taken safely when used appropriately, with no known contraindications, precautions or drug interactions. Allergic contact dermatitis from benzoin has been reported and confirmed by patch testing. Safety in pregnancy and breastfeeding has not been conclusively established.'
+    safetyNotes: Allergic contact dermatitis from benzoin has been reported and confirmed by patch testing. Safety in pregnancy and breastfeeding has not been conclusively established.
     colours:
       - brown
     references:

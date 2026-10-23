@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Agrimonia eupatoria
-safetyNotes: 'AHPA safety class 1 and interaction class A: no contraindications, other precautions, drug interactions or adverse effects are known. Its safety in pregnancy and while nursing has not been conclusively established, though the review found no concern. It contains 4–10% tannins. Cunningham marks it as currently recognised as safe (his health code G).'
+safetyNotes: Its safety in pregnancy and while nursing has not been conclusively established. It contains 4–10% tannins.
 elements:
   - air
   - earth
@@ -47,7 +47,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Agrimony"
     nameBasis: unaudited
@@ -123,6 +122,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: 38c79b7e9c600cc42ff68b94df8f60297efe691c328705c3cdb2e926b6c5ac03
 ---
 
 # Agrimony

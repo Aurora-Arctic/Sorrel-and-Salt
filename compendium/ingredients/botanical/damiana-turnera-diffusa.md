@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Turnera diffusa
-safetyNotes: AHPA places damiana leaf in safety class 1, herbs that can be safely consumed when used appropriately. It contains cyanogenic glycosides. No information on its safety in pregnancy or while nursing was found, so safety then has not been established, and Kynes says it should not be taken during pregnancy or while nursing. AHPA records one case, with few details, of convulsions and sudden outbursts in a person with a history of alcohol abuse after drinking 8 oz of damiana extract. Cunningham codes it as currently recognised as safe.
+safetyNotes: It contains cyanogenic glycosides. No information on its safety in pregnancy or while nursing was found, so safety then has not been established, and Kynes says it should not be taken during pregnancy or while nursing. AHPA records one case, with few details, of convulsions and sudden outbursts in a person with a history of alcohol abuse after drinking 8 oz of damiana extract.
 elements:
   - fire
 celestialBodies:
@@ -29,7 +29,6 @@ references:
       - celestialBodies
       - categories
       - folkNames
-      - safetyNotes
       - description
   - source: kynes-plants
     locator: under "Damiana"
@@ -92,6 +91,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2c63b3462c9a4e910a9f76575c456bec0aae104ac6787829f10a78849442bfad
 ---
 
 # Damiana

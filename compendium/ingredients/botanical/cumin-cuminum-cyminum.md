@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Cuminum cyminum
-safetyNotes: AHPA places cumin in safety class 1, herbs that can be safely consumed when used appropriately, and Cunningham's code marks it as currently recognised as safe. AHPA advises caution for anyone with inflamed kidneys or a history of kidney irritation. Allergic reactions to cumin, including anaphylaxis, have been reported. Large doses showed antifertility effects in animal studies, and its safety while nursing has not been established. AHPA notes that these concerns come from the higher doses used therapeutically, not from its use as a spice.
+safetyNotes: AHPA advises caution for anyone with inflamed kidneys or a history of kidney irritation. Allergic reactions to cumin, including anaphylaxis, have been reported. Large doses showed antifertility effects in animal studies, and its safety while nursing has not been established. AHPA notes that these concerns come from the higher doses used therapeutically, not from its use as a spice.
 elements:
   - fire
 celestialBodies:
@@ -41,7 +41,6 @@ references:
       - folkNames
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Cumin"
     nameBasis: resolved
@@ -111,6 +110,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ef68e01723e27a39fa64a05ede3a8bf3ca26c7856323a042b12aea5a8057a949
 ---
 
 # Cumin

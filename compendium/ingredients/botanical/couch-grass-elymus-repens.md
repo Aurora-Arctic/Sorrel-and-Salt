@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Elymus repens
-safetyNotes: AHPA safety class 1 (can be safely consumed when used appropriately), with no known contraindications, drug interactions or side effects; it notes that couch grass is a diuretic. No concerns were found for pregnancy or nursing, but its safety in either has not been conclusively established. Cunningham codes the root as currently recognised as safe.
+safetyNotes: AHPA notes that couch grass is a diuretic. Its safety in pregnancy or nursing has not been conclusively established.
 elements:
   - earth
 celestialBodies:
@@ -39,7 +39,6 @@ references:
       - folkNames
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Grass"
     nameBasis: unaudited
@@ -85,6 +84,7 @@ variants:
         supports:
           - form
           - colours
+seedUpdate: 80947f83d13dba11cfe72058ac7a9c85d60c38a24fc294edc3ad1962bb23725b
 ---
 
 # Couch Grass

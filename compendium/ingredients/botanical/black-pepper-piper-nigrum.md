@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Piper nigrum
-safetyNotes: 'AHPA safety class 1 and interaction class B: piperine, its pungent compound, can raise the body’s uptake of certain drugs, so clinically relevant interactions are plausible. Large doses may irritate the urinary tract, and overdoses can cause burning heat in the abdomen, thirst, vomiting, fever and occasionally convulsions; hives have also been reported. A four-year-old who habitually ate non-food items died after inhaling ground pepper. Animal studies found some anti-implantation activity, and safety while nursing is not established. These cautions concern the larger doses taken as medicine, not pepper used in cooking. Cunningham marks it safe.'
+safetyNotes: 'AHPA: piperine, its pungent compound, can raise the body’s uptake of certain drugs, so clinically relevant interactions are plausible. Large doses may irritate the urinary tract, and overdoses can cause burning heat in the abdomen, thirst, vomiting, fever and occasionally convulsions; hives have also been reported. A four-year-old who habitually ate non-food items died after inhaling ground pepper. Animal studies found some anti-implantation activity, and safety while nursing is not established. These cautions concern the larger doses taken as medicine, not pepper used in cooking.'
 elements:
   - fire
 celestialBodies:
@@ -35,7 +35,6 @@ references:
       - celestialBodies
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Pepper"
     nameBasis: unaudited
@@ -101,6 +100,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: a45ef6813431f8b508147f02b974bf1ea1eb5501093745e2529ac2edb993d18a
 ---
 
 # Black Pepper

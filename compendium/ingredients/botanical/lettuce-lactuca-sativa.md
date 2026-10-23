@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Lactuca sativa
-safetyNotes: Cunningham's health code G marks lettuce as currently recognised as safe.
 elements:
   - water
 celestialBodies:
@@ -27,7 +26,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: wikipedia-lettuce
@@ -73,6 +71,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 8de03f76cbbaf2177c50eb625981b6d241d6c70b580ffa26850d56734e30a269
 ---
 
 # Lettuce

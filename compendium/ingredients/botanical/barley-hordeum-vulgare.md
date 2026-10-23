@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Hordeum vulgare
-safetyNotes: AHPA safety class 1 (the sprouted seed). Allergic reactions to barley, anaphylaxis among them, have been reported, some after drinking beer, and workers handling barley grain dust day to day have developed asthma and contact dermatitis. Barley may lower blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Large doses of sprouted barley are taken to reduce or stop breast milk, so a nursing mother who wishes to continue should avoid them. Safety in pregnancy has not been established, and Cunningham marks the sprouted seed as not to be taken internally while pregnant. Because barley contains gluten, it is unsuitable for people with coeliac disease or other gluten-related disorders.
+safetyNotes: Allergic reactions to barley, anaphylaxis among them, have been reported, some after drinking beer, and workers handling barley grain dust day to day have developed asthma and contact dermatitis. Barley may lower blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Large doses of sprouted barley are taken to reduce or stop breast milk, so a nursing mother who wishes to continue should avoid them. Safety in pregnancy has not been established, and Cunningham marks the sprouted seed as not to be taken internally while pregnant. Because barley contains gluten, it is unsuitable for people with coeliac disease or other gluten-related disorders.
 elements:
   - earth
 celestialBodies:
@@ -144,6 +144,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d65c50040675bc41c3566f43ed6a65e5268c0b72fb83086cf17b38633284a1f5
 ---
 
 # Barley

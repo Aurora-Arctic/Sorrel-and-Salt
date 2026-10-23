@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Anethum graveolens
-safetyNotes: AHPA safety class 1 (can be safely consumed when used appropriately), with no known contraindications or drug interactions; it notes that dill is a diuretic. Allergic reactions, including contact dermatitis confirmed by patch testing, have been reported. No concerns were found for pregnancy, but safety in pregnancy has not been conclusively established, and Kynes advises avoiding medicinal concentrations while pregnant (culinary amounts such as dill pickles are fine). Cunningham codes it as currently recognised as safe.
+safetyNotes: AHPA notes that dill is a diuretic. Allergic reactions, including contact dermatitis confirmed by patch testing, have been reported. Safety in pregnancy has not been conclusively established, and Kynes advises avoiding medicinal concentrations while pregnant.
 elements:
   - fire
   - air
@@ -59,7 +59,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Dill"
     nameBasis: resolved
@@ -170,6 +169,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 71d621ff68dd6d3991c568a2abbd0d47353a75cfa5b06898ee5d1766c0eb978b
 ---
 
 # Dill

@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Bambusa vulgaris
 toxic: true
-safetyNotes: Cunningham lists bamboo as recognised as safe. The shoots of this species, alone among bamboos, contain taxiphyllin, a highly toxic cyanogenic glycoside that breaks down readily in boiling water; the shoots are eaten cooked or pickled. Eating large amounts of the leaves has caused neurological illness in horses. In Nigeria people drink a leaf infusion to bring on abortion, an effect shown in rabbits.
+safetyNotes: The shoots of this species, alone among bamboos, contain taxiphyllin, a highly toxic cyanogenic glycoside that breaks down readily in boiling water; the shoots are eaten cooked or pickled. Eating large amounts of the leaves has caused neurological illness in horses. In Nigeria people drink a leaf infusion to bring on abortion, an effect shown in rabbits.
 elements:
   - air
 celestialBodies:
@@ -37,7 +37,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Bamboo"
     nameBasis: unaudited
@@ -70,6 +69,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: c31459cc204baa0425b8667d50d994194c39b51a5511e95f4f556ab8e43798f5
 ---
 
 # Bamboo

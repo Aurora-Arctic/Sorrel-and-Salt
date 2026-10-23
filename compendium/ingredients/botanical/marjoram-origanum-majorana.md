@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Origanum majorana
-safetyNotes: Considered safe when used appropriately (AHPA safety class 1), with no known cautions, and Cunningham marks it as currently recognised as safe. No concerns were found for use in pregnancy or while nursing, but safety then has not been conclusively established.
+safetyNotes: AHPA notes that safety in pregnancy and while nursing has not been conclusively established.
 elements:
   - air
 celestialBodies:
@@ -46,7 +46,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Oregano and Marjoram"
     nameBasis: unaudited
@@ -110,6 +109,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 6ed15aba8751c7b2ca00af586fa95b9f8fef2f2907a34b9d6f7f1e5091a0aaf5
 ---
 
 # Marjoram

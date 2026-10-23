@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Sorbus aucuparia
-safetyNotes: Cunningham advises against taking the fruit internally (health code X), and Kynes warns that rowanberries are safe to eat only when cooked.
+safetyNotes: Cunningham advises against taking the fruit internally (health code X), and Kynes warns that rowanberries should be eaten only when cooked.
 elements:
   - fire
   - earth
@@ -190,6 +190,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: b9320d30bc08fe915091cbe27c3999a28a84d2d6d0d734e7daf8088c9389b700
 ---
 
 # Rowan

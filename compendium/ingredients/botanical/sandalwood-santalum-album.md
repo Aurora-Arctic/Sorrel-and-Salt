@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Santalum album
-safetyNotes: 'The AHPA handbook rates sandalwood Safety Class 1 and Interaction Class A: no known contraindications, precautions or drug interactions. Fewer than 3% of patients already allergic to fragrances reacted to sandalwood in patch tests. Safety in pregnancy has not been conclusively established.'
+safetyNotes: Fewer than 3% of patients already allergic to fragrances reacted to sandalwood in patch tests. Safety in pregnancy has not been conclusively established.
 elements:
   - air
   - water
@@ -148,6 +148,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: c3c5f9deb94c918adc8a6747465e9187bacee3b13abdb857e6bfdaf664dd449f
 ---
 
 # Sandalwood

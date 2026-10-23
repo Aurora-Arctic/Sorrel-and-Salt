@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Allium ampeloprasum
-safetyNotes: Cunningham's health code marks leek as safe.
 elements:
   - fire
 celestialBodies:
@@ -23,7 +22,6 @@ references:
       - celestialBodies
       - categories
       - description
-      - safetyNotes
   - source: wikipedia-allium-ampeloprasum
     nameBasis: stated
     supports:
@@ -38,6 +36,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 58fc789ab514db1e2fe6e719a3979f0641264d8e3ca7b6a14b7b1304fba16ba5
 ---
 
 # Leek

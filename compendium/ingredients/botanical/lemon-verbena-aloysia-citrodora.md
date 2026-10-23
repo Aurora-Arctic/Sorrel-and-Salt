@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Aloysia citrodora
-safetyNotes: 'Cunningham marks lemon verbena as safe (health code G). AHPA safety class 1, interaction class A: no known contraindications, precautions, interactions or side effects, and no reported adverse events. Its safety in pregnancy and while nursing has not been conclusively established.'
+safetyNotes: Its safety in pregnancy and while nursing has not been conclusively established.
 elements:
   - air
 celestialBodies:
@@ -28,7 +28,6 @@ references:
       - celestialBodies
       - categories
       - folkNames
-      - safetyNotes
   - source: ahpa-safety
     locator: p. 50; p. xxii
     nameBasis: unaudited
@@ -64,7 +63,7 @@ variants:
           - description
   - form: Oil
     description: Historically steam-distilled from the leaves for the perfume trade.
-    safetyNotes: The oil sensitises the skin and is phototoxic, and the European Union bars verbena oils, other than the absolute, as fragrance ingredients. Used as a food flavouring, lemon verbena oil is generally recognised as safe by the US Food and Drug Administration.
+    safetyNotes: The oil sensitises the skin and is phototoxic, and the European Union bars verbena oils, other than the absolute, as fragrance ingredients.
     references:
       - source: wikipedia-aloysia-citrodora
         nameBasis: stated
@@ -72,6 +71,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: 3327ea39c967030fa22c8d59e99874dd11f9415e76b861ff3e520124b8781717
 ---
 
 # Lemon Verbena

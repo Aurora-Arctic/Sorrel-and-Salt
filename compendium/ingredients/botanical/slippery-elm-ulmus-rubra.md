@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Ulmus rubra
-safetyNotes: AHPA places slippery elm in safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant drug interactions expected). Take it with at least 250 ml (8 oz) of liquid. Take other medicines an hour before it or several hours after, since its mucilage may slow their absorption. Bladder stones have followed the insertion of the bark into the vagina in attempted abortions, which would not happen in normal use by mouth. Its safety in pregnancy and while nursing has not been established. Cunningham's health code marks the bark as safe.
+safetyNotes: Take it with at least 250 ml (8 oz) of liquid. Take other medicines an hour before it or several hours after, since its mucilage may slow their absorption. Bladder stones have followed the insertion of the bark into the vagina in attempted abortions, which would not happen in normal use by mouth. Its safety in pregnancy and while nursing has not been established.
 elements:
   - air
 celestialBodies:
@@ -23,7 +23,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
   - source: ahpa-safety
     locator: pp. 891–892; p. xxii
@@ -80,6 +79,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: fad201068ec65ecb6ff9209e25f5d5c0765cc12171aee6d54d27de260bac8b22
 ---
 
 # Slippery Elm

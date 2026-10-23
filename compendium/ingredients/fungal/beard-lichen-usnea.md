@@ -2,7 +2,7 @@
 status: approved
 nomenclature: fungal
 canonicalName: Usnea
-safetyNotes: 'The AHPA handbook rates usnea (Usnea barbata) Safety Class 1 and Interaction Class A: no known contraindications, precautions or drug interactions. Liver failure and other liver damage have been reported in people taking the isolated compound usnic acid, on its own or in multi-herb products, though the editors note that findings on the isolated compound may not apply to the lichen or its extracts. Safety in pregnancy and breastfeeding has not been established.'
+safetyNotes: Liver failure and other liver damage have been reported in people taking the isolated compound usnic acid, on its own or in multi-herb products, though the editors note that findings on the isolated compound may not apply to the lichen or its extracts. Safety in pregnancy and breastfeeding has not been established.
 elements:
   - earth
   - water
@@ -60,6 +60,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 324c14367b22553681725e0ba1ff478833cc5c76963cfa6e9c73be9949092349
 ---
 
 # Beard Lichen

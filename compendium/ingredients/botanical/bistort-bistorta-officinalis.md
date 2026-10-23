@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Bistorta officinalis
-safetyNotes: AHPA safety class 1 and interaction class A, with no known contraindications or drug interactions. It is 15–21% tannin, and mild abdominal pain and diarrhoea have been reported, thought to come from irritation of the gut lining. No concern was identified for pregnancy or nursing, though safety in either has not been firmly proven, and Kynes cautions that it is an abortifacient.
+safetyNotes: It is 15–21% tannin, and mild abdominal pain and diarrhoea have been reported, thought to come from irritation of the gut lining. Safety in pregnancy or nursing has not been firmly proven, and Kynes cautions that it is an abortifacient.
 elements:
   - earth
 celestialBodies:
@@ -140,6 +140,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: c72705fd588928b333442f9d57daf5b76b4a37143b9cd7bf4164c7f9a925d341
 ---
 
 # Bistort

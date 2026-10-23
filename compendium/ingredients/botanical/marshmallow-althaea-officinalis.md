@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Althaea officinalis
-safetyNotes: Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. It should be taken with plenty of liquid, at least 250 ml. Because it may slow the absorption of drugs taken by mouth, other medicines should be taken an hour before it or several hours after. Its safety in pregnancy and while nursing has not been established, although no concerns were identified.
+safetyNotes: It should be taken with plenty of liquid, at least 250 ml. Because it may slow the absorption of drugs taken by mouth, other medicines should be taken an hour before it or several hours after. Its safety in pregnancy and while nursing has not been established.
 elements:
   - water
 celestialBodies:
@@ -38,7 +38,6 @@ references:
       - elements
       - categories
       - folkNames
-      - safetyNotes
       - description
   - source: kynes-plants
     locator: under "Mallow"

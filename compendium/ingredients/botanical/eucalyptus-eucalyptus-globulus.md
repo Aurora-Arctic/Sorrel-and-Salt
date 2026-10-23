@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Eucalyptus globulus
-safetyNotes: AHPA places eucalyptus leaf in safety class 1, herbs that can be safely consumed when used appropriately, with no known contraindications; it contains up to 11% tannins. No information on its safety in pregnancy or while nursing was found, so safety then has not been established. Cunningham's health codes say it should not be taken internally by anyone with liver problems or inflammatory disease of the bile ducts, and he warns against using it on the faces of small children.
+safetyNotes: AHPA notes that eucalyptus leaf contains up to 11% tannins. No information on its safety in pregnancy or while nursing was found, so safety then has not been established. Cunningham's health codes say it should not be taken internally by anyone with liver problems or inflammatory disease of the bile ducts, and he warns against using it on the faces of small children.
 elements:
   - water
   - air
@@ -141,6 +141,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ef07ad397ee3877157350b878b24e7e4b0e5c8a147c7a83d42139bdf788c9e1a
 ---
 
 # Eucalyptus

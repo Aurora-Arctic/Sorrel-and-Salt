@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Scrophularia nodosa
 toxic: true
-safetyNotes: Kynes considers figwort toxic and says it should not be swallowed. AHPA, by contrast, places the herb and root in safety class 1, herbs that can be safely consumed when used appropriately. It notes that older literature warned against figwort for people with ventricular tachycardia, a concern it regards as theoretical and neither proven nor disproven; Cunningham's health code likewise says it should not be taken internally by anyone with that condition. No information on its safety in pregnancy or while nursing was found, so its safety then has not been established.
+safetyNotes: Kynes considers figwort toxic and says it should not be swallowed. AHPA notes that older literature warned against figwort for people with ventricular tachycardia, a concern it regards as theoretical and neither proven nor disproven; Cunningham's health code likewise says it should not be taken internally by anyone with that condition. No information on its safety in pregnancy or while nursing was found, so its safety then has not been established.
 elements:
   - water
   - earth
@@ -99,6 +99,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: dbd05997dc7870269a55c950bf51f68bb0cb7de6b7d8a7460abe88ba7e6550d2
 ---
 
 # Figwort

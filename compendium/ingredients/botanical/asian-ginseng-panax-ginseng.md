@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Panax ginseng
-safetyNotes: 'AHPA safety class 1 (its interaction class is A): no contraindications are known. Taking it with stimulants is not advised, since susceptible people may become over-stimulated, and red (steamed) ginseng may strengthen the effect of caffeine. A few case reports describe altered blood clotting in people also taking warfarin, though trials in people and rats found no interaction. It may change blood sugar, so people with diabetes should watch their levels and speak to a qualified practitioner first. Allergic reactions have been reported, and high doses or very long use can bring sleeplessness, nervousness and diarrhoea. Its safety while nursing is not established. Kynes says it should not be taken in pregnancy or while breastfeeding; AHPA notes that a British herbal text rules it out in pregnancy while texts on traditional Chinese medicine raise no such concern. Wikipedia calls its use in pregnancy and breastfeeding potentially unsafe and says children should not take it.'
+safetyNotes: Taking it with stimulants is not advised, since susceptible people may become over-stimulated, and red (steamed) ginseng may strengthen the effect of caffeine. A few case reports describe altered blood clotting in people also taking warfarin, though trials in people and rats found no interaction. It may change blood sugar, so people with diabetes should watch their levels and speak to a qualified practitioner first. Allergic reactions have been reported, and high doses or very long use can bring sleeplessness, nervousness and diarrhoea. Its safety while nursing is not established. Kynes says it should not be taken in pregnancy or while breastfeeding; AHPA notes that a British herbal text rules it out in pregnancy while texts on traditional Chinese medicine raise no such concern. Wikipedia calls its use in pregnancy and breastfeeding potentially unsafe and says children should not take it.
 elements:
   - fire
 celestialBodies:
@@ -68,6 +68,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 032811ba994c843db4b92490bbfbb252a889fc05066704fc74bda280b898cc6e
 ---
 
 # Asian Ginseng

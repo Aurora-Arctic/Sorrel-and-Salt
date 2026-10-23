@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Prunus spinosa
-safetyNotes: AHPA safety class 1. The seeds hold cyanogenic glycosides; Kynes warns that in Prunus species the seeds and leaves release cyanide once swallowed, and Wikipedia notes trace hydrogen cyanide in the seed. Cunningham marks the seeds as not for internal use and the plant as not for long-term or excessive internal use. It is a diuretic. Safety in pregnancy and while nursing has not been established.
+safetyNotes: The seeds hold cyanogenic glycosides; Kynes warns that in Prunus species the seeds and leaves release cyanide once swallowed, and Wikipedia notes trace hydrogen cyanide in the seed. Cunningham marks the seeds as not for internal use and the plant as not for long-term or excessive internal use. It is a diuretic. Safety in pregnancy and while nursing has not been established.
 elements:
   - fire
   - earth
@@ -176,6 +176,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 89e95793aa50569be0a231d6d3e21cce5cc9c9650c2e5bd9132c9a7b12ccc2e2
 ---
 
 # Blackthorn

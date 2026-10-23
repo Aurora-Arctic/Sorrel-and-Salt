@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Magnolia virginiana
-safetyNotes: Cunningham marks magnolia as currently recognised as safe.
 elements:
   - earth
   - water
@@ -48,7 +47,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Magnolia"
     nameBasis: unaudited
@@ -153,6 +151,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 70e556276c42ab8e7961a2333589727e81b9961c8b9751273c608b4a2e760bde
 ---
 
 # Magnolia

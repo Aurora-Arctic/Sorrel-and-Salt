@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Secale cereale
-safetyNotes: "Cunningham's health code marks rye as safe (code G: currently recognised as safe)."
 elements:
   - earth
 celestialBodies:
@@ -39,7 +38,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - categories
   - source: kynes-plants
     locator: under "Grain"
@@ -69,6 +67,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 6249018e7ed7289ceab1ba40634cabc7f18b03861f6ef9b7f513ccebac15b0f6
 ---
 
 # Rye

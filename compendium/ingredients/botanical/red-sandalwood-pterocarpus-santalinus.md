@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Pterocarpus santalinus
-safetyNotes: 'The AHPA handbook rates red saunders heartwood Safety Class 1 and Interaction Class A: no known contraindications, precautions or drug interactions. Allergic contact dermatitis from it has been reported. An animal study found that it may change how the body regulates blood sugar, so people with diabetes are advised to watch their blood sugar closely and talk to a qualified healthcare practitioner before using it. Its safety in pregnancy and while breastfeeding has not been conclusively established.'
+safetyNotes: Allergic contact dermatitis from it has been reported. An animal study found that it may change how the body regulates blood sugar, so people with diabetes are advised to watch their blood sugar closely and talk to a qualified healthcare practitioner before using it. Its safety in pregnancy and while breastfeeding has not been conclusively established.
 elements:
   - water
 celestialBodies:
@@ -82,6 +82,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: 3da4764f5d5207aa1012151b1d2af47bc64eb0a87473329b69503b7e81e43d39
 ---
 
 # Red Sandalwood

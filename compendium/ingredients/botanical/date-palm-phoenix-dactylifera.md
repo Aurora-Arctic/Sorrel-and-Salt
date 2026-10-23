@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Phoenix dactylifera
-safetyNotes: Cunningham's health code marks the date palm as currently recognised as safe.
 elements:
   - air
   - fire
@@ -55,7 +54,6 @@ references:
       - deities
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Date"
     nameBasis: unaudited
@@ -137,6 +135,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 228517fee2e58d49f91ffdadfcb8ba7d15c20861963001afa24fcba4128d9e89
 ---
 
 # Date Palm

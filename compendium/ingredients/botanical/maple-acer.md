@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Acer
-safetyNotes: Cunningham's health code for maple marks it as currently recognised as safe.
 elements:
   - air
   - earth
@@ -46,7 +45,6 @@ references:
       - celestialBodies
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Maple"
     nameBasis: resolved
@@ -137,6 +135,7 @@ variants:
         resolvedBy: wikipedia-maple
         supports:
           - form
+seedUpdate: 48e02f9e15188433cb27146bd5a6a9a54dc632b0078797cf88ff2314443b6a45
 ---
 
 # Maple

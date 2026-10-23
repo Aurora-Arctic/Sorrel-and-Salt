@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Yucca
-safetyNotes: "AHPA safety class 2d: do not exceed the recommended dose. Allergic reactions to yucca have been reported. Safety while nursing is not established. Cunningham's health code marks the root as safe."
+safetyNotes: 'AHPA: do not exceed the recommended dose. Allergic reactions to yucca have been reported. Safety while nursing is not established.'
 elements:
   - fire
   - earth
@@ -33,7 +33,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - categories
   - source: kynes-plants
     locator: under "Yucca"
@@ -110,6 +109,7 @@ variants:
           - form
           - description
           - categories
+seedUpdate: 2fb273ff9a7bffb41d384bf938606ea87c97cfb31a8317452d055e51b50767f7
 ---
 
 # Yucca

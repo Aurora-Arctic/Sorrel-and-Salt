@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Inula helenium
-safetyNotes: AHPA safety class 1 for the root, with no known contraindications or drug interactions. People allergic to other daisy-family plants (Asteraceae), such as feverfew, chamomile or echinacea, should take care, as cross-reactions are common; allergic reactions, mainly contact dermatitis, have been reported, and its compounds are relatively common skin sensitisers. AHPA notes it as an emmenagogue; one British herbal text advises against it in pregnancy and nursing without giving a reason, though AHPA's editors judge it generally safe for both. Cunningham advises against taking it internally when pregnant or nursing, or in high doses.
+safetyNotes: People allergic to other daisy-family plants (Asteraceae), such as feverfew, chamomile or echinacea, should take care, as cross-reactions are common; allergic reactions, mainly contact dermatitis, have been reported, and its compounds are relatively common skin sensitisers. AHPA notes it as an emmenagogue; one British herbal text advises against it in pregnancy and nursing without giving a reason. Cunningham advises against taking it internally when pregnant or nursing, or in high doses.
 elements:
   - air
 celestialBodies:
@@ -134,6 +134,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: b732b893f13802caf910cb42e4ddfcce2a9f30f0da9c1c1d43d7cc560a4bdaff
 ---
 
 # Elecampane

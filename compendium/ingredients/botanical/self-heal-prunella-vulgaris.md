@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Prunella vulgaris
-safetyNotes: 'AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected): no contraindications, precautions or drug interactions are known. Rare allergic reactions have been reported, with rashes, swelling of the throat, lips and tongue, and nausea, vomiting or diarrhoea. An animal study found it may alter blood-sugar regulation, so anyone with diabetes should watch their blood sugar closely and talk to a qualified practitioner before using it. Little is known of its safety in pregnancy or while nursing, so its safety then has not been established.'
+safetyNotes: Rare allergic reactions have been reported, with rashes, swelling of the throat, lips and tongue, and nausea, vomiting or diarrhoea. An animal study found it may alter blood-sugar regulation, so anyone with diabetes should watch their blood sugar closely and talk to a qualified practitioner before using it. Little is known of its safety in pregnancy or while nursing, so its safety then has not been established.
 elements:
   - earth
 celestialBodies:
@@ -76,6 +76,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 98f653a2ca492d3ce4a49adfd6181700f17ad17ab97e10aa7f1f54fccb16b994
 ---
 
 # Self-Heal

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Senega officinalis
-safetyNotes: "AHPA safety classes 2b and 2d, interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner (it has traditionally been used to bring on menstruation), not for long-term use, do not exceed the recommended dose, and not for anyone with gastritis or gastric ulcers. Prolonged use or an overdose may irritate the stomach and gut and cause nausea, vomiting, retching and diarrhoea. Animal studies suggest it may alter blood-sugar regulation, so people with diabetes should watch their blood sugar closely and consult a qualified practitioner before use. Its safety while nursing has not been established; no drug interactions are known. Cunningham's health codes for the root: not if pregnant, or with gastritis or gastric ulcers."
+safetyNotes: "AHPA: not for use in pregnancy except under the supervision of a qualified practitioner (it has traditionally been used to bring on menstruation), not for long-term use, do not exceed the recommended dose, and not for anyone with gastritis or gastric ulcers. Prolonged use or an overdose may irritate the stomach and gut and cause nausea, vomiting, retching and diarrhoea. Animal studies suggest it may alter blood-sugar regulation, so people with diabetes should watch their blood sugar closely and consult a qualified practitioner before use. Its safety while nursing has not been established. Cunningham's health codes for the root: not if pregnant, or with gastritis or gastric ulcers."
 folkNames:
   - Rattlesnake Root
   - Mountain Flax
@@ -65,6 +65,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 403426c03042c84e94db88145fdd6c0e938b33285b0ed1d3fa1f94d70b55b9ea
 ---
 
 # Seneca Snakeroot

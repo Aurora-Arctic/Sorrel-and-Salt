@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Coriandrum sativum
-safetyNotes: Cunningham marks coriander as recognised as safe, and AHPA puts the fruit (the "seed") in safety class 1. Allergic reactions to the fruit have been reported, anaphylaxis among them, and handling coriander at work has caused contact dermatitis and asthma. Animal studies suggest it can affect blood-sugar control, so people with diabetes are advised to watch their blood sugar and talk to a qualified healthcare practitioner before taking it. Its safety while nursing has not been conclusively established.
+safetyNotes: Allergic reactions to the fruit have been reported, anaphylaxis among them, and handling coriander at work has caused contact dermatitis and asthma. Animal studies suggest it can affect blood-sugar control, so people with diabetes are advised to watch their blood sugar and talk to a qualified healthcare practitioner before taking it. Its safety while nursing has not been conclusively established.
 elements:
   - fire
 celestialBodies:
@@ -43,7 +43,6 @@ references:
       - folkNames
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Coriander"
     nameBasis: resolved
@@ -121,6 +120,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cceeb3d6989182e29113e69c36429476489eef832619aa56309f3706d1b547ac
 ---
 
 # Coriander

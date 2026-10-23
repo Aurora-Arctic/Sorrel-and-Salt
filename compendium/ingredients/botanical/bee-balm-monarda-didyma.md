@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Monarda didyma
-safetyNotes: 'AHPA safety class 2b, interaction class A, in its monograph on Monarda species, this one among them: traditionally used to bring on menstruation, so not to be taken during pregnancy unless a qualified practitioner oversees it. No other precautions, drug interactions or side effects are known, and its safety while nursing has not been conclusively established.'
+safetyNotes: 'AHPA safety class 2b, in its monograph on Monarda species, this one among them: traditionally used to bring on menstruation, so not to be taken during pregnancy unless a qualified practitioner oversees it. Its safety while nursing has not been conclusively established.'
 elements:
   - air
 celestialBodies:

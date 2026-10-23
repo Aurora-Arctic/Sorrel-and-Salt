@@ -105,14 +105,12 @@ variants:
           - description
   - form: Seed
     description: The tiny seeds hold about 24% oil and 15% protein, and are an important food for goldfinches, bobwhites and mourning doves.
-    safetyNotes: AHPA places the seed in safety class 1, herbs that can be safely consumed when used appropriately, with no known contraindications or interactions.
     references:
       - source: ahpa-safety
         locator: p. 604; p. xxii
         nameBasis: unaudited
         supports:
           - form
-          - safetyNotes
       - source: wikipedia-oenothera-biennis
         nameBasis: stated
         supports:
@@ -120,7 +118,7 @@ variants:
           - description
   - form: Oil
     description: Evening primrose oil comes from the seed and is sold as a dietary supplement for its gamma-linolenic and linoleic acids, though there is not enough clinical evidence to support its use for any medical condition.
-    safetyNotes: AHPA places the seed oil in safety class 1, and Cunningham codes it as currently recognised as safe. It is generally well tolerated; headache, abdominal pain, nausea and loose stools have been reported in trials. NCCIH calls it probably safe for most adults taken by mouth, with less known about children. It may be safe in pregnancy and while breastfeeding, but the evidence is not conclusive, and one retrospective study linked its use in pregnancy with more need for obstetric intervention during labour. Anyone taking medicine should consult a health care provider before using it.
+    safetyNotes: Headache, abdominal pain, nausea and loose stools have been reported in trials. NCCIH notes less is known about children. The evidence on its use in pregnancy and while breastfeeding is not conclusive, and one retrospective study linked its use in pregnancy with more need for obstetric intervention during labour. Anyone taking medicine should consult a health care provider before using it.
     references:
       - source: ahpa-safety
         locator: pp. 604–605; p. xxii
@@ -133,7 +131,6 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-          - safetyNotes
       - source: nccih-evening-primrose-oil
         nameBasis: unaudited
         supports:
@@ -145,6 +142,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9717e9d99aa5ead82a17e3a7f629e813ef2bb96bfc7900304462465134bb43c2
 ---
 
 # Evening Primrose

@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Pelargonium
 toxic: true
-safetyNotes: Cunningham's health code marks geranium as currently recognised as safe. The plants are toxic to cats, dogs and horses, according to the ASPCA as cited by Wikipedia.
+safetyNotes: The plants are toxic to cats, dogs and horses, according to the ASPCA as cited by Wikipedia.
 elements:
   - water
 celestialBodies:
@@ -37,7 +37,6 @@ references:
       - celestialBodies
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Geranium"
     nameBasis: unaudited
@@ -99,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 9153998a20c86447abc19213feae1ac3ad8b2b3ba78e9140dfed02301f754bea
 ---
 
 # Geranium

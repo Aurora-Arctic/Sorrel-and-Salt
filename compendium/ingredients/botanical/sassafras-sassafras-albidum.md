@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Sassafras albidum
-safetyNotes: "AHPA safety classes 2b and 2d, interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner, not for long-term use, and do not exceed the recommended dose. The root bark holds 5 to 8% safrole and the essential oil about 80%; safrole caused cancer in animals fed high amounts over long periods, and United States rules allow sassafras in food only when it is safrole-free. AHPA considers occasional sassafras tea safe but discourages alcohol extracts, and its concerns do not apply to safrole-free products. No drug interactions are known. Cunningham's health codes: not for long-term internal use, and not internally in high doses. Kynes cautions that, as a potential carcinogen, sassafras is considered unsafe to ingest."
+safetyNotes: "AHPA: not for use in pregnancy except under the supervision of a qualified practitioner, not for long-term use, and do not exceed the recommended dose. The root bark holds 5 to 8% safrole and the essential oil about 80%; safrole caused cancer in animals fed high amounts over long periods, and United States rules allow sassafras in food only when it is safrole-free. AHPA discourages alcohol extracts, and its concerns do not apply to safrole-free products. Cunningham's health codes: not for long-term internal use, and not internally in high doses. Kynes cautions that, as a potential carcinogen, sassafras is considered unsafe to ingest."
 elements:
   - fire
 celestialBodies:
@@ -132,6 +132,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4af72b08ebde428f53299e80cd8927f91c5e137d672ca85926f0f15c8239ad3e
 ---
 
 # Sassafras

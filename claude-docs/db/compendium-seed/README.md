@@ -49,7 +49,7 @@ zodiacSigns:
   - Capricorn
 colours:
   - green
-safetyNotes: Only what a safety source says, in plain words.
+safetyNotes: A hazard, in plain words, with whom it is for and where the source says so. Never a claim that the ingredient is safe, and never a safety class that only says "safe" (AHPA class 1, interaction class A, Cunningham code G, GRAS); a class that states a restriction (2b, 2d) is written as the restriction.
 folkNames:
   - Fixture Herb
 deities:

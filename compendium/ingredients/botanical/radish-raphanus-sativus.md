@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Raphanus sativus
-safetyNotes: Cunningham's health codes mark the root as safe, and the greens as safe when cooked.
 elements:
   - fire
 celestialBodies:
@@ -31,7 +30,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: wikipedia-radish
@@ -78,6 +76,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 14a1c0bffb06acfc9cb076fff418cb7889649ee4fbaeded3e123f0ec4bc57463
 ---
 
 # Radish

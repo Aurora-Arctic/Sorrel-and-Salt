@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Zea mays
-safetyNotes: Cunningham marks both the seed and the silk as safe. AHPA places corn silk in safety class 1, with no known contraindications, precautions, drug interactions or side effects; it notes that the silk is a diuretic, and that its safety in pregnancy and while nursing has not been conclusively established.
+safetyNotes: AHPA notes that the silk is a diuretic, and that its safety in pregnancy and while nursing has not been conclusively established.
 elements:
   - earth
 celestialBodies:
@@ -44,7 +44,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: kynes-plants
@@ -112,6 +111,7 @@ variants:
         nameBasis: unaudited
         supports:
           - description
+seedUpdate: c66017fcaaaa97ae7e599849d9c16b7de0d002f4ad0d4087c9daff2967048d7b
 ---
 
 # Maize

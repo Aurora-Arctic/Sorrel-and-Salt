@@ -82,7 +82,7 @@ references:
       - colours
 variants:
   - form: Resin
-    safetyNotes: Gum arabic is generally recognised as safe to eat, and Cunningham marks it safe. Large doses, of 30 grams or more a day, give some people harmless flatulence. It slows the absorption of some medicines from the gut, amoxicillin among them.
+    safetyNotes: Large doses, of 30 grams or more a day, give some people harmless flatulence. It slows the absorption of some medicines from the gut, amoxicillin among them.
     references:
       - source: wikipedia-gum-arabic
         nameBasis: unaudited
@@ -94,7 +94,6 @@ variants:
         nameBasis: unaudited
         supports:
           - form
-          - safetyNotes
       - source: grieve-acacia-gum
         nameBasis: unaudited
         supports:

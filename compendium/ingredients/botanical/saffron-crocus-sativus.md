@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Crocus sativus
-safetyNotes: "AHPA safety class 2b and interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner, since saffron stimulates the muscles of the womb and has been used to cause abortion; safety while nursing is not established, and no drug interactions are known. Overdose (the German Commission E sets 1.5 g a day as the maximum) has brought on vomiting, bleeding, vertigo, confusion and a jaundice-like yellowing of the skin; AHPA notes these concerns come from medicinal doses, not its use as a spice. Cunningham's health codes: not to be taken internally in high doses, or while pregnant. Kynes cautions that overuse can be toxic, and that saffron must not be confused with the highly toxic autumn crocus, Colchicum autumnale."
+safetyNotes: "AHPA: not for use in pregnancy except under the supervision of a qualified practitioner, since saffron stimulates the muscles of the womb and has been used to cause abortion; safety while nursing is not established. Overdose (the German Commission E sets 1.5 g a day as the maximum) has brought on vomiting, bleeding, vertigo, confusion and a jaundice-like yellowing of the skin; AHPA notes these concerns come from medicinal doses, not its use as a spice. Cunningham's health codes: not to be taken internally in high doses, or while pregnant. Kynes cautions that overuse can be toxic, and that saffron must not be confused with the highly toxic autumn crocus, Colchicum autumnale."
 elements:
   - fire
 celestialBodies:

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Malva sylvestris
-safetyNotes: Cunningham marks it safe. AHPA places the flower and leaf in safety class 1, with no known contraindications. It should be taken with at least 250 ml of liquid, and other medicines taken an hour before it or several hours after, since its mucilage may slow their absorption. Its safety in pregnancy and while nursing has not been conclusively established.
+safetyNotes: It should be taken with at least 250 ml of liquid, and other medicines taken an hour before it or several hours after, since its mucilage may slow their absorption. Its safety in pregnancy and while nursing has not been conclusively established.
 elements:
   - water
 celestialBodies:
@@ -41,7 +41,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: kynes-plants
@@ -143,6 +142,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: 6d0ca83a5f18af3dcf34b2a078a8a814542fc6fba19d514f16453748be287fb4
 ---
 
 # Mallow

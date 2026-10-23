@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Primula veris
-safetyNotes: 'AHPA safety class 2d: not for use by people with gastritis or gastric ulcers, and to be used with caution by anyone hypersensitive to Primula species. Occasional stomach discomfort and nausea have been reported from both the root and the flower. No concerns were found for pregnancy or nursing, but its safety in either has not been conclusively established. Cunningham codes it as currently recognised as safe.'
+safetyNotes: 'AHPA: not for use by people with gastritis or gastric ulcers, and to be used with caution by anyone hypersensitive to Primula species. Occasional stomach discomfort and nausea have been reported from both the root and the flower. Its safety in pregnancy or nursing has not been conclusively established.'
 elements:
   - water
 celestialBodies:
@@ -65,7 +65,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Cowslip"
     nameBasis: unaudited
@@ -136,6 +135,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d77ef1e983f3e323c6770d08b86eefddb372c9cf4cd358631cfab5d4b1f4fa09
 ---
 
 # Cowslip

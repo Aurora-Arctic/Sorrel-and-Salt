@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Aloe vera
-safetyNotes: Cunningham marks the fresh plant as not recommended for internal use, and the dried plant as not for internal use and not to be taken in pregnancy, while nursing or with diarrhoea. AHPA rates the inner leaf gel safety class 1, but the dried yellow latex of the leaf class 2b, 2c and 2d (see the Sap form). Taken by mouth, aloe can cause abdominal cramps and diarrhoea, which may reduce the absorption of medicines, and hepatitis with long use; it may interact with drugs for blood clots, diabetes and heart disease and with diuretics, and it should not be used in pregnancy. Some people are allergic to it on the skin. Aloe vera whole-leaf extract is classed by the International Agency for Research on Cancer as a possible human carcinogen (group 2B).
+safetyNotes: Cunningham marks the fresh plant as not recommended for internal use, and the dried plant as not for internal use and not to be taken in pregnancy, while nursing or with diarrhoea. AHPA rates the dried yellow latex of the leaf class 2b, 2c and 2d (see the Sap form). Taken by mouth, aloe can cause abdominal cramps and diarrhoea, which may reduce the absorption of medicines, and hepatitis with long use; it may interact with drugs for blood clots, diabetes and heart disease and with diuretics, and it should not be used in pregnancy. Some people are allergic to it on the skin. Aloe vera whole-leaf extract is classed by the International Agency for Research on Cancer as a possible human carcinogen (group 2B).
 elements:
   - water
 celestialBodies:
@@ -76,7 +76,7 @@ references:
 variants:
   - form: Leaf
     description: The fresh leaf holds the clear gel used on burns, wounds and dry skin. Dried and powdered, the leaves are sprinkled round the base of a white candle at an esbat to help draw down the wisdom of the Moon.
-    safetyNotes: The inner leaf gel is AHPA safety class 1. Take other medicines an hour before it or several hours after, as it may slow their absorption; contact dermatitis has been reported in some people after putting it on the skin.
+    safetyNotes: Take other medicines an hour before it or several hours after, as it may slow their absorption; contact dermatitis has been reported in some people after putting it on the skin.
     references:
       - source: grieve-aloes
         nameBasis: unaudited
@@ -126,6 +126,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 3e661f52c263a7afe467dd94597d0d383575ccb3133192241421de9b4d87ae9b
 ---
 
 # Aloe

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Medicago sativa
-safetyNotes: 'AHPA safety class 1 (its interaction class is A) for the herb: no contraindications, other cautions, drug interactions or side effects are known. Its coumarins have led some to call it an anticoagulant; one laboratory study found slight anticoagulant activity, but how that bears on human use is unknown. Safety in pregnancy and nursing has not been conclusively established. Cunningham marks it as recognised as safe. Wikipedia nonetheless names pregnancy, breastfeeding, hormone-sensitive conditions and diabetes as concerns, and says it may interact with warfarin, birth control pills and oestrogens.'
+safetyNotes: Its coumarins have led some to call it an anticoagulant; one laboratory study found slight anticoagulant activity, but how that bears on human use is unknown. Safety in pregnancy and nursing has not been conclusively established. Wikipedia names pregnancy, breastfeeding, hormone-sensitive conditions and diabetes as concerns, and says it may interact with warfarin, birth control pills and oestrogens.
 elements:
   - earth
 celestialBodies:
@@ -27,7 +27,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: ahpa-safety
     locator: p. 552; p. xxii
     nameBasis: unaudited
@@ -86,6 +85,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: a6f93f78ef4348e57065f9b8bdaa896197a198cb66646699420afde534c4a712
 ---
 
 # Alfalfa

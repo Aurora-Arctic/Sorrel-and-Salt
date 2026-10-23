@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Ruta graveolens
-safetyNotes: "AHPA safety class 2b: not to be used in pregnancy except under a qualified practitioner's supervision, since it has traditionally been used to cause abortion and stimulates menstruation; interaction class A, with no drug interactions known. Avoid long exposure to sunlight after taking it, and note that its furanocoumarins can inflame the skin (phytophotodermatitis) when skin it has touched is then exposed to sunlight. At normal therapeutic doses it has been linked with low mood, poor sleep, drowsiness, dizziness and cramps, and it can irritate the stomach; its safety while breastfeeding has not been established. Cunningham warns against taking it internally in pregnancy, with kidney problems or with blood-thinning medication, and says it may increase sensitivity to sunlight (health codes P, K, B, S). Kynes adds that it may cause dermatitis and that it is unsafe to burn."
+safetyNotes: "AHPA: not to be used in pregnancy except under a qualified practitioner's supervision, since it has traditionally been used to cause abortion and stimulates menstruation. Avoid long exposure to sunlight after taking it, and note that its furanocoumarins can inflame the skin (phytophotodermatitis) when skin it has touched is then exposed to sunlight. At normal therapeutic doses it has been linked with low mood, poor sleep, drowsiness, dizziness and cramps, and it can irritate the stomach; its safety while breastfeeding has not been established. Cunningham warns against taking it internally in pregnancy, with kidney problems or with blood-thinning medication, and says it may increase sensitivity to sunlight (health codes P, K, B, S). Kynes adds that it may cause dermatitis and that it is unsafe to burn."
 elements:
   - fire
 celestialBodies:
@@ -188,6 +188,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 979638d8111f4e88bbbb618f63ea9689fdcc0981c320f49f726e740dadebb257
 ---
 
 # Rue

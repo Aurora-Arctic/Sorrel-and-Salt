@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Chamaemelum nobile
-safetyNotes: "AHPA safety class 2b: not to be used in pregnancy except under a qualified practitioner's supervision, as it was once an ingredient of abortifacient formulas and is reported to stimulate menstrual flow; interaction class A, with no drug interactions known. People allergic to other members of the daisy family, such as feverfew or chamomile, should take care, since allergic reactions and contact dermatitis from the tea and from creams have been confirmed by patch testing. Its safety while breastfeeding has not been established. Cunningham likewise warns against taking it internally in pregnancy (health code P)."
+safetyNotes: "AHPA: not to be used in pregnancy except under a qualified practitioner's supervision, as it was once an ingredient of abortifacient formulas and is reported to stimulate menstrual flow. People allergic to other members of the daisy family, such as feverfew or chamomile, should take care, since allergic reactions and contact dermatitis from the tea and from creams have been confirmed by patch testing. Its safety while breastfeeding has not been established. Cunningham likewise warns against taking it internally in pregnancy (health code P)."
 elements:
   - water
   - air
@@ -162,6 +162,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 27bcf14af020c9679e007b74487e9779562ad471a713a2ab4a2efe70381624b2
 ---
 
 # Roman Chamomile

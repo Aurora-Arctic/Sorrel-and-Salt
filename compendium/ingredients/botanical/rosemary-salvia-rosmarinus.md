@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Salvia rosmarinus
-safetyNotes: 'AHPA safety class 1 and interaction class A: no contraindications or drug interactions are known, and its concerns apply to therapeutic doses, not to rosemary as a kitchen spice. It is listed as an emmenagogue (it may bring on menstruation). Skin allergy to rosemary has been confirmed by patch testing; an extract reduced the absorption of iron from food; and because rosemary lowered blood sugar in animal studies, people with diabetes on insulin or tablets should keep monitoring their glucose. Cunningham advises against high internal doses and against internal use in pregnancy (health codes D+ and P). Kynes, in Herbal Remedies, says to avoid it in pregnancy, while breastfeeding, and with high blood pressure or epilepsy, and warns that too much may irritate the stomach.'
+safetyNotes: AHPA says its concerns apply to therapeutic doses, not to rosemary as a kitchen spice. It is listed as an emmenagogue (it may bring on menstruation). Skin allergy to rosemary has been confirmed by patch testing; an extract reduced the absorption of iron from food; and because rosemary lowered blood sugar in animal studies, people with diabetes on insulin or tablets should keep monitoring their glucose. Cunningham advises against high internal doses and against internal use in pregnancy (health codes D+ and P). Kynes, in Herbal Remedies, says to avoid it in pregnancy, while breastfeeding, and with high blood pressure or epilepsy, and warns that too much may irritate the stomach.
 elements:
   - fire
 celestialBodies:
@@ -165,7 +165,7 @@ variants:
           - form
   - form: Oil
     description: Oil of rosemary is distilled from the flowering tops or, more often, the stems and leaves; Grieve calls it colourless and a remedy for headache, and it goes into perfumes, shampoos and aromatherapy. Kynes diffuses a little of the essential oil to prepare a space for ritual, magic or healing, and uses it to consecrate charms and amulets.
-    safetyNotes: AHPA advises that although dried rosemary or its tea may be safe in pregnancy, the essential oil and other concentrated extracts should not be used then.
+    safetyNotes: AHPA advises that the essential oil and other concentrated extracts of rosemary should not be used in pregnancy.
     colours:
       - colourless
     categories:
@@ -214,6 +214,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 63dd506ae675fb5456f96a4dc974a94cce2598627dbd8fb7fb4498e81eed9d47
 ---
 
 # Rosemary

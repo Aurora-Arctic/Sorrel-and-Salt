@@ -2,7 +2,7 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Alchemilla vulgaris
-safetyNotes: Considered safe to take when used appropriately (AHPA safety class 1, under the name Alchemilla xanthochlora), with no known contraindications, interactions or side effects; it contains about 6 to 16% tannins. No information on its safety in pregnancy or while nursing was found, and safety in either has not been conclusively established. Cunningham marks it as recognised as safe.
+safetyNotes: AHPA lists it under the name Alchemilla xanthochlora; it contains about 6 to 16% tannins. No information on its safety in pregnancy or while nursing was found, and safety in either has not been conclusively established.
 elements:
   - water
 celestialBodies:
@@ -43,7 +43,6 @@ references:
       - celestialBodies
       - folkNames
       - categories
-      - safetyNotes
   - source: kynes-plants
     locator: under "Lady's Mantle"
     nameBasis: unaudited

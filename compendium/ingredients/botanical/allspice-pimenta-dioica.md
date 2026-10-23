@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Pimenta dioica
-safetyNotes: 'AHPA safety class 1 and interaction class A: no contraindications, other precautions or drug interactions are known. One food-service worker developed allergic contact dermatitis from handling allspice at work, confirmed by patch testing. Its safety in pregnancy and while nursing has not been conclusively established, although no concern was identified. Cunningham marks it as currently recognised as safe.'
+safetyNotes: One food-service worker developed allergic contact dermatitis from handling allspice at work, confirmed by patch testing. Its safety in pregnancy and while nursing has not been conclusively established.
 elements:
   - fire
 celestialBodies:
@@ -47,7 +47,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Allspice"
     nameBasis: resolved
@@ -143,6 +142,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 5f7291ec4ba80a1641aec72707ea5fb8a8e889d2abe94580a51a717796f4c699
 ---
 
 # Allspice

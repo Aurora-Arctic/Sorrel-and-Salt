@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Arctostaphylos uva-ursi
 toxic: true
-safetyNotes: 'AHPA safety class 1, interaction class A: no contraindications, other precautions or drug interactions are known, and the handbook found no evidence behind the older warning against use with kidney disorders. The dried leaf holds up to 12 per cent arbutin and related compounds that give rise to hydroquinone. One case of damage to the retina (maculopathy) followed long-term use, and it can turn the urine brownish green. No studies of its safety in pregnancy were found, and its safety while nursing is not established. Kynes warns that large amounts can be toxic and that it is not for use in pregnancy. Cunningham marks it Poison and codes it against internal use in pregnancy, with kidney problems or acidic urine, and for long periods, as liable to upset digestion, and as a gastrointestinal irritant.'
+safetyNotes: The dried leaf holds up to 12 per cent arbutin and related compounds that give rise to hydroquinone. One case of damage to the retina (maculopathy) followed long-term use, and it can turn the urine brownish green. No studies of its safety in pregnancy were found, and its safety while nursing is not established. Kynes warns that large amounts can be toxic and that it is not for use in pregnancy. Cunningham marks it Poison and codes it against internal use in pregnancy, with kidney problems or acidic urine, and for long periods, as liable to upset digestion, and as a gastrointestinal irritant.
 elements:
   - earth
 celestialBodies:
@@ -124,6 +124,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 330433f1032bfeda7a3d30736cf61329d275821abd18e73e0f3e2bdf2aada1f1
 ---
 
 # Bearberry

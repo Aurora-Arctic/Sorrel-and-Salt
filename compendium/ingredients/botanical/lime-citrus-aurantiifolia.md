@@ -54,7 +54,7 @@ references:
 variants:
   - form: Peel
     description: The peel is the part AHPA covers. Cunningham puts lime peel into love mixtures and incenses.
-    safetyNotes: AHPA safety class 1, and Cunningham marks the peel safe. The peel holds furanocoumarins that can cause phytophotodermatitis, a skin reaction set off when skin that has handled it is then exposed to sunlight; this is not expected from eating it. Allergic reactions to the peel after skin contact have been reported. Safety in pregnancy and while nursing has not been established.
+    safetyNotes: The peel holds furanocoumarins that can cause phytophotodermatitis, a skin reaction set off when skin that has handled it is then exposed to sunlight; this is not expected from eating it. Allergic reactions to the peel after skin contact have been reported. Safety in pregnancy and while nursing has not been established.
     references:
       - source: ahpa-safety
         locator: p. 227; p. xxii
@@ -69,7 +69,6 @@ variants:
         supports:
           - form
           - description
-          - safetyNotes
   - form: Fruit
     description: The whole fruit, fresh or dried, carries most of the lime's lore. Cunningham pierces a fresh lime with old iron nails, pins and needles before throwing it away into a deep hole, and has a necklace of limes worn for a sore throat. Kynes adds a piece of fresh fruit to strengthen a love spell and hangs a dried lime with a chilli where protection is wanted. Boiled in brine and dried, Key limes become black lime.
     colours:

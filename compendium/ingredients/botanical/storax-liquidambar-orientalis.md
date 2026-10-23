@@ -77,7 +77,6 @@ references:
 variants:
   - form: Resin
     description: Liquid storax, as imported, is a soft, viscous, opaque balsam the consistency of honey, greyish-brown and holding some water; refined with spirit it becomes prepared storax, a clearer brownish-yellow balsam. It is rich in cinnamic acid and its esters, smells balsamic, floral and leathery, and is used in flavours, fragrances and Friar's Balsam.
-    safetyNotes: Storax resin is generally recognised as safe (GRAS) at low levels.
     colours:
       - brown
     references:
@@ -92,7 +91,6 @@ variants:
         supports:
           - form
           - description
-          - safetyNotes
       - source: kynes-plants
         locator: under "Storax"
         nameBasis: unaudited

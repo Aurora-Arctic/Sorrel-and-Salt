@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Streptocarpus ionanthus
-safetyNotes: Cunningham marks it as currently recognised as safe (his health code G).
 elements:
   - water
 celestialBodies:
@@ -25,7 +24,6 @@ references:
       - colours
       - categories
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "African Violet"
     nameBasis: unaudited
@@ -53,6 +51,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 4414a2fe3f7a21a0344b4a81ce41244672d8a8d711db8d1102d15d84bd8da82e
 ---
 
 # African Violet

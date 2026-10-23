@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Rubus idaeus
-safetyNotes: AHPA rates the leaf safety class 1, safe when used appropriately, with no known contraindications, drug interactions or side effects; it contains tannins. In human studies, raspberry leaf taken from the 32nd week of pregnancy until birth showed no harm to mother or baby, though in one animal study it lengthened gestation. No information on its safety while breastfeeding was found, so that has not been firmly established. Cunningham's health code marks raspberry as safe (G).
+safetyNotes: It contains tannins. In one animal study raspberry leaf lengthened gestation. No information on its safety while breastfeeding was found, so that has not been firmly established.
 elements:
   - water
 celestialBodies:
@@ -35,7 +35,6 @@ references:
       - description
       - elements
       - celestialBodies
-      - safetyNotes
       - folkNames
       - categories
   - source: kynes-plants
@@ -132,6 +131,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4aa80d5be83dd3d249870a9f38da96a585db93f31f07cd75670eed2955d05663
 ---
 
 # Raspberry

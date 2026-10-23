@@ -41,7 +41,7 @@ references:
       - description
 variants:
   - form: Resin
-    safetyNotes: The AHPA handbook rates tolu balsam Safety Class 2d (specific use restrictions) and Interaction Class A. It should not be used by anyone with a fever, and it may irritate the kidneys. Allergic reactions and sensitisation to it are relatively common, after use on the skin or by mouth. Safety in pregnancy and breastfeeding has not been conclusively established.
+    safetyNotes: The AHPA handbook rates tolu balsam Safety Class 2d (specific use restrictions). It should not be used by anyone with a fever, and it may irritate the kidneys. Allergic reactions and sensitisation to it are relatively common, after use on the skin or by mouth. Safety in pregnancy and breastfeeding has not been conclusively established.
     colours:
       - brown
     references:

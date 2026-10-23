@@ -78,7 +78,7 @@ references:
 variants:
   - form: Seed
     description: Cunningham carries a few seeds in a pocket, wallet or purse to draw money, or keeps a jar of seeds and coins on the altar and adds to it each day. Mixed with mustard seed beside the bed, with a pan of cold water on the other side, flax seed guards the sleeper; boxed with red pepper, it keeps evil out of the house; and sprinkled on the altar or added to mixtures, it serves healing rituals.
-    safetyNotes: AHPA places flaxseed in safety class 1, herbs that can be safely consumed when used appropriately. Taken as a bulk-forming laxative it should not be used by people with a bowel obstruction or an abnormal narrowing of the oesophagus or intestines, and it should be taken with at least 200 ml (6 oz) of water; Cunningham's health code likewise asks for an adequate amount of liquid when the seed is taken internally. Other drugs should be taken an hour before flax or several hours after, as it may reduce their absorption. The seed contains mucilage and cyanogenic glycosides, and allergic reactions to it, anaphylaxis among them, have been reported.
+    safetyNotes: Taken as a bulk-forming laxative it should not be used by people with a bowel obstruction or an abnormal narrowing of the oesophagus or intestines, and it should be taken with at least 200 ml (6 oz) of water; Cunningham's health code likewise asks for an adequate amount of liquid when the seed is taken internally. Other drugs should be taken an hour before flax or several hours after, as it may reduce their absorption. The seed contains mucilage and cyanogenic glycosides, and allergic reactions to it, anaphylaxis among them, have been reported.
     references:
       - source: cunningham-herbs
         locator: under "Flax"; p. 266
@@ -140,6 +140,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f5846bd91ee32fb0f139acdc8469b27af51629630a2fd79a9bdb8fe1ede185bc
 ---
 
 # Flax

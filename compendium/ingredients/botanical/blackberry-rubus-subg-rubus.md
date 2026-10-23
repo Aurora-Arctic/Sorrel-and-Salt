@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Rubus subg. Rubus
-safetyNotes: Cunningham marks blackberry as safe (code G).
 elements:
   - water
 celestialBodies:
@@ -59,7 +58,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Blackberry"
     nameBasis: resolved
@@ -135,7 +133,7 @@ variants:
           - description
   - form: Leaf
     description: 'Blackberry leaves have long been laid on burns and scalds, once with a spoken charm. Cunningham gives one: dip nine leaves in spring water and lay them on the scald while repeating a chant to Brigit three times over each. The leaves also go into his wealth spells. Herbalists brewed them as an astringent tea for diarrhoea, and Culpeper and Grieve both record a lye of the leaves that dyes hair black.'
-    safetyNotes: AHPA safety class 1. The leaf holds 8–14% tannins. In animal studies blackberry leaf altered blood sugar, so people with diabetes should watch their levels closely and talk to a qualified practitioner before using it. Safety while nursing has not been established.
+    safetyNotes: The leaf holds 8–14% tannins. In animal studies blackberry leaf altered blood sugar, so people with diabetes should watch their levels closely and talk to a qualified practitioner before using it. Safety while nursing has not been established.
     references:
       - source: ahpa-safety
         locator: pp. 754–755; p. xxii
@@ -221,6 +219,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: db6e108b3fe94b6d00176569852eca6847794601ffa6b5b8683ad5778c45549c
 ---
 
 # Blackberry

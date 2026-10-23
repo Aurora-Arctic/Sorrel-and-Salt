@@ -3,7 +3,6 @@ status: approved
 nomenclature: botanical
 canonicalName: Neltuma juliflora
 toxic: true
-safetyNotes: Cunningham's health code marks it safe. The AHPA safety handbook has no entry for it.
 elements:
   - water
   - air
@@ -42,7 +41,6 @@ references:
       - categories
       - folkNames
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Mesquite"
     nameBasis: unaudited
@@ -100,6 +98,7 @@ variants:
           - description
           - safetyNotes
           - toxic
+seedUpdate: 045fbd23eed3d9456d1e19b0b2593cdb29694605e928984f025cc486097aefef
 ---
 
 # Mesquite

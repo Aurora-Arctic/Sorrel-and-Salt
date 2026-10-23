@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Symplocarpus foetidus
-safetyNotes: AHPA places skunk cabbage in safety class 2d (specific use restrictions apply) and interaction class A (no clinically relevant drug interactions expected). Do not exceed the recommended dose, and anyone with a history of kidney stones should use it with caution. Large doses have been linked with nausea, vomiting, headache, dizziness and dimmed vision. The plant holds needle-like calcium oxalate crystals that burn the lips and mouth when eaten and can bring swelling, blistering, hoarseness and difficulty swallowing. Its safety in pregnancy and while nursing has not been established. Cunningham's health code says not to take it internally if you have kidney stones.
+safetyNotes: "AHPA applies specific use restrictions: do not exceed the recommended dose, and anyone with a history of kidney stones should use it with caution. Large doses have been linked with nausea, vomiting, headache, dizziness and dimmed vision. The plant holds needle-like calcium oxalate crystals that burn the lips and mouth when eaten and can bring swelling, blistering, hoarseness and difficulty swallowing. Its safety in pregnancy and while nursing has not been established. Cunningham's health code says not to take it internally if you have kidney stones."
 elements:
   - water
 celestialBodies:
@@ -82,6 +82,7 @@ variants:
         nameBasis: stated
         supports:
           - description
+seedUpdate: 56daa673850afeb42bc086f634723ebbbeb21cb01f9cc4121c165c4fdc388399
 ---
 
 # Skunk Cabbage

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Sesamum indicum
-safetyNotes: "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected): no contraindications, precautions or drug interactions are known. Sesame is a relatively common cause of food allergy, and severe reactions, including anaphylaxis, have been reported and confirmed by testing. In an animal study a diet very high in sesame counteracted the breast-cancer drug tamoxifen. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe, with a note that serious allergic reactions have been reported."
+safetyNotes: Sesame is a relatively common cause of food allergy, and severe reactions, including anaphylaxis, have been reported and confirmed by testing. In an animal study a diet very high in sesame counteracted the breast-cancer drug tamoxifen. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham notes that serious allergic reactions have been reported.
 elements:
   - fire
 celestialBodies:
@@ -174,6 +174,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4705c93a66730082caa04873b443ffdbd1ab6bf41e0c6a0f8b7db513f2536855
 ---
 
 # Sesame

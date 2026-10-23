@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Aletris farinosa
 toxic: true
-safetyNotes: 'AHPA safety class 1 (its interaction class is A): no contraindications, other cautions, drug interactions or side effects are known. One early animal study found that it depressed the uterus and countered the oxytocin-like action of the pituitary, but AHPA finds no evidence that this would matter when oxytocin is given in labour; its safety while nursing has not been conclusively established. Cunningham flags possible drug interactions and says it may work against some oxytocins (Pitocin). Kynes advises against taking it in pregnancy or while breastfeeding, and warns that swallowing the fresh root is mildly poisonous.'
+safetyNotes: One early animal study found that it depressed the uterus and countered the oxytocin-like action of the pituitary, but AHPA finds no evidence that this would matter when oxytocin is given in labour; its safety while nursing has not been conclusively established. Cunningham flags possible drug interactions and says it may work against some oxytocins (Pitocin). Kynes advises against taking it in pregnancy or while breastfeeding, and warns that swallowing the fresh root is mildly poisonous.
 elements:
   - earth
 celestialBodies:
@@ -98,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 27683184fa14fbfd2592ce52342290059eb504c9dccbe708750f3880ac28c9f1
 ---
 
 # Ague Root

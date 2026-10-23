@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Taraxacum officinale
-safetyNotes: AHPA places dandelion leaf and root in safety class 1, herbs that can be safely consumed when used appropriately, and lists it as a diuretic. Because dandelion promotes the flow of bile, caution has been suggested for people with gallstones. Kynes advises avoiding it during pregnancy and breastfeeding, with gallbladder problems and during antibiotic treatment, and warns that the white latex throughout the plant may cause a reaction in people allergic to the daisy family.
+safetyNotes: AHPA lists dandelion leaf and root as a diuretic. Because dandelion promotes the flow of bile, caution has been suggested for people with gallstones. Kynes advises avoiding it during pregnancy and breastfeeding, with gallbladder problems and during antibiotic treatment, and warns that the white latex throughout the plant may cause a reaction in people allergic to the daisy family.
 elements:
   - air
 celestialBodies:
@@ -196,6 +196,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6b6afeb67cdd4008ee4af0b1bad07fc00d7991e59d348e14682db31db863cfe6
 ---
 
 # Dandelion

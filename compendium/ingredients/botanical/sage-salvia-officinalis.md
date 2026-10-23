@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Salvia officinalis
-safetyNotes: "AHPA safety classes 2b and 2d, interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner, and do not exceed the recommended dose (given as 3 to 12 g of dried leaf as a tea). The leaf holds thujone. Sage is traditionally used to dry up breast milk, so it should be avoided by anyone nursing who wishes to continue. No drug interactions are known; AHPA notes these concerns come from medicinal doses, not its use in cooking. Cunningham's health codes: not if pregnant, not for long-term internal use, and not internally in high doses. Kynes cautions that it is an abortifacient, and in Herbal Remedies advises against daily use, and against it in pregnancy and breastfeeding, with epilepsy or another seizure disorder, high blood pressure or diabetes."
+safetyNotes: "AHPA: not for use in pregnancy except under the supervision of a qualified practitioner, and do not exceed the recommended dose (given as 3 to 12 g of dried leaf as a tea). The leaf holds thujone. Sage is traditionally used to dry up breast milk, so it should be avoided by anyone nursing who wishes to continue. AHPA notes these concerns come from medicinal doses, not its use in cooking. Cunningham's health codes: not if pregnant, not for long-term internal use, and not internally in high doses. Kynes cautions that it is an abortifacient, and in Herbal Remedies advises against daily use, and against it in pregnancy and breastfeeding, with epilepsy or another seizure disorder, high blood pressure or diabetes."
 elements:
   - air
   - earth
@@ -157,6 +157,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 4310be87723ee1fb3cce8246df028fe8680c7a21d074d31c45fb860b84a81b69
 ---
 
 # Sage

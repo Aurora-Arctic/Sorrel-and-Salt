@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Panax quinquefolius
-safetyNotes: AHPA safety class 1. It may weaken the effect of warfarin, so the two should be taken together only under the supervision of a healthcare professional. Allergic reactions, asthma and rashes among them, have been reported, and improper use is reported to cause headache, weakness, vomiting and other effects. It may alter blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Its safety in pregnancy and while nursing is not established, and it should not be taken while pregnant or breastfeeding.
+safetyNotes: It may weaken the effect of warfarin, so the two should be taken together only under the supervision of a healthcare professional. Allergic reactions, asthma and rashes among them, have been reported, and improper use is reported to cause headache, weakness, vomiting and other effects. It may alter blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Its safety in pregnancy and while nursing is not established, and it should not be taken while pregnant or breastfeeding.
 elements:
   - fire
 celestialBodies:
@@ -83,6 +83,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: e28ed4de13a535f88e6fb58168897782e03999188837a03fe73860ab167ed906
 ---
 
 # American Ginseng

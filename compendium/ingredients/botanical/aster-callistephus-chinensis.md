@@ -2,7 +2,6 @@
 status: approved
 nomenclature: botanical
 canonicalName: Callistephus chinensis
-safetyNotes: Cunningham marks it as currently recognised as safe (his health code G).
 elements:
   - water
 celestialBodies:
@@ -40,7 +39,6 @@ references:
       - deities
       - categories
       - folkNames
-      - safetyNotes
   - source: kynes-plants
     locator: under "Aster"
     nameBasis: unaudited
@@ -79,6 +77,7 @@ variants:
         supports:
           - form
           - colours
+seedUpdate: 0ee649dc1fac8061ba8bee23e118014dc34d53bd82cb83dea636342ce0927022
 ---
 
 # Aster

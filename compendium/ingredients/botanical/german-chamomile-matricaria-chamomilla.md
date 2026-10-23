@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Matricaria chamomilla
-safetyNotes: AHPA places chamomile in safety class 1, herbs that can be safely consumed when used appropriately. Anyone allergic to other plants of the daisy family, such as feverfew or echinacea, should take care, since cross-reactions are common, and allergic reactions including anaphylaxis have been reported. Very strong hot tea can cause vomiting, and the German standard licence warns against using the infusion near the eyes. Chamomile has a theoretical potential to interact with warfarin, and Kynes advises against taking it with prescription blood thinners; chamomile tea taken with iron-fortified bread reduced the iron absorbed. Its safety in pregnancy and while nursing has not been established.
+safetyNotes: Anyone allergic to other plants of the daisy family, such as feverfew or echinacea, should take care, since cross-reactions are common, and allergic reactions including anaphylaxis have been reported. Very strong hot tea can cause vomiting, and the German standard licence warns against using the infusion near the eyes. Chamomile has a theoretical potential to interact with warfarin, and Kynes advises against taking it with prescription blood thinners; chamomile tea taken with iron-fortified bread reduced the iron absorbed. Its safety in pregnancy and while nursing has not been established.
 elements:
   - water
   - air
@@ -127,6 +127,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cc0edc67455263cc412893e972f4e3a5b6ea2a7fb95b02307e26db3c132291cc
 ---
 
 # German Chamomile

@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Alpinia officinarum
-safetyNotes: Cunningham marks galangal as recognised as safe, and AHPA puts lesser galangal rhizome in safety class 1, with no known contraindications, interactions or side effects. No information was found on its safety in pregnancy or while nursing, so its safety at those times has not been conclusively established.
+safetyNotes: No information was found on its safety in pregnancy or while nursing, so its safety at those times has not been conclusively established.
 elements:
   - fire
   - earth
@@ -54,7 +54,6 @@ references:
       - categories
       - substitutes
       - description
-      - safetyNotes
   - source: kynes-plants
     locator: under "Galangal"
     nameBasis: unaudited
@@ -113,6 +112,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: c145144832c2a07f147916f4e8d8d13962cb70ef72f4456077d01a32b074d290
 ---
 
 # Galangal

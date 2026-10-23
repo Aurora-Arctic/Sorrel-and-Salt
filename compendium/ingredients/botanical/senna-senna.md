@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Senna
-safetyNotes: "AHPA safety class 2d, interaction class A, covering both the leaf and the pod. Not for anyone with an intestinal blockage, abdominal pain of unknown cause, or an inflammatory bowel condition such as appendicitis, colitis, Crohn's disease or irritable bowel syndrome, and not for more than eight days in a row. As a stimulant laxative it may hurry other medicines through the gut and cut how much is absorbed; long-term use can drain potassium, so take care alongside heart-rhythm drugs, thiazide diuretics, corticosteroids, liquorice or herbs containing cardiac glycosides. An overdose may cause griping and severe diarrhoea with loss of fluids and salts, hepatitis has been linked to chronic use, and young children who swallowed senna laxatives have suffered severe nappy rash and blistering. AHPA's reviews call it the laxative of choice in pregnancy and nursing, though some authorities advise cautious or supervised use in pregnancy. Cunningham's health codes: not if pregnant or nursing."
+safetyNotes: "AHPA, covering both the leaf and the pod: not for anyone with an intestinal blockage, abdominal pain of unknown cause, or an inflammatory bowel condition such as appendicitis, colitis, Crohn's disease or irritable bowel syndrome, and not for more than eight days in a row. As a stimulant laxative it may hurry other medicines through the gut and cut how much is absorbed; long-term use can drain potassium, so take care alongside heart-rhythm drugs, thiazide diuretics, corticosteroids, liquorice or herbs containing cardiac glycosides. An overdose may cause griping and severe diarrhoea with loss of fluids and salts, hepatitis has been linked to chronic use, and young children who swallowed senna laxatives have suffered severe nappy rash and blistering. Some authorities advise cautious or supervised use in pregnancy. Cunningham's health codes: not if pregnant or nursing."
 elements:
   - air
   - earth
@@ -109,6 +109,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: cffe95b6b9144f67cac86fc36358da127c4bb8df85d79ea5c2db471755f0c6ca
 ---
 
 # Senna

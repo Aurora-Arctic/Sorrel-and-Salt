@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Ficus carica
-safetyNotes: Cunningham codes the fig as currently recognised as safe. Although the plant is not poisonous as such, it is listed in the US Food and Drug Administration's database of poisonous plants.
+safetyNotes: The plant is listed in the US Food and Drug Administration's database of poisonous plants.
 elements:
   - fire
   - air
@@ -63,7 +63,6 @@ references:
       - deities
       - categories
       - folkNames
-      - safetyNotes
       - description
   - source: kynes-plants
     locator: under "Fig"
@@ -167,6 +166,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: 95ae77234bd858b545505fa5a02581bc24467d10bf711ec005cc83aac3c6fff7
 ---
 
 # Fig

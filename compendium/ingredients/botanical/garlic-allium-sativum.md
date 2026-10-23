@@ -2,7 +2,7 @@
 status: approved
 nomenclature: botanical
 canonicalName: Allium sativum
-safetyNotes: AHPA safety class 1, interaction class C. People with clotting disorders should take two grams or more a day only under the supervision of a qualified healthcare professional, garlic should be stopped seven days before surgery, and cases of abnormal bleeding have been reported. People with stomach inflammation should take care with raw garlic, and those with acid reflux should avoid it. Raw garlic on the skin may cause irritation, contact dermatitis or a chemical burn. Two grams or more of fresh garlic a day may lower blood levels of the drug saquinavir. AHPA notes that these concerns rest on therapeutic doses, not on garlic used as a spice. Cunningham marks it not to be taken internally while nursing, and Kynes advises avoiding it while breastfeeding and warns that large amounts may cause heartburn or irritate the stomach.
+safetyNotes: AHPA interaction class C. People with clotting disorders should take two grams or more a day only under the supervision of a qualified healthcare professional, garlic should be stopped seven days before surgery, and cases of abnormal bleeding have been reported. People with stomach inflammation should take care with raw garlic, and those with acid reflux should avoid it. Raw garlic on the skin may cause irritation, contact dermatitis or a chemical burn. Two grams or more of fresh garlic a day may lower blood levels of the drug saquinavir. AHPA notes that these concerns rest on therapeutic doses, not on garlic used as a spice. Cunningham marks it not to be taken internally while nursing, and Kynes advises avoiding it while breastfeeding and warns that large amounts may cause heartburn or irritate the stomach.
 elements:
   - fire
 celestialBodies:
@@ -145,6 +145,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: d8b58852633097c8e8ec65bf97488275ec316fdcd3c9751063b98234aef9c7d3
 ---
 
 # Garlic
