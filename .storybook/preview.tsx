@@ -171,7 +171,8 @@ const preview: Preview = {
     options: {
       // The top-level groups in the order claude-docs/workshop.md gives
       // (Foundations, the areas as a person meets them, then the kinds), then
-      // by group, with `Default` first in every group and the rest by name.
+      // by group, with `States` first in every group, then `Default` (a piece with
+      // nothing to merge), and the rest by name.
       // Storybook reads this function from the source text without running
       // the file, and evaluates it with the types still on, so it can use no name
       // from outside it and carry no type annotation: the parameters are typed
@@ -201,8 +202,11 @@ const preview: Preview = {
         const byTop = (rankA ?? 0) - (rankB ?? 0);
         if (byTop !== 0) return byTop;
         if (a.title !== b.title) return a.title < b.title ? -1 : 1;
-        if (a.name === 'Default') return b.name === 'Default' ? 0 : -1;
-        if (b.name === 'Default') return 1;
+        const [firstA, firstB] = [a.name, b.name].map((name) =>
+          name === 'States' ? 0 : name === 'Default' ? 1 : 2,
+        );
+        const byFirst = (firstA ?? 2) - (firstB ?? 2);
+        if (byFirst !== 0) return byFirst;
         return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
       },
     },
