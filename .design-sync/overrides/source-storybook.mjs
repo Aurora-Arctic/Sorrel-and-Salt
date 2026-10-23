@@ -19,7 +19,9 @@ function pickStorybookDir({ INPUTS, PKG, SB_CONFIG_DIR }) {
   try {
     const scripts = JSON.parse(readFileSync(join(INPUTS, 'package.json'), 'utf8')).scripts ?? {};
     for (const s of Object.values(scripts)) {
-      const m = typeof s === 'string' && s.match(/\bstorybook\s+(?:dev|build)\b[^;&|]*?(?:-c|--config-dir)[= ]+(\S+)/);
+      const m =
+        typeof s === 'string' &&
+        s.match(/\bstorybook\s+(?:dev|build)\b[^;&|]*?(?:-c|--config-dir)[= ]+(\S+)/);
       if (m) return resolve(INPUTS, m[1]);
     }
   } catch {}
@@ -30,8 +32,14 @@ function pickStorybookDir({ INPUTS, PKG, SB_CONFIG_DIR }) {
       .map((d) => {
         const sib = join(dirname(d), 'package.json');
         let name = '';
-        try { name = JSON.parse(readFileSync(sib, 'utf8')).name ?? ''; } catch {}
-        return { d, score: name === PKG ? 2 : d.includes(pkgTail) ? 1 : 0, depth: d.split(sep).length };
+        try {
+          name = JSON.parse(readFileSync(sib, 'utf8')).name ?? '';
+        } catch {}
+        return {
+          d,
+          score: name === PKG ? 2 : d.includes(pkgTail) ? 1 : 0,
+          depth: d.split(sep).length,
+        };
       })
       .sort((a, b) => b.score - a.score || a.depth - b.depth);
     console.error(
@@ -40,7 +48,9 @@ function pickStorybookDir({ INPUTS, PKG, SB_CONFIG_DIR }) {
     );
     return ranked[0].d;
   }
-  return found[0] ?? (existsSync(join(INPUTS, '.storybook')) ? join(INPUTS, '.storybook') : undefined);
+  return (
+    found[0] ?? (existsSync(join(INPUTS, '.storybook')) ? join(INPUTS, '.storybook') : undefined)
+  );
 }
 
 // Storybook derives a story's display name from its export key (startCase);
@@ -48,7 +58,10 @@ function pickStorybookDir({ INPUTS, PKG, SB_CONFIG_DIR }) {
 // storyName overrides break the pairing for that story -> it stays unpaired
 // and its cell is omitted; a component with no paired stories shows the
 // floor card.
-const squash = (s) => String(s ?? '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+const squash = (s) =>
+  String(s ?? '')
+    .replace(/[^a-z0-9]/gi, '')
+    .toLowerCase();
 
 // Module export keys WITHOUT evaluating the module: esbuild parses the file
 // (bundle:false) and reports exports in the metafile. ~10ms per story file.
@@ -56,8 +69,14 @@ async function storyModuleExports(absPath) {
   const { build } = await import('esbuild');
   try {
     const r = await build({
-      entryPoints: [absPath], bundle: false, write: false, metafile: true,
-      format: 'esm', platform: 'neutral', logLevel: 'silent', jsx: 'preserve',
+      entryPoints: [absPath],
+      bundle: false,
+      write: false,
+      metafile: true,
+      format: 'esm',
+      platform: 'neutral',
+      logLevel: 'silent',
+      jsx: 'preserve',
       // JSX-in-.js story files are a common convention; jsx is a strict
       // syntax superset of js, so this is safe for plain files too.
       loader: { '.js': 'jsx' },
@@ -65,7 +84,9 @@ async function storyModuleExports(absPath) {
     const out = Object.values(r.metafile.outputs)[0];
     return (out?.exports ?? []).filter((e) => e !== 'default');
   } catch (e) {
-    console.error(`  ! story parse failed: ${relative(process.cwd(), absPath)}: ${String(e?.errors?.[0]?.text ?? e?.message ?? e).split('\n')[0]}`);
+    console.error(
+      `  ! story parse failed: ${relative(process.cwd(), absPath)}: ${String(e?.errors?.[0]?.text ?? e?.message ?? e).split('\n')[0]}`,
+    );
     return [];
   }
 }
@@ -78,12 +99,15 @@ async function storyModuleExports(absPath) {
 // storybook PROJECT root - the .storybook dir's parent when we know it; cwd
 // and the static dir's parent as fallbacks (--storybook-static-only runs).
 async function resolveStorySources(csfComponents, sbDir, sbStatic) {
-  const bases = [...new Set([
-    ...(sbDir ? [dirname(sbDir)] : []),
-    process.cwd(),
-    ...(sbStatic ? [dirname(sbStatic)] : []),
-  ])];
-  let paired = 0, total = 0;
+  const bases = [
+    ...new Set([
+      ...(sbDir ? [dirname(sbDir)] : []),
+      process.cwd(),
+      ...(sbStatic ? [dirname(sbStatic)] : []),
+    ]),
+  ];
+  let paired = 0,
+    total = 0;
   for (const c of csfComponents) {
     const srcByIp = new Map();
     for (const ip of c.importPaths ?? []) {
@@ -108,16 +132,38 @@ async function resolveStorySources(csfComponents, sbDir, sbStatic) {
       // Display name first; fall back to the story ID's tail - storybook
       // derives it from the export key, so it survives `name:` overrides
       // ("button--my-story" pairs to export MyStory whatever the name says).
-      const k = keysByFile.get(f)?.get(squash(s.name))
-        ?? keysByFile.get(f)?.get(squash(String(s.id ?? '').split('--').pop() ?? ''));
-      if (k) { s.exportKey = k; s.storySrc = f; paired++; }
+      const k =
+        keysByFile.get(f)?.get(squash(s.name)) ??
+        keysByFile.get(f)?.get(
+          squash(
+            String(s.id ?? '')
+              .split('--')
+              .pop() ?? '',
+          ),
+        );
+      if (k) {
+        s.exportKey = k;
+        s.storySrc = f;
+        paired++;
+      }
     }
   }
   console.error(`  story sources: ${paired}/${total} stories paired to module exports`);
 }
 
 export async function resolveStorybook(ctx) {
-  const { INPUTS, STORIES_ROOT, SB_CONFIG_DIR, SB_STATIC, PKG, PKG_DIR, OUT, entry, titleMap, exportedSet } = ctx;
+  const {
+    INPUTS,
+    STORIES_ROOT,
+    SB_CONFIG_DIR,
+    SB_STATIC,
+    PKG,
+    PKG_DIR,
+    OUT,
+    entry,
+    titleMap,
+    exportedSet,
+  } = ctx;
   const sbDir = pickStorybookDir({ STORIES_ROOT, INPUTS, PKG, SB_CONFIG_DIR });
   let sbStatic = SB_STATIC ? resolve(SB_STATIC) : null;
   if (sbStatic && !existsSync(join(sbStatic, 'index.json'))) {
@@ -132,12 +178,18 @@ export async function resolveStorybook(ctx) {
     sbStatic = resolve(OUT, '.sb-static');
     console.error(`  running: npx storybook build -c ${sbDir} -o ${sbStatic}`);
     const { spawnSync } = await import('node:child_process');
-    const r = spawnSync(
-      'npx', ['storybook', 'build', '-c', sbDir, '-o', sbStatic, '--quiet'],
-      { cwd: dirname(sbDir), stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 600_000, shell: process.platform === 'win32' },
-    );
+    const r = spawnSync('npx', ['storybook', 'build', '-c', sbDir, '-o', sbStatic, '--quiet'], {
+      cwd: dirname(sbDir),
+      stdio: ['ignore', 'pipe', 'pipe'],
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      timeout: 600_000,
+      shell: process.platform === 'win32',
+    });
     if (r.error || r.signal || r.status !== 0 || !existsSync(join(sbStatic, 'index.json'))) {
-      console.error(`[SB_BUILD_FAIL] storybook build exited ${r.status ?? r.signal ?? r.error?.code}:\n${(r.stderr || r.stdout || '').slice(-2000)}`);
+      console.error(
+        `[SB_BUILD_FAIL] storybook build exited ${r.status ?? r.signal ?? r.error?.code}:\n${(r.stderr || r.stdout || '').slice(-2000)}`,
+      );
       sbStatic = null;
     }
   }
@@ -152,7 +204,13 @@ export async function resolveStorybook(ctx) {
     // startsWith is case-sensitive (win32 drive-letter casing makes it
     // silently inert) and raw resolve() misses pnpm-style symlinked package
     // dirs. A wrong isOwn lets a sibling package's same-named stories win.
-    const realOf = (p) => { try { return realpathSync(p); } catch { return p; } };
+    const realOf = (p) => {
+      try {
+        return realpathSync(p);
+      } catch {
+        return p;
+      }
+    };
     const pkgReal = realOf(resolve(PKG_DIR));
     // Memoized per importPath: the sort comparator below calls isOwn
     // O(n log n) times, and a comparator's view of an entry must not
@@ -181,7 +239,14 @@ export async function resolveStorybook(ctx) {
         ? { name: titleMap[e.title], group: titleParts(e.title, {}, null).group }
         : titleParts(e.title, titleMap, exportedSet);
       if (compName === null) continue; // titleMap {Name: null} = excluded
-      if (!byComp.has(compName)) byComp.set(compName, { name: compName, group, own: isOwn(e), storyIds: [], importPaths: new Set() });
+      if (!byComp.has(compName))
+        byComp.set(compName, {
+          name: compName,
+          group,
+          own: isOwn(e),
+          storyIds: [],
+          importPaths: new Set(),
+        });
       const comp = byComp.get(compName);
       if (comp.own && !isOwn(e)) continue; // own-package stories win the name
       comp.storyIds.push({ id: e.id, name: e.name, importPath: e.importPath });
@@ -193,7 +258,9 @@ export async function resolveStorybook(ctx) {
     );
     await resolveStorySources(csfComponents, sbDir, sbStatic);
   } else {
-    console.error(`[SB_BUILD_FAIL] no storybook-static and no .storybook/ dir found \u2014 pass --storybook-static <dir> or run from a repo with .storybook/.`);
+    console.error(
+      `[SB_BUILD_FAIL] no storybook-static and no .storybook/ dir found \u2014 pass --storybook-static <dir> or run from a repo with .storybook/.`,
+    );
   }
   return { shape: 'storybook', entry, components: csfComponents, sbStatic, sbDir };
 }
@@ -207,16 +274,22 @@ export async function resolveStorybook(ctx) {
 // previews use.
 export async function bundlePreviewDecorators({ sbDir, OUT, NODE_MODULES, PKG, PKG_DIR, GLOBAL }) {
   if (!sbDir) return false;
-  const sbPreview = ['tsx', 'ts', 'jsx', 'js'].map((e) => join(sbDir, `preview.${e}`)).find(existsSync);
+  const sbPreview = ['tsx', 'ts', 'jsx', 'js']
+    .map((e) => join(sbDir, `preview.${e}`))
+    .find(existsSync);
   if (!sbPreview) {
-    console.error(`  (preview decorators: no preview.{tsx,ts,jsx,js} in ${sbDir} \u2014 nothing to bundle; cfg.provider is the manual path)`);
+    console.error(
+      `  (preview decorators: no preview.{tsx,ts,jsx,js} in ${sbDir} \u2014 nothing to bundle; cfg.provider is the manual path)`,
+    );
     return false;
   }
   // \bdecorators\b (not just `decorators:` / `decorators=`) - re-export forms
   // like `export { decorators }` are real; a false positive is harmless (the
   // wrapper finds no array at runtime and __dsDecorate stays null).
   if (!/\bdecorators\b/.test(readFileSync(sbPreview, 'utf8'))) {
-    console.error(`  (preview decorators: ${sbPreview} never mentions decorators \u2014 nothing to bundle; if providers live elsewhere, set cfg.provider)`);
+    console.error(
+      `  (preview decorators: ${sbPreview} never mentions decorators \u2014 nothing to bundle; if providers live elsewhere, set cfg.provider)`,
+    );
     return false;
   }
   const { build } = await import('esbuild');
@@ -229,7 +302,9 @@ export async function bundlePreviewDecorators({ sbDir, OUT, NODE_MODULES, PKG, P
   // A decorator returning undefined (an addon stub, a manager-side noop)
   // falls through to the inner render with one console warning - otherwise
   // one unrecognized addon silently blanks every preview.
-  writeFileSync(entry, `import * as pv from ${JSON.stringify(sbPreview)};
+  writeFileSync(
+    entry,
+    `import * as pv from ${JSON.stringify(sbPreview)};
 var ds = [].concat((pv.default && pv.default.decorators) || pv.decorators || []).filter(function(d){return typeof d==="function"});
 if (!ds.length) console.warn("[ds] preview decorators: the preview module mentions decorators but exposed none at runtime (indirect export?) \u2014 previews render without the provider chain; set cfg.provider if components need one");
 var GT = (pv.default && pv.default.globalTypes) || pv.globalTypes || {};
@@ -252,7 +327,8 @@ window.__dsDecorate = !ds.length ? null : function(el){
       return out;
     }, el);
   });
-};`);
+};`,
+  );
   // Shim the DS package (by name, or by a relative path that resolves under
   // PKG_DIR - e.g. `../src` from .storybook/) to window.<GLOBAL> so we don't
   // re-bundle the whole DS and the provider's Context matches the bundle's.
@@ -263,16 +339,24 @@ window.__dsDecorate = !ds.length ? null : function(el){
       const escPkg = PKG.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       // Exact match only - subpath imports (<pkg>/locales/en.json) must bundle
       // normally, not shim to a nonexistent window.<GLOBAL>.<subpath>.
-      b.onResolve({ filter: new RegExp(`^${escPkg}$`) }, () => ({ path: 'ds', namespace: 'ds-shim' }));
+      b.onResolve({ filter: new RegExp(`^${escPkg}$`) }, () => ({
+        path: 'ds',
+        namespace: 'ds-shim',
+      }));
       b.onResolve({ filter: /^\.\.?\// }, (a) => {
         const abs = resolve(a.resolveDir, a.path);
-        if (abs === pkgRoot || abs === join(pkgRoot, 'src') || abs === join(pkgRoot, 'src', 'index')) {
+        if (
+          abs === pkgRoot ||
+          abs === join(pkgRoot, 'src') ||
+          abs === join(pkgRoot, 'src', 'index')
+        ) {
           return { path: 'ds', namespace: 'ds-shim' };
         }
         return undefined;
       });
       b.onLoad({ filter: /^ds$/, namespace: 'ds-shim' }, () => ({
-        contents: `module.exports=window.${GLOBAL};`, loader: 'js',
+        contents: `module.exports=window.${GLOBAL};`,
+        loader: 'js',
       }));
     },
   };
@@ -289,10 +373,19 @@ window.__dsDecorate = !ds.length ? null : function(el){
     name: 'providers-global',
     setup(b) {
       b.onResolve({ filter: /app\/providers$/ }, () => ({ path: 'pv', namespace: 'pv-shim' }));
-      b.onResolve({ filter: /ClickFeedback\/status-region$/ }, () => ({ path: 'sr', namespace: 'pv-shim' }));
+      b.onResolve({ filter: /ClickFeedback\/status-region$/ }, () => ({
+        path: 'sr',
+        namespace: 'pv-shim',
+      }));
       // fork: the contexts .storybook/navigation.tsx fills are the library's, so the stub hooks read them.
-      b.onResolve({ filter: /shared\/lib\/(hooks-client-context|app-router-context)\.shared-runtime/ }, () => ({ path: 'sr', namespace: 'pv-shim' }));
-      b.onLoad({ filter: /^sr$/, namespace: 'pv-shim' }, () => ({ loader: 'js', contents: `module.exports=window.${GLOBAL};` }));
+      b.onResolve(
+        { filter: /shared\/lib\/(hooks-client-context|app-router-context)\.shared-runtime/ },
+        () => ({ path: 'sr', namespace: 'pv-shim' }),
+      );
+      b.onLoad({ filter: /^sr$/, namespace: 'pv-shim' }, () => ({
+        loader: 'js',
+        contents: `module.exports=window.${GLOBAL};`,
+      }));
       b.onLoad({ filter: /^pv$/, namespace: 'pv-shim' }, () => ({
         loader: 'js',
         contents: `module.exports={__esModule:true,get default(){return window.${GLOBAL}.__providers}};`,
@@ -318,8 +411,10 @@ window.__dsDecorate = !ds.length ? null : function(el){
       // Catch every subpath (react/jsx-runtime, react-dom/client,
       // react-dom/server, ...) so a transitive package's own `import React`
       // can't bundle a second copy alongside the page's window.React.
-      b.onResolve({ filter: /^react(-dom)?($|\/)/ }, (a) =>
-        ({ path: a.path.startsWith('react-dom') ? 'rd' : 'r', namespace: 'rg' }));
+      b.onResolve({ filter: /^react(-dom)?($|\/)/ }, (a) => ({
+        path: a.path.startsWith('react-dom') ? 'rd' : 'r',
+        namespace: 'rg',
+      }));
       // ownKeys + getOwnPropertyDescriptor so esbuild's __toESM/__copyProps
       // (which enumerate via getOwnPropertyNames) see every React export -
       // otherwise `import {useState} from 'react'` is undefined.
@@ -341,15 +436,22 @@ module.exports=${proxy('window.React', '{jsx:jsx,jsxs:jsx,jsxDEV:jsx,Fragment:un
   };
   try {
     await build({
-      entryPoints: [entry], outfile: join(OUT, '_vendor', 'preview-decorators.js'),
-      bundle: true, format: 'iife', platform: 'browser', target: 'es2020',
-      jsx: 'automatic', loader: { ...STORY_LOADERS, '.json': 'json' }, // fork: .storybook/preview imports .scss
-      nodePaths: [NODE_MODULES], plugins: [providersShim, nextNav, reactGlobal, dsShim, stubEmpty],
+      entryPoints: [entry],
+      outfile: join(OUT, '_vendor', 'preview-decorators.js'),
+      bundle: true,
+      format: 'iife',
+      platform: 'browser',
+      target: 'es2020',
+      jsx: 'automatic',
+      loader: { ...STORY_LOADERS, '.json': 'json' }, // fork: .storybook/preview imports .scss
+      nodePaths: [NODE_MODULES],
+      plugins: [providersShim, nextNav, reactGlobal, dsShim, stubEmpty],
       // Same defines as the preview compile - provider chains routinely guard
       // on NODE_ENV/__DEV__, and esbuild leaves undefined identifiers to
       // throw at load time.
       define: {
-        'process.env.NODE_ENV': '"development"', __DEV__: 'true',
+        'process.env.NODE_ENV': '"development"',
+        __DEV__: 'true',
         ...IIFE_IMPORT_META_DEFINE,
       },
       logLevel: 'silent',
@@ -367,7 +469,9 @@ module.exports=${proxy('window.React', '{jsx:jsx,jsxs:jsx,jsxDEV:jsx,Fragment:un
       // No hypothesis line here: the resolve-class remedies name the
       // story-imports fork seam, which this bundle's hardcoded plugins never
       // consult - the only actionable remedy is the unconditional line below.
-      console.error('    decorators will not wrap previews \u2014 set cfg.provider to supply the context they provided');
+      console.error(
+        '    decorators will not wrap previews \u2014 set cfg.provider to supply the context they provided',
+      );
     }
     return false;
   } finally {

@@ -266,8 +266,7 @@ services:
     # bind-mounted path (so the display bring-up is visible here) and then the
     # command. The browsers live outside `node_modules` (/ms-playwright, in the
     # image), so a Playwright version bump still needs an image rebuild.
-    entrypoint:
-      ['sh', '/app/Docker/ensure-deps.sh', '/app/Docker/playwright-entrypoint.sh']
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh', '/app/Docker/playwright-entrypoint.sh']
     environment:
       # `docker compose exec` gets the container's initial environment, not
       # the entrypoint's `export DISPLAY`.

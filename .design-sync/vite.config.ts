@@ -9,6 +9,11 @@ import base from '../vite.components.config';
 // two share chunks, and make-barrel.mjs exports it as `__providers`.
 export default mergeConfig(base, {
   build: {
-    lib: { entry: { _context: fileURLToPath(new URL('./context-modules.ts', import.meta.url)), _providers: fileURLToPath(new URL('../src/app/providers.tsx', import.meta.url)) } },
+    lib: {
+      entry: {
+        _context: fileURLToPath(new URL('./context-modules.ts', import.meta.url)),
+        _providers: fileURLToPath(new URL('../src/app/providers.tsx', import.meta.url)),
+      },
+    },
   },
 });
