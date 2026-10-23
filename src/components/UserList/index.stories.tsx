@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
@@ -76,13 +76,11 @@ const USERS: readonly UserListEntry[] = [
 // changes muted, Impersonate ruled in red at the right. Impersonate and Pause
 // Admin Changes each ask first; in the workshop the call reaches no server,
 // so confirming shows the refusal.
-export const Default: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
-      <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
-    </AdminTabbedFrame>
-  ),
-};
+const defaultNode = (
+  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
+    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+  </AdminTabbedFrame>
+);
 
 const FilteredView = () => (
   <AdminTabbedFrame page="people">
@@ -95,7 +93,7 @@ const FilteredView = () => (
   </AdminTabbedFrame>
 );
 
-export const Filtered: Story = { render: FilteredView };
+const filteredNode = <FilteredView />;
 
 // A middle page of a list longer than one: the page's 25, by name, and the
 // pager beneath them, both ends live and where the page stands between.
@@ -125,125 +123,147 @@ const PageTwo = (): ReactElement => (
   </AdminTabbedFrame>
 );
 
-export const MiddlePage: Story = { render: () => <PageTwo /> };
+const middlePageNode = <PageTwo />;
 
 // Every filter in use, which the sentence names. Spread, since a `role` attribute reads to the linter as an ARIA role.
 const EVERY_FILTER = { query: 'nobody', role: 'admin', awaitingApproval: true } as const;
 
-export const NoMatches: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people">
-      <UserList users={[]} {...EVERY_FILTER} />
-    </AdminTabbedFrame>
-  ),
-};
+const roleFilterNode = (
+  <AdminTabbedFrame page="people">
+    <UserList
+      users={USERS.filter((user) => user.role === 'admin')}
+      query=""
+      role="admin"
+      awaitingApproval={false}
+    />
+  </AdminTabbedFrame>
+);
+
+const noMatchesNode = (
+  <AdminTabbedFrame page="people">
+    <UserList users={[]} {...EVERY_FILTER} />
+  </AdminTabbedFrame>
+);
 
 // Where impersonation is not registered: no Impersonate column.
-export const WithoutImpersonation: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people">
-      <UserList users={USERS} query="" awaitingApproval={false} />
-    </AdminTabbedFrame>
-  ),
-};
+const withoutImpersonationNode = (
+  <AdminTabbedFrame page="people">
+    <UserList users={USERS} query="" awaitingApproval={false} />
+  </AdminTabbedFrame>
+);
 
 // MB.205: two users awaiting approval, one unverified and one verified. Approve
 // on the first opens a confirmation warning that nobody has proved who holds
 // the address; on the second, none.
-export const UnverifiedApproval: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people">
-      <UserList
-        users={[
-          USERS[1] as UserListEntry,
-          listed({
-            id: 'u-di',
-            name: 'Di Fixturewort',
-            email: 'di@users.test',
-            role: 'user',
-            canCreateWorkspace: false,
-            createdAt: new Date('2026-07-08T09:10:11Z'),
-            providers: ['discord'],
-            emailVerified: true,
-            primaryAdmin: false,
-          }),
-        ]}
-        query=""
-        awaitingApproval
-      />
-    </AdminTabbedFrame>
-  ),
-};
+const unverifiedApprovalNode = (
+  <AdminTabbedFrame page="people">
+    <UserList
+      users={[
+        USERS[1] as UserListEntry,
+        listed({
+          id: 'u-di',
+          name: 'Di Fixturewort',
+          email: 'di@users.test',
+          role: 'user',
+          canCreateWorkspace: false,
+          createdAt: new Date('2026-07-08T09:10:11Z'),
+          providers: ['discord'],
+          emailVerified: true,
+          primaryAdmin: false,
+        }),
+      ]}
+      query=""
+      awaitingApproval
+    />
+  </AdminTabbedFrame>
+);
 
 // MB.59, M11.20: the primary admin, labelled, its Change Role in view but
 // unusable with the reason beside it; every other row's Change Role opens its
 // choice of the roles the user does not hold, a promotion warning on Bo's
 // unverified address. Dee is a curator, in bold as an admin is, with no
 // coven-creation control, since every curator holds it.
-export const AdminRoles: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people">
-      <UserList
-        users={[
-          { ...(USERS[0] as UserListEntry), primaryAdmin: true },
-          listed({
-            id: 'u-eve',
-            name: 'Eve Fixturewort',
-            email: 'eve@users.test',
-            role: 'admin',
-            canCreateWorkspace: true,
-            createdAt: new Date('2026-08-09T10:11:12Z'),
-            providers: ['google'],
-            emailVerified: true,
-            primaryAdmin: false,
-          }),
-          listed({
-            id: 'u-dee',
-            name: 'Dee Fixturewort',
-            email: 'dee@users.test',
-            role: 'curator',
-            canCreateWorkspace: true,
-            createdAt: new Date('2026-08-10T11:12:13Z'),
-            providers: ['discord'],
-            emailVerified: true,
-            primaryAdmin: false,
-          }),
-          ...USERS.slice(1),
-        ]}
-        query=""
-        awaitingApproval={false}
-      />
-    </AdminTabbedFrame>
-  ),
-};
+const adminRolesNode = (
+  <AdminTabbedFrame page="people">
+    <UserList
+      users={[
+        { ...(USERS[0] as UserListEntry), primaryAdmin: true },
+        listed({
+          id: 'u-eve',
+          name: 'Eve Fixturewort',
+          email: 'eve@users.test',
+          role: 'admin',
+          canCreateWorkspace: true,
+          createdAt: new Date('2026-08-09T10:11:12Z'),
+          providers: ['google'],
+          emailVerified: true,
+          primaryAdmin: false,
+        }),
+        listed({
+          id: 'u-dee',
+          name: 'Dee Fixturewort',
+          email: 'dee@users.test',
+          role: 'curator',
+          canCreateWorkspace: true,
+          createdAt: new Date('2026-08-10T11:12:13Z'),
+          providers: ['discord'],
+          emailVerified: true,
+          primaryAdmin: false,
+        }),
+        ...USERS.slice(1),
+      ]}
+      query=""
+      awaitingApproval={false}
+    />
+  </AdminTabbedFrame>
+);
 
 // MB.63: the switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
 // usable Resume, and every row's control usable, since the pause exempts it.
-export const AdminChangesPaused: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
-      <UserList
-        users={USERS}
-        query=""
-        awaitingApproval={false}
-        adminChanges={{ paused: true, canToggle: true }}
-      />
-    </AdminTabbedFrame>
-  ),
-};
+const adminChangesPausedNode = (
+  <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
+    <UserList
+      users={USERS}
+      query=""
+      awaitingApproval={false}
+      adminChanges={{ paused: true, canToggle: true }}
+    />
+  </AdminTabbedFrame>
+);
 
 // Paused, to another admin: the warning, Resume locked with its reason in a
 // tip, and every Change Role, Approve and coven-creation Revoke locked with
 // the pause's reason.
-export const AdminChangesNotPrimary: Story = {
-  render: () => (
-    <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
-      <UserList
-        users={USERS}
-        query=""
-        awaitingApproval={false}
-        adminChanges={{ paused: true, canToggle: false }}
-      />
-    </AdminTabbedFrame>
-  ),
+const adminChangesNotPrimaryNode = (
+  <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
+    <UserList
+      users={USERS}
+      query=""
+      awaitingApproval={false}
+      adminChanges={{ paused: true, canToggle: false }}
+    />
+  </AdminTabbedFrame>
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const LISTED_STATES: Record<string, ReactNode> = {
+  'Without Filters': defaultNode,
+  'Awaiting Approval And Query': filteredNode,
+  'Middle Page': middlePageNode,
+  'Role Filter': roleFilterNode,
+  'No Matches': noMatchesNode,
+  'Without Impersonation': withoutImpersonationNode,
+  'Unverified Approval': unverifiedApprovalNode,
+  'Admin Roles': adminRolesNode,
+  'Admin Changes Paused': adminChangesPausedNode,
+  'Admin Changes Not Primary': adminChangesNotPrimaryNode,
+};
+
+export const States: Story = {
+  args: { state: 'Without Filters' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(LISTED_STATES), mapping: LISTED_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
