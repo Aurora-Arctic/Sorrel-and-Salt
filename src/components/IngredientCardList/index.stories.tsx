@@ -14,7 +14,8 @@ const meta = {
   title: 'Ingredients / Ingredient Card List',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const CompendiumCards = () => (
   <IngredientCardList label="Compendium">

@@ -9,7 +9,8 @@ const meta = {
   title: 'Pages / Error Page',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const defaultNode = (
   <ErrorPage title="Page Not Found" reason="There is nothing at this address.">

@@ -17,7 +17,8 @@ const meta = {
   title: 'Admin / Invitations',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The filter a page shows: part of an address and Expires in 24 Hrs, which
 // leaves the one invitation lapsing tomorrow morning.

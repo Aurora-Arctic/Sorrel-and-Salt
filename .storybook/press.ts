@@ -39,7 +39,7 @@ export function setInputValue(input: HTMLInputElement, value: string): void {
 export function pressLast(name: string): void {
   [...document.querySelectorAll<HTMLButtonElement>('button')]
     .filter((button) => button.textContent === name || button.ariaLabel === name)
-    .at(-1)
+    .pop()
     ?.click();
 }
 

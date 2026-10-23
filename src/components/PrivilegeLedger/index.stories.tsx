@@ -10,7 +10,8 @@ const meta = {
   title: 'Admin / Privilege Ledger',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ADA = { name: 'Ada Fixturewort', href: '/admin/users?query=ada%40users.test' };
 const BRAM = { name: 'Bram Testwort', href: '/admin/users?query=bram%40users.test' };

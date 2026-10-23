@@ -8,7 +8,8 @@ const meta = {
   title: 'Coven / Invitations Sent',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const INVITATIONS: readonly PendingInvitationEntry[] = [
   {

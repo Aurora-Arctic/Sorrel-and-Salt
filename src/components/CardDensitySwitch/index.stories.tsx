@@ -15,7 +15,8 @@ const meta = {
   title: 'Ingredients / Card Density Switch',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // On by default. Toggling it sets `data-card-density` on the story frame's <html>
 // and writes localStorage, so it persists across stories until cleared.

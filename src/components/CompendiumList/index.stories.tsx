@@ -31,7 +31,8 @@ const meta = {
   title: 'Ingredients / Compendium List',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The page around the list: the layout's frame, then `main` with the heading
 // and its Add, as the route draws them.

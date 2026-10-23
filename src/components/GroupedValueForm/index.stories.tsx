@@ -18,7 +18,8 @@ const meta = {
   title: 'Admin / Grouped Value Form',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Enough of each to narrow: every group field is typed into (MB.115).
 const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);

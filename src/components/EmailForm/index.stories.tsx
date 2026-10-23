@@ -14,7 +14,8 @@ const meta = {
   title: 'Account / Email Form',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Inside the page's own frame and panel, so the workshop shows what the page
 // shows; nothing here is the workshop's alone.

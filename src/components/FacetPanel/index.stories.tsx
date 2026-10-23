@@ -15,7 +15,8 @@ const meta = {
   title: 'Ingredients / Facet Panel',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WARDING = { id: 'g1', name: 'Protective', colorDark: '#2f6b4f', colorLight: '#b7dfc9' };
 const MENDING = { id: 'g2', name: 'Restorative', colorDark: '#7a4b8f', colorLight: '#dcc6e8' };

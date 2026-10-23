@@ -10,7 +10,8 @@ const meta = {
   title: 'Account / Name Form',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Inside the account page's frame and section, on its panel, as
 // src/app/(shell)/account/page.tsx writes them, so the workshop shows what the page

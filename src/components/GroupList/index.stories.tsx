@@ -15,7 +15,8 @@ const meta = {
   title: 'Admin / Group List',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const CATEGORY_GROUPS = [
   { name: 'Fixture Mending', colorDark: '#559c54', colorLight: '#326d31' },

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Route } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../src/lib/navigation';
 import { Navigating } from './navigating';
@@ -12,7 +13,8 @@ const meta = {
   title: 'Feedback / Main Body',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // One link per destination frame, each named for the frame its wait is drawn in.
 const Page = (): ReactElement => (
@@ -64,7 +66,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href="/compendium/ingredients/testwort"
+          href={'/compendium/ingredients/testwort' as Route}
           navigationTarget={{ region: 'main', shape: 'page', frame: 'entry' }}
         >
           Entry
@@ -72,7 +74,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href="/account/sign-in-methods"
+          href={'/account/sign-in-methods' as Route}
           navigationTarget={{
             region: 'main',
             shape: 'table',
@@ -96,7 +98,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href="/account/name"
+          href={'/account/name' as Route}
           navigationTarget={{ region: 'main', shape: 'page', head: 'title' }}
         >
           Title Head

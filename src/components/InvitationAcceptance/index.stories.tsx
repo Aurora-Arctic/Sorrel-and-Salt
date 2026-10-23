@@ -13,7 +13,8 @@ const meta = {
   title: 'Pages / Invitation Acceptance',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Inside the page's own frame, so the workshop shows what the page shows.
 const Page = (props: InvitationAcceptanceProps) => (

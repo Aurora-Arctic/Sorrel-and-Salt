@@ -8,7 +8,8 @@ const meta = {
   title: 'Layout / Theme Toggle',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Follows the toolbar's theme control. The first four stories draw the
 // `corner` variant, as the root layout mounts it on the pages with no shell

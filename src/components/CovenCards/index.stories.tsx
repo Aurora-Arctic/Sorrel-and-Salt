@@ -16,7 +16,8 @@ const meta = {
   title: 'Ingredients / Coven Cards',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const NO_FILTER: CovenCardsProps['filter'] = {
   ...COMPENDIUM_NO_FILTER,

@@ -11,7 +11,8 @@ const meta = {
   title: 'Shell / Public Frame',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The workshop pretends to be on the admin area unless told otherwise, so each
 // story says where the page is: the nav marks the Compendium link as current

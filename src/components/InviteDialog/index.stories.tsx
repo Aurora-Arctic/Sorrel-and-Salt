@@ -9,7 +9,8 @@ const meta = {
   title: 'Coven / Invite Dialog',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-0000-0000-000000000001';
 

@@ -18,7 +18,8 @@ const meta = {
   title: 'Sign In / Sign-In Methods',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };

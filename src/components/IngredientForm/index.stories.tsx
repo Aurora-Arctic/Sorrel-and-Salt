@@ -67,7 +67,8 @@ const meta = {
   ],
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
 

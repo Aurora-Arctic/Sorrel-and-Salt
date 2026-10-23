@@ -11,7 +11,8 @@ const meta = {
   title: 'Ingredients / Jar Shelf',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const INGREDIENT = '00000000-0000-4000-8000-000000000002';

@@ -15,7 +15,8 @@ const meta = {
   title: 'Admin / Group Form',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Two of the shared groups, and the one edited here. The first two carry an
 // icon, which a form group's move-to choices draw: the first its own, the

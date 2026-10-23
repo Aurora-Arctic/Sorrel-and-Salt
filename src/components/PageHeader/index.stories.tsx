@@ -13,7 +13,8 @@ const meta = {
   title: 'Layout / Page Header',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The compendium's, the one admin page with a heading of its own since the
 // others went into tabs (MB.115).

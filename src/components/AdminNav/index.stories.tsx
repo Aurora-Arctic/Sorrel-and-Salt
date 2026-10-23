@@ -14,7 +14,8 @@ const meta = {
   title: 'Admin / Nav',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Wider than a tablet: six tabs along the row, People set apart by a hairline
 // and marked by weight and the heavy rule. The narrower shapes are
