@@ -31,7 +31,7 @@ import type {
 
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
-// It adds W's cupboard (three compendium entries held, two of them annotated),
+// It adds W's cupboard (seven compendium entries held, six of them annotated),
 // W's own ingredients, so the jars mix both kinds, one custom one-off layer
 // with no `ingredient_id`, and W's stock: seven jars of what it holds
 // (claude-docs/db/demo-scenario.md, "The demo scenario").
@@ -73,6 +73,10 @@ export interface SeedCupboardEntry {
   entry: { name: string; canonicalName: string };
   label?: string;
   description?: string;
+  safetyNotes?: string;
+  elements?: Array<'earth' | 'air' | 'fire' | 'water' | 'spirit'>;
+  celestialBodies?: string[];
+  zodiacSigns?: string[];
   colors?: string[];
 }
 
@@ -91,6 +95,32 @@ export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
   },
   // In the cupboard and not annotated: the row alone.
   { entry: { name: 'Ginger', canonicalName: 'Zingiber officinale' } },
+  // Mugwort under the coven's label, with a safety note and a second celestial body.
+  {
+    entry: { name: 'Mugwort', canonicalName: 'Artemisia vulgaris' },
+    label: 'Hedgerow Mugwort',
+    safetyNotes: 'Not for anyone pregnant. Keep the smoke away from the cat.',
+    celestialBodies: ['Moon', 'Neptune'],
+  },
+  // Lavender with a description, an element the compendium lacks and a sign of its own.
+  {
+    entry: { name: 'Lavender', canonicalName: 'Lavandula angustifolia' },
+    description: 'Grown along the south wall and stripped into paper bags in July.',
+    elements: ['air', 'water'],
+    zodiacSigns: ['Pisces'],
+  },
+  // Only a safety note over the compendium's own text.
+  {
+    entry: { name: 'Comfrey', canonicalName: 'Symphytum officinale' },
+    safetyNotes: 'Never taken internally here. The leaf is for poultices and the compost heap.',
+  },
+  // An empty element list is an answer: the coven says Sea Salt has none.
+  {
+    entry: { name: 'Sea Salt', canonicalName: 'Sodium chloride' },
+    label: 'Kitchen Salt',
+    elements: [],
+    colors: ['grey', 'white'],
+  },
 ];
 
 /** Everything W has of its own. Seeded into W, and invisible from X. */

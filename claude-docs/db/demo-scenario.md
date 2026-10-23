@@ -36,7 +36,8 @@ by tier and identity, so the extra entries make none of them ambiguous.
 - **W's cupboard** (M12.26), the compendium entries a coven holds as
   `workspace_compendium_entries` rows ([workspace-compendium-entries.md](workspace-compendium-entries.md)).
   The seed inserts them directly, stamped like every other row, and does not
-  call the cupboard service. Three, one of each kind of row:
+  call the cupboard service. Seven, so that a member opening them sees annotated entries
+  with a variety of fields (the first three are the original M12.26 rows):
   - **Rosemary**, labelled `Garden Rosemary`, with its own description,
     "Cut from the bush by the back door, dried in bunches over the stove."
     (an annotated row with a label and a text override);
@@ -44,7 +45,19 @@ by tier and identity, so the extra entries make none of them ambiguous.
     with `colors` set to `white` and `yellow` (a label and an array override;
     the compendium lists no colour for it);
   - **Ginger** (_Zingiber officinale_), with no override at all (in the
-    cupboard and not annotated).
+    cupboard and not annotated);
+  - **Mugwort**, labelled `Hedgerow Mugwort`, with a safety note and
+    `celestial_bodies` `Moon` and `Neptune`;
+  - **Lavender** (_Lavandula angustifolia_), with a description,
+    `elements` `air` and `water`, and `zodiac_signs` `Pisces`;
+  - **Comfrey**, with a safety note alone;
+  - **Sea Salt**, labelled `Kitchen Salt`, with `elements` an empty array (an
+    answer, not an absence) and `colors` `grey` and `white`.
+
+  Only the `demo` scenario annotates anything: `standard` has no cupboard rows,
+  so a capture signed in as A against `standard` finds no Annotate action. The
+  action shows in a held entry's cupboard menu only for a role that may update
+  ingredients.
 
   Every other column is null, so it reads as the compendium's value. These
   three were W's own rows until M12.26, which shadowed the compendium's entry
@@ -117,7 +130,7 @@ Weight, volume and count are all there. A jar that sets no threshold gets its
 unit's default, from `defaultThreshold` in
 `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock`
 reads too, so the seed carries no second table of values. Every compendium entry
-stocked is one of the three in W's cupboard (`tests/db/seed/demo.test.ts` holds
+stocked is one of the seven in W's cupboard (`tests/db/seed/demo.test.ts` holds
 it), and `standard` and the other scenarios write no stock.
 
 Idempotency is the pair the live-unique index guards, W and the variant,
