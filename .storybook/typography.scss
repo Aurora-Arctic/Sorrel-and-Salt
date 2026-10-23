@@ -1,7 +1,6 @@
-// typography-base hung off .workshop-story-frame rather than `body`, so its bare
-// element selectors stay off Storybook's own chrome. Inside `:where()`, so the
-// scope adds no specificity: a component's own class beats a rule here as it
-// beats `body p` in the app, and a story renders as the page does.
+// typography-base hung off the preview body, as the app hangs it off `body`, so a
+// component's own class beats a rule here as it beats `body p` in the app. The
+// preview iframe holds only the story (preview.tsx adds `workshop-app` to the body).
 
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;
@@ -16,6 +15,6 @@
   --font-display: 'Cormorant Unicase';
 }
 
-:where(.workshop-story-frame) {
+body:where(.workshop-app) {
   @include typography-base;
 }

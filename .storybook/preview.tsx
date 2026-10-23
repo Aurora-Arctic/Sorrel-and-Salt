@@ -9,6 +9,10 @@ import './typography.scss';
 import './layout.scss';
 import './primitives.scss';
 
+// The class the three sheets above hang off; the preview iframe's body holds
+// only the story, so the app's own `body` rules can apply here unchanged.
+if (typeof document !== 'undefined') document.body.classList.add('workshop-app');
+
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 // Storybook's load-once preview and the workshop decorator: frames every story

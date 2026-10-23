@@ -107,7 +107,11 @@ const Shell = ({
           )}
         </IngredientSearchForm>
       }
-      action={<button type="button">Add Ingredient</button>}
+      action={
+        <button type="button" className="btn btn--solid">
+          Add Ingredient
+        </button>
+      }
       previousHref={previous ? (`${PATH}` as Route) : undefined}
       nextHref={`${PATH}?after=x` as Route}
       position={{ page: previous ? 2 : 1, pages: 2 }}

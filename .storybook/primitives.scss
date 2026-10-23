@@ -1,8 +1,10 @@
-// primitives-base scoped to the frame, so a story gets the same classes a page
-// does; inside `:where()` for the reason typography.scss gives.
+// primitives-base hung off the preview body, as the app hangs it off `body`, so a
+// story gets the same classes at the same specificity a page does. The class is
+// `where()`-wrapped so the scope adds none: `body:where(.workshop-app) .x` weighs
+// what `body .x` does (preview.tsx adds the class to the body).
 
 @use '../src/scss/primitives' as *;
 
-:where(.workshop-story-frame) {
+body:where(.workshop-app) {
   @include primitives-base;
 }

@@ -34,7 +34,7 @@ export const Default: Story = {
     return (
       <>
         <p>
-          <button type="button" onClick={() => setBusy((on) => !on)}>
+          <button type="button" className="btn" onClick={() => setBusy((on) => !on)}>
             {busy ? 'Arrive' : 'Start a Wait'}
           </button>
         </p>
