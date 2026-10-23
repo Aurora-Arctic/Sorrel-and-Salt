@@ -68,8 +68,6 @@ export const States: Story = {
       states={{
         'Dark Theme': <Field column="colorDark" initial="#5d8ab1" />,
         'Light Theme': <Field column="colorLight" initial="#286ba6" />,
-        // Too dark for the dark card: the ratio says so before any save.
-        'Under The Floor': <Field column="colorDark" initial="#0c5393" />,
         // A shade off another group's colour in the same theme: the warning names it.
         'Near Another Group': (
           <Field
@@ -94,4 +92,12 @@ export const States: Story = {
       }}
     />
   ),
+};
+
+// Too dark for the dark card: the field shows the failing ratio before any save. Its colour
+// fails the contrast rule on purpose, so it is its own story, tagged to be exempt from that one
+// rule (claude-docs/workshop.md, 'The every-story check'), and the other states stay checked.
+export const UnderTheFloor: Story = {
+  tags: ['shows-low-contrast'],
+  render: () => <Field column="colorDark" initial="#0c5393" />,
 };

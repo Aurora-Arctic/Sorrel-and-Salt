@@ -871,7 +871,7 @@ export default function Foundations(): ReactElement {
         </SectionHead>
         <div className="fd-stage">
           <div className="modal">
-            <h4>Delete this spell?</h4>
+            <h3>Delete this spell?</h3>
             <p>The Hearth Warding Jar and its six ingredients will be removed from the grimoire.</p>
             <div className="modal__actions">
               <button type="button" className="btn btn--destructive">

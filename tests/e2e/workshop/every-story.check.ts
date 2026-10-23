@@ -14,11 +14,14 @@ import { chromium, expect, test, type Browser } from '@playwright/test';
 // worker registers only there. The browser server runs in another container,
 // so `exposeNetwork` lets it reach this container's loopback. A story tagged
 // `expects-failed-request` shows a refusal on purpose and is exempt from the
-// request and console-error checks, never from the page-error or axe ones.
+// request and console-error checks, never from the page-error or axe ones. A story
+// tagged `shows-low-contrast` shows a failing colour pair on purpose and is exempt from the
+// `color-contrast` axe rule only.
 
 const BASE = process.env.WORKSHOP_CHECK_URL ?? 'http://localhost:61104';
 const THEMES = (process.env.WORKSHOP_CHECK_THEMES ?? 'light,dark').split(',');
 const ONLY = process.env.WORKSHOP_CHECK_ONLY; // a substring of the story id
+const DETAIL = process.env.WORKSHOP_CHECK_DETAIL === '1'; // print each violating element
 const WORKERS = Number(process.env.WORKSHOP_CHECK_WORKERS ?? 4);
 
 // Rules about a whole page, which a story, one component alone, is not: the
@@ -47,6 +50,7 @@ async function connect(): Promise<Browser> {
 
 async function checkStory(browser: Browser, entry: IndexEntry, theme: string) {
   const problems: string[] = [];
+  const lowContrast = entry.tags?.includes('shows-low-contrast') ?? false;
   const exempt = entry.tags?.includes('expects-failed-request') ?? false;
   const context = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await context.newPage();
@@ -76,8 +80,17 @@ async function checkStory(browser: Browser, entry: IndexEntry, theme: string) {
       problems.push(`story error: ${(await page.locator('#error-message').innerText()).trim()}`);
     await page.evaluate(async () => document.fonts.ready);
     await page.waitForTimeout(400);
-    const { violations } = await new AxeBuilder({ page }).disableRules(PAGE_RULES).analyze();
-    for (const v of violations) problems.push(`axe ${v.id}: ${v.help} (${v.nodes.length} node(s))`);
+    const { violations } = await new AxeBuilder({ page })
+      .disableRules(lowContrast ? [...PAGE_RULES, 'color-contrast'] : PAGE_RULES)
+      .analyze();
+    for (const v of violations) {
+      problems.push(`axe ${v.id}: ${v.help} (${v.nodes.length} node(s))`);
+      if (DETAIL)
+        for (const n of v.nodes)
+          problems.push(
+            `  ${n.target.join(' ')} :: ${n.html.slice(0, 110)} :: ${JSON.stringify(n.any[0]?.data ?? {}).slice(0, 220)}`,
+          );
+    }
   } catch (error) {
     problems.push(`did not render: ${(error as Error).message.split('\n')[0]}`);
   } finally {

@@ -43,7 +43,7 @@ What it looks like is the owner's calls. The area has a crosshair cursor. The ve
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/ChipColorField/index.stories.tsx) has one story, `States`, a grid of Dark Theme and Light Theme (a seeded pair), Under The Floor (a hex fit for the light page, read on the dark card), Near Another Group (a shade off another group's colour), With Partner, Empty, Half A Hex, With Error, Lightness Format and Red Green Blue Format.
+[`index.stories.tsx`](../../src/components/ChipColorField/index.stories.tsx) has two stories. `States` is a grid of Dark Theme and Light Theme (a seeded pair), Near Another Group (a shade off another group's colour), With Partner, Empty, Half A Hex, With Error, Lightness Format and Red Green Blue Format. `UnderTheFloor` is a hex fit for the light page, read on the dark card; it fails contrast on purpose, so it carries the `shows-low-contrast` tag.
 
 ## Testing
 

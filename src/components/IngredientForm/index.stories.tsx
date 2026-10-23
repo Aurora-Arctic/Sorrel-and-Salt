@@ -1416,9 +1416,9 @@ function HeldNameField({ blocking }: { blocking: boolean }) {
 function Duplicates() {
   return (
     <div className="page-column">
-      <h2>Typing: A Question</h2>
+      <h3>Typing: A Question</h3>
       <HeldNameField blocking={false} />
-      <h2>Save Pressed: On Hold</h2>
+      <h3>Save Pressed: On Hold</h3>
       <HeldNameField blocking />
     </div>
   );
