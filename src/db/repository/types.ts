@@ -962,8 +962,29 @@ export interface CitingLink {
   reference: ReferenceRow;
 }
 
-/** An `ingredients` row, compendium entry or coven's, as a finder returns it. */
-export type IngredientRow = typeof ingredients.$inferSelect;
+/** The columns `unread-columns.ts` leaves out of an `ingredients` row read. */
+export type UnreadIngredientColumn = 'curatorReviewedAt' | 'curatorReviewedBy';
+
+/**
+ * An `ingredients` row, compendium entry or coven's, as a finder returns it: without the
+ * review mark, which no finder reads with the row (`unread-columns.ts`; M14.8).
+ */
+export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredientColumn>;
+
+/**
+ * A row as the generic finders read it: the table's whole row, less any column
+ * `unread-columns.ts` keeps out of reads. Writers' `returning()` still hold
+ * the whole row (M14.8).
+ */
+export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
+  ? IngredientRow
+  : TTable['$inferSelect'];
+
+/** When a curator last marked a compendium entry reviewed, as the curator's own read returns it. */
+export interface CompendiumReviewRow {
+  /** `null` once the mark is cleared: the entry needs review. */
+  reviewedAt: Date | null;
+}
 
 /** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;

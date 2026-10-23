@@ -15,13 +15,14 @@ import type {
   SortPart,
   Unscoped,
   WorkspaceScoped,
+  ReadRow,
 } from './types';
 
 /** All matching, non-soft-deleted rows. The default and normal-use finder. */
 export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped>(
   table: TTable,
   where?: SQL,
-): Promise<TTable['$inferSelect'][]> {
+): Promise<ReadRow<TTable>[]> {
   // `and` drops undefined conditions, so a join table's read is the caller's
   // `where` alone.
   return selectFrom(table, and(notSoftDeleted(table), where));
@@ -30,7 +31,7 @@ export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped & No
 /** The first matching, non-soft-deleted row, or `undefined`. */
 export async function findOne<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped,
->(table: TTable, where?: SQL): Promise<TTable['$inferSelect'] | undefined> {
+>(table: TTable, where?: SQL): Promise<ReadRow<TTable> | undefined> {
   const [row] = await findMany(table, where);
   return row;
 }
@@ -41,7 +42,7 @@ export async function findOne<
  */
 export function findOneById<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
->(table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
+>(table: TTable, id: string): Promise<ReadRow<TTable> | undefined> {
   return findOne(table, eq(table.id, id));
 }
 
@@ -52,14 +53,14 @@ export function findOneById<
  */
 export function findOneBySlug<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Slugged,
->(table: TTable, slug: string): Promise<TTable['$inferSelect'] | undefined> {
+>(table: TTable, slug: string): Promise<ReadRow<TTable> | undefined> {
   return findOne(table, eq(table.slug, slug));
 }
 
 /** The live rows among these ids, in no particular order — a loader's batch read. */
 export async function findManyByIds<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
->(table: TTable, ids: readonly string[]): Promise<TTable['$inferSelect'][]> {
+>(table: TTable, ids: readonly string[]): Promise<ReadRow<TTable>[]> {
   if (ids.length === 0) return [];
   return findMany(table, inArray(table.id, [...ids]));
 }
@@ -69,14 +70,14 @@ export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & N
   membership: Membership,
   table: TTable,
   where?: SQL,
-): Promise<TTable['$inferSelect'][]> {
+): Promise<ReadRow<TTable>[]> {
   return selectFrom(table, and(scopedTo(membership, table), notSoftDeleted(table), where));
 }
 
 /** The first such row, or `undefined` — including when it belongs to another workspace. */
 export async function findOneInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped,
->(membership: Membership, table: TTable, where?: SQL): Promise<TTable['$inferSelect'] | undefined> {
+>(membership: Membership, table: TTable, where?: SQL): Promise<ReadRow<TTable> | undefined> {
   const [row] = await findManyInWorkspace(membership, table, where);
   return row;
 }
@@ -89,7 +90,7 @@ export async function findOneInWorkspace<
  */
 export function findOneByIdInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
->(membership: Membership, table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
+>(membership: Membership, table: TTable, id: string): Promise<ReadRow<TTable> | undefined> {
   return findOneInWorkspace(membership, table, eq(table.id, id));
 }
 
@@ -109,7 +110,7 @@ export function findPage<
   order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
   return readPage(table, notSoftDeleted(table), order, page, where);
 }
 
@@ -135,7 +136,7 @@ export function findPageInWorkspace<
   order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
   return readPage(
     table,
     and(scopedTo(membership, table), notSoftDeleted(table)),
@@ -160,7 +161,7 @@ export function findPageInTiers<
   order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
   return readPage(table, readableInTiers(memberships, table), order, page, where);
 }
 
@@ -191,7 +192,7 @@ export function findPageInScope<TTable extends PgTable & Identified, Carried ext
   order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
   return readPage(table, and(scope, notSoftDeleted(table)), order, page, where);
 }
 
@@ -223,7 +224,7 @@ export function findPageInScopeIncludingSoftDeleted<
   order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
   return readPage(table, scope, order, page, where);
 }
 
@@ -245,7 +246,7 @@ function readPage<TTable extends PgTable & Identified, Carried extends object>(
   order: PageOrder<Carried>,
   page: PageRequest,
   where: SQL | undefined,
-): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+): Promise<PageEntry<ReadRow<TTable>, Carried>[]> {
   const keyset: Keyset<Carried> = { ...keyOf(table, order), request: page };
   return selectFrom(table, and(scope, where, pageBounds(keyset)), keyset);
 }
@@ -285,6 +286,6 @@ function isSortAlone<Carried extends object>(
  */
 export function findManyIncludingSoftDeleted<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped,
->(table: TTable, where?: SQL): Promise<TTable['$inferSelect'][]> {
+>(table: TTable, where?: SQL): Promise<ReadRow<TTable>[]> {
   return selectFrom(table, where);
 }

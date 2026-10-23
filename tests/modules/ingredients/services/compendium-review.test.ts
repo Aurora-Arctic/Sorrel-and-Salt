@@ -1,0 +1,277 @@
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { Forbidden, NotFound } from '@/lib/errors';
+import {
+  createCompendiumEntry,
+  getIngredient,
+  listCompendium,
+  promoteFolkName,
+  readCompendiumEntry,
+  readCompendiumReview,
+  setCompendiumEntryReviewed,
+  updateCompendiumEntry,
+} from '@/modules/ingredients';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
+import { useTestDatabase } from '../../../support/db/database';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeVariant,
+  variantInput,
+} from '../../../support/fixtures';
+import { curatedFormId } from '../../../support/db/curated-ids';
+
+// M14.8: a curator's review mark on a compendium entry. Set by hand through
+// `setCompendiumEntryReviewed`, and by every curator write to the entry; read
+// back only through the curator's own read, never through the public one.
+// The table is emptied per test, so every row read back is one this file wrote.
+
+let sql: postgres.Sql;
+useTestDatabase((client) => {
+  sql = client;
+});
+
+let herb: string;
+beforeAll(async () => {
+  herb = await curatedFormId(sql, 'Herb');
+});
+
+beforeEach(async () => {
+  await sql`truncate ingredients cascade`;
+  await sql`truncate retired_ingredient_slugs`;
+});
+
+const LONG_AGO = '2020-01-01 00:00:00';
+
+function compendiumInput(
+  overrides: Overrides<IngredientFixture> = {},
+): Parameters<typeof createCompendiumEntry>[1] {
+  const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })], ...overrides });
+  const { workspaceId: _tier, categories: _c, substitutes, deities, variants, ...input } = fixture;
+  return {
+    ...input,
+    substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
+    deities: deities.map((name) => ({ deityId: null, name })),
+    variants: variants.map((variant) => variantInput(variant, { formId: herb })),
+  };
+}
+
+/** A compendium entry written raw by A, as the seed writes one: never reviewed. */
+const seeded = (overrides: Partial<IngredientFixture> = {}) =>
+  insertIngredient(sql, makeIngredient({ workspaceId: null, ...overrides }), A.id);
+
+/** A coven's own ingredient, in W unless named. */
+const local = (workspaceId = WORKSPACE_W_ID) =>
+  insertIngredient(
+    sql,
+    makeIngredient({ workspaceId, nomenclature: 'none', canonicalName: null }),
+    A.id,
+  );
+
+async function markOf(id: string) {
+  const [row] = await sql<
+    { curator_reviewed_at: Date | null; curator_reviewed_by: string | null }[]
+  >`select curator_reviewed_at, curator_reviewed_by from ingredients where id = ${id}`;
+  return row;
+}
+
+async function stampsOf(id: string) {
+  const [row] = await sql<{ updated_at: Date; updated_by: string }[]>`
+    select updated_at, updated_by from ingredients where id = ${id}`;
+  return row;
+}
+
+/** Writes the row's `updated_at` far in the past, past the trigger that would hold it. */
+async function backdate(id: string): Promise<void> {
+  await sql.begin(async (tx) => {
+    await tx`alter table ingredients disable trigger set_updated_at`;
+    await tx`update ingredients set updated_at = ${LONG_AGO} where id = ${id}`;
+    await tx`alter table ingredients enable trigger set_updated_at`;
+  });
+}
+
+async function folkIdOf(ingredientId: string, name: string) {
+  const [row] = await sql`
+    select id from ingredient_folk_names
+    where ingredient_id = ${ingredientId} and name = ${name} and deleted_at is null`;
+  return row.id as string;
+}
+
+describe('setCompendiumEntryReviewed', () => {
+  it.each([
+    ['a curator (F)', F],
+    ['an admin (E)', E],
+  ])('lets %s set and clear the mark by direct id', async (_who, user) => {
+    const id = await seeded();
+    // Why setting it means something: the seeded row is unreviewed.
+    expect((await markOf(id)).curator_reviewed_at).toBeNull();
+
+    await setCompendiumEntryReviewed(asUser(user), id, true);
+    const set = await markOf(id);
+    expect(set.curator_reviewed_at).toBeInstanceOf(Date);
+    expect(set.curator_reviewed_by).toBe(user.id);
+
+    await setCompendiumEntryReviewed(asUser(user), id, false);
+    expect(await markOf(id)).toEqual({ curator_reviewed_at: null, curator_reviewed_by: null });
+  });
+
+  it.each([
+    ['a coven owner who is not a curator (A)', A],
+    ['a member (B)', B],
+    ['a viewer (C)', C],
+    ['a member of an unrelated coven (D)', D],
+  ])('refuses %s by direct id', async (_who, user) => {
+    const id = await seeded();
+    // Why the write could have gone through: the id names a live compendium entry
+    // a curator can mark, and the user holds a role that writes in a coven.
+    const [membership] = await sql<{ role: string }[]>`
+      select role from workspace_members
+      where user_id = ${user.id} and workspace_id in (${WORKSPACE_W_ID}, ${WORKSPACE_X_ID})`;
+    expect(membership).toBeDefined();
+    await setCompendiumEntryReviewed(asUser(F), id, true);
+    await setCompendiumEntryReviewed(asUser(F), id, false);
+
+    await expect(setCompendiumEntryReviewed(asUser(user), id, true)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    expect((await markOf(id)).curator_reviewed_at).toBeNull();
+  });
+
+  it('refuses D even where D is a member writing in its own coven', async () => {
+    const id = await seeded();
+    const [membership] = await sql<{ role: string }[]>`
+      select role from workspace_members where user_id = ${D.id} and workspace_id = ${WORKSPACE_X_ID}`;
+    // The precondition: D may write ingredients in X, so the refusal is the curator check.
+    expect(membership.role).toBe('member');
+
+    await expect(setCompendiumEntryReviewed(asUser(D), id, true)).rejects.toBeInstanceOf(Forbidden);
+  });
+
+  it('answers NotFound for a coven own entry, and leaves it untouched', async () => {
+    const id = await local();
+
+    await expect(setCompendiumEntryReviewed(asUser(F), id, true)).rejects.toBeInstanceOf(NotFound);
+    expect((await markOf(id)).curator_reviewed_at).toBeNull();
+  });
+
+  it('answers NotFound for an id that is not one', async () => {
+    await expect(setCompendiumEntryReviewed(asUser(F), 'not-a-uuid', true)).rejects.toBeInstanceOf(
+      NotFound,
+    );
+  });
+
+  it('does not move updated_at or updated_by', async () => {
+    const id = await seeded();
+    await backdate(id);
+    const before = await stampsOf(id);
+    // Why it could have moved: a different user writes the row.
+    expect(before.updated_by).not.toBe(F.id);
+
+    await setCompendiumEntryReviewed(asUser(F), id, true);
+    expect(await stampsOf(id)).toEqual(before);
+    await setCompendiumEntryReviewed(asUser(F), id, false);
+    expect(await stampsOf(id)).toEqual(before);
+  });
+});
+
+describe('a curator write to an entry marks it reviewed', () => {
+  it('when it creates the entry', async () => {
+    const created = await createCompendiumEntry(asUser(F), compendiumInput());
+
+    expect((await markOf(created.id)).curator_reviewed_by).toBe(F.id);
+  });
+
+  it('when it edits the entry, even with nothing else changed', async () => {
+    const created = await createCompendiumEntry(asUser(E), compendiumInput());
+    await setCompendiumEntryReviewed(asUser(E), created.id, false);
+
+    await updateCompendiumEntry(asUser(F), created.id, compendiumInput());
+
+    const mark = await markOf(created.id);
+    expect(mark.curator_reviewed_at).toBeInstanceOf(Date);
+    expect(mark.curator_reviewed_by).toBe(F.id);
+  });
+
+  it('when it promotes a folk name', async () => {
+    const id = await seeded({ name: 'Testleaf', folkNames: ['Testwort'] });
+    expect((await markOf(id)).curator_reviewed_at).toBeNull();
+
+    await promoteFolkName(asUser(F), null, id, await folkIdOf(id, 'Testwort'));
+
+    expect((await markOf(id)).curator_reviewed_by).toBe(F.id);
+  });
+
+  it('never when a coven member promotes a folk name on its own entry', async () => {
+    const id = await insertIngredient(
+      sql,
+      makeIngredient({
+        workspaceId: WORKSPACE_W_ID,
+        nomenclature: 'none',
+        canonicalName: null,
+        name: 'Testleaf',
+        folkNames: ['Testwort'],
+      }),
+      A.id,
+    );
+
+    await promoteFolkName(asUser(A), WORKSPACE_W_ID, id, await folkIdOf(id, 'Testwort'));
+
+    expect((await markOf(id)).curator_reviewed_at).toBeNull();
+  });
+});
+
+describe('readCompendiumReview', () => {
+  it('reads when a curator reviewed the entry, and null once cleared', async () => {
+    const id = await seeded();
+    expect(await readCompendiumReview(asUser(F), id)).toBeNull();
+
+    await setCompendiumEntryReviewed(asUser(E), id, true);
+    const [{ curator_reviewed_at: at }] = await sql<{ curator_reviewed_at: Date }[]>`
+      select curator_reviewed_at from ingredients where id = ${id}`;
+    expect(await readCompendiumReview(asUser(F), id)).toEqual({ reviewedAt: at });
+  });
+
+  it('refuses anyone but a curator or admin', async () => {
+    const id = await seeded();
+    await setCompendiumEntryReviewed(asUser(F), id, true);
+    // Precondition: there is a mark to read.
+    expect(await readCompendiumReview(asUser(E), id)).not.toBeNull();
+
+    await expect(readCompendiumReview(asUser(D), id)).rejects.toBeInstanceOf(Forbidden);
+  });
+
+  it('answers NotFound for a coven own entry', async () => {
+    const id = await local();
+    await expect(readCompendiumReview(asUser(F), id)).rejects.toBeInstanceOf(NotFound);
+  });
+});
+
+describe('the public compendium reads', () => {
+  it('carry neither the mark nor the reviewer', async () => {
+    const id = await seeded();
+    await setCompendiumEntryReviewed(asUser(F), id, true);
+    // Precondition: the row holds both.
+    expect((await markOf(id)).curator_reviewed_by).toBe(F.id);
+
+    const page = await listCompendium({}, { limit: 26, inverted: false });
+    const listed = page.find(({ node }) => node.id === id)?.node;
+    expect(listed).toBeDefined();
+    const entry = await getIngredient(null, id);
+    const slug = (await stampsOfSlug(id)).slug;
+    const shown = await readCompendiumEntry(slug);
+
+    for (const row of [listed, entry, shown.kind === 'entry' ? shown.detail.entry : undefined]) {
+      expect(row).toBeDefined();
+      expect(row).not.toHaveProperty('curatorReviewedAt');
+      expect(row).not.toHaveProperty('curatorReviewedBy');
+    }
+  });
+});
+
+async function stampsOfSlug(id: string) {
+  const [row] = await sql<{ slug: string }[]>`select slug from ingredients where id = ${id}`;
+  return row;
+}

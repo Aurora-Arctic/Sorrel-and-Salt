@@ -44,6 +44,7 @@ export type {
   CompendiumAddress,
   CompendiumEntryPage,
   CompendiumFacets,
+  CompendiumReview,
   CompendiumSlugEntry,
   CupboardEntryKey,
   CupboardEntryRow,

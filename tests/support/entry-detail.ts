@@ -33,8 +33,6 @@ export function entryDetail(overrides: Partial<IngredientRow> = {}): IngredientD
       toxic: false,
       seedKey: null,
       seedContentHash: null,
-      curatorReviewedAt: null,
-      curatorReviewedBy: null,
       ...STAMPS,
       ...overrides,
     },
