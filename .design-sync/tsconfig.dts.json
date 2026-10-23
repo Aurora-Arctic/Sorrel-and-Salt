@@ -7,10 +7,10 @@
     "emitDeclarationOnly": true,
     "noEmitOnError": false,
     "allowImportingTsExtensions": false,
-    "rootDir": "../src",
+    "rootDir": "..",
     "outDir": "../dist/types",
     "plugins": []
   },
-  "include": ["../src/components/*/index.tsx", "../src/**/*.d.ts"],
+  "include": ["index.ts", "../src/**/*.d.ts"],
   "exclude": []
 }

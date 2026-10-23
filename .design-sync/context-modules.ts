@@ -1,6 +1,6 @@
 // Modules whose React contexts the stories' own frames (.storybook/*) and fixtures also
 // reach for. Built into the library in the same pass as the components, so the one copy
-// is the one the components read; make-barrel.mjs flattens its exports onto the bundle's
+// is the one the components read; index.ts flattens its exports onto the bundle's
 // global, and config storyImports.shim points the stories' imports of these at it.
 export * from '../src/lib/navigation';
 export * from '../src/lib/navigation/timing';
@@ -11,7 +11,7 @@ export { TabSwitchContext } from '../src/components/TabbedPage/tab-switch';
 export * from 'react-hook-form';
 export * from '@tanstack/react-query';
 export * from 'next/navigation';
-// The contexts next/navigation's hooks read; .storybook/navigation.tsx fills them (see make-barrel.mjs).
+// The contexts next/navigation's hooks read; .storybook/navigation.tsx fills them (see next-navigation.ts).
 export {
   PathnameContext,
   PathParamsContext,

@@ -1,0 +1,6 @@
+{
+  "name": "sorrel-and-salt",
+  "version": "0.0.0",
+  "type": "module",
+  "types": "types/.design-sync/index.d.ts"
+}
