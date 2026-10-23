@@ -183,17 +183,18 @@ export default function FacetPanel({
   // matching entry comes from the other, so the filter cannot narrow. Counts not yet read
   // (`facets.source` unset) leave it free.
   const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
-  // The public compendium's Forms line, whose chips are Toxic alone, is halved (the owner's call,
-  // 2026-10-23): Forms takes one half, In My Covens and Toxic the other. The admin and coven
-  // panels keep Forms growing beside their wider run of chips, which a half would wrap.
+  // The public compendium's Forms line, whose chips are Toxic alone, is halved when the viewer has
+  // covens (the owner's call, 2026-10-23): Forms and Toxic take the left half, In My Covens and its
+  // In / Not In choice the right. With no covens Forms and Toxic take the line, as on the admin and
+  // coven panels, which keep Forms growing beside their wider run of chips, which a half would wrap.
   const halves =
     !admin &&
     filter.source === undefined &&
     filter.inStock === undefined &&
     filter.lowStockOnly === undefined;
   // A call, not a component, so the fields inside keep their state across renders.
-  const formsOtherHalf = (children: ReactNode): ReactNode =>
-    halves ? (
+  const formsHalf = (children: ReactNode): ReactNode =>
+    halves && covens.length > 0 ? (
       <div className="facet-panel__line facet-panel__grow facet-panel__half">{children}</div>
     ) : (
       children
@@ -467,26 +468,26 @@ export default function FacetPanel({
               </div>
 
               <div className="facet-panel__line">
-                <div className="facet-panel__grow">
-                  <FacetCombobox
-                    label="Forms"
-                    name="forms"
-                    typeahead
-                    placeholder="Add Form"
-                    removeNoun="Form"
-                    loading={loading}
-                    choices={facets.forms.map((form) => ({
-                      value: form.value,
-                      label: form.label,
-                      count: form.count,
-                      icon: <FormIcon name={form.icon} />,
-                    }))}
-                    values={filter.forms}
-                    onChange={(forms) => onChange({ forms })}
-                  />
-                </div>
-                {formsOtherHalf(
+                {formsHalf(
                   <>
+                    <div className="facet-panel__grow">
+                      <FacetCombobox
+                        label="Forms"
+                        name="forms"
+                        typeahead
+                        placeholder="Add Form"
+                        removeNoun="Form"
+                        loading={loading}
+                        choices={facets.forms.map((form) => ({
+                          value: form.value,
+                          label: form.label,
+                          count: form.count,
+                          icon: <FormIcon name={form.icon} />,
+                        }))}
+                        values={filter.forms}
+                        onChange={(forms) => onChange({ forms })}
+                      />
+                    </div>
                     <div className="facet-panel__quick">
                       <ChoiceChip
                         legend="Toxic"
@@ -569,37 +570,37 @@ export default function FacetPanel({
                         />
                       )}
                     </div>
-                    {/* The viewer's own covens (M12.55), after Toxic, filling the rest of the line (the
-                    owner's call, 2026-10-23), with the In / Not In choice beside them, and only for a
-                    viewer in one. No counts: the counts the rest read are the cached, public ones, and
-                    a count per coven would make them the viewer's (rule 6). */}
-                    {covens.length > 0 && (
-                      <>
-                        <div className="facet-panel__grow">
-                          <FacetCombobox
-                            label="In My Covens"
-                            name="covens"
-                            placeholder="Add Coven"
-                            removeNoun="Coven"
-                            loading={loading}
-                            counts={false}
-                            choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
-                            values={filter.covens ?? []}
-                            onChange={(picked) => onChange({ covens: picked })}
-                          />
-                        </div>
-                        <div className="facet-panel__quick">
-                          <ChoiceChip
-                            legend="Covens"
-                            name="covensNot"
-                            options={COVENS_NOT_OPTIONS}
-                            value={filter.covensNot ? '1' : ''}
-                            onChange={(value) => onChange({ covensNot: value === '1' })}
-                          />
-                        </div>
-                      </>
-                    )}
                   </>,
+                )}
+                {/* The viewer's own covens (M12.55), the right half of the line with the In / Not In
+                choice beside them (the owner's call, 2026-10-23), and only for a viewer in one. No
+                counts: the counts the rest read are the cached, public ones, and a count per coven
+                would make them the viewer's (rule 6). */}
+                {covens.length > 0 && (
+                  <div className="facet-panel__line facet-panel__grow facet-panel__half">
+                    <div className="facet-panel__grow">
+                      <FacetCombobox
+                        label="In My Covens"
+                        name="covens"
+                        placeholder="Add Coven"
+                        removeNoun="Coven"
+                        loading={loading}
+                        counts={false}
+                        choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                        values={filter.covens ?? []}
+                        onChange={(picked) => onChange({ covens: picked })}
+                      />
+                    </div>
+                    <div className="facet-panel__quick">
+                      <ChoiceChip
+                        legend="Covens"
+                        name="covensNot"
+                        options={COVENS_NOT_OPTIONS}
+                        value={filter.covensNot ? '1' : ''}
+                        onChange={(value) => onChange({ covensNot: value === '1' })}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
 
