@@ -205,6 +205,30 @@ describe('the whole table', () => {
       zodiac: [],
       celestialBodies: [],
       toxic: '',
+      covens: [],
     });
+  });
+});
+
+describe('the covens parameter (M12.55)', () => {
+  it('reads repeated coven ids, repeats dropped', () => {
+    expect(entries.covens.read(['w-id', 'v-id', 'w-id'])).toEqual(['w-id', 'v-id']);
+    expect(entries.covens.read(undefined)).toEqual([]);
+  });
+
+  it('round-trips through the address as repeated parameters', () => {
+    const href = COMPENDIUM_PARAMS.href('/compendium', { covens: ['w-id', 'v-id'] });
+    expect(href).toBe('/compendium?covens=w-id&covens=v-id');
+    const params = new URL(href, 'http://x').searchParams;
+    expect(COMPENDIUM_PARAMS.read({ covens: params.getAll('covens') }).covens).toEqual([
+      'w-id',
+      'v-id',
+    ]);
+  });
+
+  it('is the covenIds variable, and none when empty', () => {
+    expect(entries.covens.variable).toBe('covenIds');
+    expect(entries.covens.toVariable(['w-id'])).toEqual(['w-id']);
+    expect(entries.covens.toVariable([])).toBeUndefined();
   });
 });

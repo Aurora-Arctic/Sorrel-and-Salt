@@ -42,6 +42,7 @@ const NO_FILTER: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  covens: [],
 };
 
 const FACETS: CompendiumFacetCounts = {

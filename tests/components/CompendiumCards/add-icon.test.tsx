@@ -68,6 +68,7 @@ const props = (
     zodiac: [],
     celestialBodies: [],
     toxic: '',
+    covens: [],
   },
   facets: {
     forms: [],
