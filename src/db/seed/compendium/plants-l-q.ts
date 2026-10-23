@@ -826,6 +826,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Venus', 'Mars'],
       safetyNotes:
         "Poisonous. Kynes cautions that every part of the plant is toxic, the seeds above all, and can be fatal if eaten, and Cunningham's health code marks it as not recommended for internal use.",
+      toxic: true,
       folkNames: [
         'Delphinium',
         "Knight's Spur",
@@ -863,6 +864,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -897,11 +899,12 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The seeds ripen from June to September. Kynes suggests sprinkling a circle of them on the altar during sessions to heighten psychic abilities.',
           safetyNotes:
             'The seeds are the most poisonous part of the plant: Kynes singles them out as especially toxic, and Wikipedia records that they hold up to 1.4% alkaloids.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
               locator: 'under "Larkspur"',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'wikipedia-consolida-regalis',
@@ -1615,6 +1618,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       zodiacSigns: ['Aries'],
       safetyNotes:
         'Kynes warns that lesser celandine is toxic if eaten. Like the rest of the buttercup family it holds ranunculin, which turns into the irritant protoanemonin when the plant is damaged: touching crushed leaves can cause itching, rashes or blisters on the skin or mucous membranes, and swallowing it can cause nausea, vomiting, dizziness, spasms or paralysis. One person developed acute hepatitis and jaundice after taking untreated extracts of it for piles. The raw plant is poisonous to grazing livestock and can be fatal to them. Drying or cooking turns the toxin into harmless anemonin.',
+      toxic: true,
       folkNames: [
         'Crazies',
         'Crowfoot',
@@ -1643,6 +1647,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'elements',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -1928,6 +1933,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       zodiacSigns: ['Gemini', 'Pisces', 'Scorpio', 'Virgo'],
       safetyNotes:
         'Cunningham warns that some lilies are poisonous. The above-ground parts of the tiger lily are toxic to cats, damaging the kidneys and sometimes causing kidney failure.',
+      toxic: true,
       deities: [
         'Venus',
         'Juno',
@@ -1954,6 +1960,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'categories',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -2037,6 +2044,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       zodiacSigns: ['Gemini', 'Taurus', 'Virgo'],
       safetyNotes:
         'Poisonous: every part of the plant is toxic and can kill if swallowed. AHPA safety class 3, to be used only under the supervision of an expert qualified in its use. Its interactions are those of digoxin and the other digitalis glycosides. It may cause nausea and vomiting; large amounts have been linked with changes in heart rate and rhythm, and with pain in the mouth, abdominal pain, cramping and diarrhoea. Its use in pregnancy or while nursing is not recommended except under expert supervision.',
+      toxic: true,
       folkNames: [
         'Convallaria',
         "Jacob's Ladder",
@@ -2077,6 +2085,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'deities',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -2092,12 +2101,13 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'categories',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
           source: 'ahpa-safety',
           locator: 'p. 260; p. xxii',
-          supports: ['canonicalName', 'safetyNotes'],
+          supports: ['canonicalName', 'safetyNotes', 'toxic'],
         },
         {
           source: 'wikipedia-lily-of-the-valley',
@@ -2584,6 +2594,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Saturn', 'Neptune'],
       safetyNotes:
         "Poisonous: Cunningham marks it as a poison, and Kynes warns that it is toxic if swallowed and can be fatal. Not for use in pregnancy except under a qualified practitioner's supervision (AHPA safety class 2b), and not to be taken internally in high doses. It is a strong emetic and may cause nausea or vomiting; in clinical trials its alkaloid lobeline caused nausea and a burning mouth and throat, and higher doses brought vertigo and a fast heartbeat. Deaths from excessive doses were reported in older literature, though reviews found the evidence too thin to name lobelia as the cause. Its safety while nursing has not been established.",
+      toxic: true,
       folkNames: [
         'Asthma Weed',
         'Bladderpod',
@@ -2604,6 +2615,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'elements',
             'celestialBodies',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -2617,6 +2629,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'elements',
             'celestialBodies',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -2700,6 +2713,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       zodiacSigns: ['Aries'],
       safetyNotes:
         'Poisonous: every part is toxic if eaten, the roots especially, and all parts can irritate the skin or cause allergic reactions, so handle it with care. The berries contain needle-shaped oxalate crystals that irritate the skin, mouth, tongue and throat and can bring swelling of the throat, difficulty breathing, burning pain and stomach upset. Their acrid taste usually stops anyone eating much, but the plant is one of the commonest causes of accidental plant poisoning seen in hospital emergency departments, and there is no known antidote. The leaves are toxic and can be mistaken for edible sorrel.',
+      toxic: true,
       folkNames: [
         'Cuckoo Pint',
         'Adam and Eve',
@@ -2738,13 +2752,14 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
         },
         {
           source: 'wikipedia-arum-maculatum',
-          supports: ['canonicalName', 'description', 'safetyNotes', 'folkNames'],
+          supports: ['canonicalName', 'description', 'safetyNotes', 'toxic', 'folkNames'],
         },
       ],
       variants: [
@@ -2754,11 +2769,12 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The large, starch-storing tuber, which can lie as deep as 40 centimetres. Well roasted and ground, it was once sold as Portland sago, made into the drink saloop and used in place of arrowroot, and it was a traditional laundry starch. Kynes lists the cut, dried root among the forms on sale.',
           safetyNotes:
             'Kynes names the roots as the most toxic part of the plant, and the root can be highly toxic if not prepared correctly.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
               locator: 'under "Lords and Ladies"',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'wikipedia-arum-maculatum',
@@ -2782,11 +2798,12 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           description:
             'The female flowers ripen in autumn into a cluster of red to orange berries that remains after the hood and leaves have withered. Birds eat them unharmed and so spread the seeds.',
           safetyNotes: 'Extremely poisonous to people and many animals, and attractive to look at.',
+          toxic: true,
           colors: ['red', 'orange'],
           references: [
             {
               source: 'wikipedia-arum-maculatum',
-              supports: ['form', 'description', 'safetyNotes', 'colors'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic', 'colors'],
             },
             {
               source: 'kynes-plants',
@@ -3488,6 +3505,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Mercury'],
       safetyNotes:
         'Poisonous. Cunningham labels it poison, and AHPA puts it in safety class 3: to be used only under the supervision of an expert qualified in its use. Reported poisonings have caused vomiting, diarrhoea, vertigo, headache, tremors, cold sweats, difficulty breathing, cyanosis, convulsions, stupor and mental disturbance, sometimes with disturbed vision or blindness that was permanent in several cases, and deaths have been reported. Taking it with castor oil, as was once done, is considered dangerous, since the oil is believed to raise the absorption of its toxins. AHPA advises against its use in pregnancy and while nursing.',
+      toxic: true,
       folkNames: [
         'Paproc',
         'Basket Fern',
@@ -3506,6 +3524,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'elements',
             'celestialBodies',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -3527,6 +3546,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The part in use is the rhizome, the underground stem from which the fronds rise. It was the raw material for the Finnish tapeworm medicines Filisin and Filicon, and was still being gathered around Nurmijärvi in the 1960s.',
           safetyNotes:
             'The rhizome is toxic: too large a dose can cause serious poisoning, blindness and even death.',
+          toxic: true,
           references: [
             {
               source: 'ahpa-safety',
@@ -3535,7 +3555,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-dryopteris-filix-mas',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -3708,6 +3728,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       zodiacSigns: ['Gemini', 'Taurus'],
       safetyNotes:
         'Poisonous. Kynes warns that every part of the plant is toxic and can be fatal if eaten, and Cunningham labels it poison. Its tropane alkaloids, among them atropine, hyoscyamine and scopolamine, make the plant poisonous, the root and leaves above all. Reported poisonings resemble atropine poisoning: blurred vision, dilated pupils, a dry mouth, difficulty passing urine, dizziness, headache, vomiting, flushing and a racing heart, with hyperactivity and hallucinations in most patients, and its anticholinergic effects can lead to asphyxiation.',
+      toxic: true,
       folkNames: [
         'Alraun',
         'Anthropomorphon',
@@ -3771,6 +3792,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'elements',
             'celestialBodies',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'deities',
             'categories',
@@ -3787,6 +3809,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'deities',
             'categories',
@@ -3804,6 +3827,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The thick, often forked root, whose human-like shape gave the plant its fame. Cunningham hangs it on the bedhead for protection in sleep, uses it as a poppet, sets silver coins beside it to double them, and wakes a dried root by leaving it undisturbed for three days and then soaking it overnight in warm water, which can then be sprinkled about the house to protect it. Kynes puts a root under the bed as a fertility charm.',
           safetyNotes:
             'The root is hallucinogenic and narcotic; eating it is likely to cause vomiting and diarrhoea, and large internal doses were said to bring on delirium and madness.',
+          toxic: true,
           references: [
             {
               source: 'cunningham-herbs',
@@ -3817,7 +3841,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-mandragora-officinarum',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -3826,6 +3850,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           description:
             'Wrinkled leaves in a rosette at the base of the plant, which Kynes compares to Swiss chard. She lays three of them on the altar or table to strengthen any kind of magical work.',
           safetyNotes: 'With the root, the leaves are the most poisonous part of the plant.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
@@ -3834,7 +3859,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-mandragora-officinarum',
-              supports: ['safetyNotes'],
+              supports: ['safetyNotes', 'toxic'],
             },
           ],
         },
@@ -4240,6 +4265,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Sun', 'Uranus'],
       safetyNotes:
         'Every part of the plant contains an irritant, chiefly protoanemonin, and its juice can blister or inflame the skin and mucous membranes. The leaves are toxic if eaten, and larger amounts can cause convulsions, a burning throat, vomiting, bloody diarrhoea, dizziness and fainting. Early spring greens and buds are edible only when cooked, since heat breaks the toxins down; they are poisonous raw.',
+      toxic: true,
       folkNames: [
         'Kingcup',
         'Broad Buttercup',
@@ -4289,11 +4315,12 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
           source: 'wikipedia-caltha-palustris',
-          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -4318,15 +4345,16 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           form: 'Leaf',
           safetyNotes:
             'The leaves are toxic if eaten, and poisonous raw; early spring greens are eaten only after being dipped several times in fresh boiling water until barely tender.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
               locator: 'under "Marsh Marigold"',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
             {
               source: 'wikipedia-caltha-palustris',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -4549,6 +4577,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Mercury'],
       safetyNotes:
         'Poisonous. AHPA places it in safety class 3: not to be used except under the supervision of an expert qualified in its use. Poisoning has followed both swallowing it and putting it on the skin, with nausea, vomiting, nerve damage in the limbs, difficulty breathing, lethargy and coma, and some cases have been fatal. It acts as an abortifacient, an emetic and a stimulant laxative; putting its compounds podophyllin and podophyllotoxin on the skin in pregnancy is strongly contraindicated, and its safety while nursing has not been established. Cunningham marks it Poison, never to be taken internally or put on the skin, and Kynes warns that the unripe fruit and other parts are toxic and can be fatal if eaten.',
+      toxic: true,
       folkNames: [
         'American Mandrake',
         'Duck’s Foot',
@@ -4572,6 +4601,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'celestialBodies',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -4585,6 +4615,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -4605,11 +4636,12 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The root is the part used, sold cut, dried or powdered and often labelled as mandrake. Kynes has the powdered root sprinkled at the cardinal points of a property to raise protection around a home, and records an Appalachian belief that a couple’s hair wound around the root kept them faithful.',
           safetyNotes:
             'Applying the fresh or dried root to the skin again and again may cause irritation followed by festering, and the fresh or recently dried root has been described as an irritant poison. Workers processing dried mayapple or its resin have suffered irritation of the mucous membranes, including inflamed eyes.',
+          toxic: true,
           references: [
             {
               source: 'ahpa-safety',
               locator: 'pp. 684–686',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
             {
               source: 'kynes-plants',
@@ -4624,16 +4656,17 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The fruit is a yellow, oval or egg-shaped berry that looks like a small lemon and ripens later in the summer. Once ripe it can be eaten in small amounts, and it is sometimes made into jelly.',
           safetyNotes:
             'The unripe green fruit is poisonous and can be fatal if eaten, and the ripe fruit may also be harmful when eaten in excess.',
+          toxic: true,
           colors: ['yellow'],
           references: [
             {
               source: 'wikipedia-podophyllum-peltatum',
-              supports: ['form', 'description', 'safetyNotes', 'colors'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic', 'colors'],
             },
             {
               source: 'kynes-plants',
               locator: 'under "Mayapple"',
-              supports: ['description', 'safetyNotes', 'colors'],
+              supports: ['description', 'safetyNotes', 'toxic', 'colors'],
             },
           ],
         },
@@ -4809,6 +4842,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Moon', 'Saturn'],
       safetyNotes:
         "Cunningham's health code marks it safe. The AHPA safety handbook has no entry for it.",
+      toxic: true,
       folkNames: [
         'Mizquitl',
         'Ironwood',
@@ -4852,7 +4886,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-neltuma-juliflora',
-          supports: ['canonicalName', 'description', 'folkNames'],
+          supports: ['canonicalName', 'description', 'folkNames', 'toxic'],
         },
       ],
       variants: [
@@ -4883,6 +4917,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'The long, thin pods ripen from green to brown. They are sweet and edible, and were dried and ground into flour or chewed on long journeys against thirst. Magically, the pods are said to strengthen healing herbs, and a bundle tied with red ribbon is kept on the altar as a charm for endurance.',
           safetyNotes:
             'The seed pods contain neurotoxic alkaloids, and livestock that eat too many of them are poisoned (Wikipedia; no safety handbook covers this plant).',
+          toxic: true,
           colors: ['brown'],
           references: [
             {
@@ -4892,7 +4927,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-neltuma-juliflora',
-              supports: ['description', 'safetyNotes'],
+              supports: ['description', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -5061,6 +5096,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       zodiacSigns: ['Leo'],
       safetyNotes:
         'AHPA places European mistletoe in safety classes 2b and 2d: it is not for use in pregnancy except under the supervision of a qualified practitioner, and the recommended dose should not be exceeded. Allergic reactions, anaphylaxis among them, have been reported. Animal studies suggest it may alter blood-sugar control, so people with diabetes should watch their levels and talk to a practitioner first, and some authorities advise regular blood-pressure checks for anyone drinking the tea. NCCIH says the berries and leaves can do serious harm when taken by mouth, that it is probably unsafe in pregnancy, and that little is known about its safety while breastfeeding. Cunningham advises against taking it internally with a protein hypersensitivity or a chronic progressive infection, and Kynes warns that it is toxic if eaten.',
+      toxic: true,
       folkNames: [
         'All Heal',
         'Birdlime',
@@ -5130,6 +5166,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -5208,6 +5245,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Saturn'],
       safetyNotes:
         'Every part of the plant is extremely poisonous. Kynes warns that eating any part can be fatal and that the poison can enter through broken skin, so it should be handled only in gloves; Cunningham marks it as a poison, never to be eaten or rubbed on the skin. AHPA, in its monograph on Sichuan aconite, says every Aconitum species in trade should be treated as safety class 3, for use only under the supervision of a qualified expert, and records cases of aconite poisoning, some of them fatal, with nausea, vomiting, numbness, an irregular heartbeat and cold extremities.',
+      toxic: true,
       folkNames: [
         'Aconite',
         "Cupid's Car",
@@ -5237,6 +5275,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -5251,6 +5290,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -5290,10 +5330,11 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           form: 'Root',
           description:
             'The root carries the poison of old accounts: an early medical dictionary tells of arrows tipped with poison from the roots being used to kill wild goats in Italy, and at Prague Castle in 1561 a condemned prisoner given about four grams of powdered root, followed by a trial antidote, died.',
+          toxic: true,
           references: [
             {
               source: 'wikipedia-aconitum-napellus',
-              supports: ['form', 'description'],
+              supports: ['form', 'description', 'toxic'],
             },
           ],
         },
@@ -5381,6 +5422,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       celestialBodies: ['Saturn'],
       safetyNotes:
         'Kynes warns that every part of the morning glories is toxic if eaten and can be fatal, and Cunningham marks the genus as a poison, never to be taken internally or applied to the skin.',
+      toxic: true,
       folkNames: ['Bindweed', 'Tall Morning Glory', 'Grannyvine'],
       categories: [
         'Peace',
@@ -5404,6 +5446,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -5416,6 +5459,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {

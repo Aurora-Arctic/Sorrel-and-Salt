@@ -177,6 +177,7 @@ export const PILOT: SeedCompendiumShard = {
       zodiacSigns: ['Cancer', 'Gemini', 'Libra', 'Sagittarius', 'Taurus'],
       safetyNotes:
         'Not for use in pregnancy except under the supervision of a qualified healthcare practitioner: it has been reported as an abortifacient and is classed as an emmenagogue (AHPA safety class 2b). Its safety while nursing has not been established. Mugwort is a relatively common cause of contact dermatitis, and allergic reactions have been reported, including cross-reactivity in people allergic to pine nut or lettuce. It can be toxic if swallowed in large quantities.',
+      toxic: true,
       folkNames: [
         'Artemis Herb',
         'Artemisia',
@@ -222,6 +223,7 @@ export const PILOT: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -236,13 +238,14 @@ export const PILOT: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
         {
           source: 'ahpa-safety',
           locator: 'pp. 97–98; p. xxii',
-          supports: ['canonicalName', 'safetyNotes'],
+          supports: ['canonicalName', 'safetyNotes', 'toxic'],
         },
         {
           source: 'northcote-herbs',
@@ -300,6 +303,7 @@ export const PILOT: SeedCompendiumShard = {
       zodiacSigns: ['Cancer', 'Gemini', 'Libra'],
       safetyNotes:
         'Considered safe to take when used appropriately (AHPA safety class 1). People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common, and contact allergy and skin rashes from yarrow have been reported. Safety in pregnancy and while nursing is not established; one animal study at high doses showed lower fetal weight, and a herbal source advises against taking it internally when pregnant. It is reported to be toxic to dogs, cats and horses, and it can be mistaken for the deadly hemlock.',
+      toxic: true,
       folkNames: [
         'Achillea',
         "Bad Man's Plaything",
@@ -390,7 +394,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-achillea-millefolium',
-          supports: ['canonicalName', 'description', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [

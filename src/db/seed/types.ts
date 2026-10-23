@@ -238,6 +238,7 @@ export type CompendiumEntryField =
   | 'zodiacSigns'
   | 'colors'
   | 'safetyNotes'
+  | 'toxic'
   | 'folkNames'
   | 'deities'
   | 'categories'
@@ -248,6 +249,7 @@ export type CompendiumVariantField =
   | 'form'
   | 'description'
   | 'safetyNotes'
+  | 'toxic'
   | 'elements'
   | 'celestialBodies'
   | 'zodiacSigns'
@@ -281,6 +283,12 @@ export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert,
       'description' | 'safetyNotes' | 'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
     >
   > & {
+    /**
+     * On when a source says this form is poisonous (M14.1). `true` alone: a
+     * written `false` would claim the form is safe, which needs a source of
+     * its own; left out means not flagged, the column's default.
+     */
+    toxic?: true;
     categories?: string[];
     substitutes?: SeedSubstitute[];
     references: SeedCitation<CompendiumVariantField>[];
@@ -303,6 +311,12 @@ export type SeedCompendiumEntry = Pick<
   | 'colors'
   | 'safetyNotes'
 > & {
+  /**
+   * On when a source says any part of the plant is poisonous (M14.1); its
+   * own flag, never read into a form or out of one (DESIGN.md §5, "The toxic
+   * flag is the one exception"). `true` alone, as on a form.
+   */
+  toxic?: true;
   folkNames?: string[];
   deities?: string[];
   categories?: string[];

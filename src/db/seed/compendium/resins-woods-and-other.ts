@@ -1137,6 +1137,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       zodiacSigns: ['Cancer', 'Pisces'],
       safetyNotes:
         'The AHPA handbook rates camphor, the distillate of the wood, Safety Class 2b and 2d: not for use in pregnancy except under the supervision of a qualified healthcare practitioner, not for long-term use, not to be taken above the recommended dose, and not for children under two, with caution in small children. Taken internally it needs extreme caution: swallowing camphor products has caused many poisonings, with nausea, vomiting, abdominal pain and seizures, some of them fatal. Poisoning from products used on the skin is rare and has mostly affected small children, and products for the skin should hold no more than 11% camphor. The distillate can contain safrole. Safety while breastfeeding has not been established. Cunningham marks camphor as not recommended for internal use and warns against using it near the faces of small children.',
+      toxic: true,
       folkNames: [
         'Kafoor',
         'Camphire',
@@ -1190,7 +1191,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'ahpa-safety',
           locator: 'pp. 213–214',
-          supports: ['canonicalName', 'description', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [

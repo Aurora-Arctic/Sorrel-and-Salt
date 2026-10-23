@@ -764,6 +764,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       celestialBodies: ['Venus'],
       zodiacSigns: ['Libra', 'Scorpio'],
       safetyNotes: 'Toxic if swallowed, and it may irritate the skin.',
+      toxic: true,
       folkNames: ['Putty Root', 'Putty Root Orchid', 'Adam, Eve, and Son Root'],
       deities: ['Bacchus', 'Dionysus', 'Pan', 'Saturn'],
       categories: ['Fertility', 'Love', 'Fidelity', 'Psychic Work', 'Success'],
@@ -780,6 +781,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -1098,6 +1100,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       celestialBodies: ['Saturn'],
       safetyNotes:
         'AHPA safety class 1 (its interaction class is A): no contraindications, other cautions, drug interactions or side effects are known. One early animal study found that it depressed the uterus and countered the oxytocin-like action of the pituitary, but AHPA finds no evidence that this would matter when oxytocin is given in labour; its safety while nursing has not been conclusively established. Cunningham flags possible drug interactions and says it may work against some oxytocins (Pitocin). Kynes advises against taking it in pregnancy or while breastfeeding, and warns that swallowing the fresh root is mildly poisonous.',
+      toxic: true,
       folkNames: [
         'Unicorn Root',
         'True Unicorn Root',
@@ -1138,6 +1141,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -1157,6 +1161,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       variants: [
         {
           form: 'Root',
+          toxic: true,
           references: [
             {
               source: 'ahpa-safety',
@@ -1170,7 +1175,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             {
               source: 'kynes-plants',
               locator: 'under "Unicorn Root"',
-              supports: ['form'],
+              supports: ['form', 'toxic'],
             },
           ],
         },
@@ -1663,6 +1668,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius', 'Gemini', 'Virgo'],
       safetyNotes:
         'Sweet almonds, the kind commonly eaten, hold only traces of amygdalin, which releases cyanide; bitter almonds hold some forty times as much, and are not for internal use. AHPA has no monograph of its own on almond, but applies its cautions on bitter apricot kernel (safety class 3: only under the supervision of a qualified expert) to bitter almond. As few as five to ten bitter almonds may kill a child, and around fifty an adult, with vertigo among the signs of cyanide poisoning. Kynes warns that raw bitter almonds are lethal and that the seeds and leaves of Prunus species produce cyanide in the gut. Almonds can also cause food allergy, often alongside allergy to peach or other tree nuts, and mouldy almonds may carry aflatoxin and should not be eaten.',
+      toxic: true,
       folkNames: ['Greek Nuts'],
       deities: [
         'Attis',
@@ -1713,6 +1719,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'categories',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -2035,6 +2042,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius'],
       safetyNotes:
         'Poisonous. The berries are toxic if swallowed, and every part of the plant should be handled with care.',
+      toxic: true,
       folkNames: ['Wax Work', 'False Bittersweet'],
       deities: ['Hecate'],
       categories: [
@@ -2058,6 +2066,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -2073,25 +2082,27 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
           source: 'wikipedia-celastrus-scandens',
-          supports: ['canonicalName', 'description', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
         {
           form: 'Berry',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
               locator: 'under "Bittersweet"',
-              supports: ['form'],
+              supports: ['form', 'toxic'],
             },
             {
               source: 'wikipedia-celastrus-scandens',
-              supports: ['form'],
+              supports: ['form', 'toxic'],
             },
           ],
         },
@@ -2474,6 +2485,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius', 'Cancer', 'Libra', 'Taurus'],
       safetyNotes:
         'The seeds contain amygdalin, which releases cyanide once digested. A few seeds do no harm, but very large amounts can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.',
+      toxic: true,
       folkNames: [
         'Fruit of the Gods',
         'Fruit of the Underworld',
@@ -2527,6 +2539,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -2627,6 +2640,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Taurus'],
       safetyNotes:
         'The kernel inside the stone is poisonous. Kynes warns that it is toxic if eaten and can kill, and that in Prunus species both seeds and leaves give rise to cyanide in the gut; Cunningham marks the seeds as not recommended for internal use. The Seed form gives the safety handbook’s detail.',
+      toxic: true,
       folkNames: [
         'Umublinkosi',
         'Xing Ren',
@@ -2675,6 +2689,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -2740,6 +2755,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The kernel inside the stone. Cunningham has the stones carried to attract love. Grieve notes that Eau de Noyaux, a French liqueur, is made from bitter apricot kernels, and that the kernels yield both a fixed oil and an essential oil that contains amygdalin.',
           safetyNotes:
             'AHPA safety class 3: the kernel is for use only with a qualified expert overseeing it, and should not be sold loose in bulk or given to children. Bitter kernels hold cyanide-forming glycosides (up to 8% amygdalin); sweet kernels hold very little, and the cautions concern the bitter kind. Fatal and non-fatal poisonings have followed eating apricot kernels: 10 to 20 kernels have been reported as a toxic dose for a child and 40 to 60 for an adult. Symptoms include nausea, vomiting, stomach pain, headache, dizziness, breathlessness and palpitations, and in severe cases coma and death from respiratory failure. Rats fed high-amygdalin kernel had fewer surviving young; safety while nursing is not established. Cunningham marks the seeds as not recommended for internal use.',
+          toxic: true,
           references: [
             {
               source: 'cunningham-herbs',
@@ -2753,7 +2769,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             {
               source: 'ahpa-safety',
               locator: 'pp. 702–704; p. xxii',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -2795,6 +2811,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       celestialBodies: ['Saturn'],
       safetyNotes:
         'AHPA safety class 3 for internal use and 2d for external use: not to be taken by mouth unless a qualified expert oversees it, and never to be applied to broken skin or open wounds. Swallowing it has caused severe poisoning, with fever, racing heart and raised liver enzymes, and deaths have been reported; it irritates the mucous membranes and can cause stomach pain, diarrhoea and vomiting. It contains sesquiterpene lactones that cause allergic contact dermatitis in sensitive people, and people allergic to other plants of the daisy family, sunflower, marigold and feverfew among them, should be cautious. Overdoses have caused miscarriage, and safety while nursing is not established. Kynes adds that long external use can irritate the skin.',
+      toxic: true,
       folkNames: [
         'Mountain Arnica',
         "Leopard's Bane",
@@ -2833,7 +2850,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'ahpa-safety',
           locator: 'pp. 87–88; p. xxii',
-          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'folkNames', 'safetyNotes', 'toxic'],
         },
         {
           source: 'grieve-arnica',
@@ -2841,7 +2858,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-arnica-montana',
-          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -3501,6 +3518,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Libra'],
       safetyNotes:
         'The leaves, branches and seeds are not for internal use. Some people are allergic to avocado: people allergic to tree pollen can react in the mouth and throat soon after eating it, and in latex-fruit syndrome, linked to latex allergy, the reaction can include hives over the body, stomach pain and vomiting, and is occasionally life-threatening. The leaves, bark, skin and stone can badly harm or kill many animals, among them cats, dogs, horses, cattle, goats, rabbits, birds and fish; the leaves hold a toxin, persin, to which birds seem especially sensitive.',
+      toxic: true,
       folkNames: [
         'Alligator Pear',
         'Avocado Pear',
@@ -3547,7 +3565,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-avocado',
-          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -3576,6 +3594,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The stone, or pit, is grown into a plant at home to bring love into the household, and carried about the person to promote beauty.',
           safetyNotes:
             'Cunningham marks the seeds as not for internal use. The pit is among the parts of the plant documented as harmful to many animals.',
+          toxic: true,
           references: [
             {
               source: 'cunningham-herbs',
@@ -3584,7 +3603,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-avocado',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -3629,6 +3648,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       celestialBodies: ['Sun'],
       safetyNotes:
         'Cunningham lists bamboo as recognised as safe. The shoots of this species, alone among bamboos, contain taxiphyllin, a highly toxic cyanogenic glycoside that breaks down readily in boiling water; the shoots are eaten cooked or pickled. Eating large amounts of the leaves has caused neurological illness in horses. In Nigeria people drink a leaf infusion to bring on abortion, an effect shown in rabbits.',
+      toxic: true,
       folkNames: ['Common Bamboo', 'Golden Hawaiian Bamboo', 'Ohe', 'Kauayan-Kiling'],
       deities: ['Hina', 'Kuan Yin', 'Thoth'],
       categories: [
@@ -3664,7 +3684,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-bambusa-vulgaris',
-          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -3750,6 +3770,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Scorpio', 'Taurus'],
       safetyNotes:
         'AHPA safety class 2b: not for use in pregnancy except under the supervision of a qualified healthcare practitioner. The caution rests mainly on the isolated alkaloid berberine, which stimulated the womb in tests on excised mouse tissue and may displace bilirubin and cause jaundice in newborns, though several studies of berberine in pregnant rats and mice found no harm to the unborn young at more than 75 times the usual human dose. Use while nursing is not recommended, and berberine passes into breast milk. Use is cautioned for people with severe or acute liver disease, septic inflammation of the gallbladder, unconjugated hyperbilirubinaemia, intestinal spasm or blockage, or liver cancer. Studies of berberine taken with the drug cyclosporine have given mixed results, one showing raised levels of the drug. Kynes warns that every part of the plant is mildly toxic if eaten.',
+      toxic: true,
       folkNames: [
         'Common Barberry',
         'European Barberry',
@@ -3774,6 +3795,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -4356,6 +4378,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         "Be-still is the yellow oleander, a poisonous evergreen shrub or small tree of the dogbane family, native to Mexico and Central America and grown widely for ornament. It is related to the true oleander, from which it takes its common name. Its narrow, glossy leaves resemble a willow's and carry a waxy coat, its long funnel-shaped flowers are usually yellow but sometimes apricot or white, and its deep red-black fruit encloses a single large seed. The genus name comes from Spanish words for a little bell or a rattlesnake's rattle, perhaps in reference to a toxicity likened to rattlesnake venom, and the species name honours André de Thevet, the sixteenth-century French Franciscan who explored Brazil and Guiana. Older works file it under Thevetia peruviana, the name Cunningham uses. In frost-prone gardens it is kept in a pot and brought indoors for the winter. Its single recorded magical use is for luck: Cunningham writes that Sri Lankans call the seeds lucky beans and carry them as charms to draw good fortune.",
       safetyNotes:
         'Cunningham marks it as a poison. Every part of the plant is toxic to most vertebrates: it contains cardiac glycosides, chiefly thevetin A and B, which closely resemble the digoxin of foxglove and survive both drying and heating. Poisoning causes stomach upset and effects on the heart, including an abnormally slow heartbeat and abnormally high potassium in the blood. Many accidental and deliberate poisonings of people are recorded, some from Tecojote root supplements.',
+      toxic: true,
       folkNames: [
         'Trumpet Flower',
         'Yellow Oleander',
@@ -4368,11 +4391,11 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Be-Still"',
-          supports: ['folkNames', 'description', 'safetyNotes'],
+          supports: ['folkNames', 'description', 'safetyNotes', 'toxic'],
         },
         {
           source: 'wikipedia-cascabela-thevetia',
-          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -4503,6 +4526,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Scorpio'],
       safetyNotes:
         'AHPA safety class 1, interaction class A: no contraindications, other precautions or drug interactions are known, and the handbook found no evidence behind the older warning against use with kidney disorders. The dried leaf holds up to 12 per cent arbutin and related compounds that give rise to hydroquinone. One case of damage to the retina (maculopathy) followed long-term use, and it can turn the urine brownish green. No studies of its safety in pregnancy were found, and its safety while nursing is not established. Kynes warns that large amounts can be toxic and that it is not for use in pregnancy. Cunningham marks it Poison and codes it against internal use in pregnancy, with kidney problems or acidic urine, and for long periods, as liable to upset digestion, and as a gastrointestinal irritant.',
+      toxic: true,
       folkNames: [
         'Arberry',
         "Bear's Grape",
@@ -4527,7 +4551,14 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Uva Ursa"; p. 266',
-          supports: ['canonicalName', 'categories', 'folkNames', 'description', 'safetyNotes'],
+          supports: [
+            'canonicalName',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+            'toxic',
+          ],
         },
         {
           source: 'kynes-plants',
@@ -4541,6 +4572,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -4733,6 +4765,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       nomenclature: 'botanical',
       description:
         "Beech, Fagus sylvatica, the European or common beech, is a big deciduous tree of the family Fagaceae, native across much of Europe and usually twenty-five to thirty-five metres tall, with smooth, silvery-grey bark and a short trunk branching low. Saplings and clipped hedges often hold their dead brown leaves all winter. Its small three-sided nuts, two to each prickly husk, ripen in autumn as mast, fed to park deer in England and to pigs and poultry in France, and pressed for an oil used in cooking and lamps. Grieve traces its name, across the Germanic tongues, to a word meaning either beech or book, since runic tablets, the first books, were made of its wood, and Kynes adds that beech sticks often carried runes. Greeks and Romans counted it a lucky tree: the Romans turned bowls and jugs for libations from it, Bacchus was said to drink from a beech cup, and in Greek legend the oracle of Zeus's grove at Dodona lived in a great beech. Norse people held it sacred as an oracle of Thor, and the Swiss, Germans and Belgians read weather and harvest from it. Culpeper put it under Saturn. In magic a wish is carved on a beech stick and buried, and its wood or leaves are carried to stir creativity.",
+      toxic: true,
       elements: ['fire', 'water'],
       celestialBodies: ['Saturn', 'Jupiter'],
       zodiacSigns: ['Gemini', 'Sagittarius', 'Virgo'],
@@ -4811,7 +4844,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-fagus-sylvatica',
-          supports: ['canonicalName', 'folkNames', 'description'],
+          supports: ['canonicalName', 'folkNames', 'description', 'toxic'],
         },
       ],
       variants: [
@@ -4868,6 +4901,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'Beechnuts are small and three-sided, two to a woody, prickly husk. People have eaten them, in times of famine according to Grieve, and they were once ground into flour after soaking had drawn out the tannins. In England they were thought to give wisdom and were kept as amulets; a cluster is offered when seeking abundance, and a few are eaten to sharpen second sight.',
           safetyNotes:
             'The nuts contain tannins and alkaloids and are mildly toxic eaten in large amounts. Cunningham does not recommend large amounts of the nut for internal use.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
@@ -4876,7 +4910,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-fagus-sylvatica',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'cunningham-herbs',
@@ -5003,6 +5037,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Libra', 'Scorpio'],
       safetyNotes:
         'Poisonous in every part: never take it internally or put it on the skin. AHPA safety class 3, to be used only under the supervision of an expert qualified in its use. An overdose brings on anticholinergic poisoning: a flushed face, widened pupils, a racing heart, a dry mouth, agitation, hallucinations and meaningless speech. The sweet berries are the commonest cause of poisoning in children. Touching the plant can irritate the skin, so wear gloves, and never handle it with cuts or grazes on the hands. Its alkaloid atropine crosses the placenta quickly. Cats and dogs are very susceptible to it.',
+      toxic: true,
       folkNames: [
         'Deadly Nightshade',
         'Banewort',
@@ -5037,6 +5072,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -5056,11 +5092,11 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'ahpa-safety',
           locator: 'pp. 112–113; p. xxii',
-          supports: ['folkNames', 'safetyNotes'],
+          supports: ['folkNames', 'safetyNotes', 'toxic'],
         },
         {
           source: 'grieve-nightshade-deadly',
-          supports: ['folkNames', 'description', 'safetyNotes'],
+          supports: ['folkNames', 'description', 'safetyNotes', 'toxic'],
         },
         {
           source: 'wikipedia-atropa-bella-donna',
@@ -5088,14 +5124,15 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The thick, whitish root entered English medicine only in 1860, as the base of a pain-relieving liniment. In Bukovina, in the Carpathians, a girl wishing to grow more attractive would dig up a root on a Shrovetide Sunday, leave bread, salt and brandy in its place, and carry it home on her head, telling no one what it was.',
           safetyNotes:
             'The root is the most poisonous part of the plant, holding up to about 1.3 per cent tropane alkaloids by fresh weight.',
+          toxic: true,
           references: [
             {
               source: 'grieve-nightshade-deadly',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'wikipedia-atropa-bella-donna',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -5344,6 +5381,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius', 'Gemini'],
       safetyNotes:
         'Kynes cautions that every part of the plant, the roots and seeds above all, is toxic if eaten. It contains alkaloids, chiefly pseudotropine, which are toxic to mice and reported to be psychoactive; in quantity it may poison horses, its roots are reported as possibly poisonous to pigs, and it can cause photosensitisation in susceptible animals.',
+      toxic: true,
       folkNames: [
         'Field Bindweed',
         'Creeping Jenny',
@@ -5373,11 +5411,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
           source: 'wikipedia-convolvulus-arvensis',
-          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes', 'toxic'],
         },
         {
           source: 'grieve-bindweeds',
@@ -5861,6 +5900,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius'],
       safetyNotes:
         'Poisonous. The whole plant is regarded as poisonous; any medicinal use calls for caution and professional advice, has been recorded for adults only, and should be avoided by anyone allergic to it. Kynes warns that the berries and leaves are toxic if eaten, sometimes fatally, and advises handling every part of the plant with care.',
+      toxic: true,
       folkNames: [
         'Bittersweet',
         'Bitter Nightshade',
@@ -5910,6 +5950,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -5923,7 +5964,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-solanum-dulcamara',
-          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -5946,6 +5987,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'Kynes uses the berries for letting go: three are held between the palms to take in toxic feelings and then buried outdoors, and a sprig of dried berries on the Samhain altar stands for the mingled bitterness and sweetness of remembering the dead. Culpeper says country people bruised the berries and laid them on felons, the old word Grieve glosses as whitlow, from which the plant took the name Felonwort.',
           safetyNotes:
             'The berries are poisonous to people and livestock, and their bright, familiar look makes them a particular danger to children; the poison is thought to be solanine. Poisoning is rare because the fruit tastes intensely bitter.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
@@ -5963,7 +6005,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-solanum-dulcamara',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -5980,6 +6022,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Scorpio'],
       safetyNotes:
         'AHPA safety class 2b, with A as its interaction class: not to be used in pregnancy unless a qualified healthcare practitioner supervises, a restriction AHPA bases on reported cases of liver toxicity whose meaning is not yet understood. Liver damage has been reported in people taking black cohosh products; most reports are poorly documented and the link is unproven, and some products involved proved to contain other species, but practitioners and users should keep the possible link in mind. Occasional stomach upset and rashes are the most common reported effects. Cunningham advises against taking it internally when pregnant or nursing, and Kynes says to avoid it during pregnancy and breastfeeding.',
+      toxic: true,
       folkNames: [
         'Black Snakeroot',
         'Bugbane',
@@ -6015,7 +6058,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'ahpa-safety',
           locator: 'pp. 16–17; p. xxii',
-          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'folkNames', 'safetyNotes', 'toxic'],
         },
         {
           source: 'grieve-cohosh-black',
@@ -6081,6 +6124,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius', 'Capricorn'],
       safetyNotes:
         'Poisonous: Cunningham marks it as a poison and calls it too dangerous to use, and Kynes warns that it is dangerously toxic, possibly fatally so, if swallowed, and that the sap can irritate the skin. All parts are considered toxic if eaten or if sap from damaged plant tissue touches the body. The leaves, stems and flowers release protoanemonin, which irritates the skin, mouth and eyes and, in large amounts, can cause blisters in the mouth and throat, gastroenteritis and vomiting of blood, in people and animals alike.',
+      toxic: true,
       folkNames: [
         'Christmas Rose',
         'Winter Rose',
@@ -6105,6 +6149,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -6120,6 +6165,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -6133,7 +6179,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-helleborus-niger',
-          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -6190,6 +6236,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Aries'],
       safetyNotes:
         'Kynes warns that black locust is poisonous if eaten. Its bark, leaves and wood are poisonous to people and livestock; the main toxin, the toxalbumin robin, loses its toxicity when heated. Horses that eat the plant can show colic, weakness and disturbed heart rhythm about an hour later and need a vet at once.',
+      toxic: true,
       folkNames: ['False Acacia', 'Yellow Locust', 'Locust Tree'],
       deities: ['Cerridwen', 'Hecate', 'Morrigan'],
       categories: ['Harmony', 'Binding', 'Love', 'Fidelity', 'Protection', 'Strength'],
@@ -6206,6 +6253,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'folkNames',
             'description',
             'safetyNotes',
+            'toxic',
           ],
         },
         {
@@ -6214,7 +6262,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-robinia-pseudoacacia',
-          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes', 'toxic'],
         },
       ],
       variants: [
@@ -6222,6 +6270,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           form: 'Wood',
           safetyNotes:
             'Sawdust and shavings from the timber may bring on contact dermatitis in people sensitive to them.',
+          toxic: true,
           references: [
             {
               source: 'grieve-acacia-false',
@@ -6229,7 +6278,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-robinia-pseudoacacia',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -6376,6 +6425,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       zodiacSigns: ['Libra', 'Scorpio'],
       safetyNotes:
         'Every part is toxic except the ripe berries. The plant is rarely fatal, but eating unripe green berries or mature leaves raw can cause solanine poisoning, usually 6 to 12 hours later, with fever, sweating, vomiting, abdominal pain, diarrhoea, confusion and drowsiness; very large amounts have killed through heart-rhythm disturbance and respiratory failure. Toxin levels vary with the strain and with growing conditions, so its berries should not be eaten unless they come from a strain known to be edible. Livestock have been poisoned by grazing its mature leaves and green berries.',
+      toxic: true,
       folkNames: [
         'Blackberry Nightshade',
         'Common Nightshade',
@@ -6398,6 +6448,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -6412,7 +6463,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-solanum-nigrum',
-          supports: ['canonicalName', 'folkNames', 'safetyNotes', 'description'],
+          supports: ['canonicalName', 'folkNames', 'safetyNotes', 'toxic', 'description'],
         },
       ],
       variants: [
@@ -6431,6 +6482,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'Grieve records the bruised fresh leaves laid on the skin to ease pain and calm inflammation, and Arab healers putting them on burns and ulcers; in Bohemia the leaves went into infants’ cradles to bring sleep. Boiled thoroughly, leaves from edible strains serve as greens in Greece, East Africa and southern India.',
           safetyNotes:
             'Mature leaves eaten raw can cause solanine poisoning. Where the young leaves are cooked as a vegetable, they are boiled with the water thrown away and replaced several times.',
+          toxic: true,
           references: [
             {
               source: 'grieve-nightshade-black',
@@ -6438,7 +6490,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-solanum-nigrum',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -6449,15 +6501,16 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The berries hang in clusters, green at first and black when ripe. Ripe berries of edible strains are eaten fresh or cooked, and one forager finds them both sweet and salty, with a note of liquorice and melon; in fifteenth-century China they were a famine food, and in parts of India they are cooked with tamarind, onion and cumin.',
           safetyNotes:
             'Unripe green berries hold the highest concentration of toxin and should be treated as poisonous. Kynes excepts only the ripe berries from the plant’s toxicity, and even ripe ones should come from a strain known to be edible.',
+          toxic: true,
           references: [
             {
               source: 'wikipedia-solanum-nigrum',
-              supports: ['form', 'colors', 'description', 'safetyNotes'],
+              supports: ['form', 'colors', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'kynes-plants',
               locator: 'under "Nightshade"',
-              supports: ['form', 'colors', 'safetyNotes'],
+              supports: ['form', 'colors', 'safetyNotes', 'toxic'],
             },
             {
               source: 'grieve-nightshade-black',

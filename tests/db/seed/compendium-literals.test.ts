@@ -188,7 +188,32 @@ describe('checkCompendium', () => {
       const shards = edited((shard) => {
         testwort(shard).variants[1].references = [{ source: 'fixture-page', supports: ['form'] }];
       });
-      expect(checkCompendium(shards)).toHaveLength(3);
+      expect(checkCompendium(shards)).toHaveLength(4);
+    });
+
+    // M14.1: a flag on claims the plant is poisonous, so a citation must name it.
+    it('refuses a toxic flag on an entry that no citation supports', () => {
+      const shards = edited((shard) => {
+        const [citation] = testwort(shard).references;
+        testwort(shard).references = [
+          { ...citation, supports: citation.supports.filter((field) => field !== 'toxic') },
+        ];
+      });
+      expect(checkCompendium(shards)).toEqual([
+        expect.stringContaining('no citation supports toxic'),
+      ]);
+    });
+
+    it('refuses a toxic flag on a form that no citation supports', () => {
+      const shards = edited((shard) => {
+        const [citation] = testwort(shard).variants[1].references;
+        testwort(shard).variants[1].references = [
+          { ...citation, supports: citation.supports.filter((field) => field !== 'toxic') },
+        ];
+      });
+      expect(checkCompendium(shards)).toEqual([
+        expect.stringContaining('(Oil): no citation supports toxic'),
+      ]);
     });
 
     it('refuses a handle nothing declares', () => {

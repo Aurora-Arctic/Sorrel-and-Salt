@@ -772,6 +772,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       celestialBodies: ['Venus'],
       safetyNotes:
         'Cunningham marks the seed as poison, and Kynes warns that every part of the plant is toxic if eaten. Columbines contain cyanogenic glycosides. One person who ate about 20 grams of fresh Aquilegia vulgaris leaves suffered convulsions, breathing difficulty and heart failure; a child who ate twelve flowers had weak limbs, bluish skin and drowsiness for some hours; and the ripe seeds and roots hold toxins dangerous to the heart. The flowers were once eaten as a garnish, until deaths from overdose were reported.',
+      toxic: true,
       folkNames: [
         "Lion's Herb",
         'Dancing Fairies',
@@ -813,6 +814,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -852,11 +854,12 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'Ground seeds are rubbed on the hands and body as a love perfume, a use Indigenous North Americans also made of crushed Aquilegia canadensis seed. A few seeds carried in a pocket are said to bolster courage and balance the emotions.',
           safetyNotes:
             'Cunningham marks the seed as poison, and the ripe seeds contain toxins that are dangerous to the heart if eaten.',
+          toxic: true,
           references: [
             {
               source: 'cunningham-herbs',
               locator: 'under "Columbine"',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'kynes-plants',
@@ -865,7 +868,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-aquilegia',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -1370,6 +1373,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       nomenclature: 'botanical',
       description:
         "Gossypium barbadense is one of the cotton species, a member of the mallow family whose native range runs from Colombia to Peru. On the coast of present-day Ecuador and Peru it was in wide use some five thousand years ago, and the people there may have been its first domesticators. In the dry tropics it is a frost-tender perennial that becomes a bush or small tree of one to three metres, though farmers grow it as an annual. Its leaves are cut into three to five deep lobes, its showy yellow flowers open only partly, and its black seeds form in bolls that split open when ripe to show snowball-like tufts of fibre. It is prized for an unusually long, fine and silky fibre, sold under names such as Sea Island, Egyptian and Pima cotton; it makes up about a twentieth of the world's crop and goes into fine yarn, lace, high thread-count cloth and sewing thread. Like all cottons it contains gossypol, which makes the plant poisonous to animals that are not ruminants. The folk magic Cunningham records is mostly about the fibre: a piece put in the sugar bowl, or thrown over the right shoulder at dawn, brings luck before the day is out; cotton planted or strewn in the yard keeps ghosts away; vinegar-soaked cotton balls on the windowsills hold evil off; pepper sewn into cotton and worn calls back a lost love; and burning it is said to bring rain.",
+      toxic: true,
       elements: ['earth'],
       celestialBodies: ['Moon'],
       categories: ['Healing', 'Protection'],
@@ -1388,7 +1392,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-gossypium-barbadense',
-          supports: ['canonicalName', 'nomenclature', 'description'],
+          supports: ['canonicalName', 'nomenclature', 'description', 'toxic'],
         },
       ],
       variants: [
@@ -2141,6 +2145,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Leo', 'Libra'],
       safetyNotes:
         'Kynes warns that every part of the plant is toxic if eaten, the roots most of all, and that it may irritate the skin. Cunningham marks it as probably not for internal use in high doses.',
+      toxic: true,
       folkNames: ['Groundbread', 'Sow-Bread', 'Swine Bread'],
       deities: ['Hecate', 'Apollo'],
       categories: [
@@ -2179,6 +2184,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -2192,11 +2198,12 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
           form: 'Root',
           description:
             'The part sold as the root is botanically a tuber, a round storage organ from which the leaves, flowers and true roots all grow. Kynes names it the most poisonous part of the plant, and it is what pigs were given to eat, hence the name sowbread.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
               locator: 'under "Cyclamen"',
-              supports: ['form', 'description'],
+              supports: ['form', 'description', 'toxic'],
             },
             {
               source: 'wikipedia-cyclamen',
@@ -2359,6 +2366,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Leo', 'Sagittarius'],
       safetyNotes:
         'Cunningham marks the daffodil as poison, and Kynes warns that every part is toxic if eaten, the bulb most of all. Every Narcissus species contains the alkaloid lycorine. Handling the plants commonly causes "daffodil itch", a dry, cracked, scaling and reddened rash on the hands of flower pickers, florists and gardeners, blamed on substances in the sap.',
+      toxic: true,
       folkNames: [
         'Asphodel',
         'Daffy-Down-Dilly',
@@ -2386,6 +2394,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -2400,6 +2409,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -2444,15 +2454,16 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'In Germany a daffodil bulb wrapped in cloth and worn beneath the clothes was believed to rid a person of evil spirits.',
           safetyNotes:
             "The bulb holds most of the plant's lycorine. Many poisonings, some fatal, have followed bulbs cooked and eaten in mistake for leeks or onions. Bulb extract getting into a wound can cause nervous-system and heart symptoms.",
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
               locator: 'under "Daffodil"',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'wikipedia-narcissus-plant',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
           ],
         },
@@ -2469,6 +2480,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Cancer', 'Taurus'],
       safetyNotes:
         'Cunningham marks the daisy as poison. His entry covers both the European daisy and the American ox-eye daisy.',
+      toxic: true,
       folkNames: [
         'Bairnwort',
         'Bruisewort',
@@ -2508,6 +2520,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -3602,6 +3615,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       description:
         "Spreading dogbane, also called fly-trap dogbane, is a perennial herb of North America, common across Canada and most of the United States and reaching into north-east Mexico. It grows in woods and along their edges, on prairies, in meadows and fields, and favours dry soil at low to middle elevations. It stands twenty to thirty centimetres tall, now and then half a metre, on branching, hairless stems that bleed a milky sap when broken, with pointed oval leaves that are hairy beneath. Pairs of pink flowers open at the tips of the stalks from June to September and give way to paired pods, roughly twelve to eighteen centimetres long, packed with silky-haired seeds. The genus name joins Greek words for 'away from' and 'dog', after its poisonous effect on dogs, and animals in general leave it alone. Native Americans put it to many uses: as medicine for a long list of complaints, the Ojibwe taking the root during the medicine lodge ceremony, and its strong stem fibres as sewing thread. Medical writers of the late nineteenth and early twentieth centuries recorded that it nearly always caused nausea or vomiting and heavy sweating and acted powerfully on the heart. Its magical use is narrow: Cunningham gives it one power, love, and puts its flowers in love mixtures.",
       safetyNotes: 'Cunningham marks dogbane as not recommended for internal use.',
+      toxic: true,
       folkNames: [
         'Rheumatism Weld',
         'Wild Ipecac',
@@ -3630,7 +3644,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-apocynum-androsaemifolium',
-          supports: ['canonicalName', 'nomenclature', 'folkNames', 'description'],
+          supports: ['canonicalName', 'nomenclature', 'folkNames', 'description', 'toxic'],
         },
       ],
       variants: [
@@ -3674,6 +3688,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       elements: ['air', 'earth'],
       celestialBodies: ['Mars', 'Moon'],
       safetyNotes: 'Cunningham codes dogwood as currently recognised as safe.',
+      toxic: true,
       folkNames: [
         'Boxwood',
         'Budwood',
@@ -3722,7 +3737,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-cornus-florida',
-          supports: ['canonicalName', 'nomenclature', 'folkNames', 'description'],
+          supports: ['canonicalName', 'nomenclature', 'folkNames', 'description', 'toxic'],
         },
       ],
       variants: [
@@ -3781,6 +3796,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
           description:
             'Clusters of small bright red drupes that ripen in late summer and early autumn.',
           safetyNotes: 'Kynes warns that the fruit of the flowering dogwood is not edible.',
+          toxic: true,
           references: [
             {
               source: 'kynes-plants',
@@ -3789,7 +3805,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-cornus-florida',
-              supports: ['form', 'description'],
+              supports: ['form', 'description', 'toxic'],
             },
           ],
         },
@@ -4577,11 +4593,12 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'Eucalyptus oil is steam-distilled from the leaves, and this species is the chief source of it worldwide, with China the largest producer. Its main constituent is cineole, which Cloez named eucalyptol in 1870. Kynes notes that Aboriginal Australians have used the oil as medicine for centuries.',
           safetyNotes:
             'AHPA places the essential oil in safety classes 2b and 2d: not to be taken internally in pregnancy except under the supervision of a qualified healthcare practitioner, and the recommended dose should not be exceeded. Being highly concentrated, it should not be used on the face, and especially the nose, of infants and young children. Poisoning has been reported after swallowing it, affecting the nervous, digestive, respiratory and circulatory systems, and similar symptoms have followed its use on the skin.',
+          toxic: true,
           references: [
             {
               source: 'ahpa-safety',
               locator: 'p. 349; p. xxii',
-              supports: ['form', 'safetyNotes'],
+              supports: ['form', 'safetyNotes', 'toxic'],
             },
             {
               source: 'kynes-plants',
@@ -5237,6 +5254,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       celestialBodies: ['Mercury'],
       safetyNotes:
         'Cunningham warns that some ferns are poisonous. Bracken in particular contains carcinogens linked to cancers of the oesophagus and stomach, and should not be eaten by people or animals.',
+      toxic: true,
       deities: ['Laka'],
       categories: ['Protection'],
       references: [
@@ -5249,6 +5267,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'deities',
             'categories',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -5609,6 +5628,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Cancer', 'Libra', 'Taurus'],
       safetyNotes:
         "Kynes considers figwort toxic and says it should not be swallowed. AHPA, by contrast, places the herb and root in safety class 1, herbs that can be safely consumed when used appropriately. It notes that older literature warned against figwort for people with ventricular tachycardia, a concern it regards as theoretical and neither proven nor disproven; Cunningham's health code likewise says it should not be taken internally by anyone with that condition. No information on its safety in pregnancy or while nursing was found, so its safety then has not been established.",
+      toxic: true,
       folkNames: [
         "Carpenter's Square",
         'Rosenoble',
@@ -5650,6 +5670,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -5915,6 +5936,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       colors: ['red', 'white'],
       safetyNotes:
         'Kynes calls fly agaric extremely toxic if eaten and advises against even touching it; Cunningham marks it as a poison and judges it too virulently poisonous to be worth using. It has poisoned young children, people taking it for hallucinations, and people who mistook it for an edible mushroom. It contains ibotenic acid, a neurotoxin, and muscimol, a psychoactive compound, in amounts that vary widely by region and season. Its effects are unpredictable, ranging from nausea, twitching and drowsiness to delirium, hallucinations, seizures and coma. With modern treatment deaths are extremely rare, but medical help should be sought in any suspected poisoning.',
+      toxic: true,
       folkNames: [
         'Death Angel',
         'Magic Mushroom',
@@ -5953,6 +5975,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -5970,6 +5993,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'categories',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -5990,11 +6014,12 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
           form: 'Mushroom',
           description:
             'Cunningham sets the mushroom on the altar or in the bedroom to increase fertility, while warning that its poison makes this unwise. Kynes, for the same reason, works with it only through pictures and figurines: toadstool ornaments painted in its colours draw faeries and pixies to the garden, and a picture of it written with a few keywords and burned helps to be rid of something unwanted.',
+          toxic: true,
           references: [
             {
               source: 'cunningham-herbs',
               locator: 'under "Agaric"',
-              supports: ['form', 'description'],
+              supports: ['form', 'description', 'toxic'],
             },
             {
               source: 'kynes-plants',
@@ -6090,6 +6115,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Aquarius', 'Libra'],
       safetyNotes:
         'Poisonous: every part of the plant is toxic and can kill if swallowed, so it is never taken internally. The AHPA handbook puts it in safety class 3, to be used only under the supervision of an expert qualified in its use, and interaction class C, because it acts like the heart drugs digoxin and digitoxin, whose effective and toxic doses lie very close together. Poisonings have followed deliberate self-harm and the mistaking of its leaves for borage, comfrey or plantain; signs include nausea, vomiting, abdominal pain, dizziness, confusion, hallucinations, disturbed or yellow-green vision, chest pain and an abnormal heartbeat. Its safety in pregnancy and while nursing has not been established.',
+      toxic: true,
       folkNames: [
         'Cow-Flop',
         "Deadmen's Bells",
@@ -6149,6 +6175,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'folkNames',
             'categories',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -6164,13 +6191,14 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'folkNames',
             'categories',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
         {
           source: 'ahpa-safety',
           locator: 'pp. 311–312; pp. xxii–xxiii',
-          supports: ['canonicalName', 'nomenclature', 'folkNames', 'safetyNotes'],
+          supports: ['canonicalName', 'nomenclature', 'folkNames', 'safetyNotes', 'toxic'],
         },
         {
           source: 'northcote-herbs',
@@ -6230,6 +6258,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       celestialBodies: ['Venus'],
       safetyNotes:
         'Cunningham marks plumeria as a poison. The US Forest Service lists it as a poisonous plant and warns against touching or eating any part of it, and the white latex from broken branches irritates the skin and mucous membranes and is toxic, though not deadly unless taken in large amounts.',
+      toxic: true,
       folkNames: [
         'Frangipangi',
         'Graveyard Flowers',
@@ -6249,12 +6278,20 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'folkNames',
             'categories',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
         {
           source: 'wikipedia-plumeria-rubra',
-          supports: ['canonicalName', 'nomenclature', 'folkNames', 'safetyNotes', 'description'],
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'folkNames',
+            'safetyNotes',
+            'toxic',
+            'description',
+          ],
         },
       ],
       variants: [
@@ -6285,6 +6322,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Aries', 'Capricorn'],
       safetyNotes:
         'Every part of the plant is toxic and can cause unpleasant side effects if swallowed. One herbal writer calls it poisonous and fit for use only under the direction of a medical herbalist. Large doses of its main alkaloid, protopine, caused excitation and convulsions in animals; its toxicology has not been thoroughly studied, and there are no studies of its safety in pregnancy, in children or in the elderly.',
+      toxic: true,
       folkNames: [
         'Beggary',
         'Earth Smoke',
@@ -6339,6 +6377,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'deities',
             'categories',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },
@@ -6348,7 +6387,14 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-fumaria-officinalis',
-          supports: ['canonicalName', 'nomenclature', 'folkNames', 'safetyNotes', 'description'],
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'folkNames',
+            'safetyNotes',
+            'toxic',
+            'description',
+          ],
         },
       ],
       variants: [
@@ -6806,6 +6852,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       zodiacSigns: ['Aries', 'Cancer'],
       safetyNotes:
         "Cunningham's health code marks geranium as currently recognised as safe. The plants are toxic to cats, dogs and horses, according to the ASPCA as cited by Wikipedia.",
+      toxic: true,
       folkNames: ['Storkbill', 'Storksbill'],
       deities: ['Minerva'],
       categories: [
@@ -6841,7 +6888,14 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-pelargonium',
-          supports: ['canonicalName', 'nomenclature', 'folkNames', 'description', 'safetyNotes'],
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'folkNames',
+            'description',
+            'safetyNotes',
+            'toxic',
+          ],
         },
       ],
       variants: [
@@ -7143,6 +7197,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
       elements: ['water'],
       safetyNotes:
         'Kynes warns that globeflower is mildly poisonous and should not be eaten, and that it may irritate and burn the skin.',
+      toxic: true,
       folkNames: [
         'Common Globeflower',
         'European Globeflower',
@@ -7165,6 +7220,7 @@ export const PLANTS_CO_K: SeedCompendiumShard = {
             'elements',
             'folkNames',
             'safetyNotes',
+            'toxic',
             'description',
           ],
         },

@@ -117,6 +117,29 @@ describe('seedCompendium', () => {
       ]);
     });
 
+    // M14.1: the two flags are the literal's, each its own, and off where the
+    // literal leaves them out.
+    it('flags an entry and a form toxic exactly where the literal says so', async () => {
+      const entries = await sql<{ seed_key: string; toxic: boolean }[]>`
+        select seed_key, toxic from ingredients order by seed_key
+      `;
+      expect(entries).toEqual([
+        { seed_key: 'fixtura exemplaris', toxic: false },
+        { seed_key: 'fixtura testalis', toxic: true },
+      ]);
+
+      const forms = await sql<{ seed_key: string; form: string; toxic: boolean }[]>`
+        select i.seed_key, v.form, v.toxic from ingredient_variants v
+        join ingredients i on i.id = v.ingredient_id
+        order by i.seed_key, v.form
+      `;
+      expect(forms).toEqual([
+        { seed_key: 'fixtura exemplaris', form: 'Root', toxic: false },
+        { seed_key: 'fixtura testalis', form: 'Herb', toxic: false },
+        { seed_key: 'fixtura testalis', form: 'Oil', toxic: true },
+      ]);
+    });
+
     it('writes the folk names, the deities in order and linked, and the categories on the entry and on a form', async () => {
       const testwort = await ingredientId('fixtura testalis');
       expect(await countOf('ingredient_folk_names', `where ingredient_id = '${testwort}'`)).toBe(2);

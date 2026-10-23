@@ -78,11 +78,12 @@ variants:
   - form: Oil
     description: At most 120 words on what this form adds.
     safetyNotes: A caution particular to the oil.
+    toxic: true # only where a source says this form is poisonous; left out otherwise
     references:
       - source: invented-safety-handbook
         locator: p. 418
         nameBasis: stated
-        supports: [form, description, safetyNotes]
+        supports: [form, description, safetyNotes, toxic]
 ---
 
 # Testwort
@@ -103,6 +104,7 @@ What the example shows:
 - **The body is the name and the description.** The `# Testwort` heading is the entry's `name`, the text up to the first `####` heading is its `description`, and no other H1, H2 or H3 is allowed. A `needs-review` file must have a non-empty Questions section. `status` is `draft`, `needs-review` or `approved`, and the seed writes `approved` files only.
 - **Every entry cites at least one source of its own, and so does every form.** The admin's "unsourced" filter counts only entry-level links (`citesNothing('ingredientId')` in `src/db/repository/ingredients.ts`), so a source cited only on a form would leave the entry on the admin's to-do list.
 - **Every citation of an entry that has a `canonicalName` says how its source's name was matched** (`nameBasis`), as "Formal names" below sets out. An entry with no formal name is exempt.
+- **The toxic flag is on only where a source says so, in so many words** (M14.1). The entry's flag goes on when a source says the plant, or any part of it, is poisonous or toxic to people or pets. A form's flag goes on only on a form the entry already has, and only when the source says that form is: an essential oil's poisoning flags the oil, and whether the whole plant is flagged too is the admin's or curator's call. The two flags are independent, never read into each other (DESIGN.md §5, "The toxic flag is the one exception"). The value is `true` alone: a written `false` would claim the plant is safe, which needs a source of its own, so the key is left out instead. A flag is a populated field, so at least one citation's `supports` must name `toxic`. A safety class, a drug interaction or a warning in pregnancy sets no flag; a sourced safety note that says poisonous, toxic or fatal if swallowed does, so the note and the flag agree.
 - **A form adds to its entry and never overrides it** (MB.215). Put a property on the entry when every form has it, and on a form when only that form does. Deities and folk names belong to the entry alone.
 - **Every entry carries at least its primary form as a variant.** A further form is added only where a source the lane read attaches something to that form: a description, a caution, a use.
 - **A work is cited once on an entry or a form.** `reference_links` holds one live link per work per row, so two passages of one book are one citation whose locator names both (`under "Mugwort"; p. 266`). The guard refuses a work cited twice on one row. The pilot ([`pilot.md`](pilot.md), "Decisions the lanes inherit") records the other rules it settled: categories by the source's own word, deities by the curated row, colours.
@@ -126,6 +128,7 @@ A citation's `supports` lists the fields it backs, using the literal's own field
 | `zodiacSigns`     | `colors`            |
 | `colors`          | `categories`        |
 | `safetyNotes`     | `substitutes`       |
+| `toxic`           | `toxic`             |
 | `folkNames`       |                     |
 | `deities`         |                     |
 | `categories`      |                     |

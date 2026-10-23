@@ -67,6 +67,8 @@ function populatedEntryFields(entry: SeedCompendiumEntry): CompendiumEntryField[
   if (entry.canonicalName) fields.push('canonicalName');
   if (entry.description) fields.push('description');
   if (entry.safetyNotes) fields.push('safetyNotes');
+  // A flag on is a claim the plant is poisonous, so a citation must back it (M14.1).
+  if (entry.toxic) fields.push('toxic');
   for (const field of [
     'elements',
     'celestialBodies',
@@ -86,6 +88,7 @@ function populatedVariantFields(variant: SeedCompendiumVariant): CompendiumVaria
   const fields: CompendiumVariantField[] = ['form'];
   if (variant.description) fields.push('description');
   if (variant.safetyNotes) fields.push('safetyNotes');
+  if (variant.toxic) fields.push('toxic');
   for (const field of [
     'elements',
     'celestialBodies',

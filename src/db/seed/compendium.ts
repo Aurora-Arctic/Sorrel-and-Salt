@@ -124,6 +124,7 @@ export async function seedCompendiumContent(
       zodiacSigns: spelled('zodiacSigns', entry.zodiacSigns),
       colors: entry.colors ?? null,
       safetyNotes: entry.safetyNotes ?? null,
+      toxic: entry.toxic ?? false,
       seedKey: identityOf(entry),
     })),
   );
@@ -147,6 +148,7 @@ export async function seedCompendiumContent(
       formId: form.id,
       description: variant.description ?? null,
       safetyNotes: variant.safetyNotes ?? null,
+      toxic: variant.toxic ?? false,
       elements: variant.elements ?? null,
       celestialBodies: spelled('celestialBodies', variant.celestialBodies),
       zodiacSigns: spelled('zodiacSigns', variant.zodiacSigns),

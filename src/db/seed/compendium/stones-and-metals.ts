@@ -592,6 +592,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       colors: ['white', 'grey'],
       safetyNotes:
         'Wikipedia states that antimony and many of its compounds are toxic, with effects resembling arsenic poisoning, although antimony is far less toxic than arsenic.',
+      toxic: true,
       categories: ['Protection'],
       references: [
         {
@@ -601,7 +602,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-antimony',
-          supports: ['canonicalName', 'nomenclature', 'colors', 'safetyNotes', 'description'],
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'colors',
+            'safetyNotes',
+            'toxic',
+            'description',
+          ],
         },
       ],
       variants: [
@@ -2376,16 +2384,31 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       colors: ['silver', 'grey'],
       safetyNotes:
         'Lead is poisonous. Wikipedia describes it as a neurotoxin that builds up in soft tissue and bone and can damage the nervous system, heart and blood vessels, and kidneys; Cunningham warns that it causes death once absorbed by the body, as the Romans found from their lead dishes and cooking pots.',
+      toxic: true,
       categories: ['Protection', 'Divination', 'Fertility'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'p. 161',
-          supports: ['elements', 'celestialBodies', 'safetyNotes', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'safetyNotes',
+            'toxic',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-lead',
-          supports: ['canonicalName', 'nomenclature', 'colors', 'safetyNotes', 'description'],
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'colors',
+            'safetyNotes',
+            'toxic',
+            'description',
+          ],
         },
       ],
       variants: [
@@ -2457,6 +2480,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       colors: ['silver'],
       safetyNotes:
         'Mercury is toxic. Wikipedia states that exposure to it harms the nervous and immune systems and the kidneys, and Cunningham warns that it is dangerous to breathe, to swallow or even to touch for long, and asks readers not to use it in magic.',
+      toxic: true,
       folkNames: ['Quicksilver'],
       categories: ['Gambling', 'Protection'],
       references: [
@@ -2467,6 +2491,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             'elements',
             'celestialBodies',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
             'description',
@@ -2479,6 +2504,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             'nomenclature',
             'colors',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'description',
           ],

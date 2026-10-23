@@ -544,6 +544,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       celestialBodies: ['Venus'],
       safetyNotes:
         "Not recommended for internal use (Cunningham's health code X), and Kynes warns that every part of the plant is toxic if eaten. AHPA's profile of pyrrolizidine alkaloids names the unsaturated alkaloids of Senecio species, the genus ragwort was long placed in, as a recognised cause of liver damage when eaten in sufficient amounts, and notes that livestock have been poisoned by grazing Senecio.",
+      toxic: true,
       folkNames: [
         'Cankerwort',
         'Dog Standard',
@@ -588,6 +589,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'elements',
             'celestialBodies',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -807,6 +809,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       zodiacSigns: ['Gemini'],
       safetyNotes:
         "AHPA classes the root and rhizome 2b, 2c and 2d: not for use in pregnancy or while nursing except under a qualified practitioner's supervision; not with intestinal obstruction, abdominal pain of unknown cause, inflammatory bowel conditions such as colitis, Crohn's disease or irritable bowel syndrome, or during menstruation; not for more than eight days running; and not for children under twelve. It is a stimulant laxative and contains tannins. It can cause cramping, nausea, vomiting and poor appetite, and may turn the urine red-brown or bright yellow. Long laxative use can lose potassium, so take care alongside heart-rhythm drugs, cardiac glycoside plants, thiazide diuretics, corticosteroids or liquorice; it may also lessen the absorption of other drugs taken by mouth. Cunningham's codes for the root say not to take it internally when pregnant or nursing, or with kidney stones, intestinal obstruction or abdominal pain, and not for long-term use. Kynes warns that only the stalks are edible and the rest of the plant is toxic if eaten.",
+      toxic: true,
       folkNames: [
         'Chinese Rhubarb',
         'Turkey Rhubarb',
@@ -841,6 +844,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -2433,10 +2437,11 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'The fragrant oil is distilled from the root bark, and Grieve records it scenting cheap perfumes and soaps and flavouring medicines and fizzy drinks. Most commercial sassafras oil now comes from camphor production in Asia or from related Brazilian trees.',
           safetyNotes:
             'The essential oil is about 80% safrole (AHPA). Grieve records that a teaspoonful caused vomiting, dilated pupils, stupor and collapse in a young man, that the oil can cause fatal narcotic poisoning, and that its use has caused abortion.',
+          toxic: true,
           references: [
             {
               source: 'grieve-sassafras',
-              supports: ['form', 'description', 'safetyNotes'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic'],
             },
             {
               source: 'ahpa-safety',
@@ -2462,6 +2467,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       zodiacSigns: ['Gemini', 'Leo', 'Virgo'],
       safetyNotes:
         'Kynes cautions that every part of the plant, the roots above all, is toxic if eaten.',
+      toxic: true,
       folkNames: [
         "Bird's Eye",
         "Poor Man's Weather-Glass",
@@ -2486,6 +2492,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -3389,6 +3396,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         "The common snowdrop is a small perennial of the family Amaryllidaceae, the best known and most widespread of the twenty species in its genus, standing seven to fifteen centimetres tall. Each bulb sends up two narrow grey-green leaves and a single stalk bearing one nodding, bell-shaped white flower, whose three inner segments are touched with green at the tips; it blooms from January to April and often comes up through snow. It is native across Europe from Spain to Ukraine and is widely naturalised in woodland elsewhere; in Britain, long taken for a native, it was probably brought in around the early sixteenth century. The name Galanthus means milk flower, and the English name snowdrop first appears in the 1633 edition of Gerard's herbal. Grieve found it of little account in medicine, though a glossary of 1465 counted it an emmenagogue; galantamine, first extracted from snowdrops, is now used to help with mild to moderate Alzheimer's disease. Kynes gathers its lore: Persephone carried it back from the underworld, it was unlucky to bring indoors and an omen of death when given to the sick in England, yet in the Welsh Borders a bowl of the flowers taken in at Imbolc drove out evil spirits, and in England and Scotland it was a flower of hope for heralding spring. Kynes gives it to earth, for courage and release.",
       elements: ['earth'],
       safetyNotes: 'Kynes cautions that the bulbs are poisonous if eaten.',
+      toxic: true,
       folkNames: [
         'Common Snowdrop',
         "Death's Flower",
@@ -3415,6 +3423,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'description',
             'elements',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'deities',
             'categories',
@@ -3451,6 +3460,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           form: 'Bulb',
           description:
             'Snowdrops grow from bulbs that cluster in tight masses, each sending up a single flowering stem; the tough, thickened tips of the leaves let the shoot push through the soil. Kynes lists the bulbs among the forms on sale.',
+          toxic: true,
           references: [
             {
               source: 'grieve-snowdrop',
@@ -3459,7 +3469,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             {
               source: 'kynes-plants',
               locator: 'under "Snowdrop"',
-              supports: ['form', 'description'],
+              supports: ['form', 'description', 'toxic'],
             },
             {
               source: 'wikipedia-galanthus-nivalis',
@@ -3479,6 +3489,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       celestialBodies: ['Saturn'],
       zodiacSigns: ['Capricorn', 'Gemini'],
       safetyNotes: 'Kynes cautions that every part of the plant is poisonous if eaten.',
+      toxic: true,
       folkNames: [
         'Dropberry',
         "Lady's Seal",
@@ -3517,6 +3528,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'categories',
           ],
@@ -3599,6 +3611,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       zodiacSigns: ['Aries', 'Scorpio'],
       safetyNotes:
         "AHPA places southernwood in safety class 2b (not to be used in pregnancy) and interaction class A (no clinically relevant drug interactions expected): it is not for use in pregnancy except under a qualified practitioner, having been reported to bring on menstruation. Its safety while nursing has not been established. Kynes cautions that it is poisonous if eaten in large amounts, and Cunningham's health code says not to take it internally if pregnant.",
+      toxic: true,
       folkNames: [
         'Appleringie',
         "Boy's Love",
@@ -3656,6 +3669,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'deities',
             'categories',
@@ -3715,6 +3729,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       zodiacSigns: ['Capricorn'],
       safetyNotes:
         'Highly poisonous. Every part of the tree except the red flesh around the seed is toxic: the seeds and foliage can be fatal if eaten, and the toxins can also be taken in through the skin and by breathing. Its taxine alkaloids act on the heart, and swallowing leaves or seeds needs urgent medical attention; there is no known antidote. Livestock are often killed by eating it.',
+      toxic: true,
       folkNames: ['Common Yew', 'European Yew', 'English Yew'],
       deities: [
         'Artemis',
@@ -3743,7 +3758,14 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Yew"',
-          supports: ['canonicalName', 'description', 'elements', 'celestialBodies', 'safetyNotes'],
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'celestialBodies',
+            'safetyNotes',
+            'toxic',
+          ],
         },
         {
           source: 'kynes-plants',
@@ -3755,6 +3777,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'deities',
             'categories',
@@ -3762,7 +3785,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         },
         {
           source: 'wikipedia-taxus-baccata',
-          supports: ['canonicalName', 'description', 'safetyNotes', 'folkNames'],
+          supports: ['canonicalName', 'description', 'safetyNotes', 'toxic', 'folkNames'],
         },
       ],
       variants: [
