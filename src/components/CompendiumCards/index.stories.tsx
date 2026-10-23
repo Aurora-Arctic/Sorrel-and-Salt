@@ -147,6 +147,19 @@ const middlePageNode = (
   />
 );
 
+// Two entries the marker reaches: one new this month, one changed this month.
+const withMarkersNode = (
+  <CompendiumCards
+    {...BASE}
+    entries={[{ ...ENTRIES[0], recency: 'new' }, { ...ENTRIES[1], recency: 'updated' }, ENTRIES[2]]}
+  />
+);
+
+// The last page: Previous is live, Next is not.
+const lastPageNode = (
+  <CompendiumCards {...BASE} position={{ page: 3, pages: 3 }} previousHref="/compendium?before=x" />
+);
+
 const emptyNode = <CompendiumCards {...BASE} entries={[]} total={0} />;
 
 // One story with a control to choose the state: each is a whole page or list,
@@ -159,6 +172,8 @@ const STATES: Record<string, ReactNode> = {
   'Can Add Edit And More': canAddEditAndMoreNode,
   'Curator Can Edit': curatorCanEditNode,
   'Middle Page': middlePageNode,
+  'With Markers': withMarkersNode,
+  'Last Page': lastPageNode,
   Empty: emptyNode,
 };
 
