@@ -33,7 +33,13 @@ export function generatePreviewSource(c, opts) {
   const src = base(c, opts);
   if (!src) return src;
   const files = new Set([c.storySrc, ...(c.storyIds ?? []).map((s) => s.storySrc)].filter(Boolean));
-  const uses = [...files].some((f) => { try { return /mock-api/.test(readFileSync(resolve(f), 'utf8')); } catch { return false; } });
+  const uses = [...files].some((f) => {
+    try {
+      return /mock-api/.test(readFileSync(resolve(f), 'utf8'));
+    } catch {
+      return false;
+    }
+  });
   if (!uses) return src;
   return src.replace(/= (\/\* .*? \*\/ )compose\(/g, '= $1composeMocked(') + HARNESS;
 }

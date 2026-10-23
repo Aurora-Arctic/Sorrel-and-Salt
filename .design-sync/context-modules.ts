@@ -12,7 +12,11 @@ export * from 'react-hook-form';
 export * from '@tanstack/react-query';
 export * from 'next/navigation';
 // The contexts next/navigation's hooks read; .storybook/navigation.tsx fills them (see make-barrel.mjs).
-export { PathnameContext, PathParamsContext, SearchParamsContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime.js';
+export {
+  PathnameContext,
+  PathParamsContext,
+  SearchParamsContext,
+} from 'next/dist/shared/lib/hooks-client-context.shared-runtime.js';
 export { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime.js';
 
 // The workshop's own sheets (.storybook/preview.tsx imports them, and the converter compiles

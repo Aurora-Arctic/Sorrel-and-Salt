@@ -1,6 +1,7 @@
 # Design sync notes
 
 ## Setup gotchas
+
 - [GENERAL] A multi-entry Vite library has no single entry or `.d.ts`. `.design-sync/make-barrel.mjs` (run by `buildCmd` after `vite build` and `tsc -p .design-sync/tsconfig.dts.json`) writes `dist/index.mjs`, `dist/index.d.ts` and `dist/package.json` (`types`). `export *` skips defaults, so each file with a default export gets `export { default as Name }`. Symptom: "exported PascalCase symbols: 0".
 - [GENERAL] - Bundled Next.js internals read `process.env` at load -> "process is not defined", empty window.SorrelAndSalt. Fix: `dist/_process-shim.mjs`, imported first by the barrel.
 - [GENERAL] - `next/navigation` hooks throw "expected app router to be mounted". Fix: make-barrel rewrites every dist chunk's import to `dist/_next-navigation.mjs` (inert hooks); the source-storybook fork stubs it in the decorator bundle.
@@ -12,6 +13,7 @@
 - Unmapped/excluded stories: 3 email stories, Foundations, Feedback Main Body / Navigation Bar / Pending Link (hook-only or not components).
 
 ## Re-sync risks
+
 - Adding a context-bearing module that `.storybook/` or a story imports (see above).
 - New `src/components/*/index.tsx` with only named exports: barrel handles it, titleMap may need an entry.
 - Validator warnings left: RENDER_BLANK ImpersonationBanner, FONT_REMOTE (Lexend, Cormorant Unicase).
@@ -20,6 +22,7 @@
 - compare.mjs caps a capture at 2000x2000 (`compare.mjs:433`), so a `viewport` over 2000 high does nothing. ChipColorField States is 3023px tall in Storybook: its last ~1000px is never captured, and it grades close, not match. IngredientCard States (3745px in Storybook) shows 10 of its 18 cards for the same reason. Splitting a tall States story is the only fix that keeps the harness unedited.
 
 ## Phase 2 fixes
+
 - [GENERAL] Fonts fell to serif, theme was light, ThemeToggle unstyled: story-side `.scss` compiles as empty, so the workshop sheets never reached the preview and `--font-body` was undefined (an undefined var invalidates the whole `font-family`). Fix: `.design-sync/context-modules.ts` imports `.storybook/{theme,story-frame,typography,layout,primitives}.scss`, so they land in the library CSS (`cssEntry`).
 - 40 GRID_OVERFLOW components: `wide` -> cardMode "column"; `escape` -> cardMode "single" plus primaryStory (Modal and ThemeToggle use `States`). Set in `config.json` `overrides`.
 - [GENERAL] Tall or wide stories cut off in the card: the ds capture is the viewport only (900x700 default) while Storybook captures the whole `#storybook-root`, and the card chrome insets the frame about 24px. Fix: `viewport` override (Notice 1000x850, IngredientCard 1000x2000).
@@ -41,6 +44,7 @@
 - [GENERAL] **dist is built by hand: `package-build.mjs` does not run `buildCmd`.** A stale `dist/_context.mjs` ships silently (this is how TabSwitchContext was missing after the first rebuild). Before every `package-build.mjs` run, from /app: `export PATH=$PWD/node_modules/.bin:$PATH; (vite build --config .design-sync/vite.config.ts && tsc -p .design-sync/tsconfig.dts.json && node .design-sync/make-barrel.mjs) > .reports/design-sync-dist.log 2>&1; echo dist $?` (needs exit 0; `vite` is not on PATH without the export). Then `grep -c <new export> dist/_context.mjs` for anything added to `context-modules.ts`. Then the build: `node .ds-sync/package-build.mjs --config .design-sync/config.json --node-modules node_modules --entry dist/index.mjs --out ./ds-bundle > .reports/design-sync-build.log 2>&1`. A stray esbuild goroutine dump at the end of that log is from an earlier killed run and is harmless when "wrote ./ds-bundle" printed; use `grep -a` on it.
 
 ## Wave 2-3 findings (folded from lane learnings)
+
 - [GENERAL] Frame is narrower than Storybook's root: the preview pads a story 24px (about 48px narrower in places). Changes wrapping, column counts, fixed-width boxes, and (SectionNav) JS-measured folding into More. Accepted delta; no knob.
 - [GENERAL] Viewport is read from the first line of the card html (`viewport="WxH"`), written only by `package-build.mjs`. A config viewport change gives `CONFIG_STALE` in `preview-rebuild.mjs` and needs a full rebuild; `compare.mjs --force` then recaptures. A duplicate key in `overrides` replaces the earlier one: merge into the existing entry.
 - [GENERAL] Whole-form/page stories taller than the capture (default 900x700, cap 2000x2000) grade close: IngredientForm (2581, 3560, 2674 tall; candidate 900x2000, Copy Skipped needs 900x900), ChipColorField, IngredientCard.
