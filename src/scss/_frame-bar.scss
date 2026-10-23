@@ -9,6 +9,30 @@
 // `.app-shell__nav`, in AppShell's sheet, which both frames use (`SiteNav`).
 // claude-docs/components/public-frame.md, "Styling", sets out both lists.
 @mixin frame-bar($block) {
+  // The top edge a sticky row of a page (IngredientSearch’s search row) holds at: just under
+  // this bar.
+  .#{$block} {
+    --sticky-top: calc(#{$top-inset} + #{$shell-bar-height});
+  }
+
+  .#{$block}__bar {
+    position: sticky;
+    // Below the impersonation banner where it takes room in the flow (touch).
+    top: $top-inset;
+    z-index: layer('shell');
+    box-sizing: border-box;
+    height: $shell-bar-height;
+    border-bottom: 1px solid $hairline;
+    background-color: $surface-card;
+  }
+
+  // The layout layer gives every `header` a bottom margin, and this bar is one. Zeroed: a context
+  // row meets the bar edge to edge, and a page with none has its own padding, which with the
+  // margin as well made a page that fits the window scroll by it.
+  .#{$block} .#{$block}__bar {
+    margin-bottom: 0;
+  }
+
   .#{$block}__bar-inner {
     box-sizing: border-box;
     display: flex;

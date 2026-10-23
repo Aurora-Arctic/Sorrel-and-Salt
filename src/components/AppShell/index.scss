@@ -35,32 +35,7 @@
   }
 }
 
-// The top edge a sticky row of a page (IngredientSearch's search row) holds at: just under
-// this bar. PublicFrame sets the same property to 0, its header not being sticky.
-.app-shell {
-  --sticky-top: calc(#{$top-inset} + #{$shell-bar-height});
-}
-
-.app-shell__bar {
-  position: sticky;
-  // Below the impersonation banner where it takes room in the flow (touch).
-  top: $top-inset;
-  z-index: layer('shell');
-  box-sizing: border-box;
-  height: $shell-bar-height;
-  border-bottom: 1px solid $hairline;
-  background-color: $surface-card;
-}
-
-// The layout layer gives every `header` a bottom margin, and this bar is one.
-// Zeroed: a context row meets the bar edge to edge, and a page with none has
-// its own padding, which with the margin as well made a page that fits the
-// window (`.page-frame`'s height is the window's less the bar) scroll by it.
-.app-shell .app-shell__bar {
-  margin-bottom: 0;
-}
-
-// The bar's inner row, brand and end group, shared with PublicFrame (_frame-bar.scss).
+// The bar, its inner row, brand and end group, shared with PublicFrame (_frame-bar.scss).
 @include frame-bar(app-shell);
 
 // The links fill the bar's height, square, so the current one's rule sits along the bar's

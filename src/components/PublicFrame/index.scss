@@ -6,27 +6,7 @@
 // visitor who signs in meets the same bar; tokens only (signed off in MB.120,
 // 2026-10-20). claude-docs/components/public-frame.md.
 
-// Where a page's sticky row holds (the shell sets the same property under its bar): this
-// header scrolls away, so the row sticks at the window's top.
-.public-frame {
-  // A length with its unit: the offset sits inside calc() sums, where a bare 0 is invalid.
-  /* stylelint-disable-next-line length-zero-no-unit */
-  --sticky-top: 0px;
-}
-
-.public-frame__bar {
-  box-sizing: border-box;
-  height: $shell-bar-height;
-  border-bottom: 1px solid $hairline;
-  background-color: $surface-card;
-}
-
-// The layout layer gives every `header` a bottom margin; the bar is one.
-.public-frame .public-frame__bar {
-  margin-bottom: 0;
-}
-
-// The bar's inner row, brand, nav and end group, shared with AppShell (_frame-bar.scss).
+// The bar and its inner row, brand, nav and end group, shared with AppShell (_frame-bar.scss).
 @include frame-bar(public-frame);
 
 // The nav is the shell's (`SiteNav`, `.app-shell__nav`), whose two shell-only rules the public frame

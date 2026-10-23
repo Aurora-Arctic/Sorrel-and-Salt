@@ -39,21 +39,12 @@
   background-size: 100% 100%;
   background-repeat: no-repeat;
 
-  // Inside the shell the sorrel starts below its bars rather than behind them:
+  // Inside the shell or the public frame the sorrel starts below its bars rather than behind them:
   // the top inset, the bar (its hairline is inside its height), and where a
   // context row follows, its height (a control with the lead's air above and below) and its own 1px
   // hairline. Pages without the shell keep `$top-inset` above.
-  body:has(.app-shell) & {
+  body:has(.app-shell, .public-frame) & {
     top: calc(#{$top-inset} + #{$shell-bar-height});
-  }
-
-  // The public frame's bar is not sticky, so the sorrel starts beneath it and climbs to the
-  // top as the bar scrolls away, never sitting behind it (the owner's call, 2026-10-20).
-  body:has(.public-frame) & {
-    --sorrel-rest: #{$top-inset};
-    --sorrel-lift: #{$shell-bar-height};
-
-    @include sorrel-follows-scroll;
   }
 
   // The context row scrolls away but the bar stays: the sorrel climbs to the bar's foot.
