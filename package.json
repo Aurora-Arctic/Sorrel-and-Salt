@@ -111,6 +111,7 @@
     "lint-staged": "^17.6.0",
     "monocart-coverage-reports": "^2.13.0",
     "msw": "^2.15.0",
+    "msw-storybook-addon": "^3.0.3",
     "oxlint": "^1.86.0",
     "pdfjs-dist": "^6.4.299",
     "picomatch": "^4.0.7",
