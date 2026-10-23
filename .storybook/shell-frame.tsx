@@ -1,9 +1,14 @@
 import type { ReactElement } from 'react';
 import AdminNav from '../src/components/AdminNav';
+import { adminTarget } from '../src/components/AdminNav/target';
 import AppShell from '../src/components/AppShell';
 import ContextRow from '../src/components/ContextRow';
 import CovenNav from '../src/components/CovenNav';
+import { CovenSwitchProvider } from '../src/components/CovenSwitchTargets/context';
+import { RouteModalProvider } from '../src/components/Modal/route-modal-provider';
+import SectionBody from '../src/components/SectionBody';
 import WorkspaceSwitcher from '../src/components/WorkspaceSwitcher';
+import { PendingLink } from '../src/lib/navigation';
 import type { ShellViewer, ShellWorkspace } from '../src/lib/types';
 import { WorkshopPathname } from './navigation';
 import type { ShellFrameProps } from './types';
@@ -14,6 +19,8 @@ import type { ShellFrameProps } from './types';
 // is their markup with fixture props, as ./admin-frame.tsx is for the admin
 // layout. The create page's row is the page's own, not a layout's, and the page
 // draws it only for someone with a coven to switch to, as `new` does here.
+// `role` is the admin area's: an admin sees People in its nav, a curator does
+// not, as the layout reads it from the session.
 
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
@@ -64,6 +71,7 @@ const DEFAULT_OPEN = {
 
 export const ShellFrame = ({
   area = 'coven',
+  role = 'admin',
   viewer,
   workspaces = FIXTURE_WORKSPACES,
   open = DEFAULT_OPEN[area],
@@ -78,22 +86,36 @@ export const ShellFrame = ({
     <WorkshopPathname.Provider value={open}>
       <AppShell viewer={who} workspaces={workspaces}>
         {area === 'coven' && (
-          <>
+          <CovenSwitchProvider>
             <ContextRow
               lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={who.canCreate} />}
             >
               <CovenNav slug={OPEN_COVEN} canReadMembers={canReadMembers} />
             </ContextRow>
-            <div className="coven-layout">{children}</div>
-          </>
+            <SectionBody region="coven" className="coven-layout">
+              {children}
+            </SectionBody>
+          </CovenSwitchProvider>
         )}
         {area === 'admin' && (
-          <>
-            <ContextRow lead={<span className="context-row__name">Admin</span>}>
-              <AdminNav managesPeople />
+          <RouteModalProvider>
+            <ContextRow
+              lead={
+                <PendingLink
+                  href="/admin"
+                  className="context-row__name"
+                  navigationTarget={adminTarget('/admin')}
+                >
+                  Admin
+                </PendingLink>
+              }
+            >
+              <AdminNav managesPeople={role === 'admin'} />
             </ContextRow>
-            <div className="page-column">{children}</div>
-          </>
+            <SectionBody region="admin" className="page-column">
+              {children}
+            </SectionBody>
+          </RouteModalProvider>
         )}
         {/* /coven/new: the switcher alone, no section nav, and no wrapper div
             (src/app/(shell)/coven/new/page.tsx). */}

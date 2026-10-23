@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
-import { ShellFrame } from '../../../.storybook/shell-frame';
+import type { ReactElement, ReactNode } from 'react';
+import { usePressOnMount } from '../../../.storybook/press';
+import { FIXTURE_WORKSPACES, ShellFrame } from '../../../.storybook/shell-frame';
 
 // Render-only; behaviour is asserted in tests/components/AppShell. Each story
 // draws the shell as a layout does (.storybook/shell-frame.tsx), around a stub
@@ -50,51 +51,77 @@ const CreateStub = (): ReactElement => (
   </main>
 );
 
-// A member on a coven page: the switcher names the coven, three to choose
-// from and Create Coven last.
-export const Default: Story = {
-  render: () => (
+// Opens the Add Ingredient menu once drawn, as a press would.
+const MenuOpened = ({ children }: { children: ReactNode }): ReactElement => {
+  usePressOnMount('Choose Where to Add');
+  return <>{children}</>;
+};
+
+const ONE_COVEN = [FIXTURE_WORKSPACES[0]];
+const CURATOR = { name: 'Fixture Curator', canCurate: true };
+
+// Each state is the whole shell around a stub page, so one control chooses it.
+// Member: the switcher names the coven, three to choose from and Create Coven
+// last. Admin Page: Your Covens and Admin in the bar, "Admin" in the row, and
+// Add Ingredient as a split button (the compendium and each coven). Curator
+// Page: the same without People in the row's nav. Add Menu Open: the menu's
+// two groups, with the third coven, where the viewer may not write, disabled.
+// Your Coven, singular, is the label for a curator in one coven. Create Page:
+// the switcher alone, since the page belongs to no one coven. Account Page: no
+// context row. Invitations Waiting: the account menu's count. Unverified: the
+// brand as text, the account menu and the theme disc, and nothing else.
+const STATES: Record<string, ReactNode> = {
+  Member: (
     <ShellFrame>
       <CovenStub />
     </ShellFrame>
   ),
-};
-
-// An admin on an admin page: Your Coven and Admin in the bar, "Admin" in the row,
-// and Add Ingredient as a split button (the compendium and each coven).
-export const AdminPage: Story = {
-  render: () => (
+  'Admin Page': (
     <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', canCurate: true }} open="/admin">
       <AdminStub />
     </ShellFrame>
   ),
-};
-
-// The create page: the context row holds the switcher alone, with no section
-// nav, since the page belongs to no one coven.
-export const CreatePage: Story = {
-  render: () => (
+  'Curator Page': (
+    <ShellFrame area="admin" role="curator" viewer={CURATOR} open="/admin">
+      <AdminStub />
+    </ShellFrame>
+  ),
+  'Add Menu Open': (
+    <MenuOpened>
+      <ShellFrame viewer={CURATOR}>
+        <CovenStub />
+      </ShellFrame>
+    </MenuOpened>
+  ),
+  'Curator In One Coven': (
+    <ShellFrame viewer={CURATOR} workspaces={ONE_COVEN}>
+      <CovenStub />
+    </ShellFrame>
+  ),
+  'Create Page': (
     <ShellFrame area="new">
       <CreateStub />
     </ShellFrame>
   ),
-};
-
-// A page that belongs to no area: the account page, with no context row.
-export const AccountPage: Story = {
-  render: () => (
+  'Account Page': (
     <ShellFrame area="none" open="/account">
       <AccountStub heading="Your Account" />
     </ShellFrame>
   ),
-};
-
-// An unverified account: the brand as text, the account menu and the theme
-// disc, and nothing else.
-export const Unverified: Story = {
-  render: () => (
+  'Invitations Waiting': (
+    <ShellFrame area="none" viewer={{ pendingInvitations: 2 }} open="/account">
+      <AccountStub heading="Your Account" />
+    </ShellFrame>
+  ),
+  Unverified: (
     <ShellFrame area="none" viewer={{ verified: false }} open="/account/email">
       <AccountStub heading="Your Email" />
     </ShellFrame>
   ),
+};
+
+export const States: Story = {
+  args: { state: 'Member' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

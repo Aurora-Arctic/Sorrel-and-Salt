@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { WorkshopPathname } from '../../../.storybook/navigation';
+import { adminTarget } from '../AdminNav/target';
+import { PendingLink } from '../../lib/navigation';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import AdminNav from '../AdminNav';
 import CovenNav from '../CovenNav';
@@ -18,16 +20,32 @@ const WORKSPACES = [
   { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
 ];
 
-// The admin area's row: the word "Admin" in the display face, the nav beside it. A coven's row:
-// the switcher is the lead, the coven's nav beside it, as a member sees it (Overview and Members).
+const SOLE = [WORKSPACES[0]];
+
+const AdminName = () => (
+  <PendingLink href="/admin" className="context-row__name" navigationTarget={adminTarget('/admin')}>
+    Admin
+  </PendingLink>
+);
+
+// The admin area's row: the word "Admin", the area's home link, in the display
+// face, the nav beside it; an admin's nav ends with People, a curator's does not. A coven's
+// row: the switcher is the lead, the coven's nav beside it, as a member sees it
+// (Overview and Members); a viewer's nav has no Members; the zero-coven row is
+// the switcher with nothing to choose but Create Coven.
 export const States: Story = {
   render: () => (
     <StatesGrid
       cell="40rem"
       states={{
         Admin: (
-          <ContextRow lead={<span className="context-row__name">Admin</span>}>
+          <ContextRow lead={<AdminName />}>
             <AdminNav managesPeople />
+          </ContextRow>
+        ),
+        Curator: (
+          <ContextRow lead={<AdminName />}>
+            <AdminNav managesPeople={false} />
           </ContextRow>
         ),
         Coven: (
@@ -35,6 +53,18 @@ export const States: Story = {
             <ContextRow lead={<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />}>
               <CovenNav slug="fixture-coven" canReadMembers />
             </ContextRow>
+          </WorkshopPathname.Provider>
+        ),
+        "Viewer's Coven": (
+          <WorkshopPathname.Provider value="/coven/fixture-coven">
+            <ContextRow lead={<WorkspaceSwitcher workspaces={SOLE} />}>
+              <CovenNav slug="fixture-coven" canReadMembers={false} />
+            </ContextRow>
+          </WorkshopPathname.Provider>
+        ),
+        'No Covens': (
+          <WorkshopPathname.Provider value="/coven/new">
+            <ContextRow lead={<WorkspaceSwitcher workspaces={[]} canCreate />} />
           </WorkshopPathname.Provider>
         ),
         'Long Workspace Name': (

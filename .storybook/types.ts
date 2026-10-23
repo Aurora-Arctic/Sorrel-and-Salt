@@ -26,6 +26,8 @@ export interface AdminTabbedFrameProps {
 export interface ShellFrameProps {
   /** Which area's context row to draw: a coven's (switcher and nav), the admin area's, the create page's (the switcher alone), or none (the account pages). */
   area?: 'coven' | 'admin' | 'new' | 'none';
+  /** In the admin area: an `admin` sees People in the nav, a `curator` does not. Default `admin`. */
+  role?: 'curator' | 'admin';
   /** The viewer, by what differs from a verified member who may not create covens. */
   viewer?: Partial<ShellViewer>;
   /** The viewer's covens; three fixture ones by default. */
