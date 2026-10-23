@@ -1693,7 +1693,7 @@ The page also carries:
 
 - `requireSession()`, called in the page, since the `(shell)` layout does not.
 - `LastEdit` under the title ([`components/last-edit.md`](../components/last-edit.md)).
-- An Edit control and a Delete control, as places only: M13.10 builds editing at `/coven/[slug]/grimoire/[id]/edit` and fills the Edit control for members and owners, and M13.11 builds `deleteSpell` and fills the Delete control. This task does not build either action.
+- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the edit route, and M13.11 adds the Delete control with `deleteSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
 - If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
 - A `Skeleton` of shape `page`, through a `PARTS_OF_SECTION` entry in `src/lib/coven-path.ts`, so the loading shape matches.
 - The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
@@ -1710,7 +1710,7 @@ _Acceptance criteria:_
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
 - A custom, one-off ingredient (MB.40) renders its own name and form in `position` order with the rest, marked as one-off, and links to no ingredient page
 - The page calls `requireSession()` and shows `LastEdit` under the title
-- Edit and Delete controls are in place for M13.10 and M13.11 to fill; a viewer sees neither
+- The page has no Edit or Delete control; M13.10 and M13.11 each add their own
 - The loading skeleton is shape `page`
 - The page is the only view M10.22 styles for print
 

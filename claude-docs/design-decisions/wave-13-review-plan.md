@@ -68,7 +68,7 @@ Every item below was checked against staging unless marked "lane verifies first"
 18. **M10.19**: "not held" → "not in the cupboard"; a compendium-only step counts as out of stock, since no jar exists for it; use `StockBadge` and `stockState` (`stock-badge.md`); never colour alone.
 19. **M10.20**: reopening per D4; the unit refusal result from `unitConvert` is shown as text, never NaN or a guess.
 20. **M10.22**: no change to the print rule (`.claude/rules/components.md` already reserves `_print.scss` for M10.22). Add: the print control is a `BusyButton`-free plain button, hidden in print, and the 375px layout prints the summary first.
-21. **MB.6**: delete "a card's tooltip" clause (M12.43: no tooltip unless a rule or format trap; IconTip is not hoverable). Add `LastEdit` (`claude-docs/components/last-edit.md`) under the title, the Edit and Delete controls as the hooks M13.10 and M13.11 fill, `requireSession()`, the jump menu pattern from the ingredient entry page if sections exceed one screen (lane verifies the component name), `Skeleton` shape `page` via `PARTS_OF_SECTION`. Judgement: 2h → 3h.
+21. **MB.6**: delete "a card's tooltip" clause (M12.43: no tooltip unless a rule or format trap; IconTip is not hoverable). Add `LastEdit` (`claude-docs/components/last-edit.md`) under the title, no Edit or Delete control (first written as placeholders for M13.10 and M13.11 to fill; changed 2026-10-23 after the review agent noted they would ship as dead buttons, so each task adds its own control), `requireSession()`, the jump menu pattern from the ingredient entry page if sections exceed one screen (lane verifies the component name), `Skeleton` shape `page` via `PARTS_OF_SECTION`. Judgement: 2h → 3h.
 22. **M13.3**: "Placeholders stay short with the detail in the InfoTip" → "placeholders are one or two example words; an InfoTip only where a rule or format trap needs it (M12.43)". Keyboard reorder and live-region announcement as in item 15; a step with `body` only, `ingredient` only, or both is each reachable from the keyboard. A `StepRow` presentation component under `src/components/` shared with MB.6's read view and M13.8. Judgement: 2.5h → 4h.
 23. **MB.123**: "_Left by MB.115_" names `StackTable` (a sub-export of `DataTable`, `src/components/DataTable/index.tsx:79`) and `FilterSelectField` (in `src/components/Field/`): cite by path. Add to the review list: `SpellCard` and the card list's empty states, `Skeleton` shapes, the focus ring (M12.45), click feedback (M12.31), tooltip triage (M12.43), and that after add, remove and reorder of a step, focus and an aria-live message are asserted in the story spec, since axe does not check them.
 
@@ -89,7 +89,7 @@ Every item below was checked against staging unless marked "lane verifies first"
 | M10.9  | 2h   | 2.5h     | spell-scoped page helper                                 |
 | M10.11 | 2h   | 4h       | search stack, nav row, skeleton entry, card, empty state |
 | M10.15 | 2h   | 3h       | two-group picker, variant id, quantity and unit          |
-| MB.6   | 2h   | 3h       | steps, summary, LastEdit, controls hooks                 |
+| MB.6   | 2h   | 3h       | steps, summary, LastEdit, jump menu, skeleton            |
 | M13.3  | 2.5h | 4h       | keyboard reorder, three step kinds, StepRow              |
 | M13.4  | 2h   | 3h       | stories and count statements                             |
 | M13.5  | 3.5h | 4.5h     | decrement writer, planDeductions, permission statement   |
