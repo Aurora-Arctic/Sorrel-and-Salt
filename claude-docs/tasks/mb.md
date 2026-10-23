@@ -4204,7 +4204,7 @@ _Acceptance criteria:_
 - A safety note stands out from the rest of an entry without relying on colour alone
 - The card grid holds its layout from phone width to a wide screen
 
-**MB.121 — Design review: the workspace ingredients page** · 3h
+**MB.121 — Design review: the workspace ingredients page** · 6h
 
 _Story:_ As a coven member, I want the ingredients page to make stock easy to scan and edit, so that keeping it current is quick.
 
@@ -4251,7 +4251,7 @@ _Acceptance criteria:_
 
 See **MB.7**.
 
-**MB.123 — Design review: the grimoire** · 3h
+**MB.123 — Design review: the grimoire** · 7h
 
 _Story:_ As a coven member, I want building and reading a spell to feel crafted, so that the grimoire is a pleasure to use.
 
@@ -4280,7 +4280,7 @@ _Acceptance criteria:_
 - The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
 
-**MB.124 — Design review: error, loading and empty states, and the whole site** · 3h
+**MB.124 — Design review: error, loading and empty states, and the whole site** · 7h
 
 _Story:_ As a user, I want errors, loading and empty pages to look as finished as the rest, and the whole site to feel like one thing, so that nothing looks broken.
 
