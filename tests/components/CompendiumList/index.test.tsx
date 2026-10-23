@@ -1035,7 +1035,8 @@ describe('CompendiumList filter', () => {
 
       expect(pushed().get('query')).toBe('newwort');
       expect(typing()).toBe(true);
-      expect(typedLine()).toContain('newwort');
+      // The old line is backspaced first (MB.270), so the new term is typed after it.
+      await waitFor(() => expect(typedLine()).toContain('newwort'), { timeout: 3000 });
       expect(typedLine()).not.toContain('oldwort');
     });
 
@@ -1052,7 +1053,12 @@ describe('CompendiumList filter', () => {
 
       expect(pushed().has('query')).toBe(false);
       expect(typing()).toBe(true);
-      expect(typedLine()).not.toContain('oldwort');
+      // The old line is backspaced before the lead is typed (MB.270): once the lead is whole, the
+      // line holds no term.
+      await waitFor(() => expect(typedLine()).toContain('Searching for ingredients'), {
+        timeout: 3000,
+      });
+      expect(typedLine()).not.toContain('matching');
     });
 
     // The whole typed sentence while a search is on its way: the first line and the clauses
@@ -1100,7 +1106,7 @@ describe('CompendiumList filter', () => {
       expect(pushed().get('query')).toBe('newwort');
       expect(pushed().has('categories')).toBe(false);
       expect(typing()).toBe(true);
-      expect(typedSentence()).toContain('newwort');
+      await waitFor(() => expect(typedSentence()).toContain('newwort'), { timeout: 3000 });
       expect(typedSentence()).toContain('without references');
       expect(typedSentence()).not.toContain('oldwort');
       expect(typedSentence()).not.toContain('testcraft');
