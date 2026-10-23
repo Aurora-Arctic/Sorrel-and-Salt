@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { usePressOnMount } from '../../../.storybook/press';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import ImpersonationBanner from '.';
 
@@ -34,4 +35,15 @@ const OverTheShellView = () => (
 
 export const OverTheShell: Story = {
   render: () => <OverTheShellView />,
+};
+
+// Stop pressed: with no server the sign-out fails, and the banner stays open with the callout
+// under the button.
+const StopFailedView = () => {
+  usePressOnMount('Stop Impersonating');
+  return <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />;
+};
+
+export const StopFailed: Story = {
+  render: () => <StopFailedView />,
 };

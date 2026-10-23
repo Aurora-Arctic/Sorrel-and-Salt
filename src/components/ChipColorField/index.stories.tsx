@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useSteps } from '../../../.storybook/press';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import ChipColorField from '.';
 import type { ChipColorFieldProps } from './types';
@@ -16,15 +17,28 @@ const Field = ({
   column,
   initial,
   others,
+  partner,
+  error,
+  switchFormat = 0,
 }: {
   column: 'colorDark' | 'colorLight';
   initial: string;
   others?: ChipColorFieldProps['others'];
+  partner?: string;
+  error?: string;
+  // How many times the format toggle is pressed once drawn: hsba, then hsla, then rgba.
+  switchFormat?: number;
 }) => {
+  const root = useRef<HTMLDivElement>(null);
+  useSteps(
+    Array.from({ length: switchFormat }, () => () => {
+      root.current?.querySelector<HTMLButtonElement>('button.chip-color-field__format')?.click();
+    }),
+  );
   const [value, setValue] = useState(initial);
   const label = column === 'colorDark' ? 'Dark Theme Colour' : 'Light Theme Colour';
   return (
-    <div className="field">
+    <div className="field" ref={root}>
       <label className="field__label" htmlFor={column}>
         {label}
       </label>
@@ -37,6 +51,11 @@ const Field = ({
         onChange={setValue}
         sample="Testwort Wards"
         others={others}
+        partner={partner}
+        error={error}
+        errorId={error ? `${column}-error` : undefined}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${column}-error` : undefined}
       />
     </div>
   );
@@ -59,6 +78,19 @@ export const States: Story = {
             others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
           />
         ),
+        // The other colour of the pair is known, so Match is offered.
+        'With Partner': <Field column="colorDark" initial="#5d8ab1" partner="#286ba6" />,
+        Empty: <Field column="colorDark" initial="" />,
+        'Half A Hex': <Field column="colorDark" initial="#5d8" />,
+        'With Error': (
+          <Field
+            column="colorDark"
+            initial="#5d8ab1"
+            error="Choose a colour with a ratio of 4.5:1 or more."
+          />
+        ),
+        'Lightness Format': <Field column="colorLight" initial="#286ba6" switchFormat={1} />,
+        'Red Green Blue Format': <Field column="colorLight" initial="#286ba6" switchFormat={2} />,
       }}
     />
   ),
