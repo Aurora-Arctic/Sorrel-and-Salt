@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
+import { useState } from 'react';
+import { SearchField } from '../Field';
+import FilterForm from '.';
 import GroupedValueListFilter from '../GroupedValueList/filter';
 import type { GroupedValueListFilter as Shown } from '../GroupedValueList/types';
 import ListFrame from '../ListFrame';
@@ -35,3 +38,40 @@ export const Default: Story = { render: () => <Framed /> };
 const FILTER: Shown = { query: 'test', group: GROUPS[0].slug };
 
 export const Filtered: Story = { render: () => <Framed shown={FILTER} /> };
+
+// The form drawn on its own, with a filter shown so Clear would be drawn.
+const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
+  const [query, setQuery] = useState('test');
+  return (
+    <ListFrame>
+      <FilterForm
+        label="Filter Categories"
+        action="/admin/categories"
+        searchHref={() => '/admin/categories'}
+        shown={['test']}
+        clear={clear}
+        sorrel={sorrel}
+      >
+        <SearchField
+          label="Name"
+          name="query"
+          placeholder="Search names"
+          value={query}
+          onChange={setQuery}
+        />
+      </FilterForm>
+    </ListFrame>
+  );
+};
+
+// A row with its own Clear All turns this one off, so a filter shows no Clear.
+export const WithoutClear: Story = { render: () => <Bare clear={false} /> };
+
+// The layer a sticky row fills itself with, so the corner sorrel shows through it.
+export const WithSorrel: Story = { render: () => <Bare sorrel /> };
+
+// On a phone: the row stacks, the search over Clear.
+export const Narrow: Story = {
+  globals: { viewport: { value: 'w375', isRotated: false } },
+  render: () => <Framed shown={FILTER} />,
+};
