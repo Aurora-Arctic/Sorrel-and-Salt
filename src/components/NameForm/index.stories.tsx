@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import PageNav from '../PageNav';
 import NameForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/NameForm. The
@@ -17,15 +19,31 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 // src/app/(shell)/account/page.tsx writes them, so the workshop shows what the page
 // shows.
 const Section = ({ name }: { name: string }) => (
-  <main className="page-frame page-frame--narrow">
-    <section className="page-frame__section panel" aria-labelledby="name-story-heading">
-      <div className="header">
-        <h2 id="name-story-heading">Name</h2>
-        <p className="lede">The name Sorrel &amp; Salt shows for you.</p>
-      </div>
-      <NameForm name={name} />
-    </section>
-  </main>
+  <ShellFrame area="none" open="/account">
+    <main className="page-frame page-frame--narrow page-with-nav">
+      <h1>Your Account</h1>
+      <PageNav
+        label="On This Page"
+        entries={[
+          { href: '#account-name', label: 'Name' },
+          { href: '#account-email', label: 'Email' },
+          { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
+          { href: '#account-invitations', label: 'Invitations' },
+        ]}
+      />
+      <section
+        id="account-name"
+        className="page-frame__section panel"
+        aria-labelledby="account-name-heading"
+      >
+        <div className="header">
+          <h2 id="account-name-heading">Name</h2>
+          <p className="lede">The name Sorrel &amp; Salt shows for you.</p>
+        </div>
+        <NameForm name={name} />
+      </section>
+    </main>
+  </ShellFrame>
 );
 
 // The usual visit: the name the provider gave, nothing to save until edited.
@@ -44,6 +62,7 @@ const STATES_STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
