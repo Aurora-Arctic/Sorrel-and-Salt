@@ -91,6 +91,33 @@ const curatorNode = <UserDetail user={DEE} memberships={[]} canImpersonate />;
 
 const withoutImpersonationNode = <UserDetail user={BO} memberships={COVENS} />;
 
+// Admin changes are locked for the viewing admin (MB.63): the controls say why.
+const changesPausedNode = (
+  <UserDetail user={BO} memberships={COVENS} canImpersonate changesPaused />
+);
+
+// A user who may create covens, so the control offers to revoke it.
+const mayCreateCovensNode = (
+  <UserDetail user={{ ...BO, canCreateWorkspace: true }} memberships={COVENS} canImpersonate />
+);
+
+// An admin who is not the primary one: no crown.
+const otherAdminNode = (
+  <UserDetail
+    user={{
+      ...ADA,
+      id: 'u-eve',
+      name: 'Eve Fixturewort',
+      email: 'eve@fixture.test',
+      primaryAdmin: false,
+    }}
+    memberships={[]}
+  />
+);
+
+// No sign-in method on file.
+const noProvidersNode = <UserDetail user={{ ...BO, providers: [] }} memberships={COVENS} />;
+
 // Press Impersonate to see the question over the modal.
 export const InAModal: Story = {
   render: () => {
@@ -121,6 +148,10 @@ const STATES_STATES: Record<string, ReactNode> = {
   Admin: adminNode,
   Curator: curatorNode,
   'Without Impersonation': withoutImpersonationNode,
+  'Changes Paused': changesPausedNode,
+  'May Create Covens': mayCreateCovensNode,
+  'Other Admin': otherAdminNode,
+  'No Providers': noProvidersNode,
 };
 
 export const States: Story = {
