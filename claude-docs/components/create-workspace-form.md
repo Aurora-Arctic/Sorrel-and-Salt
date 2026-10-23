@@ -65,7 +65,7 @@ the tokens is MB.119's, the coven section's design review.
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Create Coven Form": `States`, with a control that chooses Empty, Name Typed or Refused After Submitting, inside the
+`index.stories.tsx`, titled "Coven / Create Coven Form": `States`, with a control that chooses Empty, Name Typed, Needs an Invitation or Refused After Submitting, inside the app shell and the
 page's real frame, panel and heading. The toolbar viewport menu shows it at 375px.
 
 ## Testing

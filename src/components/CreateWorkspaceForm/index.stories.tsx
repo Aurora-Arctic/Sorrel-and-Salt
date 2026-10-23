@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Notice from '../Notice';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
 import { setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import CreateWorkspaceForm from '.';
 
@@ -26,22 +27,24 @@ const Page = ({
 }) => {
   useSteps(steps);
   return (
-    <main className="page-frame page-frame--narrow">
-      <div className="page-frame__section panel">
-        <div className="header">
-          <h1>Create Coven</h1>
-          <p className="lede">Start a coven of your own. You will be its owner.</p>
+    <ShellFrame area="new">
+      <main className="page-frame page-frame--narrow">
+        <div className="page-frame__section panel">
+          <div className="header">
+            <h1>Create Coven</h1>
+            <p className="lede">Start a coven of your own. You will be its owner.</p>
+          </div>
+          {mayCreate ? (
+            <CreateWorkspaceForm />
+          ) : (
+            <Notice kind="warn" quiet>
+              Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or
+              an admin&rsquo;s approval.
+            </Notice>
+          )}
         </div>
-        {mayCreate ? (
-          <CreateWorkspaceForm />
-        ) : (
-          <Notice kind="warn" quiet>
-            Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or an
-            admin&rsquo;s approval.
-          </Notice>
-        )}
-      </div>
-    </main>
+      </main>
+    </ShellFrame>
   );
 };
 
@@ -62,6 +65,7 @@ const CREATE_STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'Empty' },
   argTypes: {
     state: { control: 'select', options: Object.keys(CREATE_STATES), mapping: CREATE_STATES },
