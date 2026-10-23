@@ -23,7 +23,8 @@ is done and committed on
 | Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                     |
 | A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch |
 | The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                 |
-| Proposal P1, the symbol on the shelf            | P1, the symbol. The mocks stay until the sign-off                        |
+| Remove the mocks                                | Yes: removed 2026-10-23                                                  |
+| Proposal P1, the symbol on the shelf            | P1, the symbol                                                           |
 
 ## What was changed
 
@@ -33,7 +34,7 @@ is done and committed on
 | Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring      | Accessibility fix             | Yes                  |
 | The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition                    | No                   |
 | Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal, chosen by the owner | Yes                  |
-| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks                         | Yes                  |
+| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks, removed 2026-10-23     | Removed              |
 | A viewer's empty cupboard says which roles can add                                                | Owner's answer                | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
@@ -85,11 +86,21 @@ a mock at phone width, then chose P1. This replaces the owner's call of
 2026-10-21, which ruled out "an extra word and an icon" on the shelf: the
 icon is now in, and the word (P1b) stays out.
 
-**The mocks stay for now.** The Storybook stories under `Proposals / MB.121`
-(`.storybook/mb121-proposals.stories.tsx` and its stylesheet, with the token
-`$mb121-mock-mark-stroke` that only P1c uses) are kept until the owner signs
-the review off. They show the shelf before P1, P1, P1b, P1c and a viewer's empty
-cupboard, in both themes at 1280px and 375px.
+**The mocks were removed on 2026-10-23, at the owner's word.** The Storybook
+stories under `Proposals / MB.121` (`.storybook/mb121-proposals.stories.tsx`
+and its stylesheet) showed the shelf before P1, P1, P1b, P1c and a viewer's
+empty cupboard. They are deleted, with `$mb121-mock-mark-stroke`, the token
+only P1c used. P1 is shown by the real `JarShelf`, `StockBadge` and
+`IngredientEntry` stories, and the viewer's line by the `CovenCards` story
+`Empty For A Viewer`. The removed options can still be seen in two places:
+
+- the phone-width mock the owner decided from,
+  <https://claude.ai/artifact/81JdeTVeFUT2Vk93TYVaVT>, a private page on
+  claude.ai;
+- the review's screenshots of the mocks, the `proposals-mb-121--*.png` files
+  in both themes at 1280px and 375px, in the review's screenshot folder
+  `mb.121/proposals/`, listed in that folder's `index.md`. The folder sits
+  in the reviewing session's scratch space, outside the repository.
 
 ## The accessibility audit
 
@@ -168,8 +179,8 @@ wrapping by hand is the trap code the Modal deliberately does without
 A viewer, who may add nothing, sees only "There are no ingredients here yet."
 Kaplan's first guideline for empty states is to "tell the user what could be
 displayed, and how to populate the area".[^kaplan] A viewer cannot populate it,
-but can be told who can. The mock `Viewer Empty Cupboard` adds "A member or
-owner of this coven can add them."
+but can be told who can. A mock, since removed, added "A member or owner of
+this coven can add them."
 
 **The owner's answer (2026-10-23): add the line.** It tells a viewer the empty
 cupboard is not a fault and who to ask. Built: `CovenCards/empty.tsx` draws it

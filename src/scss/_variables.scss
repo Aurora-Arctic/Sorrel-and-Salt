@@ -528,11 +528,6 @@ $opacity-disabled: 0.55;
 $stock-low-ink: $warning;
 $stock-out-ink: badge-token('out-of-stock', 'fg');
 
-// MB.121's mock P1c only: Low's threshold mark on the jar shelf drawn heavier than the shipped
-// 1.4, in SVG user units, so the level it fell to shows without a symbol. Used by
-// .storybook/mb121-proposals.scss; it goes with that mock's commit if the owner drops it.
-$mb121-mock-mark-stroke: 2.4;
-
 // ---------------------------------------------------------------------------
 // Type
 // ---------------------------------------------------------------------------
