@@ -27,7 +27,7 @@ const ITEMS: MenuButtonItem[] = [
 ];
 
 const Row = ({ busy = false }: { busy?: boolean }) => (
-  <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '14rem' }}>
+  <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '14rem' }}>
     <MenuButton
       label="Edit"
       className="btn btn--quiet btn--medium"
@@ -35,7 +35,7 @@ const Row = ({ busy = false }: { busy?: boolean }) => (
       busy={busy}
       busyLabel="Adding"
     />
-  </p>
+  </div>
 );
 
 export const Default: Story = { render: () => <Row /> };
@@ -46,7 +46,7 @@ export const Pending: Story = { render: () => <Row busy /> };
 // button's type: set at the window's foot, where the room is above, so the
 // menu flips over the button. No prop says so; the room decides.
 const Foot = () => (
-  <p
+  <div
     style={{
       display: 'flex',
       justifyContent: 'flex-end',
@@ -55,7 +55,7 @@ const Foot = () => (
     }}
   >
     <MenuButton label="More" className="btn btn--quiet" items={ITEMS.slice(2)} buttonType />
-  </p>
+  </div>
 );
 
 export const OpensAbove: Story = { render: () => <Foot /> };
@@ -64,7 +64,7 @@ export const OpensAbove: Story = { render: () => <Foot /> };
 // by the green check (`mark`) and named "Fixture Coven Two, in its cupboard".
 export const MarkedItem: Story = {
   render: () => (
-    <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
       <MenuButton
         label="Add to My Ingredients"
         className="btn btn--quiet btn--medium"
@@ -79,7 +79,7 @@ export const MarkedItem: Story = {
           },
         ]}
       />
-    </p>
+    </div>
   ),
 };
 
@@ -95,13 +95,13 @@ const SECTIONED = {
 };
 
 const SectionedRow = ({ viewing }: { viewing: 'compendium' | 'coven' }) => (
-  <p style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '14rem' }}>
+  <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '14rem' }}>
     <MenuButton
       label="More"
       className="btn btn--quiet btn--medium"
       sections={sectionsFor(SECTIONED, viewing)}
     />
-  </p>
+  </div>
 );
 
 export const SectionedOnACovenPage: Story = { render: () => <SectionedRow viewing="coven" /> };
