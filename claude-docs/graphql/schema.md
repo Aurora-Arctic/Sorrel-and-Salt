@@ -778,8 +778,8 @@ The numbers beside each choice in the search's filter panel (M12.3): for
 every value of every filter, how many entries the list would hold with that
 value picked. `compendiumFacets` sits in `graphql/compendium.ts` and takes
 exactly `compendium`'s filter arguments (`query`, `categoryIds`,
-`categoryMode`, the six facet arguments, `withoutReferences`, `withoutForms` and
-`nomenclature`), with no page. `workspaceIngredientFacets` sits in
+`categoryMode`, the six facet arguments, `withoutReferences`, `withoutForms`,
+`reviewed` and `nomenclature`), with no page. `workspaceIngredientFacets` sits in
 `graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
 (`workspaceId`, `query`, the category arguments, the six facet
 arguments, and the coven-only `source`, `inStock` and `lowStockOnly`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
@@ -801,6 +801,16 @@ reference under the rest of the filter, and `withoutForms`, how many have no liv
 off; a coven's list has no such switch. The seven shared fields are written
 once, in `facetFields`, which both types spread.
 
+`CompendiumFacets.reviewed` (M14.8) is a nullable `ReviewFacetCount` list:
+how many entries are reviewed (`value: true`) and how many need review
+(`value: false`), counted under the rest of the filter with `reviewed` left
+out. It is null, with no error, for anyone who neither curates nor
+administers, so the public panel and a signed-out caller can ask for the
+facets and learn nothing of the mark. Both `compendium` and
+`compendiumFacets` take a `reviewed: Boolean` argument; sent by anyone but a
+curator or an admin it is `FORBIDDEN`, refused by `compendiumFilterFor` in the
+service ([`db/compendium-read.md`](../db/compendium-read.md), `reviewed`).
+
 A coven's `IngredientFacets` also carries two counts that a compendium list has no
 switch for (M9.7), so the two answers are two types and the fields are non-null on
 the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
@@ -815,6 +825,12 @@ type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
   withoutReferences: Int!
   withoutForms: Int!
+  reviewed: [ReviewFacetCount!] # null to anyone but a curator or an admin
+}
+
+type ReviewFacetCount {
+  value: Boolean! # true reviewed, false needs review
+  count: Int!
 }
 
 type IngredientFacets {
@@ -1036,6 +1052,18 @@ curated values.
   does; a spell holding the entry still reaches it. A coven's ingredient, a
   deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
   reaches no coven's row by id.
+
+**`setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!`**
+(M14.8) sets a curator's review mark on a compendium entry, or clears it so
+the entry needs review. It carries `authScopes: { curator: true }` and the
+service's `assertCurator` refuses again; a coven's ingredient, a deleted
+entry and an unknown id are `NOT_FOUND`. It answers the entry, but no field
+of `Ingredient` carries the mark or the reviewer: the compendium's reads are
+cached and shared by every viewer (CLAUDE.md, rule 6), so the admin's
+details read the mark on the server through `readCompendiumReview`
+([`db/compendium-read.md`](../db/compendium-read.md)), never through the
+type. Create, update and promote set the mark in their services
+([`db/compendium-writes.md`](../db/compendium-writes.md)).
 
 **`compendiumEntryUsers(id: ID!): Int!`** (M12.25) answers how many covens
 hold a compendium entry in their cupboard, for the delete confirm. It carries

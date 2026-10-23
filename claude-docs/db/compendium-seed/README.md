@@ -263,7 +263,7 @@ Refusals 1 to 3 are overridden only by `overwriteEditor: true` beside `seedUpdat
 
 **`nameBasis` and the `unaudited` ratchet.** The conversion marks every citation `nameBasis: unaudited`, because it copied each from the shards without checking it against the formal-name rule. `unaudited` is accepted only in the files listed in `compendium/unaudited.txt`; a listed file with no `unaudited` citation fails as stale, and the list may only shrink. A test (M14.11) asserts that the count never rises. New files cannot use `unaudited` at all.
 
-**A correction of an entry on the site is the other route.** An admin or curator editing an entry in the admin's compendium page marks it reviewed, and the seed then leaves it alone. Correcting a file to match is still done, so a fresh local database agrees with production.
+**A correction of an entry on the site is the other route.** An admin or curator who creates or edits an entry on the admin's compendium page, or promotes one of its folk names, marks it reviewed (M14.8), and the seed then leaves it alone. The mark is `curator_reviewed_at` and `curator_reviewed_by` on the row, set by the service on each of those writes; a delete and a write to a child row (a form, a folk name, a reference link) do not set it. The entry's details on the admin list show a "Reviewed By Curator" or "Needs Review" badge and a "Reviewed By Curator" switch, which sets or clears the mark on its own, and the list's Reviewed filter (`?reviewed=1` or `?reviewed=0`) finds the entries still to check. Clearing the mark lets the next marked file update the entry again. Correcting a file to match is still done, so a fresh local database agrees with production.
 
 ### The library
 

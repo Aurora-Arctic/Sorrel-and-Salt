@@ -115,6 +115,30 @@ since only a spell holding the entry reads them past it
 and their unique indexes are per ingredient. A `workspaceId` in the input is stripped by the Zod object,
 and `insertInCompendium` would overwrite it if it were not.
 
+**A curator's write marks the entry reviewed** (M14.8). The mark is two
+columns on the entry's row, `curator_reviewed_at` and `curator_reviewed_by`
+(M14.5's migration 0081, with a check that both are set or neither), and it is what
+keeps the seed from rewriting an entry a person has checked
+([the seed's "Write-once"](compendium-seed/README.md#write-once-and-how-a-correction-lands)).
+The service sets it, never the repository writer: `createCompendiumEntry`,
+`updateCompendiumEntry` (even when nothing else changed) and
+`promoteCompendiumFolkName` spread `reviewMark(curator, new Date())` into the row they
+write: the curator's user id and the time of the write. A coven member
+promoting a folk name on the coven's own entry writes no mark. A delete
+does not set it, and nor does a write to a child row alone.
+**`setCompendiumEntryReviewed(session, id, reviewed)`** sets or clears the
+mark and nothing else: `assertCurator` (an admin or a curator), then
+`withAudit` and `updateByIdInCompendium` with `reviewMark(...)` or
+`NEEDS_REVIEW` (both null), then `expireCompendium()`. It moves neither
+`updated_at` nor `updated_by`: the row's trigger (`set_updated_at`, as migration 0081 redefines it) leaves
+both alone for a write that changes only the mark, so the mark never
+reads as an edit, and the service test asserts both stay put. A coven's own
+entry, a deleted one and an id that names nothing are `NotFound`.
+`tests/guards/compendium-review-mark.test.ts` reads every service's
+compendium-tier insert or update of `ingredients` as text and fails one that
+neither calls `reviewMark(` nor writes `NEEDS_REVIEW`, so a new writer cannot
+forget the mark.
+
 **A deleted entry is gone from every read and frees what it held** (M5.3).
 The service test's `READS` table asks every exported read an entry reaches
 anyone through — the list and its count, the read by id, its address and one
