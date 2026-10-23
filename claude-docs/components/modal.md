@@ -90,7 +90,8 @@ is the wrapper every admin page opens it through (below).
   `aria-labelledby` points at the `<h2>`, or at the eyebrow then the
   `<h2>`, so `getByRole('dialog', { name })` finds it
   (["An edit dialog's head"](#an-edit-dialogs-head)). The Close button is `×`, hidden
-  from assistive technology, inside a button named "Close". It is a 2rem ×
+  from assistive technology, inside a button named "Close", which draws the shared
+  focus ring when the keyboard reaches it (MB.121; it drew the browser's own before). It is a 2rem ×
   in a 2rem square (`$close-target`, a 2.5rem one from M5.5 until the owner's call of
   2026-10-20, still past WCAG 2.5.8's 24px), taken out of the header's flow and set
   `$close-inset` (`space(5)`, 24px, the dialog's padding) in from the dialog's top and
@@ -790,27 +791,27 @@ Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`]
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Modal/index.stories.tsx), under
-`Surfaces / Modal`. Each sets `meta = { iframed: true }`, since the dialog
+`Surfaces / Modal`. One story, `States`, with a control that chooses the state. It sets `meta = { iframed: true }`, since the dialog
 sits in the top layer ([`workshop.md`](../workshop.md)); each owner keeps an
 Open button to bring it back after Close or Escape.
 
-- `WithAForm`, the default column around a small form, and `Wide`, the wide
+- Plain, the default column around a small form, and Wide, the wide
   size around a longer one.
-- `Editing`, an edit dialog's head: the eyebrow, a long title and a binomial
-  as the qualifier. `EditingDark`, `EditingLight`, `EditingPhoneDark` and
-  `EditingPhoneLight` pin its theme and, on a phone, its 375px width.
-- `OpenedByItsAddress`, a `RouteModal` with `content`, as an address opens it.
-  `Loading`, with `LoadingPhoneDark` and `LoadingPhoneLight`, shows the
+- Editing, an edit dialog's head: the eyebrow, a long title and a binomial
+  as the qualifier. With Every Head Part and With A Destination are other heads.
+- Opened By Its Address, a `RouteModal` with `content`, as an address opens it.
+  Loading shows the
   pressed row's head over the skeleton, through a `RouteModalContext` value
   whose navigation never arrives.
-- `OpenedByAButton` shows `ModalButton`: tab to the button, open it, close
-  it any way, and the focus ring is back on the button. `OpenedByAButtonOpen`
+- Opened By A Button shows `ModalButton`: tab to the button, open it, close
+  it any way, and the focus ring is back on the button. Opened By A Button And Pressed
   is the same, pressed open as it mounts, so the dialog itself can be looked at.
-- `AskingToDiscardChanges`, with `PhoneDark` and `PhoneLight`, the discard
+- Asking To Discard Changes, the discard
   question over a form with a change; Escape or Close there flashes it.
-  `AskingToConfirm` shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
+  Asking To Confirm shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
   once pressed.
-- `WithPickers`, a picker and a multi-picker, where Escape closes an open list
+- Listed With A Foot, a list in the body with a foot.
+- With Pickers, a picker and a multi-picker, where Escape closes an open list
   before it closes the modal.
 
 ## Testing
@@ -847,7 +848,7 @@ through `tests/support/discard-guard.tsx`: `expectGuardedWaysOut` for the
 unsaved changes, and `expectAskingOver` and `expectAnswered` for a Delete
 question in a modal (the form inert, the question a named group, the focus
 on the safe answer; then gone, the form live). The `AskingToDiscardChanges`
-story, and its `PhoneDark` and `PhoneLight` pair, show the question over a
+story shows the question over a
 short form; pressing Escape or Close there flashes it. `AskingToConfirm`
 shows `ConfirmQuestion`'s Delete and Keep It, Delete busy once pressed. The
 forms' own tests cover `ConfirmQuestion` through their Delete questions.

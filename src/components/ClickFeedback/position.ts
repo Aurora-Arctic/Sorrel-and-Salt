@@ -32,7 +32,7 @@ const MAX_REM = 20;
  * else the screen. A dialog, since a callout running past its edge reads as
  * loose from it (the owner's call, 2026-10-20); the callout is fixed, so the
  * dialog clips nothing of it, and the box is a measure only. Asked of the node
- * rather than `instanceof Element`: a story Ladle draws into an iframe runs its
+ * rather than `instanceof Element`: a story Storybook draws into an iframe runs its
  * script in the page around it, whose `Element` the frame's nodes are not.
  */
 const boxOf = (reference: unknown): Element | null => {

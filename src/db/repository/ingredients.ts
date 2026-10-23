@@ -700,6 +700,8 @@ export function compendiumList(
       filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
       reviewArm(filter.reviewed),
+      filter.heldIn?.length ? heldInAnyOf(filter.heldIn) : undefined,
+      filter.notHeldIn?.length ? heldInNoneOf(filter.notHeldIn) : undefined,
     ),
     order: match
       ? {
@@ -719,6 +721,35 @@ export function compendiumList(
           carry: { score: sql<number | null>`null` },
         },
   };
+}
+
+/**
+ * The In My Covens filter (M12.55): a compendium entry some live cupboard row
+ * of one of the proofs' covens names. `existsIn` ANDs the cupboard row's
+ * tombstone filter, so a removed entry is not held; a coven's own entries
+ * never match, as the compendium lists none.
+ */
+function heldInAnyOf(memberships: readonly Membership[]): SQL {
+  return and(inCompendium(ingredients), heldBy(memberships)) as SQL;
+}
+
+/**
+ * Its Not In (M12.55): a compendium entry no live cupboard row of the proofs'
+ * covens names. A removed row does not hold the entry, so it stays listed.
+ */
+function heldInNoneOf(memberships: readonly Membership[]): SQL {
+  return and(inCompendium(ingredients), not(heldBy(memberships))) as SQL;
+}
+
+/** Some live cupboard row of one of the proofs' covens names the entry. */
+function heldBy(memberships: readonly Membership[]): SQL {
+  return existsIn(
+    workspaceCompendiumEntries,
+    and(
+      eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
+      or(...memberships.map((membership) => scopedTo(membership, workspaceCompendiumEntries))),
+    ),
+  );
 }
 
 /**

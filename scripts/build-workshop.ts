@@ -1,26 +1,29 @@
 #!/usr/bin/env node
-// `ladle build` always exits 0 (@ladle/react 5.1.1), so this mirrors its output
-// and fails on Vite's own failure marker, which never appears on a clean run.
-// Deletable once upstream fixes it. See claude-docs/workshop.md, "The build gate".
+// Builds the workshop as a static Storybook site. Storybook's CLI exits non-zero
+// when a build fails, so this only passes the arguments through and relays that
+// exit code; it exists so `npm run workshop:build` has one place to change.
+// See claude-docs/workshop.md, "The build gate".
 //
-// Usage: npm run workshop:build [-- <ladle build options>]
-//   e.g. npm run workshop:build -- --base /workshop/ --outDir public/workshop
+// Usage: npm run workshop:build [-- --outDir <dir>]
+//   e.g. npm run workshop:build -- --outDir public/workshop
+// `--outDir` is this script's name for Storybook's `--output-dir`; the build uses
+// relative asset paths, so no base option is needed to serve it under /workshop/.
 
 import { spawn } from 'node:child_process';
 
-const FAILURE_MARKER = 'Build failed';
+const args = process.argv
+  .slice(2)
+  .map((arg) => (arg === '--outDir' ? '--output-dir' : arg.replace(/^--outDir=/, '--output-dir=')));
 
-const child = spawn('npx', ['ladle', 'build', ...process.argv.slice(2)], {
-  stdio: ['inherit', 'pipe', 'pipe'],
+// With no output directory given, build to `.reports/workshop`, the
+// gitignored directory the build has always gone to.
+if (!args.some((arg) => arg.startsWith('--output-dir'))) {
+  args.push('--output-dir', '.reports/workshop');
+}
+
+const child = spawn('npx', ['storybook', 'build', '--disable-telemetry', ...args], {
+  stdio: 'inherit',
 });
-
-let output = '';
-const relay = (target: NodeJS.WriteStream) => (chunk: Buffer) => {
-  target.write(chunk);
-  output += chunk.toString();
-};
-child.stdout.on('data', relay(process.stdout));
-child.stderr.on('data', relay(process.stderr));
 
 child.on('error', (error) => {
   console.error(error);
@@ -28,12 +31,5 @@ child.on('error', (error) => {
 });
 
 child.on('close', (code) => {
-  if (output.includes(FAILURE_MARKER)) {
-    console.error(
-      `\nbuild-workshop — ladle build reported "${FAILURE_MARKER}" above but exited 0 ` +
-        "(a known @ladle/react 5.1.1 gap, not this repo's bug); failing the run instead.",
-    );
-    process.exit(1);
-  }
-  process.exit(code ?? 0);
+  process.exit(code ?? 1);
 });

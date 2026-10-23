@@ -383,6 +383,8 @@ export function ListField({
           onFocus={onActivate}
           onBlur={field.onBlur}
           onPick={pick}
+          // Each pick adds an entry, so the list stays open for the next (M12.54).
+          keepOpen
           onCommit={pickOnly ? () => unpicked(getValues(box) as string) : add}
           onRemoveLast={removeLast}
           suggestions={offered}

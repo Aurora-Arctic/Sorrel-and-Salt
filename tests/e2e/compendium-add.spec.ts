@@ -9,6 +9,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
+import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
@@ -23,16 +24,15 @@ test.beforeAll(async () => {
 
 // Each is tipped and named by its words and then the entry (MB.120); a role name matches in part, so these
 // find a card's plus and check, and the full names are asserted once where the add lands.
-const ADD = 'Add to My Ingredients';
-const HELD = 'In Every Cupboard';
 const NAME = 'Fixture Holdwort';
+const COVEN = 'Fixture Coven Add';
 
 test('a member adds a compendium entry with the plus, the check shows, and the coven’s list shows it', async ({
   page,
   browser,
   baseURL,
 }) => {
-  const coven = await seedCoven(page, 'Fixture Coven Add', 'compendium-add.test', {
+  const coven = await seedCoven(page, COVEN, 'compendium-add.test', {
     A: 'owner',
     B: 'member',
     C: 'viewer',
@@ -61,8 +61,7 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
         where e.workspace_id = ${workspaceId} and i.name = ${NAME} and e.deleted_at is null`,
     );
   const card = (target: typeof page) => {
-    const found = rowOf(compendiumList(target), NAME);
-    return found;
+    return rowOf(compendiumList(target), NAME);
   };
   const open = async (target: typeof page) => {
     await target.goto(`/compendium?query=${encodeURIComponent(NAME)}`);
@@ -89,7 +88,7 @@ test('a member adds a compendium entry with the plus, the check shows, and the c
     );
     await card(page).getByRole('button', { name: ADD }).click();
     await expect(card(page).getByRole('button', { name: HELD })).toHaveAccessibleName(
-      `${HELD}: ${NAME}`,
+      `${HELD}: ${NAME}. In 1 coven: ${COVEN}`,
     );
     await expect(card(page).getByRole('button', { name: ADD })).toHaveCount(0);
     expect(await heldRows(coven.id)).toHaveLength(1);

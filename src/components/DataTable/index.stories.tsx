@@ -1,7 +1,8 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 
-import { asOptions, GROUP_NAMES } from '../../../.ladle/fixtures';
+import { asOptions, GROUP_NAMES } from '../../../.storybook/fixtures';
 import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import type { ListBodyProps } from '../ListFrame/types';
@@ -11,9 +12,12 @@ import type { StackColumn } from './types';
 // Render-only; the lists that hold it assert its behaviour, each in its own
 // test. A table sits in its list's ListFrame, as every admin list holds it;
 // narrow the window under 40rem to see the rows turn into cards.
-export default {
+const meta = {
   title: 'Layout / Data Table',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const PAIRS = [
   { colorDark: '#7fb38a', colorLight: '#2f6b3c' },
@@ -47,13 +51,13 @@ const Frame = ({ children }: ListBodyProps) => (
   </ListFrame>
 );
 
-export const Default: Story = () => (
+const defaultNode = (
   <Frame>
     <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
   </Frame>
 );
 
-export const Roomy: Story = () => (
+const roomyNode = (
   <Frame>
     <StackTable
       columns={COLUMNS}
@@ -65,7 +69,7 @@ export const Roomy: Story = () => (
   </Frame>
 );
 
-export const Empty: Story = () => (
+const emptyNode = (
   <Frame>
     <StackTable
       columns={COLUMNS}
@@ -76,16 +80,51 @@ export const Empty: Story = () => (
   </Frame>
 );
 
-export const PhoneDark: Story = () => (
-  <Frame>
-    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
-  </Frame>
-);
-PhoneDark.meta = { theme: 'dark', width: 375 };
+// A foot action spans the card's bottom instead of standing in its corner, the table is named
+// for a page that holds several, and a group chip draws its icon.
+const FOOT_COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
+  {
+    heading: 'Name',
+    cell: (row) => (
+      <GroupChip name={row.name} colors={row} icon={row.id === ROWS[0].id ? 'botanical' : null} />
+    ),
+  },
+  { heading: 'Description', cell: (row) => row.description },
+  {
+    heading: 'Remove',
+    action: 'foot',
+    cell: () => (
+      <button type="button" className="btn btn--small btn--destructive">
+        Remove
+      </button>
+    ),
+  },
+];
 
-export const PhoneLight: Story = () => (
+const footActionNode = (
   <Frame>
-    <StackTable columns={COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
+    <h2>Groups</h2>
+    <StackTable
+      aria-label="Groups"
+      columns={FOOT_COLUMNS}
+      rows={ROWS}
+      rowKey={(row) => row.id}
+      empty=""
+    />
   </Frame>
 );
-PhoneLight.meta = { theme: 'light', width: 375 };
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Roomy: roomyNode,
+  Empty: emptyNode,
+  'Foot Action And Icon Chip': footActionNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

@@ -34,6 +34,11 @@ export interface FacetComboboxProps {
   removeNoun?: string;
   /** A search is running: every chip holds a placeholder where its count will be. */
   loading?: boolean;
+  /**
+   * Whether the values carry counts. On unless set to `false`: a field without counts (In My Covens,
+   * M12.55) never draws a count or its placeholder, so the panel can pass one `loading` to every field.
+   */
+  counts?: boolean;
   /** Leave out a value whose count is 0. On unless set to `false`; a value already chosen keeps its chip. */
   hideZeros?: boolean;
   /** What the label's tip says, if anything. */

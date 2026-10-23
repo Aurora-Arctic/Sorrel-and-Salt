@@ -1,4 +1,5 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import Pager from '../Pager';
 import ListFrame, { ListBody, ListNavigationContext } from '.';
 
@@ -8,9 +9,12 @@ import ListFrame, { ListBody, ListNavigationContext } from '.';
 // on its way, through a navigation provided above the frame, since the
 // workshop's router goes nowhere. A whole list on its way, filter row and
 // all, is GroupedValueList's `CategoriesPending` and its phone pair.
-export default {
+const meta = {
   title: 'Layout / List Frame',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ROWS = ['Testwort', 'Fixture Salt', 'Mockroot'];
 
@@ -38,9 +42,9 @@ const List = () => (
   </ListFrame>
 );
 
-export const Default: Story = () => <List />;
+const defaultNode = <List />;
 
-export const Pending: Story = () => (
+const pendingNode = (
   <ListNavigationContext.Provider value={{ pending: true, searching: false, go: () => undefined }}>
     <List />
   </ListNavigationContext.Provider>
@@ -48,8 +52,8 @@ export const Pending: Story = () => (
 
 // A list of cards on its way: `shape="cards"` swaps the table's skeleton for a grid of
 // card shapes, the same grid the real list draws.
-export const PendingCards: Story = () => (
-  <ListNavigationContext.Provider value={{ pending: true, go: () => undefined }}>
+const pendingCardsNode = (
+  <ListNavigationContext.Provider value={{ pending: true, searching: false, go: () => undefined }}>
     <ListFrame className="card-list">
       <ListBody shape="cards">
         <p>Cards</p>
@@ -57,3 +61,19 @@ export const PendingCards: Story = () => (
     </ListFrame>
   </ListNavigationContext.Provider>
 );
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Pending: pendingNode,
+  'Pending Cards': pendingCardsNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

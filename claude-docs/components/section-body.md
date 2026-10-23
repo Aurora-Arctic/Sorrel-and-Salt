@@ -24,8 +24,12 @@ section's page.
 - **At rest, or while a navigation aimed at another region or at no region
   is on its way, it renders the children as they were.**
 - **While a navigation aimed at its own region is on its way, the page is
-  taken away at once** and `<Skeleton>` of the target's shape, with its `title`, `action` and `filter` parts, stands in its place,
-  with no dimming. Nobody can act on the wrong coven's data in the wait. The
+  hidden and put out of reach at once** (`visibility: hidden`, `inert`,
+  `aria-hidden`) and `<Skeleton>` of the target's shape, with its `title`, `action` and `filter` parts, stands over it,
+  with no dimming. The page stays mounted at its full height inside the
+  section frame, so its flex column and gap are untouched, and the skeleton is
+  laid over it in a copy of that frame, pinned under the bar
+  ([`SkeletonFade`](skeleton-fade.md), "The page is held, not swapped"; MB.271). Nobody can act on the wrong coven's data in the wait. The
   shape is the destination's. In the coven it is the section's (`cards` for
   Ingredients, `table` for the people pages, `page` for the home), worked out
   by `WorkspaceSwitcher` or `CovenNav` when the navigation starts. In admin it
@@ -56,4 +60,4 @@ switcher to mount, which focuses its box. See `workspace-switcher.md`.
 
 ## Stories
 
-`Shell / Section Body`: `AtRest`, `LoadingList`, `LoadingTabs` and `LoadingWithMenu`. The loading stories draw the wait with a title and filter, with the tab row, and with the contents menu.
+`Shell / Section Body`: `States`, with a control that chooses Loading List, Loading List With Action, Loading Tabs, Loading With Menu, Loading Entry and Loading Contents. The states draw the wait with a title and filter, with the tab row, and with the contents menu.

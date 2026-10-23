@@ -7,10 +7,15 @@ import { expect, type Page } from '@playwright/test';
 // swaps the metadata, and for a few milliseconds on a quiet machine, hundreds
 // under load, the document has no <title> while the new rows are already in,
 // so axe's document-title rule fails a page that is about to have one (MB.265).
-export async function assertNoAccessibilityViolations(page: Page) {
+// `skipRules` is for the component workshop, whose story page is one component
+// and not a whole page: it has no level-one heading unless the story draws one.
+export async function assertNoAccessibilityViolations(
+  page: Page,
+  { skipRules = [] }: { skipRules?: string[] } = {},
+) {
   await expect(page).toHaveTitle(/\S/);
   await settleTransitions(page);
-  const { violations } = await new AxeBuilder({ page }).analyze();
+  const { violations } = await new AxeBuilder({ page }).disableRules(skipRules).analyze();
   const summary = violations
     .map((v) => `${v.id}: ${v.help} (${v.nodes.length} node(s))`)
     .join('\n');

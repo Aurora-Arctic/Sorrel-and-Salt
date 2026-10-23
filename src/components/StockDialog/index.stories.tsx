@@ -1,15 +1,22 @@
-import type { Story } from '@ladle/react';
-import { type ReactElement, useEffect, useLayoutEffect, useRef } from 'react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
+import type { RequestHandler } from 'msw';
+import { SaveStockDocument } from '@/gql/graphql';
+import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mock-api';
 import StockDialog from '.';
 import type { StockForm, StockJar } from './types';
 
 // Render-only; behaviour is asserted in tests/components/StockDialog. In the
-// workshop the call reaches no server: OpenRefused and OpenFailed each
-// answer it with a canned refusal the real server can send. Every name is
+// workshop the call reaches no server: the fake API (.storybook/mock-api.ts)
+// answers it, and the two refused states each get a refusal the real server can send. Every name is
 // invented.
-export default {
+const meta = {
   title: 'Ingredients / Stock Dialog',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const INGREDIENT = '00000000-0000-4000-8000-000000000002';
@@ -42,17 +49,16 @@ const RESIN: StockJar = {
   threshold: null,
 };
 
-const Dialog = ({ jars }: { jars: StockJar[] }): ReactElement => (
+const Dialog = ({ jars, openOn }: { jars: StockJar[]; openOn?: string }): ReactElement => (
   <StockDialog
     workspaceId={WORKSPACE}
     ingredientId={INGREDIENT}
     ingredientName="Testwort"
     forms={FORMS}
     jars={jars}
+    openOn={openOn}
   />
 );
-
-export const Default: Story = () => <Dialog jars={[LEAF, OIL]} />;
 
 /** Sets a box's value as typing would, so react-hook-form hears it. */
 function type(box: HTMLInputElement | null | undefined, value: string): void {
@@ -70,72 +76,40 @@ const choose = (index: number): void =>
 const press = (selector: string): void =>
   document.querySelector<HTMLButtonElement>(selector)?.click();
 
-// Where the printed SaveStock document puts its one field, as Yoga locates
-// an error: `saveStock` opens the document's second line, indented two.
-const AT_SAVE_STOCK = { locations: [{ line: 2, column: 3 }], path: ['saveStock'] };
-
 // The field issues a batch of two edits and a removal can earn, in the shape
 // src/graphql/errors.ts sends a ValidationError
 // (claude-docs/components/stock-dialog.md, "Saving"): an issue on each edited
 // jar's box, by its place in `update`. The server checks every row before it
 // reads a jar, so a refusal of this kind carries field issues only, and the
 // removal staged beside them earns none.
-const REFUSAL = {
-  data: null,
-  errors: [
-    {
+const REFUSED = [
+  answerMutation(SaveStockDocument, () =>
+    refusal({
       message: 'Invalid input',
-      ...AT_SAVE_STOCK,
-      extensions: {
-        code: 'VALIDATION',
-        fieldErrors: [
-          {
-            path: ['update', 0, 'input', 'quantityOnHand'],
-            message: 'Quantity cannot be negative',
-          },
-          {
-            path: ['update', 1, 'input', 'lowStockThreshold'],
-            message: 'Low Stock At cannot be negative',
-          },
-        ],
-      },
-    },
-  ],
-};
+      path: ['saveStock'],
+      code: 'VALIDATION',
+      fieldErrors: [
+        { path: ['update', 0, 'input', 'quantityOnHand'], message: 'Quantity cannot be negative' },
+        {
+          path: ['update', 1, 'input', 'lowStockThreshold'],
+          message: 'Low Stock At cannot be negative',
+        },
+      ],
+    }),
+  ),
+];
 
 // The refusal of the whole batch, in the shape src/graphql/errors.ts sends a
 // NotFound: a jar it names is gone, or another coven's, so nothing is saved.
 // No path in the batch, so no field is marked and the sentence is the alert.
-const NOT_FOUND = {
-  data: null,
-  errors: [
-    {
-      message: 'No such stock in this coven',
-      ...AT_SAVE_STOCK,
-      extensions: { code: 'NOT_FOUND' },
-    },
-  ],
-};
+const GONE = [
+  answerMutation(SaveStockDocument, () =>
+    refusal({ message: 'No such stock in this coven', code: 'NOT_FOUND', path: ['saveStock'] }),
+  ),
+];
 
-/** Answers SaveStock with `answer` while the story is on screen. */
-function useRefusingApi(answer: object | null): void {
-  useLayoutEffect(() => {
-    if (!answer) return;
-    const original = window.fetch;
-    window.fetch = async (input, init) => {
-      const body = typeof init?.body === 'string' ? init.body : '';
-      if (body.includes('"operationName":"SaveStock"')) {
-        return new Response(JSON.stringify(answer), {
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-      return original(input, init);
-    };
-    return () => {
-      window.fetch = original;
-    };
-  }, [answer]);
-}
+// With neither state, a save is answered as accepted.
+const NONE: RequestHandler[] = [];
 
 // Pressed already, as after a click on the stock button: the dialog over the
 // page, Dried Leaf chosen and badged Low Stock (with every form held, Resin
@@ -155,14 +129,16 @@ const Pressed = ({
   remove = false,
   save = false,
   refuse = false,
+  openOn,
 }: {
   jars: StockJar[];
   remove?: boolean;
   save?: boolean;
   refuse?: boolean;
+  openOn?: string;
 }): ReactElement => {
   const root = useRef<HTMLDivElement>(null);
-  useRefusingApi(refuse ? REFUSAL : save ? NOT_FOUND : null);
+  useMockHandlers(refuse ? REFUSED : save ? GONE : NONE);
   useEffect(() => {
     root.current?.querySelector('button')?.click();
     const steps: (() => void)[] = [];
@@ -189,29 +165,42 @@ const Pressed = ({
   }, [remove, save, refuse]);
   return (
     <div ref={root}>
-      <Dialog jars={jars} />
+      <Dialog jars={jars} openOn={openOn} />
     </div>
   );
 };
 
-export const Open: Story = () => <Pressed jars={[LEAF, OIL]} />;
-export const OpenNoneHeld: Story = () => <Pressed jars={[]} />;
-export const OpenAllHeld: Story = () => <Pressed jars={[LEAF, OIL, RESIN]} />;
-export const OpenRefused: Story = () => <Pressed jars={[LEAF, OIL, RESIN]} refuse />;
-export const OpenFailed: Story = () => <Pressed jars={[LEAF, OIL]} save />;
-export const OpenRemoving: Story = () => <Pressed jars={[LEAF, OIL]} remove />;
-export const OpenPhoneDark: Story = () => <Pressed jars={[LEAF, OIL]} />;
-export const OpenPhoneLight: Story = () => <Pressed jars={[LEAF, OIL]} />;
-export const OpenPhoneNoneHeld: Story = () => <Pressed jars={[]} />;
+const openNode = <Pressed jars={[LEAF, OIL]} />;
+const openNoneHeldNode = <Pressed jars={[]} />;
+const openAllHeldNode = <Pressed jars={[LEAF, OIL, RESIN]} />;
+const openRefusedNode = <Pressed jars={[LEAF, OIL, RESIN]} refuse />;
+const openFailedNode = <Pressed jars={[LEAF, OIL]} save />;
+const openRemovingNode = <Pressed jars={[LEAF, OIL]} remove />;
+// `openOn` names the form chosen as the dialog opens; a form with no jar is added as a new row.
+const openOnAHeldFormNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[1].variantId} />;
+const openOnAFormNotHeldNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[2].variantId} />;
 
 // A modal draws in the page's own document, so its stories sit in a frame of
 // their own (claude-docs/workshop.md).
-Open.meta = { iframed: true };
-OpenNoneHeld.meta = { iframed: true };
-OpenAllHeld.meta = { iframed: true };
-OpenRefused.meta = { iframed: true };
-OpenFailed.meta = { iframed: true };
-OpenRemoving.meta = { iframed: true };
-OpenPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-OpenPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
-OpenPhoneNoneHeld.meta = { iframed: true, theme: 'dark', width: 375 };
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STOCK_STATES: Record<string, ReactNode> = {
+  Open: openNode,
+  'Open On A Held Form': openOnAHeldFormNode,
+  'Open On A Form Not Held': openOnAFormNotHeldNode,
+  'Open None Held': openNoneHeldNode,
+  'Open All Held': openAllHeldNode,
+  // Refused rows carry the Needs a Fix flag in the form list.
+  'Open Refused': openRefusedNode,
+  'Open Failed': openFailedNode,
+  'Open Removing': openRemovingNode,
+};
+
+export const States: Story = {
+  args: { state: 'Open' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STOCK_STATES), mapping: STOCK_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

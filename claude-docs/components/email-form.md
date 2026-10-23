@@ -155,16 +155,14 @@ column's gap and the address's weight.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx),
-titled "Account / Email Form": `Prefilled` (unverified, the sign-up mail just sent, so counting down),
-`ReadyToResend`, `NoEmail`, `Confirmed`, `ChangeLater` (verified, back to
-change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
+titled "Account / Email Form": `States`, drawn in the app shell (the header with the account's initials, and no Add Ingredient while the address is unverified), with a control that chooses Ready To Resend (unverified, the site's resting state, Send Confirmation usable), Countdown (the sign-up mail just sent, so counting down), No Email, Confirmed, Change Later (verified, back to
+change it) and Failed (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.
-`PhoneDark` and `PhoneLight` show the first visit at 375px in each theme.
-Every other story renders inside the page's own `<main className="page-frame page-frame--narrow">`
+Every other state renders inside the page's own `<main className="page-frame page-frame--narrow">`
 and its `.panel`, so the workshop shows what `/account/email` shows and
 nothing is styled for the workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
 `useMutation` needs comes from the workshop's global provider
-(`.ladle/components.tsx` wraps every story in the app's `Providers`), never
+(`.storybook/components.tsx` wraps every story in the app's `Providers`), never
 from a story's own `QueryClientProvider`: a second would split the cache. Nothing is mocked, since the component reaches
 the network only on submit.
 

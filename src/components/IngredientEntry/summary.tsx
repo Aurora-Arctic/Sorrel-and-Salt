@@ -17,6 +17,7 @@ import {
 } from './blocks';
 import { ShelfIcon } from './held-mark';
 import type { SummaryJar } from './types';
+import { HELD_IN_COVENS_TITLE } from '../AddIcon/wording';
 // The page's own stylesheet, for its blocks: a list page draws no entry page to load it.
 import './index.scss';
 import './summary.scss';
@@ -133,7 +134,7 @@ export default function IngredientSummary({
   const inYourCovens = holding.length > 0 && (
     <ListBlock
       block={blockOf('summary', 'covens')}
-      title="In Your Cupboards"
+      title={HELD_IN_COVENS_TITLE}
       level={3}
       className="ingredient-summary__covens"
     >

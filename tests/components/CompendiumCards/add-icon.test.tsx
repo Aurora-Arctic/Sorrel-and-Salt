@@ -11,6 +11,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { expectRefusalUnder } from '../../support/click-feedback';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { ADD, HELD, HELD_MARK } from '../../support/cupboard-wording';
 
 // The plus of someone who may write in several covens asks which in a menu (M9.12, the owner's
 // call, 2026-10-20): its items are every coven, one holding the entry disabled, and choosing one
@@ -69,6 +70,8 @@ const props = (
     celestialBodies: [],
     toxic: '',
     reviewed: '',
+    covens: [],
+    covensNot: false,
   },
   facets: {
     forms: [],
@@ -91,7 +94,7 @@ const props = (
 });
 
 /** The plus on the fixture card, named by its tip and then its entry (MB.120). */
-const PLUS = { name: 'Add to My Ingredients: Fixture Salt' };
+const PLUS = { name: `${ADD}: Fixture Salt` };
 
 /** Opens the plus's menu and returns it. */
 function openMenu(): HTMLElement {
@@ -108,7 +111,7 @@ const items = (menu: HTMLElement): string[] =>
 /** Every coven by name, the order the menu lists them in. */
 const BY_NAME = [FIRST, THIRD, SECOND];
 /** A held coven's item: its name, then the mark its check stands for. */
-const held = (name: string) => `${name}, in its cupboard`;
+const held = (name: string) => `${name}, ${HELD_MARK}`;
 
 function mockAdd() {
   const calls: AddCupboardEntryMutationVariables[] = [];
@@ -267,13 +270,13 @@ describe('the add icon among several covens', () => {
     );
 
     // Each card's control names its own entry, so the two are told apart by name alone.
-    expect(screen.getAllByRole('button', { name: /^Add to My Ingredients/ })).toEqual([
-      screen.getByRole('button', { name: 'Add to My Ingredients: Fixture Heldone' }),
+    expect(screen.getAllByRole('button', { name: new RegExp(`^${ADD}`) })).toEqual([
+      screen.getByRole('button', { name: `${ADD}: Fixture Heldone` }),
     ]);
-    expect(screen.getAllByRole('button', { name: /^In Every Cupboard/ })).toEqual([
-      screen.getByRole('button', { name: 'In Every Cupboard: Fixture Heldall' }),
+    expect(screen.getAllByRole('button', { name: new RegExp(`^${HELD}`) })).toEqual([
+      screen.getByRole('button', { name: `${HELD}: Fixture Heldall` }),
     ]);
-    expect(screen.queryByRole('link', { name: /^In Every Cupboard/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: new RegExp(`^${HELD}`) })).toBeNull();
   });
 });
 
