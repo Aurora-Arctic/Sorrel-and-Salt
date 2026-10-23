@@ -75,7 +75,7 @@ buttons and the spinner are the primitives', Accept drawn through
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
 `Pages / Invitation Acceptance`, each inside the page's own
-`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only, bar
+`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. The `States` dropdown opens with Signed Out, the sign-in prompt a visitor with no session gets for any link, valid or not (the page reads nothing of the invitation until someone is signed in). Render-only, bar
 the failed accept.
 
 - **The states:** `SignedOut` is its own story; `States`, with a control that chooses Default, Acceptable Curator, Acceptable Coven, Unverified, and one for each other
