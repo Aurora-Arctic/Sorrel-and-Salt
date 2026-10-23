@@ -402,13 +402,10 @@ $formal-line: $icon-size;
   }
 }
 
-// INTERIM (the owner, 2026-10-21): the whole Stock section (heading, Edit Stock button and
-// shelf) sits in a `.panel` box to set it apart from the rest of the page. MB.121's design
-// review removes it. `.panel` brings the ground, radius and padding; this rule only spaces
-// the head from the shelf. It is a box inside the section, whose children keep to the text
-// column, so the column widths and the float clearing stay the section's. It wraps the empty
-// "No stock recorded." state too, so Edit Stock does not jump in and out of a panel. To
-// remove it, drop `panel` from the wrapper in stock-section.tsx; the wrapper div itself can stay.
+// The Stock section's head and shelf as one stack, spaced as a section's heading is from
+// its body. No box: M12.29 tried a `.panel` here, and MB.121's review removed it, since no
+// other section of the entry page is boxed and the jars' shine is drawn in the card colour,
+// so it faded on a card-coloured panel (claude-docs/design-decisions/mb.121-workspace-ingredients-review.md).
 .ingredient-entry__stock-panel {
   @include stack(4);
 
