@@ -41,6 +41,8 @@ const FILTER: CovenCardsProps['filter'] = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  covens: [],
+  covensNot: false,
   source: '',
   inStock: false,
   lowStockOnly: false,
@@ -300,6 +302,18 @@ describe('CovenCards', () => {
     expect(emptyState()).not.toBeNull();
     expect(within(emptyState()!).queryByRole('button')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
+  });
+
+  // MB.121: a viewer, who cannot fill the cupboard, is told which roles can. The roles named
+  // are the state's data (rule 2's exception): nothing else tells a viewer who to ask, and a
+  // member, who has the button, is not told.
+  it('names, to a viewer only, the roles that can fill an empty cupboard', () => {
+    const { unmount } = render(<Cards {...props({ ...empty, canAdd: false })} />);
+    expect(emptyState()).toHaveTextContent(/\bmember\b/i);
+    expect(emptyState()).toHaveTextContent(/\bowner\b/i);
+    unmount();
+    render(<Cards {...props(empty)} />);
+    expect(emptyState()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
   });
 
   it('draws a search matching nothing as the no-match state, handing the search to the Compendium', () => {

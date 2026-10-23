@@ -31,7 +31,7 @@ Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for 
 
 A `PickerCategory` is the category's id, name, optional `description`, optional
 `count` (how many entries picking it would leave) and its
-`group`, a `PickerGroup`: id, name, `colorDark` and `colorLight`.
+`group`, a `PickerGroup`: id, name, `color`.
 
 ## Contracts
 
@@ -43,7 +43,10 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
   highlighted adds only the one category the text names whole.
 - **Data-free and controlled.** Ids in through `value`, ids out through
   `onChange`; no fetching and no react-hook-form, so M8.11 reuses it as a
-  filter unchanged. A pick appends its id and empties the box; an x, or
+  filter unchanged. A pick appends its id and empties the box, and the list stays
+  open for the next, the focus in the box (`keepOpen`, M12.54): in the Categories
+  facet and in the ingredient form's categories field alike, since each pick adds a
+  chip. Escape, Tab or a press outside closes it; an x, or
   Backspace in the empty box, takes an id out and keeps the rest in order;
   Clear takes them all. Each is announced through a labelled status region,
   "Categories changes", as a list field's are.
@@ -57,8 +60,7 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
   colour, the Combobox option's `colors` (the owner's call, M5.6b), so the colour
   a pick's chip will wear is seen before the pick.
 - **An entry's colour is its group's row.** Each pick is a `ComboboxEntry`
-  given its group as `colors`, so it wears the row's `colorDark` and
-  `colorLight` through `chipColors` as a solid fill (claude-docs/styling.md,
+  given its group as `colors`, so it wears the row's `color` through `chipColors` as a solid fill (claude-docs/styling.md,
   "Chips, badges and the solid-fill rule"). Its tooltip reads the name with
   its group in brackets on its first line, the entry's `qualifier`, as a
   picked deity reads with its tradition, since the colour alone cannot name
@@ -97,22 +99,14 @@ screen scrolls nothing sideways.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin /
-Category Picker`, over four of the seed's groups with their colour pairs and
-invented categories: `NothingPicked`, an empty box to focus and type in;
-`SomePicked`, three entries as chips in their groups' colours;
-`AnInvalidEntry`, one entry edged and named by an error beneath the box;
-`Loading`, with no categories yet and the pending state; and `CouldNotLoad`,
-with the status line that says the list failed; `WithCounts`, rows and a chip
-with counts and the zero rows left out; and `CountsLoading`, the chip's
-placeholder.
+[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin / Category Picker`, over four of the seed's groups with their colour pairs and invented categories. `States` has a control that chooses: Default (an empty box to focus and type in), Some Picked (three entries as chips in their groups' colours), An Invalid Entry (one entry edged and named by an error beneath the box), Loading (no categories yet, the pending state), Failed (the status line that says the list failed), With Counts (rows and a chip with counts, the zero rows left out), Counts Loading (the chip's placeholder) and Action And No Hint (the legend's action, a Copy From Ingredient button, with no hint tip).
 
 ## Testing
 
 `tests/components/CategoryPicker/index.test.tsx`: the group and its box;
 every category under its group in the order given, with a novel group; the
 rows narrowed by the text and no typed row; a pick added after the others,
-the box emptied, announced, and the pick offered no more; the picks reported
+the box emptied, announced, and the pick offered no more; the list kept open after a pick, the focus in the box, until Escape; the picks reported
 in order as one is added, removed, taken by Backspace or cleared; each entry described by its group and description, its tooltip
 naming the group; Enter adding the one category named whole and nothing for
 part of a name; the box and the entries an error names, each described; the

@@ -103,13 +103,13 @@ takes tokens only.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SafetyNote/index.stories.tsx),
-under `Surfaces / Safety Note`:
+under `Ingredients / Safety Note`:
 
-- `Note` shows the ingredient's notes alone.
-- `WithForms` adds two forms' notes; a third form has none, so it gets no line.
-- `Toxic` shows the mark.
-- `PhoneDark` and `PhoneLight` show the mark above the note at 375px, in each
-  theme.
+`States` is a grid:
+
+- Notes Only shows the ingredient's notes alone.
+- With Forms adds two forms' notes; a third form has none, so it gets no line.
+- Toxic shows the mark.
 
 ## Testing
 

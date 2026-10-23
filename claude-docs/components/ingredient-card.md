@@ -93,7 +93,7 @@ is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name
 stays the ingredient's name and the card has exactly one link. The Low badge's tip
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
-click. The category chips pass a click through the same way (the owner, 2026-10-21): the chip row's `list-reset` makes each `li` relative, so it painted above the overlay, and each plain chip's `li` now has `pointer-events: none`. The +N item is left out, so its button keeps its own press, hover and focus and does not open the ingredient. A plain chip is text with no tip, so nothing is lost, and it was never a tab stop. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
+click. The category chips pass a click through the same way (the owner, 2026-10-21): the chip row's `list-reset` makes each `li` relative, so it painted above the overlay, and each plain chip's `li` now has `pointer-events: none`. The +N item is left out, so its button keeps its own press, hover and focus and does not open the ingredient. A plain chip is text with no tip, so nothing is lost, and it was never a tab stop. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines, the New and Updated mark and the foot's actions row pass a click through too (MB.272): the jar list's reset made each line's `li` relative, the mark's words and icon are relative for their optical nudge, and the actions row and its start group are as wide as the card, so each painted above the overlay and a press on a jar's words, the mark or the gap between the foot's buttons went nowhere. `.specimen__stock` and `.recency-mark` now have `pointer-events: none`, and the stock badge's tip anchor takes the pointer back and stays raised. The actions row stays raised (`z-index: 1`) but has `pointer-events: none`, and each of its children, and each child of its start group, takes the pointer back: each child is a control, or the wrapper its tip or menu opens in. What still takes its own press, and never opens the entry: the +N button, the Low and Out of Stock badges, the tipped marks (Retired, Annotated), the last-edit line, and every button and link in the foot (Quick Look, the plus or check, Edit Stock, Edit or Annotate, the dots). The cost of the overlay: text on the card cannot be selected by dragging, since a drag that starts anywhere off a control starts on the link. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
 pointer, and the focus ring is drawn on the overlay,
 round the card.
 
@@ -124,7 +124,7 @@ the `(name, id)` keyset the list pages on
 
 Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
 
-Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+Foundations (`.storybook/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
 ## Styling
 
@@ -144,19 +144,25 @@ The computed styles were checked identical to the pixel values the tokens replac
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:
-the kinds (`Compendium`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
-`RetiredCaution`, `NewWithoutSafety`), the stress cases for the name (`LongName`, `OneLongWord`,
-`MineralName`, `NoFormalName`, `NewLongName`), the other marks and chips (`ManyForms`,
-`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`,
-`CompactLongName`) and the recency marks (`NewEntry`, `UpdatedEntry`).
+[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Ingredients / Ingredient Card`:
+one story, `States`, a grid of the kinds (Own With Jars, In Cupboard, Retired, Compendium), the safety states (Caution, New Without Safety), the stress cases for the name (Long Name, which is also retired, cautioned and
+Updated; One Long Word, Mineral Name, No Formal Name), the other marks and chips (Many Forms, No Forms Line,
+Many Categories, Last Edited), the actions (With Actions, With Start Actions), the compact look (Compact)
+and the recency marks (New And Updated).
 
 ## Testing
 
 `tests/components/IngredientCard/index.test.tsx`: the card's name and link, the category chips, safety,
 the cupboard marks, the jar-line slot, the actions, the navigation (the whole card is one target for the
-name link) and the recency marks. Layout and the drawer's look are checked in Ladle and in the page
-specs that place the card, not in jsdom, which has no layout.
+name link) and the recency marks. Layout and the drawer's look are checked in Storybook and in the page
+specs that place the card, not in jsdom, which has no layout. For the same reason, whether a press
+reaches the overlay is proved in a browser: `tests/e2e/card-click.spec.ts` (MB.272) presses each
+card on the formal name, its padding, the gap between the foot's controls, the New mark (on
+`/compendium`) and a jar line's words (on a coven's Ingredients page), checking first that the
+point is off every link and button, and expects the entry; it presses the +N, Quick Look, the plus,
+Edit Stock and the Low badge and expects each to keep its own action. It also checks the card has one
+link to the entry, named by the ingredient's name, the tab order, and that every control but the name
+is at least 24 by 24, the last-edit line's button included ([`last-edit.md`](last-edit.md)).
 
 ## Accessibility
 

@@ -19,7 +19,7 @@ import './index.scss';
 /**
  * Whether the element can take the focus back: still in the page, and not held
  * inert. Asked of the element rather than `instanceof HTMLElement`, which is
- * false in a story Ladle draws into an iframe, its script running in the page
+ * false in a story Storybook draws into an iframe, its script running in the page
  * around the frame.
  */
 const canFocus = (element: Element | null): element is HTMLElement =>

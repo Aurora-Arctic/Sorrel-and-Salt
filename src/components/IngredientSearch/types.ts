@@ -84,6 +84,8 @@ export interface IngredientSearchBoxProps {
 /** The kinds of filter the search sentence can name, in the order it names them. */
 export type SearchSentenceFacet =
   | 'query'
+  | 'covens'
+  | 'covensNot'
   | 'categories'
   | 'forms'
   | 'deities'
@@ -102,6 +104,10 @@ export type SearchSentenceFacet =
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
 export interface SearchSentenceFilter {
   query?: string | null;
+  /** The public compendium only (M12.55): ids of the viewer's covens an entry is held in, any of them. */
+  covens?: readonly string[];
+  /** Not In (M12.55): held in none of the picked covens, or with none picked none of the viewer's. */
+  covensNot?: boolean;
   /** Category slugs. */
   categories?: readonly string[];
   /** `all` (the default) lists entries in every category, `any` in at least one. */
@@ -132,7 +138,7 @@ export interface SearchSentenceFilter {
 
 /** The kinds that choose from a vocabulary, and so take display labels. */
 export type SearchSentenceLabelFacet =
-  'categories' | 'forms' | 'deities' | 'zodiac' | 'celestialBodies' | 'elements';
+  'covens' | 'categories' | 'forms' | 'deities' | 'zodiac' | 'celestialBodies' | 'elements';
 
 /** Display labels by chosen value. A value with no label is named by itself. */
 export type SearchSentenceLabels = Partial<

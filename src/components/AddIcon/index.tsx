@@ -11,7 +11,9 @@ import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
+import { HoldingCount, holdingText } from './holding';
 import type { NamedAddIconProps } from './types';
+import { ADD, HELD_MARK } from './wording';
 import './index.scss';
 
 // The plus: Add to My Ingredients as an icon (M9.12, the owner's calls, 2026-10-20), at a
@@ -19,15 +21,8 @@ import './index.scss';
 // control. Its tip and its accessible name are both ADD and then the entry's name (the name in
 // `visually-hidden`), so a list of buttons tells one card's plus from the next and the words on
 // screen are the name (MB.120; the owner's call, 2026-10-20, that the tip says the name too). A client component of its own, because the card stays a server component and a press
-// needs the browser. claude-docs/components/compendium-cards.md, "The plus".
+// needs the browser. claude-docs/components/compendium-cards.md, "Contracts".
 
-const ADD = 'Add to My Ingredients';
-/**
- * What a held coven's check in the plus's menu stands for, joined to the coven's name: "Hedge
- * Coven, in its cupboard". The same noun as the card's In Every Cupboard, which speaks for them
- * all (MB.120, the owner's call, 2026-10-20).
- */
-const HELD_MARK = 'in its cupboard';
 /**
  * How long the check holds after a success before it fades back to the plus (the owner's call,
  * 2026-10-20: "about 1s"). Long enough to be seen, short enough that the plus is soon back.
@@ -90,10 +85,12 @@ const AddIcon = ({
   ingredientId,
   covens,
   heldIn,
+  holding: holders = [],
 }: NamedAddIconProps): ReactElement => {
   // "Add to My Ingredients: Testwort, Formalis testis", the tip and the name alike, so the words
   // on screen are the name (WCAG 2.5.3), and a colon, since a formal name holds a comma of its own.
-  const label = `${ADD}: ${entry}`;
+  // Then how many of the viewer's covens hold it, and which (M12.55): nothing where none does.
+  const label = `${ADD}: ${entry}${holdingText(holders)}`;
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: label });
   const { anchorRef } = feedback;
@@ -152,51 +149,52 @@ const AddIcon = ({
   };
   const glyph = <Glyph state={state} busy={busy} onFaded={fade.onAnimationEnd} />;
 
-  if (covens.length > 1)
-    return (
-      <>
-        <IconTip tip={label}>
-          <MenuButton
-            ref={plusRef}
-            label={label}
-            className="add-icon"
-            icon={glyph}
-            state={state}
-            busy={busy && !state}
-            busyLabel="Adding"
-            items={[...covens]
-              .sort((one, other) => one.name.localeCompare(other.name))
-              .map(({ id, name }) =>
-                holding.includes(id)
-                  ? { key: id, label: name, onSelect: () => {}, disabled: true, mark: HELD_MARK }
-                  : { key: id, label: name, onSelect: () => addTo(id) },
-              )}
-          />
-        </IconTip>
-        {feedback.feedback}
-      </>
+  // The control is the one thing that differs: a menu where the viewer writes in several
+  // covens, a plain button for the one coven (or the default where the page named none).
+  const control =
+    covens.length > 1 ? (
+      <MenuButton
+        ref={plusRef}
+        label={label}
+        className="add-icon"
+        icon={
+          <>
+            {glyph}
+            <HoldingCount holding={holders} />
+          </>
+        }
+        state={state}
+        busy={busy && !state}
+        busyLabel="Adding"
+        items={[...covens]
+          .sort((one, other) => one.name.localeCompare(other.name))
+          .map(({ id, name }) =>
+            holding.includes(id)
+              ? { key: id, label: name, onSelect: () => {}, disabled: true, mark: HELD_MARK }
+              : { key: id, label: name, onSelect: () => addTo(id) },
+          )}
+      />
+    ) : (
+      <button
+        ref={plusRef}
+        type="button"
+        className="add-icon"
+        data-state={state}
+        aria-busy={busy || undefined}
+        aria-disabled={busy || state !== undefined || undefined}
+        onClick={() => {
+          if (!busy && !state) addTo(covens[0]?.id ?? workspaceId);
+        }}
+      >
+        {glyph}
+        <HoldingCount holding={holders} />
+        <span className="visually-hidden">{label}</span>
+      </button>
     );
 
-  // The one coven, or the default where the page named no covens.
-  const only = covens[0]?.id ?? workspaceId;
   return (
     <>
-      <IconTip tip={label}>
-        <button
-          ref={plusRef}
-          type="button"
-          className="add-icon"
-          data-state={state}
-          aria-busy={busy || undefined}
-          aria-disabled={busy || state !== undefined || undefined}
-          onClick={() => {
-            if (!busy && !state) addTo(only);
-          }}
-        >
-          {glyph}
-          <span className="visually-hidden">{label}</span>
-        </button>
-      </IconTip>
+      <IconTip tip={label}>{control}</IconTip>
       {feedback.feedback}
     </>
   );

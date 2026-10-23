@@ -1,11 +1,7 @@
-import { and, eq, isNull, or } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissing, insertMissingBy, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
-import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
-import { type Unit, dimensionOf } from '../../modules/ingredients/schema/units';
-import { defaultThreshold } from '../../modules/ingredients/validation/default-threshold';
-import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
@@ -15,12 +11,19 @@ import { loadCompendium } from './compendium/load';
 import { ingredientSlug } from '../../lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
+  STANDARD_CUPBOARD,
+  STANDARD_STOCK,
   WORKSPACE_W_ID,
   identityOf,
+  ingredientIdByIdentity,
+  insertMissingCupboardEntries,
+  insertMissingStock,
   insertMissingVariants,
+  namedIngredientId,
   reslugIngredients,
   seedStandardContent,
 } from './standard';
+import type { NamedIngredient, SeedCupboardEntry, SeedStock } from './standard';
 import type {
   SeedDatabase,
   SeedLayerIngredient,
@@ -31,7 +34,7 @@ import type {
 
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
-// It adds W's cupboard (three compendium entries held, two of them annotated),
+// It adds W's cupboard (seven compendium entries held, six of them annotated),
 // W's own ingredients, so the jars mix both kinds, one custom one-off layer
 // with no `ingredient_id`, and W's stock: seven jars of what it holds
 // (claude-docs/db/demo-scenario.md, "The demo scenario").
@@ -64,33 +67,17 @@ const CATS_CLAW: SeedWorkspaceIngredient = {
 };
 
 /**
- * A compendium entry W's cupboard holds, by the entry's formal name, with the
- * coven's own say over it (M12.13). Each override is null, so the compendium's
- * value shows, unless set here. An entry with none is in the cupboard and not
- * annotated.
+ * W's cupboard in `demo`: the `standard` rows, and the curated German Chamomile
+ * (which only `demo` seeds) relabelled, with a colour the compendium does not list.
  */
-export interface SeedCupboardEntry {
-  entry: { name: string; canonicalName: string };
-  label?: string;
-  description?: string;
-  colors?: string[];
-}
-
 export const WORKSPACE_W_CUPBOARD: SeedCupboardEntry[] = [
-  // Rosemary the coven grows, under its own label and its own description.
-  {
-    entry: { name: 'Rosemary', canonicalName: 'Salvia rosmarinus' },
-    label: 'Garden Rosemary',
-    description: 'Cut from the bush by the back door, dried in bunches over the stove.',
-  },
+  ...STANDARD_CUPBOARD,
   // The compendium's German Chamomile, relabelled, with a colour it does not list.
   {
     entry: { name: 'German Chamomile', canonicalName: 'Matricaria chamomilla' },
     label: 'House Chamomile',
     colors: ['white', 'yellow'],
   },
-  // In the cupboard and not annotated: the row alone.
-  { entry: { name: 'Ginger', canonicalName: 'Zingiber officinale' } },
 ];
 
 /** Everything W has of its own. Seeded into W, and invisible from X. */
@@ -101,9 +88,6 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [HEARTH_ASH, C
  * module load, because the spells below look their entries up then.
  */
 const CURATED_FILES = loadCompendium();
-
-/** A layer's ingredient that names an entry, in either tier: all but the custom one-off. */
-type NamedIngredient = Extract<SeedLayerIngredient, { entry: unknown }>;
 
 /**
  * A compendium entry, `standard` or an `approved` file, looked up at module
@@ -131,29 +115,13 @@ function fromWorkspace(entry: SeedWorkspaceIngredient): NamedIngredient {
 }
 
 /**
- * One jar of stock W holds: the entry by tier and identity, the form it holds
- * (the form's text, matched without case), and what the row says of it. A
- * `unit` carries its dimension, and a threshold left out is the dimension's
- * default, as `createStock` fills it (claude-docs/db/demo-scenario.md,
- * "W's stock").
- */
-export interface SeedStock {
-  id: string;
-  ingredient: NamedIngredient;
-  form: string;
-  quantity?: string;
-  unit?: Unit;
-  lowStockThreshold?: string;
-  source?: string;
-  acquiredDate?: string;
-}
-
-/**
- * W's stock, fixed ids in a block of their own (`…0003-…`). Every compendium
- * entry named here is in `WORKSPACE_W_CUPBOARD`: a jar on a compendium
- * variant needs its entry's cupboard row (M12.13, decision 11).
+ * W's stock in `demo`: the `standard` jars, and the jars on entries only
+ * `demo` seeds, in the ids `…0001`, `…0002`, `…0005` and `…0006` that
+ * `standard` leaves free. Every compendium entry named here is in
+ * `WORKSPACE_W_CUPBOARD`.
  */
 export const DEMO_STOCK: SeedStock[] = [
+  ...STANDARD_STOCK,
   // Own entries.
   {
     id: '00000000-0000-0000-0003-000000000001',
@@ -169,22 +137,6 @@ export const DEMO_STOCK: SeedStock[] = [
     id: '00000000-0000-0000-0003-000000000002',
     ingredient: fromWorkspace(CATS_CLAW),
     form: 'bark',
-  },
-  // Rosemary in two forms: two jar lines on one card, in two dimensions.
-  {
-    id: '00000000-0000-0000-0003-000000000003',
-    ingredient: fromCompendium('Rosemary', 'Salvia rosmarinus'),
-    form: 'Herb',
-    quantity: '60.000',
-    unit: 'g',
-    source: 'The bush by the back door',
-  },
-  {
-    id: '00000000-0000-0000-0003-000000000004',
-    ingredient: fromCompendium('Rosemary', 'Salvia rosmarinus'),
-    form: 'Oil',
-    quantity: '45.000',
-    unit: 'ml',
   },
   // Below the default 10 g, so the Low badge shows.
   {
@@ -202,15 +154,6 @@ export const DEMO_STOCK: SeedStock[] = [
     quantity: '20.000',
     unit: 'drop',
     lowStockThreshold: '12.000',
-  },
-  // Counted rather than weighed.
-  {
-    id: '00000000-0000-0000-0003-000000000007',
-    ingredient: fromCompendium('Ginger', 'Zingiber officinale'),
-    form: 'Root',
-    quantity: '6.000',
-    unit: 'piece',
-    acquiredDate: '2026-09-30',
   },
 ];
 
@@ -328,13 +271,13 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
         return ingredientId ? [{ ingredientId, variants: entry.variants }] : [];
       }),
     );
-    await insertMissingCupboardEntries(tx);
+    await insertMissingCupboardEntries(tx, WORKSPACE_W_CUPBOARD);
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
     await insertMissingLayers(tx, ingredientIds, await variantIdByIngredient(tx));
     await insertMissingSpellCategories(tx, await categoryIdByName(tx));
-    await insertMissingStock(tx, ingredientIds);
+    await insertMissingStock(tx, DEMO_STOCK, ingredientIds);
   });
 }
 
@@ -365,34 +308,6 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
 }
 
 /**
- * W's cupboard rows, keyed by the coven and the entry, ignoring `deleted_at` so
- * a row the coven removed is not put back. The seed writes the rows directly,
- * as it writes every other, not through the cupboard service.
- */
-async function insertMissingCupboardEntries(tx: SeedTransaction): Promise<void> {
-  const compendium = await tx
-    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
-    .from(ingredients)
-    .where(and(isNull(ingredients.workspaceId), isNull(ingredients.deletedAt)));
-  const ids = new Map(compendium.map((row) => [row.identityKey, row.id]));
-
-  await insertMissingBy(
-    tx,
-    workspaceCompendiumEntries,
-    WORKSPACE_W_CUPBOARD.map(({ entry, ...overrides }) => ({
-      workspaceId: WORKSPACE_W_ID,
-      ingredientId: requireFrom(
-        ids,
-        identityOf(entry),
-        () => `The demo cupboard holds "${entry.name}", which is not in the compendium.`,
-      ),
-      ...overrides,
-    })),
-    { columns: ['workspaceId', 'ingredientId'], toRow: (row) => row },
-  );
-}
-
-/**
  * The ids of W's live entries this scenario seeds, by identity: its own, and
  * no member's, a deleted one left out, so nothing is written beside it.
  */
@@ -418,35 +333,6 @@ async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Every live id a layer could name, keyed by its tier and `identityOf`, so a
- * layer finds the row of the tier it names.
- */
-async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
-  const rows = await tx
-    .select({
-      id: ingredients.id,
-      identityKey: ingredients.identityKey,
-      workspaceId: ingredients.workspaceId,
-    })
-    .from(ingredients)
-    .where(
-      and(
-        or(isNull(ingredients.workspaceId), eq(ingredients.workspaceId, WORKSPACE_W_ID)),
-        isNull(ingredients.deletedAt),
-      ),
-    );
-  return new Map(
-    rows.map((row) => [
-      tierKey(row.workspaceId === null ? 'compendium' : 'workspace', row.identityKey),
-      row.id,
-    ]),
-  );
-}
-
-/** A layer's lookup key: the tier it names, and the identity within it. */
-const tierKey = (tier: 'compendium' | 'workspace', identity: string) => `${tier}|${identity}`;
-
-/**
  * Each ingredient's first live variant in form order (MB.217), what a linked
  * layer lays: every entry a jar names has exactly one, written by
  * `insertMissingVariants`; Rosemary's two are laid by no jar.
@@ -469,83 +355,6 @@ async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, s
 }
 
 /**
- * W's jars, keyed by the coven and the form, ignoring `deleted_at` so a jar the
- * coven threw out is not put back and one it edited is not written over. Keyed
- * on the pair the live-unique index guards (`inventory_items_workspace_id_variant_id_unique`)
- * rather than on the fixed id, so a jar the coven added itself for the same
- * form is met and not collided with. The threshold is the dimension's default
- * unless the jar sets one, from the rule `createStock` reads.
- */
-async function insertMissingStock(
-  tx: SeedTransaction,
-  ingredientIds: Map<string, string>,
-): Promise<void> {
-  const variants = await tx
-    .select({
-      id: ingredientVariants.id,
-      ingredientId: ingredientVariants.ingredientId,
-      form: ingredientVariants.form,
-    })
-    .from(ingredientVariants)
-    .where(isNull(ingredientVariants.deletedAt));
-  const variantIdByForm = new Map(
-    variants.map((row) => [`${row.ingredientId}|${row.form.toLowerCase()}`, row.id]),
-  );
-
-  const wanted = DEMO_STOCK.map((stock) => {
-    const ingredientId = ingredientIdFor(stock.ingredient, ingredientIds);
-    return {
-      stock,
-      workspaceId: WORKSPACE_W_ID,
-      ingredientId,
-      variantId: requireFrom(
-        variantIdByForm,
-        `${ingredientId}|${stock.form.toLowerCase()}`,
-        () =>
-          `A demo jar names "${stock.ingredient.entry.name}" in "${stock.form}", which has no such form.`,
-      ),
-    };
-  });
-
-  await insertMissingBy(tx, inventoryItems, wanted, {
-    columns: ['workspaceId', 'variantId'],
-    where: eq(inventoryItems.workspaceId, WORKSPACE_W_ID),
-    toRow: ({ stock, workspaceId, ingredientId, variantId }) => {
-      const unit = stock.unit ?? null;
-      const threshold = stock.lowStockThreshold ?? defaultThreshold(unit);
-      return {
-        id: stock.id,
-        workspaceId,
-        ingredientId,
-        variantId,
-        quantityOnHand: stock.quantity ?? null,
-        unit,
-        unitDimension: unit === null ? null : dimensionOf(unit),
-        lowStockThreshold: threshold === null ? null : String(threshold),
-        source: stock.source ?? null,
-        acquiredDate: stock.acquiredDate ?? null,
-      };
-    },
-  });
-}
-
-/**
- * Unreachable today, but a silent `undefined` would make a null
- * `ingredient_id` — a *custom* row under the CHECK — so the failure would be a
- * blank-named layer rather than an error.
- */
-function ingredientIdFor(
-  ingredient: SeedLayerIngredient & { tier: 'compendium' | 'workspace' },
-  ingredientIds: Map<string, string>,
-): string {
-  return requireFrom(
-    ingredientIds,
-    tierKey(ingredient.tier, identityOf(ingredient.entry)),
-    () => `A demo layer names "${ingredient.entry.name}", which is not in the database.`,
-  );
-}
-
-/**
  * Exactly one of `ingredientId` and `name` is set, `variantId` rides with the
  * first (MB.217) and `form` with the second.
  */
@@ -559,7 +368,7 @@ function layerIdentity(
   if (ingredient.tier === 'custom') {
     return { ingredientId: null, variantId: null, name: ingredient.name, form: ingredient.form };
   }
-  const ingredientId = ingredientIdFor(ingredient, ingredientIds);
+  const ingredientId = namedIngredientId(ingredient, ingredientIds);
   const variantId = requireFrom(
     variantIds,
     ingredientId,

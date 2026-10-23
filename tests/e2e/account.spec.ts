@@ -1,6 +1,8 @@
+import postgres from 'postgres';
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
-import { recreateE2eDatabase } from './database';
+import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
 // The one account page, signed in (MB.71, MB.88): its Name, Email and
@@ -70,38 +72,59 @@ test('two linked and a failed link have no accessibility violations', async ({ p
 // MB.256: a link followed into the shell is a client-side navigation, which
 // once refetched the email page about every 80 ms without end. Settled means
 // two quiet seconds with no further fetch of it.
-test('settles an unverified account on the email page after a link into the shell', async ({
-  page,
-}) => {
-  await signInAs(page, 'unverified-link@account-page.test', ['discord'], 'user', {
-    emailVerified: false,
-  });
-  await page.goto('/');
+//
+// An unverified account is shown no link into a protected page (the front
+// page's Continue goes straight to the email page), and a full load
+// (`page.goto`) is answered by a 307 and never loops. So the account is
+// verified when the page draws, which gives Continue the landing's own href,
+// and is made unverified afterwards: the click is then a real router
+// navigation into a protected page that throws the email redirect.
+async function markUnverified(userId: string): Promise<void> {
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    await sql`update users set email_verified = false where id = ${userId}`;
+  } finally {
+    await sql.end();
+  }
+}
 
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page).toHaveURL('/account/email?next=%2Fcoven');
+async function expectSettledOnEmailPage(page: Page, next: string): Promise<void> {
+  await expect(page).toHaveURL(`/account/email?next=${next}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
 
   const refetch = page.waitForRequest((request) => request.url().includes('/account/email'), {
     timeout: 2000,
   });
   await expect(refetch).rejects.toThrow();
+}
+
+test('settles an unverified account on the email page after a link into the shell', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'unverified-link@account-page.test', ['discord']);
+  await page.goto('/');
+  const proceed = page.getByRole('link', { name: 'Continue' });
+  await expect(proceed).toBeVisible();
+
+  await markUnverified(userId);
+  await proceed.click();
+  await expectSettledOnEmailPage(page, '%2Fcoven');
 });
 
 // The same by the admin landing, whose own layout under the shell also sends
 // an unverified account to the email page.
 test('settles an unverified admin on the email page after a link into /admin', async ({ page }) => {
-  await signInAs(page, 'unverified-admin-link@account-page.test', ['discord'], 'admin', {
-    emailVerified: false,
-  });
+  const { userId } = await signInAs(
+    page,
+    'unverified-admin-link@account-page.test',
+    ['discord'],
+    'admin',
+  );
   await page.goto('/');
+  const proceed = page.getByRole('link', { name: 'Continue' });
+  await expect(proceed).toBeVisible();
 
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page).toHaveURL('/account/email?next=%2Fadmin');
-  await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
-
-  const refetch = page.waitForRequest((request) => request.url().includes('/account/email'), {
-    timeout: 2000,
-  });
-  await expect(refetch).rejects.toThrow();
+  await markUnverified(userId);
+  await proceed.click();
+  await expectSettledOnEmailPage(page, '%2Fadmin');
 });

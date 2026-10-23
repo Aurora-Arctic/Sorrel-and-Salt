@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmitOnError": false,
+    "allowImportingTsExtensions": false,
+    "rootDir": "../src",
+    "outDir": "../dist/types",
+    "plugins": []
+  },
+  "include": ["../src/components/*/index.tsx", "../src/**/*.d.ts"],
+  "exclude": []
+}

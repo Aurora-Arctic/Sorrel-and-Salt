@@ -1,16 +1,20 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
-import { AdminFrame as InAdminLayout } from '../../../.ladle/admin-frame';
+import { AdminFrame as InAdminLayout } from '../../../.storybook/admin-frame';
 import AddAction from '../../app/(shell)/admin/add-action';
 import PageHeader from '.';
 
 // Render-only: a heading and its action are the whole component, so the
-// story is for the look, at desktop and at a phone's width, where the action
+// story is for the look, at desktop and, by the toolbar's viewport menu, at a phone's width, where the action
 // is a plus beside the heading, with its label as a tip. Each sits in the
 // admin layout as it is (`AdminFrame`; claude-docs/styling.md, "The page column").
-export default {
+const meta = {
   title: 'Layout / Page Header',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The compendium's, the one admin page with a heading of its own since the
 // others went into tabs (MB.115).
@@ -20,7 +24,7 @@ const AddIngredient = () => (
   </AddAction>
 );
 
-export const WithAnAction: Story = () => (
+const defaultNode = (
   <InAdminLayout open="/admin/compendium">
     <main>
       <PageHeader title="Compendium" action={<AddIngredient />} />
@@ -28,7 +32,7 @@ export const WithAnAction: Story = () => (
   </InAdminLayout>
 );
 
-export const HeadingAlone: Story = () => (
+const headingAloneNode = (
   <InAdminLayout open="/admin/compendium">
     <main>
       <PageHeader title="Compendium" />
@@ -36,7 +40,7 @@ export const HeadingAlone: Story = () => (
   </InAdminLayout>
 );
 
-// A heading long enough to wrap beside its action at a phone's width,
+// A heading long enough to wrap beside its action when narrow,
 // standing in for any.
 const Long = () => (
   <InAdminLayout open="/admin/deity-traditions">
@@ -54,8 +58,43 @@ const Long = () => (
   </InAdminLayout>
 );
 
-export const PhoneDark: Story = () => <Long />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
+const longHeadingWithActionNode = <Long />;
 
-export const PhoneLight: Story = () => <Long />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+// The entry page's mark before the heading, on its own line.
+const withLeadNode = (
+  <InAdminLayout open="/admin/compendium">
+    <main>
+      <PageHeader
+        title="Testwort"
+        lead={<span>In Your Cupboard</span>}
+        action={<AddIngredient />}
+      />
+    </main>
+  </InAdminLayout>
+);
+
+// The long heading again at a phone's width, where it wraps beside the action.
+const AtPhoneWidth = () => <Long />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Heading Alone': headingAloneNode,
+  'Long Heading With Action': longHeadingWithActionNode,
+  'With Lead': withLeadNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
+
+// Pinned to a phone's width, since the wrap is what it shows.
+export const Narrow: Story = {
+  globals: { viewport: { value: 'w375', isRotated: false } },
+  render: () => <AtPhoneWidth />,
+};

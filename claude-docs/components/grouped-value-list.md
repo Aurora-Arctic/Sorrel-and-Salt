@@ -115,7 +115,7 @@ for a rule only one kind's rows need.
   `groupedValuesHref(kind, { query, group })` and `useApplyFilter` pushes
   it softly; the loading state and the form's keying by the filter shown
   are the shared form's ([`filter-form.md`](filter-form.md#contracts)). In the workshop, `next/navigation` is stubbed
-  ([`workshop.md`](../workshop.md), "`.ladle/`").
+  ([`workshop.md`](../workshop.md), "`.storybook/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
   page's heading (`ValueAction` in `src/app/(shell)/admin/value-page.tsx`, from the
@@ -182,30 +182,25 @@ so the list adds no rule for either.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/GroupedValueList/index.stories.tsx),
-`Admin / Grouped Value List`. Each kind has the bare list in five states, and
-the filter reaches the admin pages, which the workshop does not serve. Each
-grouped kind has four invented groups, so typing in a story's group filter
+`Admin / Grouped Value List`. `States`, with a control that chooses, carries the bare list; and
+the filter reaches the admin pages, which the workshop does not serve. The
+category groups are four invented groups, so typing in a state's group filter
 shows its list narrowing.
 
-| Kind                                                                             | Stories                                                                                                                 |
-| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Categories                                                                       | `CategoriesOnePageOfSeveral`, `CategoriesFirstPage`, `CategoriesFiltered`, `CategoriesNoMatch`, `CategoriesEmpty`       |
-| Forms                                                                            | `FormsOnePageOfSeveral`, `FormsFirstPage`, `FormsFiltered`, `FormsNoMatch`, `FormsEmpty`                                |
-| Deities, under invented traditions and slugged by `deitySlug`                    | `DeitiesOnePageOfSeveral`, `DeitiesFirstPage`, `DeitiesFiltered`, `DeitiesNoMatch`, `DeitiesEmpty`                      |
-| Celestial bodies and zodiac signs, the flat kinds with no group column or filter | `CelestialBodiesOnePageOfSeveral`, `Signs`, `CelestialBodiesFiltered`, `CelestialBodiesNoMatch`, `CelestialBodiesEmpty` |
+| State                       | Shows                                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Default                     | The Categories page as the route draws it: the app shell, the admin row, the heading with its Categories and Groups toggle and Add Category, the Name and Group filters, and three categories |
+| First Page, Middle Page     | Categories, Next alone and "Page 1 of 2" beside it; and a middle page                                                                                                                         |
+| Filtered, No Matches, Empty | Categories with a filter, with a filter that matches nothing, and with no rows                                                                                                                |
+| Forms                       | A form's row, drawing its group's icon                                                                                                                                                        |
+| Deities                     | Deities under invented traditions, slugged by `deitySlug`                                                                                                                                     |
+| Celestial Bodies            | A flat kind, with no group column or filter                                                                                                                                                   |
 
-A `…OnePageOfSeveral` story is a middle page, both pager ends live and "Page 2
-of 3" between them; a `…FirstPage` has Next alone, "Page 1 of 2" beside it.
-
-These stories stand for the page, in the admin layout's frame with the
+`Pending` is its own story: the page's pending state inside the admin frame. These stories stand for the page, in the admin layout's frame with the
 Categories page's heading and tabs, its Categories tab open, as
 `TabbedPage` draws them:
 
-- `PhoneDark` and `PhoneLight` at 375px: the tab's Add over the filtered list,
-  showing the stacked filter with Clear drawn, the Add as a plus and the rows
-  as cards.
-- `CategoriesPending`, with `PendingPhoneDark` and `PendingPhoneLight` at
-  375px: the same page with a filter applied and the list on its way. A
+- `Pending`: the same page with a filter applied and the list on its way. A
   `ListNavigationContext` holding one pending sits above the page, since the
   stub router goes nowhere, so the filter row is greyed and the tabs' skeleton
   is in place of the list ([`list-frame.md`](list-frame.md)).
