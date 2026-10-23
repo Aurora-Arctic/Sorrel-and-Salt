@@ -66,9 +66,7 @@
 
   // Inside the tab, where the row's edge would clip an outside ring.
   &:focus-visible {
-    @include focus-ring;
-
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 
   &[aria-current='page'] {

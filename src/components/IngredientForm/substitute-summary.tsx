@@ -1,5 +1,6 @@
 'use client';
 
+import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import { useQuery } from '@tanstack/react-query';
@@ -153,7 +154,8 @@ export function SubstituteSummary({
       {href && (
         // A new tab, so the form and its unsaved changes stay where they are.
         <a className="entry-summary__link" href={href} target="_blank" rel="noopener noreferrer">
-          Open Entry<span className="visually-hidden"> (opens in a new tab)</span>
+          Open Entry
+          <NewTabHint />
         </a>
       )}
     </>

@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
+import type { ReactNode } from 'react';
+import { fn } from 'storybook/test';
 import MenuButton from '.';
 import { sectionsFor } from './sections';
 import type { MenuButtonItem } from './types';
@@ -12,7 +14,8 @@ const meta = {
   title: 'Forms / Menu Button',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const ITEMS: MenuButtonItem[] = [
   {
@@ -21,9 +24,9 @@ const ITEMS: MenuButtonItem[] = [
     href: '/?edit' as Route,
     onClick: (e) => e.preventDefault(),
   },
-  { key: 'annotate', label: 'Annotate', onSelect: () => {} },
-  { key: 'own', label: 'Make It Ours', onSelect: () => {} },
-  { key: 'remove', label: 'Remove', destructive: true, onSelect: () => {} },
+  { key: 'annotate', label: 'Annotate', onSelect: fn() },
+  { key: 'own', label: 'Make It Ours', onSelect: fn() },
+  { key: 'remove', label: 'Remove', destructive: true, onSelect: fn() },
 ];
 
 const Row = ({ busy = false }: { busy?: boolean }) => (
@@ -37,10 +40,6 @@ const Row = ({ busy = false }: { busy?: boolean }) => (
     />
   </div>
 );
-
-export const Default: Story = { render: () => <Row /> };
-
-export const Pending: Story = { render: () => <Row busy /> };
 
 // At a dialog's foot, as the Annotate dialog's More is, its items in the
 // button's type: set at the window's foot, where the room is above, so the
@@ -58,39 +57,35 @@ const Foot = () => (
   </div>
 );
 
-export const OpensAbove: Story = { render: () => <Foot /> };
-
 // The plus's menu of covens (M9.12): a coven that holds the entry is disabled, its name followed
 // by the green check (`mark`) and named "Fixture Coven Two, in its cupboard".
-export const MarkedItem: Story = {
-  render: () => (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
-      <MenuButton
-        label="Add to My Ingredients"
-        className="btn btn--quiet btn--medium"
-        items={[
-          { key: 'one', label: 'Fixture Coven One', onSelect: () => {} },
-          {
-            key: 'two',
-            label: 'Fixture Coven Two',
-            onSelect: () => {},
-            disabled: true,
-            mark: 'in its cupboard',
-          },
-        ]}
-      />
-    </div>
-  ),
-};
+const MarkedItem = () => (
+  <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '10rem' }}>
+    <MenuButton
+      label="Add to My Ingredients"
+      className="btn btn--quiet btn--medium"
+      items={[
+        { key: 'one', label: 'Fixture Coven One', onSelect: fn() },
+        {
+          key: 'two',
+          label: 'Fixture Coven Two',
+          onSelect: fn(),
+          disabled: true,
+          mark: 'in its cupboard',
+        },
+      ]}
+    />
+  </div>
+);
 
 // Sections (the owner's call, 2026-10-20): a menu holding both the compendium's choices and the
 // coven's draws them under discreet headings, the viewer's own side first. Set on a coven's page
 // (Coven first) and on a compendium page (Compendium first).
 const SECTIONED = {
-  compendium: [{ key: 'edit', label: 'Edit in Compendium', onSelect: () => {} }],
+  compendium: [{ key: 'edit', label: 'Edit in Compendium', onSelect: fn() }],
   coven: [
-    { key: 'own', label: 'Make It Ours', onSelect: () => {} },
-    { key: 'remove', label: 'Remove', destructive: true, onSelect: () => {} },
+    { key: 'own', label: 'Make It Ours', onSelect: fn() },
+    { key: 'remove', label: 'Remove', destructive: true, onSelect: fn() },
   ],
 };
 
@@ -104,8 +99,19 @@ const SectionedRow = ({ viewing }: { viewing: 'compendium' | 'coven' }) => (
   </div>
 );
 
-export const SectionedOnACovenPage: Story = { render: () => <SectionedRow viewing="coven" /> };
+// One story with a control to choose the state: some open the menu on a tall frame, and one
+// sits at the window's foot, too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES: Record<string, ReactNode> = {
+  Closed: <Row />,
+  Pending: <Row busy />,
+  'Opens Above': <Foot />,
+  'Marked Item': <MarkedItem />,
+  'Sectioned On A Coven Page': <SectionedRow viewing="coven" />,
+  'Sectioned On A Compendium Page': <SectionedRow viewing="compendium" />,
+};
 
-export const SectionedOnACompendiumPage: Story = {
-  render: () => <SectionedRow viewing="compendium" />,
+export const States: Story = {
+  args: { state: 'Closed' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

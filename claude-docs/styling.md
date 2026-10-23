@@ -530,6 +530,15 @@ Two rings keep another strength:
   track and the open pill the accent starts at only 4.05:1, so 66.6% takes it
   to 2.42 and even 75% leaves it at 2.75 (the owner's call, 2026-10-20).
 
+**Every button draws this ring, never the browser's own.** MB.121's keyboard
+pass found three that drew Chromium's default ring, since nothing set one: the
+icon buttons (the `icon-button` mixin), the stock dialog's jar picks and the
+dialog's Close. The `icon-button` mixin now sets the shared ring on a button
+alone (`&:where(button):focus-visible`), so an icon link keeps the accent ring
+every link takes from the typography; the jar picks fill their row, so theirs
+is inset; Close takes the shared ring
+([`mb.121-workspace-ingredients-review.md`](design-decisions/mb.121-workspace-ingredients-review.md)).
+
 The skip link's and the theme toggle's rings are the page's own colour round
 an accent fill, so it is the fill they are told from; faded, the ring sits
 closer to the ground behind it, and the fill is unchanged.

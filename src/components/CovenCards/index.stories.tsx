@@ -105,7 +105,7 @@ const middlePageNode = (
   />
 );
 
-// An empty cupboard: a member is offered the first add, a viewer reads the sentence alone.
+// An empty cupboard: a member is offered the first add, a viewer is told which roles can add.
 const emptyNode = <CovenCards {...BASE} entries={[]} total={0} />;
 
 const emptyForAViewerNode = <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />;

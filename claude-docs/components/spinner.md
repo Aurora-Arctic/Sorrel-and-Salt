@@ -29,7 +29,7 @@ it; nothing else should draw its own.
 
 ## Stories
 
-`Feedback / Spinner`: `Default` and `Larger`, unchanged.
+`Feedback / Spinner`: one `States` story showing `Default` and `Larger` side by side.
 
 ## Testing
 

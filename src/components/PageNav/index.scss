@@ -73,7 +73,7 @@
   // step above body copy, as the group's entries do not: a size between
   // body and the smallest heading, which the scale has no step for.
   &--grouped > ul > li > a {
-    font-size: 1.125rem;
+    font-size: $nav-link-size;
   }
 
   // An item set apart (an ingredient's Forms, and its References, one link or

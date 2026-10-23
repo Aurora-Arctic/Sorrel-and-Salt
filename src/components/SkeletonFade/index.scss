@@ -61,7 +61,7 @@
 }
 
 // The waiting skeleton: over the held page's whole height, its frame pinned
-// just under the bar (the shell's `--sticky-top`; 0 in `PublicFrame`), so it
+// just under the bar (the frames' `--sticky-top`), so it
 // is in the window however far down the page was scrolled. Unscrolled, it
 // sits at the page's top, where the swapped-in skeleton used to.
 .skeleton-cover {

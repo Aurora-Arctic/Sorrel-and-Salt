@@ -510,33 +510,28 @@
   }
 }
 
-// An ingredient entry's body, past a tablet's width, is laid out in two parts
-// (the owner's calls, M12.29, 2026-10-21): Details and Stock, then the forms.
+// An ingredient entry's body, past a tablet's width, is a grid of two columns (the owner's
+// calls, M12.29, 2026-10-21, and MB.121, 2026-10-23): Stock and Details down the left, one
+// straight after the other, and Details' lists (its side column) down the right, starting level
+// with the top of the first section, Stock where the page has it and else Details' heading.
 //
-// Details and Stock are two columns that run independently: Details' text and
-// the Stock section down the left, one straight after the other, and Details'
-// lists down the right, however long they run. Only Details' first lines line
-// up, its text's top with its lists'. That is floats, not a grid: a grid row
-// is as tall as its taller cell, and Stock would wait below Details' lists.
-// Details' text floats left and its lists float right, so its lists can start
-// level with its text, and the section ends where its text does, which lets
-// Stock follow straight on. The markup keeps Details' lists inside its section,
-// so on a phone, and to a screen reader, they read under Details' text.
+// The side column is a grid item of its own spanning both rows, so it can start beside Stock;
+// a float inside Details could only start beside Details. The second row is `1fr`, so a
+// side column longer than both sections grows that row and leaves Stock where it is. Stock's
+// row is empty (no height, no gap) where the page has no Stock. The markup puts the side
+// column straight after the Details section, so a phone and a screen reader read it under
+// Details' text, as before; it sits outside the Details region, a plain `div`.
 //
-// The forms line up again, each form's lists beside that form's text (a grid
-// per form: `entry-section`). The Forms section clears the floats above it, so
-// it starts below Details' lists where they are the longer; that leaves a gap
-// under Stock, the accepted cost of Stock following the description. Not from
-// the menu's breakpoint, where the text would be a few words wide.
+// The forms then start on the row below, across both columns, and line up again, each form's
+// lists beside that form's text (a grid per form: `entry-section`). Not from the menu's
+// breakpoint, where the text would be a few words wide.
 // claude-docs/components/ingredient-entry.md, "Layout".
 $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
-$-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
 
-// The box around the sections: a stack on a phone, and past a tablet's width
-// the one formatting context that Details' floats share and stay inside.
-// `$text` is the selector of a section's text, the first section's (Details)
-// floated left.
-@mixin entry-body($text) {
+// The box around the sections: a stack on a phone, and past a tablet's width the grid above.
+// `$details` and `$side` select the Details section and its side column; the first child
+// that is neither is Stock.
+@mixin entry-body($details, $side) {
   @include stack(6);
 
   // The stack's gap alone spaces the sections, not `section`'s own margins.
@@ -546,63 +541,73 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
   }
 
   @media (min-width: $-entry-tablet) {
-    display: flow-root;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    grid-template-rows: auto 1fr;
+    gap: 0 space(8);
+    align-items: start;
+
+    > * {
+      grid-column: 1 / -1;
+    }
 
     > * + * {
       margin-block-start: space(6);
     }
 
-    > :first-child > #{$text} {
-      float: left;
-      clear: left;
-      width: $-entry-text-column;
+    > :not(#{$details}):not(#{$side}):first-child {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    > #{$details} {
+      grid-column: 1;
+      grid-row: 2;
+      margin-block-start: 0;
+    }
+
+    // Details' step off Stock, where the page has Stock.
+    > :not(#{$details}):not(#{$side}):first-child + #{$details} {
+      margin-block-start: space(6);
+    }
+
+    // Dropped by `space(1)` (0.25rem), the owner's value after seeing it live (2026-10-23),
+    // so the side column's first heading sits a little lower than the first section's. The
+    // skeleton's side part takes the same value through this mixin.
+    > #{$side} {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      margin-block-start: space(1);
     }
   }
 }
 
-// A section of the body's two columns (Details, Stock): its heading, its text,
-// then its side column, one under the other on a phone. Past a tablet's width a
-// block, so the floats inside it share the body's context: everything but the
-// side column keeps to the text column, and the section ends where its text
-// does, whatever its side column runs on to.
+// The rule under an entry section's heading (MB.121, the owner's choice of 2026-10-23, shortened
+// the same day, then to 1rem and 0.25rem): a hairline as wide as the heading's own text plus `space(4)` (1rem) past its
+// end, from the heading's left edge, so each section starts on a visible line and Stock, the
+// shortest, reads as a section of its own without a box. The rule is the heading's bottom
+// border the 1rem its end padding and `space(1)` (0.25rem) the gap under the text; `fit-content` sizes the heading to its text and
+// `max-width: 100%` keeps a heading that wraps inside its column. The Stock, Details, Forms and
+// References headings all take it. claude-docs/design-decisions/mb.121-workspace-ingredients-review.md.
+@mixin entry-heading-rule {
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+  padding-block-end: space(1);
+  padding-inline-end: space(4);
+  border-block-end: 1px solid $hairline;
+}
+
+// A section of the body's left column (Details, Stock): its heading, then its text, one under
+// the other.
 @mixin entry-column-section {
   @include stack(4);
-
-  @media (min-width: $-entry-tablet) {
-    display: block;
-
-    > * {
-      max-width: $-entry-text-column;
-    }
-
-    > * + * {
-      margin-block-start: space(4);
-    }
-
-    &::after {
-      content: '';
-      display: block;
-      clear: left;
-    }
-  }
 }
 
-// The side column of such a section: a clear step under the text on a phone;
-// past a tablet's width floated right. Its top margin is the section's own step,
-// as the text's is, so Details' two start level. Its foot margin is the section
-// gap, so the Forms section, which clears it, starts that far below it as it
-// starts below Stock.
+// The side column of Details: under the text on a phone, a grid item of the body past a
+// tablet's width (`entry-body`).
 @mixin entry-column-side {
   @include stack(6);
-
-  margin-block-start: space(4);
-
-  @media (min-width: $-entry-tablet) {
-    float: right;
-    width: $side-column;
-    max-width: none;
-    margin-block: space(4) space(6);
-  }
 }
 
 // A section laid out as a grid (a form): its heading, its text, then its side
@@ -980,6 +985,13 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
   &:hover,
   &:focus-visible {
     color: $text-primary;
+  }
+
+  // A button takes the shared ring; without it Chromium drew its own default one (MB.121).
+  // A link keeps the accent ring the typography gives every link, so the ring is set on a
+  // button alone, `:where()` keeping the selector no heavier than a class and a pseudo-class.
+  &:where(button):focus-visible {
+    @include focus-ring;
   }
 
   @include reduced-motion {

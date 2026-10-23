@@ -417,16 +417,18 @@ describe('IngredientEntry', () => {
   it('names its folk names, categories and substitutes lists, one item each', () => {
     renderEntry();
     const details = screen.getByRole('region', { name: 'Details' });
+    // Details' side column stands after its section in the body, level with the first section.
+    const body = details.parentElement!;
 
-    expect(within(details).getAllByRole('list', { name: 'Folk Names' })).toHaveLength(1);
+    expect(within(body).getAllByRole('list', { name: 'Folk Names' })).toHaveLength(1);
     expect(
-      within(within(details).getByRole('list', { name: 'Folk Names' })).getAllByRole('listitem'),
+      within(within(body).getByRole('list', { name: 'Folk Names' })).getAllByRole('listitem'),
     ).toHaveLength(2);
     expect(
-      within(within(details).getByRole('list', { name: 'Categories' })).getAllByRole('listitem'),
+      within(within(body).getByRole('list', { name: 'Categories' })).getAllByRole('listitem'),
     ).toHaveLength(2);
     expect(
-      within(within(details).getByRole('list', { name: 'Substitutes' })).getAllByRole('listitem'),
+      within(within(body).getByRole('list', { name: 'Substitutes' })).getAllByRole('listitem'),
     ).toHaveLength(3);
   });
 
@@ -440,28 +442,32 @@ describe('IngredientEntry', () => {
       }),
     });
     const details = screen.getByRole('region', { name: 'Details' });
+    // Details' side column stands after its section in the body, level with the first section.
+    const body = details.parentElement!;
 
-    expect(within(details).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
-    expect(within(details).getAllByText('None recorded')).toHaveLength(5);
-    expect(within(details).getByText('No folk names recorded.')).toBeInTheDocument();
-    expect(within(details).getByText('No categories recorded.')).toBeInTheDocument();
+    expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
+    expect(within(body).getAllByText('None recorded')).toHaveLength(5);
+    expect(within(body).getByText('No folk names recorded.')).toBeInTheDocument();
+    expect(within(body).getByText('No categories recorded.')).toBeInTheDocument();
   });
 
   it('sets the correspondences and the three lists in a column of their own, after the text', () => {
     renderEntry({ detail: detail({ entry: entryRow({ safetyNotes: 'A fixture caution.' }) }) });
     const details = screen.getByRole('region', { name: 'Details' });
+    // Details' side column stands after its section in the body, level with the first section.
+    const body = details.parentElement!;
     const caution = within(details).getByRole('region', { name: 'Caution' });
     const description = within(details).getByText(detail().entry.description!);
 
     const side = sharedColumn([
-      within(details).getByRole('heading', { name: 'Correspondences', level: 3 }),
-      within(details).getByRole('list', { name: 'Folk Names' }),
-      within(details).getByRole('list', { name: 'Categories' }),
-      within(details).getByRole('list', { name: 'Substitutes' }),
+      within(body).getByRole('heading', { name: 'Correspondences', level: 3 }),
+      within(body).getByRole('list', { name: 'Folk Names' }),
+      within(body).getByRole('list', { name: 'Categories' }),
+      within(body).getByRole('list', { name: 'Substitutes' }),
     ]);
-    // A column inside the section, not the section itself, holding none of the text.
-    expect(details).toContainElement(side);
-    expect(side).not.toBe(details);
+    // A column of its own in the body beside the section, not inside it, holding none of the text.
+    expect(body).toContainElement(side);
+    expect(details).not.toContainElement(side);
     expect(side).not.toContainElement(caution);
     expect(side).not.toContainElement(description);
     expect(side).not.toContainElement(within(details).getByRole('heading', { level: 2 }));
@@ -1397,6 +1403,31 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(lineOf('Testoil')).toHaveTextContent('No Jar');
   });
 
+  it('puts Stock first, above Details, in the page and in the jump menu (MB.121)', () => {
+    renderStock([jar(root, 250)]);
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(headings.slice(0, 3)).toEqual(['Stock', 'Details', 'Forms']);
+
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href'))
+        .slice(0, 2),
+    ).toEqual(['#stock', '#details']);
+  });
+
+  it('leaves Details first when the entry shows no Stock section', () => {
+    renderEntry();
+
+    expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('Details');
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(within(nav).getAllByRole('link')[0]).toHaveAttribute('href', '#details');
+  });
+
   const shelfOrder = () =>
     within(section())
       .getAllByRole('listitem')
@@ -1509,16 +1540,6 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(within(section()).queryByRole('listitem')).toBeNull();
     expect(within(section()).getByText('No stock recorded.')).toBeInTheDocument();
     expect(headingButton()).toBeInTheDocument();
-  });
-
-  it('lists Stock in the jump menu after Details', () => {
-    renderStock([jar(root, 250)]);
-
-    const nav = screen.getByRole('navigation', { name: 'On This Page' });
-    const links = within(nav)
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'));
-    expect(links.slice(0, 2)).toEqual(['#details', '#stock']);
   });
 
   it('draws no Stock section without stock, as for a compendium entry the coven does not hold', () => {

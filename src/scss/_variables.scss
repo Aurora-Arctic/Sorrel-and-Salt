@@ -528,6 +528,13 @@ $opacity-disabled: 0.55;
   @return var(--badge-#{$palette}-#{$part});
 }
 
+// The inks a jar's Low Stock and Out of Stock states are drawn in: the card's stock badge
+// and the entry page's jar shelf alike, so the two can never disagree on which colour
+// means Low (MB.121's repetition check). Low is the warning amber; Out is the Out of Stock
+// badge palette's ink, which reaches 4.5:1 on the card and the page in both themes.
+$stock-low-ink: $warning;
+$stock-out-ink: badge-token('out-of-stock', 'fg');
+
 // ---------------------------------------------------------------------------
 // Type
 // ---------------------------------------------------------------------------

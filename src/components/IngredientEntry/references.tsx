@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { Fragment } from 'react';
 import { citationText, byCitation, renderCitation } from '../../lib/citation';
 import { renderShortCitation } from '../../lib/short-citation';
@@ -188,7 +189,8 @@ function BibliographyItem({ entry }: { entry: Entry }): ReactElement {
           {/* `noopener` keeps the opened page from reaching back; the hidden hint
               tells a screen reader the link leaves this tab, as IngredientForm's duplicates.tsx does. */}
           <a href={reference.url} target="_blank" rel="noopener">
-            Open the Source<span className="visually-hidden"> (opens in a new tab)</span>
+            Open the Source
+            <NewTabHint />
           </a>
         </>
       )}
