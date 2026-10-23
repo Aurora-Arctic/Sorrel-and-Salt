@@ -44,6 +44,9 @@ services:
     command: ['sleep', 'infinity']
     environment:
       NODE_ENV: development
+      # A failed `npm ci` (offline, say) prints a warning and starts anyway, so
+      # the editor still opens; every other service stops on a failed install.
+      ENSURE_DEPS_ON_FAILURE: warn
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # From `make docker-update-token`, via git-ignored Docker/.env; `:-`
       # keeps a missing file quiet and the CLI falls back to `/login`.

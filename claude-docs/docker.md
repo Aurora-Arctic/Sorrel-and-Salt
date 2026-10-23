@@ -172,7 +172,10 @@ no Neon connection and no host Node-version juggling.
       empties the contents of `node_modules` but not the directory, so it works
       on a mount point. Setting `entrypoint` clears the image's `CMD`, so every
       wrapped service names its `command` in compose (`app` writes out
-      `npm run dev`). The script reads the lock file only: it does not rebuild
+      `npm run dev`). A failed install stops the container, except on
+      `devcontainer`, which sets `ENSURE_DEPS_ON_FAILURE=warn`: there the script
+      prints a warning, saves no hash (so the next start retries) and starts
+      anyway, so an offline start still opens the editor. The script reads the lock file only: it does not rebuild
       the image, so a change to a Dockerfile, or a browser a new Playwright
       version needs (those live in the image, outside `node_modules`), still
       needs a rebuild. `playwright-audit` and `lighthouse-chrome` mount no
