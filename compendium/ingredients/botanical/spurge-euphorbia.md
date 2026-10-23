@@ -53,3 +53,7 @@ Spurge here means the genus Euphorbia, about 2,000 species of herbs, shrubs and 
 <!-- audit:kynes-plants:Spurge -->
 
 Does kynes-plants under "Spurge", cited on the entry, describe the genus Euphorbia alone? Kynes names only cypress spurge (Euphorbia cyparissias) and sun spurge (E. helioscopia), so her fire element, Leo, planets, powers and toxicity notes may be for those two rather than the genus. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+Curator note: Kynes prints the slur "madwoman's milk" as a folk name of sun spurge under "Spurge". It was left out of `folkNames` on purpose.

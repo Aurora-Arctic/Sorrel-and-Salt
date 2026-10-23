@@ -110,3 +110,7 @@ variants:
 # Wintergreen
 
 Wintergreen is a low evergreen shrub of the heath family, Ericaceae, native to north-eastern North America. Wikipedia describes red berries and leaves with the scent of oil of wintergreen, and says the leaves and berries contain methyl salicylate, a compound related to aspirin. Grieve names the leaves as the part used and the oil as almost wholly methyl salicylate. Cunningham calls it feminine, with the Moon and water, and lists protection, healing and hex-breaking. He has it put in a child's pillow for protection, sprinkled about to remove hexes, used in healing spells, and laid on the altar to call good spirits. Kynes has no wintergreen entry. Cunningham, Grieve, Wikipedia and the American Herbal Products Association all record hazards of the oil, set out in the safety notes.
+
+#### Edit Notes for Claude
+
+Curator note: the Wikipedia revision this entry cites (oldid 1376725677) prints the slur "squaw vine" in its list of common names. It was left out of `folkNames` on purpose.

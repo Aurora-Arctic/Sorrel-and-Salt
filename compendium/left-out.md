@@ -151,3 +151,9 @@ Kynes often lists two or three species under one heading. The roster keeps one r
 - **Remedies, not workings** (baking soda, lard, castor oil, in "Hoodoo (spirituality)"): castor oil is a form of Castor, which has a row.
 - **Forms of a plant already present**: cayenne (Chilli Pepper), rosemary (Rosemary), red wine (Grape), olive oil (Olive).
 - **Named in passing, single source**: sand ("Witch bottle"); dried manure, insect chitin and "anvil dust", the iron dust from around a blacksmith's anvil ("Goofer dust"; anvil dust is a form of Iron). Holy water, rain water and sea water are named by none of the lists read here.
+
+### Kept to add in future
+
+These are kept to add in future. They are not rejected.
+
+- Sarsaparilla (_Smilax_ spp.): not seeded, because the sources do not name one species. Cunningham prints _Smilax aspera_ under "Sarsaparilla", while the AHPA _Botanical Safety Handbook_ p. 819 covers _Smilax_ spp. under several species (_S. aristolochiifolia_, _S. febrifuga_, _S. regelii_). It can be added once a species is chosen.
