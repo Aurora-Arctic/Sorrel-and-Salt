@@ -437,6 +437,57 @@ describe('FacetPanel', () => {
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
 
+  describe('In My Covens (M12.55)', () => {
+    const COVENS = [
+      { id: 'coven-w', name: 'Testhollow' },
+      { id: 'coven-v', name: 'Testwren' },
+    ];
+    const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
+      stubViewport(true);
+      const view = render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+      return view;
+    };
+
+    it('is absent when the caller passes no covens, or none', () => {
+      const { unmount } = open();
+      expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
+      unmount();
+      open({}, { covens: [] });
+      expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
+    });
+
+    it('lists the viewer’s covens by name, with no counts, first in the panel', () => {
+      open({ covens: [] }, { covens: COVENS });
+      const box = screen.getByRole('combobox', { name: 'In My Covens' });
+      // First: before the Categories field in the panel.
+      const categories = screen.getByRole('group', { name: 'Categories' });
+      expect(
+        box.compareDocumentPosition(categories) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      fireEvent.click(box);
+      expect(screen.getByRole('option', { name: 'Testhollow' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Testwren' })).toBeInTheDocument();
+    });
+
+    it('reports a picked coven as a patch of only that part, by id', () => {
+      const onChange = vi.fn();
+      open({ covens: [] }, { covens: COVENS, onChange });
+      fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Testwren' }));
+      expect(onChange).toHaveBeenCalledWith({ covens: ['coven-v'] });
+    });
+
+    it('submits each picked coven as covens=<id>, and counts it on the Filters button', () => {
+      const { container } = open({ covens: ['coven-w', 'coven-v'] }, { covens: COVENS });
+      const sent = Array.from(
+        container.querySelectorAll<HTMLInputElement>('input[type="hidden"][name="covens"]'),
+      ).map((input) => input.value);
+      expect(sent).toEqual(['coven-w', 'coven-v']);
+      expect(filtersButton()).toHaveAccessibleName('Filters 2');
+    });
+  });
+
   describe("the coven's Source, In Stock and Low Stock Only controls (M9.7, M9.8)", () => {
     const COVEN = { source: '', inStock: false, lowStockOnly: false } as const;
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {

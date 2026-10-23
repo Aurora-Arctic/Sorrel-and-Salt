@@ -133,6 +133,7 @@ export default function FacetPanel({
   onApply,
   onClear,
   className,
+  covens = [],
 }: FacetPanelProps): ReactElement {
   const hydrated = useHydrated();
   const id = useId();
@@ -148,6 +149,7 @@ export default function FacetPanel({
   // Every chosen value counts, so two categories and two forms read 4. Match is a mode
   // of the categories, not a filter, and counts nothing.
   const chosen = [
+    filter.covens ?? [],
     filter.categories,
     filter.forms,
     filter.deities,
@@ -384,6 +386,26 @@ export default function FacetPanel({
                   Close
                 </button>
               </div>
+
+              {/* The viewer's own covens (M12.55), first since they are the viewer's own context, and
+                  only for a viewer in one. No counts: the counts the rest read are the cached,
+                  public ones, and a count per coven would make them the viewer's (rule 6). */}
+              {covens.length > 0 && (
+                <div className="facet-panel__line">
+                  <div className="facet-panel__grow">
+                    <FacetCombobox
+                      label="In My Covens"
+                      name="covens"
+                      placeholder="Add Coven"
+                      removeNoun="Coven"
+                      loading={loading}
+                      choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                      values={filter.covens ?? []}
+                      onChange={(picked) => onChange({ covens: picked })}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="facet-panel__line">
                 <div className="facet-panel__grow">
