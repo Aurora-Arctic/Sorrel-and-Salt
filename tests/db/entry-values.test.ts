@@ -130,7 +130,11 @@ const everything = (): CompendiumWrite => ({
 
 async function rowOf(id: string) {
   // `updated_at` is the trigger's, and moves on any write, a no-op included.
-  const [{ updated_at: _updated, ...row }] = await sql`select * from ingredients where id = ${id}`;
+  // `curator_reviewed_at` is the review mark's time: a curator's save marks the
+  // entry reviewed again, untouched or not (M14.8, proved in
+  // tests/modules/ingredients/services/compendium-review.test.ts).
+  const [{ updated_at: _updated, curator_reviewed_at: _reviewed, ...row }] =
+    await sql`select * from ingredients where id = ${id}`;
   return row;
 }
 

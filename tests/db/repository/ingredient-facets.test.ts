@@ -601,7 +601,7 @@ describe('findCompendiumFacets', () => {
       return logged.filter(({ query }) => !/set_config/.test(query));
     }
 
-    it('sends at most eight reads for the compendium and eleven for a coven, with a search or without', async () => {
+    it('sends at most nine reads for the compendium and eleven for a coven, with a search or without', async () => {
       await seedEntries();
       const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
       const browse: IngredientFilter = { zodiacSigns: ['leo'] };
@@ -617,9 +617,10 @@ describe('findCompendiumFacets', () => {
       ];
 
       // Why the bound could have been missed: each kind is read, so a read per
-      // value would send far more than eight.
+      // value would send far more than nine. The ninth is the Reviewed counts
+      // (M14.8), read apart because their filter leaves out its own setting.
       expect(compendium[0].length).toBeGreaterThan(0);
-      for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(8);
+      for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(9);
       for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);
     });
   });
