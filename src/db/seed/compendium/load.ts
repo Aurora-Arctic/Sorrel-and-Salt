@@ -139,14 +139,19 @@ function readSources(root: string, issues: string[]): Record<string, CitationFie
   return sources;
 }
 
-/** `unaudited.txt`'s paths, one per line, blank lines and `#` comments skipped; absent is empty. */
-function readUnaudited(root: string): string[] {
-  const path = join(root, UNAUDITED_LIST);
-  if (!existsSync(path)) return [];
-  return readFileSync(path, 'utf8')
+/** A list of paths, one per line, blank lines and `#` comments skipped: `unaudited.txt` and its ratchet's baseline. */
+export function pathList(text: string): string[] {
+  return text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line !== '' && !line.startsWith('#'));
+}
+
+/** `unaudited.txt`'s paths; absent is empty. */
+function readUnaudited(root: string): string[] {
+  const path = join(root, UNAUDITED_LIST);
+  if (!existsSync(path)) return [];
+  return pathList(readFileSync(path, 'utf8'));
 }
 
 /**

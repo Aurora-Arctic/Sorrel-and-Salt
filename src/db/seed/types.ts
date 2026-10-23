@@ -388,3 +388,51 @@ export interface SeedCompendiumShard {
   sources: Record<string, CitationFields>;
   entries: SeedCompendiumEntry[];
 }
+
+/** One of the audit's three ways a citation becomes a candidate (M14.11). */
+export type AuditHeuristic = 'collision' | 'hatnote' | 'no-binomial';
+
+/**
+ * A citation the attribution audit (M14.11) doubts: one source cited under
+ * one heading on one file, wherever on the entry it is cited (the entry, a
+ * variant, or both), since one answer settles them all.
+ */
+export interface AuditCandidate {
+  /** The file, relative to the compendium root. */
+  path: string;
+  /** The entry's formal name, which the source must print or resolve to. */
+  canonicalName: string;
+  source: string;
+  /** The heading the source is cited under, from the locator or the source's title; absent only when neither gives one. */
+  headedAs?: string;
+  /** Where on the entry it is cited: `entry`, or a variant's form. */
+  citedOn: string[];
+  /** Which heuristics marked it, in a fixed order. */
+  heuristics: AuditHeuristic[];
+  /** The other formal names the heading may mean, from the corpus and the hatnotes. */
+  candidates: string[];
+  /** One plain line per heuristic, saying what it found. */
+  evidence: string[];
+  /** The rank: higher is likelier another taxon's citation. */
+  score: number;
+}
+
+/** A citation of a Wikipedia article whose taxobox names the entry's formal name: `stated`, for a lane to write (M14.11). */
+export interface AuditStated {
+  path: string;
+  source: string;
+  citedOn: string[];
+  /** The taxon the article's `{{Speciesbox}}` or `{{Automatic taxobox}}` names. */
+  taxon: string;
+}
+
+/** The audit's findings over a corpus (M14.11). */
+export interface AuditReport {
+  /** How many files with a formal name were read. */
+  files: number;
+  /** How many citations were checked: those not yet `stated` or `resolved`. */
+  citations: number;
+  /** Ranked, highest score first. */
+  candidates: AuditCandidate[];
+  stated: AuditStated[];
+}

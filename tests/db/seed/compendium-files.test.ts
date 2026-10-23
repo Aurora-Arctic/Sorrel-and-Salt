@@ -1,6 +1,12 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { checkCompendiumFiles, releaseBranch, RELEASE_BRANCHES } from '@/db/seed/compendium/guard';
-import { loadCompendium } from '@/db/seed/compendium/load';
+import {
+  checkCompendiumFiles,
+  releaseBranch,
+  RELEASE_BRANCHES,
+  unauditedGrowth,
+} from '@/db/seed/compendium/guard';
+import { loadCompendium, pathList } from '@/db/seed/compendium/load';
 import type { LoadedCompendium } from '@/db/seed/compendium/load';
 import { SOURCES } from '@/db/seed/sources';
 import { fromRoot } from '../../support/paths';
@@ -67,5 +73,34 @@ describe('the compendium files', () => {
     const locators = locatorsIn([loaded.files.map((file) => file.entry), loaded.sources, SOURCES]);
     expect(locators.filter((locator) => locator.startsWith('under "'))).not.toEqual([]);
     expect(locators.filter((locator) => /\bs\.\s*v\./i.test(locator))).toEqual([]);
+  });
+
+  // The ratchet (M14.11): the legacy list of unaudited files only shrinks.
+  // The baseline beside this test is the list as last committed; a line
+  // leaves both together, and none joins either.
+  describe('the unaudited list', () => {
+    const baseline = pathList(
+      readFileSync(fromRoot('tests/db/seed/compendium/unaudited-baseline.txt'), 'utf8'),
+    );
+
+    it('has not grown past its baseline', () => {
+      // The precondition: there is a list to hold to its baseline.
+      expect(loaded.unaudited.length).toBeGreaterThan(0);
+      expect(unauditedGrowth(loaded.unaudited, baseline)).toEqual([]);
+    });
+
+    it('fails when the list gains a path', () => {
+      const grown = [...loaded.unaudited, 'ingredients/botanical/testwort-fixtura-testalis.md'];
+      expect(unauditedGrowth(grown, baseline)).toEqual([
+        expect.stringContaining('gained ingredients/botanical/testwort-fixtura-testalis.md'),
+      ]);
+    });
+
+    it('asks for the baseline to shrink with the list', () => {
+      const [dropped, ...rest] = loaded.unaudited;
+      expect(unauditedGrowth(rest, baseline)).toEqual([
+        expect.stringContaining(`no longer lists ${dropped}`),
+      ]);
+    });
   });
 });

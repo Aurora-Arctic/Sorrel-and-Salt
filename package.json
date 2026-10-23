@@ -43,6 +43,7 @@
     "db:drop": "tsx scripts/db-seed.ts drop",
     "seed:mark": "tsx scripts/seed-mark.ts",
     "seed:queue": "tsx scripts/seed-queue.ts",
+    "compendium:audit": "tsx scripts/compendium-audit.ts",
     "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
     "db:reset:demo": "SEED_SCENARIO=demo npm run db:reset",
     "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",

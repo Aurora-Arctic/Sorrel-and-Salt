@@ -566,3 +566,30 @@ function checkNameBases(
     }
   }
 }
+
+/**
+ * The ratchet on the legacy list (M14.11): `unaudited.txt` may only shrink.
+ * `baseline` is the list as last committed beside the test that holds it, so
+ * a path the list gains is refused, and a path it has dropped asks for the
+ * baseline to drop it too, or the path could come back unnoticed. The guard
+ * already keeps the list equal to the files carrying the flag, so this is
+ * what stops a new file joining both.
+ */
+export function unauditedGrowth(listed: readonly string[], baseline: readonly string[]): string[] {
+  const was = new Set(baseline);
+  const is = new Set(listed);
+  return [
+    ...[...is]
+      .filter((path) => !was.has(path))
+      .map(
+        (path) =>
+          `${UNAUDITED_LIST} gained ${path}: the legacy list only shrinks. Audit the file's citations instead.`,
+      ),
+    ...[...was]
+      .filter((path) => !is.has(path))
+      .map(
+        (path) =>
+          `${UNAUDITED_LIST} no longer lists ${path}: remove it from the ratchet's baseline too.`,
+      ),
+  ];
+}
