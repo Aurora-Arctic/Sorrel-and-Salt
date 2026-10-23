@@ -331,10 +331,14 @@ describe('the /admin/compendium page', () => {
 
     await renderPage({ after: encodeCursor({ key: ['Testwort'], id: TESTWORT.id }) });
 
-    expect(countCompendium).toHaveBeenCalledWith(NO_FILTER, {
-      key: ['Testwort 0'],
-      id: expect.any(String),
-    });
+    expect(countCompendium).toHaveBeenCalledWith(
+      NO_FILTER,
+      {
+        key: ['Testwort 0'],
+        id: expect.any(String),
+      },
+      ADMIN,
+    );
     expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 });
@@ -376,7 +380,7 @@ describe('the /admin/compendium filter', () => {
   it('counts the facets under the same filter as the list and its count', async () => {
     await renderPage({ query: 'test', forms: 'Fixture Oil', toxic: 'toxic' });
 
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(lastFilter());
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(lastFilter(), ADMIN);
     expect(lastFilter()).toEqual({ query: 'test', forms: ['Fixture Oil'], toxic: 'toxic' });
   });
 
@@ -393,7 +397,7 @@ describe('the /admin/compendium filter', () => {
     await renderPage({ deities: ['testa-roman', 'gone-greek'] });
 
     expect(lastFilter()).toEqual({ deityIds: ['d-ro'] });
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ deityIds: ['d-ro'] });
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ deityIds: ['d-ro'] }, ADMIN);
   });
 
   it('reads ?zodiac=, ?celestialBodies= and ?toxic= into the variables the query takes', async () => {
@@ -405,6 +409,23 @@ describe('the /admin/compendium filter', () => {
       toxic: 'not_toxic',
     });
   });
+
+  // M14.8: the services decide who may filter by the mark, so the page hands them the session.
+  it.each([
+    ['1', { reviewed: true }],
+    ['0', { reviewed: false }],
+    ['yes', {}],
+  ])(
+    'reads ?reviewed=%s into the filter, passed with the session to the list, its count and the facets',
+    async (reviewed, filter) => {
+      await renderPage({ reviewed });
+      expect(lastFilter()).toEqual(filter);
+      expect(listCompendium.mock.lastCall?.[listCompendium.mock.lastCall.length - 1]).toEqual(
+        ADMIN,
+      );
+      expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(filter, ADMIN);
+    },
+  );
 
   it('reads a ?toxic= that is neither setting as no filter', async () => {
     await renderPage({ toxic: 'any' });

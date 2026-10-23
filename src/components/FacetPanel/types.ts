@@ -1,5 +1,5 @@
 import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
-import type { CompendiumFacetCounts } from '../CompendiumList/types';
+import type { CompendiumFacetCounts, ReviewSetting } from '../CompendiumList/types';
 
 /**
  * What the panel shows as chosen. Every facet but the last three is a list of
@@ -21,6 +21,11 @@ export interface FacetPanelFilter {
   withoutReferences: boolean;
   /** Show only the entries that have no live form (admin; M12.30). */
   withoutForms: boolean;
+  /**
+   * The admin's Reviewed strip (M14.8), shown only when this is set: `''` for either, as the
+   * address leaves it blank. The public and coven panels leave it out.
+   */
+  reviewed?: '' | ReviewSetting;
   /**
    * The coven's Source control (M9.7), shown only when this is set: `''` for both,
    * as the address leaves it blank. The compendium's panel leaves it out.

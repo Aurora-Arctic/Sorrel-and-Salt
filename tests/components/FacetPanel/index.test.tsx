@@ -696,6 +696,100 @@ describe('FacetPanel', () => {
     expect(screen.queryByRole('switch', { name: /^No Form/ })).toBeNull();
   });
 
+  describe("the admin's Reviewed strip (M14.8)", () => {
+    const REVIEWED: CompendiumFacetCounts['reviewed'] = [
+      { value: 'reviewed', label: 'Reviewed', count: 4 },
+      { value: 'needs_review', label: 'Needs Review', count: 7 },
+    ];
+    const openAdmin = (
+      filter: Partial<FacetPanelFilter> = { reviewed: '' },
+      more: Partial<FacetPanelProps> = {},
+    ) => {
+      stubViewport(true);
+      render(
+        <FacetPanel
+          {...props(filter, { admin: true, facets: { ...FACETS, reviewed: REVIEWED }, ...more })}
+        />,
+      );
+      fireEvent.click(filtersButton());
+    };
+    const group = () => screen.getByRole('group', { name: /^Reviewed/ });
+
+    it('offers Any, Reviewed and Needs Review with their counts, on Any by default', () => {
+      openAdmin();
+      expect(within(group()).getByRole('radio', { name: 'Any' })).toBeChecked();
+      expect(within(group()).getByRole('radio', { name: 'Reviewed 4' })).toBeInTheDocument();
+      expect(within(group()).getByRole('radio', { name: 'Needs Review 7' })).toBeInTheDocument();
+    });
+
+    it('is shown to an admin panel alone, and only once the review counts are read', () => {
+      stubViewport(true);
+      const { rerender } = render(
+        <FacetPanel {...props({ reviewed: '' }, { facets: { ...FACETS, reviewed: REVIEWED } })} />,
+      );
+      fireEvent.click(filtersButton());
+      // Not an admin panel, though it was handed the setting and the counts.
+      expect(screen.queryByRole('group', { name: /^Reviewed/ })).toBeNull();
+      // An admin panel without the counts, which the service gives a curator alone.
+      rerender(<FacetPanel {...props({ reviewed: '' }, { admin: true })} />);
+      expect(screen.queryByRole('group', { name: /^Reviewed/ })).toBeNull();
+      rerender(
+        <FacetPanel
+          {...props({ reviewed: '' }, { admin: true, facets: { ...FACETS, reviewed: REVIEWED } })}
+        />,
+      );
+      expect(group()).toBeInTheDocument();
+    });
+
+    it('reports each choice as a patch of only that part', () => {
+      const onChange = vi.fn();
+      openAdmin({ reviewed: '' }, { onChange });
+      fireEvent.click(within(group()).getByRole('radio', { name: 'Needs Review 7' }));
+      expect(onChange).toHaveBeenLastCalledWith({ reviewed: 'needs_review' });
+      fireEvent.click(within(group()).getByRole('radio', { name: 'Reviewed 4' }));
+      expect(onChange).toHaveBeenLastCalledWith({ reviewed: 'reviewed' });
+    });
+
+    it('counts a chosen setting on the Filters button', () => {
+      openAdmin({ reviewed: 'needs_review' });
+      expect(filtersButton()).toHaveAccessibleName('Filters 1');
+    });
+
+    it('submits through the GET form around it in the address spelling, reviewed=0', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel
+            {...props(
+              { reviewed: 'needs_review' },
+              { admin: true, facets: { ...FACETS, reviewed: REVIEWED } },
+            )}
+          />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('reviewed')).toEqual(['0']);
+    });
+
+    it('rests on Any, disabled with a hint, when every matching entry has the same mark', () => {
+      openAdmin(
+        { reviewed: 'reviewed' },
+        {
+          facets: {
+            ...FACETS,
+            reviewed: [
+              { value: 'reviewed', label: 'Reviewed', count: 4 },
+              { value: 'needs_review', label: 'Needs Review', count: 0 },
+            ],
+          },
+        },
+      );
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+    });
+  });
+
   it('renders inline and open before hydration, every control present, with Filters a link to the panel', () => {
     const markup = renderToString(<FacetPanel {...props({ forms: ['test-oil'] })} />);
     const host = document.createElement('div');

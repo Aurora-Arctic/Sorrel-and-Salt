@@ -4,6 +4,7 @@ import {
   eq,
   gt,
   inArray,
+  isNotNull,
   isNull,
   lte,
   ne,
@@ -698,6 +699,7 @@ export function compendiumList(
       filter.withoutReferences ? citesNowhere() : undefined,
       filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
+      reviewArm(filter.reviewed),
     ),
     order: match
       ? {
@@ -1058,6 +1060,18 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
     ),
   ) as SQL;
   return toxic === 'toxic' ? flagged : not(flagged);
+}
+
+/**
+ * A curator's review mark (M14.8): true keeps the entries holding one, false
+ * the ones without. Read off `curator_reviewed_at`, which a CHECK keeps set
+ * exactly when `curator_reviewed_by` is. Absent means any.
+ */
+export function reviewArm(reviewed: IngredientFilter['reviewed']): SQL | undefined {
+  if (reviewed === undefined) return undefined;
+  return reviewed
+    ? isNotNull(ingredients.curatorReviewedAt)
+    : isNull(ingredients.curatorReviewedAt);
 }
 
 /**

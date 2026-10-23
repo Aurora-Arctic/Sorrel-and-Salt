@@ -20,7 +20,7 @@ import type {
   CompendiumListFilter,
 } from '../../../../components/CompendiumList/types';
 import PageHeader from '../../../../components/PageHeader';
-import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
+import { DEFAULT_PAGE_SIZE, allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import { ingredientDetailOf, resolveCompendiumSlug } from '@/modules/ingredients';
@@ -79,8 +79,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // The entry whose details are open over the list, `?entry=` (M12.5).
   const entrySlug = single(params.entry);
   const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
-    readCompendium(variables, after, before),
-    readFacets(variables),
+    // The session, for the Reviewed filter and its counts, a curator's alone (M14.8).
+    readCompendium(variables, after, before, DEFAULT_PAGE_SIZE, session),
+    readFacets(variables, session),
     readFormIcons(),
     readEditPlace(place, readCompendiumEntry),
     entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug)) : undefined,

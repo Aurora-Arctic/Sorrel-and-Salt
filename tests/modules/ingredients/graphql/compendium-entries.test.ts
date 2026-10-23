@@ -406,6 +406,70 @@ describe('setCompendiumEntryReviewed', () => {
   });
 });
 
+describe('the reviewed filter and its counts', () => {
+  const LIST =
+    'query ($reviewed: Boolean) { compendium(first: 100, reviewed: $reviewed) { edges { node { id } } } }';
+  const FACETS =
+    'query ($reviewed: Boolean) { compendiumFacets(reviewed: $reviewed) { reviewed { value count } } }';
+
+  async function seedPair() {
+    const reviewed = await seed({ name: 'Testwort', nomenclature: 'none' });
+    const unreviewed = await seed({ name: 'Testbane', nomenclature: 'none' });
+    await run(
+      asUser(F),
+      'mutation ($id: ID!) { setCompendiumEntryReviewed(id: $id, reviewed: true) { id } }',
+      {
+        id: reviewed,
+      },
+    );
+    return { reviewed, unreviewed };
+  }
+
+  it('narrows the list for a curator, and is FORBIDDEN signed out and for a member', async () => {
+    const { reviewed, unreviewed } = await seedPair();
+    // Why a refusal below is the gate: a curator's same query answers.
+    const curator = await run<{ compendium: { edges: { node: { id: string } }[] } }>(
+      asUser(F),
+      LIST,
+      { reviewed: true },
+    );
+    expect(curator.data?.compendium.edges.map((edge) => edge.node.id)).toEqual([reviewed]);
+    const needing = await run<{ compendium: { edges: { node: { id: string } }[] } }>(
+      asUser(E),
+      LIST,
+      { reviewed: false },
+    );
+    expect(needing.data?.compendium.edges.map((edge) => edge.node.id)).toEqual([unreviewed]);
+
+    for (const session of [null, asUser(B), asUser(A)]) {
+      const refused = await run(session, LIST, { reviewed: true });
+      expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      expect(refused.data?.compendium ?? null).toBeNull();
+    }
+    // Without the argument the list stays public.
+    const open = await run<{ compendium: { edges: unknown[] } }>(null, LIST, {});
+    expect(open.data?.compendium.edges).toHaveLength(2);
+  });
+
+  it('counts for a curator alone, and refuses the filter on the counts too', async () => {
+    await seedPair();
+    const curator = await run<{ compendiumFacets: { reviewed: unknown } }>(asUser(F), FACETS, {});
+    expect(curator.data?.compendiumFacets.reviewed).toEqual(
+      expect.arrayContaining([
+        { value: true, count: 1 },
+        { value: false, count: 1 },
+      ]),
+    );
+
+    for (const session of [null, asUser(B)]) {
+      const counts = await run<{ compendiumFacets: { reviewed: unknown } }>(session, FACETS, {});
+      expect(counts.errors).toBeUndefined();
+      expect(counts.data?.compendiumFacets.reviewed).toBeNull();
+      const refused = await run(session, FACETS, { reviewed: true });
+      expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    }
+  });
+});
 describe('compendiumEntryUsers', () => {
   const USERS = 'query ($id: ID!) { compendiumEntryUsers(id: $id) }';
 

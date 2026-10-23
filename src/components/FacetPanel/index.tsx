@@ -123,6 +123,9 @@ function NativeCategories({
   );
 }
 
+/** The Reviewed strip's settings as the address writes them (M14.8). */
+const REVIEW_ADDRESS = { reviewed: '1', needs_review: '0' } as const;
+
 export default function FacetPanel({
   facets,
   filter,
@@ -160,6 +163,7 @@ export default function FacetPanel({
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
     (admin && filter.withoutForms ? 1 : 0) +
+    (admin && filter.reviewed ? 1 : 0) +
     (filter.source ? 1 : 0) +
     (filter.inStock ? 1 : 0) +
     (filter.lowStockOnly ? 1 : 0);
@@ -170,6 +174,9 @@ export default function FacetPanel({
   // matching entry comes from the other, so the filter cannot narrow. Counts not yet read
   // (`facets.source` unset) leave it free.
   const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
+  // The Reviewed chip (M14.8), stuck the same way: with either side empty, every matching
+  // entry is reviewed or none is.
+  const reviewedStuck = facets.reviewed?.some((choice) => choice.count === 0) ?? false;
 
   // Focus goes back to the button when it was inside the panel, so that a closing panel
   // never leaves it on a control that is about to disappear.
@@ -536,6 +543,37 @@ export default function FacetPanel({
                       name="withoutForms"
                       checked={filter.withoutForms}
                       onChange={(withoutForms) => onChange({ withoutForms })}
+                    />
+                  )}
+                  {admin && filter.reviewed !== undefined && facets.reviewed && (
+                    <ChoiceChip
+                      legend="Reviewed"
+                      name="reviewed"
+                      // The address's own spelling, `1` and `0`, so the form submits what the
+                      // parameter table reads before hydration.
+                      options={[
+                        { value: '', label: 'Any' },
+                        ...facets.reviewed.map((choice) => ({
+                          value: REVIEW_ADDRESS[choice.value],
+                          label: choice.label,
+                          count: choice.count,
+                        })),
+                      ]}
+                      value={
+                        reviewedStuck || !filter.reviewed ? '' : REVIEW_ADDRESS[filter.reviewed]
+                      }
+                      disabled={reviewedStuck}
+                      chipHint={
+                        reviewedStuck
+                          ? 'Every matching entry has the same review mark, so this filter cannot narrow further.'
+                          : undefined
+                      }
+                      onChange={(value) =>
+                        onChange({
+                          reviewed:
+                            value === '1' ? 'reviewed' : value === '0' ? 'needs_review' : '',
+                        })
+                      }
                     />
                   )}
                 </div>

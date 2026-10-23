@@ -96,7 +96,8 @@ export type SearchSentenceFacet =
   | 'lowStockOnly'
   | 'nomenclature'
   | 'withoutReferences'
-  | 'withoutForms';
+  | 'withoutForms'
+  | 'reviewed';
 
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
 export interface SearchSentenceFilter {
@@ -125,6 +126,8 @@ export interface SearchSentenceFilter {
   withoutReferences?: boolean;
   /** Admin lists only. */
   withoutForms?: boolean;
+  /** Admin lists only (M14.8): `reviewed`, `needs_review`, or left out for either. */
+  reviewed?: 'reviewed' | 'needs_review' | null;
 }
 
 /** The kinds that choose from a vocabulary, and so take display labels. */

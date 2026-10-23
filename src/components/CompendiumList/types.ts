@@ -9,7 +9,7 @@ import type { CardCategory } from '../CategoryChips/types';
 import type { PickerCategory } from '../CategoryPicker/types';
 import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
 import type { COVEN_PARAMS } from '../IngredientSearch/coven-params';
-import type { COMPENDIUM_PARAMS } from './params';
+import type { COMPENDIUM_PARAMS, REVIEW_SETTINGS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -134,11 +134,20 @@ export interface CompendiumFacetCounts {
    * source, and by a coven panel whose counts have not been read.
    */
   source?: FacetChoice<IngredientSource>[];
+  /**
+   * The admin's Reviewed strip (M14.8): Reviewed, then Needs Review, zeros kept, each counted
+   * with the strip's own choice left out. Left off for anyone who does not curate, whom the
+   * service gives no review counts.
+   */
+  reviewed?: FacetChoice<ReviewSetting>[];
   /** The coven's In Stock switch's count, the same with it on or off. Left off with `source`. */
   inStock?: number;
   /** The coven's Low Stock Only switch's count (M9.8), read as inStock's is. */
   lowStockOnly?: number;
 }
+
+/** The Reviewed strip's two settings (M14.8): marked reviewed by a curator, or not. */
+export type ReviewSetting = (typeof REVIEW_SETTINGS)[number];
 
 /**
  * The list's filter as asked: the name query, the forms, deities (by slug),
@@ -175,7 +184,8 @@ export type CompendiumListFilterProps = Pick<
    * The filter the page shows. A coven list's also carries its Source, In Stock and Low Stock Only
    * choices (`CovenListFilter`), which the other two lists leave out.
    */
-  filter: CompendiumListFilter &
+  filter: Omit<CompendiumListFilter, 'reviewed'> &
+    Partial<Pick<CompendiumListFilter, 'reviewed'>> &
     Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
   /**
    * Who the filter is for. The admin's (the default) opens an entry's edit modal on a pick, offers

@@ -30,6 +30,8 @@ export interface CompendiumSearchParams extends ListSearchParams {
   zodiac?: string | string[];
   celestialBodies?: string | string[];
   toxic?: string | string[];
+  /** Reviewed by a curator, `1`, or not, `0` (M14.8); the public page drops it. */
+  reviewed?: string | string[];
   /** The entry whose details modal is open over the list, by slug (M12.5). */
   entry?: string | string[];
 }

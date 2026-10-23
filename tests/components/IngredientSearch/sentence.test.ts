@@ -197,6 +197,28 @@ describe('buildSearchSentence', () => {
     });
   });
 
+  it('names the review mark only for an admin list, either way, and carries the facet that removes it (M14.8)', () => {
+    expect(text({ reviewed: 'reviewed' }, 2)).toBe('2 ingredients');
+    expect(text({ reviewed: 'reviewed' }, 2, { admin: true })).toBe(
+      '2 ingredients, reviewed by a curator',
+    );
+    expect(text({ reviewed: 'needs_review' }, 2, { admin: true })).toBe(
+      '2 ingredients, needing review',
+    );
+    const { fragments, hasFilter } = buildSearchSentence({
+      filter: { reviewed: 'needs_review' },
+      total: 2,
+      admin: true,
+    });
+    expect(hasFilter).toBe(true);
+    expect(fragments).toContainEqual({
+      kind: 'value',
+      text: 'needing review',
+      facet: 'reviewed',
+      value: 'needs_review',
+    });
+  });
+
   it('carries on each value fragment the facet and value that remove it', () => {
     const labels = { forms: { oil: 'Oil' }, celestialBodies: { sun: 'Sun' } };
     const { fragments, hasFilter } = buildSearchSentence({

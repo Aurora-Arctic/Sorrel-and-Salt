@@ -178,6 +178,21 @@ describe('the public compendium page', () => {
     expect(variablesRead()).not.toHaveProperty('withoutReferences');
   });
 
+  // M14.8: the review filter is the admin list's; the services refuse it to anyone else.
+  it('reads the same list with ?reviewed=1 as without it, for a curator too', async () => {
+    await renderPage();
+    const unfiltered = readCompendium.mock.lastCall![0];
+    readCompendium.mockClear();
+    document.body.innerHTML = '';
+    viewerIfSignedIn.mockResolvedValue({
+      ...shellOf(),
+      viewer: { name: 'Fixture', canCurate: true },
+    });
+    await renderPage({ reviewed: '1' });
+    expect(readCompendium.mock.lastCall![0]).toBe(unfiltered);
+    expect(variablesRead()).not.toHaveProperty('reviewed');
+  });
+
   it('leaves a visitor with no account no action on the cards, and no second Sign In', async () => {
     await renderPage();
     expect(screen.getAllByRole('link', { name: 'Testwort' }).length).toBeGreaterThan(0);

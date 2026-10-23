@@ -13,6 +13,7 @@ import {
   INGREDIENT_ELEMENTS,
   type ToxicFilter,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import type { ReviewSetting } from './types';
 
 // The two settings the Toxic strip chooses between. The query's third, `any`,
 // is no filter, so it is the address with no `toxic` in it.
@@ -20,6 +21,11 @@ const TOXIC_SETTINGS = ['toxic', 'not_toxic'] as const satisfies readonly Exclud
   ToxicFilter,
   'any'
 >[];
+
+// The Reviewed strip's two settings (M14.8). No filter is the address with no
+// `reviewed` in it; the address writes them `1` and `0`, and the query
+// variable is true or false.
+export const REVIEW_SETTINGS = ['reviewed', 'needs_review'] as const;
 
 // The compendium search's parameters, each once (M8.13): the name in the
 // address, how it is read, and the filter variable it becomes. The page reads
@@ -82,4 +88,18 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   // Toxic entries, or entries that are not: `?toxic=not_toxic`. Left out for
   // either, so `any` and a junk value read as no filter.
   toxic: choiceParam('toxic', TOXIC_SETTINGS, 'toxic'),
+  // Entries a curator marked reviewed, `?reviewed=1`, or not, `?reviewed=0`
+  // (M14.8). Only the admin list offers it, and the read refuses it without a
+  // curator's session, since the mark is the curators' alone.
+  reviewed: searchParam({
+    name: 'reviewed',
+    variable: 'reviewed',
+    read: (raw): ReviewSetting | '' => {
+      const value = single(raw);
+      return value === '1' ? 'reviewed' : value === '0' ? 'needs_review' : '';
+    },
+    write: (setting: ReviewSetting | '') =>
+      setting === 'reviewed' ? '1' : setting === 'needs_review' ? '0' : undefined,
+    toVariable: (setting) => (setting === '' ? undefined : setting === 'reviewed'),
+  }),
 });

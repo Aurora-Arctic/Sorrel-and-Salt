@@ -42,6 +42,9 @@ const SOURCE_LABELS = { local: 'Local', compendium: 'Compendium' } as const;
 /** The toxic strip's two settings as the facets name them, and what each says. */
 const TOXIC_LABELS = { toxic: 'Toxic', not_toxic: 'Not Toxic' } as const;
 
+/** The Reviewed strip's two settings as the facets name them, and what each says (M14.8). */
+const REVIEW_LABELS = { reviewed: 'Reviewed', needs_review: 'Needs Review' } as const;
+
 /** Counts that carry no vocabulary of their own: the value is the label. */
 const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: value, count });
 
@@ -56,7 +59,10 @@ export function covenFacetCounts(
   vocabularies: FacetVocabularies,
 ): CompendiumFacetCounts {
   return {
-    ...compendiumFacetCounts({ ...facets, withoutReferences: 0, withoutForms: 0 }, vocabularies),
+    ...compendiumFacetCounts(
+      { ...facets, withoutReferences: 0, withoutForms: 0, reviewed: null },
+      vocabularies,
+    ),
     source: facets.source.map(({ value, count }) => ({
       value,
       label: SOURCE_LABELS[value],
@@ -111,5 +117,12 @@ export function compendiumFacetCounts(
     })),
     withoutReferences: facets.withoutReferences,
     withoutForms: facets.withoutForms,
+    ...(facets.reviewed && {
+      reviewed: facets.reviewed.map(({ value, count }) => ({
+        value,
+        label: REVIEW_LABELS[value],
+        count,
+      })),
+    }),
   };
 }

@@ -18,11 +18,12 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
+import { compendiumFilterFor } from './compendium-filter';
 import { heldCompendiumEntry } from './cupboard-entries';
 import { ingredientDetailOf } from './ingredient-detail';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
-import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
+import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
@@ -81,29 +82,37 @@ const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount
  * malformed id would come back as "Invalid cursor". A query shorter than
  * `MIN_QUERY_LENGTH` is no search.
  *
+ * `viewer` is needed only for the Reviewed setting (M14.8), which a curator
+ * alone may set; the rest of the list takes no session.
+ *
+ * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the
  * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function listCompendium(
   filter: CompendiumFilterInput,
   page: PageRequest,
+  viewer: Session | null = null,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  return cachedPage(parseInput(CompendiumFilter, filter), page);
+  return cachedPage(compendiumFilterFor(filter, viewer), page);
 }
 
 /**
  * How many entries the compendium holds under `filter`, and how many come
  * before `start` — a page's first row, none on an empty page. Parsed as
- * `listCompendium` parses, so it counts the rows that list's pages hold.
+ * `listCompendium` parses, so it counts the rows that list's pages hold, and
+ * refused the Reviewed setting as it refuses it.
  *
+ * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the
  * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function countCompendium(
   filter: CompendiumFilterInput,
   start: Cursor | undefined,
+  viewer: Session | null = null,
 ): Promise<PageCount> {
-  return cachedCount(parseInput(CompendiumFilter, filter), start);
+  return cachedCount(compendiumFilterFor(filter, viewer), start);
 }
 
 /**

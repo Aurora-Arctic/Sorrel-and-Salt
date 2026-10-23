@@ -139,6 +139,7 @@ export type {
   DeityFilter,
   DeitySuggestion,
   FacetCount,
+  ReviewFacetValue,
   FormSuggestion,
   GroupFilter,
   IngredientFacets,

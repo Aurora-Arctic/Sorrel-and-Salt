@@ -772,6 +772,12 @@ export interface IngredientFilter {
   withoutForms?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
+  /**
+   * The compendium's only (M14.8): true keeps the entries a curator has marked
+   * reviewed, false the ones still needing review. Absent keeps both. The
+   * service lets only a curator set it.
+   */
+  reviewed?: boolean;
 }
 
 /** One facet value and how many entries the list would hold with it chosen (M12.3). */
@@ -818,7 +824,16 @@ export interface WorkspaceIngredientFacets extends IngredientFacets {
 export interface CompendiumFacets extends IngredientFacets {
   withoutReferences: number;
   withoutForms: number;
+  /**
+   * How many entries are reviewed and how many need review, under the rest of
+   * the filter (M14.8). The repository always counts them; the service answers
+   * null to anyone but a curator, since the mark is the curators' alone.
+   */
+  reviewed: FacetCount<ReviewFacetValue>[] | null;
 }
+
+/** The Reviewed filter's two settings, as its facet counts them (M14.8). */
+export type ReviewFacetValue = 'reviewed' | 'needs_review';
 
 /**
  * What a compendium entry carries onto its edge: on a search, its rank — the

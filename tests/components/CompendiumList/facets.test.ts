@@ -47,6 +47,7 @@ const EMPTY: CompendiumFacets = {
   toxic: [],
   withoutReferences: 0,
   withoutForms: 0,
+  reviewed: null,
 };
 
 describe('the facet counts as the list takes them', () => {
@@ -201,6 +202,24 @@ describe('the facet counts as the list takes them', () => {
     ]);
     expect(counts.withoutReferences).toBe(7);
     expect(counts.withoutForms).toBe(5);
+  });
+
+  it('names both review settings with their counts for a curator, and leaves the strip off without them (M14.8)', () => {
+    const counts = compendiumFacetCounts(
+      {
+        ...EMPTY,
+        reviewed: [
+          { value: 'reviewed', count: 2 },
+          { value: 'needs_review', count: 0 },
+        ],
+      },
+      VOCABULARIES,
+    );
+    expect(counts.reviewed).toEqual([
+      { value: 'reviewed', label: 'Reviewed', count: 2 },
+      { value: 'needs_review', label: 'Needs Review', count: 0 },
+    ]);
+    expect(compendiumFacetCounts(EMPTY, VOCABULARIES)).not.toHaveProperty('reviewed');
   });
 });
 

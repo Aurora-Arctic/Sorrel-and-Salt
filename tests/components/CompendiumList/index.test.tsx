@@ -112,6 +112,7 @@ const NO_FILTER: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  reviewed: '',
 };
 
 /** Every filter in use, as a page shows it. */
@@ -127,6 +128,7 @@ const SHOWN: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  reviewed: '',
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */

@@ -60,6 +60,7 @@ const NO_FILTER: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  reviewed: '',
 };
 
 // The categories the Categories box offers, under two groups in their colours.
@@ -217,6 +218,7 @@ export const Filtered: Story = () => (
         zodiac: [],
         celestialBodies: [],
         toxic: '',
+        reviewed: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}
@@ -255,6 +257,7 @@ export const NoMatch: Story = () => (
         zodiac: [],
         celestialBodies: [],
         toxic: '',
+        reviewed: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}

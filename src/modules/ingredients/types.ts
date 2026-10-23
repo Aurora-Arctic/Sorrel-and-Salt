@@ -7,6 +7,7 @@ import type {
   IngredientFacets,
   IngredientRow,
   ReferenceRow,
+  ReviewFacetValue,
   StockRow,
   WorkspaceIngredientFacets,
 } from '../../db/repository';
@@ -29,6 +30,7 @@ export type {
   IngredientFacets,
   IngredientRow,
   ReferenceRow,
+  ReviewFacetValue,
   StockRow,
   WorkspaceIngredientFacets,
 };

@@ -37,6 +37,7 @@ const NO_FILTER: Filter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  reviewed: '',
 };
 
 const NO_FACETS: CompendiumFacetCounts = {

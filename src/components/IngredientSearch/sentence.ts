@@ -12,7 +12,7 @@ import type {
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
 // text query, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
-// then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
+// then a coven's source, in stock and low stock, then the admin-only nomenclature, No Refs, No Form and Reviewed
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
 // `Intl.ListFormat` is Baseline Widely Available, so no guard line is needed.
@@ -210,6 +210,15 @@ export function buildSearchSentence({
       text: 'without forms',
       facet: 'withoutForms',
       value: 'true',
+    });
+  }
+
+  if (admin && (filter.reviewed === 'reviewed' || filter.reviewed === 'needs_review')) {
+    clause({
+      kind: 'value',
+      text: filter.reviewed === 'reviewed' ? 'reviewed by a curator' : 'needing review',
+      facet: 'reviewed',
+      value: filter.reviewed,
     });
   }
 

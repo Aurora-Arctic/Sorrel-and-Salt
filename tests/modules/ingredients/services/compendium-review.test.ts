@@ -3,6 +3,8 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import {
+  compendiumFacets,
+  countCompendium,
   createCompendiumEntry,
   getIngredient,
   listCompendium,
@@ -275,3 +277,93 @@ async function stampsOfSlug(id: string) {
   const [row] = await sql<{ slug: string }[]>`select slug from ingredients where id = ${id}`;
   return row;
 }
+
+describe('the Reviewed filter (M14.8)', () => {
+  const PAGE = { limit: 26, inverted: false } as const;
+
+  /** A compendium entry of its own name and no formal one, so several can stand together. */
+  const named = (name: string) => seeded({ name, nomenclature: 'none', canonicalName: null });
+
+  /** Two compendium entries, one reviewed by F, and a coven's own entry. */
+  async function twoEntries() {
+    const reviewed = await named('Alphawort');
+    const unreviewed = await named('Betawort');
+    await local();
+    await setCompendiumEntryReviewed(asUser(F), reviewed, true);
+    return { reviewed, unreviewed };
+  }
+
+  const idsOf = (page: Awaited<ReturnType<typeof listCompendium>>) =>
+    page.map(({ node }) => node.id);
+
+  it.each([
+    ['a curator (F)', F],
+    ['an admin (E)', E],
+  ])(
+    'lists and counts the reviewed entries, or the ones needing review, for %s',
+    async (_who, user) => {
+      const { reviewed, unreviewed } = await twoEntries();
+      const session = asUser(user);
+      // Why the filter is doing the narrowing: without it both entries list.
+      expect(idsOf(await listCompendium({}, PAGE, session)).sort()).toEqual(
+        [reviewed, unreviewed].sort(),
+      );
+
+      expect(idsOf(await listCompendium({ reviewed: true }, PAGE, session))).toEqual([reviewed]);
+      expect(idsOf(await listCompendium({ reviewed: false }, PAGE, session))).toEqual([unreviewed]);
+      expect((await countCompendium({ reviewed: true }, undefined, session)).totalCount).toBe(1);
+      expect((await countCompendium({ reviewed: false }, undefined, session)).totalCount).toBe(1);
+    },
+  );
+
+  it.each([
+    ['a signed-out visitor', null],
+    ['a coven owner (A)', A],
+    ['a member of an unrelated coven (D)', D],
+  ])('refuses %s the filter, on the list, the count and the facets', async (_who, user) => {
+    await twoEntries();
+    const session = user && asUser(user);
+    // Why it could have answered: the same read without the filter does, and a
+    // curator's with it does.
+    await expect(listCompendium({}, PAGE, session)).resolves.toHaveLength(2);
+    await expect(listCompendium({ reviewed: true }, PAGE, asUser(F))).resolves.toHaveLength(1);
+
+    for (const reviewed of [true, false]) {
+      await expect(listCompendium({ reviewed }, PAGE, session)).rejects.toBeInstanceOf(Forbidden);
+      await expect(countCompendium({ reviewed }, undefined, session)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+      await expect(compendiumFacets({ reviewed }, session)).rejects.toBeInstanceOf(Forbidden);
+    }
+  });
+
+  it('counts each setting for a curator, under the rest of the filter and not its own', async () => {
+    await twoEntries();
+    await named('Gammawort');
+
+    const counts = await compendiumFacets({ reviewed: true }, asUser(F));
+    expect(counts.reviewed).toEqual([
+      { value: 'reviewed', count: 1 },
+      { value: 'needs_review', count: 2 },
+    ]);
+    // Under the rest of the filter: a search for one name counts that one.
+    const searched = await compendiumFacets({ query: 'Gammawort' }, asUser(F));
+    expect(searched.reviewed).toEqual([
+      { value: 'reviewed', count: 0 },
+      { value: 'needs_review', count: 1 },
+    ]);
+  });
+
+  it('gives the counts to nobody else, and the rest of the facets unchanged', async () => {
+    await twoEntries();
+    const curator = await compendiumFacets({}, asUser(F));
+    // The precondition: there are counts to withhold.
+    expect(curator.reviewed).toHaveLength(2);
+
+    for (const session of [null, asUser(A), asUser(D)]) {
+      const facets = await compendiumFacets({}, session);
+      expect(facets.reviewed).toBeNull();
+      expect(facets.toxic).toEqual(curator.toxic);
+    }
+  });
+});
