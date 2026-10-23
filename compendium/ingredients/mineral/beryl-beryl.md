@@ -88,3 +88,8 @@ seedUpdate: bcede0af906c875da6332af78541814102d3db07c975dea7eedbd2e3ff2bc1db
 # Beryl
 
 Beryl is a mineral, a silicate of beryllium and aluminium, that grows as six-sided columns; single crystals can reach several metres, though ones with finished ends are uncommon. Pure beryl has no colour of its own, but traces of other elements tint it green, blue, yellow, pink or, most rarely, red, and its best-known varieties are emerald and aquamarine. It is found mostly in granite pegmatites, and also in mica schists and in Colombian limestone, and it is mined as an ore of beryllium. The name reached English through French and Latin from a Greek word used for several blue-green stones. The first spectacles, made in thirteenth-century Italy, had lenses ground from beryl or rock crystal, which is why the German word for glasses is Brille. Cunningham gives beryl to the Moon and to water, links it with Poseidon and Neptune, and calls it the seer's stone: he says spheres and flat mirrors of it served for scrying, that John Dee's famous crystal was beryl rather than quartz, and that it is worn at sea against storms and drowning, to draw love and friendship, and to reconcile enemies. Hall describes it as a stone for coping with a stressful life and dropping needless burdens, credits it with lending courage, and recommends it for scrying and crystal balls.
+
+#### Edit Notes for Claude
+
+- Deity gap: Tiamat (Cunningham's Crystals, pp. 76–78; p. 190), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Mara (Cunningham's Crystals, pp. 76–78; p. 190), not in the vocabulary; link once M14.15 adds it.

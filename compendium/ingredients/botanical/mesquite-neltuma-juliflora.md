@@ -104,3 +104,7 @@ seedUpdate: 045fbd23eed3d9456d1e19b0b2593cdb29694605e928984f025cc486097aefef
 # Mesquite
 
 Mesquite here is Neltuma juliflora, long known as Prosopis juliflora: a thorny shrub or small tree of the legume family, native to Mexico, South America and the Caribbean. It grows to about twelve metres, with light green, feathery leaves, thorns set in pairs, and greenish-yellow flowers in cylindrical spikes, followed by long pods holding ten to thirty seeds each. Its roots reach deep for water, and it has become an invasive weed in Africa, India, Australia and elsewhere; since 2019 the European Union has forbidden importing or planting it. Indigenous peoples in Peru, Chile and California ate the sweet pods raw, ground them into flour for bread or fermented them into a mild drink, and the tree also gives fodder, firewood, timber and honey. Best known today as a barbecue flavouring, mesquite takes its name from mizquitl, the Aztec word for the tree. In the Aztec creation story Quetzalcoatl, remaking the world, fed its people on mesquite fruit; the Yuma used mesquite charcoal for tattooing at girls’ puberty ceremonies, and the Moapa hardened mesquite sticks in fire for arrow tips. In magical practice it is added to healing incenses and mixtures, used to feed ritual fires, and burned as wood chips to cleanse an outdoor space before ritual.
+
+#### Edit Notes for Claude
+
+- Deity gap: Ixtlilton (Kynes's Plants, under "Mesquite"), not in the vocabulary; link once M14.15 adds it.

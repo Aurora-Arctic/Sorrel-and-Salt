@@ -130,3 +130,7 @@ Saffron is the dried stigmas of the saffron crocus, a small perennial of the iri
 <!-- audit:kynes-plants:Crocus -->
 
 Does kynes-plants under "Crocus", cited on the entry, the Flower, describe Crocus sativus? It may mean Crocus instead. The audit found: "Crocus" is the name of ingredients/botanical/crocus-crocus.md (Crocus). Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+- Deity gap: Eos (Kynes's Plants, under "Crocus"), not in the vocabulary; link once M14.15 adds it.

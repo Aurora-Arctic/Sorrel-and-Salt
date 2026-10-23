@@ -180,3 +180,7 @@ seedUpdate: 4705c93a66730082caa04873b443ffdbd1ab6bf41e0c6a0f8b7db513f2536855
 # Sesame
 
 Sesame is an upright plant with opposite, lance-shaped leaves and tubular flowers of white, pink or purple, followed by capsules that split open with a pop when ripe to release small, flattened seeds. Charred remains show it was domesticated in the Indian subcontinent at least 5,500 years ago, and it is counted the oldest oilseed crop; today it grows naturalised through the tropics, prized as a hardy crop that survives drought where others fail, with India, Myanmar and Sudan the largest producers. It is listed among the drugs of Egypt's Ebers Papyrus, and baskets of it lay among Tutankhamun's grave goods. The seeds and oil run through the cooking of the world, from the West African soups and puddings that enslaved Africans carried to colonial America to Japanese gomashio and Indian chikki. Its lore is as old: Mesopotamians used the oil for offerings and anointing, Hindu legend makes Yama, the god of death, its creator, and Greeks offered cakes of sesame and honey to Demeter and Persephone at the Thesmophoria and served sesame cakes at weddings as a sign of fertility. The 'open sesame' of Ali Baba may echo the popping pods. Cunningham gives it to the Sun, fire and Ganesha, for money and lust, keeping an open jar of seeds in the house to draw cash; Kynes adds the Moon and uses it for banishing, fertility, healing, prosperity and truth.
+
+#### Edit Notes for Claude
+
+- Deity gap: Yama (Kynes's Plants, under "Sesame"), not in the vocabulary; link once M14.15 adds it.

@@ -220,3 +220,7 @@ seedUpdate: 63dd506ae675fb5456f96a4dc974a94cce2598627dbd8fb7fb4498e81eed9d47
 # Rosemary
 
 Rosemary is an evergreen shrub of the mint family, Lamiaceae, with fragrant, needle-like leaves, green above and pale beneath, and small flowers that are commonly pale blue or purple, sometimes white or pink. It is native to the Mediterranean region, Portugal and north-west Spain; long known as Rosmarinus officinalis, it was moved into the sage genus, Salvia, in 2017. The leaves flavour stews, roasts and marinades, its oil goes into perfumes and household products, and Hungary water, one of Europe's first alcohol-based perfumes, was distilled mainly from it. Grieve records its old fame for strengthening the memory, which made it an emblem of fidelity between lovers: it was woven into bridal wreaths, given to wedding guests and used at funerals, and burned with juniper berries in sickrooms and French hospitals. Kynes adds that it was laid in graves and carried by mourners, and used across Europe in love magic and against witches, demons and the evil eye. Cunningham calls it one of the oldest incenses, burned to cleanse a place before magic, put under the pillow against nightmares and hung at the door against thieves; he gives it to the Sun and fire, and to protection, love, lust, purification, healing and sleep. Kynes adds Mercury and the Moon, five signs, and powers that include clarity, creativity, dream work and fidelity.
+
+#### Edit Notes for Claude
+
+- Deity gap: the Lares (Kynes's Plants, under "Rosemary"), not in the vocabulary; link once M14.15 adds it.
