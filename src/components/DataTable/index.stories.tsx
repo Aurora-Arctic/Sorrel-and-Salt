@@ -80,12 +80,47 @@ const emptyNode = (
   </Frame>
 );
 
+// A foot action spans the card's bottom instead of standing in its corner, the table is named
+// for a page that holds several, and a group chip draws its icon.
+const FOOT_COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
+  {
+    heading: 'Name',
+    cell: (row) => (
+      <GroupChip name={row.name} colors={row} icon={row.id === ROWS[0].id ? 'botanical' : null} />
+    ),
+  },
+  { heading: 'Description', cell: (row) => row.description },
+  {
+    heading: 'Remove',
+    action: 'foot',
+    cell: () => (
+      <button type="button" className="btn btn--small btn--destructive">
+        Remove
+      </button>
+    ),
+  },
+];
+
+const footActionNode = (
+  <Frame>
+    <h2>Groups</h2>
+    <StackTable
+      aria-label="Groups"
+      columns={FOOT_COLUMNS}
+      rows={ROWS}
+      rowKey={(row) => row.id}
+      empty=""
+    />
+  </Frame>
+);
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Roomy: roomyNode,
   Empty: emptyNode,
+  'Foot Action And Icon Chip': footActionNode,
 };
 
 export const States: Story = {
