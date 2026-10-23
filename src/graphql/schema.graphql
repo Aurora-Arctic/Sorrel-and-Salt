@@ -377,6 +377,11 @@ type Ingredient {
   A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
   """
   retired: Boolean!
+
+  """
+  When a curator marked a compendium entry reviewed: null while it needs review, and for a coven's own entry. The date only, shown to anyone; who marked it is never a field.
+  """
+  reviewedAt: DateTime
   safetyNotes: String
   slug: String!
 

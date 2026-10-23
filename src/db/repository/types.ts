@@ -985,12 +985,13 @@ export interface CitingLink {
   reference: ReferenceRow;
 }
 
-/** The columns `unread-columns.ts` leaves out of an `ingredients` row read. */
-export type UnreadIngredientColumn = 'curatorReviewedAt' | 'curatorReviewedBy';
+/** The column `unread-columns.ts` leaves out of an `ingredients` row read. */
+export type UnreadIngredientColumn = 'curatorReviewedBy';
 
 /**
  * An `ingredients` row, compendium entry or coven's, as a finder returns it: without the
- * review mark, which no finder reads with the row (`unread-columns.ts`; M14.8).
+ * name of the curator who reviewed it, which no finder reads with the row
+ * (`unread-columns.ts`; M14.8). The review date is on the row.
  */
 export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredientColumn>;
 

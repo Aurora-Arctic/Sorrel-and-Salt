@@ -198,6 +198,13 @@ IngredientRef.implement({
         'A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).',
       resolve: (row) => isRetired(row),
     }),
+    reviewedAt: t.field({
+      type: 'DateTime',
+      nullable: true,
+      description:
+        "When a curator marked a compendium entry reviewed: null while it needs review, and for a coven's own entry. The date only, shown to anyone; who marked it is never a field.",
+      resolve: (row) => row.curatorReviewedAt,
+    }),
     // The row is the loaders' key: they read `workspaceId` off it to know
     // which coven to check, and cache by `id`.
     folkNames: t.field({

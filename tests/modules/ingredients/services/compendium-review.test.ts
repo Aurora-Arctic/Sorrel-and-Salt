@@ -288,7 +288,7 @@ describe('readCompendiumReview', () => {
 });
 
 describe('the public compendium reads', () => {
-  it('carry neither the mark nor the reviewer', async () => {
+  it('carry the date of the mark and never the reviewer', async () => {
     const id = await seeded();
     await setCompendiumEntryReviewed(asUser(F), id, true);
     // Precondition: the row holds both.
@@ -303,7 +303,8 @@ describe('the public compendium reads', () => {
 
     for (const row of [listed, entry, shown.kind === 'entry' ? shown.detail.entry : undefined]) {
       expect(row).toBeDefined();
-      expect(row).not.toHaveProperty('curatorReviewedAt');
+      // The date is public (the owner's call, 2026-10-23); who marked it is not.
+      expect(row).toHaveProperty('curatorReviewedAt', expect.any(Date));
       expect(row).not.toHaveProperty('curatorReviewedBy');
     }
   });

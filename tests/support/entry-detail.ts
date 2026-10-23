@@ -24,6 +24,7 @@ export function entryDetail(overrides: Partial<IngredientRow> = {}): IngredientD
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
       identityKey: 'fixtura testalis',
+      curatorReviewedAt: null,
       description: 'A fixture herb.',
       elements: [],
       celestialBodies: [],

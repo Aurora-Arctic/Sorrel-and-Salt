@@ -89,6 +89,7 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     canonicalName: 'Fixtura testalis',
     nomenclature: 'botanical',
     identityKey: 'fixtura testalis',
+    curatorReviewedAt: null,
     description: 'A fixture herb.',
     elements: ['fire'],
     celestialBodies: ['Fixture Moon'],
