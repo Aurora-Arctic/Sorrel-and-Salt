@@ -1061,7 +1061,7 @@
     max-width: $measure;
     margin: 0;
     padding: space(2) space(3);
-    border-inline-start: 3px solid var(--notice-bar);
+    border-inline-start: $rule-heavy solid var(--notice-bar);
     background-color: color-mix(in srgb, var(--notice-bar) var(--notice-tint), transparent);
     color: $text-primary;
     font-size: type-size('small');

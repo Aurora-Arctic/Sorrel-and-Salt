@@ -272,9 +272,7 @@ $track-inset: calc(1px + 0.125rem);
     // The accent at its own strength per theme: the shared fade in dark, full
     // in light, where even 75% falls to 2.75:1 on the track
     // (claude-docs/styling.md, "The focus ring").
-    @include focus-ring($accent, $focus-ring-tab-strength);
-
-    outline-offset: -2px;
+    @include focus-ring($accent, $focus-ring-tab-strength, inset);
   }
 }
 
