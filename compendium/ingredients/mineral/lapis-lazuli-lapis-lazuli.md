@@ -79,4 +79,4 @@ Wikipedia (Lapis lazuli, lines 5–15) calls lapis lazuli a metamorphic rock com
 
 #### Edit Notes for Claude
 
-- Deity gap: Nuit (Cunningham, p. 107), not in the vocabulary under that name (the vocabulary has a row 'Nut', Egyptian sky goddess; this helper did not link it because no read source equates the two); link once M14.15 adds it or the lead confirms Nut.
+- Other name: Nuit (Cunningham, p. 107) is a spelling of Nut; link once M14.23 seeds it as an other name.
