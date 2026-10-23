@@ -4,10 +4,13 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import {
   compendiumFacets,
+  compendiumFacetsHeldIn,
   countCompendium,
+  countCompendiumHeldIn,
   createCompendiumEntry,
   getIngredient,
   listCompendium,
+  listCompendiumHeldIn,
   promoteFolkName,
   readCompendiumEntry,
   readCompendiumReview,
@@ -373,6 +376,41 @@ describe('the Reviewed filter (M14.8)', () => {
       await expect(compendiumFacets({ reviewed }, session)).rejects.toBeInstanceOf(Forbidden);
     }
   });
+
+  // The coven-held reads (M12.55) filter the compendium by what covens hold, and
+  // must keep M14.8's gate: they once parsed the filter without it.
+  it.each([
+    ['no coven picked, the cached read', []],
+    ['W picked, the scoped read', [WORKSPACE_W_ID]],
+  ])(
+    'refuses a member (B) the filter on the coven-held list, count and facets, with %s',
+    async (_what, covenIds) => {
+      await twoEntries();
+      const covens = { covenIds, covensNot: false };
+      const member = asUser(B);
+      // Why it could have answered: B belongs to W, and the same reads without the
+      // filter succeed for B; a curator (F) with the same arguments succeeds.
+      await expect(listCompendiumHeldIn(member, covens, {}, PAGE)).resolves.toBeDefined();
+      for (const reviewed of [true, false]) {
+        const filter = { reviewed };
+        await expect(listCompendiumHeldIn(asUser(F), covens, filter, PAGE)).resolves.toBeDefined();
+        await expect(
+          countCompendiumHeldIn(asUser(F), covens, filter, undefined),
+        ).resolves.toBeDefined();
+        await expect(compendiumFacetsHeldIn(asUser(F), covens, filter)).resolves.toBeDefined();
+
+        await expect(listCompendiumHeldIn(member, covens, filter, PAGE)).rejects.toBeInstanceOf(
+          Forbidden,
+        );
+        await expect(
+          countCompendiumHeldIn(member, covens, filter, undefined),
+        ).rejects.toBeInstanceOf(Forbidden);
+        await expect(compendiumFacetsHeldIn(member, covens, filter)).rejects.toBeInstanceOf(
+          Forbidden,
+        );
+      }
+    },
+  );
 
   it('counts each setting for a curator, under the rest of the filter and not its own', async () => {
     await twoEntries();
