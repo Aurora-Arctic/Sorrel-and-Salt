@@ -2,53 +2,47 @@
 status: needs-review
 nomenclature: mineral
 canonicalName: Quartz var. agate
-safetyNotes: 'Wikipedia notes that sawing, grinding and tumbling agate throws off a great deal of silica dust, and that researchers in India and China have looked at silicosis and tuberculosis among people working in the agate trade.'
-categories:
-  - 'Strength'
-  - 'Courage'
-  - 'Longevity'
-  - 'Love'
-  - 'Healing'
-  - 'Protection'
-  - 'Abundance'
-  - 'Fertility'
-  - 'Truth'
-  - 'Grounding'
-  - 'Confidence'
-  - 'Memory'
-  - 'Cleansing'
+safetyNotes: Wikipedia notes that sawing, grinding and tumbling agate throws off a great deal of silica dust, and that researchers in India and China have looked at silicosis and tuberculosis among people working in the agate trade.
 celestialBodies:
   - Mercury
 colours:
-  - 'colourless'
-  - 'blue'
-  - 'black'
-  - 'red'
-  - 'orange'
-  - 'yellow'
-  - 'white'
-  - 'brown'
-  - 'pink'
-  - 'purple'
-  - 'green'
-  - 'grey'
-deities:
-  -
-elements:
-  -
-folkNames:
-  -
+  - colourless
+  - blue
+  - black
+  - red
+  - orange
+  - yellow
+  - white
+  - brown
+  - pink
+  - purple
+  - green
+  - grey
+categories:
+  - Strength
+  - Courage
+  - Longevity
+  - Love
+  - Healing
+  - Protection
+  - Abundance
+  - Fertility
+  - Truth
+  - Grounding
+  - Confidence
+  - Memory
+  - Cleansing
 references:
   - source: cunningham-crystals
-    nameBasis: unresolved
     locator: pp. 66–67
+    nameBasis: unresolved
     supports:
       - celestialBodies
       - categories
       - description
   - source: hall-crystal-bible
-    nameBasis: unresolved
     locator: under "Agate"
+    nameBasis: unresolved
     supports:
       - colours
       - categories
@@ -63,25 +57,22 @@ references:
       - description
 variants:
   - form: Crystal
-    description: 'Hall describes agate as a waxy, generally banded stone, at times see-through with tiny crystals in it, found in many sizes. She notes that the dyed slices common in shops add nothing to its healing virtues.'
+    description: Hall describes agate as a waxy, generally banded stone, at times see-through with tiny crystals in it, found in many sizes. She notes that the dyed slices common in shops add nothing to its healing virtues.
     references:
       - source: hall-crystal-bible
-        nameBasis: unresolved
         locator: under "Agate"
+        nameBasis: unresolved
         supports:
           - form
           - description
   - form: Bead
-    description: 'Agate is widely cut into beads. In the nineteenth century the workshops of Idar-Oberstein in Germany worked out ways of staining agate, soaking it in dye, sugar or metal-salt solutions and often heating it afterwards, and sold the coloured beads around the world. In the 1939–45 war, beads of black agate from Queensland were used in the instruments of military planes that show turning and banking.'
+    description: Agate is widely cut into beads. In the nineteenth century the workshops of Idar-Oberstein in Germany worked out ways of staining agate, soaking it in dye, sugar or metal-salt solutions and often heating it afterwards, and sold the coloured beads around the world. In the 1939–45 war, beads of black agate from Queensland were used in the instruments of military planes that show turning and banking.
     references:
       - source: wikipedia-agate
         nameBasis: unresolved
         supports:
           - form
           - description
-
-zodiacSigns:
-  -
 ---
 
 # Agate

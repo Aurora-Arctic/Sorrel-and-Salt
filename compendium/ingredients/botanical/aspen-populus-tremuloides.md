@@ -1,7 +1,8 @@
 ---
 status: needs-review
 nomenclature: botanical
-canonicalName: 'Populus tremuloides'
+canonicalName: Populus tremuloides
+safetyNotes: Cunningham marks it as currently recognised as safe (his health code G).
 elements:
   - air
   - water
@@ -14,99 +15,99 @@ zodiacSigns:
   - Capricorn
   - Libra
 folkNames:
-  - 'Quaking Aspen'
-  - 'Trembling Aspen'
-  - 'American Aspen'
-  - 'Aspen Poplar'
-  - 'Mountain Aspen'
-  - 'Golden Aspen'
-  - 'Quaking Poplar'
-  - 'Trembling Poplar'
-  - 'Shivering Tree'
-  - 'Popple'
+  - Quaking Aspen
+  - Trembling Aspen
+  - American Aspen
+  - Aspen Poplar
+  - Mountain Aspen
+  - Golden Aspen
+  - Quaking Poplar
+  - Trembling Poplar
+  - Shivering Tree
+  - Popple
 deities:
-  - 'Apollo'
-  - 'Danu'
-  - 'Frigg'
-  - 'Gaia'
-  - 'Hecate'
-  - 'Morrigan'
-  - 'Odin'
-  - 'Persephone'
-  - 'Tyr'
-  - 'Zeus'
+  - Apollo
+  - Danu
+  - Frigg
+  - Gaia
+  - Hecate
+  - Morrigan
+  - Odin
+  - Persephone
+  - Tyr
+  - Zeus
 categories:
-  - 'Ancestor Work'
-  - 'Communication'
-  - 'Courage'
-  - 'Divination'
-  - 'Healing'
-  - 'Knowledge'
-  - 'Peace'
-  - 'Prosperity'
-  - 'Protection'
-  - 'Success'
+  - Ancestor Work
+  - Communication
+  - Courage
+  - Divination
+  - Healing
+  - Knowledge
+  - Peace
+  - Prosperity
+  - Protection
+  - Success
 references:
-  - source: 'cunningham-herbs'
-    nameBasis: unresolved
-    locator: 'under "Aspen"; p. 266'
-    supports:
-      - 'canonicalName'
-      - 'description'
-      - 'elements'
-      - 'celestialBodies'
-      - 'folkNames'
-      - 'safetyNotes'
-  - source: 'kynes-plants'
-    nameBasis: unresolved
-    locator: 'under "Aspen"'
-    supports:
-      - 'canonicalName'
-      - 'description'
-      - 'elements'
-      - 'celestialBodies'
-      - 'zodiacSigns'
-      - 'deities'
-      - 'categories'
-      - 'folkNames'
-  - source: 'grieve-poplar-trembling'
+  - source: cunningham-herbs
+    locator: under "Aspen"; p. 266
     nameBasis: unresolved
     supports:
-      - 'canonicalName'
-      - 'description'
-      - 'folkNames'
-  - source: 'wikipedia-populus-tremuloides'
+      - canonicalName
+      - description
+      - elements
+      - celestialBodies
+      - folkNames
+      - safetyNotes
+  - source: kynes-plants
+    locator: under "Aspen"
     nameBasis: unresolved
     supports:
-      - 'canonicalName'
-      - 'description'
-      - 'folkNames'
+      - canonicalName
+      - description
+      - elements
+      - celestialBodies
+      - zodiacSigns
+      - deities
+      - categories
+      - folkNames
+  - source: grieve-poplar-trembling
+    nameBasis: unresolved
+    supports:
+      - canonicalName
+      - description
+      - folkNames
+  - source: wikipedia-populus-tremuloides
+    nameBasis: unresolved
+    supports:
+      - canonicalName
+      - description
+      - folkNames
 variants:
-  - form: 'Leaf'
+  - form: Leaf
     references:
-      - source: 'cunningham-herbs'
+      - source: cunningham-herbs
+        locator: under "Aspen"
         nameBasis: unresolved
-        locator: 'under "Aspen"'
         supports:
-          - 'form'
-      - source: 'kynes-plants'
+          - form
+      - source: kynes-plants
+        locator: under "Aspen"
         nameBasis: unresolved
-        locator: 'under "Aspen"'
         supports:
-          - 'form'
-  - form: 'Bark'
-    description: 'The bark is the part herbalists used. Gathered in spring, it tastes bitter and has no smell, and was given as a tonic and for recurring fevers, a substitute for Peruvian bark; Indigenous North Americans and settlers in the American West drew a quinine substitute from it.'
+          - form
+  - form: Bark
+    description: The bark is the part herbalists used. Gathered in spring, it tastes bitter and has no smell, and was given as a tonic and for recurring fevers, a substitute for Peruvian bark; Indigenous North Americans and settlers in the American West drew a quinine substitute from it.
     references:
-      - source: 'grieve-poplar-trembling'
+      - source: grieve-poplar-trembling
         nameBasis: unresolved
         supports:
-          - 'form'
-          - 'description'
-      - source: 'wikipedia-populus-tremuloides'
+          - form
+          - description
+      - source: wikipedia-populus-tremuloides
         nameBasis: unresolved
         supports:
-          - 'form'
-          - 'description'
+          - form
+          - description
 ---
 
 # Aspen
