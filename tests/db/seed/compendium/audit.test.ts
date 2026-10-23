@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { auditCompendium, flaggedCandidates, wikiKey } from '@/db/seed/compendium/audit';
+import {
+  auditCompendium,
+  flaggedCandidates,
+  taxoboxTaxon,
+  wikiKey,
+} from '@/db/seed/compendium/audit';
 import type { RenderableEntryFile } from '@/db/seed/compendium/render-entry';
 import type { NameBasis, SeedCitation, SeedCompendiumEntry } from '@/db/seed/types';
 import { fileOf, loadedOf, SAMPLEWORT, TESTWORT } from './files-fixture';
@@ -278,5 +283,20 @@ describe('the attribution audit', () => {
       expect(flaggedCandidates(report).map((found) => found.path)).toEqual([testwortPath]);
       expect(flaggedCandidates(report, { includeUnnamed: true })).toHaveLength(2);
     });
+  });
+});
+
+describe('taxoboxTaxon', () => {
+  it('reads a taxobox whose template name is spelled with an underscore', () => {
+    expect(taxoboxTaxon("{{Automatic_taxobox\n|taxon = ''Fixtura''\n}}")).toBe('Fixtura');
+  });
+
+  it('drops a Wikipedia disambiguator from the genus and from the taxon', () => {
+    expect(taxoboxTaxon('{{Speciesbox\n| genus = Fixtura (plant)\n| species = testalis\n}}')).toBe(
+      'Fixtura testalis',
+    );
+    expect(taxoboxTaxon('{{Automatic taxobox\n|taxon = Fixtura (alga) testalis\n}}')).toBe(
+      'Fixtura testalis',
+    );
   });
 });

@@ -24,7 +24,7 @@ categories:
   - Psychic Work
 references:
   - source: wikipedia-usnea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

@@ -38,7 +38,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Corn"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Corn
+    resolvedBy: wikipedia-maize
     supports:
       - canonicalName
       - description
@@ -66,7 +68,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-maize
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -82,7 +84,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Corn"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Corn
+        resolvedBy: wikipedia-maize
         supports:
           - form
           - description
@@ -94,7 +98,7 @@ variants:
           - form
           - description
       - source: wikipedia-maize
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours
@@ -103,12 +107,14 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Corn"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Corn
+        resolvedBy: wikipedia-maize
         supports:
           - form
           - description
       - source: wikipedia-maize
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
 seedUpdate: c66017fcaaaa97ae7e599849d9c16b7de0d002f4ad0d4087c9daff2967048d7b

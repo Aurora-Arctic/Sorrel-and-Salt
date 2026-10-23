@@ -19,7 +19,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Dulse"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Dulse
+    resolvedBy: wikipedia-palmaria-palmata
     supports:
       - elements
       - celestialBodies
@@ -36,7 +38,7 @@ references:
       - safetyNotes
       - description
   - source: wikipedia-palmaria-palmata
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -52,9 +54,12 @@ variants:
           - form
       - source: cunningham-herbs
         locator: under "Dulse"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Dulse
+        resolvedBy: wikipedia-palmaria-palmata
         supports:
           - form
+seedUpdate: e0e9c141989936cdccd19ad32a9310ec48b70979fa3e12938064c10c5725d60b
 ---
 
 # Dulse

@@ -38,7 +38,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Black Cohosh"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Black Cohosh
+    resolvedBy: wikipedia-actaea-racemosa
     supports:
       - canonicalName
       - elements
@@ -62,7 +64,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-actaea-racemosa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -78,7 +80,9 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Black Cohosh"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Black Cohosh
+        resolvedBy: wikipedia-actaea-racemosa
         supports:
           - form
           - description
@@ -87,7 +91,7 @@ variants:
         supports:
           - form
       - source: wikipedia-actaea-racemosa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Seed
@@ -95,15 +99,18 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Black Cohosh"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Black Cohosh
+        resolvedBy: wikipedia-actaea-racemosa
         supports:
           - form
           - description
       - source: wikipedia-actaea-racemosa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 146eda906e3ec81de58de338805bd94650d836187e6e33e6ce26bd714339b25b
 ---
 
 # Black Cohosh

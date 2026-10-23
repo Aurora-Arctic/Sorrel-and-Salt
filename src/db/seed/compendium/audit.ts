@@ -123,11 +123,23 @@ function parametersOf(body: string): Map<string, string> {
 /** The taxon a page's taxobox names, or undefined when it has none the audit reads. */
 export function taxoboxTaxon(page: string): string | undefined {
   for (const template of templatesIn(page)) {
-    if (!/^(speciesbox|subspeciesbox|automatic taxobox|taxobox)$/.test(template.name)) continue;
+    // Wikipedia spells a template name with spaces or underscores alike.
+    if (
+      !/^(speciesbox|subspeciesbox|automatic taxobox|taxobox)$/.test(
+        template.name.replace(/_/g, ' ').trim(),
+      )
+    )
+      continue;
     const parameters = parametersOf(template.body);
-    const taxon = parameters.get('taxon');
+    // A genus can carry a disambiguator, "Actaea (plant)", which is no part of the name.
+    const bare = (value: string | undefined) =>
+      value
+        ?.replace(/\s*\([^)]*\)/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const taxon = bare(parameters.get('taxon'));
     if (taxon) return taxon;
-    const genus = parameters.get('genus');
+    const genus = bare(parameters.get('genus'));
     const species = parameters.get('species');
     if (genus && species) return `${genus} ${species}`;
   }

@@ -48,7 +48,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-calamus-draco
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -115,6 +115,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: e6df8c9be972d4682b0cff3647236d4c5940eda8291e533d448ebb634c3b89b0
 ---
 
 # Dragon's Blood

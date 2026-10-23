@@ -45,7 +45,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-prunella-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -73,7 +73,7 @@ variants:
           - form
           - description
       - source: wikipedia-prunella-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 seedUpdate: 98f653a2ca492d3ce4a49adfd6181700f17ad17ab97e10aa7f1f54fccb16b994
