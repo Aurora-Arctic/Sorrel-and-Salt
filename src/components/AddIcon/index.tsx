@@ -20,7 +20,7 @@ import './index.scss';
 // control. Its tip and its accessible name are both ADD and then the entry's name (the name in
 // `visually-hidden`), so a list of buttons tells one card's plus from the next and the words on
 // screen are the name (MB.120; the owner's call, 2026-10-20, that the tip says the name too). A client component of its own, because the card stays a server component and a press
-// needs the browser. claude-docs/components/compendium-cards.md, "The plus".
+// needs the browser. claude-docs/components/compendium-cards.md, "Contracts".
 
 const ADD = 'Add to My Ingredients';
 /**
