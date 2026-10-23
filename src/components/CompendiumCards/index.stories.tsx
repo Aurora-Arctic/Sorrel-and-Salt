@@ -5,6 +5,7 @@ import { compendiumHref } from '../CompendiumList/href';
 import { detailsHeading } from '../IngredientEntry/details';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
 import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
 import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 
@@ -189,7 +190,24 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
+  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  // The page around the list, as src/app/(public)/compendium/page.tsx draws it: the shell, then the
+  // eyebrow, heading and lede.
+  render: ({ state }) => (
+    <ShellFrame area="none" open="/compendium">
+      <main className="page-column">
+        <header className="header">
+          <p className="eyebrow">Reference</p>
+          <h1>Compendium</h1>
+          <p className="lede">
+            Ingredients for spellwork: their formal and folk names, categories, deities and forms,
+            with the sources behind them.
+          </p>
+        </header>
+        <div key={String(state)}>{state}</div>
+      </main>
+    </ShellFrame>
+  ),
 };
