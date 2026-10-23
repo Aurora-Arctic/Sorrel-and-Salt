@@ -208,8 +208,8 @@ describe('seed(db, { scenario: "demo" })', () => {
     // The moved slug beside the two `standard` seeds as fixtures.
     expect(all).toHaveLength(3);
   });
-  // The Edit Stock button and the jar lines show only on a card with stock, and
-  // no other scenario writes any (M9.9).
+  // The Edit Stock button and the jar lines show only on a card with stock;
+  // `standard` writes the compendium jars and `demo` adds its own (M9.9).
   describe("W's stock", () => {
     const stockRows = () => sql`
       select s.id, s.quantity_on_hand, s.unit, s.unit_dimension, s.low_stock_threshold,
@@ -224,7 +224,10 @@ describe('seed(db, { scenario: "demo" })', () => {
 
       expect(rows.map((row) => row.id).sort()).toEqual(DEMO_STOCK.map((jar) => jar.id).sort());
       const unmeasured = rows.filter((row) => row.quantity_on_hand === null);
-      expect(unmeasured.map((row) => [row.unit, row.low_stock_threshold])).toEqual([[null, null]]);
+      expect(unmeasured.map((row) => [row.unit, row.low_stock_threshold])).toEqual([
+        [null, null],
+        [null, null],
+      ]);
       // Below its threshold, the default one where the jar sets none.
       expect(
         rows.filter(

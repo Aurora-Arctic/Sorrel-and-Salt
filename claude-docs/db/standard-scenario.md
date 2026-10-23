@@ -150,6 +150,22 @@ cupboard rows (M12.26), so that tests start from an empty cupboard; a test that
 holds one of the six entries in W needs a coven of its own. `demo` adds German
 Chamomile to W's rows ([demo-scenario.md](demo-scenario.md)).
 
+### W's stock
+
+`standard` seeds seven jars of stock for W (`STANDARD_STOCK` in `src/db/seed/standard.ts`, written by `insertMissingStock`), so the ingredients page's jar lines and Edit Stock button (M9.9) have something to show. Every jar sits on an entry in W's cupboard above, since a jar on a compendium variant needs its entry's cupboard row (M12.13, decision 11). Their ids are fixed in a block of their own, `…0003-…`; `demo` keeps `…0001`, `…0002`, `…0005` and `…0006` for its own jars ([demo-scenario.md](demo-scenario.md), "W's stock").
+
+| Ingredient (form) | Id      | Quantity | Why it is there                                                                 |
+| ----------------- | ------- | -------- | ------------------------------------------------------------------------------- |
+| Rosemary (Herb)   | `…0003` | 60 g     | The first of Rosemary's two jar lines, with a source.                           |
+| Rosemary (Oil)    | `…0004` | 45 ml    | Its second form, in a second dimension: two jar lines on one card.              |
+| Ginger (Root)     | `…0007` | 6 piece  | Counted rather than weighed, with a date acquired.                              |
+| Mugwort (Herb)    | `…0008` | 4 g      | Under the default 10 g threshold, so the Low badge shows.                       |
+| Lavender (Flower) | `…0009` | none     | Held and never weighed: no quantity, no unit, so "Unmeasured" and no threshold. |
+| Comfrey (Leaf)    | `…0010` | 30 g     | Under a threshold of its own (50 g) in place of the default 10 g.               |
+| Sea Salt (Salt)   | `…0011` | 500 g    | A well-stocked jar, with a source.                                              |
+
+A jar that sets no threshold gets its unit's default, from `defaultThreshold` in `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock` reads too. Idempotency is the pair the live-unique index guards, W and the variant, ignoring `deleted_at`, so a jar the coven threw out stays out and one it edited is not written over. A test that inserts a jar on one of these six variants in W meets that index, so it needs a coven of its own or a different form. `tests/db/seed/standard-stock.test.ts` holds the list. X and every coven a test creates start with no stock.
+
 ### One transaction, every vocabulary
 
 `standard` is "a populated compendium", and that is all of it: M4.3a's forms

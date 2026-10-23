@@ -63,8 +63,8 @@ by tier and identity, so the extra entries make none of them ambiguous.
   under the hiding rule (M8.3, M12.12); a coven now names the entry instead of
   copying it. The two jars' layers for Rosemary and Chamomile point at the
   compendium's variants (Rosemary's `Herb`, Chamomile's `Flower`). The demo
-  seeds no stock, so no jar sits on a compendium variant; when one does, its
-  entry has a row (decision 11 of the plan,
+  seeds its jars on cupboard entries only: a jar on a compendium variant needs
+  its entry's row (decision 11 of the plan,
   [m12.13-cupboard-names-the-compendium-plan.md](../design-decisions/m12.13-cupboard-names-the-compendium-plan.md)).
 
 - **W's own ingredients**, the coven tier of §5's one table: `Hearth Ash` and
@@ -109,28 +109,28 @@ the same key the cupboard rows use.
 
 ### W's stock
 
-The demo also writes seven jars of stock into W (`DEMO_STOCK`), the rows the
-ingredients page's jar lines and Edit Stock button (M9.9) show. Their ids are
-fixed and take a block of their own, `…0003-…`, after the spells. Each names its
-ingredient and the form it holds, and the seed looks the variant up by that
-pair, so a jar can sit on any form an entry has.
+The demo writes eleven jars of stock into W (`DEMO_STOCK`), the rows the
+ingredients page's jar lines and Edit Stock button (M9.9) show: the seven
+`standard` seeds ([standard-scenario.md](standard-scenario.md), "W's stock"),
+which `DEMO_STOCK` spreads in, and four of its own. Their ids are fixed and take a
+block of their own, `…0003-…`, after the spells. Each names its ingredient and
+the form it holds, and the seed looks the variant up by that pair, so a jar can
+sit on any form an entry has.
 
 | Ingredient (form)         | Id      | Quantity | Why it is there                                                                 |
 | ------------------------- | ------- | -------- | ------------------------------------------------------------------------------- |
 | Hearth Ash (ash)          | `…0001` | 250 g    | An own entry with a weight, a source and a date acquired.                       |
 | Cat's Claw (bark)         | `…0002` | none     | Held and never weighed: no quantity, no unit, so "Unmeasured" and no threshold. |
-| Rosemary (Herb)           | `…0003` | 60 g     | A compendium entry (as Garden Rosemary), the first of its two jar lines.        |
-| Rosemary (Oil)            | `…0004` | 45 ml    | Its second form, in a second dimension: two jar lines on one card.              |
 | German Chamomile (Flower) | `…0005` | 8 g      | Under the default 10 g threshold, so the Low badge shows.                       |
 | German Chamomile (Oil)    | `…0006` | 20 drop  | A count unit, with a threshold of its own (12) in place of the default 3.       |
-| Ginger (Root)             | `…0007` | 6 piece  | Counted rather than weighed, on the cupboard row that has no annotation.        |
 
-Weight, volume and count are all there. A jar that sets no threshold gets its
-unit's default, from `defaultThreshold` in
+The ids `…0003`, `…0004` and `…0007` to `…0011` are `standard`'s. Weight,
+volume and count are all there. A jar that sets no threshold gets its unit's
+default, from `defaultThreshold` in
 `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock`
 reads too, so the seed carries no second table of values. Every compendium entry
-stocked is one of the seven in W's cupboard (`tests/db/seed/demo.test.ts` holds
-it), and `standard` and the other scenarios write no stock.
+stocked is in W's cupboard (`tests/db/seed/demo.test.ts` holds it). The
+`minimal` scenario writes no stock.
 
 Idempotency is the pair the live-unique index guards, W and the variant,
 ignoring `deleted_at`: a jar the coven threw out stays out, one it edited is
@@ -145,7 +145,7 @@ ignoring `deleted_at` — for the spells (fixed id), W's ingredients
 pair), W's cupboard rows (the coven and the entry), a row the coven
 removed counting as present, and W's stock (the coven and the variant). A database seeded before M12.26 still holds
 Garden Rosemary, House Chamomile and Ginger as own rows, which a reseed leaves
-alone: `make db-reset` is what brings it to this scenario. **`spell_ingredients` is the exception: the unit keyed on is the spell,
+alone: `npm run db:reset` is what brings it to this scenario. **`spell_ingredients` is the exception: the unit keyed on is the spell,
 not the layer.**
 
 The `standard` rows it writes through `seedStandardContent(tx)` keep their
@@ -170,7 +170,7 @@ whole scenario rather than the row.
 So a jar that already has layers is left exactly as it is — removed ones
 included, since a tombstone is a layer the jar has had, and a jar a member
 emptied has been edited rather than left unstocked. What that gives up is a
-demo jar healing itself after someone empties it, which `make db-reset` (M1.24)
+demo jar healing itself after someone empties it, which `npm run db:reset` (M1.24)
 does properly anyway; what it buys is that a reseed over an edited grimoire is
 a no-op rather than an error. A developer scenario, so no test holds it
 (MB.225).
