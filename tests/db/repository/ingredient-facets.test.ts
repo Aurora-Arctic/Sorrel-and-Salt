@@ -623,6 +623,19 @@ describe('findCompendiumFacets', () => {
       for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(9);
       for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);
     });
+
+    it('sends no Reviewed counts read unless asked for them (M14.8)', async () => {
+      await seedEntries();
+      const filter: IngredientFilter = { zodiacSigns: ['leo'] };
+
+      const asked = await readsOf(() => findCompendiumFacets(filter, true));
+      const notAsked = await readsOf(() => findCompendiumFacets(filter, false));
+
+      // Why it could have failed: asked, the counts come back and cost a read.
+      expect((await findCompendiumFacets(filter, true)).reviewed).not.toBeNull();
+      expect(notAsked.length).toBe(asked.length - 1);
+      expect((await findCompendiumFacets(filter, false)).reviewed).toBeNull();
+    });
   });
 
   describe('the entries citing no reference', () => {

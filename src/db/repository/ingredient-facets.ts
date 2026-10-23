@@ -64,13 +64,19 @@ import type {
  * `withoutReferences` is set to true for it, so the count is the same whether
  * the switch is on or off. `withoutForms` is the same for the No Form switch:
  * how many entries have no live form (M12.30). Both come from one read.
+ *
+ * `withReview` is whether to read the Reviewed counts (M14.8), a curator's
+ * alone: false sends no statement for them and answers `reviewed: null`.
  */
-export async function findCompendiumFacets(filter: IngredientFilter): Promise<CompendiumFacets> {
+export async function findCompendiumFacets(
+  filter: IngredientFilter,
+  withReview = true,
+): Promise<CompendiumFacets> {
   const scope = readableInTiers([], ingredients);
   const [facets, switches, reviewed] = await Promise.all([
     readFacets(filter, scope),
     switchCounts(filter, scope),
-    reviewFacet(filter, scope),
+    withReview ? reviewFacet(filter, scope) : Promise.resolve(null),
   ]);
   return { ...facets, ...switches, reviewed };
 }

@@ -31,7 +31,8 @@ const cachedFacets = cachedCompendiumRead('compendium-facets', findCompendiumFac
  * switch's count, the same with the switch on or off. Needs no session: the compendium is the public surface (MB.80).
  * Parsed as `listCompendium` parses, so it counts the rows that list holds.
  * The Reviewed counts (M14.8) are a curator's alone: `viewer` must curate to
- * set the filter, and anyone else is answered null for them.
+ * set the filter, and for anyone else the counts are not read at all and the
+ * answer is null.
  *
  * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the
@@ -41,8 +42,9 @@ export async function compendiumFacets(
   filter: CompendiumFilterInput,
   viewer: Session | null = null,
 ): Promise<CompendiumFacets> {
-  const facets = await cachedFacets(compendiumFilterFor(filter, viewer));
-  return seesReview(viewer) ? facets : { ...facets, reviewed: null };
+  // The Reviewed counts are read only for a viewer who sees them (M14.8); the
+  // flag is part of the cache key, so the two answers are held apart.
+  return cachedFacets(compendiumFilterFor(filter, viewer), seesReview(viewer));
 }
 
 /**
