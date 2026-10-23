@@ -487,35 +487,7 @@ export default function FacetPanel({
                 </div>
                 {formsOtherHalf(
                   <>
-                    {/* The viewer's own covens (M12.55), between Forms and Toxic on their line (the owner's
-                    call, 2026-10-23), and only for a viewer in one. No counts: the counts the rest
-                    read are the cached, public ones, and a count per coven would make them the
-                    viewer's (rule 6). */}
-                    {covens.length > 0 && (
-                      <div className="facet-panel__grow">
-                        <FacetCombobox
-                          label="In My Covens"
-                          name="covens"
-                          placeholder="Add Coven"
-                          removeNoun="Coven"
-                          loading={loading}
-                          counts={false}
-                          choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
-                          values={filter.covens ?? []}
-                          onChange={(picked) => onChange({ covens: picked })}
-                        />
-                      </div>
-                    )}
                     <div className="facet-panel__quick">
-                      {covens.length > 0 && (
-                        <ChoiceChip
-                          legend="Covens"
-                          name="covensNot"
-                          options={COVENS_NOT_OPTIONS}
-                          value={filter.covensNot ? '1' : ''}
-                          onChange={(value) => onChange({ covensNot: value === '1' })}
-                        />
-                      )}
                       <ChoiceChip
                         legend="Toxic"
                         name="toxic"
@@ -597,6 +569,36 @@ export default function FacetPanel({
                         />
                       )}
                     </div>
+                    {/* The viewer's own covens (M12.55), after Toxic, filling the rest of the line (the
+                    owner's call, 2026-10-23), with the In / Not In choice beside them, and only for a
+                    viewer in one. No counts: the counts the rest read are the cached, public ones, and
+                    a count per coven would make them the viewer's (rule 6). */}
+                    {covens.length > 0 && (
+                      <>
+                        <div className="facet-panel__grow">
+                          <FacetCombobox
+                            label="In My Covens"
+                            name="covens"
+                            placeholder="Add Coven"
+                            removeNoun="Coven"
+                            loading={loading}
+                            counts={false}
+                            choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                            values={filter.covens ?? []}
+                            onChange={(picked) => onChange({ covens: picked })}
+                          />
+                        </div>
+                        <div className="facet-panel__quick">
+                          <ChoiceChip
+                            legend="Covens"
+                            name="covensNot"
+                            options={COVENS_NOT_OPTIONS}
+                            value={filter.covensNot ? '1' : ''}
+                            onChange={(value) => onChange({ covensNot: value === '1' })}
+                          />
+                        </div>
+                      </>
+                    )}
                   </>,
                 )}
               </div>
