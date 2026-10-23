@@ -33,6 +33,8 @@ deities:
   - Hecate
   - Loki
   - Morrigan
+  - Baldur
+  - Holda
 categories:
   - Protection
   - Love
@@ -124,3 +126,9 @@ Common juniper is a small evergreen tree or shrub of the cypress family with the
 <!-- audit:ahpa-safety:Juniperus spp. -->
 
 Does ahpa-safety at p. 487, cited on the entry, describe Juniperus communis alone? The handbook's heading is "Juniperus spp." and lists Juniperus communis, J. monosperma, J. osteosperma, J. oxycedrus, so its safety text is written for the genus or the group, not for Juniperus communis alone. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+Deity gap: the Furies (Kynes, under "Juniper"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Ran (Kynes, under "Juniper"), not in the vocabulary; link once M14.15 adds it.

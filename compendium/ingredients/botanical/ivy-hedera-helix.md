@@ -38,6 +38,7 @@ deities:
   - Persephone
   - Rhea
   - Saturn
+  - Holda
 categories:
   - Divination
   - Love

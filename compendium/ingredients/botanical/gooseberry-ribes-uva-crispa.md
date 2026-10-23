@@ -25,6 +25,7 @@ folkNames:
 deities:
   - Cernunnos
   - Morrigan
+  - Bastet
 categories:
   - Abundance
   - Fertility

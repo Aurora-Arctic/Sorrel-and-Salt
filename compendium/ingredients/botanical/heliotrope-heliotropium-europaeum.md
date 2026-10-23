@@ -23,6 +23,7 @@ deities:
   - Hathor
   - Helios
   - Ra
+  - Mithra
 categories:
   - Healing
   - Wealth
@@ -98,3 +99,7 @@ Does cunningham-herbs under "Heliotrope", cited on the entry and the Flower, des
 <!-- audit:kynes-plants:Heliotrope -->
 
 Does kynes-plants under "Heliotrope", cited on the entry and the Flower, describe Heliotropium europaeum alone? Kynes heads the plant "Heliotrope" and describes two species together, European heliotrope (Heliotropium europaeum) and seaside heliotrope (H. curassavicum). Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+Deity gap: Phoebe (Kynes, under "Heliotrope"), not in the vocabulary; link once M14.15 adds it.
