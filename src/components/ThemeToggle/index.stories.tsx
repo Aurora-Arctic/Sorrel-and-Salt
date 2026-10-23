@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import ThemeToggle from '.';
 
 // Render-only; behaviour is asserted in tests/components/ThemeToggle. A story
@@ -14,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 // (Welcome, Sign In and the invitation page): a
 // quarter disc pinned to the story frame's top-right corner and clipped by its
 // edge, which is the design.
-export const Default: Story = { render: () => <ThemeToggle /> };
+const defaultNode = <ThemeToggle />;
 
 // `.meta = { reducedMotion: true }` simulates the OS setting (.storybook/components.tsx):
 // transitions drop to instant and a click parks the outgoing facet at once.
@@ -24,4 +25,19 @@ export const ReducedMotion: Story = {
 };
 // The disc in the flow, as the shell's bar draws it (AppShell's stories show it
 // there, in the bar). No clip, no fixed position.
-export const Inline: Story = { render: () => <ThemeToggle variant="inline" /> };
+const inlineNode = <ThemeToggle variant="inline" />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const TOGGLE_STATES: Record<string, ReactNode> = {
+  Corner: defaultNode,
+  Inline: inlineNode,
+};
+
+export const States: Story = {
+  args: { state: 'Corner' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(TOGGLE_STATES), mapping: TOGGLE_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

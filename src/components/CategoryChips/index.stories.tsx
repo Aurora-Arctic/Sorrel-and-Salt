@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
+import { useEffect, useRef } from 'react';
 import CategoryChips from '.';
 import type { CardCategory } from './types';
 
@@ -21,29 +23,43 @@ const make = (count: number): CardCategory[] =>
     group: GROUPS[i % GROUPS.length],
   }));
 
-export const Default: Story = {
-  render: () => <CategoryChips categories={make(2)} label="Testwort" />,
-};
-
-export const WithMore: Story = {
-  render: () => <CategoryChips categories={make(6)} label="Testwort" />,
-};
-
-// In a bounded, scrolling frame, as the admin table holds it: the panel is not clipped.
-export const InAScrollingFrame: Story = {
-  render: () => (
-    <div style={{ overflowX: 'auto', inlineSize: '18rem', padding: '1rem', border: '1px solid' }}>
+// Opens the +N panel as a person would, by pressing the button in its own frame.
+const PanelOpen = () => {
+  const frame = useRef<HTMLDivElement>(null);
+  useEffect(() => frame.current?.querySelector('button')?.click(), []);
+  return (
+    <div ref={frame} style={{ minBlockSize: '12rem' }}>
       <CategoryChips categories={make(6)} label="Testwort" />
     </div>
-  ),
+  );
 };
 
-// Both sizes side by side: the regular one the card wears, the compact one the table does.
-export const Sizes: Story = {
+// The limit is two chips: past that the rest sit behind a +N button.
+export const States: Story = {
   render: () => (
-    <div style={{ display: 'grid', gap: '1rem' }}>
-      <CategoryChips categories={make(3)} label="Testwort" />
-      <CategoryChips categories={make(3)} label="Testwort" compact />
-    </div>
+    <StatesGrid
+      states={{
+        'No Categories': <CategoryChips categories={make(0)} label="Testwort" />,
+        'Exactly At The Limit': <CategoryChips categories={make(2)} label="Testwort" />,
+        'One In The More Button': <CategoryChips categories={make(3)} label="Testwort" />,
+        'Several In The More Button': <CategoryChips categories={make(6)} label="Testwort" />,
+        'More Panel Open': <PanelOpen />,
+        // In a bounded, scrolling frame, as the admin table holds it: the panel is not clipped.
+        'In A Scrolling Frame': (
+          <div
+            style={{ overflowX: 'auto', inlineSize: '18rem', padding: '1rem', border: '1px solid' }}
+          >
+            <CategoryChips categories={make(6)} label="Testwort" />
+          </div>
+        ),
+        // Both sizes: the regular one the card wears, the compact one the table does.
+        Sizes: (
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <CategoryChips categories={make(3)} label="Testwort" />
+            <CategoryChips categories={make(3)} label="Testwort" compact />
+          </div>
+        ),
+      }}
+    />
   ),
 };

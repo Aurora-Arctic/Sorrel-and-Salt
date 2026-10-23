@@ -249,9 +249,9 @@ describe('the workshop', () => {
   }
 
   const PATHS = [
-    '/workshop?path=/story/layout-theme-toggle--default',
+    '/workshop?path=/story/layout-theme-toggle--states',
     '/workshop/index.html',
-    '/workshop/iframe.html?id=layout-theme-toggle--default&viewMode=story',
+    '/workshop/iframe.html?id=layout-theme-toggle--states&viewMode=story',
     '/workshop/index.json',
     '/workshop/sb-manager/runtime.js',
   ];
@@ -296,7 +296,7 @@ describe('the workshop', () => {
 
   it.each([
     '/workshop/index.html',
-    '/workshop/iframe.html?id=layout-theme-toggle--default&viewMode=story',
+    '/workshop/iframe.html?id=layout-theme-toggle--states&viewMode=story',
     '/workshop/index.json',
     '/workshop/project.json',
     '/workshop/sb-manager/runtime.js',
@@ -319,11 +319,11 @@ describe('the workshop', () => {
   it('sends an admin at the bare path to the manager page, query kept', async () => {
     actAs('admin');
 
-    const response = await proxy(signedIn('/workshop?path=/story/layout-theme-toggle--default'));
+    const response = await proxy(signedIn('/workshop?path=/story/layout-theme-toggle--states'));
 
     expect(response.status).toBe(307);
     expect(getRedirectUrl(response)).toBe(
-      `${ORIGIN}/workshop/index.html?path=/story/layout-theme-toggle--default`,
+      `${ORIGIN}/workshop/index.html?path=/story/layout-theme-toggle--states`,
     );
   });
 
