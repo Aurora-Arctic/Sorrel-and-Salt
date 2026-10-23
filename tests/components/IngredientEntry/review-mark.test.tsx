@@ -13,8 +13,8 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The admin's review mark on a compendium entry's details (M14.8): a badge saying whether a
-// curator has reviewed it, and the switch that marks or clears it (claude-docs/components/ingredient-entry.md).
+// The admin's review mark on a compendium entry's details (M14.8): the switch that marks or
+// clears it, in the details' foot; the badge is the entry's own mark (claude-docs/components/ingredient-entry.md).
 
 const ID = '00000000-0000-4000-8000-000000000002';
 const AT = '2026-10-01T09:30:00.000Z';
@@ -46,19 +46,15 @@ describe('ReviewMark', () => {
     router.refresh.mockClear();
   });
 
-  it('says an unmarked entry needs review, its switch off', () => {
+  it('shows an unmarked entry as off', () => {
     renderMark(null);
 
-    expect(screen.getByRole('status')).toHaveTextContent('Needs Review');
     expect(toggle()).not.toBeChecked();
   });
 
-  it('says a marked entry is reviewed, and when, its switch on', () => {
+  it('shows a marked entry as on', () => {
     renderMark(AT);
 
-    const badge = screen.getByRole('status');
-    expect(badge).toHaveTextContent('Reviewed By Curator');
-    expect(badge.querySelector('time')).toHaveAttribute('datetime', AT);
     expect(toggle()).toBeChecked();
   });
 

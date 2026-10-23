@@ -11,11 +11,11 @@ import Notice from '../Notice';
 import type { ReviewMarkProps } from './types';
 import './review-mark.scss';
 
-// The admin's review mark on a compendium entry (M14.8), in the entry's details on the admin list:
-// a badge saying whether a curator has reviewed the entry, and the switch that marks or clears it.
+// The admin's review switch on a compendium entry (M14.8), in the foot of the entry's details on
+// the admin list: it marks or clears the review. The badge saying where the entry stands is the
+// entry's own mark, drawn for everyone (EntryMarks).
 // A switch rather than a button that flips its label, so the state is the control's own to a
-// screen reader. The badge is a status, read by its role, as the page's other statements of a
-// state are. The mark is the seed's: the seed never rewrites an entry a curator has reviewed
+// screen reader.  The mark is the seed's: the seed never rewrites an entry a curator has reviewed
 // (claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction lands"). The
 // service is the guard; this is only the control (claude-docs/components/ingredient-entry.md).
 
@@ -26,15 +26,6 @@ const SetCompendiumEntryReviewedDocument = graphql(`
     }
   }
 `);
-
-/** The day, as LastEdit prints one, in UTC so the server's zone cannot move it. */
-const day = (at: string) =>
-  new Date(at).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 
 export default function ReviewMark({ ingredientId, reviewedAt }: ReviewMarkProps): ReactElement {
   const { refresh } = usePendingNavigation();
@@ -63,13 +54,6 @@ export default function ReviewMark({ ingredientId, reviewedAt }: ReviewMarkProps
 
   return (
     <div className="review-mark">
-      {reviewedAt && sent !== false ? (
-        <output className="badge badge--local">
-          Reviewed By Curator <time dateTime={reviewedAt}>{day(reviewedAt)}</time>
-        </output>
-      ) : (
-        <output className="badge badge--attention">Needs Review</output>
-      )}
       <SwitchField
         label="Reviewed By Curator"
         name="reviewed"

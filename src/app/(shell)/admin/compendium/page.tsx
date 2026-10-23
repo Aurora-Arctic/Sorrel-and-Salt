@@ -183,17 +183,15 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             marks: summary && detailsMarks(summary),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
-            children: summary && (
-              <>
-                {review !== undefined && (
-                  <ReviewMark
-                    ingredientId={detailed.id}
-                    reviewedAt={review?.reviewedAt.toISOString() ?? null}
-                  />
-                )}
-                <IngredientSummary detail={summary} covens={covens} />
-              </>
-            ),
+            children: summary && <IngredientSummary detail={summary} covens={covens} />,
+            ...(review !== undefined && {
+              footControl: (
+                <ReviewMark
+                  ingredientId={detailed.id}
+                  reviewedAt={review?.reviewedAt.toISOString() ?? null}
+                />
+              ),
+            }),
             // No Edit in details opened over another entry's form, an add's or an edit's: it would
             // put this entry's form in that one's place, and its typing with it. The edit of this
             // entry is M12.5's, opened from here over them, so its Edit stays.

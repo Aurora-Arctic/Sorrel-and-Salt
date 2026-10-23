@@ -93,13 +93,20 @@ const EditAction = ({
  * site's plain `.btn` at its normal size, centred and two thirds of the bar. Still a link, to the entry's page,
  * with the loading standard's target.
  */
-function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
+function PageLinkBar({ pageHref, footControl }: IngredientDetailsOpened): ReactElement {
   // Named by where it goes, not by who is looking (the owner's call, 2026-10-20): the
   // public compendium's page, or a coven's own page for an entry the coven holds, whether
   // it made the entry or annotated the compendium's.
   const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
-    <div className="ingredient-details-foot">
+    <div
+      className={
+        footControl
+          ? 'ingredient-details-foot ingredient-details-foot--control'
+          : 'ingredient-details-foot'
+      }
+    >
+      {footControl}
       <PendingLink
         className="btn"
         href={pageHref}

@@ -300,6 +300,11 @@ export interface IngredientDetailsOpened {
   marks?: DetailsMarks;
   /** Who last edited the entry in this coven and when (M6.18); drawn above the head's buttons. */
   lastEdit?: LastEditProps | null;
+  /**
+   * A control drawn in the foot beside the link to the entry's page: the admin's Reviewed By
+   * Curator switch (M14.8). The details dialog has no Save, so the foot is where its controls stand.
+   */
+  footControl?: ReactNode;
   /** The entry's own page, which the foot's link (See in Compendium or See in Your Cupboard) reaches. */
   pageHref: Route;
   /**
@@ -459,8 +464,9 @@ export interface SummaryJar {
 }
 
 /**
- * The admin's review mark on a compendium entry (M14.8, `review-mark.tsx`): the entry, and when a
- * curator last marked it reviewed, as an ISO moment, or `null` while it needs review.
+ * The admin's Reviewed By Curator switch on a compendium entry (M14.8, `review-mark.tsx`): the
+ * entry, and when a curator last marked it reviewed, as an ISO moment, or `null` while it needs
+ * review. The badge saying so is the entry's own mark (`EntryMarks`), drawn for everyone.
  */
 export interface ReviewMarkProps {
   ingredientId: string;

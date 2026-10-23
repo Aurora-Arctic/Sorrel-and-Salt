@@ -983,7 +983,7 @@ DetailsPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 export const DetailsPhoneLight: Story = () => <DetailsFromCovenList />;
 DetailsPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
 
-// The admin's review mark (M14.8), above the summary in an entry's details on the
+// The admin's review switch (M14.8), in the foot of an entry's details on the
 // admin list: an entry no curator has reviewed, then one a curator has. The
 // workshop has no server, so the switch's change is refused and the switch goes back.
 export const ReviewMarkNeedsReview: Story = () => (
