@@ -170,10 +170,10 @@ export const WithStock: Story = {
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
-  'For AViewer': forAViewerNode,
+  'For A Viewer': forAViewerNode,
   'Middle Page': middlePageNode,
   Empty: emptyNode,
-  'Empty For AViewer': emptyForAViewerNode,
+  'Empty For A Viewer': emptyForAViewerNode,
   'No Matches': noMatchesNode,
 };
 
