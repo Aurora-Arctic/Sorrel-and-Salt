@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
+import Backdrop from '../Backdrop';
 import Welcome from '.';
 
 // Render-only; behaviour is asserted in tests/components/Welcome. The page
@@ -14,7 +15,11 @@ export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const Page = ({ children }: { children: ReactNode }) => (
-  <main className="page-frame welcome-page">{children}</main>
+  <>
+    <main className="page-frame welcome-page">{children}</main>
+    {/* The root layout draws it on every page; `.welcome-page` makes it the front door's size. */}
+    <Backdrop />
+  </>
 );
 
 const SignedOut = (): ReactElement => (

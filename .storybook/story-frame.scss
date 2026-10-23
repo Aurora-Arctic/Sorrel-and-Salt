@@ -43,6 +43,9 @@
   transform: none;
   overflow: visible;
   padding: 0;
+  // The page colour is the body's, as on the site: an opaque frame would sit over the Backdrop,
+  // whose `z-index: -1` paints above the body and beneath everything else.
+  background-color: transparent;
 }
 
 // The CSS half of the `reducedMotion` story pin (preview.tsx is the other).

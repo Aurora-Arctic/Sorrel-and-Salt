@@ -68,7 +68,7 @@ so the component sets no type of its own.
 
 [`index.stories.tsx`](../../src/components/Welcome/index.stories.tsx) —
 `States`, with a control that chooses Default (signed out) or Signed In (the `/coven` landing). Each renders inside the page's real
-`main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)).
+`main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)), with the layout's corner `Backdrop` beside it, at the front door's size.
 Render-only, no test ids, no snapshots.
 
 ## Testing
