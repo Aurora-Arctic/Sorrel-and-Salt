@@ -9,6 +9,17 @@
 .last-edit__button {
   @include button-reset(help);
 
+  // At least 24px tall to press (WCAG 2.5.8, MB.272): one line of the card's small text is
+  // 21.4px, and the 24px spacing exception cannot apply where the button sits on the card's
+  // stretched link and right over the foot's buttons. The padding grows the box and the equal
+  // negative margin takes it back out of the line, so nothing around it moves. Not a
+  // `min-block-size`, which would make the line taller and push the foot down. `lh` is
+  // Baseline Widely Available; `max` keeps it from going negative under a taller line.
+  $grow: max(0px, calc((#{$icon-size} - 1lh) / 2));
+
+  padding-block: $grow;
+  margin-block: calc(#{$grow} * -1);
+
   &:focus-visible {
     @include focus-ring;
   }
