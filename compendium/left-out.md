@@ -156,7 +156,7 @@ Kynes often lists two or three species under one heading. The roster keeps one r
 
 What the addendum of 23 October 2026 considered and did not seat. Its picking is described in `claude-docs/db/compendium-seed/candidates.md`, "The addendum". The roster plus the addendum may not exceed 1,111 rows, and every row needs an open source that names a use. Nothing here is loaded by the seed.
 
-### Kept to add in future: Western rows with an open source that did not fit the 1,111 (227)
+### Kept to add in future: Western rows with an open source that did not fit the 1,111 (228)
 
 These are kept to add in future. They are not rejected: each meets the rule and lost only on rank. If the roster widens, or a seated row is dropped, they come back in the order listed, which is the ranking set out under "How the Western rows are ranked" in `claude-docs/db/compendium-seed/candidates.md`. Each has a Grieve entry that names a use and a formal name read from Wikipedia. The use count is the number of distinct use terms in its Grieve entry. All the rows named by two works were seated, so each row here is named by one work. They are listed highest use count first, ties by spread across the alphabet.
 
@@ -387,6 +387,7 @@ These are kept to add in future. They are not rejected: each meets the rule and 
 - Sea Blite (_Suaeda fruticosa_): Grieve b/blisea56; named by 1 work; use count 0
 - Wall Hawkweed (_Hieracium murorum_): Grieve h/hawwal06; named by 1 work; use count 0
 - Greater Bindweed (_Calystegia sepium_): Grieve b/binweg39; named by 1 work; use count 0
+- Roselle (_Hibiscus sabdariffa_), as its own entry: Cunningham (under Hibiscus, which prints _Hibiscus sabdariffa_ flowers with health code G, "currently recognized as safe") and AHPA _Botanical Safety Handbook_ pp. 441–442; named by 2 works, not ranked by Grieve use count, so it is listed last.
 
 ### Western rows with no open source that names a use (115)
 
