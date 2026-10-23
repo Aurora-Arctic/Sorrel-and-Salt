@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import { ADMIN_PAGES } from '../AdminNav/sections';
+import TabbedPage from '../TabbedPage';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
@@ -77,10 +80,18 @@ const USERS: readonly UserListEntry[] = [
 // changes muted, Impersonate ruled in red at the right. Impersonate and Pause
 // Admin Changes each ask first; in the workshop the call reaches no server,
 // so confirming shows the refusal.
+// Drawn inside the app shell, so the phone shows the header and the bottom bar the admin nav
+// moves to; the other states draw the admin frame alone.
 const defaultNode = (
-  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
-    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
-  </AdminTabbedFrame>
+  <ShellFrame area="admin">
+    <TabbedPage
+      title={ADMIN_PAGES.people.label}
+      tabs={ADMIN_PAGES.people.tabs}
+      action={<PauseControl paused={false} canToggle />}
+    >
+      <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+    </TabbedPage>
+  </ShellFrame>
 );
 
 const FilteredView = () => (
