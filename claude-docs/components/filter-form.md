@@ -175,7 +175,7 @@ its hover and press look.
 `Admin / Filter Form`: the categories list's own filter, `GroupedValueListFilter`, a name
 search and a type-ahead group select (a `FilterSelectField`) applying through `useApplyFilter`, on
 the workshop's invented groups. `Default`, a
-page showing no filter, so no Clear; `Filtered`, a page showing one, Clear at the row's end. Each
+page showing no filter, so no Clear; `Filtered`, a page showing one, Clear at the row's end. `WithoutClear`, `WithSorrel` and `Narrow` are the row without Clear, with the sorrel in it, and at a phone's width. Each
 sits in a `ListFrame`, whose navigation it needs; the workshop's router goes
 nowhere, so a change shows nothing on its way here. The row greyed over a
 list on its way is GroupedValueList's `CategoriesPending`.

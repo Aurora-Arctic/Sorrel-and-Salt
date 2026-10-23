@@ -96,15 +96,7 @@ screen scrolls nothing sideways.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin /
-Category Picker`, over four of the seed's groups with their colour pairs and
-invented categories: `Default`, an empty box to focus and type in;
-`SomePicked`, three entries as chips in their groups' colours;
-`AnInvalidEntry`, one entry edged and named by an error beneath the box;
-`Loading`, with no categories yet and the pending state; and `Failed`,
-with the status line that says the list failed; `WithCounts`, rows and a chip
-with counts and the zero rows left out; and `CountsLoading`, the chip's
-placeholder.
+[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin / Category Picker`, over four of the seed's groups with their colour pairs and invented categories. `States` has a control that chooses: Default (an empty box to focus and type in), Some Picked (three entries as chips in their groups' colours), An Invalid Entry (one entry edged and named by an error beneath the box), Loading (no categories yet, the pending state), Failed (the status line that says the list failed), With Counts (rows and a chip with counts, the zero rows left out), Counts Loading (the chip's placeholder) and Action And No Hint (the legend's action, a Copy From Ingredient button, with no hint tip).
 
 ## Testing
 

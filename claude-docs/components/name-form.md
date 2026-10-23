@@ -54,8 +54,8 @@ input ([`field.md`](field.md)).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/NameForm/index.stories.tsx), titled
-"Account / Name Form": `Prefilled` (the name the provider gave, nothing to save
-until edited), and `LongName`. Each renders inside the account page's real frame, section and panel, as
+"Account / Name Form": `States`, with a control that chooses Default (the name the provider gave, nothing to save
+until edited) or Long Name. Each renders inside the account page's real frame, section and panel, as
 `src/app/(shell)/account/page.tsx` writes them. Nothing is mocked: a submit in
 the workshop fails into the alert region. Render-only, no test ids, no
 snapshots.

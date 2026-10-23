@@ -60,7 +60,7 @@ went when the primitive learned it (MB.119).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InviteDialog/index.stories.tsx), `Coven / Invite Dialog`:
-`Default`, the button; and `Open`, the dialog pressed open. The open stories are `iframed`, as every story that opens a modal is. In the workshop
+`States`, with a control that chooses Closed (the button), Open (the dialog pressed open), Member Role Chosen, Address Refused Before Sending and Send Failed. The open states are `iframed`, as every story that opens a modal is. In the workshop
 sending reaches no server, so it shows the failure.
 
 ## Tests

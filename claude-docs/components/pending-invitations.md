@@ -50,8 +50,8 @@ styles a span inside the table, so it does not depend on any wrapper.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PendingInvitations/index.stories.tsx),
-`Coven / Invitations Sent`: `Default`, two pending rows; `WithDeclined`, a declined row among
-them with Remove in place of Revoke; and `Empty`. The Revoke and Remove questions open from their buttons and are
+`Coven / Invitations Sent`: `States`, with a control that chooses Default (two pending rows); With Declined (a declined row among
+them with Remove in place of Revoke); Empty; Middle Page; Revoke Refused; and Remove Refused. The Revoke and Remove questions open from their buttons and are
 `ConfirmedAction`'s ([`user-list.md`](user-list.md)).
 
 ## Tests

@@ -255,10 +255,10 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Layout / Tabbed Page`: the People page in the admin layout's frame, the nav in
 its context row above, with its Invitations tab open and the pills beside the heading, New Invitation at the
-end of the line, as `/admin/invitations` draws it. `Default`; `PrivilegeChangesTab`, on Privilege Changes, the last
-tab, with no action; and `LoadingState`, Users on its way: the action and the row greyed out, the
-pill moved to Users in its pending look, over its skeleton with the filter row; and `LoadingUnfiltered`, the skeleton without the
-filter row. Hover, focus and the pressed look are real input, so no story
+end of the line, as `/admin/invitations` draws it. `States`, with a control that chooses Invitations Tab; Privilege Changes Tab, on Privilege Changes, the last
+tab, with no action; Add Action Label And Plus; Single Tab; and Loading A Filtered Tab, Users on its way: the action and the row greyed out, the
+pill moved to Users in its pending look, over its skeleton with the filter row; and Loading An Unfiltered Tab, the skeleton without the
+filter row. `AddActionAt600`, `AddActionAt382`, `LoadingAt375` and `PrivilegeChangesAt375` are pinned to a width. Hover, focus and the pressed look are real input, so no story
 holds them. The workshop's stub router goes nowhere, so those stories provide
 `TabSwitchContext` above the page, holding a tab on its way; the stub
 `usePathname` says which address is open ([`workshop.md`](../workshop.md),

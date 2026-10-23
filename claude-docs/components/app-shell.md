@@ -123,16 +123,7 @@ link.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AppShell/index.stories.tsx), titled
-"Shell / App Shell", each inside `ShellFrame` (`.storybook/shell-frame.tsx`), which
-draws the layouts' markup with fixture props around a stub page. Each area's
-stub wraps and heads itself as that area's real page does: a coven's name in
-the coven layout's column, "Admin" in the admin layout's, "Your Account" or
-"Your Email" in the narrow page frame, and "Create Coven" on its panel.
-`Default`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
-context row, with no section nav), `AccountPage`, `Unverified` (the email page's
-bar). The toolbar viewport menu shows any of them at 375px. The body swap has its own, `Feedback / Main Body`
-(`.storybook/main-body.stories.tsx`): `States`, one dropdown of the pages and the loading shapes ([loading](../loading.md), "Stories").
+[`index.stories.tsx`](../../src/components/AppShell/index.stories.tsx), titled "Shell / App Shell", has one story, `States`, with a control that chooses the state, each inside `ShellFrame` (`.storybook/shell-frame.tsx`), which draws the layouts' markup with fixture props around a stub page. Each area's stub wraps and heads itself as that area's real page does: a coven's name in the coven layout's column, "Admin" in the admin layout's, "Your Account" or "Your Email" in the narrow page frame, and "Create Coven" on its panel. The states are Member, Admin Page, Curator Page, Add Menu Open, Curator In One Coven, Create Page (`/coven/new`: the switcher alone in the context row, with no section nav), Account Page, Invitations Waiting and Unverified (the email page's bar). The toolbar viewport menu shows any of them at 375px. The body swap has its own, `Feedback / Main Body` (`.storybook/main-body.stories.tsx`): `States`, one dropdown of the pages and the loading shapes ([loading](../loading.md), "Stories").
 
 ## Testing
 

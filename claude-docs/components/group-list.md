@@ -39,18 +39,18 @@ The table takes the `data-table--roomy` modifier: while it is a table, its cells
 ## Stories
 
 [`index.stories.tsx`](../../src/components/GroupList/index.stories.tsx),
-`Admin / Group List`, has eleven stories. The bare list, at the workshop's own
+`Admin / Group List`: one story, `States`, with a control that chooses, at the workshop's own
 width:
 
-- `CategoryGroups`: three invented groups in seeded pairs.
-- `FormGroups`: two groups with a next page and no search.
-- `Traditions`: three invented traditions under an empty search.
-- `TraditionsSearched`: searched by a fragment, Clear drawn.
-- `TraditionsNoMatch`: the no-match message.
-- `Empty` and `TraditionsEmpty`: the empty messages, the traditions' naming
+- Default: three invented category groups in seeded pairs.
+- Form Groups: two groups with a next page and no search.
+- Traditions: three invented traditions under an empty search.
+- Traditions Searched: searched by a fragment, Clear drawn.
+- Traditions No Matches: the no-match message.
+- Empty and Traditions Empty: the empty messages, the traditions' naming
   them.
 
-The stories stand for the page, which draws a group list only inside its
+The states stand for the page, which draws a group list only inside its
 tabbed page ([`tabbed-page.md`](tabbed-page.md)): the admin layout's frame, the
 page's heading, tabs and Add, with the Groups or Deity Traditions tab open.
 

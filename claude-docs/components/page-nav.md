@@ -96,7 +96,7 @@ cannot drift, and the account page's layout was checked unchanged at four widths
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/PageNav/index.stories.tsx): `Default`, the column on a wide screen with the bar on the right edge and the text right-aligned; `Grouped`, a top-level entry and three under a Forms label; `GroupedApart`, a group set apart by its first entry, with a break and a short rule before it. The toolbar viewport menu shows any of them at 375px, where the bar is on the left and the text left-aligned.
+[`index.stories.tsx`](../../src/components/PageNav/index.stories.tsx): `States` is a grid: Plain, the column on a wide screen with the bar on the right edge and the text right-aligned; Grouped, a top-level entry and three under a Forms label; Grouped Apart, a group set apart by its first entry, with a break and a short rule before it. The toolbar viewport menu shows any of them at 375px, where the bar is on the left and the text left-aligned.
 
 ## Tests
 

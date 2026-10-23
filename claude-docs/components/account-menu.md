@@ -128,14 +128,7 @@ rows beneath it.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx),
-titled "Shell / Account Menu": `Default`, `Open`, `OpenUnverified` (Sign Out
-alone), `ClosedWithInvitations` (the dot) and `OpenWithInvitations`
-(the count beside Your Account). The toolbar viewport menu shows any of them at a phone's width. Every open story draws Sign Out as its last row; there is no
-story of the button alone, since the app never draws it elsewhere, and in the
-workshop a click shows the failure, as the call reaches no auth server. Each sits at the right, since the panel hangs from the
-button's right edge. The wrapper holds the menu at its top and is tall enough
-for the open panel, because the workshop's frame clips what overflows it.
+[`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx), titled "Shell / Account Menu", has one story, `States`, with a control that chooses the state: Closed, Open, Closed With Invitations (the dot), Open With Invitations (the count beside Your Account), Open With One Invitation (the singular wording), Open On The Admin Page (the current page marked), Open With A Long Name, Sign Out Failed (the failure callout under the button) and Open Unverified (Sign Out alone). The toolbar viewport menu shows any of them at a phone's width. Every open state draws Sign Out as its last row; there is no state of the button alone, since the app never draws it elsewhere. Each sits at the right, since the panel hangs from the button's right edge. The wrapper holds the menu at its top and is tall enough for the open panel, because the workshop's frame clips what overflows it.
 
 ## Testing
 

@@ -78,9 +78,9 @@ buttons and the spinner are the primitives', Accept drawn through
 `main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only, bar
 the failed accept.
 
-- **The states:** `SignedOut`, `Acceptable`, `AcceptableCurator`, `AcceptableCoven`, `Unverified`, and one for each other
-  refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
-  `DifferentAddress` and `Paused`. The refusal sentences are copied from the service's `MESSAGES`,
+- **The states:** `SignedOut` is its own story; `States`, with a control that chooses Default, Acceptable Curator, Acceptable Coven, Unverified, and one for each other
+  refusal: Invalid, Accepted, Revoked, Expired, Declined, Deleted Coven,
+  Different Address and Paused. The refusal sentences are copied from the service's `MESSAGES`,
   as a story cannot import a server-only module.
 - **A failed accept:** `AcceptRefused` presses Accept on mount
   (`usePressOnMount`); the workshop has no API, so the request fails and the callout says

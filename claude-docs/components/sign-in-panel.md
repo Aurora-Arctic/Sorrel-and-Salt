@@ -255,8 +255,8 @@ are the primitives' (`.panel`, `.notice--error`, `.meta`,
 every story inside the page's own `main.page-frame.page-frame--narrow`, so the
 workshop shows what the page shows:
 
-- `Default` (every provider configured), `LastUsed` (Discord marked),
-  `WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
+- `States`, with a control that chooses Default (every provider configured), Last Used (Discord marked),
+  With Error, and Some Unavailable (the shape most local dev actually sees:
   one pair in `.env.local`, the rest greyed out);
 - `Pending` and `Failed`, each pressing Continue with Google as a
   person would: the first with the request held open by the workshop's server

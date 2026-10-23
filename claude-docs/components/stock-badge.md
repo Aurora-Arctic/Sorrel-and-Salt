@@ -86,7 +86,7 @@ The inks were checked as text on both surfaces of both themes, and clear 4.5:1: 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/StockBadge/index.stories.tsx), under
-`Ingredients / Stock Badge`: `Default` (low) and `Out`.
+`Ingredients / Stock Badge`: `States`, a grid of Low, Low Without A Unit, Quantity Equal To The Threshold and Out; Stocked, No Quantity and No Threshold draw nothing.
 
 ## Testing
 

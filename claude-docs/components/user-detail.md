@@ -76,12 +76,15 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 `Admin / User Detail`, on invented people. Impersonate reaches Better Auth,
 which the workshop does not serve: the question can be seen, its answer cannot.
 
-- `Default`: a user with three covens, each role once, and Impersonate.
-- `NoCovens`: the same user holding none.
-- `SeveralProviders`: four sign-in methods and an unverified address.
-- `Admin`: the primary admin, marked, with no Impersonate, as the endpoint
-  refuses an admin.
-- `WithoutImpersonation`: the user where impersonation is not registered.
+`States` has a control that chooses:
+
+- Default: a user with three covens, each role once, and Impersonate.
+- No Covens: the same user holding none.
+- Several Providers: four sign-in methods and an unverified address.
+- Admin: the primary admin, marked, with no Impersonate, as the endpoint
+  refuses an admin. Curator and Other Admin are the other roles.
+- Without Impersonation: the user where impersonation is not registered.
+- Changes Paused, May Create Covens and No Providers.
 - `InAModal`: the detail inside a `Modal`, in its own iframe, so Impersonate's
   question draws over it.
 

@@ -89,9 +89,9 @@ list's Name cell and the value lists' group cell draw it.
 
 [`index.stories.tsx`](../../src/components/DataTable/index.stories.tsx), `Layout /
 Data Table`: `StackTable` over a few category groups, each in its `ListFrame`
-as an admin list holds it. `Default` has two groups in chips and two plain;
-`Roomy` adds the `data-table--roomy` class; `Empty` shows the empty-state
-sentence. The toolbar viewport menu shows the rows turned into cards at 375px.
+as an admin list holds it. `States` has a control that chooses: Default has two groups in chips and two plain;
+Roomy adds the `data-table--roomy` class; Empty shows the empty-state
+sentence; Foot Action And Icon Chip adds a foot action and an icon chip. The toolbar viewport menu shows the rows turned into cards at 375px.
 
 ## Testing
 

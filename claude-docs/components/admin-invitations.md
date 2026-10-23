@@ -146,17 +146,7 @@ alert (MB.116).
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
-`Admin / Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
-page with its Invitations tab open and New Invitation beside the heading:
-`Default`, `Empty`, `Filtered` (an Email and Expires in 24 Hrs
-applied, Clear offered, one invitation left), `NoMatches` (the
-empty state naming the filter), `MiddlePage` (a middle page of 25,
-both pager ends live and "Page 2 of 3" between them) (at 375px, from the toolbar viewport menu, the pager's
-row wraps Next beneath Prev and the position), `Inviting` (the form open, its Reason's
-hint in a tip), `Paused` (both controls locked with the pause's reason). The toolbar viewport menu shows any of them at 375px, where New Invitation sits across the line beneath the
-heading, the filter row stacks and the invitations are cards. Invite and Revoke reach the network only when sent, so a send in the workshop
-fails into its alert. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx), `Admin / Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People page with its Invitations tab open and New Invitation beside the heading. `States` has a control that chooses: Default, Empty, Filtered (an Email and Expires in 24 Hrs applied, Clear offered, one invitation left), No Matches (the empty state naming the filter), Middle Page (a middle page of 25, both pager ends live and "Page 2 of 3" between them), Last Page (Previous live, Next not), Paused (both controls locked with the pause's reason), Revoke Refused (Revoke pressed and confirmed; no server answers, so the refusal shows) and Send Refused (an address typed and sent; the form's alert shows). `Inviting` is its own story: the form open, its Reason's hint in a tip. The toolbar viewport menu shows any of them at 375px, where New Invitation sits across the line beneath the heading, the filter row stacks, the invitations are cards and the pager's row wraps Next beneath Prev and the position. The "Invitation sent" notice and a refusal pathed to the Email field need a server, so no story reaches them. Render-only, no test ids, no snapshots.
 
 ## Tests
 

@@ -123,9 +123,9 @@ at 4.5:1 over its own tint on the page and on a card, are rows in
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Notice/index.stories.tsx), under
-`Feedback / Notice`: `Failed` (an error), `Warning`, `QuietWarning` (a
-warning as a status), `Caution`, `Success` and `Plain`, one for each look and role in
-the table above, and `BlockWarning` and `BlockFailure`, the block form with a
+`Feedback / Notice`: `States`, a grid of Plain, Failed (an error), Warning, Quiet Warning (a
+warning as a status), Caution and Success, one for each look and role in
+the table above, and Block Warning and Block Failure, the block form with a
 sentence, a list of links and a button. The toolbar viewport menu shows them at 375px.
 
 ## Testing

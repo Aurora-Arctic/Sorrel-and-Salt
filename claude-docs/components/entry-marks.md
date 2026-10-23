@@ -95,7 +95,7 @@ Updated's ink is New's in the dark theme and darker in the light one (`#274b0c`)
 
 ## Stories
 
-`index.stories.tsx`: `Default`, `InCupboard`, `InCupboardAnnotated`, `Retired`, `NotInCupboard` and `Recency`, one per kind and mark.
+`index.stories.tsx`: `States`, a grid with one cell per kind and mark: Own, In Cupboard, In Cupboard Annotated, Retired, Retired Alone, Own And Annotated, Compendium Entry In A Coven, Not In Cupboard, Without Provenance; the safety marks (Toxic Ingredient, Toxic With Notes, Toxic In One Form, Not Toxic, Toxic Not Known, Caution From Notes, Caution From A Form, Safety Left Out); and New With Marks and Updated With Marks. `Recency` is separate.
 
 ## Testing
 

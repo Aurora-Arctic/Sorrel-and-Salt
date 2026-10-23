@@ -67,7 +67,7 @@ so the component sets no type of its own.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Welcome/index.stories.tsx) —
-`Default` (signed out) and `SignedIn` (the `/coven` landing). Each renders inside the page's real
+`States`, with a control that chooses Default (signed out) or Signed In (the `/coven` landing). Each renders inside the page's real
 `main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)).
 Render-only, no test ids, no snapshots.
 

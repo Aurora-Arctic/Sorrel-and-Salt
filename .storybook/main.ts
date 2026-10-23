@@ -36,8 +36,8 @@ const config: StorybookConfig = {
     // e2e remote browser, as the Vite `server.allowedHosts` below says.
     allowedHosts: ['localhost', 'devcontainer'],
   },
-  // Pages are not documented here (no autodocs), and the props tables they would
-  // read cost a type-checker pass on every start.
+  // Pages are not documented here (no autodocs). The props reader slows the first
+  // story to open and the build, not the start (claude-docs/design-decisions/m12.53-storybook.md).
   typescript: { reactDocgen: false },
   viteFinal: (viteConfig) =>
     mergeConfig(viteConfig, {

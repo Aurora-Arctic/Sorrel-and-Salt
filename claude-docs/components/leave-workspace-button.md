@@ -86,9 +86,9 @@ is `.btn--destructive`; Cancel is `.btn--quiet`.
 
 ## Stories
 
-`index.stories.tsx` (`Coven / Leave Coven Button`): `Default` (the plain Leave),
-`OnlyOwner` (several members to hand over to, so the type-ahead), `OnlyOwnerOneOther` (one member,
-offered by name) and `OnlyMember` (deletion alone). In the
+`index.stories.tsx` (`Coven / Leave Coven Button`): `States`, a grid of Member (the plain Leave),
+Only Owner (several members to hand over to, so the type-ahead), Only Owner One Other (one member,
+offered by name) and Only Member (deletion alone); and `Open`, with a control that chooses the dialog open in each case (Member Asking, Member Refused, Only Owner Hand Over, Only Owner Delete Chosen, Only Owner One Other Hand Over Failed, Only Member Asking). In the
 workshop the calls reach no server, so confirming shows the failure. The button in its page is the
 coven index's, which reads the session and so has no story: it is walked in
 `tests/e2e/coven.spec.ts`.

@@ -73,16 +73,18 @@ there is none.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/GroupForm/index.stories.tsx),
-`Admin / Group Form`, has eight stories, each in the modal and its own iframe:
+`Admin / Group Form`, each in the modal and its own iframe. `States` has a control that chooses:
 
-- `AddingACategoryGroup` and `EditingACategoryGroup` (three categories held,
+- Adding A Category Group and Editing A Category Group (three categories held,
   so Delete Group shows the move).
-- `EditingAFormGroup` (none held); the groups it could move forms to carry icons, one none.
-- `AddingATradition` and `EditingATradition` (two deities held, so Delete
+- Adding A Form Group.
+- Editing A Tradition (two deities held, so Delete
   Tradition shows the move to the other invented tradition).
-- `AskingWhereToMove`: the category group's edit with Delete Group pressed
-  once drawn, the first step of the delete over the form, which is dimmed and
-  held beneath it.
+- Saving Empty Category Group and Saving Empty Form Group: Save pressed on an empty form.
+
+`AskingWhereToMove` is its own story: the category group's edit with Delete Group pressed
+once drawn, the first step of the delete over the form, which is dimmed and
+held beneath it.
 
 ## Testing
 

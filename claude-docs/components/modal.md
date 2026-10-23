@@ -790,26 +790,27 @@ Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`]
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Modal/index.stories.tsx), under
-`Surfaces / Modal`. Each sets `meta = { iframed: true }`, since the dialog
+`Surfaces / Modal`. One story, `States`, with a control that chooses the state. It sets `meta = { iframed: true }`, since the dialog
 sits in the top layer ([`workshop.md`](../workshop.md)); each owner keeps an
 Open button to bring it back after Close or Escape.
 
-- `Default`, the default column around a small form, and `Wide`, the wide
+- Plain, the default column around a small form, and Wide, the wide
   size around a longer one.
-- `Editing`, an edit dialog's head: the eyebrow, a long title and a binomial
-  as the qualifier.
-- `OpenedByItsAddress`, a `RouteModal` with `content`, as an address opens it.
-  `Loading` shows the
+- Editing, an edit dialog's head: the eyebrow, a long title and a binomial
+  as the qualifier. With Every Head Part and With A Destination are other heads.
+- Opened By Its Address, a `RouteModal` with `content`, as an address opens it.
+  Loading shows the
   pressed row's head over the skeleton, through a `RouteModalContext` value
   whose navigation never arrives.
-- `OpenedByAButton` shows `ModalButton`: tab to the button, open it, close
-  it any way, and the focus ring is back on the button. `OpenedByAButtonOpen`
+- Opened By A Button shows `ModalButton`: tab to the button, open it, close
+  it any way, and the focus ring is back on the button. Opened By A Button And Pressed
   is the same, pressed open as it mounts, so the dialog itself can be looked at.
-- `AskingToDiscardChanges`, the discard
+- Asking To Discard Changes, the discard
   question over a form with a change; Escape or Close there flashes it.
-  `AskingToConfirm` shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
+  Asking To Confirm shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
   once pressed.
-- `WithPickers`, a picker and a multi-picker, where Escape closes an open list
+- Listed With A Foot, a list in the body with a foot.
+- With Pickers, a picker and a multi-picker, where Escape closes an open list
   before it closes the modal.
 
 ## Testing

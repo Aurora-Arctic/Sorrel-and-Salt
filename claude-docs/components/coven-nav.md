@@ -75,13 +75,14 @@ All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Nav", render-only, on the coven index (the toolbar viewport menu shows the nav at 375px, the bar along the foot of the screen):
+`index.stories.tsx`, titled "Coven / Nav", render-only, on the coven index (the toolbar viewport menu shows the nav at 375px, the bar along the foot of the screen). `States` is a grid:
 
-- `Default`: as a member sees it, Overview current, Ingredients and Members beside it.
-- `Viewer`: as a viewer sees it, Overview and Ingredients.
+- Overview Current: as a member sees it, Overview current, Ingredients and Members beside it.
+- Ingredients Current, Members Current, and Members Current On Its Invitations Tab: the other pages as current.
+- Viewer: as a viewer sees it, Overview and Ingredients.
 
 The shapes the nav takes by width are `SectionNav`'s stories; the nav in its
-row is `ContextRow`'s `Coven` story and the workshop's shell frame.
+row is `ContextRow`'s Coven cell and the workshop's shell frame.
 
 ## Testing
 

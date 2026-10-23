@@ -145,11 +145,10 @@ The computed styles were checked identical to the pixel values the tokens replac
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Ingredients / Ingredient Card`:
-the kinds (`Default`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
-`NewWithoutSafety`), the stress cases for the name (`LongName`, which is also retired, cautioned and
-Updated; `OneLongWord`, `MineralName`, `NoFormalName`), the other marks and chips (`ManyForms`,
-`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`)
-and the recency marks (`NewAndUpdated`).
+one story, `States`, a grid of the kinds (Own With Jars, In Cupboard, Retired, Compendium), the safety states (Caution, New Without Safety), the stress cases for the name (Long Name, which is also retired, cautioned and
+Updated; One Long Word, Mineral Name, No Formal Name), the other marks and chips (Many Forms, No Forms Line,
+Many Categories, Last Edited), the actions (With Actions, With Start Actions), the compact look (Compact)
+and the recency marks (New And Updated).
 
 ## Testing
 

@@ -224,12 +224,10 @@ there is none.
 groups four invented ones, enough to narrow, the form groups carrying icons (one none). The workshop has no API, so a
 save answers with the generic error.
 
-- `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
-  `AddingADeity`, `EditingADeity`, `AddingACelestialBody` and
-  `EditingAZodiacSign`: an add and an edit for each kind, the celestial body
-  and the sign being flat, with no group field. Renaming in `EditingAForm`,
-  `EditingADeity` or `EditingAZodiacSign` shows the note by Save; in
-  `EditingADeity` the head keeps the name it was saved under, with the
+- `States`, with a control that chooses Adding A Category, Editing A Category, Adding A Form, Editing A Form, Editing A Deity, Adding A Celestial Body, Adding A Zodiac Sign, Save Refused and Saving Empty: an add or an edit for the kinds, the celestial body
+  and the sign being flat, with no group field. Renaming in Editing A Form or
+  Editing A Deity shows the note by Save; in
+  Editing A Deity the head keeps the name it was saved under, with the
   tradition after it.
 - `AskingToDelete`: the category's edit with Delete pressed once drawn, the
   question over the form, which is dimmed and held beneath it until Delete or
