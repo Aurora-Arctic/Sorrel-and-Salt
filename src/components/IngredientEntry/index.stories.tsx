@@ -240,6 +240,25 @@ const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
 );
 
+// The cupboard choices beside the title (M12.17). The workshop has no API, so
+// a press answers with the generic error, which shows in the failure callout
+// under the button (M12.31). A member sees the Annotate icon, More (Make It
+// Ours, M12.23) and the Remove bin once the coven holds the entry; a viewer sees none.
+// Adding is the plus's (AddIcon).
+const CUPBOARD = {
+  workspaceId: nextId(),
+  covenSlug: FIXTURE_COVEN.slug,
+  canAdd: true,
+  canAnnotate: true,
+  canRemove: true,
+  canMakeOurs: true,
+  annotate: {
+    href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
+    closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
+    opened: false,
+  },
+};
+
 const Entry = (props: Partial<IngredientEntryProps>) => (
   <Page>
     <IngredientEntry detail={FULL} hrefOf={hrefOf} {...props} />
@@ -348,25 +367,6 @@ const annotatedNode = (
     }}
   />
 );
-
-// The cupboard choices beside the title (M12.17). The workshop has no API, so
-// a press answers with the generic error, which shows in the failure callout
-// under the button (M12.31). A member sees the Annotate icon, More (Make It
-// Ours, M12.23) and the Remove bin once the coven holds the entry; a viewer sees none.
-// Adding is the plus's (AddIcon).
-const CUPBOARD = {
-  workspaceId: nextId(),
-  covenSlug: FIXTURE_COVEN.slug,
-  canAdd: true,
-  canAnnotate: true,
-  canRemove: true,
-  canMakeOurs: true,
-  annotate: {
-    href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
-    closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
-    opened: false,
-  },
-};
 
 // Annotate is the icon; Make It Ours and Remove are in the three dots, under the one Coven label
 // (the owner's call, 2026-10-20).
