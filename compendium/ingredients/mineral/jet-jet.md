@@ -51,7 +51,6 @@ references:
       - canonicalName
       - nomenclature
       - colours
-      - folkNames
       - description
 variants:
   - form: Stone
@@ -89,7 +88,7 @@ variants:
           - form
           - description
   - form: Charm
-    description: Wikipedia notes that in the Roman period jet was set in amulets and pendants for its supposed power to protect and to turn aside the evil eye, and that Roman pendants were often carved with a Medusa head. Cunningham adds that in the Middle Ages jet was carved into beetles and worn for protection.
+    description: Wikipedia notes that in the Roman period jet was set in amulets and pendants for its supposed power to protect and to turn aside the evil eye. Cunningham adds that in the Middle Ages jet was carved into beetles and worn for protection.
     categories:
       - Protection
     references:
@@ -110,4 +109,4 @@ variants:
 
 # Jet
 
-Jet is a black, sometimes dark brown, material formed from wood that decayed millions of years ago and was altered by great pressure, commonly from trees of the family Araucariaceae. Strictly it is a mineraloid rather than a mineral, and it counts as a kind of lignite, the lowest rank of coal; Hall too remarks that it looks like coal. It is roughly three-quarters carbon, soft enough to carve with ease, and like amber it gains an electric charge when rubbed. In England it is found at Whitby and in Dorset, and the phrase 'jet-black' comes from it. People have worked it since the Stone Age; Romans wore it in amulets against the evil eye, and under Queen Victoria it became the fashion for mourning jewellery. Cunningham calls it Witches' Amber or Black Amber and gives it a receptive energy, Saturn, earth and the goddess Cybele. He treats it as a protective stone that soaks up negativity, worn to bed against nightmares and carried by travellers, and he uses it in divination, psychic work and healing spells. Hall associates it with protection, drawing off negative energy, psychic opening and steadying finances, and she advises cleansing it with care, above all after healing work.
+Jet is a black, sometimes dark brown, material formed from wood that decayed millions of years ago and was altered by great pressure, commonly from trees of the family Araucariaceae. Strictly it is a mineraloid rather than a mineral, and it counts as a type of lignite; Hall too remarks that it looks like coal. It is roughly three-quarters carbon, soft enough to carve with ease, and like amber it gains an electric charge when rubbed. In England it is found at Whitby and in Dorset, and the phrase 'jet-black' comes from it. People have worked it since the Stone Age; Romans wore it in amulets against the evil eye, and under Queen Victoria it became the fashion for mourning jewellery. Cunningham calls it Witches' Amber or Black Amber and gives it a receptive energy, Saturn, earth and the goddess Cybele. He treats it as a protective stone that soaks up negativity, worn to bed against nightmares and carried by travellers, and he uses it in divination, psychic work and healing spells. Hall associates it with protection, drawing off negative energy, psychic opening and steadying finances, and she advises cleansing it with care, above all after healing work.

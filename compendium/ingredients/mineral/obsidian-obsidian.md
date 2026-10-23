@@ -29,17 +29,14 @@ categories:
   - Strength
   - Clarity
   - Shadow Work
-substitutes:
-  - identity: jet
 references:
   - source: cunningham-crystals
-    locator: under "Obsidian"; pp. 116–117; p. 190
+    locator: under "Obsidian"; pp. 116–117
     nameBasis: stated
     supports:
       - elements
       - celestialBodies
       - categories
-      - substitutes
       - description
   - source: hall-crystal-bible
     locator: under "Obsidian"
