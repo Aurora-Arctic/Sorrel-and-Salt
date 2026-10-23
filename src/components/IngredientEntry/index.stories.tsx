@@ -926,6 +926,49 @@ export const DetailsNoFormalName: Story = {
   ),
 };
 
+// The coven's jars of the entry (M12.29): the oil low, the smoke bundle unmeasured. An editor
+// has Edit Stock in the heading; a viewer sees the same shelf without it.
+const [PAGE_OIL, PAGE_BUNDLE] = FULL.variants.map(({ variant }) => variant.id);
+const STOCK = {
+  workspaceId: FIXTURE_WORKSPACE_ID,
+  forms: [
+    { variantId: PAGE_OIL, label: 'Oil' },
+    { variantId: PAGE_BUNDLE, label: 'Smoke Bundle' },
+  ],
+  jars: [
+    {
+      id: '00000000-0000-4000-8000-0000000000f1',
+      variantId: PAGE_OIL,
+      quantity: 4,
+      unit: 'ml',
+      threshold: 10,
+    },
+    {
+      id: '00000000-0000-4000-8000-0000000000f2',
+      variantId: PAGE_BUNDLE,
+      quantity: null,
+      unit: null,
+      threshold: null,
+    },
+  ],
+};
+const stockForEditorNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    stock={{ ...STOCK, mayEdit: true }}
+  />
+);
+const stockForViewerNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    stock={{ ...STOCK, mayEdit: false }}
+  />
+);
+
+// The public page for someone whose coven holds the entry: the shelf before the name.
+const heldInCovenNode = <Entry heldInCovens />;
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
@@ -949,6 +992,9 @@ const STATES_STATES: Record<string, ReactNode> = {
   'Similar In The Compendium': similarInTheCompendiumNode,
   'Moved Away': movedAwayNode,
   'Form Adds Nothing': formAddsNothingNode,
+  'Stock For Editor': stockForEditorNode,
+  'Stock For Viewer': stockForViewerNode,
+  'Held In A Coven': heldInCovenNode,
 };
 
 export const States: Story = {
