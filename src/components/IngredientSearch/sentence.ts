@@ -29,7 +29,7 @@ const text = (t: string): Part => ({ kind: 'text', text: t });
 
 // Values are shown in lower case, bar the three vocabularies whose entries are proper names
 // (deities, zodiac signs and celestial bodies), which keep their capitals. This is display only: the
-// fragment's `value` is untouched, so it still removes the right filter.
+// fragment's `value` keeps its own spelling.
 const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
 
 /** A list format's literal chunk: a bare word ("or") is a join, between its spaces; a comma stays text. */
