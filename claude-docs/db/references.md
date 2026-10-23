@@ -407,9 +407,9 @@ wrote — the same fields, to the letter — is linked by the compendium, never
 written twice, and a work an admin soft-deleted is neither re-inserted nor
 linked anew.
 
-A shard names a source by a **handle**. The works several shards cite, the
+An entry file names a source by a **handle**. The works many entries cite, the
 owner's library books, are declared once in `src/db/seed/compendium/works.ts`
-as the edition in hand; a shard's per-entry pages, a Wikipedia revision or a
+as the edition in hand; a file's per-entry pages, a Wikipedia revision or a
 web page, are its own `sources`. Each citation on an entry or a form becomes
 one `reference_links` row, `ingredient_id` for the entry and
 `ingredient_variant_id` for the form, carrying the citation's locator (`p. 71`,
@@ -417,8 +417,8 @@ one `reference_links` row, `ingredient_id` for the entry and
 admin's "unsourced" filter counts the entry's own links and its forms'.
 
 Which fields a citation backs (`supports`) is the guard's to check and is not
-stored: a link says which work supports the row, and the shard doc
-(`claude-docs/db/compendium-seed/<shard>.md`) says which fields each source
-gave. The links are written once, with the entry, as everything beneath an
+stored: a link says which work supports the row, and the entry file's
+`supports` list (`compendium/ingredients/<nomenclature>/<slug>.md`) says which
+fields each source gave. The links are written once, with the entry, as everything beneath an
 entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
 and how a correction lands").

@@ -252,7 +252,8 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   with `src/lib/citation.ts`, whose rendering keys a source, and the deity and
   astrology seed docs it is transcribed from, `src/db/seed/reference-rows.ts`,
   which writes its references and the compendium's, `src/db/seed/compendium.ts`
-  and its shards under `src/db/seed/compendium/`, the two
+  and its modules under `src/db/seed/compendium/`, the entry files under
+  `compendium/` it reads (M14.10), the two
   `*-vocabulary.ts` helpers they write through, `src/db/seed/idempotent.ts`,
   which every seed writes through, `src/db/seed/bootstrap-admin.ts`,
   `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer
