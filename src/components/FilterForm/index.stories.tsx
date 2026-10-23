@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { SearchField } from '../Field';
 import FilterForm from '.';
 import GroupedValueListFilter from '../GroupedValueList/filter';
@@ -19,7 +20,8 @@ const meta = {
   title: 'Admin / Filter Form',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const GROUPS = asSlugs(GROUP_NAMES.category);
 
@@ -31,13 +33,8 @@ const Framed = ({ shown = NO_FILTER }: { shown?: Shown }) => (
   </ListFrame>
 );
 
-// A page showing no filter: nothing to clear, so no Clear.
-export const Default: Story = { render: () => <Framed /> };
-
 // A page showing a filter: Clear, a link to the page itself, ends the row.
 const FILTER: Shown = { query: 'test', group: GROUPS[0].slug };
-
-export const Filtered: Story = { render: () => <Framed shown={FILTER} /> };
 
 // The form drawn on its own, with a filter shown so Clear would be drawn.
 const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
@@ -64,13 +61,26 @@ const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
   );
 };
 
-// A row with its own Clear All turns this one off, so a filter shows no Clear.
-export const WithoutClear: Story = { render: () => <Bare clear={false} /> };
+// One story with a control to choose the state (claude-docs/workshop.md, rule 5):
+//   No Filter: a page showing no filter, so nothing to clear and no Clear.
+//   Filtered: a page showing a filter, so Clear, a link to the page itself, ends the row.
+//   Without Clear: a row with its own Clear All turns Clear off, so a filter shows none.
+//   With Sorrel: the layer a sticky row fills itself with, so the corner sorrel shows through it.
+const STATES: Record<string, ReactNode> = {
+  'No Filter': <Framed />,
+  Filtered: <Framed shown={FILTER} />,
+  'Without Clear': <Bare clear={false} />,
+  'With Sorrel': <Bare sorrel />,
+};
 
-// The layer a sticky row fills itself with, so the corner sorrel shows through it.
-export const WithSorrel: Story = { render: () => <Bare sorrel /> };
+export const States: Story = {
+  args: { state: 'No Filter' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
 
-// On a phone: the row stacks, the search over Clear.
+// On a phone: the row stacks, the search over Clear. It stays a story of its own because the
+// state is the viewport, which a control on a state cannot set.
 export const Narrow: Story = {
   globals: { viewport: { value: 'w375', isRotated: false } },
   render: () => <Framed shown={FILTER} />,

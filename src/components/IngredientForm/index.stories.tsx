@@ -807,31 +807,30 @@ function WhatToTry() {
  * Every lookup answered and the save faked, with what to type for each state
  * beside it. Unframed: the form takes its width from whatever holds it.
  */
-export const Default: Story = {
-  render: () => {
-    // Where Save Ingredient would go: the page holding the form navigates on
-    // 'open', and the workshop has no page to go to, so it says so instead.
-    const [opens, setOpens] = useState<string | null>(null);
-    const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
-      setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
-    return (
-      <>
-        <WhatToTry />
-        <IngredientForm
-          workspaceId={WORKSPACE_ID}
-          duplicateHref={covenDuplicateHref}
-          onSaved={onSaved}
-        />
-        {opens !== null && (
-          // `output` carries the status role itself, so no `role` attribute.
-          <output className="story-note">
-            Save Ingredient would now open <code>{opens}</code>, the new ingredient&rsquo;s page.
-          </output>
-        )}
-      </>
-    );
-  },
+const CovenView = () => {
+  // Where Save Ingredient would go: the page holding the form navigates on
+  // 'open', and the workshop has no page to go to, so it says so instead.
+  const [opens, setOpens] = useState<string | null>(null);
+  const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
+    setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
+  return (
+    <>
+      <WhatToTry />
+      <IngredientForm
+        workspaceId={WORKSPACE_ID}
+        duplicateHref={covenDuplicateHref}
+        onSaved={onSaved}
+      />
+      {opens !== null && (
+        // `output` carries the status role itself, so no `role` attribute.
+        <output className="story-note">
+          Save Ingredient would now open <code>{opens}</code>, the new ingredient&rsquo;s page.
+        </output>
+      )}
+    </>
+  );
 };
+const covenNode = <CovenView />;
 
 /** One of INGREDIENTS as a substitute's link, as an edit reads it back. */
 const linkOf = ({
@@ -1429,12 +1428,13 @@ export const DuplicatesNotice: Story = { render: () => <Duplicates /> };
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
+  Coven: covenNode,
   Compendium: compendiumNode,
   'Compendium Entry': compendiumEntryNode,
 };
 
 export const States: Story = {
-  args: { state: 'Compendium' },
+  args: { state: 'Coven' },
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },

@@ -53,8 +53,8 @@ export default function StockSection({
 
   return (
     <section id="stock" className="ingredient-entry__section" aria-labelledby="stock-heading">
-      {/* The head and the shelf, spaced as one stack. No box: MB.121 removed the interim `panel`. */}
-      <div className="ingredient-entry__stock-panel">
+      {/* One box for the head and the shelf. The `panel` class is interim (MB.121's review removes it); the div can stay. */}
+      <div className="ingredient-entry__stock-panel panel">
         <div className="ingredient-entry__stock-head">
           <h2 id="stock-heading">Stock</h2>
           {stock.mayEdit && (
