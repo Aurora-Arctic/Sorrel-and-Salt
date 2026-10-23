@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { FIXTURE_GROUP_ID, GROUP_NAMES, asOptions } from '../../../.storybook/fixtures';
 import { InModal } from '../../../.storybook/in-modal';
-import { usePressOnMount } from '../../../.storybook/press';
+import { setInputValue, submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
 import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
 import GroupedValueForm from '.';
 
@@ -32,7 +32,7 @@ const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 
 const done = () => {};
 
-const defaultNode = (
+const addingACategoryNode = (
   <InModal title="Add Category">
     <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
   </InModal>
@@ -61,6 +61,51 @@ const addingAFormNode = (
     <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
   </InModal>
 );
+
+// A form filed under a group that draws its own icon.
+const editingAFormNode = (
+  <InModal eyebrow="Edit Form" title="Testleaf">
+    <GroupedValueForm
+      kind="form"
+      value={{
+        id: FIXTURE_GROUP_ID,
+        name: 'Testleaf',
+        description: 'An invented form, for the workshop.',
+        groupId: FORM_GROUPS[0].id,
+      }}
+      groups={FORM_GROUPS}
+      onDone={done}
+    />
+  </InModal>
+);
+
+// The other flat kind.
+const addingAZodiacSignNode = (
+  <InModal title="Add Zodiac Sign">
+    <GroupedValueForm kind="zodiacSign" onDone={done} />
+  </InModal>
+);
+
+// A rename sent; no server answers, so the form's generic error shows.
+const SaveRefusedView = () => {
+  useSteps([
+    () =>
+      setInputValue(
+        document.querySelector<HTMLInputElement>('input[name="name"]')!,
+        'Testcraft Two',
+      ),
+    () => submitForm('form'),
+  ]);
+  return <EditingACategoryView />;
+};
+const saveRefusedNode = <SaveRefusedView />;
+
+// Saved while empty: each missing field says so.
+const SavingEmptyView = () => {
+  useSteps([() => submitForm('form')]);
+  return addingACategoryNode;
+};
+const savingEmptyNode = <SavingEmptyView />;
 
 // Rename it to see the note by Save that the rename carries onto the
 // compendium, and the head keep the name it was saved under, its tradition
@@ -100,15 +145,19 @@ export const AskingToDelete: Story = {
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
-  'Editing ACategory': editingACategoryNode,
-  'Adding AForm': addingAFormNode,
-  'Editing ADeity': editingADeityNode,
-  'Adding ACelestial Body': addingACelestialBodyNode,
+  'Adding A Category': addingACategoryNode,
+  'Editing A Category': editingACategoryNode,
+  'Adding A Form': addingAFormNode,
+  'Editing A Form': editingAFormNode,
+  'Editing A Deity': editingADeityNode,
+  'Adding A Celestial Body': addingACelestialBodyNode,
+  'Adding A Zodiac Sign': addingAZodiacSignNode,
+  'Save Refused': saveRefusedNode,
+  'Saving Empty': savingEmptyNode,
 };
 
 export const States: Story = {
-  args: { state: 'Default' },
+  args: { state: 'Adding A Category' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
