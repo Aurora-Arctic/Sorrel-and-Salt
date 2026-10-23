@@ -1,10 +1,10 @@
-import { GraphQLInputObjectType, isNonNullType } from 'graphql';
+import { GraphQLInputObjectType, isNonNullType, isObjectType } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
@@ -365,6 +365,44 @@ describe('deleteCompendiumIngredient', () => {
     expect((await remove(asUser(E), 'not-an-ingredient')).errors?.[0]?.extensions?.code).toBe(
       'NOT_FOUND',
     );
+  });
+});
+
+describe('setCompendiumEntryReviewed', () => {
+  const REVIEWED =
+    'mutation ($id: ID!, $reviewed: Boolean!) { setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) { id } }';
+
+  it('marks and clears the entry for a curator, answering it, and is FORBIDDEN for a member', async () => {
+    const id = await seed();
+    // Why the mark below is the mutation's: the seeded row has none.
+    expect((await rowOf(id)).curator_reviewed_at).toBeNull();
+
+    const marked = await run(asUser(F), REVIEWED, { id, reviewed: true });
+    expect(marked).toEqual({ data: { setCompendiumEntryReviewed: { id } } });
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_by: F.id });
+
+    const member = await run(asUser(B), REVIEWED, { id, reviewed: false });
+    expect(member.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_by: F.id });
+
+    await run(asUser(F), REVIEWED, { id, reviewed: false });
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_at: null, curator_reviewed_by: null });
+  });
+
+  it("is NOT_FOUND for a coven's ingredient, which stays unmarked", async () => {
+    const id = await seed({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' });
+
+    const result = await run(asUser(F), REVIEWED, { id, reviewed: true });
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect((await rowOf(id)).curator_reviewed_at).toBeNull();
+  });
+
+  it('never answers the mark or the reviewer on Ingredient', () => {
+    const ingredient = schema.getType('Ingredient');
+    expect(isObjectType(ingredient)).toBe(true);
+    const fields = isObjectType(ingredient) ? Object.keys(ingredient.getFields()) : [];
+    expect(fields).toContain('name');
+    expect(fields.filter((field) => /review/i.test(field))).toEqual([]);
   });
 });
 

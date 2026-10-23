@@ -873,6 +873,11 @@ type Mutation {
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
   """
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
+
+  """
+  Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
+  """
+  setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
 
