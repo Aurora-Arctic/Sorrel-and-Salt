@@ -3,7 +3,7 @@
 // Save or Sign In button works without a server.
 //
 // The app's clients ask for `/workshop/api/...` here, not `/api/...`
-// (`NEXT_PUBLIC_API_PREFIX`, set in main.ts; src/lib/api-path.ts), because
+// (`WORKSHOP_API_PREFIX`, set in main.ts; src/lib/api-path.ts), because
 // staging's Content Security Policy lets a workshop page reach only addresses
 // under /workshop/, and it refuses the real ones before a service worker can
 // answer. claude-docs/workshop.md, "On staging".
