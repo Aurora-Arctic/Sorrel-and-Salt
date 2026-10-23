@@ -23,13 +23,26 @@ const SignedOut = (): ReactElement => (
 );
 
 // What every signed-out visitor sees at `/`.
-export const Default: Story = { render: () => <SignedOut /> };
+const defaultNode = <SignedOut />;
 
 // The same page for a visitor with a live session: the way in is the landing.
-export const SignedIn: Story = {
-  render: () => (
-    <Page>
-      <Welcome landing="/coven" />
-    </Page>
-  ),
+const signedInNode = (
+  <Page>
+    <Welcome landing="/coven" />
+  </Page>
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Signed In': signedInNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

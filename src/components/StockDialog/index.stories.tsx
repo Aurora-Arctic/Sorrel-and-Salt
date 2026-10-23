@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { type ReactElement, useEffect, useLayoutEffect, useRef } from 'react';
 import StockDialog from '.';
 import type { StockForm, StockJar } from './types';
@@ -196,12 +197,31 @@ const Pressed = ({
   );
 };
 
-export const Open: Story = { render: () => <Pressed jars={[LEAF, OIL]} /> };
-export const OpenNoneHeld: Story = { render: () => <Pressed jars={[]} /> };
-export const OpenAllHeld: Story = { render: () => <Pressed jars={[LEAF, OIL, RESIN]} /> };
-export const OpenRefused: Story = { render: () => <Pressed jars={[LEAF, OIL, RESIN]} refuse /> };
-export const OpenFailed: Story = { render: () => <Pressed jars={[LEAF, OIL]} save /> };
-export const OpenRemoving: Story = { render: () => <Pressed jars={[LEAF, OIL]} remove /> };
+const openNode = <Pressed jars={[LEAF, OIL]} />;
+const openNoneHeldNode = <Pressed jars={[]} />;
+const openAllHeldNode = <Pressed jars={[LEAF, OIL, RESIN]} />;
+const openRefusedNode = <Pressed jars={[LEAF, OIL, RESIN]} refuse />;
+const openFailedNode = <Pressed jars={[LEAF, OIL]} save />;
+const openRemovingNode = <Pressed jars={[LEAF, OIL]} remove />;
 
 // A modal draws in the page's own document, so its stories sit in a frame of
 // their own (claude-docs/workshop.md).
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Open: openNode,
+  'Open None Held': openNoneHeldNode,
+  'Open All Held': openAllHeldNode,
+  'Open Refused': openRefusedNode,
+  'Open Failed': openFailedNode,
+  'Open Removing': openRemovingNode,
+};
+
+export const States: Story = {
+  args: { state: 'Open' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

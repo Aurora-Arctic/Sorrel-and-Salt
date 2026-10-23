@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import MemberList from '.';
 import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
@@ -47,31 +48,27 @@ const MEMBERS: readonly MemberListEntry[] = [
   },
 ];
 
-export const Default: Story = {
-  render: () => <MemberList members={MEMBERS} currentUserId="u-bo" />,
-};
+const defaultNode = <MemberList members={MEMBERS} currentUserId="u-bo" />;
 
-export const WithActions: Story = {
-  render: () => (
-    <MemberList
-      members={MEMBERS}
-      currentUserId="u-ada"
-      showEmail
-      roleAction={() => (
-        <button type="button" className="btn btn--small btn--quiet">
-          Change Role
+const withActionsNode = (
+  <MemberList
+    members={MEMBERS}
+    currentUserId="u-ada"
+    showEmail
+    roleAction={() => (
+      <button type="button" className="btn btn--small btn--quiet">
+        Change Role
+      </button>
+    )}
+    removeAction={(member) =>
+      member.role === 'owner' ? null : (
+        <button type="button" className="btn btn--small btn--destructive">
+          Remove
         </button>
-      )}
-      removeAction={(member) =>
-        member.role === 'owner' ? null : (
-          <button type="button" className="btn btn--small btn--destructive">
-            Remove
-          </button>
-        )
-      }
-    />
-  ),
-};
+      )
+    }
+  />
+);
 
 // The page's composition: the sole-owner note inside the list frame, ahead of
 // the list, so the frame's gap spaces it (MB.119; src/app/(shell)/coven/[slug]/
@@ -104,4 +101,20 @@ const SoleOwnerPage = () => (
   </ListFrame>
 );
 
-export const SoleOwner: Story = { render: () => <SoleOwnerPage /> };
+const soleOwnerNode = <SoleOwnerPage />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'With Actions': withActionsNode,
+  'Sole Owner': soleOwnerNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

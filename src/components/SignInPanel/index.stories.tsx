@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
 import { authClient } from '../../lib/auth-client';
 import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '../../lib/sign-in';
@@ -31,40 +32,34 @@ const Page = (props: SignInPanelProps) => (
   </main>
 );
 
-export const Default: Story = {
-  render: () => {
-    lastUsed(null);
-    return <Page next="/" configured={ALL_PROVIDERS} />;
-  },
+const DefaultView = () => {
+  lastUsed(null);
+  return <Page next="/" configured={ALL_PROVIDERS} />;
 };
+const defaultNode = <DefaultView />;
 
 // A browser that last signed in with Discord: its button carries the mark.
-export const LastUsed: Story = {
-  render: () => {
-    lastUsed('discord');
-    return <Page next="/" configured={ALL_PROVIDERS} />;
-  },
+const LastUsedView = () => {
+  lastUsed('discord');
+  return <Page next="/" configured={ALL_PROVIDERS} />;
 };
+const lastUsedNode = <LastUsedView />;
 
 // `error` reads the real mapping rather than a copied string, so this story
 // cannot go stale the way a hardcoded copy of the sentence did.
-export const WithError: Story = {
-  render: () => {
-    lastUsed(null);
-    return (
-      <Page next="/" error={signInErrorMessage('email_not_found')} configured={ALL_PROVIDERS} />
-    );
-  },
+const WithErrorView = () => {
+  lastUsed(null);
+  return <Page next="/" error={signInErrorMessage('email_not_found')} configured={ALL_PROVIDERS} />;
 };
+const withErrorNode = <WithErrorView />;
 
 // The shape most local dev actually sees: one registered pair in .env.local,
 // the rest greyed out until their credentials are added.
-export const SomeUnavailable: Story = {
-  render: () => {
-    lastUsed(null);
-    return <Page next="/" configured={['google']} />;
-  },
+const SomeUnavailableView = () => {
+  lastUsed(null);
+  return <Page next="/" configured={['google']} />;
 };
+const someUnavailableNode = <SomeUnavailableView />;
 
 // Continue with Google pressed, as a person would, with the sign-in request
 // left unanswered: that button reads "Signing In" and the others are disabled,
@@ -86,4 +81,21 @@ export const Failed: Story = {
     usePressOnMount('Continue with Google');
     return <Page next="/" configured={ALL_PROVIDERS} />;
   },
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Last Used': lastUsedNode,
+  'With Error': withErrorNode,
+  'Some Unavailable': someUnavailableNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

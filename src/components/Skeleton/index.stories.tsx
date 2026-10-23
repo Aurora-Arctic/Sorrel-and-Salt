@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import Skeleton from '.';
 
 // Render-only; the skeleton announces itself once, as a status, and the shapes
@@ -9,28 +10,48 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <Skeleton shape="table" /> };
+const defaultNode = <Skeleton shape="table" />;
 
-export const TableWithFilter: Story = { render: () => <Skeleton shape="table" filter /> };
+const tableWithFilterNode = <Skeleton shape="table" filter />;
 
-export const Cards: Story = { render: () => <Skeleton shape="cards" /> };
+const cardsNode = <Skeleton shape="cards" />;
 
-export const CardsWithFilter: Story = { render: () => <Skeleton shape="cards" filter /> };
+const cardsWithFilterNode = <Skeleton shape="cards" filter />;
 
-export const Form: Story = { render: () => <Skeleton shape="form" /> };
+const formNode = <Skeleton shape="form" />;
 
-export const Page: Story = { render: () => <Skeleton shape="page" /> };
+const pageNode = <Skeleton shape="page" />;
 
-export const Line: Story = { render: () => <Skeleton shape="line" /> };
+const lineNode = <Skeleton shape="line" />;
 
-export const TableWithTitleAndFilter: Story = {
-  render: () => <Skeleton shape="table" title action filter />,
+const tableWithTitleAndFilterNode = <Skeleton shape="table" title action filter />;
+
+const cardsWithTitleAndFilterNode = <Skeleton shape="cards" title action filter />;
+
+const contentsNode = <Skeleton shape="contents" />;
+
+const pageWithMenuNode = <Skeleton shape="page" menu />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Table With Filter': tableWithFilterNode,
+  Cards: cardsNode,
+  'Cards With Filter': cardsWithFilterNode,
+  Form: formNode,
+  Page: pageNode,
+  Line: lineNode,
+  'Table With Title And Filter': tableWithTitleAndFilterNode,
+  'Cards With Title And Filter': cardsWithTitleAndFilterNode,
+  Contents: contentsNode,
+  'Page With Menu': pageWithMenuNode,
 };
 
-export const CardsWithTitleAndFilter: Story = {
-  render: () => <Skeleton shape="cards" title action filter />,
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
-
-export const Contents: Story = { render: () => <Skeleton shape="contents" /> };
-
-export const PageWithMenu: Story = { render: () => <Skeleton shape="page" menu /> };

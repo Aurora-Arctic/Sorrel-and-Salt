@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
@@ -67,25 +68,21 @@ const CHANGES: PrivilegeLedgerEntry[] = [
   },
 ];
 
-export const Default: Story = {
-  render: () => (
-    <PrivilegeLedger
-      changes={CHANGES}
-      filter={{}}
-      nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
-      position={{ page: 1, pages: 3 }}
-    />
-  ),
-};
+const defaultNode = (
+  <PrivilegeLedger
+    changes={CHANGES}
+    filter={{}}
+    nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
+    position={{ page: 1, pages: 3 }}
+  />
+);
 
-export const OneUser: Story = {
-  render: () => (
-    <PrivilegeLedger
-      changes={CHANGES.filter((change) => change.subject === ADA)}
-      filter={{ query: 'ada@users.test' }}
-    />
-  ),
-};
+const oneUserNode = (
+  <PrivilegeLedger
+    changes={CHANGES.filter((change) => change.subject === ADA)}
+    filter={{ query: 'ada@users.test' }}
+  />
+);
 
 const OneUserAdminOnlyView = () => (
   <PrivilegeLedger
@@ -94,17 +91,33 @@ const OneUserAdminOnlyView = () => (
   />
 );
 
-export const OneUserAdminOnly: Story = { render: OneUserAdminOnlyView };
+const oneUserAdminOnlyNode = <OneUserAdminOnlyView />;
 
-export const Empty: Story = { render: () => <PrivilegeLedger changes={[]} filter={{}} /> };
+const emptyNode = <PrivilegeLedger changes={[]} filter={{}} />;
 
 // A search no row in this file matches, so the empty state is true of the
 // other stories' rows as well.
-export const NoMatches: Story = {
-  render: () => (
-    <PrivilegeLedger
-      changes={[]}
-      filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
-    />
-  ),
+const noMatchesNode = (
+  <PrivilegeLedger
+    changes={[]}
+    filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
+  />
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'One User': oneUserNode,
+  'One User Admin Only': oneUserAdminOnlyNode,
+  Empty: emptyNode,
+  'No Matches': noMatchesNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

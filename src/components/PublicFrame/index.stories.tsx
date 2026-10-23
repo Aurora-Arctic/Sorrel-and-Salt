@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Navigating } from '../../../.storybook/navigating';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 import PublicFrame from '.';
@@ -28,10 +28,10 @@ const Page = ({ open = '/compendium' }: { open?: string }): ReactElement => (
   </WorkshopPathname.Provider>
 );
 
-export const Default: Story = { render: () => <Page /> };
+const defaultNode = <Page />;
 
 // The bar on a page the nav does not name, so the Compendium link rests unmarked.
-export const NotOnTheCompendium: Story = { render: () => <Page open="/" /> };
+const notOnTheCompendiumNode = <Page open="/" />;
 
 // Mid-wait: the nav's Compendium link already pressed, on an entry's page, so
 // the page has gone and the Compendium's cards stand in the frame's body
@@ -42,4 +42,19 @@ export const LoadingTheCompendium: Story = {
       <Page open="/compendium/ingredients/testwort" />
     </Navigating>
   ),
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Not On The Compendium': notOnTheCompendiumNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

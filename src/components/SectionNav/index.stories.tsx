@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { type ReactElement, type ReactNode } from 'react';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
@@ -36,23 +37,19 @@ const Row = ({ path, children }: { path: string; children: ReactNode }): ReactEl
 
 // Wide: Grimoire-style tabs, as a member sees them (Overview and Members),
 // with Overview current.
-export const Default: Story = {
-  render: () => (
-    <Row path="/coven/fixture-coven">
-      <CovenNav slug="fixture-coven" canReadMembers />
-    </Row>
-  ),
-};
+const defaultNode = (
+  <Row path="/coven/fixture-coven">
+    <CovenNav slug="fixture-coven" canReadMembers />
+  </Row>
+);
 
 // Wide: six tabs, a hairline between Astrology and People, Categories
 // current (on its Groups tab's address).
-export const Admin: Story = {
-  render: () => (
-    <Row path="/admin/category-groups">
-      <AdminNav managesPeople />
-    </Row>
-  ),
-};
+const adminNode = (
+  <Row path="/admin/category-groups">
+    <AdminNav managesPeople />
+  </Row>
+);
 
 // Tablet, on a page that is behind More: More names it and carries the mark. The
 // width stays pinned (700px) because this state exists only at tablet width: wider
@@ -64,4 +61,19 @@ export const AdminOnAHiddenPage: Story = {
     </Row>
   ),
   globals: { viewport: { value: 'w700', isRotated: false } },
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Admin: adminNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

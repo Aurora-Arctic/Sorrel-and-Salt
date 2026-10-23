@@ -51,39 +51,31 @@ const Page = (props: SignInMethodsProps) => (
 
 // The common first visit: the one provider the account was made with, which
 // cannot be removed while it is the only one, and says so.
-export const Default: Story = {
-  render: () => <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />,
-};
+const defaultNode = <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
 
-export const TwoLinked: Story = {
-  render: () => <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />,
-};
+const twoLinkedNode = <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
 
 // The same two from a session older than Better Auth's `freshAge`: no row
 // offers Remove, and the list offers a fresh sign-in instead.
-export const StaleSession: Story = {
-  render: () => <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} fresh={false} />,
-};
+const staleSessionNode = (
+  <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} fresh={false} />
+);
 
 // A failed link to Microsoft, its sentence in Microsoft's row. `error` reads
 // the real mapping rather than a copied string.
-export const Failed: Story = {
-  render: () => (
-    <Page
-      linked={[DISCORD]}
-      configured={ALL_PROVIDERS}
-      error={{
-        providerId: 'microsoft',
-        message: linkErrorMessage('account_already_linked_to_different_user') ?? GENERIC_LINK_ERROR,
-      }}
-    />
-  ),
-};
+const failedNode = (
+  <Page
+    linked={[DISCORD]}
+    configured={ALL_PROVIDERS}
+    error={{
+      providerId: 'microsoft',
+      message: linkErrorMessage('account_already_linked_to_different_user') ?? GENERIC_LINK_ERROR,
+    }}
+  />
+);
 
 // Local dev with one registered pair: the rest cannot be added.
-export const SomeUnavailable: Story = {
-  render: () => <Page linked={[DISCORD]} configured={['discord']} />,
-};
+const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />;
 
 // The whole /account page, which is a server component and has no story of
 // its own: composed as page.tsx composes it, a bare heading, the jump links
@@ -145,7 +137,7 @@ const WholeAccountPage = ({
   </main>
 );
 
-export const WholePage: Story = { render: () => <WholeAccountPage /> };
+const wholePageNode = <WholeAccountPage />;
 
 // The whole page with every row state (narrow it with the viewport menu):
 // two linked, one addable, one unavailable, and a failure in a row.
@@ -159,9 +151,7 @@ const EveryRow = () => (
   />
 );
 
-export const EveryRowState: Story = {
-  render: () => <EveryRow />,
-};
+const everyRowStateNode = <EveryRow />;
 // Add pressed on Google, as a person would, with the link request left
 // unanswered: the row's button reads "Adding" and waits, as it does while the
 // browser is on its way to the provider (M12.33).
@@ -180,4 +170,37 @@ export const FailedRemove: Story = {
     usePressOnMount('Remove Microsoft');
     return <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
   },
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Two Linked': twoLinkedNode,
+  'Stale Session': staleSessionNode,
+  Failed: failedNode,
+  'Some Unavailable': someUnavailableNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const WHOLEPAGE_STATES: Record<string, ReactNode> = {
+  'Whole Page': wholePageNode,
+  'Every Row State': everyRowStateNode,
+};
+
+export const WholePage: Story = {
+  args: { state: 'Whole Page' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(WHOLEPAGE_STATES), mapping: WHOLEPAGE_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

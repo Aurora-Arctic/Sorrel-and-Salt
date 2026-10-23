@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import { AdminFrame as InAdminLayout } from '../../../.storybook/admin-frame';
 import AddAction from '../../app/(shell)/admin/add-action';
@@ -22,25 +23,21 @@ const AddIngredient = () => (
   </AddAction>
 );
 
-export const Default: Story = {
-  render: () => (
-    <InAdminLayout open="/admin/compendium">
-      <main>
-        <PageHeader title="Compendium" action={<AddIngredient />} />
-      </main>
-    </InAdminLayout>
-  ),
-};
+const defaultNode = (
+  <InAdminLayout open="/admin/compendium">
+    <main>
+      <PageHeader title="Compendium" action={<AddIngredient />} />
+    </main>
+  </InAdminLayout>
+);
 
-export const HeadingAlone: Story = {
-  render: () => (
-    <InAdminLayout open="/admin/compendium">
-      <main>
-        <PageHeader title="Compendium" />
-      </main>
-    </InAdminLayout>
-  ),
-};
+const headingAloneNode = (
+  <InAdminLayout open="/admin/compendium">
+    <main>
+      <PageHeader title="Compendium" />
+    </main>
+  </InAdminLayout>
+);
 
 // A heading long enough to wrap beside its action when narrow,
 // standing in for any.
@@ -60,6 +57,20 @@ const Long = () => (
   </InAdminLayout>
 );
 
-export const LongHeadingWithAction: Story = {
-  render: () => <Long />,
+const longHeadingWithActionNode = <Long />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Heading Alone': headingAloneNode,
+  'Long Heading With Action': longHeadingWithActionNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

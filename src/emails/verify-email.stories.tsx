@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { verifyEmailMessage } from './verify-email';
 import type { ProviderId } from '../lib/types';
@@ -36,12 +37,29 @@ const change = () =>
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
-export const Default: Story = { render: () => <EmailPreview message={oneProvider} /> };
+const defaultNode = <EmailPreview message={oneProvider} />;
 
-export const TwoProviders: Story = { render: () => <EmailPreview message={twoProviders} /> };
+const twoProvidersNode = <EmailPreview message={twoProviders} />;
 
 // No linked account on record: the sentence stops at the address.
-export const NoProvider: Story = { render: () => <EmailPreview message={noProvider} /> };
+const noProviderNode = <EmailPreview message={noProvider} />;
 
 // An existing account asking for this address (MB.54): the first sentence changes.
-export const Change: Story = { render: () => <EmailPreview message={change} /> };
+const changeNode = <EmailPreview message={change} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Two Providers': twoProvidersNode,
+  'No Provider': noProviderNode,
+  Change: changeNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

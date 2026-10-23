@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Modal from '../Modal';
 import UserDetail from '.';
@@ -75,31 +76,19 @@ const COVENS: readonly UserCoven[] = [
   },
 ];
 
-export const Default: Story = {
-  render: () => <UserDetail user={BO} memberships={COVENS} canImpersonate />,
-};
+const defaultNode = <UserDetail user={BO} memberships={COVENS} canImpersonate />;
 
-export const NoCovens: Story = {
-  render: () => <UserDetail user={BO} memberships={[]} canImpersonate />,
-};
+const noCovensNode = <UserDetail user={BO} memberships={[]} canImpersonate />;
 
 // Several providers and an unverified address.
-export const SeveralProviders: Story = {
-  render: () => <UserDetail user={MANY} memberships={COVENS} />,
-};
+const severalProvidersNode = <UserDetail user={MANY} memberships={COVENS} />;
 
 // The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one (MB.53).
-export const Admin: Story = {
-  render: () => <UserDetail user={ADA} memberships={COVENS} canImpersonate />,
-};
+const adminNode = <UserDetail user={ADA} memberships={COVENS} canImpersonate />;
 
-export const Curator: Story = {
-  render: () => <UserDetail user={DEE} memberships={[]} canImpersonate />,
-};
+const curatorNode = <UserDetail user={DEE} memberships={[]} canImpersonate />;
 
-export const WithoutImpersonation: Story = {
-  render: () => <UserDetail user={BO} memberships={COVENS} />,
-};
+const withoutImpersonationNode = <UserDetail user={BO} memberships={COVENS} />;
 
 // Press Impersonate to see the question over the modal.
 export const InAModal: Story = {
@@ -121,3 +110,22 @@ export const InAModal: Story = {
 };
 
 // In its own iframe: `showModal()` puts the dialog in the top layer.
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'No Covens': noCovensNode,
+  'Several Providers': severalProvidersNode,
+  Admin: adminNode,
+  Curator: curatorNode,
+  'Without Impersonation': withoutImpersonationNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

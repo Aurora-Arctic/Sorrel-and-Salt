@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
 import InvitationAcceptance from '.';
 import type { InvitationAcceptanceProps } from './types';
@@ -50,13 +51,11 @@ const AcceptableView = () => (
   <Page status="acceptable" token="workshop" tier="site" siteRole="admin" landing="/admin" />
 );
 
-export const Default: Story = { render: AcceptableView };
+const defaultNode = <AcceptableView />;
 
-export const AcceptableCurator: Story = {
-  render: () => (
-    <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
-  ),
-};
+const acceptableCuratorNode = (
+  <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
+);
 
 // Accept pressed and refused: the workshop's request finds no server, so the
 // callout says the generic sentence, with the badge on Accept's corner.
@@ -77,29 +76,52 @@ const AcceptableCovenView = () => (
   />
 );
 
-export const AcceptableCoven: Story = { render: AcceptableCovenView };
+const acceptableCovenNode = <AcceptableCovenView />;
 
 const UnverifiedView = () => <Page status="refused" message={UNVERIFIED} emailHref={EMAIL_PAGE} />;
 
-export const Unverified: Story = { render: UnverifiedView };
+const unverifiedNode = <UnverifiedView />;
 
-export const Invalid: Story = { render: () => <Page status="refused" message={INVALID} /> };
+const invalidNode = <Page status="refused" message={INVALID} />;
 
-export const Accepted: Story = { render: () => <Page status="refused" message={ACCEPTED} /> };
+const acceptedNode = <Page status="refused" message={ACCEPTED} />;
 
-export const Revoked: Story = { render: () => <Page status="refused" message={REVOKED} /> };
+const revokedNode = <Page status="refused" message={REVOKED} />;
 
-export const Expired: Story = { render: () => <Page status="refused" message={EXPIRED} /> };
+const expiredNode = <Page status="refused" message={EXPIRED} />;
 
-export const Declined: Story = { render: () => <Page status="refused" message={DECLINED} /> };
+const declinedNode = <Page status="refused" message={DECLINED} />;
 
 // A link into a deleted coven (MB.119 decision f): its own reason, `closed`.
 const DeletedCovenView = () => <Page status="refused" message={CLOSED} />;
 
-export const DeletedCoven: Story = { render: DeletedCovenView };
+const deletedCovenNode = <DeletedCovenView />;
 
-export const DifferentAddress: Story = {
-  render: () => <Page status="refused" message={DIFFERENT_ADDRESS} />,
+const differentAddressNode = <Page status="refused" message={DIFFERENT_ADDRESS} />;
+
+const pausedNode = <Page status="refused" message={PAUSED} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Acceptable Curator': acceptableCuratorNode,
+  'Acceptable Coven': acceptableCovenNode,
+  Unverified: unverifiedNode,
+  Invalid: invalidNode,
+  Accepted: acceptedNode,
+  Revoked: revokedNode,
+  Expired: expiredNode,
+  Declined: declinedNode,
+  'Deleted Coven': deletedCovenNode,
+  'Different Address': differentAddressNode,
+  Paused: pausedNode,
 };
 
-export const Paused: Story = { render: () => <Page status="refused" message={PAUSED} /> };
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

@@ -1065,28 +1065,26 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
 }
 
 /** The admin's form for a new compendium entry (M5.5): no coven, so every lookup asks the compendium alone. */
-export const Compendium: Story = {
-  render: () => {
-    return (
-      <>
-        <WhatToTryOnTheCompendium editing={false} />
-        <CompendiumForm />
-      </>
-    );
-  },
+const CompendiumView = () => {
+  return (
+    <>
+      <WhatToTryOnTheCompendium editing={false} />
+      <CompendiumForm />
+    </>
+  );
 };
+const compendiumNode = <CompendiumView />;
 
 /** The admin's form over an existing compendium entry: one save, and a delete. */
-export const CompendiumEntry: Story = {
-  render: () => {
-    return (
-      <>
-        <WhatToTryOnTheCompendium editing />
-        <CompendiumForm entry={ENTRY} entryHref={entryHref} />
-      </>
-    );
-  },
+const CompendiumEntryView = () => {
+  return (
+    <>
+      <WhatToTryOnTheCompendium editing />
+      <CompendiumForm entry={ENTRY} entryHref={entryHref} />
+    </>
+  );
 };
+const compendiumEntryNode = <CompendiumEntryView />;
 
 /** The same entry with its Correspondences open, the other sections summarised. */
 export const CompendiumEntrySectionOpen: Story = {
@@ -1489,3 +1487,18 @@ function Duplicates() {
 }
 
 export const DuplicatesNotice: Story = { render: () => <Duplicates /> };
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Compendium: compendiumNode,
+  'Compendium Entry': compendiumEntryNode,
+};
+
+export const States: Story = {
+  args: { state: 'Compendium' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import PendingInvitations from '.';
 import type { PendingInvitationEntry } from './types';
 
@@ -26,9 +27,7 @@ const INVITATIONS: readonly PendingInvitationEntry[] = [
   },
 ];
 
-export const Default: Story = {
-  render: () => <PendingInvitations workspaceId="w" invitations={INVITATIONS} />,
-};
+const defaultNode = <PendingInvitations workspaceId="w" invitations={INVITATIONS} />;
 
 const WithDeclinedView = () => (
   <PendingInvitations
@@ -46,8 +45,22 @@ const WithDeclinedView = () => (
   />
 );
 
-export const WithDeclined: Story = { render: WithDeclinedView };
+const withDeclinedNode = <WithDeclinedView />;
 
-export const Empty: Story = {
-  render: () => <PendingInvitations workspaceId="w" invitations={[]} />,
+const emptyNode = <PendingInvitations workspaceId="w" invitations={[]} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'With Declined': withDeclinedNode,
+  Empty: emptyNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

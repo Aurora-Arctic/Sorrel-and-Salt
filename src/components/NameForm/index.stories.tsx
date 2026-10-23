@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import NameForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/NameForm. The
@@ -27,9 +28,24 @@ const Section = ({ name }: { name: string }) => (
 );
 
 // The usual visit: the name the provider gave, nothing to save until edited.
-export const Default: Story = { render: () => <Section name="Ada Fixture" /> };
+const defaultNode = <Section name="Ada Fixture" />;
 
 // A long name, to see the field hold it.
-export const LongName: Story = {
-  render: () => <Section name="Adelheid Wilhelmina Fixture-Testwort of the Lower Fixture Coven" />,
+const longNameNode = (
+  <Section name="Adelheid Wilhelmina Fixture-Testwort of the Lower Fixture Coven" />
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Long Name': longNameNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

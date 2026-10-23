@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
@@ -56,15 +57,30 @@ const Page = ({ invitations, ...rest }: ReceivedInvitationsProps) => (
   </main>
 );
 
-export const OneInvitation: Story = { render: () => <Page invitations={[ONE]} /> };
+const oneInvitationNode = <Page invitations={[ONE]} />;
 
-export const Default: Story = { render: () => <Page invitations={SEVERAL} /> };
+const defaultNode = <Page invitations={SEVERAL} />;
 
 // The section is always on the account page, so an empty list is drawn too.
-export const Empty: Story = { render: () => <Page invitations={[]} /> };
+const emptyNode = <Page invitations={[]} />;
 
-export const LastPage: Story = {
-  render: () => (
-    <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
-  ),
+const lastPageNode = (
+  <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
+);
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'One Invitation': oneInvitationNode,
+  Empty: emptyNode,
+  'Last Page': lastPageNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
