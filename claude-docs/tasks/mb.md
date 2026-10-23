@@ -270,6 +270,9 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 | MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
+| MB.270 | The Search Sentence Types a Changed Term                                                                                 | Bugfixes | —                      |
+| MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
+| MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1646,6 +1649,75 @@ _Acceptance criteria:_
 - A regression test reproduces the sign-in panel's getSnapshot warning before the fix, and the panel's test passes twenty consecutive runs with none
 - Docs: `claude-docs/components/sign-in-panel.md`, "Last used", says how the read stays stable
 
+**MB.270 — The Search Sentence Types a Changed Term** · 1.5h
+
+_Story:_ As anyone searching the compendium or a coven's ingredients, I want the search sentence to type out my new search term, so that the sentence reads as one animation instead of half typing and half jumping.
+
+Found on 2026-10-23, locally, every time, signed out on `/compendium` and as a member on a coven's Ingredients page; cosmetic. Steps to reproduce:
+
+1. Open `/compendium` signed out, or a coven's Ingredients page as a member.
+2. Search for "sage" and wait for the sentence to finish typing.
+3. Change the search to "rose" by typing in the search box.
+
+Actual: the sentence's lead words and clauses type out, but "rose" appears whole, with no typing.
+Expected: "sage" is wiped and "rose" is typed out; a term that did not change stays put.
+
+Cause found in the code: while a search is pending, `src/components/CompendiumList/filter.tsx` builds the sentence from the target address, and the pending-edge effect in `src/components/SearchSentence/index.tsx` rebuilds the old line from that same new term, so the old and new lines hold the same term and the term is never typed.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: after the term changes from one value to another, the old term is wiped and the new one is typed character by character.
+- A term that did not change between two searches stays on screen and is not retyped.
+- Under reduced motion the sentence still switches straight to the new line.
+- `claude-docs/components/search-sentence.md` matches the behaviour.
+
+**MB.271 — The Back Link Returns to the Same Results and Place** · 3h
+
+_Story:_ As anyone browsing ingredients, I want "Back to …" on an ingredient page to take me to the search, filters and page I came from, at the card I opened, so that I don't have to search again.
+
+Found on 2026-10-23, locally, for every kind of user; wrong result. Steps to reproduce:
+
+1. As any user, open a coven's Ingredients page or `/compendium`.
+2. Search or set a filter, go to page 2 of the results, and scroll down.
+3. Open an ingredient's card.
+4. Press the "Back to …" link on the ingredient page.
+
+Actual: the list opens unfiltered, on page 1, at the top.
+Expected: the same search, filters and page, scrolled so the card that was opened is where it was.
+
+Cause: the back link is the bare list address in `src/app/(public)/compendium/ingredients/[slug]/page.tsx` and `src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx`, and the cards in `src/components/CompendiumCards/index.tsx` carry no return address.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: the back link from an entry opened from a filtered, paged list carries that list's search, filters and cursor.
+- On return, the opened card is in view at the position it had.
+- The return address only ever points at the list route the entry belongs to; a crafted address to another origin or route falls back to the bare list.
+- Opened directly, with no list before it, the back link is the bare list, as today.
+- A Playwright spec walks the steps above on both the compendium and a coven's Ingredients page.
+
+**MB.272 — A Click Anywhere on an Ingredient Card Opens Its Entry** · 2.5h
+
+_Story:_ As anyone searching ingredients, I want a click anywhere on an ingredient card to open its entry, so that I don't have to aim for the name.
+
+Found on 2026-10-23, locally, for every kind of user, every time (assumed: it is how the cards are built); wrong result. Steps to reproduce:
+
+1. As any user, open `/compendium` or a coven's Ingredients page.
+2. Click a card's empty space or its description, not its name.
+
+Actual: nothing happens; only the name opens the entry.
+Expected: a click anywhere on the card opens the entry, the same as clicking its name. The + button, stock controls, chips and the Quick Look icon each still do their own thing. The card shows a hover and focus style saying it is clickable.
+
+The name link is in `src/components/CompendiumCards/index.tsx` and `src/components/IngredientCard/index.tsx`. The fix is the stretched-link pattern: the name stays the one real link, its `::after` covers the card, and the other controls sit above it. Wrapping the card in one `<a>` is ruled out: HTML does not allow a button inside a link, and a screen reader would read the whole card as the link's name (Pickering, _Inclusive Components_, "Cards"; Soueidan, "Nested Links"; MDN, the `<a>` element).
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: on both cards, a click on the card outside the name navigates to the entry.
+- The + button, stock controls, chips and the Quick Look icon still do their own action, and none of them navigates.
+- The name is still the card's only link, so its accessible name is the ingredient's name, and tab order is unchanged.
+- Each other control keeps a target of at least 24 × 24 px (WCAG 2.5.8).
+- A Playwright spec clicks a card's body and its + on `/compendium`, and its body and its stock control on a coven's Ingredients page.
+- Docs: `claude-docs/components/compendium-cards.md` and `claude-docs/components/ingredient-card.md`.
+
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
 Merged before this file carried per-task hours; sized after the fact from the merged diff. The reduced-motion swap of the toggle's facets, and the workshop story that simulates the preference.
@@ -1683,11 +1755,20 @@ _Acceptance criteria:_
 - The stale comment at `src/db/audit.ts:3-5` is corrected — it cites M2.1, and `users` lands in M2.3
 - No retrofit migration is needed for any table created after this task
 
-**MB.6 — Spell recipe view page** · 2h
+**MB.6 — Spell recipe view page** · 3h
 
 _Story 56 — As a workspace member, I want to read a saved spell on its own page, so that I can follow it without opening the builder._
 
-`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them the way a card's tooltip can.
+`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them.
+
+The page also carries:
+
+- `requireSession()`, called in the page, since the `(shell)` layout does not.
+- `LastEdit` under the title ([`components/last-edit.md`](../components/last-edit.md)).
+- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the edit route, and M13.11 adds the Delete control with `deleteSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
+- If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
+- A `Skeleton` of shape `page`, through a `PARTS_OF_SECTION` entry in `src/lib/coven-path.ts`, so the loading shape matches.
+- The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
 
@@ -1699,7 +1780,10 @@ _Acceptance criteria:_
 - Steps render numbered in `position` order, an ingredient step with its quantity and unit
 - The Ingredients summary lists the ingredient steps in order
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
-- A custom, one-off ingredient (MB.40) renders its own name and form in layer order with the rest, marked as one-off, and links to no ingredient page
+- A custom, one-off ingredient (MB.40) renders its own name and form in `position` order with the rest, marked as one-off, and links to no ingredient page
+- The page calls `requireSession()` and shows `LastEdit` under the title
+- The page has no Edit or Delete control; M13.10 and M13.11 each add their own
+- The loading skeleton is shape `page`
 - The page is the only view M10.22 styles for print
 
 **MB.7 — Application nav shell** · 16h
@@ -1744,7 +1828,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want one validation schema for spells so that the builder and the mutation cannot disagree about what is valid.
 
-M4.5 covers ingredient and category only. M10.10 needs the spell equivalent.
+M4.5 covers ingredient and category only. M10.10 needs the spell equivalent. It creates `src/modules/grimoire/validation/`, following the layout of `src/modules/ingredients/validation/` (one file per schema, a `types.ts` for the inferred types); M13.2 extends it.
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the layer list becomes one ordered `steps` list (M13.1). A step is `{ body?, ingredientId + variantId? | name + form?, quantity?, unit?, note? }`: at least one of an instruction (`body`) or an identity, at most one identity, and `quantity`, `unit` and `note` only beside an identity. The spell gains its free-text `note`.
 
@@ -1753,8 +1837,8 @@ _Acceptance criteria:_
 - One schema shared by client and server
 - Covers title, visibility, note, steps, quantities and units
 - A step carries an instruction, an identity, or both, and never neither; `quantity`, `unit` and `note` on an instruction-only step are rejected, and a blank instruction is rejected, mirroring M13.1's CHECKs
-- A layer is `{ ingredientId }` or `{ name, form? }` and never both or neither (MB.40); `form` beside `ingredientId` is rejected, and a blank `name` or `form` is rejected — the table's four CHECKs, mirrored so the CHECK is never what a user sees
-- Unit validation imports M9.2's shared unit-to-dimension module rather than keeping its own list
+- A step that lays an ingredient is `{ ingredientId }` or `{ name, form? }` and never both or neither (MB.40); `form` beside `ingredientId` is rejected, and a blank `name` or `form` is rejected — the table's four CHECKs, mirrored so the CHECK is never what a user sees
+- Unit validation imports the shared unit module rather than keeping its own list: `dimensionOf`, `Unit` and `UnitDimension` from `src/modules/ingredients/schema/units.ts`
 - Rejects a visibility value outside `private` and `workspace`
 
 **MB.9 — `ingredientsById` DataLoader** · 1h
@@ -4142,13 +4226,15 @@ See **MB.7**.
 
 _Story:_ As a coven member, I want building and reading a spell to feel crafted, so that the grimoire is a pleasure to use.
 
-Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, layers and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
+Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, steps and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the review also covers the step editor (M13.3), the Record a Working dialog with its deduction preview (M13.7), and the recipe page's Workings section (M13.8). M13.9 follows it.
 
+The review list also covers: `SpellCard` and the card list's empty states (M10.11), the `Skeleton` shapes for the list and the recipe page, the focus ring (M12.45), click feedback (M12.31) and the tooltip triage (M12.43, a tooltip only for a rule or format trap). After a step is added, removed or reordered, focus placement and the `aria-live` message are asserted in the story spec, since axe does not check them.
+
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
+_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own. It was first scoped as a `StackTable` (the default export of `src/components/DataTable/index.tsx`, not a component of its own; `components/data-table.md`) for its rows, but M10.11 now builds it as cards in the `CovenCards` pattern (`SpellCard`), so this review covers the card list, not a table. It still uses `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` (`src/components/Field/filter-select-field.tsx`) for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
 
 _Acceptance criteria:_
 
