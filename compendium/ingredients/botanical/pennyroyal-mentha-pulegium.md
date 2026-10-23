@@ -130,3 +130,7 @@ variants:
 # Pennyroyal
 
 European pennyroyal is a mint of Europe, North Africa and the Middle East whose crushed leaves smell strongly like spearmint. Wikipedia says it is a traditional folk remedy and culinary herb, but is toxic to the liver and has caused some deaths. Cunningham calls it masculine, with Mars and fire, gives the deity Demeter, and lists strength, protection and peace. He says it placed in the shoe prevents weariness on a journey, worn it acts against the evil eye, and given to quarrelling couples it ends their fighting. Kynes adds Hecate and Persephone, and says it may be the mint of the drink used at the Eleusinian Mysteries. Both Cunningham and Kynes warn of its poison, and the hazards are set out in the safety notes.
+
+#### Edit Notes for Claude
+
+Curator note: Cunningham prints the slur "Squaw Mint" among the folk names under "Pennyroyal". It was left out of `folkNames` on purpose.
