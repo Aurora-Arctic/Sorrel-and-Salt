@@ -1,5 +1,5 @@
 ---
-status: needs-review
+status: approved
 nomenclature: botanical
 canonicalName: Populus tremuloides
 safetyNotes: Cunningham marks it as currently recognised as safe (his health code G).
@@ -49,8 +49,8 @@ categories:
   - Success
 references:
   - source: cunningham-herbs
-    locator: under "Aspen"; p. 266
-    nameBasis: unresolved
+    locator: under "Aspen"; under "Poplar"; p. 266
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -60,7 +60,7 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Aspen"
-    nameBasis: unresolved
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -71,13 +71,13 @@ references:
       - categories
       - folkNames
   - source: grieve-poplar-trembling
-    nameBasis: unresolved
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - folkNames
   - source: wikipedia-populus-tremuloides
-    nameBasis: unresolved
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -86,40 +86,31 @@ variants:
   - form: Leaf
     references:
       - source: cunningham-herbs
-        locator: under "Aspen"
-        nameBasis: unresolved
+        locator: under "Aspen"; under "Poplar"
+        nameBasis: stated
         supports:
           - form
       - source: kynes-plants
         locator: under "Aspen"
-        nameBasis: unresolved
+        nameBasis: stated
         supports:
           - form
   - form: Bark
     description: The bark is the part herbalists used. Gathered in spring, it tastes bitter and has no smell, and was given as a tonic and for recurring fevers, a substitute for Peruvian bark; Indigenous North Americans and settlers in the American West drew a quinine substitute from it.
     references:
       - source: grieve-poplar-trembling
-        nameBasis: unresolved
+        nameBasis: stated
         supports:
           - form
           - description
       - source: wikipedia-populus-tremuloides
-        nameBasis: unresolved
+        nameBasis: stated
         supports:
           - form
           - description
+seedUpdate: 32be4105c658a1744c1419dfa2b1db42ed7f9f7bad8d06d129a2ed09bd8379d3
 ---
 
 # Aspen
 
-Quaking aspen is a deciduous tree of the cooler parts of North America and the most widespread tree on that continent, found from Canada down to the mountains of central Mexico. It grows quickly, with a tall trunk, smooth pale bark marked by black scars, and nearly round leaves on long, flattened stalks, so that the lightest air sets them shivering: the habit behind its names quaking and trembling aspen. In autumn the foliage turns gold or yellow. A stand often rises from one shared root system, every trunk a clone of the rest, and one such colony, Pando, is thought to be the oldest and heaviest organism alive. Its bitter bark was once taken against fevers in place of quinine and Peruvian bark. Aspen lore from Europe and Ireland links the tree with death and with healing: an Irish glossary of about 900 CE describes an aspen rod for measuring a fresh grave, Russians laid one over the grave of a suspected witch, and in northern England a lock of hair was pinned to an aspen as a cure. Its bark, like willow's, holds salicin. In magic it guards against theft, worked into spells or planted in a garden or field, and a leaf held under the tongue is said to make the speaker eloquent. A pressed leaf is kept to draw prosperity, a dried leaf is crumbled and burned to send a hex back, and a twig on the altar helps in reaching the ancestors.
-
-#### Questions for the Curator
-
-Does each cited source print the formal name Populus tremuloides, or only the common name "Aspen"? Populus tremuloides (American) and Populus tremula (European) are different trees, and a source headed "Aspen" alone could describe either, so every citation is marked `unresolved` until that is checked against each source (M14.12).
-
-#### Edit Notes for Claude
-
-Populus tremuloides is not the same as populus tremula. Make sure you are being specific and not just assuming based on common name. That is a universal rule
-
-Sort out the content for this and aspen-populus-tremula.md. Checking both. I made some guesses on populus-tremula
+Quaking aspen, Populus tremuloides, is a deciduous tree of the cooler parts of North America and the most widely distributed tree on that continent, found from Canada south to central Mexico. It grows tall and fast, with smooth, pale bark scarred with black, and nearly round leaves on flattened stalks, so that the lightest air sets them trembling: the habit behind its names quaking and trembling aspen. In autumn the leaves turn gold or yellow. A grove often rises from one shared root system, every trunk a clone of the rest, and one such colony, Pando, is thought to be the heaviest and oldest living organism. Its bitter bark was taken against fevers in place of quinine and Peruvian bark. Kynes notes that aspen bark, like willow's, holds salicin, and Grieve judged this tree's bark probably to share the salicin and populin of the European aspen's. In magic Cunningham has it guard against theft, worked into spells or planted in a garden or field, and a leaf held under the tongue is said to make the speaker eloquent; under the name poplar he has its buds and leaves carried to draw money. Kynes keeps a pressed leaf to draw prosperity, crumbles and burns a dried leaf to send a hex back, and lays a twig on the altar to help in reaching the ancestors.
