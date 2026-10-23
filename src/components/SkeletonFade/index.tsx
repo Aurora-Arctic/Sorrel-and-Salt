@@ -51,6 +51,41 @@ export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
 
 /**
+ * The props that hold the page during a wait (MB.271): the page stays mounted at
+ * its full height, unseen (`visibility`, which keeps its box, where
+ * `display: none` or React's `<Activity>` would collapse it) and out of reach
+ * (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. Not taken
+ * away, because the browser saves the scroll position into the history entry
+ * when the navigation writes it, after the skeleton is up: a page swapped for a
+ * shorter skeleton clamps the scroll first, and Back returns to the clamped one.
+ * The same element whether waiting or not, so React keeps the page mounted.
+ */
+export const heldPage = (waiting: boolean, className?: string) => ({
+  className: [className, waiting && 'skeleton-held'].filter(Boolean).join(' ') || undefined,
+  inert: waiting || undefined,
+  'aria-hidden': waiting || undefined,
+});
+
+/**
+ * The waiting skeleton over the held page: laid over its whole height and
+ * pinned under the bar, so it is in the window wherever the page was scrolled
+ * to. `className` is the frame the skeleton stands in.
+ */
+export const SkeletonCover = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}): ReactElement => (
+  <div className="skeleton-cover">
+    <div className={className ? `skeleton-cover__pin ${className}` : 'skeleton-cover__pin'}>
+      {children}
+    </div>
+  </div>
+);
+
+/**
  * The skeleton kept over the arrived page, out of layout and out of the
  * accessibility tree (the page carries the one heading and landmark now).
  */

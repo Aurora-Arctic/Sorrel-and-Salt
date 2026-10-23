@@ -7,6 +7,7 @@ import EntryMarks, { RecencyMark } from '../EntryMarks';
 import { SafetyMark } from '../SafetyNote';
 import FormIcon from '../FormIcon';
 import HeldMark from './held-mark';
+import BackLink from './back-link';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../Modal/route-modal-provider';
@@ -296,11 +297,7 @@ const IngredientEntry = ({
           // The row stands for the badge alone where there is no way back and no marker.
           <div className="ingredient-entry__bar">
             {back && (
-              <PendingLink
-                className="ingredient-entry__back"
-                href={back.href}
-                navigationTarget={ingredientLinkTarget(back.href)}
-              >
+              <BackLink className="ingredient-entry__back" href={back.href}>
                 <svg
                   viewBox="0 0 16 16"
                   width="1em"
@@ -318,7 +315,7 @@ const IngredientEntry = ({
                   />
                 </svg>
                 Back to {back.label} <LinkHint />
-              </PendingLink>
+              </BackLink>
             )}
             <RecencyMark recency={recency} />
             <SafetyMark
