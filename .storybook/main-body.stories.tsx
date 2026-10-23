@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { Route } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../src/lib/navigation';
 import { Navigating } from './navigating';
+import { route } from './route';
 import { ShellFrame } from './shell-frame';
 
 // The shell's body (src/components/AppShell/main-body.tsx), drawn by the shell
@@ -66,7 +66,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href={'/compendium/ingredients/testwort' as Route}
+          href={route('/compendium/ingredients/testwort')}
           navigationTarget={{ region: 'main', shape: 'page', frame: 'entry' }}
         >
           Entry
@@ -74,7 +74,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href={'/account/sign-in-methods' as Route}
+          href={'/admin/users'}
           navigationTarget={{
             region: 'main',
             shape: 'table',
@@ -98,7 +98,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href={'/account/name' as Route}
+          href={'/account'}
           navigationTarget={{ region: 'main', shape: 'page', head: 'title' }}
         >
           Title Head
