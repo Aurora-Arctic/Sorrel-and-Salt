@@ -42,7 +42,10 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
           <Link className="btn btn--solid btn--medium" href="/sign-in">
             Sign In
           </Link>
-          <ThemeToggle variant="inline" />
+          {/* The shell’s wrapper (AppShell/index.scss). */}
+          <span className="app-shell__theme">
+            <ThemeToggle variant="inline" />
+          </span>
         </div>
       </div>
     </header>
