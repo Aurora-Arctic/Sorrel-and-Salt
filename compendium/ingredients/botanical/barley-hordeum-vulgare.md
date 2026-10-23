@@ -150,3 +150,7 @@ seedUpdate: d65c50040675bc41c3566f43ed6a65e5268c0b72fb83086cf17b38633284a1f5
 # Barley
 
 Barley is a cereal of the grass family, grown for its grain in temperate regions all over the world. It was one of the first crops ever domesticated, in the Fertile Crescent in roughly 9000 BC, and had spread across Eurasia by 2000 BC. Each of its spikelets bears a long, slender bristle, which gives the ears their tufted look. Most of today's crop feeds livestock; much of the remainder is malted for brewing beer and distilling whisky, and the grain also goes into soups, stews and bread. The initiates of the Eleusinian Mysteries in Greece drank a preparation of barley and herbs, and Demeter's name may first have meant 'barley-mother', while in English folk song John Barleycorn is a personification of the grain and of the beer brewed from it. Kynes notes that in Palestine children wore barley as an amulet of protection, and that across Europe and the British Isles its grains were used to read the future in love. Cunningham puts the grain, or barley water, into love spells, and scatters it about to ward off evil and negativity.
+
+#### Edit Notes for Claude
+
+- Deity gap: Centéotl (Kynes, under "Grain"), not in the vocabulary; link once M14.15 adds it.

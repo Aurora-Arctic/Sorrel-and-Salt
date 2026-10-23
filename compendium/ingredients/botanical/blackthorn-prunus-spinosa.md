@@ -182,3 +182,9 @@ seedUpdate: 89e95793aa50569be0a231d6d3e21cce5cc9c9650c2e5bd9132c9a7b12ccc2e2
 # Blackthorn
 
 Blackthorn, or sloe, is a big deciduous shrub or small tree of the rose family, at home in Europe and western Asia and locally in north-west Africa, and naturalised in eastern North America and Tasmania. It grows to about five metres, a tangle of stiff, spiny branches with very dark bark, and its small creamy-white flowers open early in spring, ahead of the leaves. The name contrasts its dark bark and thorns with the paler hawthorn, or whitethorn, and a cold spell in early spring while it blooms is called a blackthorn winter in rural England. Its thorns made it a traditional cattle-proof hedge in Britain, and its flowering may once have been linked with Imbolc. Lore makes it a guardian against harm: Kynes records that the Greeks thought it shielded against witchcraft, that in Eastern Europe a piece was sewn into clothes for protection, that moon faeries called the Lunantishee watch over it, and that in the Balkans a vampire was to be staked with it. English witches were said to carve spells into its wood. Cunningham says that hung over a door or carried it keeps evil and calamity away and drives out demons and negative energy.
+
+#### Edit Notes for Claude
+
+- Deity gap: Banba (Kynes, under "Blackthorn"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Macha (Kynes, under "Blackthorn"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Ran (Kynes, under "Blackthorn"), not in the vocabulary; link once M14.15 adds it.

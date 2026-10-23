@@ -164,3 +164,9 @@ seedUpdate: 6aba59ed637cc3ece52d34c53a5637da65eb1449850c2eb5db51b4edcd706edf
 # Fennel
 
 Fennel is a hardy perennial of the carrot family, native to the shores of the Mediterranean and now naturalised in many parts of the world, especially on dry ground near the sea and along riverbanks; Northcote noted in 1903 that it was sometimes found wild by the sea. Its hollow, glaucous green stems reach about two metres, with feathery, thread-fine leaves and broad umbels of tiny yellow flowers, followed by flat, ridged, light brown seeds. Leaves, seeds and the swollen base all go into cooking, and the anise or liquorice flavour comes from anethole. The Greeks called it marathon, so the battlefield of Marathon was a plain of fennel. In myth Prometheus carried fire to humankind in a fennel stalk, and the thyrsus of Dionysian rites was often made from giant fennel stalks tipped with pine cones. Fennel is one of the nine plants of the tenth-century Anglo-Saxon Nine Herbs Charm, and the English hung it on their doors on Midsummer's Eve against fire and witches, later stuffing the seeds into keyholes to keep out evil spirits and ghosts. By Shakespeare's time it had become the emblem of flattery, and an old proverb warned 'sow fennel, sow sorrow'. Cunningham grows it around the house for protection, hangs it at doors and windows against evil spirits, and puts it into purification sachets and healing mixtures.
+
+#### Edit Notes for Claude
+
+- Deity gap: Prometheus (Cunningham, under "Fennel"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Kupala (Kynes, under "Fennel"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Prometheus (Kynes, under "Fennel"), not in the vocabulary; link once M14.15 adds it.

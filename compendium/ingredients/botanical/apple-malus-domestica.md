@@ -180,8 +180,6 @@ The orchard apple is a deciduous tree whose round fruit is now grown all over th
 
 #### Edit Notes for Claude
 
-Deity gap: Olwen (Cunningham, under "Apple"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Badb (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
-
-Deity gap: Macha (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Olwen (Cunningham, under "Apple"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Badb (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Macha (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
