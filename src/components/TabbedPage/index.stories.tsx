@@ -153,3 +153,9 @@ export const LoadingAt375: Story = {
   globals: { viewport: { value: 'w375', isRotated: false } },
   render: () => loadingStateNode,
 };
+
+// The last tab open at the width its comment names.
+export const PrivilegeChangesAt375: Story = {
+  globals: { viewport: { value: 'w375', isRotated: false } },
+  render: () => privilegeChangesTabNode,
+};
