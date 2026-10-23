@@ -29,18 +29,18 @@ is done and committed on
 
 ## What was changed
 
-| Change                                                                                             | Kind                          | Can be dropped alone |
-| -------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------- |
-| The entry page's Stock section loses its `.panel` box                                              | Required by MB.121            | No                   |
-| Stock is the first section, above Details, and the jump menu follows (option C)                    | Owner's answer                | Yes                  |
-| Every section's h2 stands over a `$hairline` rule, `entry-heading-rule` (option A)                 | Owner's answer                | Yes                  |
-| The rule is the heading text's width plus 1rem, 0.25rem under the text                             | Owner's answer                | Yes                  |
-| The side column stands beside the first section, its first heading level at the bottom with the h2 | Owner's answer                | Yes                  |
-| Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring       | Accessibility fix             | Yes                  |
-| The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below)  | Repetition                    | No                   |
-| Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount              | Proposal, chosen by the owner | Yes                  |
-| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                    | Mocks, removed 2026-10-23     | Removed              |
-| A viewer's empty cupboard says which roles can add                                                 | Owner's answer                | No                   |
+| Change                                                                                            | Kind                          | Can be dropped alone |
+| ------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------- |
+| The entry page's Stock section loses its `.panel` box                                             | Required by MB.121            | No                   |
+| Stock is the first section, above Details, and the jump menu follows (option C)                   | Owner's answer                | Yes                  |
+| Every section's h2 stands over a `$hairline` rule, `entry-heading-rule` (option A)                | Owner's answer                | Yes                  |
+| The rule is the heading text's width plus 1rem, 0.25rem under the text                            | Owner's answer                | Yes                  |
+| The side column stands beside the first section, dropped by `space(1)`                            | Owner's answer                | Yes                  |
+| Icon buttons, the stock dialog's jar picks and the dialog's Close draw the shared focus ring      | Accessibility fix             | Yes                  |
+| The amount text, the stock tip button and the Low and Out inks are shared (the DRY merges, below) | Repetition                    | No                   |
+| Proposal P1: the shelf draws the card badge's Low or Out symbol before a jar's amount             | Proposal, chosen by the owner | Yes                  |
+| Mocks of the options not built, as Storybook stories under `Proposals / MB.121`                   | Mocks, removed 2026-10-23     | Removed              |
+| A viewer's empty cupboard says which roles can add                                                | Owner's answer                | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
 differs. The viewer's added line changes what a viewer reads, nothing else.
@@ -91,14 +91,14 @@ obvious way to set it apart, in a way the page's other sections can share.
   phone is `space(6)` (the body's gap), where it was `space(4)`. On a phone, and
   below the tablet width generally (768px included), the page is one column: Stock,
   Details, the side column, then the forms.
-- **Bottom to bottom** (owner, 2026-10-23). The bottom of the side column's first
-  heading's text is level with the bottom of the first section's h2 text. An h3 is
-  smaller than an h2, so level tops left it about 6px higher; the side column is
-  dropped by `calc(heading-size(2) * 1.2 - heading-size(3) * 1.225)`, 0.375rem
-  (6px). Measured in Chromium, text bottom to text bottom, at 1280, 1024 and
-  900px: 0px with Stock ("In the Compendium" first, and Correspondences first)
-  and 0px without Stock (Details' h2 against Correspondences). Before the drop the
-  h2 was 6.0px lower in all of them.
+- **A small drop** (owner, 2026-10-23, after seeing it live). The side column has
+  `margin-block-start: space(1)`, 0.25rem (4px), and the skeleton's side part takes
+  the same value through `entry-body`. Measured in Chromium, text bottom to text
+  bottom of the side column's first heading against the first section's h2, the
+  h2's text bottom is 2.0px lower at 1280 and at 1024px, with Stock ("In the
+  Compendium" first, and Correspondences first) and without Stock (Details' h2
+  against Correspondences). With no drop it was 6.0px lower, so 0.25rem leaves 2px
+  of the 6px; the owner chose it.
 
 Options not chosen: a tinted full-bleed band (it either fades the jar's shine
 or needs a new token, and it would be one different section again), and a
