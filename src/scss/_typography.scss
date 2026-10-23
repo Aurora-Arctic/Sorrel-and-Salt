@@ -2,8 +2,8 @@
 @use './mixins' as *;
 
 // Document prose, as a mixin so it can be scoped: `body` in the app,
-// `.ladle-story-frame` in the workshop, where bare element selectors would
-// otherwise land on Ladle's own chrome. Nothing here names a raw hue; a rule
+// `.workshop-story-frame` in the workshop, where bare element selectors would
+// otherwise land on Storybook's own chrome. Nothing here names a raw hue; a rule
 // needing one adds a token. No print tier outside the spell recipe view.
 @mixin typography-base {
   font-family: $font-body;

@@ -179,6 +179,23 @@ describe('FacetCombobox', () => {
       expect(box()).toHaveValue('');
     });
 
+    it('stays open after a pick for the next, with the focus in the text, and the pick applied', () => {
+      const { container } = render(<Controlled typeahead />);
+
+      box().focus();
+      fireEvent.keyDown(box(), { key: 'ArrowDown' });
+      fireEvent.click(screen.getByRole('option', { name: 'Testfire 9' }));
+
+      expect(hidden(container)).toEqual(['fire']);
+      expect(box()).toHaveAttribute('aria-expanded', 'true');
+      expect(box()).toHaveFocus();
+      fireEvent.click(screen.getByRole('option', { name: 'Testwater 7' }));
+      expect(hidden(container)).toEqual(['fire', 'water']);
+
+      fireEvent.keyDown(box(), { key: 'Escape' });
+      expect(box()).toHaveAttribute('aria-expanded', 'false');
+    });
+
     it('lists no chosen value, and no value with nothing behind it', () => {
       render(<Controlled typeahead initial={['fire']} />);
 

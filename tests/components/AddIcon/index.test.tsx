@@ -19,7 +19,13 @@ const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven O
 const TWO = { id: '00000000-0000-4000-8000-000000000002', name: 'Fixture Coven Two' };
 const NAME = 'Testwort, Formalis testis';
 
-const Plus = ({ covens }: { covens: (typeof ONE)[] }): ReactElement => (
+const Plus = ({
+  covens,
+  holding,
+}: {
+  covens: (typeof ONE)[];
+  holding?: string[];
+}): ReactElement => (
   <StatusRegionProvider>
     <QueryClientProvider client={makeQueryClient()}>
       <AddIcon
@@ -28,6 +34,7 @@ const Plus = ({ covens }: { covens: (typeof ONE)[] }): ReactElement => (
         ingredientId="fixture-testwort-id"
         covens={covens}
         heldIn={[TWO.id]}
+        holding={holding}
       />
     </QueryClientProvider>
   </StatusRegionProvider>
@@ -67,5 +74,49 @@ describe('the held check names its entry', () => {
     render(<HeldMark name={NAME} />);
     const check = screen.getByRole('button', { name: `In Every Cupboard: ${NAME}` });
     expect(tipOf(check)).toBe(`In Every Cupboard: ${NAME}`);
+  });
+});
+
+// M12.55: the plus and the check say how many of the viewer's covens hold the entry, every
+// membership counted, and name them in the tip; nothing at all where none does.
+describe('the holding covens (M12.55)', () => {
+  /** The badge: the number drawn on the mark, kept from the accessibility tree as its name says it. */
+  const badgeOf = (control: HTMLElement) => control.querySelector('.add-icon__count')?.textContent;
+
+  it('counts and names them on the lone plus', () => {
+    render(<Plus covens={[ONE]} holding={['Testhollow', 'Testwren']} />);
+    const label = `Add to My Ingredients: ${NAME}. In 2 covens: Testhollow, Testwren`;
+    const plus = screen.getByRole('button', { name: label });
+    expect(tipOf(plus)).toBe(label);
+    expect(badgeOf(plus)).toBe('2');
+  });
+
+  it("counts and names them on the menu's plus", () => {
+    render(<Plus covens={[ONE, TWO]} holding={['Testwren']} />);
+    const label = `Add to My Ingredients: ${NAME}. In 1 coven: Testwren`;
+    const plus = screen.getByRole('button', { name: label });
+    expect(tipOf(plus)).toBe(label);
+    expect(badgeOf(plus)).toBe('1');
+  });
+
+  it("keeps the menu's covens the writable ones, not the holding ones", () => {
+    render(<Plus covens={[ONE, TWO]} holding={['Testwren', 'Testhollow', 'Testmere']} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Add to My Ingredients/ }));
+    expect(screen.getAllByRole('menuitem')).toHaveLength(2);
+  });
+
+  it('draws no badge and keeps the tip where no coven holds it', () => {
+    render(<Plus covens={[ONE]} holding={[]} />);
+    const plus = screen.getByRole('button', { name: `Add to My Ingredients: ${NAME}` });
+    expect(tipOf(plus)).toBe(`Add to My Ingredients: ${NAME}`);
+    expect(badgeOf(plus)).toBeUndefined();
+  });
+
+  it('counts and names them on the held check', () => {
+    render(<HeldMark name={NAME} holding={['Testhollow', 'Testwren', 'Testmere']} />);
+    const label = `In Every Cupboard: ${NAME}. In 3 covens: Testhollow, Testwren, Testmere`;
+    const check = screen.getByRole('button', { name: label });
+    expect(tipOf(check)).toBe(label);
+    expect(badgeOf(check)).toBe('3');
   });
 });

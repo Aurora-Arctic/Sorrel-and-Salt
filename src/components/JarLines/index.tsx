@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import FormIcon from '../FormIcon';
 import { StockBadge } from '../StockBadge';
+import { amountText } from '../StockBadge/stock-words';
 import type { JarLinesProps } from './types';
 
 // The jar lines of an ingredient card, for its `children` slot: one `li` per jar, the form and
@@ -18,11 +19,7 @@ export default function JarLines({ jars }: JarLinesProps): ReactElement {
             <FormIcon name={jar.icon} /> {formLabel(jar.form)}
             <span aria-hidden="true">·</span>
             <span className="spoken-separator">,</span>
-            {jar.quantity === null
-              ? 'Unmeasured'
-              : jar.unit
-                ? `${jar.quantity} ${jar.unit}`
-                : jar.quantity}
+            {amountText(jar.quantity, jar.unit)}
           </span>
           <StockBadge quantity={jar.quantity} threshold={jar.threshold} unit={jar.unit} />
         </li>

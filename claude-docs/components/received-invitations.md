@@ -84,11 +84,10 @@ refusal's callout is `ClickFeedback`'s, styled there.
 
 ## Stories
 
-`Account / Received Invitations` (`index.stories.tsx`), each inside the account page's section as the
+`Account / Invitations Received` (`index.stories.tsx`), each inside the account page's section as the
 page draws it (a panel in the narrow frame, under its head), since the
-stacked rows depend on the panel's width: `OneInvitation`, `SeveralInvitations`,
-`NoInvitations` (the empty line), `SecondPage` (the pager), and `OnePhoneDark`, `OnePhoneLight`,
-`SeveralPhoneDark` and `SeveralPhoneLight` at 375px, where the rows stack.
+stacked rows depend on the panel's width: `States`, with a control that chooses Default (several invitations), One Invitation,
+Empty (the empty line), and Last Page (the pager). At 375px, from the toolbar viewport menu, the rows stack.
 
 ## Tests
 

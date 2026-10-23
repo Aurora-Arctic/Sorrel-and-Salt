@@ -44,7 +44,7 @@ export function usePendingNavigation(): PendingNavigation {
   const owner = useRef(Symbol('navigation'));
   const router = useRouter();
 
-  // Outside the provider (a Ladle story, a component test) a call is a plain
+  // Outside the provider (a Storybook story, a component test) a call is a plain
   // router call in a transition: it navigates, and nothing shows a wait.
   const start = actions?.navigate;
   const reload = actions?.refresh;

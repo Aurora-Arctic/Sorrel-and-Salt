@@ -5,6 +5,7 @@ import {
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
+  type ReactNode,
   type SyntheticEvent,
   type TransitionEvent,
   type UIEvent,
@@ -73,6 +74,13 @@ function sourceOptions(
   ];
 }
 
+// In My Covens' two ways (M12.55): In, held in a picked coven, or Not In, held in none of them.
+// Not In submits as covensNot=1; In submits an empty value, which the address reads as absent.
+const COVENS_NOT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: '', label: 'In' },
+  { value: '1', label: 'Not In' },
+];
+
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'any', label: 'Any' },
@@ -136,6 +144,7 @@ export default function FacetPanel({
   onApply,
   onClear,
   className,
+  covens = [],
 }: FacetPanelProps): ReactElement {
   const hydrated = useHydrated();
   const id = useId();
@@ -151,6 +160,7 @@ export default function FacetPanel({
   // Every chosen value counts, so two categories and two forms read 4. Match is a mode
   // of the categories, not a filter, and counts nothing.
   const chosen = [
+    filter.covens ?? [],
     filter.categories,
     filter.forms,
     filter.deities,
@@ -160,6 +170,9 @@ export default function FacetPanel({
   ].reduce((total, list) => total + list.length, 0);
   const count =
     chosen +
+    // Not In with covens picked is a mode of them, as Match is; with none picked it is a filter
+    // of its own, in none of the viewer's covens.
+    (filter.covensNot && !filter.covens?.length ? 1 : 0) +
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
     (admin && filter.withoutForms ? 1 : 0) +
@@ -177,6 +190,22 @@ export default function FacetPanel({
   // The Reviewed chip (M14.8), stuck the same way: with either side empty, every matching
   // entry is reviewed or none is.
   const reviewedStuck = facets.reviewed?.some((choice) => choice.count === 0) ?? false;
+  // The public compendium's Forms line, whose chips are Toxic alone, is halved when the viewer has
+  // covens (the owner's call, 2026-10-23): Forms and Toxic take the left half, In My Covens and its
+  // In / Not In choice the right. With no covens Forms and Toxic take the line, as on the admin and
+  // coven panels, which keep Forms growing beside their wider run of chips, which a half would wrap.
+  const halves =
+    !admin &&
+    filter.source === undefined &&
+    filter.inStock === undefined &&
+    filter.lowStockOnly === undefined;
+  // A call, not a component, so the fields inside keep their state across renders.
+  const formsHalf = (children: ReactNode): ReactNode =>
+    halves && covens.length > 0 ? (
+      <div className="facet-panel__line facet-panel__grow facet-panel__half">{children}</div>
+    ) : (
+      children
+    );
 
   // Focus goes back to the button when it was inside the panel, so that a closing panel
   // never leaves it on a control that is about to disappear.
@@ -446,137 +475,179 @@ export default function FacetPanel({
               </div>
 
               <div className="facet-panel__line">
-                <div className="facet-panel__grow">
-                  <FacetCombobox
-                    label="Forms"
-                    name="forms"
-                    typeahead
-                    placeholder="Add Form"
-                    removeNoun="Form"
-                    loading={loading}
-                    choices={facets.forms.map((form) => ({
-                      value: form.value,
-                      label: form.label,
-                      count: form.count,
-                      icon: <FormIcon name={form.icon} />,
-                    }))}
-                    values={filter.forms}
-                    onChange={(forms) => onChange({ forms })}
-                  />
-                </div>
-                <div className="facet-panel__quick">
-                  <ChoiceChip
-                    legend="Toxic"
-                    name="toxic"
-                    options={[
-                      { value: '', label: 'Any' },
-                      ...facets.toxic.map((choice) => ({
-                        value: choice.value,
-                        label: choice.label,
-                        count: choice.count,
-                      })),
-                    ]}
-                    // Toxic is the one facet that keeps a zero-count value: all three
-                    // choices always show. With either side empty, every matching entry
-                    // shares one toxicity, so the chip rests on Any and cannot narrow.
-                    value={toxicStuck ? '' : filter.toxic}
-                    disabled={toxicStuck}
-                    chipHint={
-                      toxicStuck
-                        ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
-                        : undefined
-                    }
-                    onChange={(toxic) => onChange({ toxic })}
-                  />
-                  {filter.source !== undefined && (
-                    <ChoiceChip
-                      legend="Source"
-                      name="source"
-                      hint={
-                        sourceStuck
-                          ? undefined
-                          : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
-                      }
-                      chipHint={
-                        sourceStuck
-                          ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
-                          : undefined
-                      }
-                      options={sourceOptions(facets.source)}
-                      // Rests on All while stuck and submits nothing, as Toxic rests on Any.
-                      value={sourceStuck ? '' : filter.source}
-                      disabled={sourceStuck}
-                      onChange={(source) => onChange({ source })}
-                    />
-                  )}
-                  {filter.inStock !== undefined && (
-                    <FacetSwitch
-                      label="In Stock"
-                      count={facets.inStock}
-                      name="inStock"
-                      checked={filter.inStock}
-                      onChange={(inStock) => onChange({ inStock })}
-                    />
-                  )}
-                  {filter.lowStockOnly !== undefined && (
-                    <FacetSwitch
-                      label="Low Stock Only"
-                      count={facets.lowStockOnly}
-                      name="lowStockOnly"
-                      checked={filter.lowStockOnly}
-                      onChange={(lowStockOnly) => onChange({ lowStockOnly })}
-                    />
-                  )}
-                  {admin && (
-                    <FacetSwitch
-                      label="No Refs"
-                      count={facets.withoutReferences}
-                      name="withoutReferences"
-                      checked={filter.withoutReferences}
-                      onChange={(withoutReferences) => onChange({ withoutReferences })}
-                    />
-                  )}
-                  {admin && (
-                    <FacetSwitch
-                      label="No Form"
-                      count={facets.withoutForms}
-                      name="withoutForms"
-                      checked={filter.withoutForms}
-                      onChange={(withoutForms) => onChange({ withoutForms })}
-                    />
-                  )}
-                  {admin && filter.reviewed !== undefined && facets.reviewed && (
-                    <ChoiceChip
-                      legend="Reviewed"
-                      name="reviewed"
-                      // The address's own spelling, `1` and `0`, so the form submits what the
-                      // parameter table reads before hydration.
-                      options={[
-                        { value: '', label: 'Any' },
-                        ...facets.reviewed.map((choice) => ({
-                          value: REVIEW_ADDRESS[choice.value],
-                          label: choice.label,
-                          count: choice.count,
-                        })),
-                      ]}
-                      value={
-                        reviewedStuck || !filter.reviewed ? '' : REVIEW_ADDRESS[filter.reviewed]
-                      }
-                      disabled={reviewedStuck}
-                      chipHint={
-                        reviewedStuck
-                          ? 'Every matching entry has the same review mark, so this filter cannot narrow further.'
-                          : undefined
-                      }
-                      onChange={(value) =>
-                        onChange({
-                          reviewed:
-                            value === '1' ? 'reviewed' : value === '0' ? 'needs_review' : '',
-                        })
-                      }
-                    />
-                  )}
-                </div>
+                {formsHalf(
+                  <>
+                    <div className="facet-panel__grow">
+                      <FacetCombobox
+                        label="Forms"
+                        name="forms"
+                        typeahead
+                        placeholder="Add Form"
+                        removeNoun="Form"
+                        loading={loading}
+                        choices={facets.forms.map((form) => ({
+                          value: form.value,
+                          label: form.label,
+                          count: form.count,
+                          icon: <FormIcon name={form.icon} />,
+                        }))}
+                        values={filter.forms}
+                        onChange={(forms) => onChange({ forms })}
+                      />
+                    </div>
+                    <div className="facet-panel__quick">
+                      <ChoiceChip
+                        legend="Toxic"
+                        name="toxic"
+                        options={[
+                          { value: '', label: 'Any' },
+                          ...facets.toxic.map((choice) => ({
+                            value: choice.value,
+                            label: choice.label,
+                            count: choice.count,
+                          })),
+                        ]}
+                        // Toxic is the one facet that keeps a zero-count value: all three
+                        // choices always show. With either side empty, every matching entry
+                        // shares one toxicity, so the chip rests on Any and cannot narrow.
+                        value={toxicStuck ? '' : filter.toxic}
+                        disabled={toxicStuck}
+                        chipHint={
+                          toxicStuck
+                            ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
+                            : undefined
+                        }
+                        onChange={(toxic) => onChange({ toxic })}
+                      />
+                      {filter.source !== undefined && (
+                        <ChoiceChip
+                          legend="Source"
+                          name="source"
+                          hint={
+                            sourceStuck
+                              ? undefined
+                              : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
+                          }
+                          chipHint={
+                            sourceStuck
+                              ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
+                              : undefined
+                          }
+                          options={sourceOptions(facets.source)}
+                          // Rests on All while stuck and submits nothing, as Toxic rests on Any.
+                          value={sourceStuck ? '' : filter.source}
+                          disabled={sourceStuck}
+                          onChange={(source) => onChange({ source })}
+                        />
+                      )}
+                      {filter.inStock !== undefined && (
+                        <FacetSwitch
+                          label="In Stock"
+                          count={facets.inStock}
+                          name="inStock"
+                          checked={filter.inStock}
+                          onChange={(inStock) => onChange({ inStock })}
+                        />
+                      )}
+                      {filter.lowStockOnly !== undefined && (
+                        <FacetSwitch
+                          label="Low Stock Only"
+                          count={facets.lowStockOnly}
+                          name="lowStockOnly"
+                          checked={filter.lowStockOnly}
+                          onChange={(lowStockOnly) => onChange({ lowStockOnly })}
+                        />
+                      )}
+                      {admin && (
+                        <FacetSwitch
+                          label="No Refs"
+                          count={facets.withoutReferences}
+                          name="withoutReferences"
+                          checked={filter.withoutReferences}
+                          onChange={(withoutReferences) => onChange({ withoutReferences })}
+                        />
+                      )}
+                      {admin && (
+                        <FacetSwitch
+                          label="No Form"
+                          count={facets.withoutForms}
+                          name="withoutForms"
+                          checked={filter.withoutForms}
+                          onChange={(withoutForms) => onChange({ withoutForms })}
+                        />
+                      )}
+                      {admin && filter.reviewed !== undefined && facets.reviewed && (
+                        <ChoiceChip
+                          legend="Reviewed"
+                          name="reviewed"
+                          // The address's own spelling, `1` and `0`, so the form submits what the
+                          // parameter table reads before hydration.
+                          options={[
+                            { value: '', label: 'Any' },
+                            ...facets.reviewed.map((choice) => ({
+                              value: REVIEW_ADDRESS[choice.value],
+                              label: choice.label,
+                              count: choice.count,
+                            })),
+                          ]}
+                          value={
+                            reviewedStuck || !filter.reviewed ? '' : REVIEW_ADDRESS[filter.reviewed]
+                          }
+                          disabled={reviewedStuck}
+                          chipHint={
+                            reviewedStuck
+                              ? 'Every matching entry has the same review mark, so this filter cannot narrow further.'
+                              : undefined
+                          }
+                          onChange={(value) =>
+                            onChange({
+                              reviewed:
+                                value === '1' ? 'reviewed' : value === '0' ? 'needs_review' : '',
+                            })
+                          }
+                        />
+                      )}
+                    </div>
+                  </>,
+                )}
+                {/* The viewer's own covens (M12.55), the right half of the line with the In / Not In
+                choice beside them (the owner's call, 2026-10-23), and only for a viewer in one. No
+                counts: the counts the rest read are the cached, public ones, and a count per coven
+                would make them the viewer's (rule 6). */}
+                {covens.length > 0 && (
+                  <div className="facet-panel__line facet-panel__grow facet-panel__half">
+                    <div className="facet-panel__grow">
+                      <FacetCombobox
+                        label="In My Covens"
+                        name="covens"
+                        placeholder="Add Coven"
+                        removeNoun="Coven"
+                        loading={loading}
+                        counts={false}
+                        choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                        values={filter.covens ?? []}
+                        // Removing the last coven switches the choice back to In (the owner's call,
+                        // 2026-10-23), so it never turns into "not held in any of my covens" unasked.
+                        onChange={(picked) =>
+                          onChange(
+                            picked.length === 0
+                              ? { covens: picked, covensNot: false }
+                              : { covens: picked },
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="facet-panel__quick">
+                      <ChoiceChip
+                        legend="Covens"
+                        name="covensNot"
+                        options={COVENS_NOT_OPTIONS}
+                        value={filter.covensNot ? '1' : ''}
+                        onChange={(value) => onChange({ covensNot: value === '1' })}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="facet-panel__line">

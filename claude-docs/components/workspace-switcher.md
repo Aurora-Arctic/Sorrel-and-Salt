@@ -140,7 +140,7 @@ a switch superseded by another click cannot steal focus later.
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Coven Switcher": `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's
+`index.stories.tsx`, titled "Coven / Coven Switcher": `States`, a grid of In Workspace, Outside Workspace and Can Create. The workshop's
 router goes nowhere, so a choice only closes the list.
 
 ## Testing

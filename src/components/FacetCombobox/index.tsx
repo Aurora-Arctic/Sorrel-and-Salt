@@ -27,11 +27,14 @@ export default function FacetCombobox({
   placeholder,
   emptyPlaceholder = `No ${label}`,
   removeNoun,
-  loading,
+  loading: searching,
+  counts = true,
   hideZeros = true,
   hint,
   className,
 }: FacetComboboxProps): ReactElement {
+  // A field without counts has no count to wait for.
+  const loading = counts && searching;
   const field = fieldDescription({ id: useId(), hint });
   const hydrated = useHydrated();
   const shellClass = className ? `facet-combobox ${className}` : 'facet-combobox';

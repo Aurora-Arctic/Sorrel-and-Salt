@@ -9,7 +9,8 @@ import type { Session } from '@/lib/session';
 // are mocked.
 
 const getSession = vi.fn<() => Promise<Session | null>>();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+const sessionIsVerified = vi.fn<() => Promise<boolean>>();
+vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
 
 const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
@@ -20,6 +21,8 @@ const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 beforeEach(() => {
   getSession.mockReset();
+  sessionIsVerified.mockReset();
+  sessionIsVerified.mockResolvedValue(true);
   firstCovenSlugOf.mockReset();
   firstCovenSlugOf.mockResolvedValue(undefined);
 });
@@ -86,5 +89,31 @@ describe('the / page', () => {
     render(await HomePage());
 
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven');
+  });
+
+  // An unverified account is sent to the email page by every protected page, so
+  // Continue goes there directly, carrying the landing to go on to once verified.
+  it('continues an unverified account to the email page, carrying its landing', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
+    sessionIsVerified.mockResolvedValue(false);
+
+    render(await HomePage());
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute(
+      'href',
+      '/account/email?next=%2Fcoven',
+    );
+  });
+
+  it('carries an unverified admin’s landing the same way', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'admin' });
+    sessionIsVerified.mockResolvedValue(false);
+
+    render(await HomePage());
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute(
+      'href',
+      '/account/email?next=%2Fadmin',
+    );
   });
 });

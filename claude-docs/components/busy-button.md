@@ -50,10 +50,7 @@ None of its own: `.btn` and its variants, the `Spinner`, and the
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/BusyButton/index.stories.tsx),
-`Forms / Busy Button`: `Solid`, `Outline`, `Destructive` and `Small`, each
-idle beside busy; `BusyKeepingFocus`, busy with `aria-disabled`; and
-`PhoneDark`/`PhoneLight`.
+[`index.stories.tsx`](../../src/components/BusyButton/index.stories.tsx), `Forms / Busy Button`: `States` is a grid of Solid, Outline, Destructive and Small, each idle beside busy; `BusyKeepingFocus` is busy with `aria-disabled`.
 
 ## Testing
 

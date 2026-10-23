@@ -67,6 +67,15 @@ export async function getSession(): Promise<Session | null> {
 }
 
 /**
+ * Whether the signed-in account's address is verified; `false` with no session.
+ * For the front page, which offers an unverified account the email page rather
+ * than a page that would send it there. From the same per-request lookup.
+ */
+export async function sessionIsVerified(): Promise<boolean> {
+  return (await getSessionState()).emailVerified;
+}
+
+/**
  * Whether this request's session is recent enough for Better Auth to remove a
  * sign-in method; `false` with no session. For the account page, after
  * `requireSession()`, from the same per-request lookup.

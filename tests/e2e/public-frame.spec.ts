@@ -30,7 +30,7 @@ test.describe('without script', () => {
     );
     await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
     // The skip link's target is an empty span; the wrapper after it holds the layout's main.
-    await expect(page.locator('span#main[tabindex="-1"] + .public-frame__main main')).toBeVisible();
+    await expect(page.locator('span#main[tabindex="-1"] + .app-shell__main main')).toBeVisible();
   });
 });
 
@@ -85,4 +85,20 @@ test('the signed-out page is accessible and holds at 375px', async ({ page }) =>
 
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+// The public frame's bar is sticky, so a focused control or a jump target must land below it.
+// The page rules that do that were once the shell's alone; this proves the public page has them.
+test('the signed-out page keeps a scrolled-to control clear of the sticky bar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 700 });
+  await page.goto('/compendium');
+  const bar = page.getByRole('banner');
+  await expect(bar).toBeVisible();
+  const barBottom = (await bar.boundingBox())!.y + (await bar.boundingBox())!.height;
+  const padding = await page.evaluate(
+    () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+  );
+  expect(padding).toBeGreaterThan(barBottom);
 });

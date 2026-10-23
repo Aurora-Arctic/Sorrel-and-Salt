@@ -200,4 +200,9 @@ export type CompendiumListFilterProps = Pick<
   covenSlug?: string;
   /** The coven's id, for `audience="coven"`: the type-ahead and the live counts read it. */
   workspaceId?: string;
+  /**
+   * The signed-in viewer's covens, every membership, which In My Covens offers by name and the
+   * sentence names (M12.55). The public list only; left out, the field is not drawn.
+   */
+  covens?: readonly { id: string; name: string }[];
 };

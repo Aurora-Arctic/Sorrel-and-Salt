@@ -416,6 +416,11 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   &:focus-visible {
     color: $text-primary;
   }
+
+  // The shared ring (MB.121: it drew the browser's own).
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
 // A question a form asks over itself, ConfirmOverlay (MB.115, the owner's

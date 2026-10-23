@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { HELD_TIP } from '../AddIcon/wording';
 import IconTip from '../IconTip';
 
 // The shelf of two bottles before an entry's name, saying the coven's
@@ -11,8 +12,6 @@ import IconTip from '../IconTip';
 // it on touch (the owner's call, 2026-10-20); the press does nothing else.
 // The words are the compendium's one noun for "you hold this", the cupboard (MB.120, the
 // owner's call, 2026-10-20). claude-docs/components/ingredient-entry.md, "In Your Cupboard".
-
-export const HELD_TIP = 'In Your Cupboard';
 
 // Exported for the details modal's In Your Cupboards links, which each lead with it.
 export const ShelfIcon = (): ReactElement => (

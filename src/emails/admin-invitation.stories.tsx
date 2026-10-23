@@ -1,13 +1,17 @@
-import type { Story } from '@ladle/react';
-import EmailPreview, { WORKSHOP_ORIGIN } from '../../.ladle/EmailPreview';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { adminInvitationMessage } from './admin-invitation';
 
 // Render-only; content is asserted in tests/emails/admin-invitation.test.tsx.
 // The link is invented and goes nowhere; the images and fonts come from the
 // workshop, which serves public/.
-export default {
+const meta = {
   title: 'Emails / Admin Invitation',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const URL = 'https://sorrelandsalt.com/invite/workshop-preview-token';
 
@@ -31,14 +35,22 @@ const curatorMessage = () =>
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
-export const Default: Story = () => <EmailPreview message={message} />;
-
-// Pinned dark: what Gmail and any client that ignores the setting shows.
-export const Dark: Story = () => <EmailPreview message={message} />;
-Dark.meta = { theme: 'dark' };
-
-export const Light: Story = () => <EmailPreview message={message} />;
-Light.meta = { theme: 'light' };
+const defaultNode = <EmailPreview message={message} />;
 
 // The same mail inviting to the curator role (M11.20).
-export const Curator: Story = () => <EmailPreview message={curatorMessage} />;
+const curatorNode = <EmailPreview message={curatorMessage} />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Curator: curatorNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

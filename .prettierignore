@@ -23,3 +23,6 @@ src/gql
 # A local folder of reference texts, kept out of git by .git/info/exclude,
 # which Prettier does not read
 .library
+
+# MSW's own service worker, copied by `msw init`; its header says not to modify it
+.storybook/public/mockServiceWorker.js
