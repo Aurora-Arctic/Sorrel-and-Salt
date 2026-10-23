@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
 import { verifyErrorMessage } from '../../lib/account-email';
 import EmailForm from '.';
 import type { EmailFormProps } from './types';
@@ -17,24 +18,28 @@ export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Inside the page's own frame and panel, so the workshop shows what the page
-// shows; nothing here is the workshop's alone.
+// Inside the app shell, then the page's own frame and panel, so the workshop shows what
+// the page shows: the header, with the account's initials at a phone's width, and an
+// unverified account's header without Add Ingredient. The shell's viewer is verified
+// when the address is.
 const Page = (props: EmailFormProps) => (
-  <main className="page-frame page-frame--narrow">
-    <div className="panel">
-      <EmailForm {...props} />
-    </div>
-  </main>
+  <ShellFrame area="none" viewer={{ verified: props.verified }} open="/account/email">
+    <main className="page-frame page-frame--narrow">
+      <div className="panel">
+        <EmailForm {...props} />
+      </div>
+    </main>
+  </ShellFrame>
 );
 
-// The common first visit: the provider shared an address, the sign-up mail
-// has just gone, so the submit is counting the minute down.
-const defaultNode = (
+// The common first visit once the minute has passed: the provider shared an
+// address, the sign-up mail went a while ago, so Send Confirmation is usable.
+const readyToResendNode = <Page email="ada@example.test" verified={false} landing="/coven" />;
+
+// The same visit within the minute after a mail: the submit counts it down.
+const countdownNode = (
   <Page email="ada@example.test" verified={false} landing="/coven" waitSeconds={45} />
 );
-
-// The same visit once the minute has passed.
-const readyToResendNode = <Page email="ada@example.test" verified={false} landing="/coven" />;
 
 // A provider that shared no address: the field starts empty.
 const noEmailNode = <Page email="" verified={false} landing="/coven" />;
@@ -78,8 +83,8 @@ export const Embedded: Story = {
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
   'Ready To Resend': readyToResendNode,
+  Countdown: countdownNode,
   'No Email': noEmailNode,
   Confirmed: confirmedNode,
   'Change Later': changeLaterNode,
@@ -87,7 +92,8 @@ const STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  args: { state: 'Default' },
+  parameters: shellFrameParameters,
+  args: { state: 'Ready To Resend' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

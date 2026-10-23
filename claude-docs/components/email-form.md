@@ -155,8 +155,7 @@ column's gap and the address's weight.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx),
-titled "Account / Email Form": `States`, with a control that chooses Default (unverified, the sign-up mail just sent, so counting down),
-Ready To Resend, No Email, Confirmed, Change Later (verified, back to
+titled "Account / Email Form": `States`, drawn in the app shell (the header with the account's initials, and no Add Ingredient while the address is unverified), with a control that chooses Ready To Resend (unverified, the site's resting state, Send Confirmation usable), Countdown (the sign-up mail just sent, so counting down), No Email, Confirmed, Change Later (verified, back to
 change it) and Failed (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.
 Every other state renders inside the page's own `<main className="page-frame page-frame--narrow">`
