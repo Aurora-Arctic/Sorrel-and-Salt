@@ -61,9 +61,11 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // reads them, and list what the unfiltered page lists.
 //
 // In My Covens (M12.55) narrows the list to the entries the viewer's picked covens hold, any
-// role. Only then, and only with a session, are the list and its counts read through the uncached
-// held-in reads, which prove each coven and drop the rest; with none picked, and for a visitor
-// whatever the address says, the reads are the cached ones above. Each card's plus or check also
+// role, and Not In (`?covensNot=1`) to the entries none of them holds, or with none picked none
+// of the viewer's covens. Only then, and only with a session, are the list and its counts read
+// through the uncached held-in reads, which prove each coven and drop the rest, and read cached
+// when every one is dropped; with neither, and for a visitor whatever the address says, the
+// reads are the cached ones above. Each card's plus or check also
 // counts and names every coven of the viewer's that holds the entry, the ones they only view too.
 //
 // Each card's Quick Look, for anyone, opens the entry's details over the results from
@@ -132,8 +134,8 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
   const entryId = single(params.entry);
-  // A coven picked under In My Covens, by someone signed in: the reads narrowed to it.
-  const session = filter.covens.length > 0 ? await getSession() : null;
+  // A coven picked under In My Covens, or Not In, by someone signed in: the reads narrowed to it.
+  const session = filter.covens.length > 0 || filter.covensNot ? await getSession() : null;
   const [page, counts, formIcons, viewer, shown] = await Promise.all([
     session
       ? readCompendiumHeldIn(session, variables, after, before, CARD_PAGE_SIZE)

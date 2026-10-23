@@ -240,6 +240,25 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
     expect(readFacetsHeldIn).toHaveBeenCalledWith(SESSION, variables);
   });
 
+  it('reads both through the session under Not In with no coven picked, carrying covensNot', async () => {
+    viewerIfSignedIn.mockResolvedValue(shellOf(true, false));
+    await renderPage({ covensNot: '1' });
+    expect(readCompendium).not.toHaveBeenCalled();
+    expect(readFacets).not.toHaveBeenCalled();
+    const [session, variables] = readCompendiumHeldIn.mock.lastCall!;
+    expect(session).toBe(SESSION);
+    expect(JSON.parse(variables as string)).toMatchObject({ covensNot: true });
+    expect(readFacetsHeldIn).toHaveBeenCalledWith(SESSION, variables);
+  });
+
+  it('reads the cached list for a visitor under Not In', async () => {
+    getSession.mockResolvedValue(null);
+    await renderPage({ covensNot: '1' });
+    expect(readCompendiumHeldIn).not.toHaveBeenCalled();
+    expect(readFacetsHeldIn).not.toHaveBeenCalled();
+    expect(readCompendium).toHaveBeenCalled();
+  });
+
   it('reads the cached list for a visitor, whatever covens the address names', async () => {
     getSession.mockResolvedValue(null);
     await renderPage({ covens: 'w0' });
