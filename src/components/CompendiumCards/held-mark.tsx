@@ -1,4 +1,6 @@
 import type { ReactElement } from 'react';
+import { HoldingCount, holdingText } from '../AddIcon/holding';
+import { HELD_ALL_TIP } from '../AddIcon/wording';
 import IconTip, { CheckIcon } from '../IconTip';
 // The held check's look lives with the plus's, whose place it takes (claude-docs/components/add-icon.md).
 import '../AddIcon/index.scss';
@@ -6,13 +8,6 @@ import '../AddIcon/index.scss';
 // The check at a compendium card's bottom right, in the plus's place once every coven the
 // viewer may write in holds the entry (M9.12), and the same check on the entry pages. The
 // plus itself is AddIcon's.
-
-/**
- * The start of the tip and the name: the compendium's one noun for "you hold this" is the
- * cupboard, as the entry page's In Your Cupboard and the details modal's In Your Cupboards say
- * (MB.120, the owner's call, 2026-10-20).
- */
-export const HELD_ALL_TIP = 'In Every Cupboard';
 
 /**
  * The check: every coven the viewer may write in holds this entry. A status mark, not a link
@@ -24,12 +19,20 @@ export const HELD_ALL_TIP = 'In Every Cupboard';
  * so the keyboard reaches it (WCAG 2.1.1), and on a press, as InfoTip's ⓘ does, so a tap
  * shows it on touch (the owner's call, 2026-10-20). The press does nothing else.
  */
-export const HeldMark = ({ name }: { name: string }): ReactElement => {
-  const label = `${HELD_ALL_TIP}: ${name}`;
+export const HeldMark = ({
+  name,
+  holding = [],
+}: {
+  name: string;
+  /** Every coven of the viewer's that holds the entry, by name, any role: counted and named, as on the plus (M12.55). */
+  holding?: readonly string[];
+}): ReactElement => {
+  const label = `${HELD_ALL_TIP}: ${name}${holdingText(holding)}`;
   return (
     <IconTip tip={label} opensOnPress>
       <button type="button" className="add-icon--held" aria-label={label}>
         <CheckIcon />
+        <HoldingCount holding={holding} />
       </button>
     </IconTip>
   );

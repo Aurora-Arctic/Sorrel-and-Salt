@@ -37,4 +37,4 @@ primitive.
 
 ## Stories
 
-"Surfaces / Category Chips": within the limit, with more, in a scrolling frame, and both sizes.
+"Ingredients / Category Chips": within the limit, with more, in a scrolling frame, and both sizes.

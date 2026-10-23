@@ -32,7 +32,7 @@ card's own rules live in `IngredientCard/index.scss`.
 
 ## Stories
 
-`Compendium Grid` and `Cupboard Grid` (regular), `Cupboard Grid Compact`: the same nine invented entries (`story-fixtures.tsx`), the compendium's without marks, jars or actions, the cupboard's with them.
+`States`, with a control that chooses Default (the compendium grid), Cupboard Grid and Cupboard Grid Compact: the same nine invented entries (`story-fixtures.tsx`), the compendium's without marks, jars or actions, the cupboard's with them.
 
 ## Testing
 

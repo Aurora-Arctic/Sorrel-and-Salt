@@ -417,29 +417,24 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx),
-`Admin / Users`, every story inside the admin layout's frame (the nav in its
+`Admin / User List`, every story inside the admin layout's frame (the nav in its
 context row above the column) and the People page with its Users tab open:
 
-- **States**: `Default`, the page as signed off at MB.115, its tab's
-  Pause Admin Changes and each row's Impersonate opening their
-  confirmations; `Filtered`; `NoMatch`, with every filter set, so the
-  sentence names all three; `WithoutImpersonation`, where impersonation is
-  not registered; `UnverifiedApproval`, `AdminRoles`, `AdminChangesPaused`
-  and `AdminChangesNotPrimary`, each name led by its privilege changes icon,
+- **States**, one story with a control that chooses: Without Filters, the page as a signed-in admin who is not the primary one sees it (the site's resting state: Pause Admin Changes dashed and locked, in the app shell); Primary Admin, the same page with a usable Pause Admin Changes and each row's Impersonate opening their
+  confirmations; Awaiting Approval And Query; Role Filter; No Matches, with every filter set, so the
+  sentence names all three; Without Impersonation, where impersonation is
+  not registered; Unverified Approval, Admin Roles, Admin Changes Paused
+  and Admin Changes Not Primary, each name led by its privilege changes icon,
   whose tip shows on hover or focus; the list holds an admin, a user awaiting
-  approval and an approved user, so each control shows. `UnverifiedApproval`
+  approval and an approved user, so each control shows. Unverified Approval
   holds two users awaiting approval, one unverified and one verified, so the
   first's Approve opens the warning (MB.205) and the second's does not.
-  `AdminRoles` holds the primary admin, its Change Role unusable with the reason beside it, a second admin, a curator (bold, with no coven-creation control) and users, each Change Role opening its modal, Bo's with the warning on a promotion (MB.59, M11.20). `AdminChangesPaused`
+  Admin Roles holds the primary admin, its Change Role unusable with the reason beside it, a second admin, a curator (bold, with no coven-creation control) and users, each Change Role opening its modal, Bo's with the warning on a promotion (MB.59, M11.20). Admin Changes Paused
   shows the switch paused with the primary admin's Resume, and
-  `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
-  `OnePageOfSeveral` is a middle page of 25, both pager ends live and
+  Admin Changes Not Primary the switch on, unusable, with its reason (MB.63).
+  Middle Page is a middle page of 25, both pager ends live and
   "Page 2 of 3" between them (MB.115).
-- **Phone width**: `PhoneDark` and `PhoneLight`, the page's header and the
-  list with Impersonate at 375px, every row a card; `FilteredPhoneDark` and
-  `FilteredPhoneLight`, `Filtered` at 375px with Clear offered;
-  `OnePageOfSeveralPhoneDark` and `OnePageOfSeveralPhoneLight`, the middle
-  page at 375px, the pager on one line beneath the last card.
+- **Phone width**: the toolbar viewport menu shows any story at 375px, every row a card, with Clear offered on the filtered states and the pager on one line beneath the last card on Middle Page.
   In the workshop no confirmation reaches a server, so confirming one shows the
   refusal. Render-only, no test ids, no snapshots.
 

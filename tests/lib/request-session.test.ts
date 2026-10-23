@@ -46,6 +46,7 @@ const {
   requireSignedIn,
   sessionFromHeaders,
   sessionIsFresh,
+  sessionIsVerified,
 } = await import('@/lib/request-session');
 const { auth } = await import('@/lib/auth');
 const { Forbidden } = await import('@/lib/errors');
@@ -386,5 +387,18 @@ describe('requireCovenMembership', () => {
       `redirect:/sign-in?next=${encodeURIComponent('/coven/whitethorn-coven')}`,
     );
     expect(membershipBySlugMock).not.toHaveBeenCalled();
+  });
+});
+
+// The front page offers an unverified account the email page rather than a page
+// that would send it there, so it asks the same per-request lookup.
+describe('sessionIsVerified', () => {
+  it('is true for a verified address, false for an unverified one and with no session', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true));
+    await expect(sessionIsVerified()).resolves.toBe(true);
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false));
+    await expect(sessionIsVerified()).resolves.toBe(false);
+    getSessionMock.mockResolvedValue(null);
+    await expect(sessionIsVerified()).resolves.toBe(false);
   });
 });

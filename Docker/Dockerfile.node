@@ -33,6 +33,11 @@ USER node
 COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
+# The lock file's hash, saved where Docker/ensure-deps.sh looks: a fresh
+# `node_modules` volume copies it from here, so the first start installs
+# nothing twice.
+RUN sha256sum package-lock.json | cut -d ' ' -f 1 > node_modules/.lock-sha256
+
 ENV NODE_ENV=development
 EXPOSE 8000
 CMD ["npm", "run", "dev"]

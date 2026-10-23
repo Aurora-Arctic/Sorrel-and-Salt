@@ -96,3 +96,23 @@
     opacity: 0;
   }
 }
+
+// How many of the viewer's covens hold the entry (M12.55), on the plus and on the held check: a
+// bare figure in the mark's top corner, in the mark's own green, so it reads as part of the mark
+// rather than a second badge beside it. Tokens only: its look waits on the section's design
+// review. claude-docs/components/compendium-cards.md, "The holding count".
+.add-icon,
+.add-icon--held {
+  position: relative;
+}
+
+.add-icon__count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-family: $font-body;
+  font-size: type-size('caption');
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: none;
+}

@@ -25,6 +25,16 @@ On the coven card the card's stretched name link covers the card, so the line si
 (`position: relative; z-index: 1`); without that, hover never reached the line and only
 focus worked.
 
+The button is at least 24px tall to press (WCAG 2.5.8, Target Size (Minimum); MB.272, the
+owner's call). One line of the card's small text is 21.4px, and WCAG's spacing exception for a
+smaller target does not apply on the card, where the button lies on the stretched link and just
+above the foot's buttons. `padding-block` grows the button by half the shortfall (`$icon-size`,
+24px, less one line height, `1lh`) above and below, and an equal negative `margin-block` takes it
+back out of the line, so the line, the card and its foot do not move (measured in Chromium: the
+card's height and the foot row's place are the same to the hundredth of a pixel before and after).
+Not a `min-block-size`, which would make the line taller and push the foot down. The same rule
+holds wherever the line is used. `tests/e2e/card-click.spec.ts` measures it on a coven card.
+
 ## How the time works
 
 The line holds a `<time>` whose `datetime` holds the moment. Before hydration it reads a

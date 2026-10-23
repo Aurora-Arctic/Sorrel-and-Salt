@@ -92,11 +92,10 @@ used: `space()`, `type-size('caption')`, `$text-muted`, `$table-stack-width`.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/MemberList/index.stories.tsx),
-`Coven / Member List`: `ReadOnly`, a member's view with no controls;
-`WithActions`, an owner's, with plain buttons standing in for the page's
-controls and the Email column; and `SoleOwner`, the owner's page composition, addresses included, with the sole-owner note
-inside a `ListFrame` ahead of the list, with `SoleOwnerPhoneDark` and
-`SoleOwnerPhoneLight` at 375px.
+`Coven / Member List`: `States`, with a control that chooses Default (a member's view with no controls);
+With Actions (an owner's, with plain buttons standing in for the page's
+controls and the Email column); Sole Owner (the owner's page composition, addresses included, with the sole-owner note
+inside a `ListFrame` ahead of the list); Gaps In The Record; and Addresses Without Actions.
 
 ## Tests
 

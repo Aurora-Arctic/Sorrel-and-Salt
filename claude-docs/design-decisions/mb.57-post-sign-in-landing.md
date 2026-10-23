@@ -56,7 +56,10 @@ again — for exactly one decision: whether the way in is "Sign in" (to
 `/sign-in`) or "Continue" (to `/coven`, or since MB.113 `/admin` for an
 admin, the landing a sign-in with no return path gets; since MB.257 the callback and
 Continue send a member of a coven straight into it, so `/coven` is only the stop for someone
-in none). Everything else on
+in none). For an account whose address is unverified, Continue goes straight to
+`/account/email?next=<that landing>` (from `sessionIsVerified()`, built by `emailPagePath`), since
+every page it could lead to would send the account there; the landing is its `next`, so it goes on
+there once verified. Everything else on
 the page is the same for both. `/` stays in `PUBLIC_ROUTES`.
 
 ## What this rules out

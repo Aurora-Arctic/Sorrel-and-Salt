@@ -11,17 +11,10 @@ import type { SlotEnv } from './types';
 const CACHE_OFFSET = 100;
 
 /**
- * The workshop (Ladle) sits one above the cache server, for the specs that
+ * The workshop (Storybook) sits one above the cache server, for the specs that
  * measure a component no page uses yet (playwright.workshop.config.ts).
  */
 const WORKSHOP_OFFSET = CACHE_OFFSET + 1;
-
-/**
- * The workshop's live-reload (HMR) socket, one above it: the block's, not the
- * 61002 .ladle/config.mjs pins for the review workshop, so a test run never
- * competes with a review Ladle (claude-docs/workshop.md, ".ladle/").
- */
-const WORKSHOP_HMR_OFFSET = WORKSHOP_OFFSET + 1;
 
 /**
  * The first slot's port: 8001, not the dev server's 8000, so `npm run dev` and an
@@ -36,9 +29,9 @@ export function portBase(env: SlotEnv = process.env): number {
   if (raw === undefined) return 8001;
 
   const base = Number(raw);
-  if (!/^\d+$/.test(raw) || base < 1024 || base + WORKSHOP_HMR_OFFSET > 65535)
+  if (!/^\d+$/.test(raw) || base < 1024 || base + WORKSHOP_OFFSET > 65535)
     throw new Error(
-      `E2E_PORT_BASE must be a whole number from 1024 to ${65535 - WORKSHOP_HMR_OFFSET}, got "${raw}"`,
+      `E2E_PORT_BASE must be a whole number from 1024 to ${65535 - WORKSHOP_OFFSET}, got "${raw}"`,
     );
   return base;
 }
@@ -55,8 +48,6 @@ export const CONFIGURED_PROVIDERS_PORT = FIRST_SLOT_PORT + 99;
 export const COMPENDIUM_CACHE_PORT = FIRST_SLOT_PORT + CACHE_OFFSET;
 /** The workshop server, for playwright.workshop.config.ts alone. */
 export const WORKSHOP_PORT = FIRST_SLOT_PORT + WORKSHOP_OFFSET;
-/** Its HMR socket, handed to Ladle as `LADLE_HMR_PORT`. */
-export const WORKSHOP_HMR_PORT = FIRST_SLOT_PORT + WORKSHOP_HMR_OFFSET;
 export const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
 
 /**

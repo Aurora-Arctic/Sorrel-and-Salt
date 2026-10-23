@@ -154,9 +154,8 @@ $account-menu-avatar: 2rem;
   }
 
   &:focus-visible {
-    @include focus-ring;
     // Inside the row, where the panel's edge would clip an outside ring.
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 
   &[aria-current='page'] {

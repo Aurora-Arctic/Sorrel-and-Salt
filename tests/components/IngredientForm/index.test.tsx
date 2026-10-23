@@ -138,7 +138,10 @@ const CATEGORIES: CategoryNode[] = [
 ];
 /** Opens the picker's list and picks the category, once the categories have been read. */
 const pickCategory = async (name: string) => {
-  fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+  // Opened only when shut: a pick leaves the list open for the next (M12.54), and the
+  // chevron would shut it.
+  if (screen.getByRole('combobox', { name: 'Category' }).getAttribute('aria-expanded') !== 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
   // A longer wait than the default 1000ms, here alone: nothing says the categories have
   // loaded before the list opens, so the options are the only signal. They appear about
   // 82ms after the click on an idle machine, but a run under full CPU load slows this
@@ -624,6 +627,21 @@ describe('IngredientForm', () => {
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input.categoryIds).toEqual([trialcraft.id, testward.id]);
+    });
+
+    // M12.54: the form's categories field takes several picks in a row, as the facet does.
+    it('keeps the categories list open after a pick, with the focus in the box', async () => {
+      renderForm({ categories: CATEGORIES });
+      const box = screen.getByRole('combobox', { name: 'Category' });
+
+      box.focus();
+      await pickCategory('Trialcraft');
+
+      expect(removeButton('Trialcraft')).toBeInTheDocument();
+      expect(box).toHaveAttribute('aria-expanded', 'true');
+      expect(box).toHaveFocus();
+      fireEvent.keyDown(box, { key: 'Escape' });
+      expect(box).toHaveAttribute('aria-expanded', 'false');
     });
 
     it('is something to save on its own', async () => {

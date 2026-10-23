@@ -1854,7 +1854,7 @@ length, and no other text field has one either.
 The promote control has its own stories: `PromoteControl`, `PromoteQuestion` (clean), `PromoteQuestionWithChanges`, phone dark and light, and `PromoteQuestionCoven`.
 
 [`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx),
-titled "Admin / Ingredient Form":
+titled "Ingredients / Ingredient Form":
 `Blank`, unframed, with every lookup answered and the save faked (MB.131),
 under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the
@@ -1883,7 +1883,7 @@ page with a long address, and each citation is rendered by `citationText`
 as the server renders it; a new source is answered the same way, after the
 same pause, and refused by its title as an ingredient is by its name. The workshop has no page to open, so after Save Ingredient
 the story says beneath the buttons where its page would go,
-"/ingredients/<id>", in a `.story-note` from `.ladle/story-frame.scss`;
+"/ingredients/<id>", in a `.story-note` from `.storybook/story-frame.scss`;
 Save & Add Another clears it.
 `Compendium` and `CompendiumEntry` (M5.5) are the form on the compendium,
 new and given an entry to edit, on the same stand-in, which also answers the
@@ -1903,19 +1903,17 @@ Dried leaf carrying a safety note, its own toxic flag (the entry's is off), a ce
 two substitutes of its own, Fixturewort in its Whole root form and the name
 Hedge Mockroot, and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
-Edit (MB.115), its own sections closed to their lines, and
-`VariantOpenPhoneDark` and `VariantOpenPhoneLight` are it at 375px;
+Edit (MB.115), its own sections closed to their lines;
 `CompendiumEntryVariantSectionOpen` opens Dried leaf's Correspondences too,
 and `VariantAdded` is a coven's new entry with Oil just added from the New
 Form box, every one of its sections open. `CompendiumEntryCopySkipped` adds Mockleaf, in no form, to
 the ingredient's substitutes, opens Dried leaf and its Relations and presses its Substitute
 Ingredients' Copy From Ingredient: Testwort links its Dried leaf, and the
 notice beneath the list names Mockleaf with Copy Anyway;
-`CopySkippedPhoneDark` and `CopySkippedPhoneLight` are it at 375px. And `CompendiumEntryEditSource` the same entry with its first
+And `CompendiumEntryEditSource` is the same entry with its first
 source's row open and Edit Source pressed, the panel prefilled; the stand-in
 answers `Reference` from each source's whole fields and keeps what
-`UpdateReference` saves. `EditSourcePhoneDark` and `EditSourcePhoneLight` are
-it at 375px. `Compendium` and `Blank` show a new entry's sections all open,
+`UpdateReference` saves. `Compendium` and `Blank` show a new entry's sections all open,
 `CompendiumEntry` an edit's all closed to their summaries,
 `CompendiumEntrySectionOpen` the edit with Correspondences open, and
 `CompendiumEntrySaveError` the edit, a colour left in its box, submitted
@@ -1924,10 +1922,8 @@ once drawn: Correspondences opens on the error, flagged, the box focused
 `AskingToDeleteInModal` opens every section, scrolls to the foot and presses
 Delete Ingredient, and `AskingToDiscardInModal` types a change, opens every
 section, scrolls half way and presses Close: each question over the long
-form, centred where it was scrolled to (MB.115). `AskingToDeletePhoneDark`,
-`AskingToDeletePhoneLight`, `AskingToDiscardPhoneDark` and
-`AskingToDiscardPhoneLight` are them at 375px. The stories that open
-something inside an edit open its section first, as a person would. `PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
+form, centred where it was scrolled to (MB.115). The stories that open
+something inside an edit open its section first, as a person would. The toolbar viewport menu shows any of them at 375px. On a phone the
 compendium's modal stays inset, the page in view on every side, rather than
 a full-height sheet: the owner's call in M5.5, kept at MB.115's design
 review. Its shape is `Modal`'s, the wide dialog less the modal gap
@@ -2244,7 +2240,7 @@ holds the form: `tests/e2e/admin-compendium.spec.ts` scans M5.5's admin page
 with the list, the empty form in its modal, a lookup open inside it, and an
 edit just saved. The coven's add and edit modals (M8.16, M8.17) carry no
 scan of their own yet.
-MB.154's References field was driven in a browser — Ladle's story through
+MB.154's References field was driven in a browser — Storybook's story through
 the `playwright-server` service, at 375px in both themes — and scanned
 with `@axe-core/playwright` at each state: the suggestions open, three
 rows, the panel refusing a chapter, a web page's fields. No WCAG 2.2 AA or

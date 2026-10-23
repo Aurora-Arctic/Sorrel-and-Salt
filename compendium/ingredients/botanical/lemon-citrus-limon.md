@@ -105,7 +105,7 @@ variants:
           - description
   - form: Peel
     description: The rind, whose coloured outer layer, the zest, carries the fruit’s oil. Cunningham adds the dried peel to love sachets and mixtures.
-    safetyNotes: The peel contains furanocoumarins that can cause a phototoxic skin reaction when applied before sun exposure, but AHPA found no reported cases and expects none after eating it.
+    safetyNotes: The peel contains furanocoumarins that can cause a phototoxic skin reaction when applied before sun exposure.
     references:
       - source: ahpa-safety
         locator: p. 236; p. xxii
@@ -194,7 +194,7 @@ variants:
         supports:
           - form
           - description
-seedUpdate: b6219c6263e0a9f25ac1e197837d9a6a0bea8141483127ed84dbe6128ed5fad0
+seedUpdate: 910e79bbdbbbfa772463fdad06334d29a7fe9a60ca38c6aebcb1ff1fd12708fd
 ---
 
 # Lemon

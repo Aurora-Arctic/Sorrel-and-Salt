@@ -1,5 +1,5 @@
 ---
-status: approved
+status: needs-review
 nomenclature: mineral
 canonicalName: Quartz var. tiger's eye
 safetyNotes: Wikipedia reports a 2003 study finding that the original crocidolite fibres, an asbestos mineral, survive inside tiger's eye sealed in quartz, so grinding or cutting the stone could release small amounts of crocidolite into the air.

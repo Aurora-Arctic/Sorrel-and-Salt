@@ -382,7 +382,7 @@
 // Details columns, and its forms lined up with their lists. Bare bars, no card
 // surface; the heading bar takes an h2's line box.
 .skeleton__entry-body {
-  @include entry-body('.skeleton__entry-text');
+  @include entry-body('.skeleton__entry-details', '.skeleton__entry-side');
 }
 
 .skeleton__entry-body > .skeleton__entry-section {
@@ -418,7 +418,7 @@
   }
 }
 
-.skeleton__entry-body > .skeleton__entry-section > .skeleton__entry-side {
+.skeleton__entry-body > .skeleton__entry-side {
   @include entry-column-side;
 }
 

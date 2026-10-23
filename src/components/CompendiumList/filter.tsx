@@ -65,6 +65,8 @@ const whereOf = ({
  * admin's its Reviewed strip (M14.8).
  */
 const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => ({
+  covens: filter.covens ?? [],
+  covensNot: filter.covensNot ?? false,
   categories: filter.categories,
   categoryMode: filter.categoryMode,
   forms: filter.forms,
@@ -85,6 +87,8 @@ const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter
 
 /** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
 const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
+  covens: [],
+  covensNot: false,
   categories: [],
   categoryMode: 'all',
   forms: [],
@@ -101,6 +105,8 @@ const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
 
 /** The panel's facets as filter values. */
 const changeOf = (panel: FacetPanelFilter) => ({
+  covens: [...(panel.covens ?? [])],
+  covensNot: panel.covensNot ?? false,
   categories: [...panel.categories],
   forms: [...panel.forms],
   deities: [...panel.deities],
@@ -168,6 +174,7 @@ const PanelFacets = ({
   audience = 'admin',
   covenSlug,
   workspaceId,
+  covens,
   panel,
   onPanel,
 }: CompendiumListFilterProps & {
@@ -196,6 +203,7 @@ const PanelFacets = ({
       loading={pending || live.loading}
       clearHref={where.path}
       className="compendium-list__panel"
+      covens={covens}
       onChange={(patch) => onPanel({ ...panel, ...patch })}
       // Shut any other way than Apply Filters, whose submit applies the name as well: the
       // facets held, under the name the page shows, and nothing at all when none changed.
@@ -218,6 +226,7 @@ const CompendiumListFilterRow = ({
   audience = 'admin',
   covenSlug,
   workspaceId,
+  covens,
 }: CompendiumListFilterProps): ReactElement => {
   const where = whereOf({ audience, covenSlug });
   const coven = where.covenSlug !== undefined;
@@ -261,6 +270,7 @@ const CompendiumListFilterRow = ({
         audience={audience}
         covenSlug={covenSlug}
         workspaceId={workspaceId}
+        covens={covens}
         panel={panel}
         onPanel={setPanel}
       />
@@ -276,7 +286,8 @@ const CompendiumListFilterRow = ({
 function labelsOf({
   facets,
   categories,
-}: Pick<CompendiumListFilterProps, 'facets' | 'categories'>): SearchSentenceLabels {
+  covens = [],
+}: Pick<CompendiumListFilterProps, 'facets' | 'categories' | 'covens'>): SearchSentenceLabels {
   const named = (rows: readonly { value: string; label: string }[]) =>
     Object.fromEntries(rows.map(({ value, label }) => [value, label]));
   // Two gods of one name are told apart by their tradition, as the panel's groups do.
@@ -291,6 +302,8 @@ function labelsOf({
       ]),
     ),
     elements: named(facets.elements),
+    // Only the viewer's own covens have a name here, so only they are named (M12.55).
+    covens: Object.fromEntries(covens.map(({ id, name }) => [id, name])),
   };
 }
 
@@ -314,6 +327,7 @@ const CompendiumListFilterWithSentence = ({
   audience = 'admin',
   covenSlug,
   workspaceId,
+  covens,
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   // Only a filter's navigation retypes the sentence: a pager press changes the page, not the search.
@@ -335,11 +349,11 @@ const CompendiumListFilterWithSentence = ({
           inStock: searched.inStock ?? false,
           lowStockOnly: searched.lowStockOnly ?? false,
         },
-        labels: labelsOf({ facets, categories }),
+        labels: labelsOf({ facets, categories, covens }),
         total,
         admin: audience === 'admin',
       }),
-    [searched, facets, categories, total, audience],
+    [searched, facets, categories, covens, total, audience],
   );
   return (
     <>
@@ -353,6 +367,7 @@ const CompendiumListFilterWithSentence = ({
         audience={audience}
         covenSlug={covenSlug}
         workspaceId={workspaceId}
+        covens={covens}
       />
       <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
     </>
