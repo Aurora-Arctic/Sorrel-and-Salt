@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
@@ -24,80 +25,78 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => {
-    const [open, setOpen] = useState(true);
-    return (
-      <>
-        <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-          Open
-        </button>
-        {open && (
-          <Modal title="Add Category" onClose={() => setOpen(false)}>
-            <form className="form" onSubmit={(event) => event.preventDefault()}>
-              <div className="field">
-                <label className="field__label" htmlFor="story-name">
-                  Name
-                </label>
-                <input id="story-name" className="input" />
-              </div>
-              <div className="modal__actions">
-                <button type="submit" className="btn btn--solid">
-                  Save Category
-                </button>
-                <button type="button" className="btn" onClick={() => setOpen(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </Modal>
-        )}
-      </>
-    );
-  },
+const DefaultView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal title="Add Category" onClose={() => setOpen(false)}>
+          <form className="form" onSubmit={(event) => event.preventDefault()}>
+            <div className="field">
+              <label className="field__label" htmlFor="story-name">
+                Name
+              </label>
+              <input id="story-name" className="input" />
+            </div>
+            <div className="modal__actions">
+              <button type="submit" className="btn btn--solid">
+                Save Category
+              </button>
+              <button type="button" className="btn" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
 };
+const defaultNode = <DefaultView />;
 
 // In its own iframe: `showModal()` puts the dialog in the top layer, which in
 // the workshop's own document would cover Storybook's sidebar too.
 // The wide size, for a long form (M5.5): the compendium entry's is the first.
-export const Wide: Story = {
-  render: () => {
-    const [open, setOpen] = useState(true);
-    return (
-      <>
-        <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-          Open
-        </button>
-        {open && (
-          <Modal title="Add Ingredient" size="wide" onClose={() => setOpen(false)}>
-            <form className="form" onSubmit={(event) => event.preventDefault()}>
-              <div className="field">
-                <label className="field__label" htmlFor="story-wide-name">
-                  Name
-                </label>
-                <input id="story-wide-name" className="input" defaultValue="Testwort" />
-              </div>
-              <div className="field">
-                <label className="field__label" htmlFor="story-wide-formal">
-                  Formal Name
-                </label>
-                <input id="story-wide-formal" className="input" defaultValue="Fixtura testalis" />
-              </div>
-              <div className="modal__actions">
-                <button type="submit" className="btn btn--solid">
-                  Save Ingredient
-                </button>
-                <button type="button" className="btn" onClick={() => setOpen(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </Modal>
-        )}
-      </>
-    );
-  },
+const WideView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal title="Add Ingredient" size="wide" onClose={() => setOpen(false)}>
+          <form className="form" onSubmit={(event) => event.preventDefault()}>
+            <div className="field">
+              <label className="field__label" htmlFor="story-wide-name">
+                Name
+              </label>
+              <input id="story-wide-name" className="input" defaultValue="Testwort" />
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="story-wide-formal">
+                Formal Name
+              </label>
+              <input id="story-wide-formal" className="input" defaultValue="Fixtura testalis" />
+            </div>
+            <div className="modal__actions">
+              <button type="submit" className="btn btn--solid">
+                Save Ingredient
+              </button>
+              <button type="button" className="btn" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
 };
+const wideNode = <WideView />;
 
 /**
  * An edit dialog's head (MB.115): the eyebrow says what it does to what
@@ -137,7 +136,7 @@ const EditingView = () => {
   );
 };
 
-export const Editing: Story = { render: EditingView };
+const editingNode = <EditingView />;
 
 // A modal a button opens (MB.119): however it closes, Close, Escape, a click
 // outside or Done, the focus ring is back on the button.
@@ -153,42 +152,39 @@ const ButtonModal = () => (
   </ModalButton>
 );
 
-export const OpenedByAButton: Story = { render: () => <ButtonModal /> };
+const openedByAButtonNode = <ButtonModal />;
 
 // The same, pressed open as the story mounts, so the dialog itself shows.
-export const OpenedByAButtonOpen: Story = {
-  render: () => {
-    usePressOnMount('Open');
-    return <ButtonModal />;
-  },
+const OpenedByAButtonOpenView = () => {
+  usePressOnMount('Open');
+  return <ButtonModal />;
 };
+const openedByAButtonOpenNode = <OpenedByAButtonOpenView />;
 
 // The address-driven wrapper the admin pages open: the workshop's router goes
 // nowhere, but reports where it was sent (.storybook/navigation.ts), which
 // `Reopenable` answers by unmounting it, as the changed address does in the
 // app. Close, Escape and Done fade it out and leave Open Again. Done stands
 // for a form's save.
-export const OpenedByItsAddress: Story = {
-  render: () => (
-    <Reopenable>
-      {() => (
-        <RouteModal
-          closeHref={'/admin/categories' as Route}
-          content={{
-            heading: { eyebrow: 'Edit Category', title: 'Testcraft' },
-            body: (done) => (
-              <div className="modal__actions">
-                <button type="button" className="btn btn--solid" onClick={done}>
-                  Done
-                </button>
-              </div>
-            ),
-          }}
-        />
-      )}
-    </Reopenable>
-  ),
-};
+const openedByItsAddressNode = (
+  <Reopenable>
+    {() => (
+      <RouteModal
+        closeHref={'/admin/categories' as Route}
+        content={{
+          heading: { eyebrow: 'Edit Category', title: 'Testcraft' },
+          body: (done) => (
+            <div className="modal__actions">
+              <button type="button" className="btn btn--solid" onClick={done}>
+                Done
+              </button>
+            </div>
+          ),
+        }}
+      />
+    )}
+  </Reopenable>
+);
 
 // A route modal pressed open while its page is on its way (M9.18): the
 // pressed row's head over the form's skeleton, through a provider whose
@@ -210,7 +206,7 @@ const LoadingView = () => (
   </Reopenable>
 );
 
-export const Loading: Story = { render: LoadingView };
+const loadingNode = <LoadingView />;
 
 /**
  * A form with a change, asked on opening whether to discard it, as Cancel,
@@ -272,7 +268,84 @@ const AskingToDiscardChangesView = () => {
   );
 };
 
-export const AskingToDiscardChanges: Story = { render: AskingToDiscardChangesView };
+const askingToDiscardChangesNode = <AskingToDiscardChangesView />;
+
+// The head's other parts, one story each beside the plain dialog (Modal/types.ts).
+const HeadView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal
+          topEnd={<span className="badge">Updated</span>}
+          aboveName={<span>Last edited by Ada Fixturewort</span>}
+          formalName={<span className="binomial">Fixtura testalis</span>}
+          formalActions={
+            <button type="button" className="btn btn--quiet">
+              Edit
+            </button>
+          }
+          title="Testwort"
+          under={<span className="badge">Safe</span>}
+          onClose={() => setOpen(false)}
+        >
+          <p>The entry's own text.</p>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+const withEveryHeadPartNode = <HeadView />;
+
+const DestinationView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal title="Add Ingredient" destination="Whitethorn Coven" onClose={() => setOpen(false)}>
+          <p>Where the add lands is named over the title.</p>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+const withADestinationNode = <DestinationView />;
+
+const ListedView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal
+          title="Edit Stock"
+          size="listed"
+          readingBody
+          foot={
+            <button type="button" className="btn">
+              See in Your Cupboard
+            </button>
+          }
+          onClose={() => setOpen(false)}
+        >
+          <p>A body to read, with a bar beneath it that never moves.</p>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+const listedWithAFootNode = <ListedView />;
 
 // The shared form groups, the first three, by slug as a picker's values are.
 const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
@@ -314,65 +387,88 @@ function DeletingForm() {
   );
 }
 
-export const AskingToConfirm: Story = {
-  render: () => (
-    <Reopenable>
-      {(close) => (
-        <Modal eyebrow="Edit Group" title="Fixture Healing" onClose={close}>
-          <DeletingForm />
-        </Modal>
-      )}
-    </Reopenable>
-  ),
-};
+const askingToConfirmNode = (
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Group" title="Fixture Healing" onClose={close}>
+        <DeletingForm />
+      </Modal>
+    )}
+  </Reopenable>
+);
 
 // A picker and a multi-picker in a modal: Escape on an open list closes the
 // list alone, and a second Escape, the list shut, closes the modal (MB.115).
-export const WithPickers: Story = {
-  render: () => {
-    const [open, setOpen] = useState(true);
-    const [group, setGroup] = useState('');
-    const [colours, setColours] = useState<string[]>([]);
-    return (
-      <>
-        <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-          Open
-        </button>
-        {open && (
-          <Modal eyebrow="Edit Form" title="Fixture Oil" onClose={() => setOpen(false)}>
-            <form className="form" onSubmit={(event) => event.preventDefault()}>
-              <div className="field">
-                <span className="field__label" id="story-group-label">
-                  Group
-                </span>
-                <ComboboxSelect
-                  id="story-group"
-                  label="Group"
-                  labelId="story-group-label"
-                  value={group}
-                  onChange={setGroup}
-                  choices={PICKS}
-                  placeholder="Choose a group"
-                />
-              </div>
-              <div className="field">
-                <span className="field__label" id="story-colours-label">
-                  Colours
-                </span>
-                <ComboboxMultiSelect
-                  id="story-colours"
-                  label="Colours"
-                  labelId="story-colours-label"
-                  values={colours}
-                  onChange={setColours}
-                  choices={PICKS}
-                  placeholder="Add a colour"
-                />
-              </div>
-            </form>
-          </Modal>
-        )}
-      </>
-    );
+const WithPickersView = () => {
+  const [open, setOpen] = useState(true);
+  const [group, setGroup] = useState('');
+  const [colours, setColours] = useState<string[]>([]);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal eyebrow="Edit Form" title="Fixture Oil" onClose={() => setOpen(false)}>
+          <form className="form" onSubmit={(event) => event.preventDefault()}>
+            <div className="field">
+              <span className="field__label" id="story-group-label">
+                Group
+              </span>
+              <ComboboxSelect
+                id="story-group"
+                label="Group"
+                labelId="story-group-label"
+                value={group}
+                onChange={setGroup}
+                choices={PICKS}
+                placeholder="Choose a group"
+              />
+            </div>
+            <div className="field">
+              <span className="field__label" id="story-colours-label">
+                Colours
+              </span>
+              <ComboboxMultiSelect
+                id="story-colours"
+                label="Colours"
+                labelId="story-colours-label"
+                values={colours}
+                onChange={setColours}
+                choices={PICKS}
+                placeholder="Add a colour"
+              />
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+};
+const withPickersNode = <WithPickersView />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const MODAL_STATES: Record<string, ReactNode> = {
+  Plain: defaultNode,
+  Wide: wideNode,
+  Editing: editingNode,
+  'Opened By A Button': openedByAButtonNode,
+  'Opened By A Button And Pressed': openedByAButtonOpenNode,
+  'Opened By Its Address': openedByItsAddressNode,
+  Loading: loadingNode,
+  'Asking To Discard Changes': askingToDiscardChangesNode,
+  'With Every Head Part': withEveryHeadPartNode,
+  'With A Destination': withADestinationNode,
+  'Listed With A Foot': listedWithAFootNode,
+  'Asking To Confirm': askingToConfirmNode,
+  'With Pickers': withPickersNode,
+};
+
+export const States: Story = {
+  args: { state: 'Plain' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(MODAL_STATES), mapping: MODAL_STATES },
   },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
