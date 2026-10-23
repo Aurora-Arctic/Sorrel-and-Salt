@@ -1696,7 +1696,7 @@ The page also carries:
 - An Edit control and a Delete control, as places only: M13.10 builds editing at `/coven/[slug]/grimoire/[id]/edit` and fills the Edit control for members and owners, and M13.11 builds `deleteSpell` and fills the Delete control. This task does not build either action.
 - If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
 - A `Skeleton` of shape `page`, through a `PARTS_OF_SECTION` entry in `src/lib/coven-path.ts`, so the loading shape matches.
-- A `StepRow` presentation component under `src/components/`, shared with M13.3's editor and M13.8's workings section. This page renders it read-only.
+- The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
 
