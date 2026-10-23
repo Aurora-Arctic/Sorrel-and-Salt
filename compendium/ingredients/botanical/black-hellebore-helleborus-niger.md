@@ -122,3 +122,7 @@ seedUpdate: e59aa0dba710c540a59f06c0131e6dc4569753ce1a8ae71b8f8adef6fe9621fd
 # Black Hellebore
 
 Black hellebore, better known as the Christmas rose, is a low evergreen perennial of the buttercup family and no rose at all. It grows wild in the mountains of the Alps, the Apennines and the northern Dinaric Alps. Dark, leathery, deeply cut leaves surround broad white flowers, sometimes flushed pink or green, which open around a yellow centre from midwinter into early spring; the name niger, black, is thought to refer to the dark roots. A legend has it spring up from the snow where a girl with no gift for the Christ child shed her tears. It was the leading purgative of the ancient world, said to have been brought into use by the seer Melampus to cure the daughters of Proteus of their madness, which gave it the old name Melampode. Culpeper places it under Saturn. In medieval Europe it was strewn on floors against evil, cattle were blessed with it to keep spells away, and it served in exorcism, yet witches were believed to use it for hexes and flight, and French sorcerers to throw its powdered root into the air to become invisible. Kynes adds that picking its flowers was unlucky, though the plant protected the house where it grew.
+
+#### Edit Notes for Claude
+
+- Deity gap: Cronos (Kynes, under "Hellebore"), not in the vocabulary; link once M14.15 adds it.
