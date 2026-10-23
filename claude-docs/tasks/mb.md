@@ -270,6 +270,9 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 | MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
+| MB.270 | The Search Sentence Types a Changed Term                                                                                 | Bugfixes | —                      |
+| MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
+| MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1645,6 +1648,75 @@ _Acceptance criteria:_
 - If Close is slow after a reload, that is fixed in the app, with a regression test that fails before the fix
 - A regression test reproduces the sign-in panel's getSnapshot warning before the fix, and the panel's test passes twenty consecutive runs with none
 - Docs: `claude-docs/components/sign-in-panel.md`, "Last used", says how the read stays stable
+
+**MB.270 — The Search Sentence Types a Changed Term** · 1.5h
+
+_Story:_ As anyone searching the compendium or a coven's ingredients, I want the search sentence to type out my new search term, so that the sentence reads as one animation instead of half typing and half jumping.
+
+Found on 2026-10-23, locally, every time, signed out on `/compendium` and as a member on a coven's Ingredients page; cosmetic. Steps to reproduce:
+
+1. Open `/compendium` signed out, or a coven's Ingredients page as a member.
+2. Search for "sage" and wait for the sentence to finish typing.
+3. Change the search to "rose" by typing in the search box.
+
+Actual: the sentence's lead words and clauses type out, but "rose" appears whole, with no typing.
+Expected: "sage" is wiped and "rose" is typed out; a term that did not change stays put.
+
+Cause found in the code: while a search is pending, `src/components/CompendiumList/filter.tsx` builds the sentence from the target address, and the pending-edge effect in `src/components/SearchSentence/index.tsx` rebuilds the old line from that same new term, so the old and new lines hold the same term and the term is never typed.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: after the term changes from one value to another, the old term is wiped and the new one is typed character by character.
+- A term that did not change between two searches stays on screen and is not retyped.
+- Under reduced motion the sentence still switches straight to the new line.
+- `claude-docs/components/search-sentence.md` matches the behaviour.
+
+**MB.271 — The Back Link Returns to the Same Results and Place** · 3h
+
+_Story:_ As anyone browsing ingredients, I want "Back to …" on an ingredient page to take me to the search, filters and page I came from, at the card I opened, so that I don't have to search again.
+
+Found on 2026-10-23, locally, for every kind of user; wrong result. Steps to reproduce:
+
+1. As any user, open a coven's Ingredients page or `/compendium`.
+2. Search or set a filter, go to page 2 of the results, and scroll down.
+3. Open an ingredient's card.
+4. Press the "Back to …" link on the ingredient page.
+
+Actual: the list opens unfiltered, on page 1, at the top.
+Expected: the same search, filters and page, scrolled so the card that was opened is where it was.
+
+Cause: the back link is the bare list address in `src/app/(public)/compendium/ingredients/[slug]/page.tsx` and `src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx`, and the cards in `src/components/CompendiumCards/index.tsx` carry no return address.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: the back link from an entry opened from a filtered, paged list carries that list's search, filters and cursor.
+- On return, the opened card is in view at the position it had.
+- The return address only ever points at the list route the entry belongs to; a crafted address to another origin or route falls back to the bare list.
+- Opened directly, with no list before it, the back link is the bare list, as today.
+- A Playwright spec walks the steps above on both the compendium and a coven's Ingredients page.
+
+**MB.272 — A Click Anywhere on an Ingredient Card Opens Its Entry** · 2.5h
+
+_Story:_ As anyone searching ingredients, I want a click anywhere on an ingredient card to open its entry, so that I don't have to aim for the name.
+
+Found on 2026-10-23, locally, for every kind of user, every time (assumed: it is how the cards are built); wrong result. Steps to reproduce:
+
+1. As any user, open `/compendium` or a coven's Ingredients page.
+2. Click a card's empty space or its description, not its name.
+
+Actual: nothing happens; only the name opens the entry.
+Expected: a click anywhere on the card opens the entry, the same as clicking its name. The + button, stock controls, chips and the Quick Look icon each still do their own thing. The card shows a hover and focus style saying it is clickable.
+
+The name link is in `src/components/CompendiumCards/index.tsx` and `src/components/IngredientCard/index.tsx`. The fix is the stretched-link pattern: the name stays the one real link, its `::after` covers the card, and the other controls sit above it. Wrapping the card in one `<a>` is ruled out: HTML does not allow a button inside a link, and a screen reader would read the whole card as the link's name (Pickering, _Inclusive Components_, "Cards"; Soueidan, "Nested Links"; MDN, the `<a>` element).
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: on both cards, a click on the card outside the name navigates to the entry.
+- The + button, stock controls, chips and the Quick Look icon still do their own action, and none of them navigates.
+- The name is still the card's only link, so its accessible name is the ingredient's name, and tab order is unchanged.
+- Each other control keeps a target of at least 24 × 24 px (WCAG 2.5.8).
+- A Playwright spec clicks a card's body and its + on `/compendium`, and its body and its stock control on a coven's Ingredients page.
+- Docs: `claude-docs/components/compendium-cards.md` and `claude-docs/components/ingredient-card.md`.
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
