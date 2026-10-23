@@ -7,7 +7,7 @@ import { AdminContents } from '.';
 // one prop, `managesPeople`: an admin sees every page, a curator all but
 // People (M11.20). The workshop's `usePathname`
 // stub answers `/admin/users` (.storybook/navigation.ts), the People page's
-// Users tab, so People is the current page in every story. Each sits in the
+// Users tab, so People is the current page unless a story opens another address. Each sits in the
 // admin layout as it is (`AdminFrame`): the nav in the context row led by
 // "Admin", above the `.page-column` column that holds the page.
 const meta = {
@@ -35,9 +35,10 @@ const curatorNode = <Frame open="/admin/compendium" managesPeople={false} />;
 
 // The `/admin` index under the nav: a lede, then the table of contents in
 // the nav's sections. The page is a server component behind the guard, so
-// its heading and lede are copied here; the contents are the real part.
+// its heading and lede are copied here; the contents are the real part. Opened
+// at `/admin`, where the site marks no page current.
 const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElement => (
-  <Frame managesPeople={managesPeople}>
+  <Frame open="/admin" managesPeople={managesPeople}>
     <main>
       <h1>Admin</h1>
       <p className="lede">

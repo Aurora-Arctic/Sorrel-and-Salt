@@ -54,7 +54,7 @@ without a page routed to it.
      piece is drawn from.
   2. **A piece the app draws in one area goes under that area's group**, in the
      order a person meets them: **Pages** (a whole page with no area of its own:
-     Welcome, Not Authorized, the invitation page), **Sign In** (the panel, the
+     Welcome, the invitation page; Not Authorized is a state of Error Page), **Sign In** (the panel, the
      sign-in methods and the provider mark), **Shell** (the bar and what sits
      in it: the account menu, the context row), **Account** (including
      `Account / Invitations Received`), **Coven** (including
@@ -367,6 +367,7 @@ A story whose component asks the server gets an answer from Mock Service Worker 
 - **Run it against a running workshop at `localhost`**, since a service worker needs a secure origin: `npm run workshop` in one shell, then the check with `WORKSHOP_CHECK_URL` (default `http://localhost:61104`; set it to the port the workshop runs on). The remote browser reaches the container's `localhost` through `PLAYWRIGHT_WS_ENDPOINT` with `exposeNetwork`.
 - **Narrowing:** `WORKSHOP_CHECK_ONLY` (a story id substring), `WORKSHOP_CHECK_THEMES` (`light`, `dark` or both) and `WORKSHOP_CHECK_WORKERS` (default 4).
 - **A story tagged `expects-failed-request`** is exempt from the failed-request and console-error checks only, never from page errors or axe.
+- **A story tagged `shows-low-contrast`** is exempt from the `color-contrast` axe rule only. Use it for a story whose point is a colour pair that fails, such as a colour field showing its too-low ratio; every other rule still runs.
 
 ## Commands and gates
 

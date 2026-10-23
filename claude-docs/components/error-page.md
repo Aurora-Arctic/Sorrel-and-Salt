@@ -45,7 +45,7 @@ page, per CLAUDE.md ("`/coven/[slug]` returns 404 to a non-member").
 
 ## Stories and tests
 
-`index.stories.tsx` — `States`, with a control that chooses Default (not found) or Something Went Wrong; the toolbar viewport and theme menus show the latter at 375px
+`index.stories.tsx` — `States`, with a control that chooses Default (not found), Something Went Wrong or Not Authorized (the 403 page, [NotAuthorized](not-authorized.md)); the toolbar viewport and theme menus show the latter at 375px
 in each theme. `tests/components/ErrorPage` covers the children and the
 reference; `tests/app/error.test.tsx` the three screens;
 `tests/e2e/error-pages.spec.ts` the 404 against the built server, with axe.

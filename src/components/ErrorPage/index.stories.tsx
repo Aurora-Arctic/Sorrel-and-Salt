@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import NotAuthorized from '../NotAuthorized';
 import ErrorPage from '.';
 
 // Render-only; behaviour is asserted in tests/components/ErrorPage. Each story
@@ -37,11 +39,22 @@ const SomethingWentWrongView = () => (
 
 const somethingWentWrongNode = <SomethingWentWrongView />;
 
+// The 403 page `forbidden.tsx` draws for a signed-in non-admin: its real
+// `main.page-frame`, inside the app shell. It takes no props.
+const notAuthorizedNode = (
+  <ShellFrame area="none" open="/admin">
+    <main className="page-frame">
+      <NotAuthorized />
+    </main>
+  </ShellFrame>
+);
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Something Went Wrong': somethingWentWrongNode,
+  'Not Authorized': notAuthorizedNode,
 };
 
 export const States: Story = {

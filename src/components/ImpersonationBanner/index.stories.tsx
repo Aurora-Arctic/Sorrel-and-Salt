@@ -17,7 +17,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// Stop is never answered here, so a press shows Stopping, not the fake API's 501.
 export const Default: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />,
 };
 // Above the shell, where the app puts it: the first thing in the body, over
@@ -37,6 +39,7 @@ const OverTheShellView = () => (
 );
 
 export const OverTheShell: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => <OverTheShellView />,
 };
 

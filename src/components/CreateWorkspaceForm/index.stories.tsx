@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import Notice from '../Notice';
 import { setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import CreateWorkspaceForm from '.';
 
@@ -16,7 +17,13 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Inside the page's frame and head, as src/app/(shell)/coven/new/page.tsx writes
 // them, so the workshop shows what the page shows.
-const Page = ({ steps = [] }: { steps?: readonly (() => void)[] }) => {
+const Page = ({
+  steps = [],
+  mayCreate = true,
+}: {
+  steps?: readonly (() => void)[];
+  mayCreate?: boolean;
+}) => {
   useSteps(steps);
   return (
     <main className="page-frame page-frame--narrow">
@@ -25,7 +32,14 @@ const Page = ({ steps = [] }: { steps?: readonly (() => void)[] }) => {
           <h1>Create Coven</h1>
           <p className="lede">Start a coven of your own. You will be its owner.</p>
         </div>
-        <CreateWorkspaceForm />
+        {mayCreate ? (
+          <CreateWorkspaceForm />
+        ) : (
+          <Notice kind="warn" quiet>
+            Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or an
+            admin&rsquo;s approval.
+          </Notice>
+        )}
       </div>
     </main>
   );
@@ -40,6 +54,9 @@ const CREATE_STATES: Record<string, ReactNode> = {
   // The usual visit: an empty name, nothing to create until one is typed.
   Empty: <Page />,
   'Name Typed': <Page steps={[typeName]} />,
+  // An account that has not been invited to create one: the page shows this
+  // notice where the form would be (src/app/(shell)/coven/new/page.tsx).
+  'Needs an Invitation': <Page mayCreate={false} />,
   // The workshop reaches no server, so the submit fails into the alert region.
   'Refused After Submitting': <Page steps={[typeName, () => submitForm('form.form')]} />,
 };
