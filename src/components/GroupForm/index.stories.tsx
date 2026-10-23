@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { FIXTURE_GROUP_ID, GROUP_NAMES, asOptions } from '../../../.storybook/fixtures';
 import { InModal } from '../../../.storybook/in-modal';
-import { usePressOnMount } from '../../../.storybook/press';
+import { submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
 import GroupForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/GroupForm. The
@@ -41,7 +41,7 @@ const WARDS = {
 const done = () => {};
 
 // A category group adds its two colours.
-const defaultNode = (
+const addingACategoryGroupNode = (
   <InModal title="Add Category Group">
     <GroupForm kind="category" groups={GROUPS} onDone={done} />
   </InModal>
@@ -96,17 +96,33 @@ export const AskingWhereToMove: Story = {
   },
 };
 
+// Saved while empty: the name, the description and both colours say so.
+const SavingEmptyCategoryView = () => {
+  useSteps([() => submitForm('form')]);
+  return addingACategoryGroupNode;
+};
+const savingEmptyCategoryGroupNode = <SavingEmptyCategoryView />;
+
+// Saved while empty: the icon choice says so too.
+const SavingEmptyFormView = () => {
+  useSteps([() => submitForm('form')]);
+  return addingAFormGroupNode;
+};
+const savingEmptyFormGroupNode = <SavingEmptyFormView />;
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
-  'Editing ACategory Group': editingACategoryGroupNode,
-  'Adding AForm Group': addingAFormGroupNode,
-  'Editing ATradition': editingATraditionNode,
+  'Adding A Category Group': addingACategoryGroupNode,
+  'Editing A Category Group': editingACategoryGroupNode,
+  'Adding A Form Group': addingAFormGroupNode,
+  'Editing A Tradition': editingATraditionNode,
+  'Saving Empty Category Group': savingEmptyCategoryGroupNode,
+  'Saving Empty Form Group': savingEmptyFormGroupNode,
 };
 
 export const States: Story = {
-  args: { state: 'Default' },
+  args: { state: 'Adding A Category Group' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };
