@@ -21,6 +21,13 @@ type Story = StoryObj<typeof meta>;
 // SectionNav's stories.
 const defaultNode = <Frame />;
 
+// Other pages current: the nav marks whichever page the address belongs to.
+const categoriesCurrentNode = <Frame open="/admin/category-groups" />;
+
+const astrologyCurrentNode = <Frame open="/admin/zodiac-signs" />;
+
+const invitationsCurrentNode = <Frame open="/admin/invitations" />;
+
 // A curator's nav: the five curation pages, and no People. Opened on the
 // compendium, since a curator never reaches the People page.
 const curatorNode = <Frame open="/admin/compendium" managesPeople={false} />;
@@ -50,14 +57,24 @@ const indexPageCuratorNode = <Index managesPeople={false} />;
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
+  'People Current': defaultNode,
+  'Categories Current': categoriesCurrentNode,
+  'Astrology Current': astrologyCurrentNode,
+  'Invitations Current': invitationsCurrentNode,
   Curator: curatorNode,
   'Index Page': indexPageNode,
   'Index Page Curator': indexPageCuratorNode,
 };
 
 export const States: Story = {
-  args: { state: 'Default' },
+  args: { state: 'People Current' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
+
+// Narrow, where the nav moves to the bar at the foot of the window. Its own
+// story: a width is pinned for the whole story, not for a state.
+export const NarrowPinned: Story = {
+  render: () => <Frame open="/admin/compendium" />,
+  globals: { viewport: { value: 'w375', isRotated: false } },
 };

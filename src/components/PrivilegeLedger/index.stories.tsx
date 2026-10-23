@@ -57,6 +57,36 @@ const CHANGES: PrivilegeLedgerEntry[] = [
     note: null,
   },
   {
+    id: 'c6',
+    at: new Date('2026-01-01T00:00:00Z'),
+    subject: ADA,
+    privilege: 'curator',
+    change: 'grant',
+    via: 'admin',
+    actor: BRAM,
+    note: null,
+  },
+  {
+    id: 'c7',
+    at: new Date('2025-12-20T00:00:00Z'),
+    subject: ADA,
+    privilege: 'admin',
+    change: 'revoke',
+    via: 'admin',
+    actor: BRAM,
+    note: 'Stepped down.',
+  },
+  {
+    id: 'c8',
+    at: new Date('2025-12-19T00:00:00Z'),
+    subject: BRAM,
+    privilege: 'curator',
+    change: 'revoke',
+    via: 'admin',
+    actor: null,
+    note: null,
+  },
+  {
     id: 'c5',
     at: new Date('2026-01-01T00:00:00Z'),
     subject: BRAM,
@@ -68,12 +98,34 @@ const CHANGES: PrivilegeLedgerEntry[] = [
   },
 ];
 
-const defaultNode = (
+const MIDDLE = { page: 2, pages: 3 };
+const LAST = { page: 3, pages: 3 };
+
+const firstPageNode = (
   <PrivilegeLedger
     changes={CHANGES}
     filter={{}}
     nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
     position={{ page: 1, pages: 3 }}
+  />
+);
+
+const middlePageNode = (
+  <PrivilegeLedger
+    changes={CHANGES}
+    filter={{}}
+    previousHref={privilegeLedgerHref({}, { before: 'cursor' })}
+    nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
+    position={MIDDLE}
+  />
+);
+
+const lastPageNode = (
+  <PrivilegeLedger
+    changes={CHANGES.slice(-2)}
+    filter={{}}
+    previousHref={privilegeLedgerHref({}, { before: 'cursor' })}
+    position={LAST}
   />
 );
 
@@ -106,8 +158,10 @@ const noMatchesNode = (
 
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
-const STATES_STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
+const LEDGER_STATES: Record<string, ReactNode> = {
+  'First Page': firstPageNode,
+  'Middle Page': middlePageNode,
+  'Last Page': lastPageNode,
   'One User': oneUserNode,
   'One User Admin Only': oneUserAdminOnlyNode,
   Empty: emptyNode,
@@ -115,9 +169,9 @@ const STATES_STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  args: { state: 'Default' },
+  args: { state: 'First Page' },
   argTypes: {
-    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+    state: { control: 'select', options: Object.keys(LEDGER_STATES), mapping: LEDGER_STATES },
   },
   render: ({ state }) => <div key={String(state)}>{state}</div>,
 };

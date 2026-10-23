@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, type ReactNode } from 'react';
+import { usePressOnMount } from '../../../.storybook/press';
 import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
 import CovenNav from '../CovenNav';
@@ -34,45 +35,71 @@ const Row = ({ path, children }: { path: string; children: ReactNode }): ReactEl
   </WorkshopPathname.Provider>
 );
 
-// Wide: Grimoire-style tabs, as a member sees them (Overview and Members),
-// with Overview current.
-const defaultNode = (
-  <Row path="/coven/fixture-coven">
-    <CovenNav slug="fixture-coven" canReadMembers />
+const coven = (path: string, canReadMembers: boolean) => (
+  <Row path={path}>
+    <CovenNav slug="fixture-coven" canReadMembers={canReadMembers} />
   </Row>
 );
 
-// Wide: six tabs, a hairline between Astrology and People, Categories
-// current (on its Groups tab's address).
-const adminNode = (
-  <Row path="/admin/category-groups">
-    <AdminNav managesPeople />
+const admin = (path: string, managesPeople = true) => (
+  <Row path={path}>
+    <AdminNav managesPeople={managesPeople} />
   </Row>
 );
+
+// Wide: the tabs a member sees, then a viewer's (no Members), then the admin's
+// six tabs with a hairline between Astrology and People.
+const SECTION_STATES: Record<string, ReactNode> = {
+  'Coven Overview Current': coven('/coven/fixture-coven', true),
+  'Coven Ingredients Current': coven('/coven/fixture-coven/ingredients', true),
+  'Coven Members Current': coven('/coven/fixture-coven/members', true),
+  'Coven As A Viewer': coven('/coven/fixture-coven', false),
+  'Admin Categories Current': admin('/admin/category-groups'),
+  'Admin Compendium Current': admin('/admin/compendium'),
+  'Admin Astrology Current': admin('/admin/zodiac-signs'),
+  'Admin People Current': admin('/admin/users'),
+  'Admin As A Curator': admin('/admin/compendium', false),
+};
+
+export const States: Story = {
+  args: { state: 'Coven Overview Current' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(SECTION_STATES), mapping: SECTION_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
 
 // Tablet, on a page that is behind More: More names it and carries the mark. The
 // width stays pinned (700px) because this state exists only at tablet width: wider
 // shows every link, narrower moves the nav to the bottom bar.
 export const AdminOnAHiddenPage: Story = {
-  render: () => (
-    <Row path="/admin/users">
-      <AdminNav managesPeople />
-    </Row>
-  ),
+  render: () => admin('/admin/users'),
   globals: { viewport: { value: 'w700', isRotated: false } },
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
-const STATES_STATES: Record<string, ReactNode> = {
-  Default: defaultNode,
-  Admin: adminNode,
+// Tablet with More pressed: the links behind it in a sheet.
+const MoreOpen = ({ path }: { path: string }): ReactElement => {
+  usePressOnMount('More');
+  return admin(path);
 };
 
-export const States: Story = {
-  args: { state: 'Default' },
-  argTypes: {
-    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
-  },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+export const TabletMoreOpen: Story = {
+  render: () => <MoreOpen path="/admin/compendium" />,
+  globals: { viewport: { value: 'w700', isRotated: false } },
+};
+
+// A phone: the nav leaves the row for the bar at the foot of the window.
+export const PhoneBottomBar: Story = {
+  render: () => coven('/coven/fixture-coven', true),
+  globals: { viewport: { value: 'w375', isRotated: false } },
+};
+
+export const PhoneAdminBottomBar: Story = {
+  render: () => admin('/admin/compendium'),
+  globals: { viewport: { value: 'w375', isRotated: false } },
+};
+
+export const PhoneMoreOpen: Story = {
+  render: () => <MoreOpen path="/admin/compendium" />,
+  globals: { viewport: { value: 'w375', isRotated: false } },
 };
