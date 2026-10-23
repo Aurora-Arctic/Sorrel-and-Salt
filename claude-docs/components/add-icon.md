@@ -40,7 +40,7 @@
 
 **On a phone** the plus and the check have no rule of their own: each is a `$icon-size-large` (2rem) target, above WCAG 2.5.8's 24px.
 
-**Forced colours.** The glyphs are drawn in `currentColor`, so they take the system's ink. The plus has no border, so the wash under the pointer, a background colour, is all that marks a hover there, and the `icon-button` mixin sets no focus outline of its own, so focus shows the browser's, which forced colours keeps. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
+**Forced colours.** The glyphs are drawn in `currentColor`, so they take the system's ink. The plus has no border, so the wash under the pointer, a background colour, is all that marks a hover there. The plus is a button, so focus shows the shared ring the `icon-button` mixin gives a button (MB.121), an outline, which forced colours keeps. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
 
 ## Stories and tests
 

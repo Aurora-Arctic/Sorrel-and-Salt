@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import Spinner from '.';
 
 // Render-only; the spinner is hidden from assistive technology, and the
@@ -10,18 +11,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => (
-    <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-      <Spinner /> Saving Name
-    </p>
-  ),
-};
+const line = { display: 'flex', alignItems: 'center', gap: '0.5rem' } as const;
 
-export const Larger: Story = {
+export const States: Story = {
   render: () => (
-    <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem' }}>
-      <Spinner /> Loading
-    </p>
+    <StatesGrid
+      states={{
+        Default: (
+          <p style={line}>
+            <Spinner /> Saving Name
+          </p>
+        ),
+        Larger: (
+          <p style={{ ...line, fontSize: '2rem' }}>
+            <Spinner /> Loading
+          </p>
+        ),
+      }}
+    />
   ),
 };

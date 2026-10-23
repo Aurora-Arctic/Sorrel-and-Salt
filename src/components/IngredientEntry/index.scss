@@ -297,11 +297,11 @@ $formal-line: $icon-size;
   }
 }
 
-// Details, Stock, Forms and References. Past a tablet's width Details' text and
-// lists, and Stock after its text, run as two independent columns; the forms
-// then start below both (`entry-body`, `_mixins.scss`).
+// Stock, Details, the side column, Forms and References. Past a tablet's width the
+// side column stands beside Stock and Details (a grid); the forms then start
+// below (`entry-body`, `_mixins.scss`).
 .ingredient-entry__body {
-  @include entry-body('.ingredient-entry__text');
+  @include entry-body('#details', '.ingredient-entry__side');
 }
 
 // A section: its heading, its text (description and caution), then its side
@@ -331,6 +331,12 @@ $formal-line: $icon-size;
   margin: 0;
 }
 
+// Every section's h2 stands over a rule (`entry-heading-rule`): Details' here, Stock's on its
+// head's h2 below, the forms' and the references' beside theirs.
+.ingredient-entry__section > h2 {
+  @include entry-heading-rule;
+}
+
 .ingredient-entry__text {
   @include stack(4);
 }
@@ -338,8 +344,8 @@ $formal-line: $icon-size;
 // The side column's blocks stand further apart than the text's parts, so
 // each heading reads as its own list and not as the last one's tail; under the
 // text it stands a clear step off it, beside the text past a tablet's width.
-// Details' floats down the right on its own; a form's stands level with that form's text.
-.ingredient-entry__body > .ingredient-entry__section > .ingredient-entry__side {
+// Details' stands in the body's right column, level with its first section; a form's stands level with that form's text.
+.ingredient-entry__body > .ingredient-entry__side {
   @include entry-column-side;
 }
 
@@ -392,7 +398,10 @@ $formal-line: $icon-size;
   justify-content: space-between;
   gap: space(2);
 
+  // The rule runs under the heading's text alone; the button stays at the row's end.
   > h2 {
+    @include entry-heading-rule;
+
     margin: 0;
   }
 
@@ -402,13 +411,10 @@ $formal-line: $icon-size;
   }
 }
 
-// INTERIM (the owner, 2026-10-21): the whole Stock section (heading, Edit Stock button and
-// shelf) sits in a `.panel` box to set it apart from the rest of the page. MB.121's design
-// review removes it. `.panel` brings the ground, radius and padding; this rule only spaces
-// the head from the shelf. It is a box inside the section, whose children keep to the text
-// column, so the column widths and the float clearing stay the section's. It wraps the empty
-// "No stock recorded." state too, so Edit Stock does not jump in and out of a panel. To
-// remove it, drop `panel` from the wrapper in stock-section.tsx; the wrapper div itself can stay.
+// The Stock section's head and shelf as one stack, spaced as a section's heading is from
+// its body. No box: M12.29 tried a `.panel` here, and MB.121's review removed it, since no
+// other section of the entry page is boxed and the jars' shine is drawn in the card colour,
+// so it faded on a card-coloured panel (claude-docs/design-decisions/mb.121-workspace-ingredients-review.md).
 .ingredient-entry__stock-panel {
   @include stack(4);
 
@@ -419,6 +425,8 @@ $formal-line: $icon-size;
   @include entry-forms;
 
   > h2 {
+    @include entry-heading-rule;
+
     margin: 0;
   }
 }
@@ -512,6 +520,8 @@ $formal-line: $icon-size;
   scroll-margin-top: calc(#{$top-inset} + #{space(4)});
 
   > h2 {
+    @include entry-heading-rule;
+
     margin: 0;
   }
 }

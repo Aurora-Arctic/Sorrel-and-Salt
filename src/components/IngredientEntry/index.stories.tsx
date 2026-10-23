@@ -967,6 +967,31 @@ const stockForEditorNode = (
     stock={{ ...STOCK, mayEdit: true }}
   />
 );
+// Every state a jar can show on the shelf: the oil Out, the smoke bundle stocked. Low is
+// 'Stock For Editor' above. Low and Out are told by a symbol before the amount as well as by
+// colour (MB.121).
+const stockOutAndStockedNode = (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    stock={{
+      ...STOCK,
+      mayEdit: true,
+      jars: [
+        { ...STOCK.jars[0], quantity: 0 },
+        { ...STOCK.jars[1], quantity: 40, unit: 'g', threshold: 10 },
+      ],
+    }}
+  />
+);
+// An entry with no form to hold: "No stock recorded." beside Edit Stock, with no box.
+const noStockRecordedNode = (
+  <Entry
+    detail={{ ...FULL, variants: [], cupboardEntry: cupboardEntry() }}
+    cupboard={CUPBOARD}
+    stock={{ ...STOCK, mayEdit: true, forms: [], jars: [] }}
+  />
+);
 const stockForViewerNode = (
   <Entry
     detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
@@ -1025,6 +1050,8 @@ const STATES_STATES: Record<string, ReactNode> = {
   'Moved Away': movedAwayNode,
   'Form Adds Nothing': formAddsNothingNode,
   'Stock For Editor': stockForEditorNode,
+  'Stock Out And Stocked': stockOutAndStockedNode,
+  'No Stock Recorded': noStockRecordedNode,
   'Stock For Viewer': stockForViewerNode,
   'Held In A Coven': heldInCovenNode,
   'Nothing Recorded': nothingRecordedNode,

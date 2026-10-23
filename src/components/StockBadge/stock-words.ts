@@ -23,3 +23,11 @@ export const stockTip = (
   unit: string | null | undefined,
 ): string =>
   state === 'out' ? 'Out of Stock' : `Low Stock at ${withUnit(threshold as number, unit)} or less`;
+
+/**
+ * A jar's amount as every stock surface writes it (the card's jar line, the Edit Stock
+ * dialog's list, the entry page's shelf): "250 g", "250" with no unit, or "Unmeasured" when
+ * no quantity is recorded. One home, so the three never drift (MB.121's repetition check).
+ */
+export const amountText = (quantity: number | null, unit: string | null | undefined): string =>
+  quantity === null ? 'Unmeasured' : withUnit(quantity, unit);
