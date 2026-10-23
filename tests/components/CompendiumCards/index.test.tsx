@@ -14,6 +14,7 @@ import type { AddCupboardEntryMutation, AddCupboardEntryMutationVariables } from
 import { expectRefusalUnder } from '../../support/click-feedback';
 import { filterForm, sent } from '../../support/filter-form';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
@@ -137,8 +138,8 @@ describe('CompendiumCards', () => {
 
   describe('the add icon', () => {
     /** Any card's plus, and any card's check: each is named by its tip and then its entry. */
-    const PLUS = { name: /^Add to My Ingredients: / };
-    const HELD = { name: /^In Every Cupboard: / };
+    const PLUS = { name: new RegExp(`^${ADD}: `) };
+    const HELD = { name: new RegExp(`^${HELD_TEXT}: `) };
     const addTo = (slug: string) => {
       const item = screen
         .getAllByRole('listitem')
@@ -153,9 +154,9 @@ describe('CompendiumCards', () => {
       render(<Cards {...props({ action: 'add' })} />);
       const buttons = screen.getAllByRole('button', PLUS);
       expect(buttons.map((button) => button.textContent)).toEqual([
-        'Add to My Ingredients: Testwort, Fixtura testalis',
-        'Add to My Ingredients: Testwort, Fixtura alteralis',
-        'Add to My Ingredients: Fixture Salt',
+        `${ADD}: Testwort, Fixtura testalis`,
+        `${ADD}: Testwort, Fixtura alteralis`,
+        `${ADD}: Fixture Salt`,
       ]);
       for (const button of buttons) expect(button).not.toHaveAttribute('aria-disabled');
       expect(screen.queryByRole('button', HELD)).toBeNull();
@@ -170,15 +171,15 @@ describe('CompendiumCards', () => {
       render(<Cards {...props({ entries: held, action: 'add' })} />);
       expect(screen.getAllByRole('button', PLUS)).toHaveLength(2);
       const mark = screen.getByRole('button', HELD);
-      expect(mark).toHaveAccessibleName('In Every Cupboard: Testwort, Fixtura testalis');
+      expect(mark).toHaveAccessibleName(`${HELD_TEXT}: Testwort, Fixtura testalis`);
       expect(mark.closest('a')).toBeNull();
       expect(screen.queryByRole('link', HELD)).toBeNull();
 
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain('In Every Cupboard: Testwort, Fixtura testalis');
+      expect(tips()).not.toContain(`${HELD_TEXT}: Testwort, Fixtura testalis`);
       act(() => mark.focus());
-      expect(tips()).toContain('In Every Cupboard: Testwort, Fixtura testalis');
+      expect(tips()).toContain(`${HELD_TEXT}: Testwort, Fixtura testalis`);
     });
 
     // The owner's call, 2026-10-20: a press opens the check's tip, as a tap does on InfoTip's ⓘ,
@@ -190,11 +191,11 @@ describe('CompendiumCards', () => {
       const mark = screen.getByRole('button', HELD);
       const tips = () =>
         screen.queryAllByRole('tooltip', { hidden: true }).map((tip) => tip.textContent);
-      expect(tips()).not.toContain('In Every Cupboard: Testwort, Fixtura testalis');
+      expect(tips()).not.toContain(`${HELD_TEXT}: Testwort, Fixtura testalis`);
 
       fireEvent.click(mark);
       expect(mark).not.toHaveFocus();
-      expect(tips()).toContain('In Every Cupboard: Testwort, Fixtura testalis');
+      expect(tips()).toContain(`${HELD_TEXT}: Testwort, Fixtura testalis`);
     });
 
     it('draws neither without a coven to add to', () => {
@@ -239,7 +240,7 @@ describe('CompendiumCards', () => {
       act(() => button.focus());
       fireEvent.click(button);
 
-      await expectRefusalUnder(button, 'Add to My Ingredients: Fixture Salt');
+      await expectRefusalUnder(button, `${ADD}: Fixture Salt`);
       expect(button).not.toHaveAttribute('aria-busy');
       expect(router.refresh).not.toHaveBeenCalled();
     });
@@ -263,7 +264,7 @@ describe('CompendiumCards', () => {
     expect(
       screen.getByRole('link', { name: 'Edit in Compendium Fixture Salt' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /^Add to My Ingredients: / })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: new RegExp(`^${ADD}: `) })).toHaveLength(3);
   });
 
   it('draws no Edit where the page gives none', () => {
@@ -369,7 +370,7 @@ describe('CompendiumCards', () => {
 
   it('holds neither for an account that only views', () => {
     render(<Cards {...props({ action: 'none' })} />);
-    expect(screen.queryByRole('button', { name: /^Add to My Ingredients/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: new RegExp(`^${ADD}`) })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
   });
 
@@ -428,14 +429,14 @@ describe('CompendiumCards', () => {
       ];
       render(<Cards {...props({ entries, action: 'add' })} />);
       const plus = screen.getByRole('button', {
-        name: 'Add to My Ingredients: Testwort, Fixtura testalis. In 2 covens: Testhollow, Testwren',
+        name: `${ADD}: Testwort, Fixtura testalis. In 2 covens: Testhollow, Testwren`,
       });
       expect(plus.querySelector('.add-icon__count')).toHaveTextContent('2');
       const check = screen.getByRole('button', {
-        name: 'In Every Cupboard: Testwort, Fixtura alteralis. In 1 coven: Testhollow',
+        name: `${HELD_TEXT}: Testwort, Fixtura alteralis. In 1 coven: Testhollow`,
       });
       expect(check.querySelector('.add-icon__count')).toHaveTextContent('1');
-      const bare = screen.getByRole('button', { name: 'Add to My Ingredients: Fixture Salt' });
+      const bare = screen.getByRole('button', { name: `${ADD}: Fixture Salt` });
       expect(bare.querySelector('.add-icon__count')).toBeNull();
     });
   });

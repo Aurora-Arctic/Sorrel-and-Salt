@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
@@ -18,8 +19,6 @@ import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients'
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
-const ADD = 'Add to My Ingredients';
-const HELD = 'In Every Cupboard';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

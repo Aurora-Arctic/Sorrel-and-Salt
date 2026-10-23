@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
+import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
@@ -61,7 +62,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   // Add is the card's plus beside the pencil, as on the public page (the owner's call, 2026-10-20).
   const plus = () =>
     page.getByRole('main').getByRole('button', {
-      name: 'Add to My Ingredients: Fixture Screens Wort',
+      name: `${ADD}: Fixture Screens Wort`,
       exact: true,
     });
 
@@ -84,9 +85,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await plus().click();
   const refusal = page.getByRole('alert').filter({ hasText: 'This entry could not be added.' });
   await expect(refusal).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Show the error for Add to My Ingredients' }),
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: `Show the error for ${ADD}` })).toBeVisible();
   expect(await heading('Fixture Screens Wort').boundingBox()).toEqual(before);
   await refusal.getByRole('button', { name: 'Dismiss' }).click();
   await expect(refusal).toHaveCount(0);
@@ -98,7 +97,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(plus()).toHaveCount(0);
   // The one coven that may add holds it now: the card's check in the plus's place.
   await expect(
-    page.getByRole('main').getByRole('button', { name: 'In Every Cupboard: Fixture Screens Wort' }),
+    page.getByRole('main').getByRole('button', { name: `${HELD}: Fixture Screens Wort` }),
   ).toBeVisible();
   // The failed try's badge went with the button it belonged to.
   await expect(page.getByRole('button', { name: /^Show the error for / })).toHaveCount(0);
