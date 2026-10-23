@@ -1104,6 +1104,18 @@
     --notice-icon: #{$warning};
   }
 
+  // A button on a warning or an error: its label in `$notice-button-ink`, since the tint under it
+  // takes the accent below 4.5:1 in light (M12.56). Hover keeps the filled look.
+  .notice--warn .btn,
+  .notice--error .btn {
+    color: $notice-button-ink;
+
+    &:hover,
+    &:focus-visible {
+      color: $text-on-color;
+    }
+  }
+
   // Caution: a quieter warning, for what is worth knowing but asks nothing
   // of the reader. The bar and tint in the muted ink, the triangle still the
   // ochre, the text in the body ink (the owner's call, 2026-10-19).

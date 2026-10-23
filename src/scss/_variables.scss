@@ -42,6 +42,8 @@ $sorrel-deep: color.adjust($sorrel-vivid, $lightness: -8%); // light accent, hov
 // step under the pointer barely registers. More saturated, rather than only
 // further from the ground.
 $sorrel-spring: color.adjust($sorrel, $lightness: 38%, $saturation: 40%); // dark
+// The light button ink on a warning or an error notice, which the accent falls short of (M12.56).
+$sorrel-notice-button: #33680f;
 $sorrel-rich: color.adjust($sorrel-vivid, $lightness: -8%, $saturation: 20%); // light
 $wax-warm: color.adjust($wax, $lightness: 22%); // dark secondary
 $wax-glow: color.adjust(
@@ -438,6 +440,11 @@ $drawer-shade-fade: var(--drawer-shade-fade);
 $drawer-shade-edge: var(--drawer-shade-edge);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
+// The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in
+// light, where the placeholder mix is 4.22:1 on the page and falls short (M12.56).
+$last-edit-ink: var(--last-edit-ink);
+// The ink of a button inside a warning or an error notice: the accent in dark, a darker green in light (M12.56).
+$notice-button-ink: var(--notice-button-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks

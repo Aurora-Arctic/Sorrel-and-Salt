@@ -52,5 +52,7 @@ ahead of the reader's clock, it reads "just now". An unparseable `at` draws noth
   `aboveName` slot ([`modal.md`](modal.md)); the spacing is one shared rule in `index.scss`.
 
 The caller works out which edit is the latest; this component only shows it. The ink is
-`$text-placeholder`, the faintest existing text token that passes 4.5:1 on the card in both
-themes.
+`$last-edit-ink` (M12.56): in dark the placeholder mix (the muted ink 85% into the card), 7.37:1;
+in light the muted ink itself, 5.99:1 on the page and higher on the card. The placeholder mix was
+4.22:1 on the page in light, under 4.5:1, so light takes the muted ink; dark keeps its colour
+unchanged. `tests/scss/tokens.test.ts` holds both on the card and the page.

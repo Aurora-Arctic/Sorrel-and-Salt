@@ -255,10 +255,16 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const placeholder = mixed(toHex(tokens['--text-muted'], theme), card, 0.85);
     row('the placeholder on the field', placeholder, card, 4.5);
 
-    // The last-edit line (M6.18, `LastEdit/index.scss`): the placeholder on a card, where it
-    // is faint enough; on the page-coloured entry page and Quick Look the placeholder falls
-    // under 4.5:1, so it takes the muted ink there.
-    row('the last-edit line on the page', tokens['--text-muted'], page, 4.5);
+    // The last-edit line (M6.18, `LastEdit/index.scss`), in `$last-edit-ink` (M12.56): the
+    // placeholder mix in dark, the muted ink in light, where the mix is 4.22:1 on the page.
+    const lastEdit = tokens['--last-edit-ink'].startsWith('color-mix')
+      ? placeholder
+      : toHex(
+          tokens['--last-edit-ink'].replace('var(--text-muted)', tokens['--text-muted']),
+          theme,
+        );
+    row('the last-edit line on the card', lastEdit, card, 4.5);
+    row('the last-edit line on the page', lastEdit, page, 4.5);
 
     // A notice (`.notice`, _primitives.scss): a bar down its start edge and a
     // tint of the bar's colour, `--notice-tint` of it over whatever holds the
@@ -275,6 +281,10 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const muted = toHex(tokens['--text-muted'], theme);
     const waxText = toHex(tokens['--secondary-hover'], theme);
     const accentText = toHex(tokens['--accent-hover'], theme);
+    const buttonInk = toHex(
+      tokens['--notice-button-ink'].replace('var(--accent)', tokens['--accent']),
+      theme,
+    );
     for (const [ground, under] of [
       ['page', page],
       ['card', card],
@@ -304,6 +314,20 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
         4.5,
       );
       row(`an error's text on its tint on the ${ground}`, waxText, mixed(wax, under, tint), 4.5);
+      // A button inside a warning or an error (M12.56): `$notice-button-ink`, not the accent,
+      // which is 4.25:1 and 4.19:1 on the light tints on the page.
+      row(
+        `a button in a warning on its tint on the ${ground}`,
+        buttonInk,
+        mixed(warning, under, tint),
+        4.5,
+      );
+      row(
+        `a button in an error on its tint on the ${ground}`,
+        buttonInk,
+        mixed(wax, under, tint),
+        4.5,
+      );
       row(
         `a success's text on its tint on the ${ground}`,
         accentText,

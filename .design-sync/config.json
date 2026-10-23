@@ -5,7 +5,7 @@
   "pkg": "sorrel-and-salt",
   "globalName": "SorrelAndSalt",
   "storybookStatic": ".design-sync/sb-reference",
-  "buildCmd": "vite build --config .design-sync/vite.config.ts && tsc -p .design-sync/tsconfig.dts.json && node .design-sync/make-barrel.mjs",
+  "buildCmd": "vite build --config .design-sync/vite.config.ts && tsc -p .design-sync/tsconfig.dts.json && cp .design-sync/dist-package.json dist/package.json && cp .design-sync/dist-index.mjs dist/index.mjs",
   "entry": "dist/index.mjs",
   "titleMap": {
     "Emails / Verify Email": null,
