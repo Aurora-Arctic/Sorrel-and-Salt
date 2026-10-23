@@ -838,6 +838,81 @@ describe('CompendiumList filter', () => {
     expect(unsourcedSwitch()).not.toBeChecked();
   });
 
+  describe('In My Covens on the public list (M12.55)', () => {
+    const COVENS = [
+      { id: 'coven-w', name: 'Testhollow' },
+      { id: 'coven-v', name: 'Testwren' },
+    ];
+    const publicFilter = (filter: CompendiumListFilter = NO_FILTER) => {
+      const { facets, categories, vocabulary } = props();
+      return render(
+        <QueryClientProvider client={client}>
+          <IngredientSearch
+            search={
+              <AudienceFilter
+                audience="public"
+                filter={filter}
+                facets={facets}
+                categories={categories}
+                vocabulary={vocabulary}
+                total={2}
+                covens={COVENS}
+              />
+            }
+          >
+            {null}
+          </IngredientSearch>
+        </QueryClientProvider>,
+      );
+    };
+    const pickCoven = (name: string) => {
+      fireEvent.click(within(panel()).getByRole('combobox', { name: 'In My Covens' }));
+      fireEvent.click(screen.getByRole('option', { name }));
+    };
+
+    it('applies a picked coven to the address by id', () => {
+      publicFilter();
+      openPanel();
+      pickCoven('Testwren');
+      applyFilters();
+      expect(router.push.mock.calls).toEqual([['/compendium?covens=coven-v']]);
+    });
+
+    it('asks for the held counts with the picked covens', async () => {
+      const asked: unknown[] = [];
+      mockGraphQLQuery('CompendiumFacetCounts', (variables) => {
+        asked.push(variables.covenIds);
+        return {
+          compendiumFacets: {
+            forms: [],
+            deities: [],
+            categories: [],
+            zodiacSigns: [],
+            celestialBodies: [],
+            elements: [],
+            toxic: [],
+            withoutReferences: 0,
+            withoutForms: 0,
+          },
+        };
+      });
+      publicFilter();
+      openPanel();
+      pickCoven('Testhollow');
+      await waitFor(() => expect(asked).toContainEqual(['coven-w']));
+    });
+
+    it('names the picked covens in the search sentence', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w', 'coven-v'] });
+      expect(listStatus()[0]).toHaveTextContent('held in Testhollow or Testwren');
+    });
+
+    it('counts a picked coven on the Filters button', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w'] });
+      expect(screen.getByRole('button', { name: 'Filters 1' })).toBeInTheDocument();
+    });
+  });
+
   describe('the match mode', () => {
     const twoChosen = { ...NO_FILTER, categories: ['testward', 'testcraft'] };
 

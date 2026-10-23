@@ -39,6 +39,7 @@ const CompendiumFacetCountsDocument = graphql(`
     $zodiacSigns: [String!]
     $celestialBodies: [String!]
     $toxic: ToxicFilter
+    $covenIds: [ID!]
   ) {
     compendiumFacets(
       query: $query
@@ -52,6 +53,7 @@ const CompendiumFacetCountsDocument = graphql(`
       zodiacSigns: $zodiacSigns
       celestialBodies: $celestialBodies
       toxic: $toxic
+      covenIds: $covenIds
     ) {
       forms {
         value

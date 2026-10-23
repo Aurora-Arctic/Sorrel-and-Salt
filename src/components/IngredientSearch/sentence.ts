@@ -11,7 +11,7 @@ import type {
 // function, so the component only draws it: it returns typed fragments, and the
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
-// text query, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
+// text query, the viewer's covens, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
 // then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
@@ -101,6 +101,14 @@ export function buildSearchSentence({
   const query = filter.query?.trim();
   if (query) {
     clause(text('matching '), { kind: 'value', text: query, facet: 'query', value: query });
+  }
+
+  // Named by label only (M12.55): a label is a coven the viewer is in, and the read drops
+  // any other id, so an id with none filters nothing and is not named. A coven's name keeps
+  // its capitals, as a deity's does.
+  const covens = picked(filter.covens).filter((id) => labels.covens?.[id] !== undefined);
+  if (covens.length > 0) {
+    clause(text('held in '), ...valueList('covens', covens, OR, (v) => label('covens', v)));
   }
 
   const categories = picked(filter.categories);
