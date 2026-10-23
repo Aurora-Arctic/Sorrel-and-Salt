@@ -1076,11 +1076,15 @@ const countIn = (label: string) => Number(/(\d+)\)?\s*$/.exec(label.trim())?.[1]
 /** Picks the option of a type-ahead or multi-select by its label. */
 async function pick(page: Page, box: string, typed: string, option: string | RegExp) {
   const field = page.getByRole('combobox', { name: box, exact: true });
-  // The click first: after a pick the field keeps focus with its list closed, and `fill` sets the
-  // value without a focus event, so the list would never reopen.
+  // The click first: a list closed by Escape or a press elsewhere stays closed while the field keeps
+  // focus, and `fill` sets the value without a focus event, so the list would never reopen.
   await field.click();
   await field.fill(typed);
   await page.getByRole('option', { name: option }).first().click();
+  // A pick leaves the list open for the next (M12.54); Tab away closes it, as a person would before
+  // reaching for what it covers. Not Escape: a list left with nothing to offer closes itself as the
+  // counts reload, and an Escape landing after that closes the Filters panel instead.
+  await field.press('Tab');
 }
 
 test('two forms list the entries holding either, and a form with a deity lists the entries holding both', async ({
@@ -1098,7 +1102,18 @@ test('two forms list the entries holding either, and a form with a deity lists t
   // Why a filter could drop rows: all five are listed unfiltered.
   await expect.poll(() => listed(page)).toBe('ABCDE');
 
-  await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
+  // M12.54: after a pick the list stays open for the next, the focus in the box; Escape closes it.
+  const forms = page.getByRole('combobox', { name: 'Forms', exact: true });
+  await forms.click();
+  await forms.fill('Facetform Alpha');
+  await page
+    .getByRole('option', { name: /^Facetform Alpha/ })
+    .first()
+    .click();
+  await expect(forms).toHaveAttribute('aria-expanded', 'true');
+  await expect(forms).toBeFocused();
+  await forms.press('Escape');
+  await expect(forms).toHaveAttribute('aria-expanded', 'false');
   // Held in the panel: neither the address nor the list has moved.
   await expect(page).not.toHaveURL(/forms=/);
   await expect.poll(() => listed(page)).toBe('ABCDE');

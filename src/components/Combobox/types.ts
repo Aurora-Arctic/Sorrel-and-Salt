@@ -125,6 +125,14 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   highlightFirst?: boolean;
   /**
+   * Whether a pick leaves the list open for the next one, as the multi-select
+   * box does: a box that adds each pick to a list (the Forms filter, a list
+   * field) rather than holding one value. Escape, Tab and a press outside
+   * still close it, and the focus stays in the text. A single-value box closes
+   * on a pick, the default.
+   */
+  keepOpen?: boolean;
+  /**
    * What a row is called, singular: the list's name, its chevron's and its
    * status's count. "suggestion" unless said; a closed set's are "choice"s.
    */

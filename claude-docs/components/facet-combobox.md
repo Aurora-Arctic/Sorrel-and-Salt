@@ -60,7 +60,8 @@ box's state.
   component draws the typed `Combobox` instead (`typeahead.tsx`), the way the
   Forms and Deities filters were drawn in the workshop: typing keeps the rows
   whose label contains the text, a chosen value is not listed again, a pick
-  clears the text, and Backspace on empty text takes the last chip off. Chips,
+  clears the text and leaves the list open for the next, the focus in the text (M12.54;
+  Escape, Tab or a press outside closes it), and Backspace on empty text takes the last chip off. Chips,
   counts, icons, the loading placeholder, `removeNoun`, `hideZeros` (a zero
   value left out) and the hidden inputs all
   behave as in the default form. A row's `group` is its heading in the list,

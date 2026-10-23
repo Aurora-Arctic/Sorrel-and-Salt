@@ -273,6 +273,76 @@ describe('Combobox', () => {
     expect(onPick).toHaveBeenCalledWith('Rhizomes', RHIZOMES);
   });
 
+  describe('kept open for the next pick', () => {
+    // A box that adds each pick to a list: the list stays open after a pick,
+    // with the focus still in the text, and only leaving it closes it.
+    it('stays open after a pick by click, with the focus in the text, where a single box closes', () => {
+      const onPick = vi.fn();
+      const { unmount } = render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} keepOpen />);
+
+      box().focus();
+      type('wax');
+      fireEvent.click(screen.getByRole('option', { name: 'Wax (Substance)' }));
+
+      expect(onPick).toHaveBeenCalledWith('Wax', WAX_SUBSTANCE);
+      expect(box()).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('option', { name: /Rhizomes/ })).toBeInTheDocument();
+      expect(box()).toHaveFocus();
+      unmount();
+
+      // Why the list could have closed: the same pick on a single box does.
+      render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
+      type('wax');
+      fireEvent.click(screen.getByRole('option', { name: 'Wax (Substance)' }));
+      expect(box()).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('stays open after a pick by Enter', () => {
+      const onPick = vi.fn();
+      render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} keepOpen />);
+
+      type('wax');
+      key('ArrowDown');
+      key('ArrowDown');
+      key('Enter');
+
+      expect(onPick).toHaveBeenCalledWith('Wax', WAX_ANIMAL);
+      expect(box()).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('closes on Escape, on Tab away and on a press outside', () => {
+      render(
+        <>
+          <Harness suggestions={TWO_BUCKETS} keepOpen />
+          <button type="button">Elsewhere</button>
+        </>,
+      );
+      const pick = () => {
+        key('ArrowDown');
+        expect(box()).toHaveAttribute('aria-expanded', 'true');
+        fireEvent.click(screen.getAllByRole('option')[0] as HTMLElement);
+        expect(box()).toHaveAttribute('aria-expanded', 'true');
+      };
+
+      pick();
+      key('Escape');
+      expect(box()).toHaveAttribute('aria-expanded', 'false');
+
+      pick();
+      // Tab moves the focus on; Downshift reads the blur.
+      fireEvent.blur(box(), { relatedTarget: screen.getByRole('button', { name: 'Elsewhere' }) });
+      expect(box()).toHaveAttribute('aria-expanded', 'false');
+
+      // A press on something else: the focus goes to it between the press and the release.
+      pick();
+      const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+      fireEvent.mouseDown(elsewhere);
+      act(() => elsewhere.focus());
+      fireEvent.mouseUp(elsewhere);
+      expect(box()).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
   it('picks what was typed from its own row, as no suggestion', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
