@@ -86,3 +86,4 @@ Silver is the chemical element Ag, atomic number 47, a soft, white, lustrous met
 #### Edit Notes for Claude
 
 - Deity gap: Lucina (Cunningham's Crystals, pp. 169–171), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Luna (Cunningham's Crystals, pp. 169–171), not in the vocabulary; link once M14.15 adds it.

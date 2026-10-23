@@ -276,3 +276,4 @@ Roses are the woody perennial shrubs and climbers of the genus Rosa, in the fami
 #### Edit Notes for Claude
 
 - Deity gap: Aurora (Cunningham's Herbs, under "Rose"; p. 266), not in the vocabulary; link once M14.15 adds it.
+- Deity gap: Harpocrates (Cunningham's Herbs, under "Rose"; p. 266), not in the vocabulary; link once M14.15 adds it.
