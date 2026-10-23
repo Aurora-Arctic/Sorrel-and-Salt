@@ -4,6 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import {
   applyFilters,
+  chooseChip,
   compendiumList,
   openFilters,
   rowOf,
@@ -16,8 +17,9 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 
 // The public compendium's In My Covens filter (M12.55), a gate spec with no story behind it: the
 // panel lists the viewer's covens by name, a pick narrows the list to the entries those covens
-// hold and is kept in the address, a foreign coven's id in the address narrows nothing, and a
-// visitor signed out is offered no such filter. A viewer's coven counts as the viewer's.
+// hold and is kept in the address, Not In lists the entries none of them holds, a foreign
+// coven's id in the address narrows nothing, under In or Not In, and a visitor signed out is
+// offered no such filter. A viewer's coven counts as the viewer's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -133,6 +135,25 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
     );
     await expect(rowOf(compendiumList(page), VIEWED)).toBeVisible();
     expect(await shown(page)).toEqual([HELD, VIEWED].sort());
+  });
+
+  await test.step('Not In lists the entries none of the picked covens holds, or none of the viewer’s', async () => {
+    const panel = await openFilters(page);
+    await chooseChip(panel.getByRole('group', { name: 'Covens' }), 'Not In');
+    await applyFilters(page, panel);
+    expect(new URL(page.url()).searchParams.get('covensNot')).toBe('1');
+    await expect(rowOf(compendiumList(page), HELD)).toHaveCount(0);
+    expect(await shown(page)).toEqual([FOREIGN, FREE].sort());
+
+    // With no coven picked: none of the viewer's covens, the one A only views included.
+    await page.goto(`/compendium?query=${QUERY}&covensNot=1`);
+    await expect(compendiumList(page)).toBeVisible();
+    expect(await shown(page)).toEqual([FOREIGN, FREE].sort());
+
+    // A foreign coven's id, the only one named, filters nothing under Not In either.
+    await page.goto(`/compendium?query=${QUERY}&covens=${elsewhere.id}&covensNot=1`);
+    await expect(compendiumList(page)).toBeVisible();
+    expect(await shown(page)).toEqual([...ALL].sort());
   });
 
   await test.step('a foreign coven’s id in the address narrows nothing', async () => {

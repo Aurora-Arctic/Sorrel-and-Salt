@@ -863,7 +863,11 @@ which deduplicates the ids, keeps the first 20, and asks
 dropped without an error, so a foreign coven's id narrows nothing and says
 nothing about that coven. With no id left, or none given, or no session, the
 answer is the cached, public one above. With at least one, it is read per
-request and never cached (rule 6). `compendium` itself takes no `covenIds`: the
+request and never cached (rule 6). `covensNot: Boolean` turns it to Not In:
+count only the entries none of the proved covens holds, and with no
+`covenIds` given, none of the caller's covens, every membership counted. If
+`covenIds` were given and every one was dropped, it is the cached answer
+under Not In too, so a foreign id never changes it. `compendium` itself takes no `covenIds`: the
 page reads the narrowed list through the service, `listCompendiumHeldIn` and
 `countCompendiumHeldIn`, never through the GraphQL list.
 `workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
