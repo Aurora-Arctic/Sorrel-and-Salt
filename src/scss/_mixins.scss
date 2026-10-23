@@ -1096,6 +1096,7 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
   --dismiss-ink: #{$dismiss-ink-dark};
   --card-more-ink: #{$card-more-ink-dark};
   --last-edit-ink: color-mix(in srgb, var(--text-muted) 85%, var(--surface-card));
+  --notice-button-ink: var(--accent);
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -1117,6 +1118,8 @@ $-entry-text-column: calc(100% - #{$side-column} - #{space(8)});
   --secondary-hover: #{$wax-deep};
   --warning: #{$ochre-deep};
   --notice-tint: 7%;
+  // Darker than the accent: a button on a warning or an error tint is 4.25:1 and 4.19:1 in it (M12.56).
+  --notice-button-ink: #{$sorrel-notice-button};
   --focus-ring-link-strength: #{$focus-ring-link-strength-light};
   --focus-ring-tab-strength: #{$focus-ring-tab-strength-light};
   --shadow-elevated: 0 20px 45px #{$shadow-light};

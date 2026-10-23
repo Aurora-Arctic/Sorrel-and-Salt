@@ -113,6 +113,8 @@ lowest text is the dark error on a card, at 5.62:1, and the lowest mark the
 light caution's triangle over its grey tint on the page, at 4.46:1 (the
 warning's is 4.47:1).
 
+A button inside a warning or an error (`.notice--warn .btn`, `.notice--error .btn`) takes its label from `$notice-button-ink` (`--notice-button-ink`), not from `$accent`. On light the tint under the accent label measured 4.25:1 (warning) and 4.19:1 (error) on the page, under 4.5:1. The light value is `#33680f` (`$sorrel-notice-button`), 5.07:1 and 5.00:1 on the page and 5.61 and 5.53 on a card; dark keeps `$accent`, so its computed colours are unchanged. The border stays `$accent`, and a hover or a focus fills the button as any `.btn` does. The two buttons-in-notice rows in `tests/scss/tokens.test.ts` hold the floor on the page and the card. The owner chose this on 2026-10-23 over two other options: lighter tints (a 2% tint was needed, which leaves almost nothing of the tint) and a mix of both (a 5% tint with `#356f10`, 4.74:1 and 4.67:1).
+
 **Another kind is a few lines**: a modifier class that sets `--notice-bar`
 and, if it leads with the triangle, `--notice-icon`, joined to the triangle's
 selector; then its role in `index.tsx` and a row in the table above. The

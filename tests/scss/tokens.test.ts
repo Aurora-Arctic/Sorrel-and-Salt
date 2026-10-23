@@ -281,6 +281,10 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const muted = toHex(tokens['--text-muted'], theme);
     const waxText = toHex(tokens['--secondary-hover'], theme);
     const accentText = toHex(tokens['--accent-hover'], theme);
+    const buttonInk = toHex(
+      tokens['--notice-button-ink'].replace('var(--accent)', tokens['--accent']),
+      theme,
+    );
     for (const [ground, under] of [
       ['page', page],
       ['card', card],
@@ -310,6 +314,20 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
         4.5,
       );
       row(`an error's text on its tint on the ${ground}`, waxText, mixed(wax, under, tint), 4.5);
+      // A button inside a warning or an error (M12.56): `$notice-button-ink`, not the accent,
+      // which is 4.25:1 and 4.19:1 on the light tints on the page.
+      row(
+        `a button in a warning on its tint on the ${ground}`,
+        buttonInk,
+        mixed(warning, under, tint),
+        4.5,
+      );
+      row(
+        `a button in an error on its tint on the ${ground}`,
+        buttonInk,
+        mixed(wax, under, tint),
+        4.5,
+      );
       row(
         `a success's text on its tint on the ${ground}`,
         accentText,
