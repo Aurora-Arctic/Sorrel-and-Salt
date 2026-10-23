@@ -36,6 +36,7 @@ deities:
   - Ra
   - Saturn
   - Zeus
+  - Astarte
 categories:
   - Healing
   - Peace
@@ -116,3 +117,13 @@ variants:
 # Olive
 
 The olive is the tree that gives the fruit and the oil, an evergreen of the Mediterranean region. Wikipedia names Olea europaea as the species that includes the cultivated olive and five other subspecies. Cunningham calls it masculine, with the Sun and fire, and gives deities Athena, Apollo, Irene, Minerva and Ra and powers of healing, peace, fertility, potency, protection and lust. His other names are Olivier, Itm and Mitan. Kynes gives it all four elements, the signs Aquarius, Aries and Leo, and the planets Jupiter, Mercury, Moon and Sun, with a long list of deities that includes Amaterasu, Amun, Apollo, Athena, Hera, Horus, Pele, Poseidon and Ra. Her powers include abundance, fertility, healing, love, loyalty, peace, prosperity, protection and purification. She says to prepare a candle with olive oil for love or passion and to use olive oil to consecrate ritual objects, and she sells olives, olive oil and dried leaves.
+
+#### Edit Notes for Claude
+
+Deity gap: Irene (Cunningham, under "Olive"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Brahma (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Fides (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Indra (Kynes, under "Olive"), not in the vocabulary; link once M14.15 adds it.

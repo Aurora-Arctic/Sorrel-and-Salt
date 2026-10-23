@@ -20,6 +20,7 @@ folkNames:
   - Key Flower
 deities:
   - Freya
+  - Berchta
 categories:
   - Protection
   - Love

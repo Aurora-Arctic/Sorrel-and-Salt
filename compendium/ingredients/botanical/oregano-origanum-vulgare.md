@@ -89,3 +89,7 @@ Does kynes-plants under "Oregano and Marjoram", cited on the entry, the Leaf and
 <!-- audit:ahpa-safety:Origanum vulgare ssp. hirtum -->
 
 Does ahpa-safety under "Origanum vulgare ssp. hirtum", cited on the entry and the Leaf, describe Origanum vulgare alone? The AHPA monograph is headed with the subspecies hirtum, so its allergy note may belong to that subspecies rather than to the species as a whole. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+Deity gap: Kupala (Kynes, under "Oregano and Marjoram"), not in the vocabulary; link once M14.15 adds it.

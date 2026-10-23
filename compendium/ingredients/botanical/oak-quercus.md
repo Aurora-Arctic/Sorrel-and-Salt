@@ -36,6 +36,7 @@ deities:
   - Rhea
   - Thor
   - Zeus
+  - Baldur
 categories:
   - Protection
   - Healing
@@ -127,3 +128,15 @@ Does kynes-plants under "Oak", cited on the entry, the Bark and the Flower essen
 <!-- audit:ahpa-safety:Quercus spp. -->
 
 Does ahpa-safety under "Quercus spp.", cited on the entry and the Bark, describe Quercus alone? The AHPA monograph is headed "Quercus spp." and names white oak, sessile oak and English oak, so its safety class and the skin caution may apply to any of them. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+Deity gap: Dianus (Cunningham, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Heme (Cunningham, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Erato (Cunningham, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Bilé (Kynes, under "Oak"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Dôn (Kynes, under "Oak"), not in the vocabulary; link once M14.15 adds it.

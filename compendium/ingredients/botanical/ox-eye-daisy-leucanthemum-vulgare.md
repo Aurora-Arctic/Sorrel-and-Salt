@@ -26,6 +26,7 @@ deities:
   - Thor
   - Venus
   - Zeus
+  - Eostre
 categories:
   - Divination
   - Dream Work

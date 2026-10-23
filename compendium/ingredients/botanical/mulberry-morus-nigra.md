@@ -111,3 +111,7 @@ Does cunningham-herbs under "Mulberry", cited on the entry, the Fruit and the Wo
 <!-- audit:kynes-plants:Mulberry -->
 
 Does kynes-plants under "Mulberry", cited on the entry, the Fruit and the Wood, describe Morus nigra alone? Kynes heads black mulberry (Morus nigra) and white mulberry (M. alba) as two equal sub-headings, so her element, planets, signs, deities and powers may belong to either. Settle it as `stated` or `resolved` from the source, or replace the citation.
+
+#### Edit Notes for Claude
+
+Deity gap: San Ku Fu Jen (Cunningham, under "Mulberry"), not in the vocabulary; link once M14.15 adds it.

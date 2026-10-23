@@ -42,6 +42,7 @@ deities:
   - Mercury
   - Pluto
   - Sekhmet
+  - Mithra
 categories:
   - Divination
   - Fertility

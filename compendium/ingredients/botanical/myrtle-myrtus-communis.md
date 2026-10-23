@@ -107,3 +107,7 @@ variants:
 # Myrtle
 
 Common myrtle, also called true myrtle, is an evergreen shrub of the myrtle family, native to southern Europe, North Africa, western Asia, Macaronesia and the Indian subcontinent. Wikipedia says its leaves hold a fragrant essential oil. Cunningham ties it to love, fertility, peace and money, and records that it was carried in love chaplets and used in wedding wreaths, and that a plant grown in a window box is said to protect the home. Kynes gives it a long list of deities, including Aphrodite, Artemis, Astarte, Athena, Demeter, Dionysus, Eros, Hathor and Ishtar, and lists dream work, fertility, healing, love, loyalty, peace, protection and purification among its powers. She also gives roman myrtle, sweet myrtle and true myrtle as other names, and sells the dried leaves and the essential oil. Cunningham says it may disturb some part of the digestive system if used internally.
+
+#### Edit Notes for Claude
+
+Deity gap: Marian (Cunningham, under "Myrtle"), not in the vocabulary; link once M14.15 adds it.
