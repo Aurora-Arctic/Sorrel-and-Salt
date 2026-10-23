@@ -78,6 +78,11 @@ export interface CompendiumCardEntry {
    */
   heldIn?: readonly string[];
   /**
+   * The names of every coven of the viewer's that holds it, any role, a viewer's too (M12.55):
+   * counted on the plus or the check and named in its tip. Left out, or empty, neither shows.
+   */
+  holding?: readonly string[];
+  /**
    * The covens that hold this entry and let the viewer annotate it, make it their own or remove
    * it, for the card's More. Left out, or empty, no More shows. Given to a signed-in member alone.
    */
@@ -116,6 +121,12 @@ export interface CompendiumCardsProps extends Pick<
    * card's plus is a menu of them all by name; with one, it adds there at once.
    */
   covens?: readonly CompendiumCoven[];
+  /**
+   * Every coven the viewer belongs to, any role (M12.55), for the filter's In My Covens: wider
+   * than `covens`, since a viewer's coven narrows the list as well as anyone's. Left out, or
+   * empty, as for a signed-out visitor or one in no coven, the field does not show.
+   */
+  myCovens?: readonly { id: string; name: string }[];
 }
 
 export type { CompendiumCoven };

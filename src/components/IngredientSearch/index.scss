@@ -160,35 +160,25 @@ $page-gutter: space(4);
 }
 
 // A focus or a jump that scrolls a control into view lands it below the stuck row, not
-// under it: the bar (the shell's alone), the row's own height, and a step of air. The root
+// under it: the bar (the shell's and the public frame's alike), the row's own height, and a step of air. The root
 // is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The
 // first `space(2)` is the gap under the row, a margin when the tray is shut and padding when
 // it is open, so a jump lands in the same place either way.
-html:has(.app-shell .ingredient-search) {
+html:has(:is(.app-shell, .public-frame) .ingredient-search) {
   scroll-padding-top: calc(
     #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} +
       #{space(4)}
   );
 }
 
-html:has(.public-frame .ingredient-search) {
-  scroll-padding-top: calc(#{$control-height} + #{$stuck-pad} + #{space(2)} + #{space(4)});
-}
-
 // Under the narrow column the row is two controls tall plus the row's gap, so the root leaves one
 // more control and gap of room. The query is the container query's width on the window: the
 // column (`$narrow-column`) plus the page's two gutters.
 @media (max-width: calc(#{$narrow-column} + 2 * #{space(4)})) {
-  html:has(.app-shell .ingredient-search) {
+  html:has(:is(.app-shell, .public-frame) .ingredient-search) {
     scroll-padding-top: calc(
       #{$top-inset} + #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} +
         #{space(2)} + #{space(4)}
-    );
-  }
-
-  html:has(.public-frame .ingredient-search) {
-    scroll-padding-top: calc(
-      2 * #{$control-height} + #{space(3)} + #{$stuck-pad} + #{space(2)} + #{space(4)}
     );
   }
 }

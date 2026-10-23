@@ -147,9 +147,8 @@ tip's position and width stay its own.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InfoTip/index.stories.tsx):
-`BesideALabel`, beside a label in a `.field__label-row`, the positioned row a
-form's field gives it, in a column a form's width; and `PhoneDark` and
-`PhoneLight`, the same at 375px. Each opens its tip itself, as a tap on the ⓘ
+`States` has a control that chooses Open, Closed or Long Text: the tip beside a label in a `.field__label-row`, the positioned row a
+form's field gives it, in a column a form's width. Each opens its tip itself, as a tap on the ⓘ
 would; hover, focus or a tap opens it again once it closes.
 
 ## Testing

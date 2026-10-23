@@ -190,7 +190,11 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   text and a transparent ground, the mark at `$glyph`, in the muted ink and
   `$text-primary` when pointed at or focused. `$icon-size` around
   `$glyph-size` (1.5rem around 1rem, WCAG 2.2's 24px target) by default; a
-  round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown.
+  round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown. A
+  button takes the shared focus ring (`focus-ring`; MB.121, where the keyboard
+  pass found the browser's default ring on them); an icon link keeps the
+  accent ring the typography gives every link, so the rule names a button
+  alone, through `:where(button)` to keep its weight a class's.
 - **`icon-button-remove`**: the × and the bin's answer, the wax and a tint
   of it 20% into the card, as the combobox's chip-remove and the form's
   remove icons wear.
@@ -215,11 +219,10 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IconTip/index.stories.tsx),
-`Layout / Icon Tip`, filed by kind rather than place, as the pencil is used in
-the admin lists and the ingredient form alike: `InAListRow`, three banded rows
+`Forms / Icon Tip`, filed by kind rather than place, as the pencil is used in
+the admin lists and the ingredient form alike. `States` is a grid of the tip on each control (Edit Link, Compendium Edit Link, Annotate Link, Quick Look Link, Bin Button, Annotate Button, Quick Look Button, More Menu). `InAListRow` is three banded rows
 of a list's own table, with the pencil in an unlabelled last column at the
-row's end, so it shows on the page and on the card, and the `PhoneDark` /
-`PhoneLight` pair, the rows as cards with the pencil at each card's top
+row's end, so it shows on the page and on the card. At 375px, from the toolbar viewport menu, the rows are cards with the pencil at each card's top
 right. Hover or focus a pencil to see its tip. The form's pencils are in the
 ingredient form's stories, and every list's in its own.
 

@@ -124,12 +124,47 @@ rewritten. `tests/db/seed/demo.test.ts` proves, after a `demo` run with
 `standard` inside it, that every seeded entry holds exactly the live variants
 its literal names, Rosemary's `Herb` and `Oil` among them, and that a second run writes no variant.
 
-### No cupboard rows
+### W's cupboard
 
-`standard` seeds no `workspace_compendium_entries` rows (M12.26), and no coven
-ingredients: W and X start with empty cupboards, so a test that wants an entry
-in one inserts the row itself (`tests/support/db/insert-cupboard-entry.ts`).
-`demo` seeds W's ([demo-scenario.md](demo-scenario.md)).
+`standard` seeds six `workspace_compendium_entries` rows for W, five of them
+annotated, so a member of W who opens those compendium entries sees the Annotate
+action and an annotated entry (`STANDARD_CUPBOARD` in `src/db/seed/standard.ts`,
+written by `insertMissingCupboardEntries`, which keys on the coven and the entry
+and ignores `deleted_at`, so a row the coven removed stays removed):
+
+| Entry (formal name)                 | Row says                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| Rosemary (_Salvia rosmarinus_)      | label `Garden Rosemary`, a description                                               |
+| Ginger (_Zingiber officinale_)      | none: held and not annotated                                                         |
+| Mugwort (_Artemisia vulgaris_)      | label `Hedgerow Mugwort`, a safety note, celestial bodies `Moon` and `Neptune`       |
+| Lavender (_Lavandula angustifolia_) | a description, elements `air` and `water`, zodiac sign `Pisces`                      |
+| Comfrey (_Symphytum officinale_)    | a safety note                                                                        |
+| Sea Salt (_Sodium chloride_)        | label `Kitchen Salt`, elements `[]` (cleared on purpose), colours `grey` and `white` |
+
+Only compendium entries `standard` itself seeds can be named, since the curated
+shards are `demo`'s. X and every coven a test creates start with an empty
+cupboard, and no coven has any of its own ingredients, so a test that wants an
+entry in one inserts the row itself
+(`tests/support/db/insert-cupboard-entry.ts`). Until now `standard` seeded no
+cupboard rows (M12.26), so that tests start from an empty cupboard; a test that
+holds one of the six entries in W needs a coven of its own. `demo` adds German
+Chamomile to W's rows ([demo-scenario.md](demo-scenario.md)).
+
+### W's stock
+
+`standard` seeds seven jars of stock for W (`STANDARD_STOCK` in `src/db/seed/standard.ts`, written by `insertMissingStock`), so the ingredients page's jar lines and Edit Stock button (M9.9) have something to show. Every jar sits on an entry in W's cupboard above, since a jar on a compendium variant needs its entry's cupboard row (M12.13, decision 11). Their ids are fixed in a block of their own, `…0003-…`; `demo` keeps `…0001`, `…0002`, `…0005` and `…0006` for its own jars ([demo-scenario.md](demo-scenario.md), "W's stock").
+
+| Ingredient (form) | Id      | Quantity | Why it is there                                                                 |
+| ----------------- | ------- | -------- | ------------------------------------------------------------------------------- |
+| Rosemary (Herb)   | `…0003` | 60 g     | The first of Rosemary's two jar lines, with a source.                           |
+| Rosemary (Oil)    | `…0004` | 45 ml    | Its second form, in a second dimension: two jar lines on one card.              |
+| Ginger (Root)     | `…0007` | 6 piece  | Counted rather than weighed, with a date acquired.                              |
+| Mugwort (Herb)    | `…0008` | 4 g      | Under the default 10 g threshold, so the Low badge shows.                       |
+| Lavender (Flower) | `…0009` | none     | Held and never weighed: no quantity, no unit, so "Unmeasured" and no threshold. |
+| Comfrey (Leaf)    | `…0010` | 30 g     | Under a threshold of its own (50 g) in place of the default 10 g.               |
+| Sea Salt (Salt)   | `…0011` | 500 g    | A well-stocked jar, with a source.                                              |
+
+A jar that sets no threshold gets its unit's default, from `defaultThreshold` in `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock` reads too. Idempotency is the pair the live-unique index guards, W and the variant, ignoring `deleted_at`, so a jar the coven threw out stays out and one it edited is not written over. A test that inserts a jar on one of these six variants in W meets that index, so it needs a coven of its own or a different form. `tests/db/seed/standard-stock.test.ts` holds the list. X and every coven a test creates start with no stock.
 
 ### One transaction, every vocabulary
 

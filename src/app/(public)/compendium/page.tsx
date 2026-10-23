@@ -37,8 +37,10 @@ import {
   readCategories,
   readCompendium,
   readCompendiumDetails,
+  readCompendiumHeldIn,
   readDeities,
   readFacets,
+  readFacetsHeldIn,
   readFormIcons,
 } from '../../compendium-reads';
 import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './types';
@@ -59,6 +61,14 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // are dropped before the table reads them, and list what the unfiltered page lists. The services
 // refuse a review filter from anyone who does not curate, so dropping it here is what keeps the
 // page from failing on one.
+//
+// In My Covens (M12.55) narrows the list to the entries the viewer's picked covens hold, any
+// role, and Not In (`?covensNot=1`) to the entries none of them holds, or with none picked none
+// of the viewer's covens. Only then, and only with a session, are the list and its counts read
+// through the uncached held-in reads, which prove each coven and drop the rest, and read cached
+// when every one is dropped; with neither, and for a visitor whatever the address says, the
+// reads are the cached ones above. Each card's plus or check also
+// counts and names every coven of the viewer's that holds the entry, the ones they only view too.
 //
 // Each card's Quick Look, for anyone, opens the entry's details over the results from
 // `?entry=<id>` (M12.5), read by id with no session through the public entry page's cached read,
@@ -98,7 +108,7 @@ export async function generateMetadata({
 }
 
 /**
- * Which of these entries each of the viewer's writable covens already holds, by coven id. Per
+ * Which of these entries each of the viewer's covens already holds, by coven id. Per
  * viewer, so read here and never inside the cached compendium read (rule 6). A refusal reads as
  * nothing held: the plus is then offered, and the add itself says no.
  */
@@ -126,9 +136,13 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
   const entryId = single(params.entry);
+  // A coven picked under In My Covens, or Not In, by someone signed in: the reads narrowed to it.
+  const session = filter.covens.length > 0 || filter.covensNot ? await getSession() : null;
   const [page, counts, formIcons, viewer, shown] = await Promise.all([
-    readCompendium(variables, after, before, CARD_PAGE_SIZE),
-    readFacets(variables),
+    session
+      ? readCompendiumHeldIn(session, variables, after, before, CARD_PAGE_SIZE)
+      : readCompendium(variables, after, before, CARD_PAGE_SIZE),
+    session ? readFacetsHeldIn(session, variables) : readFacets(variables),
     readFormIcons(),
     viewerIfSignedIn(),
     entryId ? readCompendiumDetails(entryId) : undefined,
@@ -165,15 +179,19 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // may write in, which the plus adds to at once when it is the only one, and which the picker
   // starts on when there are several. A viewer-only account has none, and neither has a visitor
   // with no account, who signs in through the header.
+  // Every coven of the viewer's, any role, for In My Covens and the count on each plus (M12.55).
+  const mine = viewer?.workspaces.map(({ id, name }) => ({ id, name })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
   // What the role in each of those covens permits, for the three dots on the cards and in the
   // window: one read, per request, for both, and none for a visitor or a viewer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
+  // Asked of every coven, not only the writable ones, for the holding count; read only where
+  // there is a plus or a check to count on.
   const held = defaultCoven
     ? await heldEntryIds(
-        covens.map(({ id }) => id),
+        mine.map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
@@ -222,7 +240,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
       },
       // The check shows only where every coven holds it (a mark, not a link: the owner’s call,
       // 2026-10-20).
-      ...(defaultCoven && { held: heldIn.length === writable.length, heldIn }),
+      ...(defaultCoven && {
+        held: heldIn.length === writable.length,
+        heldIn,
+        holding: mine.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ name }) => name),
+      }),
       // The three dots: the covens that hold it and let the viewer annotate, make it theirs or
       // remove it. None for a visitor, a viewer and a coven without the entry.
       places: cardPlacesOf(
@@ -273,6 +295,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         action={action}
         workspaceId={defaultCoven?.id}
         covens={covens}
+        myCovens={mine}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}

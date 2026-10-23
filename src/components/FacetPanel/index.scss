@@ -133,6 +133,12 @@
   }
 }
 
+// Each half of the public compendium's Forms line (`halves` in index.tsx), for a viewer with
+// covens, is a line of its own inside the outer one: Forms growing beside Toxic in the left half,
+// In My Covens growing beside its In / Not In choice in the right (the owner's call, 2026-10-23).
+// Both halves grow alike, so each takes half, and they stack below the tablet width as every line
+// does. They need no rule of their own here.
+
 // The chips and switches of a row, side by side and wrapping on a phone. Each stands where a
 // labelled field would, tops level: the chip's spacer is the height of a label.
 .facet-panel__quick {

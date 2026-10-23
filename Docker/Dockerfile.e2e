@@ -49,6 +49,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+# The lock file's hash, saved where Docker/ensure-deps.sh looks: a fresh
+# `node_modules` volume copies it from here, so the first start installs
+# nothing twice.
+RUN sha256sum package-lock.json | cut -d ' ' -f 1 > node_modules/.lock-sha256
+
 # The headless shell alone, not the full Chromium: every run from this stage
 # is headless, which launches the shell, so the full browser would be dead
 # weight in what CI pulls. `--with-deps` runs apt itself, with

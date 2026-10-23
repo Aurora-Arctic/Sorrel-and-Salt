@@ -5,6 +5,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertStock } from '../../../support/db/insert-stock';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -308,5 +309,75 @@ describe('workspaceIngredientFacets', () => {
     expect(result.data).toBeNull();
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+  });
+});
+
+describe('compendiumFacets covenIds (M12.55)', () => {
+  const heldToxic = async (session: Session | null) => {
+    const result = await runOperation<{ compendiumFacets: Facets }>(
+      session,
+      `query ($covenIds: [ID!]) { compendiumFacets(covenIds: $covenIds) { toxic { value count } } }`,
+      { covenIds: [WORKSPACE_W_ID] },
+    );
+    expect(result.errors).toBeUndefined();
+    return result.data?.compendiumFacets.toxic;
+  };
+
+  beforeEach(async () => {
+    const [{ id }] = await sql`select id from ingredients where name = 'Betawort'`;
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: id as string },
+      A.id,
+    );
+  });
+
+  it("counts only the entries the viewer's picked coven holds", async () => {
+    expect(await heldToxic(asUser(B))).toEqual([
+      { value: 'toxic', count: 0 },
+      { value: 'not_toxic', count: 1 },
+    ]);
+  });
+
+  it('ignores the covens signed out, and for a viewer not in them', async () => {
+    const whole = [
+      { value: 'toxic', count: 1 },
+      { value: 'not_toxic', count: 1 },
+    ];
+    expect(await heldToxic(null)).toEqual(whole);
+    expect(await heldToxic(asUser(D))).toEqual(whole);
+  });
+
+  describe('with covensNot', () => {
+    const notHeldToxic = async (session: Session | null, covenIds?: string[]) => {
+      const result = await runOperation<{ compendiumFacets: Facets }>(
+        session,
+        `query ($covenIds: [ID!]) { compendiumFacets(covenIds: $covenIds, covensNot: true) { toxic { value count } } }`,
+        { covenIds },
+      );
+      expect(result.errors).toBeUndefined();
+      return result.data?.compendiumFacets.toxic;
+    };
+    const rest = [
+      { value: 'toxic', count: 1 },
+      { value: 'not_toxic', count: 0 },
+    ];
+
+    it('counts only the entries the picked coven does not hold', async () => {
+      expect(await notHeldToxic(asUser(B), [WORKSPACE_W_ID])).toEqual(rest);
+    });
+
+    it("with no coven picked, counts only the entries none of the viewer's covens hold", async () => {
+      expect(await notHeldToxic(asUser(B))).toEqual(rest);
+    });
+
+    it('ignores it signed out, and for a viewer not in the picked coven', async () => {
+      const whole = [
+        { value: 'toxic', count: 1 },
+        { value: 'not_toxic', count: 1 },
+      ];
+      expect(await notHeldToxic(null)).toEqual(whole);
+      expect(await notHeldToxic(asUser(D), [WORKSPACE_W_ID])).toEqual(whole);
+    });
   });
 });

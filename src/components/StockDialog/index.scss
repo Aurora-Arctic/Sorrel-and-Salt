@@ -83,6 +83,11 @@
     }
   }
 
+  // The shared ring, inside, since the button fills its row (MB.121: it drew the browser's own).
+  &:focus-visible {
+    @include focus-ring($placement: inset);
+  }
+
   @include reduced-motion {
     transition: none;
   }

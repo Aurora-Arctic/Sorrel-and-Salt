@@ -1,34 +1,44 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import ThemeToggle from '.';
 
 // Render-only; behaviour is asserted in tests/components/ThemeToggle. A story
 // pins a theme with `.meta = { theme }`, which the decorator honours over the toolbar.
-export default {
+const meta = {
   title: 'Layout / Theme Toggle',
-};
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Follows the toolbar's theme control. The first four stories draw the
 // `corner` variant, as the root layout mounts it on the pages with no shell
 // (Welcome, Sign In and the invitation page): a
 // quarter disc pinned to the story frame's top-right corner and clipped by its
 // edge, which is the design.
-export const Default: Story = () => <ThemeToggle />;
+const defaultNode = <ThemeToggle />;
 
-// Solar disc showing, `aria-pressed="true"`. Also the manual check for the sun
-// swinging in on first paint: Ladle stamps `data-theme` pre-paint as the app's
-// init script does, so this story reproduces that timing, which no test covers.
-export const Light: Story = () => <ThemeToggle />;
-Light.meta = { theme: 'light' };
-
-// The app's default: crescent showing, `aria-pressed="false"`.
-export const Dark: Story = () => <ThemeToggle />;
-Dark.meta = { theme: 'dark' };
-
-// `.meta = { reducedMotion: true }` simulates the OS setting (.ladle/components.tsx):
+// `.meta = { reducedMotion: true }` simulates the OS setting (.storybook/components.tsx):
 // transitions drop to instant and a click parks the outgoing facet at once.
-export const ReducedMotion: Story = () => <ThemeToggle />;
-ReducedMotion.meta = { reducedMotion: true };
-
+export const ReducedMotion: Story = {
+  render: () => <ThemeToggle />,
+  parameters: { reducedMotion: true },
+};
 // The disc in the flow, as the shell's bar draws it (AppShell's stories show it
 // there, in the bar). No clip, no fixed position.
-export const Inline: Story = () => <ThemeToggle variant="inline" />;
+const inlineNode = <ThemeToggle variant="inline" />;
+
+// One story with a control to choose the state: each is a whole page or list,
+// too big to sit beside the others (claude-docs/workshop.md, rule 5).
+const TOGGLE_STATES: Record<string, ReactNode> = {
+  Corner: defaultNode,
+  Inline: inlineNode,
+};
+
+export const States: Story = {
+  args: { state: 'Corner' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(TOGGLE_STATES), mapping: TOGGLE_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};

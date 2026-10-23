@@ -216,6 +216,13 @@
   min-block-size: map.get($badge-sizes, 'medium', 'min-block-size');
 }
 
+// New and Updated pass a click through to the name link's overlay (MB.272): the mark's
+// words and icon are `position: relative` for their optical nudge, which paints them above
+// the overlay. The mark is words, not a button or a tip, so nothing is lost.
+.ingredient-card .recency-mark {
+  pointer-events: none;
+}
+
 // The other badges, a row under the formal name. Its zero width and full minimum
 // keep it the block's width while adding nothing to the block's narrowest width, so
 // a wide badge never pushes the safety badge down.
@@ -234,10 +241,19 @@
   font-size: heading-size(3);
 }
 
-// Above the overlay, so the stock badge's button keeps its own hover and focus (it
-// opens an icon tip) instead of following the card's link.
+// The jar lines pass a click through to the name link's overlay (MB.272): the list reset makes
+// each line's `li` `position: relative`, which paints it above the overlay, so a press on a
+// jar's words went nowhere. Not a higher `z-index` on the overlay, for the reason the forms
+// line gives. The stock badge's button is handed the pointer back and raised above the
+// overlay, so it keeps its own hover and focus (it opens an icon tip) instead of following
+// the card's link.
+.ingredient-card .specimen__stock {
+  pointer-events: none;
+}
+
 .ingredient-card .specimen__stock .icon-tip {
   z-index: 1;
+  pointer-events: auto;
 }
 
 .ingredient-card__name,
@@ -284,10 +300,19 @@
 }
 
 // The actions' own addition to the primitive: above the stretched link, so each
-// button is its own target.
+// button is its own target. The row and the start group are boxes as wide as the card, so
+// they pass the pointer through and only their children take it back (MB.272): a press in
+// the gaps between the controls opens the entry, as the rest of the card does. Each child
+// is a control or the wrapper its tip or menu opens in, so a menu or tip keeps the pointer.
 .ingredient-card .specimen__actions {
   position: relative;
   z-index: 1;
+  pointer-events: none;
+}
+
+.ingredient-card .specimen__actions > :not(.specimen__actions-start),
+.ingredient-card .specimen__actions-start > * {
+  pointer-events: auto;
 }
 
 // The foot's start (M12.5): the coven's Quick Look eye at the bottom left, the

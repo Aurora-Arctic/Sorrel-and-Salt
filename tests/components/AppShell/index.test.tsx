@@ -155,11 +155,10 @@ describe('AppShell', () => {
     expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
   });
 
-  it('leaves an unverified account the brand as text, the account menu and the theme switch', () => {
+  it('leaves an unverified account the brand link to the front page, the account menu and the theme switch', () => {
     shell(UNVERIFIED);
 
-    expect(screen.queryByRole('link', { name: 'Sorrel & Salt' })).not.toBeInTheDocument();
-    expect(screen.getByText('Sorrel & Salt')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fixture Member' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toBeInTheDocument();
