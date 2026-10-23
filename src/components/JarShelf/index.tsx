@@ -1,8 +1,8 @@
 import { type ReactElement, useId } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import IconTip from '../IconTip';
+import { StockTip } from '../StockBadge';
 import { stockState } from '../StockBadge/stock-state';
-import { stockName, stockTip, withUnit } from '../StockBadge/stock-words';
+import { amountText, stockName } from '../StockBadge/stock-words';
 import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
 import { fillOf } from './level';
@@ -22,38 +22,24 @@ import './index.scss';
 // only, with no idle motion: the level's rise is the one transition.
 // claude-docs/components/jar-shelf.md.
 
-/** A jar's amount as the card's jar line writes it: "250 g", "250", or "Unmeasured". */
-function amountText({ quantity, unit }: HeldJar): string {
-  return quantity === null ? 'Unmeasured' : withUnit(quantity, unit);
-}
-
 /**
- * The amount of a Low or Out jar, as the button that opens its tip: the badge's tip
- * and wording (`stock-words.ts`), on text and not a box. Its name is the amount and
- * the state ("40 g, Low Stock"), so a screen reader has both without opening the tip.
- * Low's statement is its description, written once out of sight as the badge does, since
- * `IconTip`'s bubble is hidden from a screen reader; Out's would only repeat the name.
+ * The amount of a Low or Out jar, as the button that opens its tip: the badge's
+ * `StockTip`, on text and not a box. Its name is the amount and the state
+ * ("40 g, Low Stock"), so a screen reader has both without opening the tip, and Low's
+ * statement is its description, as on the badge.
  */
 function AmountTip({ jar, state }: { jar: HeldJar; state: 'low' | 'out' }): ReactElement {
-  const descriptionId = useId();
-  const tip = stockTip(state, jar.threshold, jar.unit);
-  const amount = amountText(jar);
+  const amount = amountText(jar.quantity, jar.unit);
   return (
-    <IconTip tip={tip}>
-      <button
-        type="button"
-        className="jar-shelf__amount-tip"
-        aria-label={`${amount}, ${stockName(state)}`}
-        aria-describedby={state === 'low' ? descriptionId : undefined}
-      >
-        {amount}
-      </button>
-      {state === 'low' && (
-        <span id={descriptionId} className="visually-hidden">
-          {tip}
-        </span>
-      )}
-    </IconTip>
+    <StockTip
+      state={state}
+      threshold={jar.threshold}
+      unit={jar.unit}
+      ariaLabel={`${amount}, ${stockName(state)}`}
+      className="jar-shelf__amount-tip"
+    >
+      {amount}
+    </StockTip>
   );
 }
 
@@ -166,7 +152,13 @@ function Jar({
         name
       )}
       <span className="jar-shelf__amount">
-        {!jar ? 'No Jar' : state === 'ok' ? amountText(jar) : <AmountTip jar={jar} state={state} />}
+        {!jar ? (
+          'No Jar'
+        ) : state === 'ok' ? (
+          amountText(jar.quantity, jar.unit)
+        ) : (
+          <AmountTip jar={jar} state={state} />
+        )}
       </span>
     </li>
   );

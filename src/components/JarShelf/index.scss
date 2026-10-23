@@ -338,27 +338,27 @@ $-shake-duration: 500ms;
 // solid, a little heavier, as the line the level has fallen to.
 .jar-shelf__jar--low {
   .jar-shelf__glass {
-    stroke: $warning;
+    stroke: $stock-low-ink;
   }
 
   .jar-shelf__level {
-    fill: $warning;
+    fill: $stock-low-ink;
     opacity: 0.3;
   }
 
   .jar-shelf__wave {
-    stroke: $warning;
+    stroke: $stock-low-ink;
     opacity: 1;
   }
 
   .jar-shelf__mark {
-    stroke: $warning;
+    stroke: $stock-low-ink;
     stroke-width: 1.4;
     stroke-dasharray: none;
   }
 
   .jar-shelf__amount {
-    color: $warning;
+    color: $stock-low-ink;
     font-weight: 500;
   }
 }
@@ -370,13 +370,13 @@ $-shake-duration: 500ms;
   .jar-shelf__glass,
   .jar-shelf__lid,
   .jar-shelf__facet {
-    stroke: #{badge-token('out-of-stock', 'fg')};
+    stroke: $stock-out-ink;
     stroke-dasharray: none;
     opacity: 1;
   }
 
   .jar-shelf__glass {
-    fill: color-mix(in srgb, #{badge-token('out-of-stock', 'fg')} 14%, transparent);
+    fill: color-mix(in srgb, $stock-out-ink 14%, transparent);
   }
 
   // The wave is left off too (the owner, 2026-10-21): an empty jar has no surface to ripple.
@@ -388,7 +388,7 @@ $-shake-duration: 500ms;
   }
 
   .jar-shelf__amount {
-    color: #{badge-token('out-of-stock', 'fg')};
+    color: $stock-out-ink;
     font-weight: 500;
   }
 }

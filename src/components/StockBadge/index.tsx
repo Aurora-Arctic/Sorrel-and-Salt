@@ -4,7 +4,7 @@ import { type ReactElement, useId } from 'react';
 import IconTip from '../IconTip';
 import { stockState } from './stock-state';
 import { stockName, stockTip } from './stock-words';
-import type { StockBadgeProps } from './types';
+import type { StockBadgeProps, StockTipProps } from './types';
 import './index.scss';
 
 // A jar's Low Stock or Out of Stock badge (M9.8, story 23): per jar, in the
@@ -30,6 +30,8 @@ import './index.scss';
 // description: a reader hears it with or without the tip.
 // The words themselves (the name, the tip) are `stock-words.ts`, shared with the entry
 // page's jar shelf, which tells Low and Out by the jar and a button on its amount.
+// That button is `StockTip`, exported here so the badge and the shelf draw one
+// button with one name and one description (MB.121's repetition check).
 // claude-docs/components/stock-badge.md.
 
 const Drawing = ({ out }: { out: boolean }): ReactElement => (
@@ -55,31 +57,56 @@ const Drawing = ({ out }: { out: boolean }): ReactElement => (
   </svg>
 );
 
-export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
+/**
+ * A button whose one job is to open a Low or Out tip, with the tip's statement written once
+ * out of sight as its description for Low (Out's would only repeat the name). The badge and
+ * the entry page's shelf both draw it, so the two say the same thing the same way; each
+ * brings its own name, class and face (MB.121's repetition check).
+ */
+export const StockTip = ({
+  state,
+  threshold,
+  unit,
+  ariaLabel,
+  className,
+  children,
+}: StockTipProps): ReactElement => {
   const descriptionId = useId();
-  const state = stockState(quantity, threshold);
-  if (state === 'ok') return null;
-
-  const out = state === 'out';
   const tip = stockTip(state, threshold, unit);
-  const name = stockName(state);
-
+  const low = state === 'low';
   return (
     <IconTip tip={tip}>
       <button
         type="button"
-        className={`stock-badge ${out ? 'stock-badge--out' : 'stock-badge--low'}`}
-        aria-label={name}
-        aria-describedby={out ? undefined : descriptionId}
+        className={className}
+        aria-label={ariaLabel}
+        aria-describedby={low ? descriptionId : undefined}
       >
-        <Drawing out={out} />
+        {children}
       </button>
-      {out ? null : (
+      {low && (
         <span id={descriptionId} className="visually-hidden">
           {tip}
         </span>
       )}
     </IconTip>
+  );
+};
+
+export const StockBadge = ({ quantity, threshold, unit }: StockBadgeProps): ReactElement | null => {
+  const state = stockState(quantity, threshold);
+  if (state === 'ok') return null;
+  const out = state === 'out';
+  return (
+    <StockTip
+      state={state}
+      threshold={threshold}
+      unit={unit}
+      ariaLabel={stockName(state)}
+      className={`stock-badge ${out ? 'stock-badge--out' : 'stock-badge--low'}`}
+    >
+      <Drawing out={out} />
+    </StockTip>
   );
 };
 
