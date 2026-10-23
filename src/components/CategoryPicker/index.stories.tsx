@@ -100,6 +100,23 @@ const countsLoadingNode = (
   <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
 );
 
+// A legend action (Copy From Ingredient) sits at the legend's right; no hint draws no tip.
+const withActionAndNoHintNode = (
+  <Stateful
+    hint={undefined}
+    boxName="categories"
+    action={(announce) => (
+      <button
+        type="button"
+        className="btn btn--small btn--quiet"
+        onClick={() => announce('Copied.')}
+      >
+        Copy From Ingredient
+      </button>
+    )}
+  />
+);
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
@@ -110,6 +127,7 @@ const STATES: Record<string, ReactNode> = {
   Failed: failedNode,
   'With Counts': withCountsNode,
   'Counts Loading': countsLoadingNode,
+  'Action And No Hint': withActionAndNoHintNode,
 };
 
 export const States: Story = {
