@@ -817,6 +817,40 @@ describe('the update path (M14.7)', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
+  // M14.8: the seed never sets the curator mark. A row it inserts, and a row it
+  // updates, both come out unreviewed; only a curator's switch marks an entry.
+  const markOf = async () => {
+    const [row] = await sql<{ at: Date | null; by: string | null }[]>`
+      select curator_reviewed_at as at, curator_reviewed_by as by
+      from ingredients where seed_key = ${identityOf(TESTWORT)}`;
+    return row;
+  };
+
+  it('leaves a row it inserted unreviewed', async () => {
+    expect(await markOf()).toEqual({ at: null, by: null });
+  });
+
+  it('leaves a row it updated unreviewed', async () => {
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.updated).toEqual([PATH]);
+    expect((await testwortRow()).description).toBe(wordsOf(121));
+    expect(await markOf()).toEqual({ at: null, by: null });
+  });
+
+  it('refuses to update a marked row, and keeps its mark', async () => {
+    await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+      where seed_key = ${identityOf(TESTWORT)}`;
+    const marked = await markOf();
+    expect(marked.at).not.toBeNull();
+
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.updated).toEqual([]);
+    expect(report.refused).toMatchObject([{ where: PATH, reason: REASONS.reviewed }]);
+    expect(await markOf()).toEqual(marked);
+  });
+
   it('applies the entries it may and refuses the others, in one report', async () => {
     await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
       where seed_key = ${identityOf(TESTWORT)}`;
