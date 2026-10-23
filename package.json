@@ -31,6 +31,7 @@
     "e2e:debug": "playwright test --debug",
     "e2e:trace": "playwright show-trace --host 0.0.0.0 --port 9323",
     "e2e:workshop": "playwright test --config playwright.workshop.config.ts",
+    "workshop:check": "playwright test --config playwright.workshop-check.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/db-seed.ts",

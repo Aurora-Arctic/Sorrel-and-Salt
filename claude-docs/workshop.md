@@ -138,11 +138,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
     relative paths, empty load paths.
   - `server.allowedHosts: ['devcontainer']`, for the Playwright browser, which
     reaches the workshop under the compose service's name.
-  - The `leave-auth-requests-pending` plugin: a request under `/api/auth` from
-    the two loading stories (`PendingAdd` and `Pending`, M12.33) is never
-    answered, so a button stays waiting on Better Auth. Better Auth's client takes
-    hold of `fetch` once, when it is created, so a story cannot replace it;
-    every other story still gets a plain 404.
+  - `staticDirs` serves `mockServiceWorker.js` (the fake API's worker file) from the root, and `define` sets `WORKSHOP_API_PREFIX` to `/workshop` (see **The fake API** below).
   - `next/link` and `next/navigation` need no alias: the framework supplies them.
     Its decorator wraps each story in the App Router's contexts (a router whose
     calls go nowhere), and `preview.tsx` sets the page it pretends to be on
@@ -232,8 +228,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   leaves an Open Again button in place of the modal, so a review can look
   again without a reload (M10.33). A story that draws a `Modal` whose
   `onClose` would do nothing wraps it in this.
-- **`hanging-fetch.ts`** — a `fetch` stand-in that never answers, for a story
-  that shows a button waiting on a request.
+- **`mock-api.ts`** — the workshop's fake API (see **The fake API** below). It replaces `hanging-fetch.ts`, the `/api/auth` plugin and the `fetch` stand-ins that `IngredientForm`, `StockDialog` and `IngredientSearch` kept.
 - **`admin-frame.tsx`** — the shared story wrapper for the admin area.
   `AdminFrame` is the admin layout as it is: the context row holding
   "Admin" and `AdminNav`, then the `.page-column` column around the story,
@@ -347,6 +342,31 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
   page's flow. A review's phone sign-off is a touch sign-off.
 - **Untested on purpose**: it is a tool the agents running a review use, not
   a requirement of the app.
+
+## The fake API
+
+A story whose component asks the server gets an answer from Mock Service Worker (MSW), a library that answers a request in the browser. `.storybook/mock-api.ts` holds the helpers; `preview.tsx` starts the worker with `mswLoader(startMockWorker)`, which also resets the handlers before each story.
+
+- **A story states its answers in `beforeEach: ({ msw }) => msw.use(...)`.** The helpers are `answerQuery` and `answerMutation` (typed by the generated document, matched by operation name), `answerOperations` (one function for a story with many lookups), `hangOperation` and `hangAllOperations` (a request that never answers, for a loading state), `hangAuth` and `refuseAuth` (the same for `/api/auth`), and `refusal({ message, code, fieldErrors })` (a refusal as the server sends it: HTTP 200, no data, one error with its code). Anything unanswered gets a 501.
+- **`beforeEach` runs once per load.** A story that picks its answer from an arg or a `state` control calls `useMockHandlers(handlers)` in its render instead; it swaps the handlers whenever they change.
+- **The prefix.** Staging serves the workshop under `/workshop/` with a CSP of `connect-src <host>/workshop/`, so a request to `/api/graphql` would be refused. `apiPath()` in `src/lib/graphql-client.ts` and `src/lib/auth-client.ts` puts `WORKSHOP_API_PREFIX` in front of the path; it is empty in the app and `/workshop` in the workshop. The worker file is served at `/workshop/mockServiceWorker.js`.
+- **A refused auth request is a failed request.** A GraphQL refusal logs nothing in the browser; an `/api/auth` refusal is a non-OK response and logs "Failed to load resource". A story that does this carries the tag `expects-failed-request`, which the every-story check reads from `index.json`.
+- **A request that navigates away is not mocked.** A success that ends in `window.location.assign` (Stop Impersonating) would leave the story, so its story shows the waiting and the refusal only.
+
+### Handlers a story passes
+
+- **Every handler a story passes is `fn()`** (from `storybook/test`), as an arg, so the Actions panel records the call. A bare `() => {}` records nothing and leaves a button that looks dead.
+- **Where a click should change what is shown, `useArgs`** (from `storybook/preview-api`) updates an arg the story draws (see `Field` `ActionsInUse`, `IngredientCard` `States`, `Notice` `States`).
+- **Where a control cannot work in the workshop, the story says why** in its comment. `TabbedPage` cards loading is one: a tab can only wait with the default table skeleton, because `PageTab` carries no skeleton shape and no tab in the app uses a cards skeleton.
+
+## The every-story check
+
+`npm run workshop:check` loads every story in `index.json` in both themes in a real browser and fails on a page error, a console error, a failed or 4xx/5xx request, Storybook's own error display and an axe violation (the page-level rules a lone story cannot satisfy are off: heading one, region and the landmark rules).
+
+- **It is manual.** It is not in CI, pre-commit or any other test script: its file is `tests/e2e/workshop/every-story.check.ts` (the `.check.ts` name matches no default `testMatch`), and it has its own config, `playwright.workshop-check.config.ts`. `playwright.config.ts` also ignores every `/workshop/` path, and no workflow calls it.
+- **Run it against a running workshop at `localhost`**, since a service worker needs a secure origin: `npm run workshop` in one shell, then the check with `WORKSHOP_CHECK_URL` (default `http://localhost:61104`; set it to the port the workshop runs on). The remote browser reaches the container's `localhost` through `PLAYWRIGHT_WS_ENDPOINT` with `exposeNetwork`.
+- **Narrowing:** `WORKSHOP_CHECK_ONLY` (a story id substring), `WORKSHOP_CHECK_THEMES` (`light`, `dark` or both) and `WORKSHOP_CHECK_WORKERS` (default 4).
+- **A story tagged `expects-failed-request`** is exempt from the failed-request and console-error checks only, never from page errors or axe.
 
 ## Commands and gates
 
