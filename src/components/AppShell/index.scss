@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../../scss/frame-bar' as *;
 
 // The application shell's frame and global bar (MB.7). Measurements are the
 // signed-off mock-up's, as tokens: a bar `$shell-bar-height` tall holding
@@ -59,90 +60,12 @@
   margin-bottom: 0;
 }
 
-.app-shell__bar-inner {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: space(3);
-  max-width: $wide-column;
-  height: 100%;
-  margin-inline: auto;
-  padding-inline: space(4);
-}
+// The bar's inner row, brand, nav and end group, shared with PublicFrame (_frame-bar.scss).
+@include frame-bar(app-shell);
 
+// The shell's brand takes a step of air on its right, which the public frame's does not.
 .app-shell__brand {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  min-height: $control-height;
   padding-right: space(1);
-  color: $text-primary;
-  @include heading-face;
-
-  font-size: $brand-size;
-  line-height: 1;
-  text-decoration: none;
-  white-space: nowrap;
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
-
-.app-shell__brand-short {
-  display: none;
-}
-
-// The links fill the bar's height, square, so the current one's rule sits
-// along the bar's foot and a hover washes a column of it, as the section
-// nav's tabs do in the context row.
-.app-shell__nav {
-  align-self: stretch;
-
-  ul {
-    @include list-reset;
-
-    display: flex;
-    align-items: stretch;
-    height: 100%;
-  }
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    // The item stretches to the bar; the link has to be told to fill it.
-    height: 100%;
-    padding: 0 space(3);
-    color: $text-primary;
-    text-decoration: none;
-    white-space: nowrap;
-    @include theme-transition(background-color, color);
-
-    &:hover {
-      background-color: $fill-quiet;
-    }
-
-    // Inside the link, where the bar's edge would clip an outside ring.
-    &:focus-visible {
-      @include focus-ring($placement: inset);
-    }
-
-    &[aria-current='page'] {
-      @include nav-current;
-    }
-
-    @include reduced-motion {
-      transition: none;
-    }
-  }
-}
-
-.app-shell__end {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: space(2);
-  margin-left: auto;
 }
 
 .app-shell__theme {
@@ -152,38 +75,12 @@
 // The page's own frame is `min-height: 100dvh` less the top inset; inside the
 // shell the bar takes room too (_primitives.scss).
 
-@media (max-width: $shell-phone-width) {
-  .app-shell__bar-inner {
-    gap: space(2);
-    padding-inline: space(2);
-  }
-}
-
 // Under the tablet width the site links move into the account panel, where
 // the name has already gone (AccountMenu/index.scss): with them in the bar
 // an admin's bar ran past the window from 642px up.
 @media (max-width: $shell-tablet-width) {
   .app-shell__nav {
     display: none;
-  }
-}
-
-// Narrower than the phone width: with the site links gone the bar has room
-// for the full name down to `$shell-brand-width`, so the initials stand in
-// only on a narrow phone, not in every phone-width window.
-@media (max-width: $shell-brand-width) {
-  .app-shell__brand {
-    justify-content: center;
-    min-width: $control-height;
-  }
-
-  // The name stays for a screen reader.
-  .app-shell__brand-full {
-    @include visually-hidden;
-  }
-
-  .app-shell__brand-short {
-    display: inline;
   }
 }
 

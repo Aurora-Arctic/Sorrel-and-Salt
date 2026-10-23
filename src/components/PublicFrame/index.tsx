@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
 import ThemeToggle from '../ThemeToggle';
 import PublicNav from './public-nav';
@@ -27,12 +28,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
     <header className="public-frame__bar">
       <div className="public-frame__bar-inner">
         <Link href="/" className="public-frame__brand">
-          <span className="public-frame__brand-full">Sorrel &amp; Salt</span>
-          {/* The initials stand in on a narrow phone; the name above stays for a
-              screen reader, which is why this one is hidden from it. */}
-          <span className="public-frame__brand-short" aria-hidden="true">
-            S&amp;S
-          </span>
+          <BrandName block="public-frame" />
         </Link>
         <PublicNav />
         <div className="public-frame__end">

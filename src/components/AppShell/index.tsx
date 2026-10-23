@@ -4,6 +4,7 @@ import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
 import AddIngredientButton from './add-ingredient-button';
+import BrandName from './brand-name';
 import MainBody from './main-body';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
@@ -16,8 +17,6 @@ import './index.scss';
 // their covens come in as props from `src/app/(shell)/layout.tsx`, and only
 // the account menu and the current-page marking are client code.
 // See claude-docs/components/app-shell.md.
-
-const BRAND = 'Sorrel & Salt';
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
   // The Compendium is public (MB.80), so its link is everyone's, an
@@ -36,16 +35,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           { label: 'Admin', href: '/admin', base: '/admin' },
         ]
       : [compendium];
-  const brand = (
-    <>
-      <span className="app-shell__brand-full">{BRAND}</span>
-      {/* The initials stand in at a phone's width; the full name above stays
-          for a screen reader, which is why this one is hidden from it. */}
-      <span className="app-shell__brand-short" aria-hidden="true">
-        S&amp;S
-      </span>
-    </>
-  );
+  const brand = <BrandName block="app-shell" />;
 
   return (
     <div className="app-shell">
