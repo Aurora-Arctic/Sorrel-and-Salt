@@ -88,9 +88,8 @@ is `.btn--destructive`; Cancel is `.btn--quiet`.
 
 `index.stories.tsx` (`Coven / Leave Coven Button`): `States`, a grid of Member (the plain Leave),
 Only Owner (several members to hand over to, so the type-ahead), Only Owner One Other (one member,
-offered by name) and Only Member (deletion alone); and `Open`, with a control that chooses the dialog open in each case (Member Asking, Member Refused, Only Owner Hand Over, Only Owner Delete Chosen, Only Owner One Other Hand Over Failed, Only Member Asking). In the
-workshop the calls reach no server, so confirming shows the failure. The button in its page is the
-coven index's, which reads the session and so has no story: it is walked in
+offered by name) and Only Member (deletion alone); and `Open`, with a control that chooses the dialog open in each case (Member Asking, Member Refused, Only Owner Hand Over, Only Owner Delete Chosen, Only Owner One Other Hand Over Failed, Only Member Asking); and `Overview`, with a control that chooses the caller's role (Owner, Member, Viewer): the coven index page in the app shell, with the eyebrow, title, role sentence, Contents, Your Membership and, for an owner, Delete This Coven. In the
+workshop the calls reach no server, so confirming shows the failure. The page itself reads the session, so `Overview` draws its markup with fixture props; it is walked in
 `tests/e2e/coven.spec.ts`.
 
 ## Testing
