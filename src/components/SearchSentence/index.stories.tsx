@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import SearchSentence from '.';
 
@@ -10,7 +11,8 @@ const meta = {
   title: 'Ingredients / Search Sentence',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const FULL = (query: string) =>
   buildSearchSentence({
@@ -70,14 +72,21 @@ function Searching({ wait, filtered = true }: { wait: number; filtered?: boolean
   );
 }
 
-// Settled: one closed line; press it to open the clauses.
-export const Default: Story = { render: () => <Searching wait={600} /> };
+// One story with a control to choose the state: each starts its own search on load, and the
+// control remounts it (claude-docs/workshop.md, rule 5).
+//   Settled: one closed line; press it to open the clauses.
+//   Slow Search: New Search types the sentence out; the results come back after four seconds.
+//   Fast Search: the results come back before the clauses are typed: they finish at a faster pace.
+//   Nothing To Open: a search term and no filter, so a plain line.
+const STATES: Record<string, ReactNode> = {
+  Settled: <Searching wait={600} />,
+  'Slow Search': <Searching wait={4000} />,
+  'Fast Search': <Searching wait={600} />,
+  'Nothing To Open': <Searching wait={1500} filtered={false} />,
+};
 
-// New Search types the sentence out; the results come back after four seconds.
-export const SlowSearch: Story = { render: () => <Searching wait={4000} /> };
-
-// The results come back before the clauses are typed: they finish at a faster pace.
-export const FastSearch: Story = { render: () => <Searching wait={600} /> };
-
-// A search term and no filter: nothing to open, so a plain line.
-export const NothingToOpen: Story = { render: () => <Searching wait={1500} filtered={false} /> };
+export const States: Story = {
+  args: { state: 'Settled' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
