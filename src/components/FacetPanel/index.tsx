@@ -5,6 +5,7 @@ import {
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
+  type ReactNode,
   type SyntheticEvent,
   type TransitionEvent,
   type UIEvent,
@@ -172,6 +173,21 @@ export default function FacetPanel({
   // matching entry comes from the other, so the filter cannot narrow. Counts not yet read
   // (`facets.source` unset) leave it free.
   const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
+  // The public compendium's Forms line, whose chips are Toxic alone, is halved (the owner's call,
+  // 2026-10-23): Forms takes one half, In My Covens and Toxic the other. The admin and coven
+  // panels keep Forms growing beside their wider run of chips, which a half would wrap.
+  const halves =
+    !admin &&
+    filter.source === undefined &&
+    filter.inStock === undefined &&
+    filter.lowStockOnly === undefined;
+  // A call, not a component, so the fields inside keep their state across renders.
+  const formsOtherHalf = (children: ReactNode): ReactNode =>
+    halves ? (
+      <div className="facet-panel__line facet-panel__grow facet-panel__half">{children}</div>
+    ) : (
+      children
+    );
 
   // Focus goes back to the button when it was inside the panel, so that a closing panel
   // never leaves it on a control that is about to disappear.
@@ -459,106 +475,110 @@ export default function FacetPanel({
                     onChange={(forms) => onChange({ forms })}
                   />
                 </div>
-                {/* The viewer's own covens (M12.55), between Forms and Toxic on their line (the owner's
+                {formsOtherHalf(
+                  <>
+                    {/* The viewer's own covens (M12.55), between Forms and Toxic on their line (the owner's
                     call, 2026-10-23), and only for a viewer in one. No counts: the counts the rest
                     read are the cached, public ones, and a count per coven would make them the
                     viewer's (rule 6). */}
-                {covens.length > 0 && (
-                  <div className="facet-panel__grow">
-                    <FacetCombobox
-                      label="In My Covens"
-                      name="covens"
-                      placeholder="Add Coven"
-                      removeNoun="Coven"
-                      loading={loading}
-                      choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
-                      values={filter.covens ?? []}
-                      onChange={(picked) => onChange({ covens: picked })}
-                    />
-                  </div>
+                    {covens.length > 0 && (
+                      <div className="facet-panel__grow">
+                        <FacetCombobox
+                          label="In My Covens"
+                          name="covens"
+                          placeholder="Add Coven"
+                          removeNoun="Coven"
+                          loading={loading}
+                          choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                          values={filter.covens ?? []}
+                          onChange={(picked) => onChange({ covens: picked })}
+                        />
+                      </div>
+                    )}
+                    <div className="facet-panel__quick">
+                      <ChoiceChip
+                        legend="Toxic"
+                        name="toxic"
+                        options={[
+                          { value: '', label: 'Any' },
+                          ...facets.toxic.map((choice) => ({
+                            value: choice.value,
+                            label: choice.label,
+                            count: choice.count,
+                          })),
+                        ]}
+                        // Toxic is the one facet that keeps a zero-count value: all three
+                        // choices always show. With either side empty, every matching entry
+                        // shares one toxicity, so the chip rests on Any and cannot narrow.
+                        value={toxicStuck ? '' : filter.toxic}
+                        disabled={toxicStuck}
+                        chipHint={
+                          toxicStuck
+                            ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
+                            : undefined
+                        }
+                        onChange={(toxic) => onChange({ toxic })}
+                      />
+                      {filter.source !== undefined && (
+                        <ChoiceChip
+                          legend="Source"
+                          name="source"
+                          hint={
+                            sourceStuck
+                              ? undefined
+                              : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
+                          }
+                          chipHint={
+                            sourceStuck
+                              ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
+                              : undefined
+                          }
+                          options={sourceOptions(facets.source)}
+                          // Rests on All while stuck and submits nothing, as Toxic rests on Any.
+                          value={sourceStuck ? '' : filter.source}
+                          disabled={sourceStuck}
+                          onChange={(source) => onChange({ source })}
+                        />
+                      )}
+                      {filter.inStock !== undefined && (
+                        <FacetSwitch
+                          label="In Stock"
+                          count={facets.inStock}
+                          name="inStock"
+                          checked={filter.inStock}
+                          onChange={(inStock) => onChange({ inStock })}
+                        />
+                      )}
+                      {filter.lowStockOnly !== undefined && (
+                        <FacetSwitch
+                          label="Low Stock Only"
+                          count={facets.lowStockOnly}
+                          name="lowStockOnly"
+                          checked={filter.lowStockOnly}
+                          onChange={(lowStockOnly) => onChange({ lowStockOnly })}
+                        />
+                      )}
+                      {admin && (
+                        <FacetSwitch
+                          label="No Refs"
+                          count={facets.withoutReferences}
+                          name="withoutReferences"
+                          checked={filter.withoutReferences}
+                          onChange={(withoutReferences) => onChange({ withoutReferences })}
+                        />
+                      )}
+                      {admin && (
+                        <FacetSwitch
+                          label="No Form"
+                          count={facets.withoutForms}
+                          name="withoutForms"
+                          checked={filter.withoutForms}
+                          onChange={(withoutForms) => onChange({ withoutForms })}
+                        />
+                      )}
+                    </div>
+                  </>,
                 )}
-                <div className="facet-panel__quick">
-                  <ChoiceChip
-                    legend="Toxic"
-                    name="toxic"
-                    options={[
-                      { value: '', label: 'Any' },
-                      ...facets.toxic.map((choice) => ({
-                        value: choice.value,
-                        label: choice.label,
-                        count: choice.count,
-                      })),
-                    ]}
-                    // Toxic is the one facet that keeps a zero-count value: all three
-                    // choices always show. With either side empty, every matching entry
-                    // shares one toxicity, so the chip rests on Any and cannot narrow.
-                    value={toxicStuck ? '' : filter.toxic}
-                    disabled={toxicStuck}
-                    chipHint={
-                      toxicStuck
-                        ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
-                        : undefined
-                    }
-                    onChange={(toxic) => onChange({ toxic })}
-                  />
-                  {filter.source !== undefined && (
-                    <ChoiceChip
-                      legend="Source"
-                      name="source"
-                      hint={
-                        sourceStuck
-                          ? undefined
-                          : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
-                      }
-                      chipHint={
-                        sourceStuck
-                          ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
-                          : undefined
-                      }
-                      options={sourceOptions(facets.source)}
-                      // Rests on All while stuck and submits nothing, as Toxic rests on Any.
-                      value={sourceStuck ? '' : filter.source}
-                      disabled={sourceStuck}
-                      onChange={(source) => onChange({ source })}
-                    />
-                  )}
-                  {filter.inStock !== undefined && (
-                    <FacetSwitch
-                      label="In Stock"
-                      count={facets.inStock}
-                      name="inStock"
-                      checked={filter.inStock}
-                      onChange={(inStock) => onChange({ inStock })}
-                    />
-                  )}
-                  {filter.lowStockOnly !== undefined && (
-                    <FacetSwitch
-                      label="Low Stock Only"
-                      count={facets.lowStockOnly}
-                      name="lowStockOnly"
-                      checked={filter.lowStockOnly}
-                      onChange={(lowStockOnly) => onChange({ lowStockOnly })}
-                    />
-                  )}
-                  {admin && (
-                    <FacetSwitch
-                      label="No Refs"
-                      count={facets.withoutReferences}
-                      name="withoutReferences"
-                      checked={filter.withoutReferences}
-                      onChange={(withoutReferences) => onChange({ withoutReferences })}
-                    />
-                  )}
-                  {admin && (
-                    <FacetSwitch
-                      label="No Form"
-                      count={facets.withoutForms}
-                      name="withoutForms"
-                      checked={filter.withoutForms}
-                      onChange={(withoutForms) => onChange({ withoutForms })}
-                    />
-                  )}
-                </div>
               </div>
 
               <div className="facet-panel__line">
