@@ -21,7 +21,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Damiana"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Damiana
+    resolvedBy: wikipedia-turnera-diffusa
     supports:
       - elements
       - celestialBodies
@@ -31,7 +33,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Damiana"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Damiana
+    resolvedBy: wikipedia-turnera-diffusa
     supports:
       - canonicalName
       - nomenclature
@@ -50,7 +54,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-turnera-diffusa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -66,7 +70,9 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Damiana"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Damiana
+        resolvedBy: wikipedia-turnera-diffusa
         supports:
           - form
           - description
@@ -75,12 +81,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Damiana"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Damiana
+        resolvedBy: wikipedia-turnera-diffusa
         supports:
           - form
           - description
       - source: wikipedia-turnera-diffusa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -69,7 +69,7 @@ references:
       - deities
       - categories
   - source: wikipedia-cedrus-libani
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -94,7 +94,7 @@ variants:
           - form
           - description
       - source: wikipedia-cedrus-libani
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -103,7 +103,7 @@ variants:
     description: Cedar essential oil, called cedrum, is drawn from the timber and cones. It is used to stimulate dream work and strengthen psychic abilities, and the scent of cedar is said to help in contacting spirits.
     references:
       - source: wikipedia-cedrus-libani
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -117,7 +117,7 @@ variants:
     description: Cedar resin, called cedria, is drawn from the timber and cones. The ancient Egyptians made sacred perfumes and incense from it for offerings to their gods.
     references:
       - source: wikipedia-cedrus-libani
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

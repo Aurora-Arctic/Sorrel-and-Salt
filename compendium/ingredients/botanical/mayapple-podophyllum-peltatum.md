@@ -55,7 +55,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-podophyllum-peltatum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -87,7 +87,7 @@ variants:
       - yellow
     references:
       - source: wikipedia-podophyllum-peltatum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

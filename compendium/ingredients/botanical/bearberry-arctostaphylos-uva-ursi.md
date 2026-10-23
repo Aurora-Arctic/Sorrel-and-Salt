@@ -75,7 +75,7 @@ references:
       - canonicalName
       - description
   - source: wikipedia-arctostaphylos-uva-ursi
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -100,7 +100,7 @@ variants:
         supports:
           - form
       - source: wikipedia-arctostaphylos-uva-ursi
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Berry
@@ -120,7 +120,7 @@ variants:
           - form
           - description
       - source: wikipedia-arctostaphylos-uva-ursi
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -62,7 +62,7 @@ references:
       - celestialBodies
       - description
   - source: wikipedia-berberis-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -105,7 +105,7 @@ variants:
     description: The tart red berries are made into jam and jelly in Europe, were once pickled to garnish dishes, and in Iran are dried as zereshk and cooked with rice and chicken. Kynes suggests holding a few while meditating before an important decision, especially a financial one, to see the choice clearly.
     references:
       - source: wikipedia-berberis-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

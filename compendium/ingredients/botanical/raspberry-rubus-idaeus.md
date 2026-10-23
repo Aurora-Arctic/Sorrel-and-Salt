@@ -58,7 +58,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-rubus-idaeus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -101,7 +101,7 @@ variants:
       - red
     references:
       - source: wikipedia-rubus-idaeus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -58,7 +58,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Cornflower"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cornflower
+    resolvedBy: wikipedia-centaurea-cyanus
     supports:
       - canonicalName
       - nomenclature
@@ -77,7 +79,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-centaurea-cyanus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -90,7 +92,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Cornflower"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cornflower
+        resolvedBy: wikipedia-centaurea-cyanus
         supports:
           - form
           - colours
@@ -100,7 +104,7 @@ variants:
         supports:
           - form
       - source: wikipedia-centaurea-cyanus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

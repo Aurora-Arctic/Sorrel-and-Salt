@@ -37,7 +37,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Coconut"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Coconut
+    resolvedBy: wikipedia-coconut
     supports:
       - canonicalName
       - nomenclature
@@ -48,7 +50,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Coconut"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Coconut
+    resolvedBy: wikipedia-coconut
     supports:
       - canonicalName
       - nomenclature
@@ -59,7 +63,7 @@ references:
       - categories
       - description
   - source: wikipedia-coconut
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -70,12 +74,14 @@ variants:
   - form: Fruit
     references:
       - source: wikipedia-coconut
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
       - source: kynes-plants
         locator: under "Coconut"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Coconut
+        resolvedBy: wikipedia-coconut
         supports:
           - form
   - form: Oil
@@ -90,7 +96,7 @@ variants:
           - description
           - safetyNotes
       - source: wikipedia-coconut
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Bead
@@ -98,7 +104,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Coconut"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Coconut
+        resolvedBy: wikipedia-coconut
         supports:
           - form
           - description

@@ -93,7 +93,7 @@ references:
     supports:
       - folkNames
   - source: wikipedia-blackberry
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -128,7 +128,7 @@ variants:
           - form
           - description
       - source: wikipedia-blackberry
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -202,7 +202,7 @@ variants:
         supports:
           - description
       - source: wikipedia-blackberry
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Root

@@ -72,7 +72,7 @@ references:
       - deities
       - categories
   - source: wikipedia-boswellia-sacra
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -105,7 +105,7 @@ variants:
         supports:
           - form
       - source: wikipedia-boswellia-sacra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Oil

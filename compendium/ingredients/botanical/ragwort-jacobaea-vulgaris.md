@@ -36,7 +36,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Ragwort"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ragwort
+    resolvedBy: wikipedia-jacobaea-vulgaris
     supports:
       - description
       - elements
@@ -46,7 +48,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Ragwort"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ragwort
+    resolvedBy: wikipedia-jacobaea-vulgaris
     supports:
       - canonicalName
       - description
@@ -62,13 +66,15 @@ references:
     supports:
       - safetyNotes
   - source: wikipedia-jacobaea-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - folkNames
   - source: grieve-ragwort
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ragwort
+    resolvedBy: wikipedia-jacobaea-vulgaris
     supports:
       - description
       - folkNames
@@ -81,7 +87,9 @@ variants:
   - form: Herb
     references:
       - source: grieve-ragwort
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ragwort
+        resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - form
   - form: Flower
@@ -90,20 +98,24 @@ variants:
       - yellow
     references:
       - source: grieve-ragwort
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ragwort
+        resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - form
           - description
           - colours
       - source: kynes-plants
         locator: under "Ragwort"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ragwort
+        resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - form
           - description
           - colours
       - source: wikipedia-jacobaea-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -114,19 +126,23 @@ variants:
       - green
     references:
       - source: grieve-ragwort
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ragwort
+        resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - form
           - description
           - colours
       - source: wikipedia-jacobaea-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Ragwort"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ragwort
+        resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - description
 ---

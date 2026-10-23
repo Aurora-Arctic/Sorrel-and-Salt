@@ -20,7 +20,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Cucumber"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cucumber
+    resolvedBy: wikipedia-cucumber
     supports:
       - canonicalName
       - nomenclature
@@ -41,7 +43,7 @@ references:
     supports:
       - description
   - source: wikipedia-cucumber
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -51,11 +53,13 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Cucumber"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cucumber
+        resolvedBy: wikipedia-cucumber
         supports:
           - form
       - source: wikipedia-cucumber
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Peel
@@ -63,12 +67,14 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Cucumber"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cucumber
+        resolvedBy: wikipedia-cucumber
         supports:
           - form
           - description
       - source: wikipedia-cucumber
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Seed
@@ -78,13 +84,15 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Cucumber"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cucumber
+        resolvedBy: wikipedia-cucumber
         supports:
           - form
           - description
           - categories
       - source: wikipedia-cucumber
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
 ---

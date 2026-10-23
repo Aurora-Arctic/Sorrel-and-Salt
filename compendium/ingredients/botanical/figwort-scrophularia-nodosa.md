@@ -66,7 +66,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-scrophularia-nodosa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

@@ -63,7 +63,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-ulmus-glabra
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -74,7 +74,7 @@ variants:
     description: Craftsmen prize wych elm timber for its colour, its striking grain and its "partridge-breast" markings. Kynes keeps an elm twig on the altar through times of transition, to stand for and encourage renewal.
     references:
       - source: wikipedia-ulmus-glabra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -97,7 +97,7 @@ variants:
     description: In eighteenth-century France the inner bark, sold as "pyramidal elm bark", had a brief reputation as a cure-all, taken as a powder, an extract or an elixir and even added to baths. It still appeared in a pharmacopoeia of 1893.
     references:
       - source: wikipedia-ulmus-glabra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

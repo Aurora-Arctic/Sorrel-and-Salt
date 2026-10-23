@@ -71,7 +71,7 @@ references:
       - categories
       - description
   - source: wikipedia-commiphora-myrrha
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

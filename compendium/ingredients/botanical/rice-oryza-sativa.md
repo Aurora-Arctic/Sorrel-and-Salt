@@ -64,7 +64,7 @@ references:
       - deities
       - categories
   - source: wikipedia-oryza-sativa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -90,7 +90,7 @@ variants:
           - form
           - description
       - source: wikipedia-oryza-sativa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

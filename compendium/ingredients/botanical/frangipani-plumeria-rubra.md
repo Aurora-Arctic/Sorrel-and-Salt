@@ -30,7 +30,7 @@ references:
       - toxic
       - description
   - source: wikipedia-plumeria-rubra
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -47,7 +47,7 @@ variants:
         supports:
           - form
       - source: wikipedia-plumeria-rubra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

@@ -32,7 +32,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Coriander"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Coriander
+    resolvedBy: wikipedia-coriander
     supports:
       - canonicalName
       - nomenclature
@@ -44,7 +46,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Coriander"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Coriander
+    resolvedBy: wikipedia-coriander
     supports:
       - canonicalName
       - nomenclature
@@ -62,7 +66,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-coriander
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -73,12 +77,16 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Coriander"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Coriander
+        resolvedBy: wikipedia-coriander
         supports:
           - form
       - source: kynes-plants
         locator: under "Coriander"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Coriander
+        resolvedBy: wikipedia-coriander
         supports:
           - form
       - source: ahpa-safety
@@ -91,12 +99,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Coriander"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Coriander
+        resolvedBy: wikipedia-coriander
         supports:
           - form
           - description
       - source: wikipedia-coriander
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -105,7 +115,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Coriander"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Coriander
+        resolvedBy: wikipedia-coriander
         supports:
           - form
           - description

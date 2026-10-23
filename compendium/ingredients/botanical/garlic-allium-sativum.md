@@ -30,7 +30,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Garlic"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Garlic
+    resolvedBy: wikipedia-garlic
     supports:
       - canonicalName
       - nomenclature
@@ -43,7 +45,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Garlic"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Garlic
+    resolvedBy: wikipedia-garlic
     supports:
       - canonicalName
       - nomenclature
@@ -69,7 +73,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-garlic
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -90,13 +94,17 @@ variants:
           - form
       - source: cunningham-herbs
         locator: under "Garlic"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Garlic
+        resolvedBy: wikipedia-garlic
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Garlic"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Garlic
+        resolvedBy: wikipedia-garlic
         supports:
           - form
           - description
@@ -105,13 +113,17 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Garlic"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Garlic
+        resolvedBy: wikipedia-garlic
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Garlic"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Garlic
+        resolvedBy: wikipedia-garlic
         supports:
           - form
   - form: Stem
@@ -122,13 +134,15 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Garlic"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Garlic
+        resolvedBy: wikipedia-garlic
         supports:
           - form
           - description
           - categories
       - source: wikipedia-garlic
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

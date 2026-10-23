@@ -54,7 +54,7 @@ references:
       - deities
       - categories
   - source: wikipedia-senegalia-senegal
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -109,7 +109,7 @@ variants:
           - form
           - description
       - source: wikipedia-senegalia-senegal
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

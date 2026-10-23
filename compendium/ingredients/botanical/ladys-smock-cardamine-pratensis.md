@@ -23,7 +23,9 @@ categories:
 references:
   - source: kynes-plants
     locator: under "Lady's Smock"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lady's Smock
+    resolvedBy: wikipedia-cardamine-pratensis
     supports:
       - canonicalName
       - description
@@ -39,7 +41,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-cardamine-pratensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -53,7 +55,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Lady's Smock"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lady's Smock
+        resolvedBy: wikipedia-cardamine-pratensis
         supports:
           - form
           - description
@@ -79,7 +83,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Lady's Smock"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lady's Smock
+        resolvedBy: wikipedia-cardamine-pratensis
         supports:
           - form
           - description

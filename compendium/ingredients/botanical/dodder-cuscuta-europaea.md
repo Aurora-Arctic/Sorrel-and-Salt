@@ -55,7 +55,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-cuscuta-europaea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -78,7 +78,7 @@ variants:
           - form
           - description
       - source: wikipedia-cuscuta-europaea
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Seed

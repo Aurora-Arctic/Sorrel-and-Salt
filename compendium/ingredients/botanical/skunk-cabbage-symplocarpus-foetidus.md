@@ -37,7 +37,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-symplocarpus-foetidus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -67,7 +67,7 @@ variants:
           - description
           - colours
       - source: wikipedia-symplocarpus-foetidus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Seed
@@ -79,7 +79,7 @@ variants:
           - form
           - description
       - source: wikipedia-symplocarpus-foetidus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
 ---

@@ -10,7 +10,9 @@ folkNames:
 references:
   - source: cunningham-herbs
     locator: under "Echinacea"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Echinacea
+    resolvedBy: wikipedia-echinacea
     supports:
       - folkNames
       - description
@@ -23,12 +25,14 @@ references:
       - nomenclature
       - safetyNotes
   - source: grieve-echinacea
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Echinacea
+    resolvedBy: wikipedia-echinacea
     supports:
       - folkNames
       - description
   - source: wikipedia-echinacea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -43,7 +47,9 @@ variants:
         supports:
           - form
       - source: grieve-echinacea
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Echinacea
+        resolvedBy: wikipedia-echinacea
         supports:
           - form
   - form: Flower

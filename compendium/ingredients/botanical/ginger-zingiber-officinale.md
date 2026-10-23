@@ -29,7 +29,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Ginger"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ginger
+    resolvedBy: wikipedia-ginger
     supports:
       - canonicalName
       - nomenclature
@@ -41,7 +43,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Ginger"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Ginger
+    resolvedBy: wikipedia-ginger
     supports:
       - canonicalName
       - nomenclature
@@ -59,7 +63,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-ginger
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -75,13 +79,17 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Ginger"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ginger
+        resolvedBy: wikipedia-ginger
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Ginger"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ginger
+        resolvedBy: wikipedia-ginger
         supports:
           - description
   - form: Powder
@@ -89,7 +97,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Ginger"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ginger
+        resolvedBy: wikipedia-ginger
         supports:
           - form
           - description
@@ -98,7 +108,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Ginger"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Ginger
+        resolvedBy: wikipedia-ginger
         supports:
           - form
           - description

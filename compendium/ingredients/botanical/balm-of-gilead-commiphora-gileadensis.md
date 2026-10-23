@@ -14,7 +14,7 @@ folkNames:
 categories: []
 references:
   - source: wikipedia-commiphora-gileadensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -38,7 +38,7 @@ variants:
         supports:
           - form
       - source: wikipedia-commiphora-gileadensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Oil

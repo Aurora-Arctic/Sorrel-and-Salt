@@ -52,7 +52,7 @@ references:
     supports:
       - safetyNotes
   - source: wikipedia-scutellaria
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

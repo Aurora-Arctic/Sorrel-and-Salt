@@ -41,7 +41,7 @@ references:
       - categories
       - safetyNotes
   - source: wikipedia-cypripedium-parviflorum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

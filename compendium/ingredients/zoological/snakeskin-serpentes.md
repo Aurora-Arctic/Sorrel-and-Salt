@@ -15,7 +15,7 @@ categories:
   - Knowledge
 references:
   - source: wikipedia-snake
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,7 +41,7 @@ variants:
     description: The cast outer skin of a snake. Before a moult the skin turns grey and the eyes silvery; the old skin loosens from the new one beneath, splits, and is rubbed off against rough surfaces, often peeling back whole from head to tail. In Hoodoo, snakeskins are used to make conjure powders and are one of the two chief ingredients of goofer dust, with graveyard dirt; the conjurer Dinkie carried a dried snakeskin to rouse the snake’s power against a cruel overseer.
     references:
       - source: wikipedia-snake
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -64,7 +64,7 @@ variants:
           - form
           - description
       - source: wikipedia-snake
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

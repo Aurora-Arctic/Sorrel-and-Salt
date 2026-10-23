@@ -41,7 +41,7 @@ references:
       - safetyNotes
       - description
   - source: wikipedia-peucedanum-ostruthium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

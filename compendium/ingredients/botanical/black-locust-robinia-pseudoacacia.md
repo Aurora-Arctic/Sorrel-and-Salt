@@ -44,7 +44,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-robinia-pseudoacacia
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -61,7 +61,7 @@ variants:
         supports:
           - form
       - source: wikipedia-robinia-pseudoacacia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes
@@ -76,7 +76,7 @@ variants:
           - form
           - description
       - source: wikipedia-robinia-pseudoacacia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -90,7 +90,7 @@ variants:
           - form
           - description
       - source: wikipedia-robinia-pseudoacacia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

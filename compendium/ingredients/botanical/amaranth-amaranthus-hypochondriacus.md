@@ -71,7 +71,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-amaranthus-hypochondriacus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -98,7 +98,7 @@ variants:
     description: The small, shiny seeds are eaten, valued as nourishing and mild in flavour. In magic a handful is sprinkled round a candle on the altar to strengthen contact with spirits.
     references:
       - source: wikipedia-amaranthus-hypochondriacus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

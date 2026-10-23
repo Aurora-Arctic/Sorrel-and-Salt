@@ -62,7 +62,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-malva-sylvestris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -87,7 +87,7 @@ variants:
           - description
           - colours
       - source: wikipedia-malva-sylvestris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours
@@ -110,7 +110,7 @@ variants:
         supports:
           - description
       - source: wikipedia-malva-sylvestris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -124,7 +124,7 @@ variants:
           - form
           - description
       - source: wikipedia-malva-sylvestris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Seed
@@ -138,7 +138,7 @@ variants:
         supports:
           - form
       - source: wikipedia-malva-sylvestris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

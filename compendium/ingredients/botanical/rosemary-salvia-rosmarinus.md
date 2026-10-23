@@ -49,7 +49,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Rosemary"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rosemary
+    resolvedBy: wikipedia-rosemary
     supports:
       - description
       - elements
@@ -59,7 +61,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Rosemary"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rosemary
+    resolvedBy: wikipedia-rosemary
     supports:
       - description
       - elements
@@ -80,12 +84,14 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-rosemary
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
   - source: grieve-rosemary
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rosemary
+    resolvedBy: wikipedia-rosemary
     supports:
       - description
       - folkNames
@@ -101,18 +107,22 @@ variants:
         supports:
           - form
       - source: wikipedia-rosemary
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Rosemary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
       - source: cunningham-herbs
         locator: under "Rosemary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
           - description
@@ -127,19 +137,23 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Rosemary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
           - description
           - colours
       - source: grieve-rosemary
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
           - description
           - colours
       - source: wikipedia-rosemary
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -158,19 +172,23 @@ variants:
       - Healing
     references:
       - source: grieve-rosemary
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
           - description
           - colours
       - source: wikipedia-rosemary
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Rosemary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
           - description
@@ -184,13 +202,15 @@ variants:
     description: The woody stem, stripped of leaves, is sometimes used as a skewer. Cunningham says the wood, smelled often, keeps one youthful.
     references:
       - source: wikipedia-rosemary
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Rosemary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rosemary
+        resolvedBy: wikipedia-rosemary
         supports:
           - form
           - description

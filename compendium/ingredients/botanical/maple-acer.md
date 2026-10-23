@@ -37,7 +37,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Maple"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Maple
+    resolvedBy: wikipedia-maple
     supports:
       - canonicalName
       - elements
@@ -47,7 +49,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Maple"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Maple
+    resolvedBy: wikipedia-maple
     supports:
       - elements
       - celestialBodies
@@ -57,7 +61,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-maple
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -67,13 +71,17 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Maple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maple
+        resolvedBy: wikipedia-maple
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Maple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maple
+        resolvedBy: wikipedia-maple
         supports:
           - form
           - description
@@ -82,17 +90,21 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Maple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maple
+        resolvedBy: wikipedia-maple
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Maple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maple
+        resolvedBy: wikipedia-maple
         supports:
           - description
       - source: wikipedia-maple
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Seed
@@ -100,25 +112,29 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Maple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maple
+        resolvedBy: wikipedia-maple
         supports:
           - form
           - description
       - source: wikipedia-maple
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Syrup
     description: Maple syrup is made from sap tapped in late winter and early spring, when nights freeze and days thaw, and boiled down in a sugar house; about forty litres of sugar maple sap give one litre of syrup. Any maple can be tapped, but the sugar maple is the usual source.
     references:
       - source: wikipedia-maple
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Maple"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maple
+        resolvedBy: wikipedia-maple
         supports:
           - form
 ---

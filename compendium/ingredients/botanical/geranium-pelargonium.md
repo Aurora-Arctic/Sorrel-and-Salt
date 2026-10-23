@@ -50,7 +50,7 @@ references:
       - categories
       - description
   - source: wikipedia-pelargonium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -74,14 +74,14 @@ variants:
           - form
           - description
       - source: wikipedia-pelargonium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Leaf
     description: The leaves of the scented kinds are edible and flavour jellies, cakes, butters, ice cream and teas; rose, lemon and peppermint scents are the ones most used.
     references:
       - source: wikipedia-pelargonium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -95,7 +95,7 @@ variants:
           - form
           - description
       - source: wikipedia-pelargonium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

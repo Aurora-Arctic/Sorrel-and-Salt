@@ -50,7 +50,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Rue"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rue
+    resolvedBy: wikipedia-ruta-graveolens
     supports:
       - canonicalName
       - description
@@ -62,7 +64,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Rue"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rue
+    resolvedBy: wikipedia-ruta-graveolens
     supports:
       - canonicalName
       - description
@@ -81,13 +85,15 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-ruta-graveolens
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - folkNames
   - source: grieve-rue
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rue
+    resolvedBy: wikipedia-ruta-graveolens
     supports:
       - canonicalName
       - description
@@ -102,13 +108,17 @@ variants:
         supports:
           - form
       - source: grieve-rue
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Rue"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
@@ -116,24 +126,30 @@ variants:
     description: The bitter leaves can flavour eggs, cheese and fish in small amounts. Grieve and Cunningham both lay fresh leaves on the forehead or temples for headache, and Grieve applies bruised leaves to sciatica. Cunningham rubs fresh leaves on the floorboards to send back ill spells; Kynes strews crumbled dried leaves to prepare an outdoor space for ritual.
     references:
       - source: wikipedia-ruta-graveolens
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: grieve-rue
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Rue"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Rue"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
@@ -144,13 +160,15 @@ variants:
       - Divination
     references:
       - source: wikipedia-ruta-graveolens
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Rue"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
@@ -159,12 +177,14 @@ variants:
     description: Oil of rue is distilled from the fresh herb, and Grieve gives it by the drop on sugar or in hot water. Wikipedia notes that Pliny the Elder and Soranus cited the refined oil as a means of bringing on menstruation and abortion.
     references:
       - source: grieve-rue
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rue
+        resolvedBy: wikipedia-ruta-graveolens
         supports:
           - form
           - description
       - source: wikipedia-ruta-graveolens
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

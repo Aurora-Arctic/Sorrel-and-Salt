@@ -26,7 +26,7 @@ references:
     supports:
       - description
   - source: wikipedia-cichorium-endivia
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

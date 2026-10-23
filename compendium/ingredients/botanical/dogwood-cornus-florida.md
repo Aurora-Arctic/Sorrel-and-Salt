@@ -57,7 +57,7 @@ references:
       - categories
       - description
   - source: wikipedia-cornus-florida
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -105,7 +105,7 @@ variants:
           - form
           - description
       - source: wikipedia-cornus-florida
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -121,7 +121,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-cornus-florida
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

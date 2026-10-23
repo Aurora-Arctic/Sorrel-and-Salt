@@ -16,7 +16,7 @@ categories:
   - Protection
 references:
   - source: wikipedia-rumex
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

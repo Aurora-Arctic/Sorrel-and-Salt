@@ -51,7 +51,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-consolida-regalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -74,7 +74,7 @@ variants:
         supports:
           - form
       - source: wikipedia-consolida-regalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Seed
@@ -91,7 +91,7 @@ variants:
           - safetyNotes
           - toxic
       - source: wikipedia-consolida-regalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - safetyNotes

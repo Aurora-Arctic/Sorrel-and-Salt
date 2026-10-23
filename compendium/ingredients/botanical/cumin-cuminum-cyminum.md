@@ -32,7 +32,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Cumin"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cumin
+    resolvedBy: wikipedia-cumin
     supports:
       - elements
       - celestialBodies
@@ -42,7 +44,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Cumin"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cumin
+    resolvedBy: wikipedia-cumin
     supports:
       - elements
       - celestialBodies
@@ -63,7 +67,7 @@ references:
     supports:
       - description
   - source: wikipedia-cumin
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -79,12 +83,16 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Cumin"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cumin
+        resolvedBy: wikipedia-cumin
         supports:
           - form
       - source: cunningham-herbs
         locator: under "Cumin"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cumin
+        resolvedBy: wikipedia-cumin
         supports:
           - form
   - form: Oil
@@ -92,12 +100,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Cumin"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cumin
+        resolvedBy: wikipedia-cumin
         supports:
           - form
           - description
       - source: wikipedia-cumin
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

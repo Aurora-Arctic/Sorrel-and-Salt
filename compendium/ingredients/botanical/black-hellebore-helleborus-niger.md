@@ -69,7 +69,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-helleborus-niger
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -91,7 +91,7 @@ variants:
         supports:
           - form
       - source: wikipedia-helleborus-niger
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Powder

@@ -107,7 +107,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-basil
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -152,7 +152,7 @@ variants:
           - form
           - description
       - source: wikipedia-basil
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
       - source: ahpa-safety

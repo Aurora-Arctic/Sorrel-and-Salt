@@ -64,7 +64,7 @@ references:
       - deities
       - categories
   - source: wikipedia-santalum-album
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -99,7 +99,7 @@ variants:
           - form
           - description
       - source: wikipedia-santalum-album
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Powder
@@ -127,7 +127,7 @@ variants:
           - form
           - description
       - source: wikipedia-santalum-album
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

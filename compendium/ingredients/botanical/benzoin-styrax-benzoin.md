@@ -60,7 +60,7 @@ references:
       - deities
       - categories
   - source: wikipedia-styrax-benzoin
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

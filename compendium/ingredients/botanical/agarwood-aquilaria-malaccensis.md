@@ -32,7 +32,7 @@ references:
       - categories
       - description
   - source: wikipedia-aquilaria-malaccensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

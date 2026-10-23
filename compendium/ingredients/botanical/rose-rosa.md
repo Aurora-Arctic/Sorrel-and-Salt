@@ -42,7 +42,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Rose"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rose
+    resolvedBy: wikipedia-rose
     supports:
       - canonicalName
       - description
@@ -53,7 +55,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Rose"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rose
+    resolvedBy: wikipedia-rose
     supports:
       - description
       - elements
@@ -69,13 +73,15 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-rose
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - deities
   - source: grieve-roses
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Roses
+    resolvedBy: wikipedia-rose
     supports:
       - description
 variants:
@@ -91,14 +97,16 @@ variants:
       - Protection
     references:
       - source: wikipedia-rose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
       - source: cunningham-herbs
         locator: under "Rose"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
@@ -110,18 +118,22 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Rose"; p. 266
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
           - categories
       - source: wikipedia-rose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: grieve-roses
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Roses
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
@@ -129,18 +141,22 @@ variants:
     description: Grieve notes that only buds about to open were gathered for the medicinal drug, and rose buds sometimes flavour tea. Cunningham says a tea of rosebuds drunk before sleep brings prophetic dreams.
     references:
       - source: grieve-roses
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Roses
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
       - source: wikipedia-rose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Rose"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
@@ -162,13 +178,15 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-rose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Rose"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
@@ -176,7 +194,9 @@ variants:
           - categories
       - source: cunningham-herbs
         locator: under "Rose"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
@@ -188,7 +208,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Rose"; p. 266
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
@@ -199,25 +221,31 @@ variants:
       - Love
     references:
       - source: wikipedia-rose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: grieve-roses
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Roses
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Rose"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description
           - categories
       - source: kynes-plants
         locator: under "Rose"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Rose
+        resolvedBy: wikipedia-rose
         supports:
           - form
   - form: Oil
@@ -226,12 +254,14 @@ variants:
       - yellow
     references:
       - source: wikipedia-rose
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: grieve-roses
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Roses
+        resolvedBy: wikipedia-rose
         supports:
           - form
           - description

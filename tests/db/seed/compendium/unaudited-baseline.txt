@@ -17,7 +17,6 @@ ingredients/botanical/american-bittersweet-celastrus-scandens.md
 ingredients/botanical/american-ginseng-panax-quinquefolius.md
 ingredients/botanical/angelica-angelica-archangelica.md
 ingredients/botanical/anise-pimpinella-anisum.md
-ingredients/botanical/apple-malus-domestica.md
 ingredients/botanical/apricot-prunus-armeniaca.md
 ingredients/botanical/arnica-arnica-montana.md
 ingredients/botanical/asafoetida-ferula-assa-foetida.md
@@ -25,7 +24,6 @@ ingredients/botanical/ash-fraxinus-excelsior.md
 ingredients/botanical/asian-ginseng-panax-ginseng.md
 ingredients/botanical/aster-callistephus-chinensis.md
 ingredients/botanical/avens-geum-urbanum.md
-ingredients/botanical/avocado-persea-americana.md
 ingredients/botanical/balm-of-gilead-commiphora-gileadensis.md
 ingredients/botanical/bamboo-bambusa-vulgaris.md
 ingredients/botanical/banyan-ficus-benghalensis.md
@@ -76,14 +74,11 @@ ingredients/botanical/cotton-gossypium-barbadense.md
 ingredients/botanical/couch-grass-elymus-repens.md
 ingredients/botanical/cowslip-primula-veris.md
 ingredients/botanical/crab-apple-malus-sylvestris.md
-ingredients/botanical/crocus-crocus.md
 ingredients/botanical/cubeb-piper-cubeba.md
 ingredients/botanical/cucumber-cucumis-sativus.md
 ingredients/botanical/cumin-cuminum-cyminum.md
 ingredients/botanical/curry-leaf-bergera-koenigii.md
-ingredients/botanical/cyclamen-cyclamen.md
 ingredients/botanical/cypress-cupressus-sempervirens.md
-ingredients/botanical/daffodil-narcissus.md
 ingredients/botanical/daisy-bellis-perennis.md
 ingredients/botanical/damiana-turnera-diffusa.md
 ingredients/botanical/dandelion-taraxacum-officinale.md
@@ -99,7 +94,6 @@ ingredients/botanical/dogwood-cornus-florida.md
 ingredients/botanical/dragons-blood-calamus-draco.md
 ingredients/botanical/dulse-palmaria-palmata.md
 ingredients/botanical/echinacea-echinacea.md
-ingredients/botanical/edelweiss-leontopodium-nivale.md
 ingredients/botanical/elder-sambucus.md
 ingredients/botanical/elecampane-inula-helenium.md
 ingredients/botanical/elm-ulmus-glabra.md
@@ -139,7 +133,6 @@ ingredients/botanical/ladys-bedstraw-galium-verum.md
 ingredients/botanical/ladys-mantle-alchemilla-vulgaris.md
 ingredients/botanical/ladys-slipper-cypripedium-parviflorum.md
 ingredients/botanical/ladys-smock-cardamine-pratensis.md
-ingredients/botanical/larch-larix.md
 ingredients/botanical/larkspur-consolida-regalis.md
 ingredients/botanical/lavender-lavandula-angustifolia.md
 ingredients/botanical/leek-allium-ampeloprasum.md
@@ -148,7 +141,6 @@ ingredients/botanical/lemon-citrus-limon.md
 ingredients/botanical/lemon-verbena-aloysia-citrodora.md
 ingredients/botanical/lemongrass-cymbopogon-citratus.md
 ingredients/botanical/lesser-celandine-ficaria-verna.md
-ingredients/botanical/lettuce-lactuca-sativa.md
 ingredients/botanical/life-everlasting-pseudognaphalium-obtusifolium.md
 ingredients/botanical/lilac-syringa-vulgaris.md
 ingredients/botanical/lily-lilium.md
@@ -160,7 +152,6 @@ ingredients/botanical/liverwort-anemone-hepatica.md
 ingredients/botanical/lobelia-lobelia-inflata.md
 ingredients/botanical/lords-and-ladies-arum-maculatum.md
 ingredients/botanical/lotus-nelumbo-nucifera.md
-ingredients/botanical/lovage-levisticum-officinale.md
 ingredients/botanical/magnolia-magnolia-virginiana.md
 ingredients/botanical/maidenhair-fern-adiantum.md
 ingredients/botanical/maize-zea-mays.md
@@ -168,15 +159,12 @@ ingredients/botanical/makko-machilus-thunbergii.md
 ingredients/botanical/male-fern-dryopteris-filix-mas.md
 ingredients/botanical/mallow-malva-sylvestris.md
 ingredients/botanical/mandrake-mandragora-officinarum.md
-ingredients/botanical/maple-acer.md
 ingredients/botanical/marigold-calendula-officinalis.md
 ingredients/botanical/marjoram-origanum-majorana.md
-ingredients/botanical/marsh-marigold-caltha-palustris.md
 ingredients/botanical/marshmallow-althaea-officinalis.md
 ingredients/botanical/masterwort-peucedanum-ostruthium.md
 ingredients/botanical/mastic-pistacia-lentiscus.md
 ingredients/botanical/mayapple-podophyllum-peltatum.md
-ingredients/botanical/meadow-rue-thalictrum.md
 ingredients/botanical/meadowsweet-filipendula-ulmaria.md
 ingredients/botanical/mesquite-neltuma-juliflora.md
 ingredients/botanical/milk-thistle-silybum-marianum.md
@@ -188,7 +176,6 @@ ingredients/botanical/morning-glory-ipomoea.md
 ingredients/botanical/mugwort-artemisia-vulgaris.md
 ingredients/botanical/myrrh-commiphora-myrrha.md
 ingredients/botanical/opoponax-commiphora-guidottii.md
-ingredients/botanical/radish-raphanus-sativus.md
 ingredients/botanical/ragwort-jacobaea-vulgaris.md
 ingredients/botanical/raspberry-rubus-idaeus.md
 ingredients/botanical/red-sandalwood-pterocarpus-santalinus.md

@@ -23,7 +23,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Radish"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Radish
+    resolvedBy: wikipedia-radish
     supports:
       - canonicalName
       - description
@@ -33,13 +35,15 @@ references:
       - folkNames
       - categories
   - source: wikipedia-radish
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - colours
   - source: grieve-radish
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Radish
+    resolvedBy: wikipedia-radish
     supports:
       - canonicalName
       - description
@@ -47,24 +51,30 @@ variants:
   - form: Root
     references:
       - source: grieve-radish
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Radish
+        resolvedBy: wikipedia-radish
         supports:
           - form
       - source: cunningham-herbs
         locator: under "Radish"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Radish
+        resolvedBy: wikipedia-radish
         supports:
           - form
   - form: Pod
     description: The young green seed-pods can be pickled, on their own or with other vegetables, and Grieve counts them a fair stand-in for capers; Wikipedia adds that the small pods are edible while young.
     references:
       - source: grieve-radish
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Radish
+        resolvedBy: wikipedia-radish
         supports:
           - form
           - description
       - source: wikipedia-radish
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

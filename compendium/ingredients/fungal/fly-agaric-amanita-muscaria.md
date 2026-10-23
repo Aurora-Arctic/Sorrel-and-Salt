@@ -56,7 +56,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Fly Agaric"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fly Agaric
+    resolvedBy: wikipedia-amanita-muscaria
     supports:
       - canonicalName
       - nomenclature
@@ -71,7 +73,7 @@ references:
       - toxic
       - description
   - source: wikipedia-amanita-muscaria
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -93,12 +95,14 @@ variants:
           - toxic
       - source: kynes-plants
         locator: under "Fly Agaric"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fly Agaric
+        resolvedBy: wikipedia-amanita-muscaria
         supports:
           - form
           - description
       - source: wikipedia-amanita-muscaria
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

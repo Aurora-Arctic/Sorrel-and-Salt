@@ -23,7 +23,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-juglans-nigra
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -39,7 +39,7 @@ variants:
         supports:
           - form
       - source: wikipedia-juglans-nigra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -53,7 +53,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-juglans-nigra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

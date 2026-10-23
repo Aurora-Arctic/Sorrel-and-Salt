@@ -56,7 +56,7 @@ references:
       - deities
       - categories
   - source: wikipedia-ferula-assa-foetida
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

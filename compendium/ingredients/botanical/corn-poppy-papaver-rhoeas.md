@@ -53,7 +53,7 @@ references:
       - categories
       - description
   - source: wikipedia-papaver-rhoeas
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -66,7 +66,7 @@ variants:
       - red
     references:
       - source: wikipedia-papaver-rhoeas
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -77,7 +77,7 @@ variants:
       - black
     references:
       - source: wikipedia-papaver-rhoeas
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

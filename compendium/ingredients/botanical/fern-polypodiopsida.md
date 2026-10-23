@@ -15,7 +15,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Fern"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fern
+    resolvedBy: wikipedia-fern
     supports:
       - elements
       - celestialBodies
@@ -25,7 +27,7 @@ references:
       - toxic
       - description
   - source: wikipedia-fern
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -37,12 +39,14 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fern"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fern
+        resolvedBy: wikipedia-fern
         supports:
           - form
           - description
       - source: wikipedia-fern
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -51,7 +55,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fern"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fern
+        resolvedBy: wikipedia-fern
         supports:
           - form
           - description
@@ -61,7 +67,7 @@ variants:
         supports:
           - description
       - source: wikipedia-fern
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Sap
@@ -69,7 +75,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fern"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fern
+        resolvedBy: wikipedia-fern
         supports:
           - form
           - description

@@ -77,7 +77,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-cupressus-sempervirens
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -101,7 +101,7 @@ variants:
           - form
           - description
       - source: wikipedia-cupressus-sempervirens
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Oil

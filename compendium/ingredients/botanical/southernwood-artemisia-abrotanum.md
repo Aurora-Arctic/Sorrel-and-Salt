@@ -47,7 +47,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Southernwood"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Southernwood
+    resolvedBy: wikipedia-artemisia-abrotanum
     supports:
       - canonicalName
       - description
@@ -58,7 +60,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Southernwood"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Southernwood
+    resolvedBy: wikipedia-artemisia-abrotanum
     supports:
       - canonicalName
       - description
@@ -84,13 +88,15 @@ references:
       - description
       - folkNames
   - source: wikipedia-artemisia-abrotanum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - folkNames
   - source: grieve-southernwood
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Southernwood
+    resolvedBy: wikipedia-artemisia-abrotanum
     supports:
       - canonicalName
       - description
@@ -105,13 +111,17 @@ variants:
         supports:
           - form
       - source: grieve-southernwood
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Southernwood
+        resolvedBy: wikipedia-artemisia-abrotanum
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Southernwood"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Southernwood
+        resolvedBy: wikipedia-artemisia-abrotanum
         supports:
           - form
           - description

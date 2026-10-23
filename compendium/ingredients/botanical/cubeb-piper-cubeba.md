@@ -15,7 +15,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Cubeb"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cubeb
+    resolvedBy: wikipedia-piper-cubeba
     supports:
       - canonicalName
       - nomenclature
@@ -33,7 +35,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-piper-cubeba
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -44,18 +46,20 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Cubeb"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cubeb
+        resolvedBy: wikipedia-piper-cubeba
         supports:
           - form
       - source: wikipedia-piper-cubeba
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Oil
     description: Steam distillation draws roughly 15 per cent of a volatile oil from the dried berries. In Victorian and Edwardian England the oil served as an antiseptic, and in 2000 it was named on a published list of ingredients found in cigarettes.
     references:
       - source: wikipedia-piper-cubeba
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

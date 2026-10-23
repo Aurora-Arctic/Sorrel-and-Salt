@@ -32,7 +32,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Elecampane"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Elecampane
+    resolvedBy: wikipedia-elecampane
     supports:
       - canonicalName
       - nomenclature
@@ -44,7 +46,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Elecampane"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Elecampane
+    resolvedBy: wikipedia-elecampane
     supports:
       - canonicalName
       - nomenclature
@@ -66,7 +70,7 @@ references:
     supports:
       - description
   - source: wikipedia-elecampane
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -84,11 +88,13 @@ variants:
           - safetyNotes
       - source: kynes-plants
         locator: under "Elecampane"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Elecampane
+        resolvedBy: wikipedia-elecampane
         supports:
           - form
       - source: wikipedia-elecampane
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Flower
@@ -98,19 +104,23 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Elecampane"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Elecampane
+        resolvedBy: wikipedia-elecampane
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Elecampane"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Elecampane
+        resolvedBy: wikipedia-elecampane
         supports:
           - form
           - description
           - colours
       - source: wikipedia-elecampane
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Oil
@@ -118,7 +128,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Elecampane"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Elecampane
+        resolvedBy: wikipedia-elecampane
         supports:
           - form
           - description

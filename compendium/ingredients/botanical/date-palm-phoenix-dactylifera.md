@@ -70,7 +70,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-date-palm
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -89,7 +89,7 @@ variants:
         supports:
           - form
       - source: wikipedia-date-palm
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Leaf
@@ -110,7 +110,7 @@ variants:
         supports:
           - description
       - source: wikipedia-date-palm
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -133,7 +133,7 @@ variants:
         supports:
           - description
       - source: wikipedia-date-palm
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

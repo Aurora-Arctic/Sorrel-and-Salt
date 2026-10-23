@@ -126,7 +126,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-laurus-nobilis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

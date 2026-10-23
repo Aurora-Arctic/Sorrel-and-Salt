@@ -24,7 +24,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-ammonoidea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -36,7 +36,7 @@ variants:
   - form: Shell
     references:
       - source: wikipedia-ammonoidea
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
       - source: cunningham-crystals

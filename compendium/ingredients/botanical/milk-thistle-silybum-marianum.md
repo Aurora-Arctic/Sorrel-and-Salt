@@ -56,7 +56,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-silybum-marianum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -73,7 +73,7 @@ variants:
         supports:
           - form
       - source: wikipedia-silybum-marianum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

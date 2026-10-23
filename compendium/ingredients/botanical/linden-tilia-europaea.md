@@ -76,7 +76,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-tilia-europaea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -109,7 +109,7 @@ variants:
           - description
           - colours
       - source: wikipedia-tilia-europaea
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Leaf
@@ -133,7 +133,7 @@ variants:
           - form
           - description
       - source: wikipedia-tilia-europaea
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Bark

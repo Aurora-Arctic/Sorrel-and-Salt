@@ -57,7 +57,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-senna-plant
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

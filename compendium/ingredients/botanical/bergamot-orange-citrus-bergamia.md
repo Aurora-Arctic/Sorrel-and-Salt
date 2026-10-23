@@ -29,7 +29,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-bergamot-orange
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -47,7 +47,7 @@ variants:
           - form
           - colours
       - source: wikipedia-bergamot-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -68,7 +68,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-bergamot-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -84,7 +84,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-bergamot-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

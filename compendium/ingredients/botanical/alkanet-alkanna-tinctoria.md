@@ -63,7 +63,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-alkanna-tinctoria
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -89,7 +89,7 @@ variants:
         supports:
           - form
       - source: wikipedia-alkanna-tinctoria
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -103,7 +103,7 @@ variants:
           - form
           - description
       - source: wikipedia-alkanna-tinctoria
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

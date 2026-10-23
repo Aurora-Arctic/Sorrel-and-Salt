@@ -6,7 +6,7 @@ deities:
   - Zeus
 references:
   - source: wikipedia-western-honey-bee
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -55,7 +55,7 @@ variants:
           - colours
           - safetyNotes
       - source: wikipedia-western-honey-bee
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

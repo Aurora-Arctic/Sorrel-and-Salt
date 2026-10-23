@@ -84,7 +84,7 @@ references:
     supports:
       - description
   - source: wikipedia-sambucus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

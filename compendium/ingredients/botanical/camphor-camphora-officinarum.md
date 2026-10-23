@@ -65,7 +65,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-camphora-officinarum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -90,14 +90,14 @@ variants:
           - form
           - colours
       - source: wikipedia-camphora-officinarum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Oil
     description: 'Camphor oil is steam-distilled from the wood and leaves. The tree comes in several chemical types, so oils differ: some are rich in camphor itself, others in linalool, cineole, nerolidol or borneol, and the cineole type grown in Madagascar is sold as ravintsara. Grieve describes Japanese camphor oil, a by-product of camphor making that ranged from thin and watery to thick and black, used in Japan for burning, varnish and ink, and in medicine as a rubbing liniment for rheumatism, sprains and bruises.'
     references:
       - source: wikipedia-camphora-officinarum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -124,7 +124,7 @@ variants:
     description: The wood repels insects, and Grieve notes that cabinets for natural history collections were made of it, the timber being imported for entomologists.
     references:
       - source: wikipedia-camphora-officinarum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

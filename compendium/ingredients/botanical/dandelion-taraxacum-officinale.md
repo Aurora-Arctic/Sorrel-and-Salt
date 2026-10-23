@@ -101,7 +101,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-taraxacum-officinale
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -136,7 +136,7 @@ variants:
         supports:
           - description
       - source: wikipedia-taraxacum-officinale
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Leaf
@@ -161,7 +161,7 @@ variants:
         supports:
           - description
       - source: wikipedia-taraxacum-officinale
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Flower
@@ -176,7 +176,7 @@ variants:
           - form
           - colours
       - source: wikipedia-taraxacum-officinale
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

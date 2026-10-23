@@ -28,7 +28,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-senega-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -55,7 +55,7 @@ variants:
           - form
           - description
       - source: wikipedia-senega-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

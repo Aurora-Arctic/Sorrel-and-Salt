@@ -54,7 +54,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-neltuma-juliflora
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -77,7 +77,7 @@ variants:
           - form
           - description
       - source: wikipedia-neltuma-juliflora
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Pod
@@ -95,7 +95,7 @@ variants:
           - description
           - colours
       - source: wikipedia-neltuma-juliflora
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - safetyNotes

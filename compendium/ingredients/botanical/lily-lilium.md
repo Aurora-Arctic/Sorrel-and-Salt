@@ -34,7 +34,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Lily"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lily
+    resolvedBy: wikipedia-lilium
     supports:
       - canonicalName
       - elements
@@ -46,7 +48,9 @@ references:
       - toxic
   - source: kynes-plants
     locator: under "Lily"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lily
+    resolvedBy: wikipedia-lilium
     supports:
       - elements
       - celestialBodies
@@ -61,7 +65,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-lilium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -79,11 +83,13 @@ variants:
           - safetyNotes
       - source: kynes-plants
         locator: under "Lily"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lily
+        resolvedBy: wikipedia-lilium
         supports:
           - form
       - source: wikipedia-lilium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Flower
@@ -98,20 +104,24 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Lily"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lily
+        resolvedBy: wikipedia-lilium
         supports:
           - form
           - description
           - colours
       - source: kynes-plants
         locator: under "Lily"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lily
+        resolvedBy: wikipedia-lilium
         supports:
           - form
           - description
           - colours
       - source: wikipedia-lilium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
 ---

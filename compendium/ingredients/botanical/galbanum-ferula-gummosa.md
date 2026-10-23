@@ -10,7 +10,7 @@ folkNames:
   - Mother Resin
 references:
   - source: wikipedia-ferula-gummosa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

@@ -93,7 +93,7 @@ references:
       - deities
       - categories
   - source: wikipedia-mandragora-officinarum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -118,7 +118,7 @@ variants:
           - form
           - description
       - source: wikipedia-mandragora-officinarum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -136,7 +136,7 @@ variants:
           - form
           - description
       - source: wikipedia-mandragora-officinarum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - safetyNotes
           - toxic

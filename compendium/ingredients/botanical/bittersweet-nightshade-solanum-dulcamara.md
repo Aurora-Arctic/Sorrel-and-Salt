@@ -75,7 +75,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-solanum-dulcamara
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -90,7 +90,7 @@ variants:
         supports:
           - form
       - source: wikipedia-solanum-dulcamara
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Berry
@@ -117,7 +117,7 @@ variants:
         supports:
           - description
       - source: wikipedia-solanum-dulcamara
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes

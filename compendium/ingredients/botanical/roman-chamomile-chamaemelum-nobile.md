@@ -81,7 +81,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-chamaemelum-nobile
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -122,7 +122,7 @@ variants:
           - colours
           - categories
       - source: wikipedia-chamaemelum-nobile
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -148,7 +148,7 @@ variants:
           - description
           - colours
       - source: wikipedia-chamaemelum-nobile
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

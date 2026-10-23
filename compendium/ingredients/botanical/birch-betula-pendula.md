@@ -89,7 +89,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-betula-pendula
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -113,7 +113,7 @@ variants:
           - description
           - colours
       - source: wikipedia-betula-pendula
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -146,7 +146,7 @@ variants:
     description: In spring a strong flow of sap rises in the trunk and can be tapped. At about one per cent sugar it is drunk fresh, boiled down like maple syrup or fermented. Grieve gives a birch wine of March sap with honey, cloves and lemon peel, and Culpeper the distilled water drawn from a trunk bored with an auger.
     references:
       - source: wikipedia-betula-pendula
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -170,7 +170,7 @@ variants:
           - form
           - description
       - source: wikipedia-betula-pendula
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

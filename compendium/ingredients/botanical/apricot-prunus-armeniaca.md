@@ -72,7 +72,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-prunus-armeniaca
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -94,7 +94,7 @@ variants:
         supports:
           - form
       - source: wikipedia-prunus-armeniaca
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -118,7 +118,7 @@ variants:
           - description
           - colours
       - source: wikipedia-prunus-armeniaca
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Seed
@@ -161,7 +161,7 @@ variants:
           - form
           - description
       - source: wikipedia-prunus-armeniaca
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
       - source: ahpa-safety

@@ -59,7 +59,7 @@ references:
       - canonicalName
       - folkNames
   - source: wikipedia-black-pepper
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -79,7 +79,7 @@ variants:
         supports:
           - form
       - source: wikipedia-black-pepper
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -97,7 +97,7 @@ variants:
         supports:
           - description
       - source: wikipedia-black-pepper
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

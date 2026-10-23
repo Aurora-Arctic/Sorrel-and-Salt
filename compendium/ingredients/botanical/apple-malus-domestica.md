@@ -90,7 +90,7 @@ references:
     supports:
       - description
   - source: wikipedia-apple
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -121,7 +121,7 @@ variants:
         supports:
           - form
       - source: wikipedia-apple
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Flower
@@ -146,7 +146,7 @@ variants:
         supports:
           - colours
       - source: wikipedia-apple
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

@@ -35,7 +35,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Fennel"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fennel
+    resolvedBy: wikipedia-fennel
     supports:
       - canonicalName
       - nomenclature
@@ -48,7 +50,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Fennel"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fennel
+    resolvedBy: wikipedia-fennel
     supports:
       - elements
       - celestialBodies
@@ -78,7 +82,7 @@ references:
     supports:
       - description
   - source: wikipedia-fennel
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -97,18 +101,22 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Fennel"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fennel
+        resolvedBy: wikipedia-fennel
         supports:
           - form
           - description
           - categories
       - source: cunningham-herbs
         locator: under "Fennel"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fennel
+        resolvedBy: wikipedia-fennel
         supports:
           - description
       - source: wikipedia-fennel
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Leaf
@@ -116,7 +124,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Fennel"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fennel
+        resolvedBy: wikipedia-fennel
         supports:
           - form
           - description
@@ -126,7 +136,7 @@ variants:
         supports:
           - form
       - source: wikipedia-fennel
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Oil
@@ -135,7 +145,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Fennel"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fennel
+        resolvedBy: wikipedia-fennel
         supports:
           - form
       - source: ahpa-safety
@@ -144,7 +156,7 @@ variants:
         supports:
           - safetyNotes
       - source: wikipedia-fennel
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
 ---

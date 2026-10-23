@@ -32,7 +32,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Rye"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Rye
+    resolvedBy: wikipedia-rye
     supports:
       - description
       - elements
@@ -51,7 +53,7 @@ references:
       - deities
       - categories
   - source: wikipedia-rye
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -59,7 +61,7 @@ variants:
   - form: Seed
     references:
       - source: wikipedia-rye
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
       - source: kynes-plants

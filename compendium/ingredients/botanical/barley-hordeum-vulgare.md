@@ -74,7 +74,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-barley
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -101,7 +101,7 @@ variants:
         supports:
           - form
       - source: wikipedia-barley
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Stem
@@ -140,7 +140,7 @@ variants:
         supports:
           - description
       - source: wikipedia-barley
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

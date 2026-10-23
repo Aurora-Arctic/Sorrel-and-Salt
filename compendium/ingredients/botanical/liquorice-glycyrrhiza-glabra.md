@@ -33,7 +33,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Licorice"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Licorice
+    resolvedBy: wikipedia-liquorice
     supports:
       - canonicalName
       - description
@@ -44,7 +46,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Licorice"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Licorice
+    resolvedBy: wikipedia-liquorice
     supports:
       - canonicalName
       - description
@@ -67,7 +71,7 @@ references:
       - canonicalName
       - description
   - source: wikipedia-liquorice
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -89,16 +93,20 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Licorice"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Licorice
+        resolvedBy: wikipedia-liquorice
         supports:
           - form
       - source: cunningham-herbs
         locator: under "Licorice"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Licorice
+        resolvedBy: wikipedia-liquorice
         supports:
           - form
       - source: wikipedia-liquorice
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
 ---

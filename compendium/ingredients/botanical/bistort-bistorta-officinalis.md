@@ -78,7 +78,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-bistorta-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -127,7 +127,7 @@ variants:
           - form
           - description
       - source: wikipedia-bistorta-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

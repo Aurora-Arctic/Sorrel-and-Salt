@@ -45,7 +45,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-convolvulus-arvensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -65,7 +65,7 @@ variants:
         supports:
           - form
       - source: wikipedia-convolvulus-arvensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Flower
@@ -82,7 +82,7 @@ variants:
           - description
           - colours
       - source: wikipedia-convolvulus-arvensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -28,7 +28,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-ficus-benghalensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -42,7 +42,7 @@ variants:
         supports:
           - form
       - source: wikipedia-ficus-benghalensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

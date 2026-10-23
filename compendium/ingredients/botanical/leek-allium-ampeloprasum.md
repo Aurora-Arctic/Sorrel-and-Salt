@@ -25,7 +25,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-allium-ampeloprasum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

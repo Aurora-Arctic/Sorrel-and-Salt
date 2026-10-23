@@ -41,7 +41,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Daffodil"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Daffodil
+    resolvedBy: wikipedia-narcissus-plant
     supports:
       - canonicalName
       - nomenclature
@@ -54,7 +56,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Daffodil"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Daffodil
+    resolvedBy: wikipedia-narcissus-plant
     supports:
       - elements
       - celestialBodies
@@ -66,7 +70,7 @@ references:
       - toxic
       - description
   - source: wikipedia-narcissus-plant
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -83,19 +87,23 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Daffodil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Daffodil
+        resolvedBy: wikipedia-narcissus-plant
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Daffodil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Daffodil
+        resolvedBy: wikipedia-narcissus-plant
         supports:
           - form
           - description
           - colours
       - source: wikipedia-narcissus-plant
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Bulb
@@ -105,14 +113,16 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Daffodil"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Daffodil
+        resolvedBy: wikipedia-narcissus-plant
         supports:
           - form
           - description
           - safetyNotes
           - toxic
       - source: wikipedia-narcissus-plant
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes

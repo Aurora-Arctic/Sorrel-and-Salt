@@ -72,7 +72,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-cinnamomum-verum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -90,7 +90,7 @@ variants:
         supports:
           - form
       - source: wikipedia-cinnamomum-verum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Oil

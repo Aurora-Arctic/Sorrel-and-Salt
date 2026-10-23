@@ -7,7 +7,7 @@ folkNames:
   - Itan Zaf
 references:
   - source: wikipedia-boswellia-papyrifera
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -30,7 +30,7 @@ variants:
       - yellow
     references:
       - source: wikipedia-boswellia-papyrifera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

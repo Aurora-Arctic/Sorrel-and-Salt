@@ -34,7 +34,7 @@ references:
       - canonicalName
       - description
   - source: wikipedia-beta-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -56,7 +56,7 @@ variants:
           - form
           - colours
       - source: wikipedia-beta-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -76,7 +76,7 @@ variants:
           - form
           - description
       - source: wikipedia-beta-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

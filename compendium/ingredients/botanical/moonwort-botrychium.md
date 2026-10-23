@@ -37,7 +37,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Moonwort"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Moonwort
+    resolvedBy: wikipedia-botrychium
     supports:
       - canonicalName
       - elements
@@ -47,7 +49,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Moonwort"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Moonwort
+    resolvedBy: wikipedia-botrychium
     supports:
       - elements
       - celestialBodies
@@ -62,7 +66,7 @@ references:
     supports:
       - description
   - source: wikipedia-botrychium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -71,7 +75,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Moonwort"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Moonwort
+        resolvedBy: wikipedia-botrychium
         supports:
           - form
 ---

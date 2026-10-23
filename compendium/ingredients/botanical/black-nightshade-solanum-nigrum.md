@@ -53,7 +53,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-solanum-nigrum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -78,7 +78,7 @@ variants:
           - form
           - description
       - source: wikipedia-solanum-nigrum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -92,7 +92,7 @@ variants:
       - black
     references:
       - source: wikipedia-solanum-nigrum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

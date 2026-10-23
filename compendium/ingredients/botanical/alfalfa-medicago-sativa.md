@@ -42,7 +42,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-alfalfa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -70,7 +70,7 @@ variants:
         supports:
           - safetyNotes
       - source: wikipedia-alfalfa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

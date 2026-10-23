@@ -44,7 +44,7 @@ references:
     supports:
       - description
   - source: wikipedia-ficaria-verna
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -63,7 +63,7 @@ variants:
           - form
           - description
       - source: wikipedia-ficaria-verna
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -78,7 +78,7 @@ variants:
           - form
           - description
       - source: wikipedia-ficaria-verna
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

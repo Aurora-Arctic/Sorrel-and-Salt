@@ -55,7 +55,7 @@ references:
       - canonicalName
       - nomenclature
   - source: wikipedia-oenothera-biennis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -72,7 +72,7 @@ variants:
           - form
           - description
       - source: wikipedia-oenothera-biennis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -86,14 +86,14 @@ variants:
           - form
           - description
       - source: wikipedia-oenothera-biennis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Root
     description: The thick root can be eaten raw or cooked like a potato. Its faint scent of wine lies behind the European legends that tied the plant to drinking.
     references:
       - source: wikipedia-oenothera-biennis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -114,7 +114,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-oenothera-biennis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -141,7 +141,7 @@ variants:
           - description
           - safetyNotes
       - source: wikipedia-oenothera-biennis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

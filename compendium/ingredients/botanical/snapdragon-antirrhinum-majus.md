@@ -53,7 +53,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-antirrhinum-majus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -104,7 +104,7 @@ variants:
           - form
           - description
       - source: wikipedia-antirrhinum-majus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Leaf

@@ -81,7 +81,7 @@ references:
       - canonicalName
       - folkNames
   - source: wikipedia-nelumbo-nucifera
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -105,7 +105,7 @@ variants:
           - form
           - description
       - source: wikipedia-nelumbo-nucifera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Root
@@ -113,7 +113,7 @@ variants:
     safetyNotes: Eaten raw, the rhizome, like the leaves and petals, can pass on parasites such as Fasciolopsis buski, so it should be cooked first.
     references:
       - source: wikipedia-nelumbo-nucifera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -128,7 +128,7 @@ variants:
     description: The dried seed head, shaped like the spout of a watering can, is sold around the world for decoration and dried flower arranging, and Kynes lists dried pods among the forms on sale. Cunningham pairs the pods with the seeds to counter love spells.
     references:
       - source: wikipedia-nelumbo-nucifera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -160,7 +160,7 @@ variants:
           - description
           - colours
       - source: wikipedia-nelumbo-nucifera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

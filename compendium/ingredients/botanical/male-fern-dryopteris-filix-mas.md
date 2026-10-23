@@ -20,7 +20,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Male Fern"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Male Fern
+    resolvedBy: wikipedia-dryopteris-filix-mas
     supports:
       - description
       - elements
@@ -36,7 +38,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-dryopteris-filix-mas
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -52,7 +54,7 @@ variants:
         supports:
           - form
       - source: wikipedia-dryopteris-filix-mas
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

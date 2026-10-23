@@ -65,7 +65,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-aletris-farinosa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

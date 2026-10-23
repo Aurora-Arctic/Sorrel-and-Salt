@@ -71,7 +71,7 @@ references:
     supports:
       - description
   - source: wikipedia-euphrasia-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -98,7 +98,7 @@ variants:
           - form
           - description
       - source: wikipedia-euphrasia-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Flower

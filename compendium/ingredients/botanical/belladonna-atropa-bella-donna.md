@@ -77,7 +77,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-atropa-bella-donna
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -108,7 +108,7 @@ variants:
           - safetyNotes
           - toxic
       - source: wikipedia-atropa-bella-donna
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

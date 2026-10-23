@@ -19,7 +19,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Eryngo"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Eryngo
+    resolvedBy: wikipedia-eryngium
     supports:
       - canonicalName
       - description
@@ -36,7 +38,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-eryngium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -62,7 +64,7 @@ variants:
           - form
           - description
       - source: wikipedia-eryngium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

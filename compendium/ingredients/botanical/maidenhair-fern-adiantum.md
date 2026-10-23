@@ -41,7 +41,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Maidenhair Fern"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Maidenhair Fern
+    resolvedBy: wikipedia-adiantum
     supports:
       - canonicalName
       - elements
@@ -57,7 +59,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-adiantum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -76,13 +78,15 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Maidenhair Fern"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maidenhair Fern
+        resolvedBy: wikipedia-adiantum
         supports:
           - form
           - description
           - colours
       - source: wikipedia-adiantum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Powder
@@ -90,7 +94,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Maidenhair Fern"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Maidenhair Fern
+        resolvedBy: wikipedia-adiantum
         supports:
           - form
           - description

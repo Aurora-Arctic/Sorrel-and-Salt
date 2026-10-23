@@ -23,7 +23,7 @@ references:
       - categories
       - description
   - source: wikipedia-sanicula-marilandica
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

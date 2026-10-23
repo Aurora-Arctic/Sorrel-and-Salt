@@ -46,7 +46,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-key-lime
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -90,7 +90,7 @@ variants:
           - description
           - colours
       - source: wikipedia-key-lime
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours

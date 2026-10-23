@@ -88,7 +88,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-vaccinium-myrtillus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -117,7 +117,7 @@ variants:
           - form
           - colours
       - source: wikipedia-vaccinium-myrtillus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -144,7 +144,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-vaccinium-myrtillus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes

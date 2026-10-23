@@ -78,7 +78,7 @@ references:
       - safetyNotes
       - substitutes
   - source: wikipedia-matricaria-chamomilla
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -113,7 +113,7 @@ variants:
         supports:
           - form
       - source: wikipedia-matricaria-chamomilla
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

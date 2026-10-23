@@ -51,7 +51,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Lemon Balm"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lemon Balm
+    resolvedBy: wikipedia-lemon-balm
     supports:
       - canonicalName
       - description
@@ -81,7 +83,7 @@ references:
     supports:
       - description
   - source: wikipedia-lemon-balm
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -97,7 +99,9 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Lemon Balm"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon Balm
+        resolvedBy: wikipedia-lemon-balm
         supports:
           - form
           - description
@@ -117,14 +121,16 @@ variants:
       - yellow
     references:
       - source: wikipedia-lemon-balm
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
       - source: kynes-plants
         locator: under "Lemon Balm"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon Balm
+        resolvedBy: wikipedia-lemon-balm
         supports:
           - form
           - description

@@ -39,7 +39,7 @@ references:
       - colours
       - folkNames
   - source: wikipedia-pterocarpus-santalinus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

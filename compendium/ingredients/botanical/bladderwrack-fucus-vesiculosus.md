@@ -45,7 +45,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Bladderwrack"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Bladderwrack
+    resolvedBy: wikipedia-fucus-vesiculosus
     supports:
       - canonicalName
       - elements
@@ -74,7 +76,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-fucus-vesiculosus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

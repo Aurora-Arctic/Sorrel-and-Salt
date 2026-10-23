@@ -77,7 +77,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-prunus-spinosa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -110,7 +110,7 @@ variants:
           - form
           - description
       - source: wikipedia-prunus-spinosa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -138,7 +138,7 @@ variants:
           - form
           - description
       - source: wikipedia-prunus-spinosa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

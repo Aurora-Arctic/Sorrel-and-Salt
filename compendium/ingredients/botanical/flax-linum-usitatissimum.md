@@ -32,7 +32,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Flax"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Flax
+    resolvedBy: wikipedia-flax
     supports:
       - canonicalName
       - nomenclature
@@ -43,7 +45,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Flax"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Flax
+    resolvedBy: wikipedia-flax
     supports:
       - canonicalName
       - nomenclature
@@ -65,7 +69,7 @@ references:
     supports:
       - description
   - source: wikipedia-flax
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -78,14 +82,18 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Flax"; p. 266
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Flax
+        resolvedBy: wikipedia-flax
         supports:
           - form
           - description
           - safetyNotes
       - source: kynes-plants
         locator: under "Flax"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Flax
+        resolvedBy: wikipedia-flax
         supports:
           - form
       - source: ahpa-safety
@@ -101,14 +109,18 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Flax"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Flax
+        resolvedBy: wikipedia-flax
         supports:
           - form
           - description
           - colours
       - source: kynes-plants
         locator: under "Flax"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Flax
+        resolvedBy: wikipedia-flax
         supports:
           - form
           - description
@@ -124,7 +136,7 @@ variants:
     description: Linseed oil, pressed from the seed, is one of the oldest oils in trade. It is edible, sold as a nutritional supplement and used in many wood finishes, and the solvent-extracted oil has served for centuries as a drying oil in painting and varnishing.
     references:
       - source: wikipedia-flax
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

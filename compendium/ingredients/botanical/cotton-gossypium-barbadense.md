@@ -22,7 +22,7 @@ references:
       - categories
       - description
   - source: wikipedia-gossypium-barbadense
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,7 +41,7 @@ variants:
           - form
           - description
       - source: wikipedia-gossypium-barbadense
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

@@ -61,7 +61,7 @@ references:
     supports:
       - safetyNotes
   - source: wikipedia-alchemilla-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -101,7 +101,7 @@ variants:
           - description
           - colours
       - source: wikipedia-alchemilla-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

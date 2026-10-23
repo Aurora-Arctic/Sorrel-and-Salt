@@ -84,7 +84,7 @@ references:
     supports:
       - description
   - source: wikipedia-agrimonia-eupatoria
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

@@ -68,7 +68,7 @@ references:
       - canonicalName
       - folkNames
   - source: wikipedia-magnolia-virginiana
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -88,7 +88,7 @@ variants:
           - description
           - safetyNotes
       - source: wikipedia-magnolia-virginiana
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours
@@ -105,7 +105,7 @@ variants:
           - description
           - colours
       - source: wikipedia-magnolia-virginiana
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Flower
@@ -114,7 +114,7 @@ variants:
       - white
     references:
       - source: wikipedia-magnolia-virginiana
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -132,7 +132,7 @@ variants:
       - red
     references:
       - source: wikipedia-magnolia-virginiana
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

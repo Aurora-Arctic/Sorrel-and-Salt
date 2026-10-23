@@ -42,7 +42,7 @@ references:
       - categories
       - description
   - source: wikipedia-liquidambar-styraciflua
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -59,7 +59,7 @@ variants:
       - yellow
     references:
       - source: wikipedia-liquidambar-styraciflua
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -82,7 +82,7 @@ variants:
           - description
           - categories
       - source: wikipedia-liquidambar-styraciflua
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

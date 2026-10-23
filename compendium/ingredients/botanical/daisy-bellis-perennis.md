@@ -71,7 +71,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-bellis-perennis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -98,7 +98,7 @@ variants:
           - description
           - colours
       - source: wikipedia-bellis-perennis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Root

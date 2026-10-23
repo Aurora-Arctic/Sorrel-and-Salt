@@ -65,7 +65,7 @@ references:
       - deities
       - categories
   - source: wikipedia-taxus-baccata
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -83,7 +83,7 @@ variants:
           - form
           - description
       - source: wikipedia-taxus-baccata
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -102,7 +102,7 @@ variants:
           - categories
           - safetyNotes
       - source: wikipedia-taxus-baccata
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes

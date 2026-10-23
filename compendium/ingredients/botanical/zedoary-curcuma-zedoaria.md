@@ -19,7 +19,9 @@ categories:
 references:
   - source: kynes-plants
     locator: under "Zedoary"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Zedoary
+    resolvedBy: wikipedia-curcuma-zedoaria
     supports:
       - canonicalName
       - description
@@ -34,13 +36,15 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-curcuma-zedoaria
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
       - folkNames
   - source: grieve-zedoary
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Zedoary
+    resolvedBy: wikipedia-curcuma-zedoaria
     supports:
       - canonicalName
       - description
@@ -55,11 +59,15 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Zedoary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Zedoary
+        resolvedBy: wikipedia-curcuma-zedoaria
         supports:
           - form
       - source: grieve-zedoary
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Zedoary
+        resolvedBy: wikipedia-curcuma-zedoaria
         supports:
           - form
   - form: Powder
@@ -69,7 +77,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Zedoary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Zedoary
+        resolvedBy: wikipedia-curcuma-zedoaria
         supports:
           - form
           - description
@@ -78,13 +88,15 @@ variants:
     description: An essential oil is distilled from the dried rhizomes and goes into perfumes, soaps and bitter tonics.
     references:
       - source: wikipedia-curcuma-zedoaria
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Zedoary"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Zedoary
+        resolvedBy: wikipedia-curcuma-zedoaria
         supports:
           - form
 ---

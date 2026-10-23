@@ -43,7 +43,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Lily of the Valley"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lily of the Valley
+    resolvedBy: wikipedia-lily-of-the-valley
     supports:
       - canonicalName
       - folkNames
@@ -55,7 +57,9 @@ references:
       - toxic
   - source: kynes-plants
     locator: under "Lily of the Valley"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lily of the Valley
+    resolvedBy: wikipedia-lily-of-the-valley
     supports:
       - canonicalName
       - folkNames
@@ -75,7 +79,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-lily-of-the-valley
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -95,19 +99,23 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Lily of the Valley"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lily of the Valley
+        resolvedBy: wikipedia-lily-of-the-valley
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Lily of the Valley"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lily of the Valley
+        resolvedBy: wikipedia-lily-of-the-valley
         supports:
           - form
           - description
           - colours
       - source: wikipedia-lily-of-the-valley
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours

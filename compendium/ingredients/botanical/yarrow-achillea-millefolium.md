@@ -70,7 +70,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Yarrow"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Yarrow
+    resolvedBy: wikipedia-achillea-millefolium
     supports:
       - canonicalName
       - elements
@@ -81,7 +83,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Yarrow"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Yarrow
+    resolvedBy: wikipedia-achillea-millefolium
     supports:
       - canonicalName
       - elements
@@ -98,7 +102,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-achillea-millefolium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -114,7 +118,9 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Yarrow"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Yarrow
+        resolvedBy: wikipedia-achillea-millefolium
         supports:
           - form
   - form: Oil
@@ -122,7 +128,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Yarrow"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Yarrow
+        resolvedBy: wikipedia-achillea-millefolium
         supports:
           - form
       - source: ahpa-safety

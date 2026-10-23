@@ -16,7 +16,9 @@ folkNames:
 references:
   - source: cunningham-herbs
     locator: under "Slippery Elm"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Slippery Elm
+    resolvedBy: wikipedia-ulmus-rubra
     supports:
       - description
       - elements
@@ -30,7 +32,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-ulmus-rubra
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -53,7 +55,9 @@ variants:
           - form
       - source: cunningham-herbs
         locator: under "Slippery Elm"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Slippery Elm
+        resolvedBy: wikipedia-ulmus-rubra
         supports:
           - form
           - description
@@ -63,7 +67,7 @@ variants:
           - form
           - description
       - source: wikipedia-ulmus-rubra
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

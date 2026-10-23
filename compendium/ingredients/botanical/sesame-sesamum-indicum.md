@@ -35,7 +35,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Sesame"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Sesame
+    resolvedBy: wikipedia-sesame
     supports:
       - canonicalName
       - description
@@ -47,7 +49,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Sesame"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Sesame
+    resolvedBy: wikipedia-sesame
     supports:
       - canonicalName
       - description
@@ -63,14 +67,16 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-sesame
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - folkNames
   - source: grieve-benne
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Benne
+    resolvedBy: wikipedia-sesame
     supports:
       - canonicalName
       - folkNames
@@ -87,25 +93,31 @@ variants:
         supports:
           - form
       - source: wikipedia-sesame
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
       - source: grieve-benne
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Benne
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Sesame"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sesame
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Sesame"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sesame
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
@@ -114,17 +126,21 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Sesame"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sesame
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
       - source: grieve-benne
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Benne
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
       - source: wikipedia-sesame
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Paste
@@ -132,12 +148,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Sesame"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Sesame
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
       - source: wikipedia-sesame
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -145,12 +163,14 @@ variants:
     description: 'Grieve gives the leaves as a second part used: full of gummy matter, one or two stirred into half a pint of cold water make a bland mucilage once given for infant cholera, diarrhoea, dysentery and bladder complaints. Wikipedia notes the mature leaves used in West Africa as a laxative and against dysentery and cholera.'
     references:
       - source: grieve-benne
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Benne
+        resolvedBy: wikipedia-sesame
         supports:
           - form
           - description
       - source: wikipedia-sesame
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

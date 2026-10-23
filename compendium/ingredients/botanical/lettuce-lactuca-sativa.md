@@ -20,7 +20,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Lettuce"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lettuce
+    resolvedBy: wikipedia-lettuce
     supports:
       - description
       - elements
@@ -29,7 +31,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-lettuce
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -43,12 +45,14 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Lettuce"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lettuce
+        resolvedBy: wikipedia-lettuce
         supports:
           - form
           - description
       - source: wikipedia-lettuce
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -58,12 +62,14 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Lettuce"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lettuce
+        resolvedBy: wikipedia-lettuce
         supports:
           - form
           - description
       - source: wikipedia-lettuce
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

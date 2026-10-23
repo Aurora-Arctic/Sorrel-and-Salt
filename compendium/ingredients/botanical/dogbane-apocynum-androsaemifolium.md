@@ -32,7 +32,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-apocynum-androsaemifolium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -61,7 +61,7 @@ variants:
           - description
           - safetyNotes
       - source: wikipedia-apocynum-androsaemifolium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

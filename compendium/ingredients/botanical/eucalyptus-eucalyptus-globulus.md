@@ -70,7 +70,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-eucalyptus-globulus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -115,7 +115,7 @@ variants:
           - form
           - description
       - source: wikipedia-eucalyptus-globulus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Oil
@@ -137,7 +137,7 @@ variants:
           - form
           - description
       - source: wikipedia-eucalyptus-globulus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

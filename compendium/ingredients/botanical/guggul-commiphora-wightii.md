@@ -15,7 +15,7 @@ folkNames:
 categories: []
 references:
   - source: wikipedia-commiphora-wightii
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -48,14 +48,14 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-commiphora-wightii
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Incense
     description: Guggul is sold as dhoop, a loosely packed Indian incense burned over hot coals to give a dense, fragrant smoke, and also as incense sticks and cones that burn without a separate heat source.
     references:
       - source: wikipedia-commiphora-wightii
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

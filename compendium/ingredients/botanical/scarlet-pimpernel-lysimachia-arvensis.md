@@ -44,7 +44,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-lysimachia-arvensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -91,7 +91,7 @@ variants:
           - description
           - colours
       - source: wikipedia-lysimachia-arvensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
 ---

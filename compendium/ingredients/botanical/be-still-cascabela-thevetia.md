@@ -21,7 +21,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-cascabela-thevetia
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -37,7 +37,7 @@ variants:
         supports:
           - form
       - source: wikipedia-cascabela-thevetia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

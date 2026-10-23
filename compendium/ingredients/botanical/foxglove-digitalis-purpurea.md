@@ -106,7 +106,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-digitalis-purpurea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

@@ -51,7 +51,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-syringa-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -77,7 +77,7 @@ variants:
           - description
           - colours
       - source: wikipedia-syringa-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

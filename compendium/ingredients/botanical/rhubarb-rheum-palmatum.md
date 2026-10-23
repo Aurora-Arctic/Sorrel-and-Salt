@@ -59,7 +59,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-rheum-palmatum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -89,7 +89,7 @@ variants:
           - description
           - colours
       - source: wikipedia-rheum-palmatum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

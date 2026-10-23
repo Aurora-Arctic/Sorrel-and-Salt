@@ -41,7 +41,7 @@ references:
     supports:
       - description
   - source: wikipedia-myosotis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

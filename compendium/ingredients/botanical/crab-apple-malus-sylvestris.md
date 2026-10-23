@@ -59,7 +59,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-malus-sylvestris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -77,7 +77,7 @@ variants:
           - form
           - colours
       - source: wikipedia-malus-sylvestris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Leaf

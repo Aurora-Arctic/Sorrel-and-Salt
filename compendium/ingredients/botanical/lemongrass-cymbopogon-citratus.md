@@ -70,7 +70,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-cymbopogon-citratus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -87,7 +87,7 @@ variants:
     description: Lemongrass is often sold as stems, and thin slices of the fresh stem go into Thai snacks. Kynes lists the fresh stalks among the forms on sale.
     references:
       - source: wikipedia-cymbopogon-citratus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -113,7 +113,7 @@ variants:
           - form
           - description
       - source: wikipedia-cymbopogon-citratus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -30,7 +30,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Cyclamen"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cyclamen
+    resolvedBy: wikipedia-cyclamen
     supports:
       - canonicalName
       - nomenclature
@@ -43,7 +45,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Cyclamen"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Cyclamen
+    resolvedBy: wikipedia-cyclamen
     supports:
       - elements
       - celestialBodies
@@ -55,7 +59,7 @@ references:
       - toxic
       - description
   - source: wikipedia-cyclamen
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -68,13 +72,15 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Cyclamen"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cyclamen
+        resolvedBy: wikipedia-cyclamen
         supports:
           - form
           - description
           - toxic
       - source: wikipedia-cyclamen
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -88,19 +94,23 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Cyclamen"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cyclamen
+        resolvedBy: wikipedia-cyclamen
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Cyclamen"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Cyclamen
+        resolvedBy: wikipedia-cyclamen
         supports:
           - form
           - description
           - colours
       - source: wikipedia-cyclamen
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
 ---

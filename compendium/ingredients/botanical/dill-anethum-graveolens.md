@@ -42,13 +42,15 @@ categories:
   - Purification
 references:
   - source: wikipedia-dill
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
   - source: cunningham-herbs
     locator: under "Dill"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Dill
+    resolvedBy: wikipedia-dill
     supports:
       - canonicalName
       - nomenclature
@@ -60,7 +62,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Dill"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Dill
+    resolvedBy: wikipedia-dill
     supports:
       - canonicalName
       - nomenclature
@@ -102,7 +106,9 @@ variants:
           - form
       - source: cunningham-herbs
         locator: under "Dill"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Dill
+        resolvedBy: wikipedia-dill
         supports:
           - form
   - form: Seed
@@ -122,7 +128,9 @@ variants:
           - description
       - source: cunningham-herbs
         locator: under "Dill"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Dill
+        resolvedBy: wikipedia-dill
         supports:
           - form
           - description
@@ -138,7 +146,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Dill"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Dill
+        resolvedBy: wikipedia-dill
         supports:
           - form
           - description
@@ -149,7 +159,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Dill"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Dill
+        resolvedBy: wikipedia-dill
         supports:
           - form
           - description

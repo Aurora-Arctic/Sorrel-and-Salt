@@ -86,7 +86,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-calendula-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -115,7 +115,7 @@ variants:
         supports:
           - description
       - source: wikipedia-calendula-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
           - description
@@ -129,7 +129,7 @@ variants:
           - form
           - description
       - source: wikipedia-calendula-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -137,7 +137,7 @@ variants:
     description: The leaves can be made into a poultice, believed to help scratches and shallow cuts heal faster and to keep them from infection.
     references:
       - source: wikipedia-calendula-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

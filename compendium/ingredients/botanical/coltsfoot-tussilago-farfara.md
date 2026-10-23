@@ -78,7 +78,7 @@ references:
     supports:
       - description
   - source: wikipedia-tussilago
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

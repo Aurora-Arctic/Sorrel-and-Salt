@@ -80,7 +80,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-salvia-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

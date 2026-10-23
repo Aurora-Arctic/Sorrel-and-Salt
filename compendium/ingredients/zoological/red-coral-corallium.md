@@ -40,7 +40,7 @@ references:
       - categories
       - substitutes
   - source: wikipedia-precious-coral
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -57,7 +57,7 @@ variants:
         supports:
           - form
       - source: wikipedia-precious-coral
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Powder

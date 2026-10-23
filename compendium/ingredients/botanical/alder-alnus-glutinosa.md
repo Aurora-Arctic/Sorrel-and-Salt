@@ -71,7 +71,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-alnus-glutinosa
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -86,7 +86,7 @@ variants:
           - form
           - description
       - source: wikipedia-alnus-glutinosa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -124,7 +124,7 @@ variants:
           - form
           - description
       - source: wikipedia-alnus-glutinosa
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

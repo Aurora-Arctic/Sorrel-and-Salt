@@ -28,7 +28,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Feverfew"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Feverfew
+    resolvedBy: wikipedia-tanacetum-parthenium
     supports:
       - canonicalName
       - nomenclature
@@ -40,7 +42,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Feverfew"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Feverfew
+    resolvedBy: wikipedia-tanacetum-parthenium
     supports:
       - canonicalName
       - nomenclature
@@ -74,7 +78,7 @@ references:
     supports:
       - description
   - source: wikipedia-tanacetum-parthenium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -93,7 +97,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Feverfew"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Feverfew
+        resolvedBy: wikipedia-tanacetum-parthenium
         supports:
           - form
           - description
@@ -115,7 +121,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Feverfew"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Feverfew
+        resolvedBy: wikipedia-tanacetum-parthenium
         supports:
           - form
           - description

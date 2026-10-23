@@ -87,7 +87,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-primula-veris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -117,7 +117,7 @@ variants:
         supports:
           - form
       - source: wikipedia-primula-veris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -132,7 +132,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-primula-veris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

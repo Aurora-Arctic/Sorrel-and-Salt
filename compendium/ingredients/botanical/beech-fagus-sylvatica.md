@@ -88,7 +88,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-fagus-sylvatica
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -116,7 +116,7 @@ variants:
           - form
           - description
       - source: wikipedia-fagus-sylvatica
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -153,7 +153,7 @@ variants:
           - form
           - description
       - source: wikipedia-fagus-sylvatica
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -179,7 +179,7 @@ variants:
           - form
           - description
       - source: wikipedia-fagus-sylvatica
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

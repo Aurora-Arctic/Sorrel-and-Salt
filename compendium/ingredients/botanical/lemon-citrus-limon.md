@@ -42,7 +42,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Lemon"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lemon
+    resolvedBy: wikipedia-lemon
     supports:
       - description
       - elements
@@ -52,7 +54,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Lemon"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lemon
+    resolvedBy: wikipedia-lemon
     supports:
       - description
       - elements
@@ -68,7 +72,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-lemon
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -79,20 +83,24 @@ variants:
       - yellow
     references:
       - source: wikipedia-lemon
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
       - source: cunningham-herbs
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
           - description
@@ -108,17 +116,21 @@ variants:
           - safetyNotes
       - source: cunningham-herbs
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
       - source: wikipedia-lemon
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Oil
@@ -132,11 +144,13 @@ variants:
           - safetyNotes
       - source: kynes-plants
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
       - source: wikipedia-lemon
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -147,13 +161,15 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
           - description
           - categories
       - source: wikipedia-lemon
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -164,14 +180,18 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
           - description
           - colours
       - source: cunningham-herbs
         locator: under "Lemon"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon
+        resolvedBy: wikipedia-lemon
         supports:
           - form
           - description

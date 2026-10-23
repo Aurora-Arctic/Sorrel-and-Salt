@@ -53,7 +53,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-erythronium-americanum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -82,7 +82,7 @@ variants:
           - form
           - description
       - source: wikipedia-erythronium-americanum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -95,7 +95,7 @@ references:
       - deities
       - description
   - source: wikipedia-artemisia-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

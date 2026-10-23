@@ -80,7 +80,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-fumaria-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

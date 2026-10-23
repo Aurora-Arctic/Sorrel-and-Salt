@@ -22,12 +22,16 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Edelweiss"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Edelweiss
+    resolvedBy: wikipedia-edelweiss
     supports:
       - description
   - source: kynes-plants
     locator: under "Edelweiss"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Edelweiss
+    resolvedBy: wikipedia-edelweiss
     supports:
       - elements
       - celestialBodies
@@ -36,7 +40,7 @@ references:
       - categories
       - description
   - source: wikipedia-edelweiss
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -50,17 +54,21 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Edelweiss"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Edelweiss
+        resolvedBy: wikipedia-edelweiss
         supports:
           - form
           - colours
       - source: cunningham-herbs
         locator: under "Edelweiss"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Edelweiss
+        resolvedBy: wikipedia-edelweiss
         supports:
           - form
       - source: wikipedia-edelweiss
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -69,7 +77,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Edelweiss"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Edelweiss
+        resolvedBy: wikipedia-edelweiss
         supports:
           - form
           - description
@@ -78,7 +88,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Edelweiss"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Edelweiss
+        resolvedBy: wikipedia-edelweiss
         supports:
           - form
           - description

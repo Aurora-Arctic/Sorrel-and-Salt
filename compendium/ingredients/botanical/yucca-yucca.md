@@ -25,7 +25,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Yucca"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Yucca
+    resolvedBy: wikipedia-yucca
     supports:
       - canonicalName
       - description
@@ -35,7 +37,9 @@ references:
       - categories
   - source: kynes-plants
     locator: under "Yucca"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Yucca
+    resolvedBy: wikipedia-yucca
     supports:
       - description
       - elements
@@ -51,7 +55,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-yucca
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -69,14 +73,18 @@ variants:
           - form
       - source: kynes-plants
         locator: under "Yucca"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Yucca
+        resolvedBy: wikipedia-yucca
         supports:
           - form
           - description
           - categories
       - source: cunningham-herbs
         locator: under "Yucca"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Yucca
+        resolvedBy: wikipedia-yucca
         supports:
           - form
   - form: Leaf
@@ -86,14 +94,18 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Yucca"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Yucca
+        resolvedBy: wikipedia-yucca
         supports:
           - form
           - description
           - categories
       - source: kynes-plants
         locator: under "Yucca"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Yucca
+        resolvedBy: wikipedia-yucca
         supports:
           - form
           - description

@@ -17,7 +17,9 @@ deities:
 references:
   - source: cunningham-herbs
     locator: under "Fenugreek"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fenugreek
+    resolvedBy: wikipedia-fenugreek
     supports:
       - canonicalName
       - nomenclature
@@ -40,7 +42,7 @@ references:
     supports:
       - description
   - source: wikipedia-fenugreek
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -50,7 +52,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fenugreek"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fenugreek
+        resolvedBy: wikipedia-fenugreek
         supports:
           - form
       - source: ahpa-safety
@@ -59,7 +63,7 @@ variants:
         supports:
           - form
       - source: wikipedia-fenugreek
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Leaf
@@ -72,7 +76,7 @@ variants:
           - form
           - description
       - source: wikipedia-fenugreek
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

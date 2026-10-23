@@ -56,7 +56,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-pistacia-lentiscus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

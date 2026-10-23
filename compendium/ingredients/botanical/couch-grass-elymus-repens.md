@@ -59,7 +59,7 @@ references:
       - folkNames
       - safetyNotes
   - source: wikipedia-elymus-repens
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -81,7 +81,7 @@ variants:
         supports:
           - form
       - source: wikipedia-elymus-repens
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

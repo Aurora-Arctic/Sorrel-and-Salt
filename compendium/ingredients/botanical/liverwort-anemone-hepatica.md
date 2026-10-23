@@ -38,7 +38,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-anemone-hepatica
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

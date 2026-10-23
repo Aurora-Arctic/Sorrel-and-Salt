@@ -87,7 +87,7 @@ references:
     supports:
       - safetyNotes
   - source: wikipedia-viscum-album
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -112,7 +112,7 @@ variants:
       - yellow
     references:
       - source: wikipedia-viscum-album
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

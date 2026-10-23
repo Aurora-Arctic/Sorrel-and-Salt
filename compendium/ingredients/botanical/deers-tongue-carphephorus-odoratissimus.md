@@ -23,7 +23,7 @@ categories:
   - Protection
 references:
   - source: wikipedia-carphephorus-odoratissimus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

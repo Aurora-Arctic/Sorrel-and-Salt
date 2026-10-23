@@ -35,7 +35,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Marjoram"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Marjoram
+    resolvedBy: wikipedia-marjoram
     supports:
       - canonicalName
       - elements
@@ -68,7 +70,7 @@ references:
     supports:
       - description
   - source: wikipedia-marjoram
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -88,7 +90,7 @@ variants:
         supports:
           - form
       - source: wikipedia-marjoram
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -98,7 +100,7 @@ variants:
       - yellow
     references:
       - source: wikipedia-marjoram
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

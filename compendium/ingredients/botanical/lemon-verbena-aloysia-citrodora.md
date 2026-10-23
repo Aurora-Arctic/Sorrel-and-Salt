@@ -19,7 +19,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Lemon Verbena"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lemon Verbena
+    resolvedBy: wikipedia-aloysia-citrodora
     supports:
       - description
       - elements
@@ -34,7 +36,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-aloysia-citrodora
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -49,13 +51,15 @@ variants:
         supports:
           - form
       - source: wikipedia-aloysia-citrodora
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: cunningham-herbs
         locator: under "Lemon Verbena"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lemon Verbena
+        resolvedBy: wikipedia-aloysia-citrodora
         supports:
           - description
   - form: Oil
@@ -63,7 +67,7 @@ variants:
     safetyNotes: The oil sensitises the skin and is phototoxic, and the European Union bars verbena oils, other than the absolute, as fragrance ingredients. Used as a food flavouring, lemon verbena oil is generally recognised as safe by the US Food and Drug Administration.
     references:
       - source: wikipedia-aloysia-citrodora
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

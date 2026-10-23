@@ -89,7 +89,7 @@ references:
       - deities
       - categories
   - source: wikipedia-sorbus-aucuparia
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -116,7 +116,7 @@ variants:
       - Hex-Breaking
     references:
       - source: wikipedia-sorbus-aucuparia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -147,7 +147,7 @@ variants:
       - Protection
     references:
       - source: wikipedia-sorbus-aucuparia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -179,7 +179,7 @@ variants:
       - Psychic Work
     references:
       - source: wikipedia-sorbus-aucuparia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

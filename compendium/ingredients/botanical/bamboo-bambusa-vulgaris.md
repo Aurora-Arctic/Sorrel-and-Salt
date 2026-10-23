@@ -50,7 +50,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-bambusa-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

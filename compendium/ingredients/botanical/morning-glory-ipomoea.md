@@ -46,7 +46,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-ipomoea
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -69,7 +69,7 @@ variants:
           - form
           - description
       - source: wikipedia-ipomoea
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

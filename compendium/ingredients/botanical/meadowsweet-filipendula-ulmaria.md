@@ -81,7 +81,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-filipendula-ulmaria
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -113,7 +113,7 @@ variants:
           - description
           - colours
       - source: wikipedia-filipendula-ulmaria
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

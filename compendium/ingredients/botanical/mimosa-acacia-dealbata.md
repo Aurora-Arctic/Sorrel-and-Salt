@@ -51,7 +51,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-acacia-dealbata
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -69,7 +69,7 @@ variants:
           - form
           - description
       - source: wikipedia-acacia-dealbata
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -8,7 +8,7 @@ folkNames:
   - Tabunoki
 references:
   - source: wikipedia-machilus-thunbergii
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -26,7 +26,7 @@ variants:
   - form: Powder
     references:
       - source: wikipedia-machilus-thunbergii
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
       - source: wikipedia-incense

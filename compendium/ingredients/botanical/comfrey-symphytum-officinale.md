@@ -86,7 +86,7 @@ references:
     supports:
       - description
   - source: wikipedia-symphytum-officinale
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -137,7 +137,7 @@ variants:
           - form
           - description
       - source: wikipedia-symphytum-officinale
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -81,7 +81,7 @@ references:
     supports:
       - description
   - source: wikipedia-almond
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -94,7 +94,7 @@ variants:
       - name: Peach
     references:
       - source: wikipedia-almond
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
       - source: kynes-plants
@@ -114,7 +114,7 @@ variants:
     description: Almond oil is pressed from the dried kernels of sweet and bitter almonds alike, though Grieve holds that oil meant for the skin must come from sweet almonds only. Aromatherapists and cosmetic makers use sweet almond oil to carry other oils, and it has long gone into soap and been rubbed on chapped hands; bitter almond oil, which contains benzaldehyde, flavours food and scents perfume. In magic a dab on the third eye opens the awareness for divination or for speaking with spirits.
     references:
       - source: wikipedia-almond
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

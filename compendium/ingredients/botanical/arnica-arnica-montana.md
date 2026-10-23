@@ -55,7 +55,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-arnica-montana
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -82,7 +82,7 @@ variants:
         supports:
           - form
       - source: wikipedia-arnica-montana
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -95,7 +95,7 @@ variants:
           - form
           - description
       - source: wikipedia-arnica-montana
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

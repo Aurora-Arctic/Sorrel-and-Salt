@@ -42,7 +42,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-succisa-pratensis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -59,7 +59,7 @@ variants:
           - form
           - description
       - source: wikipedia-succisa-pratensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -77,7 +77,7 @@ variants:
           - description
           - colours
       - source: wikipedia-succisa-pratensis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

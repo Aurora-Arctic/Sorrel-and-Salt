@@ -34,7 +34,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Lovage"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lovage
+    resolvedBy: wikipedia-lovage
     supports:
       - canonicalName
       - elements
@@ -45,7 +47,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Lovage"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Lovage
+    resolvedBy: wikipedia-lovage
     supports:
       - canonicalName
       - elements
@@ -55,7 +59,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-lovage
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -65,13 +69,15 @@ variants:
     description: The root is eaten as a vegetable or grated into salads, and, holding a heavy volatile oil, is used as a mild aquaretic. Kynes sells it cut and dried, and has a piece of it held briefly to steady and ground oneself.
     references:
       - source: wikipedia-lovage
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Lovage"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lovage
+        resolvedBy: wikipedia-lovage
         supports:
           - form
           - description
@@ -79,13 +85,15 @@ variants:
     description: The seeds are used as a spice in the same way as fennel seeds, and in Romania they go, with the dried leaves, into pickled cabbage and cucumbers for flavour and keeping. Kynes lays a ring of scattered seed on the altar to kindle romance between partners.
     references:
       - source: wikipedia-lovage
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Lovage"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lovage
+        resolvedBy: wikipedia-lovage
         supports:
           - form
           - description
@@ -95,14 +103,16 @@ variants:
       - green
     references:
       - source: wikipedia-lovage
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
           - colours
       - source: kynes-plants
         locator: under "Lovage"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lovage
+        resolvedBy: wikipedia-lovage
         supports:
           - colours
   - form: Oil
@@ -111,12 +121,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Lovage"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Lovage
+        resolvedBy: wikipedia-lovage
         supports:
           - form
           - description
       - source: wikipedia-lovage
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes

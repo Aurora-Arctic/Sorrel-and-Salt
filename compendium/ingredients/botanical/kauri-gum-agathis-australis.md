@@ -9,7 +9,7 @@ folkNames:
   - Kapia
 references:
   - source: wikipedia-agathis-australis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -44,7 +44,7 @@ variants:
     description: Kauri timber comes in long, clear, straight-grained lengths, light in weight, that plane and saw easily and hold screws and nails without splitting. Māori built large waka from its great logs, and settlers used it for ship masts, houses, furniture and panelling; it darkens with age to a rich golden brown. Swamp kauri, ancient trees preserved in waterlogged ground, is dug up and dried for furniture.
     references:
       - source: wikipedia-agathis-australis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -27,7 +27,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Crocus"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Crocus
+    resolvedBy: wikipedia-crocus
     supports:
       - elements
       - celestialBodies
@@ -36,7 +38,9 @@ references:
       - safetyNotes
   - source: kynes-plants
     locator: under "Crocus"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Crocus
+    resolvedBy: wikipedia-crocus
     supports:
       - elements
       - celestialBodies
@@ -45,7 +49,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-crocus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -55,11 +59,13 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Crocus"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Crocus
+        resolvedBy: wikipedia-crocus
         supports:
           - form
       - source: wikipedia-crocus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Powder
@@ -67,7 +73,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Crocus"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Crocus
+        resolvedBy: wikipedia-crocus
         supports:
           - form
           - description

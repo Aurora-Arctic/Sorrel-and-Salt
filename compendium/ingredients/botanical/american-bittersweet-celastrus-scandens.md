@@ -53,7 +53,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-celastrus-scandens
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -70,7 +70,7 @@ variants:
           - form
           - toxic
       - source: wikipedia-celastrus-scandens
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - toxic

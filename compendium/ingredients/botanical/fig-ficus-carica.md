@@ -52,7 +52,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Fig"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fig
+    resolvedBy: wikipedia-fig
     supports:
       - canonicalName
       - nomenclature
@@ -65,7 +67,9 @@ references:
       - description
   - source: kynes-plants
     locator: under "Fig"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fig
+    resolvedBy: wikipedia-fig
     supports:
       - canonicalName
       - nomenclature
@@ -81,7 +85,7 @@ references:
     supports:
       - description
   - source: wikipedia-fig
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -94,18 +98,22 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fig"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fig
+        resolvedBy: wikipedia-fig
         supports:
           - form
           - description
       - source: kynes-plants
         locator: under "Fig"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fig
+        resolvedBy: wikipedia-fig
         supports:
           - form
           - description
       - source: wikipedia-fig
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -114,12 +122,14 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fig"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fig
+        resolvedBy: wikipedia-fig
         supports:
           - form
           - description
       - source: wikipedia-fig
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -128,7 +138,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Fig"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fig
+        resolvedBy: wikipedia-fig
         supports:
           - form
           - description
@@ -138,12 +150,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Fig"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fig
+        resolvedBy: wikipedia-fig
         supports:
           - form
           - description
       - source: wikipedia-fig
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

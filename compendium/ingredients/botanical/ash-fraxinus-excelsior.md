@@ -92,7 +92,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-fraxinus-excelsior
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -115,7 +115,7 @@ variants:
           - form
           - description
       - source: wikipedia-fraxinus-excelsior
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Leaf
@@ -133,7 +133,7 @@ variants:
         supports:
           - description
       - source: wikipedia-fraxinus-excelsior
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -158,7 +158,7 @@ variants:
           - form
           - description
       - source: wikipedia-fraxinus-excelsior
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Seed

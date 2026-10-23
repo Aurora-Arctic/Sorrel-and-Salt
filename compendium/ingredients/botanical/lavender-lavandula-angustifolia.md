@@ -77,7 +77,7 @@ references:
     supports:
       - safetyNotes
   - source: wikipedia-lavandula-angustifolia
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -104,7 +104,7 @@ variants:
           - form
           - colours
       - source: wikipedia-lavandula-angustifolia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Leaf
@@ -123,7 +123,7 @@ variants:
           - form
           - description
       - source: wikipedia-lavandula-angustifolia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Oil
@@ -142,7 +142,7 @@ variants:
           - form
           - description
       - source: wikipedia-lavandula-angustifolia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
       - source: ahpa-safety

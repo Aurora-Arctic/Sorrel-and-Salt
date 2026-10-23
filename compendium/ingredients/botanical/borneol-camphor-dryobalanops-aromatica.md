@@ -8,7 +8,7 @@ folkNames:
   - Sumatran Camphor
 references:
   - source: wikipedia-dryobalanops-aromatica
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

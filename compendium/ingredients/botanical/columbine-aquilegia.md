@@ -55,7 +55,7 @@ references:
     supports:
       - description
   - source: wikipedia-aquilegia
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -93,7 +93,7 @@ variants:
           - form
           - description
       - source: wikipedia-aquilegia
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

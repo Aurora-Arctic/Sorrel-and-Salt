@@ -54,7 +54,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-avocado
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -79,7 +79,7 @@ variants:
         supports:
           - form
       - source: wikipedia-avocado
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Seed
@@ -97,7 +97,7 @@ variants:
           - description
           - safetyNotes
       - source: wikipedia-avocado
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes
@@ -127,7 +127,7 @@ variants:
           - form
           - description
       - source: wikipedia-avocado
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

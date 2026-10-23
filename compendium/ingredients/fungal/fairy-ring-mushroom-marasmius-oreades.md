@@ -37,7 +37,7 @@ references:
       - safetyNotes
       - description
   - source: wikipedia-marasmius-oreades
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -54,7 +54,7 @@ variants:
           - form
           - description
       - source: wikipedia-marasmius-oreades
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

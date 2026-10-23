@@ -31,7 +31,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-pseudognaphalium-obtusifolium
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -51,14 +51,14 @@ variants:
           - description
           - colours
       - source: wikipedia-pseudognaphalium-obtusifolium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Leaf
     description: Several nations used the leaves. The Menominee burned the dried leaves as a smudge to drive ghosts from a dwelling and steamed them as an inhalant for headaches, the Creek added them to medicines for their scent, and the Koasati drank a decoction of them for fevers.
     references:
       - source: wikipedia-pseudognaphalium-obtusifolium
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

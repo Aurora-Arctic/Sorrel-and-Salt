@@ -54,7 +54,9 @@ categories:
 references:
   - source: kynes-plants
     locator: under "Marsh Marigold"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Marsh Marigold
+    resolvedBy: wikipedia-caltha-palustris
     supports:
       - canonicalName
       - elements
@@ -65,7 +67,7 @@ references:
       - safetyNotes
       - toxic
   - source: wikipedia-caltha-palustris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -80,13 +82,15 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Marsh Marigold"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Marsh Marigold
+        resolvedBy: wikipedia-caltha-palustris
         supports:
           - form
           - colours
           - description
       - source: wikipedia-caltha-palustris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Leaf
@@ -95,13 +99,15 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Marsh Marigold"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Marsh Marigold
+        resolvedBy: wikipedia-caltha-palustris
         supports:
           - form
           - safetyNotes
           - toxic
       - source: wikipedia-caltha-palustris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - safetyNotes

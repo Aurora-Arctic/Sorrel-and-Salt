@@ -76,7 +76,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-phaseolus-vulgaris
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -100,7 +100,7 @@ variants:
         supports:
           - form
       - source: wikipedia-phaseolus-vulgaris
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

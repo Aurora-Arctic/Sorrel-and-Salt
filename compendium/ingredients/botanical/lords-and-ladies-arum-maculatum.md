@@ -54,7 +54,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-arum-maculatum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -76,7 +76,7 @@ variants:
           - safetyNotes
           - toxic
       - source: wikipedia-arum-maculatum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - safetyNotes
@@ -98,7 +98,7 @@ variants:
       - orange
     references:
       - source: wikipedia-arum-maculatum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

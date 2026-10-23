@@ -65,7 +65,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-althaea-officinalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -89,7 +89,7 @@ variants:
         supports:
           - description
       - source: wikipedia-althaea-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Leaf
@@ -106,7 +106,7 @@ variants:
         supports:
           - description
       - source: wikipedia-althaea-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
       - source: kynes-plants
@@ -132,7 +132,7 @@ variants:
           - description
           - colours
       - source: wikipedia-althaea-officinalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours

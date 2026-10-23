@@ -22,7 +22,7 @@ references:
       - celestialBodies
       - categories
   - source: wikipedia-bursera-fagaroides
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -41,7 +41,7 @@ variants:
         supports:
           - form
       - source: wikipedia-bursera-fagaroides
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
       - source: wikipedia-copal

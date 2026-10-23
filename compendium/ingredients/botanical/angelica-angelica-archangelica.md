@@ -88,7 +88,7 @@ references:
     supports:
       - description
   - source: wikipedia-angelica-archangelica
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

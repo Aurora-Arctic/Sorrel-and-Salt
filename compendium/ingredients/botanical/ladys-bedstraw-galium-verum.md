@@ -41,7 +41,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-galium-verum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -67,7 +67,7 @@ variants:
           - description
           - colours
       - source: wikipedia-galium-verum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

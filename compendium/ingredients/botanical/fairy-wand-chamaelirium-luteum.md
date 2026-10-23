@@ -44,7 +44,7 @@ references:
       - nomenclature
       - safetyNotes
   - source: wikipedia-chamaelirium-luteum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

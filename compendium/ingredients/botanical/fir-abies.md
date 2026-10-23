@@ -41,7 +41,9 @@ categories:
 references:
   - source: kynes-plants
     locator: under "Fir"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Fir
+    resolvedBy: wikipedia-fir
     supports:
       - elements
       - celestialBodies
@@ -55,7 +57,7 @@ references:
     supports:
       - safetyNotes
   - source: wikipedia-fir
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -66,7 +68,9 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Fir"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Fir
+        resolvedBy: wikipedia-fir
         supports:
           - form
           - description

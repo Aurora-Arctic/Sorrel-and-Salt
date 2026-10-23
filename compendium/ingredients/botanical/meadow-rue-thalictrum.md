@@ -11,7 +11,9 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Meadow Rue"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Meadow Rue
+    resolvedBy: wikipedia-thalictrum
     supports:
       - canonicalName
       - categories
@@ -19,7 +21,7 @@ references:
       - safetyNotes
       - description
   - source: wikipedia-thalictrum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -28,7 +30,9 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Meadow Rue"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Meadow Rue
+        resolvedBy: wikipedia-thalictrum
         supports:
           - form
 ---

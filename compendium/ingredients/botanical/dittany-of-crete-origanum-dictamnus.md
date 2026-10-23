@@ -29,13 +29,15 @@ categories:
   - Psychic Work
 references:
   - source: wikipedia-origanum-dictamnus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
   - source: cunningham-herbs
     locator: under "Dittany of Crete"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Dittany of Crete
+    resolvedBy: wikipedia-origanum-dictamnus
     supports:
       - elements
       - celestialBodies

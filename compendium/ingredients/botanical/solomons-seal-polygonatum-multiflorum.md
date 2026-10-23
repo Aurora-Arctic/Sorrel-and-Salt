@@ -55,7 +55,7 @@ references:
       - folkNames
       - categories
   - source: wikipedia-polygonatum-multiflorum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

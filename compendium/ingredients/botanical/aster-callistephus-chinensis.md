@@ -54,7 +54,7 @@ references:
       - categories
       - folkNames
   - source: wikipedia-callistephus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -75,7 +75,7 @@ variants:
         supports:
           - form
       - source: wikipedia-callistephus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

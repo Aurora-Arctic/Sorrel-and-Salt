@@ -81,7 +81,7 @@ references:
     supports:
       - description
   - source: wikipedia-anise
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -147,7 +147,7 @@ variants:
     safetyNotes: Estragole makes up 1–3% of the oil. Alcohol extracts and the essential oil should not be used in pregnancy, though an infusion of the seed may be.
     references:
       - source: wikipedia-anise
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -26,7 +26,7 @@ references:
       - celestialBodies
       - folkNames
   - source: wikipedia-tetraclinis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -57,7 +57,7 @@ variants:
     description: The wood, sold as thuya or citron wood and known in antiquity as thyine wood, has been prized for decorative work since ancient times, above all the burls that form at the base of old trees that have resprouted again and again; the Romans made costly furniture from it. The present Moroccan trade in burls is unsustainable and has caused heavy loss of the trees.
     references:
       - source: wikipedia-tetraclinis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

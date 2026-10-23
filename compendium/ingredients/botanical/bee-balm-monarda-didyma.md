@@ -57,7 +57,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-monarda-didyma
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -85,7 +85,7 @@ variants:
           - form
           - description
       - source: wikipedia-monarda-didyma
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -102,7 +102,7 @@ variants:
           - description
           - colours
       - source: wikipedia-monarda-didyma
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

@@ -42,7 +42,7 @@ references:
       - toxic
       - description
   - source: wikipedia-aplectrum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

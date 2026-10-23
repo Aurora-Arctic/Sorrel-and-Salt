@@ -56,7 +56,7 @@ references:
     supports:
       - folkNames
   - source: wikipedia-american-ginseng
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

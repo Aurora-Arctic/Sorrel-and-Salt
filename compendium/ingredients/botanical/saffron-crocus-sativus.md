@@ -73,7 +73,7 @@ references:
       - safetyNotes
       - folkNames
   - source: wikipedia-crocus-sativus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -109,7 +109,7 @@ variants:
           - description
           - colours
       - source: wikipedia-crocus-sativus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

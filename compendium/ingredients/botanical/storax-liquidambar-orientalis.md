@@ -58,7 +58,7 @@ references:
       - deities
       - categories
   - source: wikipedia-liquidambar-orientalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -104,7 +104,7 @@ variants:
       - Purification
     references:
       - source: wikipedia-liquidambar-orientalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

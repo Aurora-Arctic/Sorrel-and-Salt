@@ -23,7 +23,7 @@ references:
       - categories
       - description
   - source: wikipedia-curry-tree
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -33,7 +33,7 @@ variants:
   - form: Leaf
     references:
       - source: wikipedia-curry-tree
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---

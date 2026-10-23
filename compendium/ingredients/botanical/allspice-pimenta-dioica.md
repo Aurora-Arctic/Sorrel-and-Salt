@@ -77,7 +77,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-allspice
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -107,7 +107,7 @@ variants:
           - form
           - substitutes
       - source: wikipedia-allspice
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Oil
@@ -131,7 +131,7 @@ variants:
     description: The fresh leaves feel much like bay leaves and go into cooking in the same way, and where the tree is farmed its leaves and wood are burned to smoke meat. Crushed, the leaves smell of clove; dried leaves are sold as well.
     references:
       - source: wikipedia-allspice
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

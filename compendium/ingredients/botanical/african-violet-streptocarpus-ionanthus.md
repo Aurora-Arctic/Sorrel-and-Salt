@@ -36,7 +36,7 @@ references:
       - categories
       - description
   - source: wikipedia-streptocarpus-ionanthus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description

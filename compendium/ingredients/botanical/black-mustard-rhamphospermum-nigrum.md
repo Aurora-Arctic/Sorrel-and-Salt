@@ -55,7 +55,7 @@ references:
     supports:
       - description
   - source: wikipedia-rhamphospermum-nigrum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -87,7 +87,7 @@ variants:
           - form
           - colours
       - source: wikipedia-rhamphospermum-nigrum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours

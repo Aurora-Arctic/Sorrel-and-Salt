@@ -13,7 +13,7 @@ folkNames:
   - Esteva
 references:
   - source: wikipedia-cistus-ladanifer
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature

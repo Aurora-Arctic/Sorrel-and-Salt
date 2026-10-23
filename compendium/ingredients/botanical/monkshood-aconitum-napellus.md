@@ -69,7 +69,7 @@ references:
       - canonicalName
       - description
   - source: wikipedia-aconitum-napellus
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -95,7 +95,7 @@ variants:
     toxic: true
     references:
       - source: wikipedia-aconitum-napellus
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

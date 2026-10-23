@@ -72,7 +72,7 @@ references:
       - celestialBodies
       - folkNames
   - source: wikipedia-geum-urbanum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -91,7 +91,7 @@ variants:
         supports:
           - form
       - source: wikipedia-geum-urbanum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
   - form: Flower
@@ -107,7 +107,7 @@ variants:
           - description
           - colours
       - source: wikipedia-geum-urbanum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - colours
   - form: Seed
@@ -120,7 +120,7 @@ variants:
           - form
           - description
       - source: wikipedia-geum-urbanum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
 ---

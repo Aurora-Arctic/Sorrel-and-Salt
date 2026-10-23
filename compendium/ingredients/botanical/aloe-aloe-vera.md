@@ -67,7 +67,7 @@ references:
       - canonicalName
       - description
   - source: wikipedia-aloe-vera
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames
@@ -95,7 +95,7 @@ variants:
           - form
           - safetyNotes
       - source: wikipedia-aloe-vera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -122,7 +122,7 @@ variants:
           - form
           - description
       - source: wikipedia-aloe-vera
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

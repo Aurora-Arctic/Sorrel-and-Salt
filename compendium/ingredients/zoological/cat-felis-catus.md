@@ -12,7 +12,7 @@ categories:
   - Familiar Work
 references:
   - source: wikipedia-cat
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
@@ -50,7 +50,7 @@ variants:
     description: A cat can push its claws out and draw them back. At rest they lie sheathed in the skin and fur around the toe pads, which keeps them sharp, and those of the forefeet are usually the sharper. Most cats have five claws on each front paw and four on each hind paw, and a cat sheds the outer layer of its claw sheaths when it scratches a rough surface.
     references:
       - source: wikipedia-cat
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -58,7 +58,7 @@ variants:
     description: Cat pelts have been put to superstitious use in witchcraft, and in Switzerland they are still made into blankets as a traditional remedy thought to cure rheumatism. Cat fur has also gone into coats, hats, gloves and other goods, a trade outlawed in the United States since 2000 and in the European Union and the United Kingdom since 2007.
     references:
       - source: wikipedia-cat
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

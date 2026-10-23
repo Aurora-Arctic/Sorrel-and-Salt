@@ -55,7 +55,7 @@ references:
       - canonicalName
       - safetyNotes
   - source: wikipedia-sassafras-albidum
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -96,7 +96,7 @@ variants:
     description: Dried and ground, the leaves are filé powder, the thickener and seasoning of Louisiana gumbo, a use that came from the Choctaw. Kynes sets a pair of mitten-shaped leaves, a left and a right, wherever negativity needs warding off, and washes coins in a tea of the leaves before keeping them in a wallet to draw money.
     references:
       - source: wikipedia-sassafras-albidum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -128,7 +128,7 @@ variants:
         supports:
           - safetyNotes
       - source: wikipedia-sassafras-albidum
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

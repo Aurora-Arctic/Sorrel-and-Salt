@@ -71,7 +71,7 @@ references:
     supports:
       - description
   - source: wikipedia-centaurea-benedicta
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - folkNames

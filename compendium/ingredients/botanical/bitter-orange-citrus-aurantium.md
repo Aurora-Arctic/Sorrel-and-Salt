@@ -36,7 +36,7 @@ references:
       - description
       - folkNames
   - source: wikipedia-bitter-orange
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -53,7 +53,7 @@ variants:
         supports:
           - form
       - source: wikipedia-bitter-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - colours
@@ -73,7 +73,7 @@ variants:
           - form
           - description
       - source: wikipedia-bitter-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -94,7 +94,7 @@ variants:
           - description
           - colours
       - source: wikipedia-bitter-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description
@@ -107,7 +107,7 @@ variants:
           - form
           - description
       - source: wikipedia-bitter-orange
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
           - description

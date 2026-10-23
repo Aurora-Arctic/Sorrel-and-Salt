@@ -54,7 +54,7 @@ references:
       - description
       - safetyNotes
   - source: wikipedia-lobelia-inflata
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -77,7 +77,7 @@ variants:
           - form
           - description
       - source: wikipedia-lobelia-inflata
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Flower

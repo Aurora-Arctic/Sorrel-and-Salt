@@ -26,14 +26,18 @@ categories:
 references:
   - source: cunningham-herbs
     locator: under "Larch"; p. 266
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Larch
+    resolvedBy: wikipedia-larch
     supports:
       - categories
       - description
       - safetyNotes
   - source: kynes-plants
     locator: under "Larch"
-    nameBasis: unaudited
+    nameBasis: resolved
+    headedAs: Larch
+    resolvedBy: wikipedia-larch
     supports:
       - elements
       - celestialBodies
@@ -41,7 +45,7 @@ references:
       - folkNames
       - description
   - source: wikipedia-larch
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -51,12 +55,16 @@ variants:
     references:
       - source: cunningham-herbs
         locator: under "Larch"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Larch
+        resolvedBy: wikipedia-larch
         supports:
           - form
       - source: kynes-plants
         locator: under "Larch"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Larch
+        resolvedBy: wikipedia-larch
         supports:
           - form
   - form: Leaf
@@ -64,12 +72,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Larch"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Larch
+        resolvedBy: wikipedia-larch
         supports:
           - form
           - description
       - source: wikipedia-larch
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Resin
@@ -77,12 +87,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Larch"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Larch
+        resolvedBy: wikipedia-larch
         supports:
           - form
           - description
       - source: wikipedia-larch
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
   - form: Oil
@@ -90,12 +102,14 @@ variants:
     references:
       - source: kynes-plants
         locator: under "Larch"
-        nameBasis: unaudited
+        nameBasis: resolved
+        headedAs: Larch
+        resolvedBy: wikipedia-larch
         supports:
           - form
           - description
       - source: wikipedia-larch
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
 ---

@@ -39,7 +39,7 @@ references:
       - deities
       - categories
   - source: wikipedia-galanthus-nivalis
-    nameBasis: unaudited
+    nameBasis: stated
     supports:
       - canonicalName
       - description
@@ -64,7 +64,7 @@ variants:
           - description
           - colours
       - source: wikipedia-galanthus-nivalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - description
           - colours
@@ -85,7 +85,7 @@ variants:
           - description
           - toxic
       - source: wikipedia-galanthus-nivalis
-        nameBasis: unaudited
+        nameBasis: stated
         supports:
           - form
 ---
