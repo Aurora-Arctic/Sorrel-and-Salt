@@ -1,0 +1,11 @@
+@use '../../scss/variables' as *;
+
+// The admin's review mark above the details' body (M14.8): the badge, then the switch beneath it,
+// standing off the summary by the summary's own gap. Tokens only, before the section's design review.
+.review-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(2);
+  margin-block-end: space(6);
+}

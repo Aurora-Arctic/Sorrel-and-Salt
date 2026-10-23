@@ -50,6 +50,7 @@ type Documents = {
     "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": typeof types.RemoveCupboardEntryDocument,
     "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n": typeof types.MakeItOursDocument,
     "\n  mutation DeleteOwnIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n": typeof types.DeleteOwnIngredientDocument,
+    "\n  mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {\n    setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) {\n      id\n    }\n  }\n": typeof types.SetCompendiumEntryReviewedDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
     "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": typeof types.CompendiumEntryUsersDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          nomenclature\n          slug\n          isGlobal\n          inCupboard(workspaceId: $workspaceId)\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
@@ -133,6 +134,7 @@ const documents: Documents = {
     "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": types.RemoveCupboardEntryDocument,
     "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n": types.MakeItOursDocument,
     "\n  mutation DeleteOwnIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n": types.DeleteOwnIngredientDocument,
+    "\n  mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {\n    setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) {\n      id\n    }\n  }\n": types.SetCompendiumEntryReviewedDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
     "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": types.CompendiumEntryUsersDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          nomenclature\n          slug\n          isGlobal\n          inCupboard(workspaceId: $workspaceId)\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
@@ -338,6 +340,10 @@ export function graphql(source: "\n  mutation MakeItOurs($workspaceId: ID!, $ing
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteOwnIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation DeleteOwnIngredient($id: ID!, $workspaceId: ID!) {\n    deleteIngredient(id: $id, workspaceId: $workspaceId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {\n    setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SetCompendiumEntryReviewed($id: ID!, $reviewed: Boolean!) {\n    setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

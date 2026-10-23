@@ -66,7 +66,10 @@ const compendiumFacets = vi.fn();
 // The curator's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
+// The open entry's review mark (M14.8), read uncached with the curator's session.
+const readCompendiumReview = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  readCompendiumReview,
   listCompendium,
   countCompendium,
   compendiumFacets,
@@ -221,6 +224,8 @@ beforeEach(() => {
   countCompendium.mockResolvedValue({ totalCount: 1, countBefore: 0 });
   resolveCompendiumSlug.mockReset();
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: TESTWORT, movedAway: null });
+  readCompendiumReview.mockReset();
+  readCompendiumReview.mockResolvedValue(null);
   ingredientDetailOf.mockReset();
   ingredientDetailOf.mockResolvedValue({
     ...entryDetail({ safetyNotes: 'Fixture admin caution.' }),
@@ -770,6 +775,23 @@ describe('the /admin/compendium details modal', () => {
     ).toBeInTheDocument();
   });
 
+  // M14.8: the badge and switch that mark the entry reviewed, on the admin's own read of the mark.
+  it("shows the entry's review mark in the details, read with the curator's session", async () => {
+    readCompendiumReview.mockResolvedValue({ reviewedAt: new Date('2026-10-01T09:30:00.000Z') });
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(ADMIN, TESTWORT.id);
+    expect(within(details()).getByRole('switch', { name: 'Reviewed By Curator' })).toBeChecked();
+  });
+
+  it('shows an entry with no mark as needing review', async () => {
+    await renderPage({ ...FILTERED, entry: TESTWORT.slug });
+
+    expect(
+      within(details()).getByRole('switch', { name: 'Reviewed By Curator' }),
+    ).not.toBeChecked();
+  });
+
   it("reads no entry's sections when no details are open", async () => {
     await renderPage(FILTERED);
 
@@ -777,6 +799,7 @@ describe('the /admin/compendium details modal', () => {
     expect(screen.getAllByRole('row')).toHaveLength(2);
     expect(ingredientDetailOf).not.toHaveBeenCalled();
     expect(covensHoldingEntry).not.toHaveBeenCalled();
+    expect(readCompendiumReview).not.toHaveBeenCalled();
   });
 
   it("lists the curator's own covens that hold the entry in the details, read with the curator's session", async () => {

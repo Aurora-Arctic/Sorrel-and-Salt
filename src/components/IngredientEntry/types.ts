@@ -457,3 +457,12 @@ export interface SummaryJar {
   /** The low-stock threshold, `null` or 0 for none. */
   threshold: number | null;
 }
+
+/**
+ * The admin's review mark on a compendium entry (M14.8, `review-mark.tsx`): the entry, and when a
+ * curator last marked it reviewed, as an ISO moment, or `null` while it needs review.
+ */
+export interface ReviewMarkProps {
+  ingredientId: string;
+  reviewedAt: string | null;
+}

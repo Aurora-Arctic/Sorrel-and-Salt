@@ -7,6 +7,7 @@ import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
 import { detailsHeading, detailsMarks } from './details';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
+import ReviewMark from './review-mark';
 import IngredientSummary from './summary';
 import type { IngredientDetailsOpened, IngredientEntryProps, SummaryJar } from './types';
 import type {
@@ -981,3 +982,17 @@ DetailsPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 
 export const DetailsPhoneLight: Story = () => <DetailsFromCovenList />;
 DetailsPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+
+// The admin's review mark (M14.8), above the summary in an entry's details on the
+// admin list: an entry no curator has reviewed, then one a curator has. The
+// workshop has no server, so the switch's change is refused and the switch goes back.
+export const ReviewMarkNeedsReview: Story = () => (
+  <ReviewMark ingredientId="00000000-0000-4000-8000-0000000000e1" reviewedAt={null} />
+);
+
+export const ReviewMarkReviewed: Story = () => (
+  <ReviewMark
+    ingredientId="00000000-0000-4000-8000-0000000000e1"
+    reviewedAt="2026-10-01T09:30:00.000Z"
+  />
+);
