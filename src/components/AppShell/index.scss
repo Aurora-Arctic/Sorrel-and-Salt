@@ -81,6 +81,14 @@
   }
 }
 
+// Closer at a phone’s width. The shell hides the links there (below), so only the public frame,
+// whose links stay in the bar, shows it.
+@media (max-width: $shell-phone-width) {
+  .app-shell__nav a {
+    padding: 0 space(2);
+  }
+}
+
 .app-shell__theme {
   display: inline-flex;
 }
