@@ -23,6 +23,9 @@ const config: StorybookConfig = {
     './*.stories.tsx',
   ],
   framework: '@storybook/nextjs-vite',
+  // mockServiceWorker.js, the file the browser registers as the workshop's fake
+  // API (./mock-api.ts), served from the workshop's root.
+  staticDirs: ['./public'],
   core: {
     // This repo is public and the workshop runs in a container: no calls home.
     disableTelemetry: true,
@@ -64,6 +67,11 @@ const config: StorybookConfig = {
           },
         },
       ],
+      // The app's two clients put this in front of /api/graphql and /api/auth, so
+      // a story's requests go to /workshop/api/..., the only addresses staging's
+      // Content Security Policy lets a workshop page reach. The name has no
+      // NEXT_PUBLIC_ because Next would build such a variable into the live site.
+      define: { 'process.env.WORKSHOP_API_PREFIX': JSON.stringify('/workshop') },
       // The remote browser of tests/e2e (playwright.workshop.config.ts) reaches the
       // workshop as `devcontainer`, the compose service name, which Vite refuses
       // by default as a host it does not know (tests/e2e/slots.ts, `browserUrl`).

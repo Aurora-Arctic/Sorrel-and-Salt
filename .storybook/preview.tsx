@@ -1,5 +1,7 @@
 import { type ReactElement, type ReactNode, useLayoutEffect, useRef } from 'react';
 import type { Decorator, Preview } from '@storybook/nextjs-vite';
+import { mswLoader } from 'msw-storybook-addon/csf3';
+import { startMockWorker } from './mock-api';
 import Providers from '../src/app/providers';
 import { StatusRegionProvider } from '../src/components/ClickFeedback/status-region';
 import { STORAGE_KEY, applyTheme } from '../src/components/ThemeToggle';
@@ -131,6 +133,8 @@ const VIEWPORT_WIDTHS = [375, 382, 600, 700];
 
 const preview: Preview = {
   decorators: [withWorkshopFrame],
+  // Starts the fake API and, per story, swaps in that story's `msw` handlers.
+  loaders: [mswLoader(startMockWorker)],
   initialGlobals: {
     // The app's dark-first default (`:root { @include theme-dark }` in
     // globals.scss), so the workshop opens as a viewer who never touched the
