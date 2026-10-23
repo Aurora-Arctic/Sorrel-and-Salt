@@ -82,4 +82,19 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   // Toxic entries, or entries that are not: `?toxic=not_toxic`. Left out for
   // either, so `any` and a junk value read as no filter.
   toxic: choiceParam('toxic', TOXIC_SETTINGS, 'toxic'),
+  // Entries held in any of these covens of the viewer's, `?covens=<id>&covens=<id>` (M12.55).
+  // Ids, not slugs: a slug is a name, and an address shared with someone outside the coven
+  // should not spell it out. Only the public compendium offers it, and the read proves each
+  // id by membership, so a coven the viewer is not in filters nothing.
+  covens: textListParam('covens', 'covenIds'),
+  // Not In beside them, `?covensNot=1` as withoutReferences is written, and absent for In
+  // (M12.55): entries none of the picked covens hold, or, with none picked, none of the
+  // viewer's covens. The read ignores it signed out or in no coven.
+  covensNot: searchParam({
+    name: 'covensNot',
+    variable: 'covensNot',
+    read: (raw) => single(raw) === '1',
+    write: (on: boolean) => (on ? '1' : undefined),
+    toVariable: (on) => on || undefined,
+  }),
 });

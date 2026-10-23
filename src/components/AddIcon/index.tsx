@@ -11,6 +11,7 @@ import IconTip, { CheckIcon, PlusIcon } from '../IconTip';
 import { AddCupboardEntryDocument } from '../IngredientEntry/add-cupboard-entry';
 import MenuButton from '../MenuButton';
 import Spinner from '../Spinner';
+import { HoldingCount, holdingText } from './holding';
 import type { NamedAddIconProps } from './types';
 import './index.scss';
 
@@ -19,7 +20,7 @@ import './index.scss';
 // control. Its tip and its accessible name are both ADD and then the entry's name (the name in
 // `visually-hidden`), so a list of buttons tells one card's plus from the next and the words on
 // screen are the name (MB.120; the owner's call, 2026-10-20, that the tip says the name too). A client component of its own, because the card stays a server component and a press
-// needs the browser. claude-docs/components/compendium-cards.md, "The plus".
+// needs the browser. claude-docs/components/compendium-cards.md, "Contracts".
 
 const ADD = 'Add to My Ingredients';
 /**
@@ -90,10 +91,12 @@ const AddIcon = ({
   ingredientId,
   covens,
   heldIn,
+  holding: holders = [],
 }: NamedAddIconProps): ReactElement => {
   // "Add to My Ingredients: Testwort, Formalis testis", the tip and the name alike, so the words
   // on screen are the name (WCAG 2.5.3), and a colon, since a formal name holds a comma of its own.
-  const label = `${ADD}: ${entry}`;
+  // Then how many of the viewer's covens hold it, and which (M12.55): nothing where none does.
+  const label = `${ADD}: ${entry}${holdingText(holders)}`;
   const { pending, refresh } = usePendingNavigation();
   const feedback = useClickFeedback({ name: label });
   const { anchorRef } = feedback;
@@ -160,7 +163,12 @@ const AddIcon = ({
             ref={plusRef}
             label={label}
             className="add-icon"
-            icon={glyph}
+            icon={
+              <>
+                {glyph}
+                <HoldingCount holding={holders} />
+              </>
+            }
             state={state}
             busy={busy && !state}
             busyLabel="Adding"
@@ -194,6 +202,7 @@ const AddIcon = ({
           }}
         >
           {glyph}
+          <HoldingCount holding={holders} />
           <span className="visually-hidden">{label}</span>
         </button>
       </IconTip>

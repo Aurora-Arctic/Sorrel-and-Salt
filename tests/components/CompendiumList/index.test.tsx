@@ -112,6 +112,8 @@ const NO_FILTER: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  covens: [],
+  covensNot: false,
 };
 
 /** Every filter in use, as a page shows it. */
@@ -127,6 +129,8 @@ const SHOWN: CompendiumListFilter = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  covens: [],
+  covensNot: false,
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */
@@ -834,6 +838,141 @@ describe('CompendiumList filter', () => {
     rerender(<CompendiumList {...props({ filter: { ...SHOWN, withoutReferences: false } })} />);
 
     expect(unsourcedSwitch()).not.toBeChecked();
+  });
+
+  describe('In My Covens on the public list (M12.55)', () => {
+    const COVENS = [
+      { id: 'coven-w', name: 'Testhollow' },
+      { id: 'coven-v', name: 'Testwren' },
+    ];
+    const publicFilter = (filter: CompendiumListFilter = NO_FILTER) => {
+      const { facets, categories, vocabulary } = props();
+      return render(
+        <QueryClientProvider client={client}>
+          <IngredientSearch
+            search={
+              <AudienceFilter
+                audience="public"
+                filter={filter}
+                facets={facets}
+                categories={categories}
+                vocabulary={vocabulary}
+                total={2}
+                covens={COVENS}
+              />
+            }
+          >
+            {null}
+          </IngredientSearch>
+        </QueryClientProvider>,
+      );
+    };
+    const pickCoven = (name: string) => {
+      fireEvent.click(within(panel()).getByRole('combobox', { name: 'In My Covens' }));
+      fireEvent.click(screen.getByRole('option', { name }));
+    };
+
+    it('applies a picked coven to the address by id', () => {
+      publicFilter();
+      openPanel();
+      pickCoven('Testwren');
+      applyFilters();
+      expect(router.push.mock.calls).toEqual([['/compendium?covens=coven-v']]);
+    });
+
+    it('asks for the held counts with the picked covens', async () => {
+      const asked: unknown[] = [];
+      mockGraphQLQuery('CompendiumFacetCounts', (variables) => {
+        asked.push(variables.covenIds);
+        return {
+          compendiumFacets: {
+            forms: [],
+            deities: [],
+            categories: [],
+            zodiacSigns: [],
+            celestialBodies: [],
+            elements: [],
+            toxic: [],
+            withoutReferences: 0,
+            withoutForms: 0,
+          },
+        };
+      });
+      publicFilter();
+      openPanel();
+      pickCoven('Testhollow');
+      await waitFor(() => expect(asked).toContainEqual(['coven-w']));
+    });
+
+    it('names the picked covens in the search sentence', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w', 'coven-v'] });
+      expect(listStatus()[0]).toHaveTextContent('held in Testhollow or Testwren');
+    });
+
+    it('counts a picked coven on the Filters button', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w'] });
+      expect(screen.getByRole('button', { name: 'Filters 1' })).toBeInTheDocument();
+    });
+
+    it('applies Not In to the address as covensNot=1, keeping the picked covens', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w'] });
+      openPanel();
+      fireEvent.click(
+        within(within(panel()).getByRole('group', { name: 'Covens' })).getByRole('radio', {
+          name: 'Not In',
+        }),
+      );
+      applyFilters();
+      expect(router.push.mock.calls).toEqual([['/compendium?covens=coven-w&covensNot=1']]);
+    });
+
+    it('leaves covensNot out of the address when In is chosen again', () => {
+      publicFilter({ ...NO_FILTER, covens: ['coven-w'], covensNot: true });
+      openPanel();
+      fireEvent.click(
+        within(within(panel()).getByRole('group', { name: 'Covens' })).getByRole('radio', {
+          name: 'In',
+        }),
+      );
+      applyFilters();
+      expect(router.push.mock.calls).toEqual([['/compendium?covens=coven-w']]);
+    });
+
+    it('asks for the held counts under Not In with covensNot', async () => {
+      const asked: unknown[] = [];
+      mockGraphQLQuery('CompendiumFacetCounts', (variables) => {
+        asked.push([variables.covenIds, variables.covensNot]);
+        return {
+          compendiumFacets: {
+            forms: [],
+            deities: [],
+            categories: [],
+            zodiacSigns: [],
+            celestialBodies: [],
+            elements: [],
+            toxic: [],
+            withoutReferences: 0,
+            withoutForms: 0,
+          },
+        };
+      });
+      publicFilter();
+      openPanel();
+      fireEvent.click(
+        within(within(panel()).getByRole('group', { name: 'Covens' })).getByRole('radio', {
+          name: 'Not In',
+        }),
+      );
+      await waitFor(() => expect(asked).toContainEqual([undefined, true]));
+    });
+
+    it('says not held in, naming the covens or any of my covens, in the search sentence', () => {
+      const { unmount } = publicFilter({ ...NO_FILTER, covens: ['coven-w'], covensNot: true });
+      expect(listStatus()[0]).toHaveTextContent('not held in Testhollow');
+      unmount();
+      publicFilter({ ...NO_FILTER, covensNot: true });
+      expect(listStatus()[0]).toHaveTextContent('not held in any of my covens');
+    });
   });
 
   describe('the match mode', () => {

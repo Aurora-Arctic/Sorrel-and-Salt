@@ -40,6 +40,8 @@ const FILTER: CovenCardsProps['filter'] = {
   zodiac: [],
   celestialBodies: [],
   toxic: '',
+  covens: [],
+  covensNot: false,
   source: '',
   inStock: false,
   lowStockOnly: false,

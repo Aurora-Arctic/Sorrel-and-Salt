@@ -8,6 +8,7 @@ export * from './services/ingredient-children';
 export * from './services/ingredient-detail';
 export * from './services/workspace-ingredients';
 export * from './services/compendium';
+export * from './services/compendium-held-in';
 export * from './services/compendium-slugs';
 export * from './services/references';
 export * from './services/promote-folk-name';
@@ -45,6 +46,7 @@ export type {
   CompendiumEntryPage,
   CompendiumFacets,
   CompendiumSlugEntry,
+  CovenPick,
   CupboardEntryKey,
   CupboardEntryRow,
   DeityDetail,

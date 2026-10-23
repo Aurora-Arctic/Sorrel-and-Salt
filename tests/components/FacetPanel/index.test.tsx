@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import FacetPanel, { WIDE } from '@/components/FacetPanel';
@@ -454,6 +455,152 @@ describe('FacetPanel', () => {
 
     rerender(<FacetPanel {...props({}, { admin: true })} />);
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
+  });
+
+  describe('In My Covens (M12.55)', () => {
+    const COVENS = [
+      { id: 'coven-w', name: 'Testhollow' },
+      { id: 'coven-v', name: 'Testwren' },
+    ];
+    const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
+      stubViewport(true);
+      const view = render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+      return view;
+    };
+
+    it('is absent when the caller passes no covens, or none', () => {
+      const { unmount } = open();
+      expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
+      unmount();
+      open({}, { covens: [] });
+      expect(screen.queryByRole('combobox', { name: 'In My Covens' })).toBeNull();
+    });
+
+    it('lists the viewer’s covens by name, with no counts, after Forms and Toxic', () => {
+      open({ covens: [] }, { covens: COVENS });
+      const box = screen.getByRole('combobox', { name: 'In My Covens' });
+      // Forms, then Toxic, then In My Covens, on their line (the owner's call, 2026-10-23).
+      const forms = screen.getByRole('combobox', { name: 'Forms' });
+      const toxic = screen.getByRole('group', { name: 'Toxic' });
+      expect(forms.compareDocumentPosition(toxic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(toxic.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      fireEvent.click(box);
+      expect(screen.getByRole('option', { name: 'Testhollow' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Testwren' })).toBeInTheDocument();
+    });
+
+    it('holds no count placeholder on a picked coven while the live counts are pending', () => {
+      // The panel is loading, and Elements (a counted facet) holds its placeholder: the state In My
+      // Covens could have taken. It has no counts (decision 10(b)), so it never shows one.
+      open({ covens: ['coven-w'], elements: ['water'] }, { covens: COVENS, loading: true });
+      const pending = (chipName: string) =>
+        screen.getByRole('button', { name: chipName }).closest('li')?.querySelector('.is-pending');
+      expect(pending('Remove Element: Water')).not.toBeNull();
+      expect(pending('Remove Coven: Testhollow')).toBeNull();
+    });
+
+    it('reports a picked coven as a patch of only that part, by id', () => {
+      const onChange = vi.fn();
+      open({ covens: [] }, { covens: COVENS, onChange });
+      fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Testwren' }));
+      expect(onChange).toHaveBeenCalledWith({ covens: ['coven-v'] });
+    });
+
+    it('submits each picked coven as covens=<id>, and counts it on the Filters button', () => {
+      const { container } = open({ covens: ['coven-w', 'coven-v'] }, { covens: COVENS });
+      const sent = Array.from(
+        container.querySelectorAll<HTMLInputElement>('input[type="hidden"][name="covens"]'),
+      ).map((input) => input.value);
+      expect(sent).toEqual(['coven-w', 'coven-v']);
+      expect(filtersButton()).toHaveAccessibleName('Filters 2');
+    });
+
+    it('offers In and Not In beside In My Covens, only with covens, on In by default', () => {
+      const { unmount } = open();
+      expect(screen.queryByRole('group', { name: 'Covens' })).toBeNull();
+      unmount();
+      open({ covens: [] }, { covens: COVENS });
+      const choice = screen.getByRole('group', { name: 'Covens' });
+      const box = screen.getByRole('combobox', { name: 'In My Covens' });
+      expect(choice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+      expect(
+        within(choice)
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['', '1']);
+      expect(within(choice).getByRole('radio', { name: 'In' })).toBeChecked();
+    });
+
+    it('reports Not In as covensNot: true, and In as covensNot: false', () => {
+      const onChange = vi.fn();
+      const { unmount } = open({ covens: [] }, { covens: COVENS, onChange });
+      fireEvent.click(screen.getByRole('radio', { name: 'Not In' }));
+      expect(onChange).toHaveBeenLastCalledWith({ covensNot: true });
+      unmount();
+      open({ covens: [], covensNot: true }, { covens: COVENS, onChange });
+      fireEvent.click(screen.getByRole('radio', { name: 'In' }));
+      expect(onChange).toHaveBeenLastCalledWith({ covensNot: false });
+    });
+
+    it('switches back to In when the last picked coven is removed under Not In', () => {
+      // The panel held as its caller holds it: each patch merged over the filter shown.
+      const reported = vi.fn();
+      const Held = () => {
+        const [filter, setFilter] = useState<FacetPanelFilter>({
+          ...NONE,
+          covens: ['coven-w'],
+          covensNot: true,
+        });
+        return (
+          <FacetPanel
+            {...props(filter, {
+              covens: COVENS,
+              onChange: (patch) => {
+                reported(patch);
+                setFilter((shown) => ({ ...shown, ...patch }));
+              },
+            })}
+          />
+        );
+      };
+      stubViewport(true);
+      render(<Held />);
+      fireEvent.click(filtersButton());
+      const choice = screen.getByRole('group', { name: 'Covens' });
+      // Before: one coven picked, under Not In.
+      expect(within(choice).getByRole('radio', { name: 'Not In' })).toBeChecked();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Coven: Testhollow' }));
+      expect(reported).toHaveBeenLastCalledWith({ covens: [], covensNot: false });
+      expect(within(choice).getByRole('radio', { name: 'In' })).toBeChecked();
+      // Not In chosen on purpose with nothing picked still holds: in none of my covens.
+      fireEvent.click(within(choice).getByRole('radio', { name: 'Not In' }));
+      expect(reported).toHaveBeenLastCalledWith({ covensNot: true });
+      expect(within(choice).getByRole('radio', { name: 'Not In' })).toBeChecked();
+    });
+
+    it('submits Not In as covensNot=1 through the GET form around it', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel {...props({ covens: ['coven-w'], covensNot: true }, { covens: COVENS })} />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('covensNot')).toEqual(['1']);
+      expect(data.getAll('covens')).toEqual(['coven-w']);
+    });
+
+    it('counts Not In on the Filters button only when no coven is picked', () => {
+      // With covens picked, Not In is a mode of them, as Match is of the categories.
+      const { unmount } = open({ covens: ['coven-w'], covensNot: true }, { covens: COVENS });
+      expect(filtersButton()).toHaveAccessibleName('Filters 1');
+      unmount();
+      // With none picked, Not In is a filter of its own: in none of my covens.
+      open({ covens: [], covensNot: true }, { covens: COVENS });
+      expect(filtersButton()).toHaveAccessibleName('Filters 1');
+    });
   });
 
   describe("the coven's Source, In Stock and Low Stock Only controls (M9.7, M9.8)", () => {
