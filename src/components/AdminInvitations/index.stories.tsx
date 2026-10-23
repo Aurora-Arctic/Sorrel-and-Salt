@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
+import { press, pressLast, setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { INVITATIONS } from '../../../.storybook/fixtures';
 import { WorkshopNavigation } from '../../../.storybook/navigation';
@@ -112,6 +113,41 @@ export const Inviting: Story = {
 // Revoke in view but locked, the pause as the reason in a tip.
 const pausedNode = <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />;
 
+// The last page: Previous is live, Next is not.
+const lastPageNode = (
+  <Frame
+    invitations={PAGE_TWO.slice(0, 7)}
+    previousHref={invitationsHref({}, { before: 'cursor-51' })}
+    position={{ page: 3, pages: 3 }}
+  />
+);
+
+// Revoke pressed, then confirmed: no server answers, so the refusal shows.
+const RevokeRefusedView = (): ReactElement => {
+  useSteps(
+    [() => press(`Revoke the invitation to ${INVITATIONS[0].email}`), () => pressLast('Revoke')],
+    400,
+  );
+  return <Frame invitations={[INVITATIONS[0]]} />;
+};
+const revokeRefusedNode = <RevokeRefusedView />;
+
+// An address typed and sent: no server answers, so the form's alert shows.
+const SendRefusedView = (): ReactElement => {
+  useSteps(
+    [
+      () => {
+        const input = document.querySelector<HTMLInputElement>('input[type="email"]');
+        if (input) setInputValue(input, 'fern@fixture.test');
+      },
+      () => submitForm('form.form'),
+    ],
+    400,
+  );
+  return <Frame invitations={INVITATIONS} inviting />;
+};
+const sendRefusedNode = <SendRefusedView />;
+
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
@@ -121,6 +157,9 @@ const STATES: Record<string, ReactNode> = {
   'No Matches': noMatchesNode,
   'Middle Page': middlePageNode,
   Paused: pausedNode,
+  'Last Page': lastPageNode,
+  'Revoke Refused': revokeRefusedNode,
+  'Send Refused': sendRefusedNode,
 };
 
 export const States: Story = {
