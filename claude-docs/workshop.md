@@ -201,11 +201,10 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   `reducedMotion` parameter toggles — a `!important` blanket over every transition
   in the frame, not just the ones the app's own `reduced-motion` mixin reaches,
   since the real media feature zeroes transitions app-wide too. The
-  `workshop-story-frame--bare` rule is for a story that draws the whole app shell: it drops the
+  `.workshop-story-frame:has(.app-shell, .public-frame)` rule is for a state that draws the whole app shell or the signed-out frame: it drops the
   frame's padding, `transform`, clip and background (so the Backdrop, at `z-index: -1`, shows above the body colour as on the site), because a transformed ancestor would otherwise pin the
-  phone's `position: fixed` bottom bar to the end of the page and not the screen. A story turns it
-  on with `parameters: shellFrameParameters` (exported by `shell-frame.tsx`), on its meta or on a
-  single story; `preview.tsx` reads the `shellFrame` parameter it sets.
+  phone's `position: fixed` bottom bar to the end of the page and not the screen. It applies per state, not per story, so a story whose dropdown holds both shell and non-shell states keeps the frame's padding for the latter; no parameter is involved. `:has()` is Baseline Widely Available, the floor in `package.json`.
+  `ShellFrame` takes `signedOut` to draw `PublicFrame` (site name, nav, Sign In) in place of the shell, as the public layout does for a visitor with no session.
 - **`typography.scss`, `layout.scss`, `primitives.scss`** — each `@include`s
   its `src/scss/` `*-base` mixin into `:where(.workshop-story-frame)`, so a story
   gets the identical prose, document structure and class layer a page does
@@ -241,8 +240,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   of the phone's bottom nav. Its optional `open` is the address the workshop
   pretends to be on, which decides the nav's current page.
   Its `shell` flag draws the whole thing inside `ShellFrame` (the app bar above the admin row,
-  the phone's bottom bar pinned), as the site shows it; a story that sets it spreads
-  `shellFrameParameters`.
+  the phone's bottom bar pinned), as the site shows it; the frame goes bare by itself.
   `AdminTabbedFrame` is a tabbed admin page inside it, as its route draws
   it: heading and tabs from `ADMIN_PAGES`, and an `action`. It is the layout's
   markup only; the app's own layout reads the session.

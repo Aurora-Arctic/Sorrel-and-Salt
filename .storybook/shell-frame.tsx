@@ -6,6 +6,7 @@ import ContextRow from '../src/components/ContextRow';
 import CovenNav from '../src/components/CovenNav';
 import { CovenSwitchProvider } from '../src/components/CovenSwitchTargets/context';
 import { RouteModalProvider } from '../src/components/Modal/route-modal-provider';
+import PublicFrame from '../src/components/PublicFrame';
 import SectionBody from '../src/components/SectionBody';
 import WorkspaceSwitcher from '../src/components/WorkspaceSwitcher';
 import { PendingLink } from '../src/lib/navigation';
@@ -21,13 +22,6 @@ import type { ShellFrameProps } from './types';
 // draws it only for someone with a coven to switch to, as `new` does here.
 // `role` is the admin area's: an admin sees People in its nav, a curator does
 // not, as the layout reads it from the session.
-
-/**
- * The story parameter every story that draws the app shell spreads into its `parameters`,
- * which tells the workshop frame (preview.tsx) to drop its padding, transform and clip so the
- * phone's fixed bottom bar pins to the screen (./story-frame.scss).
- */
-export const shellFrameParameters = { shellFrame: true } as const;
 
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
@@ -82,6 +76,7 @@ export const ShellFrame = ({
   viewer,
   workspaces = FIXTURE_WORKSPACES,
   open = DEFAULT_OPEN[area],
+  signedOut = false,
   children,
 }: ShellFrameProps): ReactElement => {
   const who = { ...FIXTURE_VIEWER, ...viewer };
@@ -89,6 +84,13 @@ export const ShellFrame = ({
   // a story's own list without it falls back to a member's view.
   const canReadMembers =
     workspaces.find((workspace) => workspace.slug === OPEN_COVEN)?.canReadMembers ?? true;
+  // A visitor with no session: the public layout's frame, the site name and Sign In.
+  if (signedOut)
+    return (
+      <WorkshopPathname.Provider value={open === DEFAULT_OPEN[area] ? '/compendium' : open}>
+        <PublicFrame>{children}</PublicFrame>
+      </WorkshopPathname.Provider>
+    );
   return (
     <WorkshopPathname.Provider value={open}>
       <AppShell viewer={who} workspaces={workspaces}>

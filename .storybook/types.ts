@@ -10,7 +10,7 @@ export interface AdminFrameProps {
   managesPeople?: boolean;
   /**
    * Draw the app shell's bar above the admin row, as the site does, with the phone's bottom
-   * bar pinned. A story that sets it spreads `shellFrameParameters` into its `parameters`.
+   * bar pinned (the frame goes bare by itself while the shell is on the page, story-frame.scss).
    */
   shell?: boolean;
   children?: ReactNode;
@@ -41,5 +41,7 @@ export interface ShellFrameProps {
   workspaces?: readonly ShellWorkspace[];
   /** The address the workshop pretends to be on. */
   open?: string;
+  /** Draw the header a visitor with no session gets (`PublicFrame`) in place of the shell; `area`, `viewer` and `workspaces` are then unused. */
+  signedOut?: boolean;
   children?: ReactNode;
 }

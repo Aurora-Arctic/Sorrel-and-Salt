@@ -53,6 +53,6 @@ The cards have no stylesheet of their own. The card is [`IngredientCard`](ingred
 
 ## Stories and tests
 
-Stories: one `States` story, drawn inside the app shell under the page's Reference eyebrow, Compendium heading and lede, with a control that chooses Default, Can Add, Held, In Several Covens, Can Add Edit And More, Curator Can Edit, Middle Page, With Markers (New and Updated), Last Page and Empty. Tests: `tests/components/CompendiumCards/index.test.tsx` and `tests/app/(public)/compendium/page.test.tsx`; the browser flow is `tests/e2e/public-compendium.spec.ts`.
+Stories: one `States` story, drawn inside the app shell (the signed-out header of a visitor with no session for Default, With Markers, Last Page and Empty, which show no account-only control) under the page's Reference eyebrow, Compendium heading and lede, with a control that chooses Default, Can Add, Held, In Several Covens, Can Add Edit And More, Curator Can Edit, Middle Page, With Markers (New and Updated), Last Page and Empty. Tests: `tests/components/CompendiumCards/index.test.tsx` and `tests/app/(public)/compendium/page.test.tsx`; the browser flow is `tests/e2e/public-compendium.spec.ts`.
 
 Each `CompendiumCardEntry` carries `recency` (`new`, `updated` or null), worked out by the page with `entryRecency` and shown by the card's `EntryMarks` (MB.106).

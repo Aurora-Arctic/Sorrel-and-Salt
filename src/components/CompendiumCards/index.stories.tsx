@@ -5,7 +5,7 @@ import { compendiumHref } from '../CompendiumList/href';
 import { detailsHeading } from '../IngredientEntry/details';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
 import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 
@@ -189,14 +189,20 @@ const STATES: Record<string, ReactNode> = {
   Empty: emptyNode,
 };
 
+const VISITOR_NODES: ReactNode[] = [defaultNode, withMarkersNode, lastPageNode, emptyNode];
+
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  // The page around the list, as src/app/(public)/compendium/page.tsx draws it: the shell, then the
-  // eyebrow, heading and lede.
+  // The page around the list, as src/app/(public)/compendium/page.tsx draws it: the frame, then the
+  // eyebrow, heading and lede. A state with no plus, Edit or coven foot is what a visitor with no
+  // session sees, so it has the signed-out header; the rest need an account, so they have the shell.
   render: ({ state }) => (
-    <ShellFrame area="none" open="/compendium">
+    <ShellFrame
+      area="none"
+      open="/compendium"
+      signedOut={VISITOR_NODES.includes(state as ReactNode)}
+    >
       <main className="page-column">
         <header className="header">
           <p className="eyebrow">Reference</p>

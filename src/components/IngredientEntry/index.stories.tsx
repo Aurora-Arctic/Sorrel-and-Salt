@@ -3,7 +3,7 @@ import type { Route } from 'next';
 import { type ReactNode, useEffect } from 'react';
 import { FIXTURE_COVEN, FIXTURE_WORKSPACE_ID } from '../../../.storybook/fixtures';
 import { Reopenable } from '../../../.storybook/reopenable';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import StockDialog from '../StockDialog';
 import IngredientEntry from '.';
 import DetailsDialog from './details-dialog';
@@ -278,10 +278,12 @@ const Entry = (props: Partial<IngredientEntryProps>) => (
   </ShellFrame>
 );
 
-// The compendium's public page for someone signed in: the shell's bar without a coven's row
-// (src/app/(public)/layout.tsx), the way back to the Compendium.
+// The compendium's public page, `src/app/(public)/layout.tsx` giving it a frame by who looks: a
+// visitor with no session gets the site name and Sign In; someone signed in gets the shell's bar
+// without a coven's row. A state that only an account reaches (a held entry, an Edit pencil) is
+// drawn signed in; the rest are drawn as the visitor sees them.
 const PublicEntry = (props: Partial<IngredientEntryProps>) => (
-  <ShellFrame area="none" open="/compendium">
+  <ShellFrame area="none" open="/compendium" signedOut={!props.heldInCovens && !props.edit}>
     <Page>
       <IngredientEntry detail={FULL} hrefOf={hrefOf} back={COMPENDIUM_BACK} {...props} />
     </Page>
@@ -1031,7 +1033,6 @@ const STATES_STATES: Record<string, ReactNode> = {
 };
 
 export const States: Story = {
-  parameters: shellFrameParameters,
   args: { state: 'Default' },
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ShellFrame, shellFrameParameters } from '../../../.storybook/shell-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import Backdrop from '../Backdrop';
 import NotAuthorized from '../NotAuthorized';
 import ErrorPage from '.';
@@ -10,7 +10,6 @@ import ErrorPage from '.';
 // carries its own `main.page-frame`, as the component does.
 const meta = {
   title: 'Pages / Error Page',
-  parameters: shellFrameParameters,
 } satisfies Meta;
 export default meta;
 // The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
@@ -34,7 +33,8 @@ const defaultNode = (
   </>
 );
 
-// A visitor with no session: the root page alone, with the layout's corner ornaments.
+// A visitor with no session: the root page alone, with the layout's corner ornaments. It has no
+// frame: `src/app/not-found.tsx` sits outside the public layout, so there is no header either.
 const notFoundSignedOutNode = (
   <>
     {notFound}
