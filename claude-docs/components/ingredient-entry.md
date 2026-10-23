@@ -127,9 +127,10 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 
 [`index.stories.tsx`](../../src/components/IngredientEntry/index.stories.tsx), under `Pages / Ingredient Entry`, each in a `main.page-column` as a route gives it. `States` has a control that chooses the entry page's states, and `QuickLook` (titled "Quick Look") the details modal's. Every state is an entry of one of those two controls; there are no other stories. The names below are the entries of those controls (more: Stock For Editor, Stock For Viewer and Held In A Coven for the stock shelf, Annotate Or Remove, Remove Is The Bin, Similar In The Compendium, Viewer Sees No Cupboard Buttons, Retired Offers Make It Ours, Compendium Entry In Coven):
 
-- Default: two forms, a toxic oil with its own caution and a typed bundle drawing the spoon.
+- Default: two forms, an oil with its own caution (the head badge reads Caution; Toxic is its own state) and a typed bundle drawing the spoon.
 - No Formal Name, Unknown With Name, Unknown Without Name: the formal-name line's three sentences.
 - Nothing Recorded (on `States`): every empty state, and a form that adds nothing.
+- Annotated In Stock: an annotated entry the coven holds with its jars, so the held mark, Annotate and the three dots stand together. Annotated With Stock And Compendium Panel adds the In the Compendium block beside it.
 - Coven Entry: a coven's own entry, badged Local.
 - From The Compendium, Annotated: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared celestial bodies.
 - New With Back, Long Names, No Formal Name: the head's three lines (the owner's call, 2026-10-20): the way back with New and the safety badge after it, the pair ending flush with the pencil; long names wrapping with the pencil on the formal name's first line and Updated; and the pencil on the None line. Long Names Public is the long names on the public page, with no cupboard. At 390 the name wraps inside the column (the owner's call, 2026-10-20): the `h1` is capped at the column and breaks a word (`overflow-wrap: break-word`) only when the word cannot fit a line of its own; until then a word wider than the column ran 11px past its right edge.

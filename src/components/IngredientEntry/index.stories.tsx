@@ -202,7 +202,6 @@ const FULL: IngredientDetail = {
       {
         description: 'Pressed from the seed; thin and pale.',
         safetyNotes: 'Dilute before it touches skin.\nNever take by mouth.',
-        toxic: true,
         colors: ['Gold'],
       },
       {
@@ -260,13 +259,17 @@ const CUPBOARD = {
   },
 };
 
+// The way back every entry page has, so the head shows its badge row beside it as the site does.
+const COMPENDIUM_BACK = { href: '/compendium' as Route, label: 'Compendium' };
+
 const Entry = (props: Partial<IngredientEntryProps>) => (
   <Page>
-    <IngredientEntry detail={FULL} hrefOf={hrefOf} {...props} />
+    <IngredientEntry detail={FULL} hrefOf={hrefOf} back={COMPENDIUM_BACK} {...props} />
   </Page>
 );
 
-// A compendium entry with two forms: the oil toxic with its own caution, the
+// A compendium entry with two forms: the oil with its own caution (so the head shows Caution, as a
+// cautioned entry does on the site; Toxic is its own state), the
 // bundle typed, so its heading takes the spoon.
 const defaultNode = <Entry />;
 
@@ -370,7 +373,10 @@ const annotatedNode = (
 // Annotate is the icon; Make It Ours and Remove are in the three dots, under the one Coven label
 // (the owner's call, 2026-10-20).
 const annotateOrRemoveNode = (
-  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry({ label: 'Hedgewort' }) }}
+    cupboard={CUPBOARD}
+  />
 );
 
 // Remove the one choice left: no Make It Ours, no Annotate, so it is the bin and there are no dots.
@@ -951,6 +957,27 @@ const stockForViewerNode = (
 );
 
 // The public page for someone whose coven holds the entry: the shelf before the name.
+// An annotated entry the coven holds, with its jars: the check, Annotate and the three dots together
+// beside the title, the Annotated badge, and the stock shelf.
+const ANNOTATED_HELD = {
+  ...FULL,
+  cupboardEntry: cupboardEntry({ label: 'Hedgewort', description: 'What our coven makes of it.' }),
+};
+const annotatedInStockNode = (
+  <Entry detail={ANNOTATED_HELD} cupboard={CUPBOARD} stock={{ ...STOCK, mayEdit: true }} />
+);
+// The same with the In the Compendium panel beside it, as the site shows an annotated entry.
+const annotatedWithStockAndPanelNode = (
+  <Entry
+    detail={ANNOTATED_HELD}
+    cupboard={CUPBOARD}
+    stock={{ ...STOCK, mayEdit: true }}
+    replaces={COMPENDIUM_CASE}
+  />
+);
+// A toxic entry: the head's badge reads Toxic rather than Caution.
+const toxicNode = <Entry detail={{ ...FULL, entry: { ...FULL.entry, toxic: true } }} />;
+
 const heldInCovenNode = <Entry heldInCovens />;
 
 // One story with a control to choose the state: each is a whole page or list,
@@ -963,6 +990,9 @@ const STATES_STATES: Record<string, ReactNode> = {
   'Unknown Without Name': unknownWithoutNameNode,
   'From The Compendium': fromTheCompendiumNode,
   Annotated: annotatedNode,
+  'Annotated In Stock': annotatedInStockNode,
+  'Annotated With Stock And Compendium Panel': annotatedWithStockAndPanelNode,
+  Toxic: toxicNode,
   'Annotate Or Remove': annotateOrRemoveNode,
   'Remove Is The Bin': removeIsTheBinNode,
   'New With Back': newWithBackNode,
