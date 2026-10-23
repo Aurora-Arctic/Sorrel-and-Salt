@@ -1211,7 +1211,7 @@ The hours were re-estimated on review on 2026-10-12, from 1: the staging repair,
 Tests are written first:
 
 - every seeded entry has at least one live `reference_links` row on its `ingredient_id`
-- the seeded entries reconcile against `claude-docs/db/compendium-seed/candidates.md`, each candidate row seeded or listed as left out, read from the doc itself (no test reads it today)
+- the seeded entries reconcile against `claude-docs/db/compendium-seed/candidates.md`, each candidate row seeded or listed as left out in `compendium/left-out.md`, read from the doc itself (no test reads it today)
 - no seeded `safetyNotes` value, on an entry or a form, makes a safety claim (safe, GRAS, non-toxic or free of known hazards), whether or not it also names a hazard; a phrase that states a hazard, such as "not safe in pregnancy", passes
 - no seeded entry or form is unflagged while its `safetyNotes` value says it is poisonous, toxic or fatal if swallowed
 - the "runs after the standard scenario" test in `tests/db/seed/compendium.test.ts`, which runs `seedCompendium` once, runs it twice and asserts the second run inserts nothing
