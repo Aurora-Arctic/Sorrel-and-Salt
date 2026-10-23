@@ -1927,6 +1927,10 @@ What v2 would add: a member links one of the coven's own entries to a compendium
 
 The built work is set aside, not lost. The Link dialog, the split service and its form map, and the M12.38–M12.41 drafts wait on the branch `feature/link-to-compendium-v2` at 6adcd849. The conversion that had already reached staging (M12.21's `convertLocalToCompendiumEntry` and the This Is It action of M12.22) is removed by M12.42. The reasons, and what stays, are in [`design-decisions/m12.42-linking-goes-one-way.md`](design-decisions/m12.42-linking-goes-one-way.md).
 
+### Physical uses
+
+Wanted, and shaped by M14.2's record so it is not re-derived: what an ingredient is held to do to the body (sedative, carminative, aphrodisiac), recorded as a **closed, curated vocabulary** that admins and curators maintain, picked by key and never typed, on the ingredient or on a form under the union rule. It is shown as Traditional Uses chips apart from the Caution block, with a line saying nothing on the page is medical advice. The owner moved it to v2 on 2026-10-23, after accepting the record. The tables, the behaviour and the starting list are in [`design-decisions/m14.2-physical-uses.md`](design-decisions/m14.2-physical-uses.md). Nothing in v1 builds, seeds or links it.
+
 ### Subscription billing
 
 The owner means to charge for the site eventually. What is wanted, written down so it is not re-derived: **the workspace is what pays**, and its owner is the one who subscribes; the price scales with the workspace's member count; a new workspace can get free months; an admin can make a workspace free until they say otherwise; and someone who belongs to several workspaces pays less. Nothing in v1 bills, stores a Stripe id, or gates anything on payment.

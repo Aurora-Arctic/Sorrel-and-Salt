@@ -136,7 +136,7 @@ Long form: claude-docs/token-efficiency.md.
 
 ## Out of scope for v1
 
-Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175), and linking a coven's own ingredient to the compendium: the Link dialog, This Is It, and splitting an entry across compendium entries (§13). A coven annotates a compendium entry or makes it its own, and that is the only direction in v1.
+Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175), physical uses (§13; M14.2), and linking a coven's own ingredient to the compendium: the Link dialog, This Is It, and splitting an entry across compendium entries (§13). A coven annotates a compendium entry or makes it its own, and that is the only direction in v1.
 
 Story numbers 35–46 are **not reused** — v1 is 52 stories, numbered 1–34 and 47–64.
 
