@@ -62,11 +62,11 @@ Per your instruction, no test suite ran in this session. Every commit passes `pr
    ```sh
    npm run db:seed:compendium -- --dry-run          # decide and report, write nothing
    npm run db:seed:compendium -- --dry-run --adopt  # also list rows adopting a manifest hash
-   npm run seed:mark ingredients/mineral/agate-quartz-var-agate.md   # refused: the file is needs-review
+   npm run seed:mark compendium/ingredients/mineral/agate-quartz-var-agate.md   # refused: the file is needs-review
    npm run seed:queue                               # the needs-review files
    ```
 
-   `seed:mark` takes a path relative to `compendium/`. To see an update land you need an `approved` file the seed has inserted, which none of the three samples is yet; M14.9 and M14.10 bring the 313 entries over as files, and from then on the flow is: edit a file, `npm run seed:mark <file>`, `npm run db:seed:compendium`.
+   `seed:mark` takes a path from the repository root, starting `compendium/`. To see an update land you need an `approved` file the seed has inserted, which none of the three samples is yet; M14.9 and M14.10 bring the 313 entries over as files, and from then on the flow is: edit a file, `npm run seed:mark <file>`, `npm run db:seed:compendium`.
 
 ## What to run to verify
 
