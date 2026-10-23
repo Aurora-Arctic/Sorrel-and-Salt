@@ -1,14 +1,15 @@
 import type { Route } from 'next';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import { AcceptInvitationDocument } from '@/gql/graphql';
+import { answerMutation, refusal } from '../../../.storybook/mock-api';
 import { usePressOnMount } from '../../../.storybook/press';
 import InvitationAcceptance from '.';
 import type { InvitationAcceptanceProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/InvitationAcceptance.
-// Accept talks to the network only on a click, so nothing is mocked: the
-// workshop has no server, so a click fails into the callout under Accept
-// (ClickFeedback), which is itself a state worth seeing.
+// Accept talks to the network only on a click; the one story that presses it
+// has the fake API refuse, into the callout under Accept (ClickFeedback).
 const meta = {
   title: 'Pages / Invitation Acceptance',
 } satisfies Meta;
@@ -58,14 +59,22 @@ const acceptableCuratorNode = (
   <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
 );
 
-// Accept pressed and refused: the workshop's request finds no server, so the
-// callout says the generic sentence, with the badge on Accept's corner.
+// Accept pressed and refused: the fake API answers with the service's own
+// sentence, in the callout with the badge on Accept's corner.
 const AcceptRefusedView = () => {
   usePressOnMount('Accept Invitation');
   return <AcceptableView />;
 };
 
-export const AcceptRefused: Story = { render: AcceptRefusedView };
+export const AcceptRefused: Story = {
+  beforeEach: ({ msw }) =>
+    msw.use(
+      answerMutation(AcceptInvitationDocument, () =>
+        refusal({ message: 'This invitation has already been accepted.', code: 'FORBIDDEN' }),
+      ),
+    ),
+  render: AcceptRefusedView,
+};
 
 const AcceptableCovenView = () => (
   <Page

@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
+import { UpdateCategoryDocument } from '@/gql/graphql';
+import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mock-api';
 import { FIXTURE_GROUP_ID, GROUP_NAMES, asOptions } from '../../../.storybook/fixtures';
 import { InModal } from '../../../.storybook/in-modal';
 import { setInputValue, submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
@@ -8,7 +10,8 @@ import GroupedValueForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueForm.
 // Every kind, the flat celestial bodies and signs among them (MB.115).
-// The workshop has no API, so a save answers with the form's generic error.
+// A save is answered by the workshop's fake API (.storybook/mock-api.ts): the
+// states that save are refused, one beside a field and one above the fields.
 // Shown in the modal the admin pages open it in, each story in its own iframe,
 // so the modal's top layer covers the story's frame rather than Storybook's
 // sidebar. One story per way the form differs: a category (the plain grouped
@@ -86,8 +89,24 @@ const addingAZodiacSignNode = (
   </InModal>
 );
 
-// A rename sent; no server answers, so the form's generic error shows.
-const SaveRefusedView = () => {
+// A rename sent and refused for the name: the server's sentence shows beside it.
+const NAME_TAKEN = [
+  answerMutation(UpdateCategoryDocument, () =>
+    refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'A category called Testcraft Two already exists.' }],
+    }),
+  ),
+];
+// ...and refused as a whole: the sentence shows above the fields.
+const NOT_ALLOWED = [
+  answerMutation(UpdateCategoryDocument, () =>
+    refusal({ message: 'You cannot change categories right now.', code: 'FORBIDDEN' }),
+  ),
+];
+const SaveRefusedView = ({ answers }: { answers: typeof NAME_TAKEN }) => {
+  useMockHandlers(answers);
   useSteps([
     () =>
       setInputValue(
@@ -98,7 +117,8 @@ const SaveRefusedView = () => {
   ]);
   return <EditingACategoryView />;
 };
-const saveRefusedNode = <SaveRefusedView />;
+const saveRefusedNode = <SaveRefusedView answers={NAME_TAKEN} />;
+const saveFailedNode = <SaveRefusedView answers={NOT_ALLOWED} />;
 
 // Saved while empty: each missing field says so.
 const SavingEmptyView = () => {
@@ -152,7 +172,8 @@ const STATES: Record<string, ReactNode> = {
   'Editing A Deity': editingADeityNode,
   'Adding A Celestial Body': addingACelestialBodyNode,
   'Adding A Zodiac Sign': addingAZodiacSignNode,
-  'Save Refused': saveRefusedNode,
+  'Save Refused For The Name': saveRefusedNode,
+  'Save Refused As A Whole': saveFailedNode,
   'Saving Empty': savingEmptyNode,
 };
 

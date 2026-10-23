@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { type ReactNode, createRef, useEffect, useId, useState } from 'react';
+import { useArgs } from 'storybook/preview-api';
+import { fn } from 'storybook/test';
+import { type ReactNode, createRef, useEffect, useId, useRef, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
 import {
   FORM_GROUP_ICONS,
@@ -433,22 +435,33 @@ export const RadioSegmentedDisabled: Story = {
 // form that sends rather than saves, its submit renamed.
 const noop = () => {};
 
-export const Actions: Story = {
-  render: () => (
+type ActionHandlers = { onCancel: () => void; onDelete: () => void; onSave: () => void };
+
+// Each button calls the handler its row was given, which the Actions panel logs.
+export const Actions: StoryObj<ActionHandlers> = {
+  args: { onCancel: fn(), onDelete: fn(), onSave: fn() },
+  render: ({ onCancel, onDelete, onSave }) => (
     <div className="form" style={{ maxWidth: '32rem' }}>
-      <FormActions noun="Group" dirty={false} submitting={false} onCancel={noop} />
-      <FormActions noun="Group" dirty submitting={false} onCancel={noop} onDelete={noop} />
-      <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} />
-      <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} holdCancel />
+      <FormActions noun="Group" dirty={false} submitting={false} onCancel={onCancel} />
+      <FormActions noun="Group" dirty submitting={false} onCancel={onCancel} onDelete={onDelete} />
+      <FormActions noun="Group" dirty submitting onCancel={onCancel} onDelete={onDelete} />
+      <FormActions
+        noun="Group"
+        dirty
+        submitting
+        onCancel={onCancel}
+        onDelete={onDelete}
+        holdCancel
+      />
       <FormActions
         noun="Invitation"
         label="Send Invitation"
         busyLabel="Sending"
         dirty
         submitting={false}
-        onCancel={noop}
+        onCancel={onCancel}
       />
-      <FormActions noun="Group" dirty submitting={false} onSave={noop} onCancel={noop}>
+      <FormActions noun="Group" dirty submitting={false} onSave={onSave} onCancel={onCancel}>
         <button type="button" className="btn">
           Save And Add Another
         </button>
@@ -457,7 +470,7 @@ export const Actions: Story = {
         noun="Annotation"
         dirty
         submitting={false}
-        onCancel={noop}
+        onCancel={onCancel}
         saveValue="annotate"
         aside={
           <button type="button" className="btn btn--quiet">
@@ -469,6 +482,70 @@ export const Actions: Story = {
   ),
 };
 
+// The row at work, a form of one field: Save wakes when the field changes,
+// holds busy for a moment, then settles; Cancel puts the field back; Delete
+// removes the form. `status` is the arg that carries it, so the controls
+// panel shows and sets it.
+type InUseArgs = ActionHandlers & {
+  status: 'editing' | 'saving' | 'saved' | 'cancelled' | 'deleted';
+};
+
+export const ActionsInUse: StoryObj<InUseArgs> = {
+  args: { onCancel: fn(), onDelete: fn(), onSave: fn(), status: 'editing' },
+  argTypes: {
+    status: { control: 'select', options: ['editing', 'saving', 'saved', 'cancelled', 'deleted'] },
+  },
+  render: function Render({ onCancel, onDelete, onSave, status }) {
+    const [, updateArgs] = useArgs<InUseArgs>();
+    const [value, setValue] = useState('Testwort');
+    const [saved, setSaved] = useState('Testwort');
+    const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+    useEffect(() => () => clearTimeout(timer.current), []);
+    if (status === 'deleted') return <output>The group was deleted.</output>;
+    return (
+      <form
+        className="form"
+        style={{ maxWidth: '32rem' }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSave();
+          updateArgs({ status: 'saving' });
+          timer.current = setTimeout(() => {
+            setSaved(value);
+            updateArgs({ status: 'saved' });
+          }, 600);
+        }}
+      >
+        <label>
+          Name
+          <input
+            className="input"
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              updateArgs({ status: 'editing' });
+            }}
+          />
+        </label>
+        <FormActions
+          noun="Group"
+          dirty={value !== saved}
+          submitting={status === 'saving'}
+          onCancel={() => {
+            onCancel();
+            setValue(saved);
+            updateArgs({ status: 'cancelled' });
+          }}
+          onDelete={() => {
+            onDelete();
+            updateArgs({ status: 'deleted' });
+          }}
+        />
+        <output>{status}</output>
+      </form>
+    );
+  },
+};
 // A form's Undo and Redo, which read the form's history from its context and
 // draw nothing without one: both ready, then neither.
 const history = (canUndo: boolean, canRedo: boolean): FormHistory => ({

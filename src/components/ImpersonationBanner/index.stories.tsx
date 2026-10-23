@@ -1,10 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { hangAuth, refuseAuth, useMockHandlers } from '../../../.storybook/mock-api';
 import { usePressOnMount } from '../../../.storybook/press';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import ImpersonationBanner from '.';
 
 // Render-only; behaviour is asserted in tests/components/ImpersonationBanner.
-// In the workshop Stop reaches no server, so a click shows the failure. Where
+// Stop is answered by the workshop's fake sign-in service (.storybook/mock-api.ts):
+// refused in Stop Failed, never answered in Stopping. A success would leave the
+// page for the admin's own, so no story shows it. Where
 // the browser can hover, the banner tucks itself above the page until a
 // pointer nears the top; on a touch screen, which the review screenshots
 // emulate, it sits in the page's flow at the top, shown in full.
@@ -37,13 +40,28 @@ export const OverTheShell: Story = {
   render: () => <OverTheShellView />,
 };
 
-// Stop pressed: with no server the sign-out fails, and the banner stays open with the callout
-// under the button.
+// Stop pressed and the sign-out refused: the banner stays open with the callout
+// under the button. The refusal is a failed request on purpose.
+const REFUSED = [refuseAuth()];
 const StopFailedView = () => {
+  useMockHandlers(REFUSED);
   usePressOnMount('Stop Impersonating');
   return <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />;
 };
 
 export const StopFailed: Story = {
+  tags: ['expects-failed-request'],
   render: () => <StopFailedView />,
+};
+
+// Stop pressed and not yet answered: the button reads Stopping and is busy.
+const UNANSWERED = [hangAuth()];
+const StoppingView = () => {
+  useMockHandlers(UNANSWERED);
+  usePressOnMount('Stop Impersonating');
+  return <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />;
+};
+
+export const Stopping: Story = {
+  render: () => <StoppingView />,
 };

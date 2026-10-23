@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import { CreateAdminInvitationDocument, RevokeAdminInvitationDocument } from '@/gql/graphql';
+import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mock-api';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
 import { press, pressLast, setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
@@ -11,9 +13,9 @@ import { invitationsHref } from './href';
 import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/AdminInvitations.
-// Invite and Revoke talk to the network only when sent, so nothing is mocked:
-// a send in the workshop fails into its alert, which is itself a state worth
-// seeing.
+// Invite and Revoke talk to the network only when sent. The workshop's fake API
+// (.storybook/mock-api.ts) answers them: accepted, or refused where a state
+// shows the refusal.
 const meta = {
   title: 'Admin / Invitations',
 } satisfies Meta;
@@ -122,8 +124,14 @@ const lastPageNode = (
   />
 );
 
-// Revoke pressed, then confirmed: no server answers, so the refusal shows.
+// Revoke pressed, then confirmed, and refused.
+const REVOKE_REFUSED = [
+  answerMutation(RevokeAdminInvitationDocument, () =>
+    refusal({ message: 'That invitation was already accepted.', code: 'CONFLICT' }),
+  ),
+];
 const RevokeRefusedView = (): ReactElement => {
+  useMockHandlers(REVOKE_REFUSED);
   useSteps(
     [() => press(`Revoke the invitation to ${INVITATIONS[0].email}`), () => pressLast('Revoke')],
     400,
@@ -132,13 +140,40 @@ const RevokeRefusedView = (): ReactElement => {
 };
 const revokeRefusedNode = <RevokeRefusedView />;
 
-// An address typed and sent: no server answers, so the form's alert shows.
-const SendRefusedView = (): ReactElement => {
+// An address typed and sent, and refused: the form's alert shows.
+const SEND_REFUSED = [
+  answerMutation(CreateAdminInvitationDocument, () =>
+    refusal({ message: 'You cannot invite administrators right now.', code: 'FORBIDDEN' }),
+  ),
+];
+const SEND_ADDRESS_REFUSED = [
+  answerMutation(CreateAdminInvitationDocument, () =>
+    refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['email'], message: 'That address already has an invitation.' }],
+    }),
+  ),
+];
+const SEND_ACCEPTED = [
+  answerMutation(CreateAdminInvitationDocument, () => ({
+    createAdminInvitation: { id: 'invitation-new' },
+  })),
+];
+
+const SendView = ({
+  answers,
+  address,
+}: {
+  answers: typeof SEND_REFUSED;
+  address: string;
+}): ReactElement => {
+  useMockHandlers(answers);
   useSteps(
     [
       () => {
         const input = document.querySelector<HTMLInputElement>('input[type="email"]');
-        if (input) setInputValue(input, 'fern@fixture.test');
+        if (input) setInputValue(input, address);
       },
       () => submitForm('form.form'),
     ],
@@ -146,7 +181,11 @@ const SendRefusedView = (): ReactElement => {
   );
   return <Frame invitations={INVITATIONS} inviting />;
 };
-const sendRefusedNode = <SendRefusedView />;
+const sendRefusedNode = <SendView answers={SEND_REFUSED} address="fern@fixture.test" />;
+const sendAddressRefusedNode = (
+  <SendView answers={SEND_ADDRESS_REFUSED} address="fern@fixture.test" />
+);
+const sendAcceptedNode = <SendView answers={SEND_ACCEPTED} address="fern@fixture.test" />;
 
 // One story with a control to choose the state: each is a whole page or list,
 // too big to sit beside the others (claude-docs/workshop.md, rule 5).
@@ -159,7 +198,9 @@ const STATES: Record<string, ReactNode> = {
   Paused: pausedNode,
   'Last Page': lastPageNode,
   'Revoke Refused': revokeRefusedNode,
+  'Invitation Sent': sendAcceptedNode,
   'Send Refused': sendRefusedNode,
+  'Address Refused By The Server': sendAddressRefusedNode,
 };
 
 export const States: Story = {

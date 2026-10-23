@@ -1,4 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import { useArgs } from 'storybook/preview-api';
+import { fn } from 'storybook/test';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import { Jars } from './story-jars';
 import IngredientCard from '.';
@@ -12,7 +15,7 @@ const meta = {
   title: 'Ingredients / Ingredient Card',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<{ onUse: () => void; onRestock: () => void; lastPressed: string }>;
 
 const VARIANTS: SafetyVariant[] = [
   { form: 'dried leaf', formChoice: { group: { icon: 'botanical' } }, safetyNotes: '' },
@@ -149,29 +152,39 @@ const noFormalNameNode = (
 );
 
 // Two buttons in the foot, right-aligned beneath the jar lines (M9.9, M9.10). Each
-// sits above the card's link, so pressing one never opens the entry page.
+// sits above the card's link, so pressing one never opens the entry page. In the
+// app each opens the stock dialog; here each calls the handler the story was
+// given (logged in the Actions panel) and the line beneath the card names the
+// last one pressed.
 const withActionsNode = (
-  <IngredientCard
-    {...BASE}
-    kind="own"
-    actions={
-      <>
-        <button type="button" className="btn btn--small">
-          Use
-        </button>
-        <button type="button" className="btn btn--small">
-          Restock
-        </button>
-      </>
-    }
-  >
-    <Jars />
-  </IngredientCard>
+  onUse: () => void,
+  onRestock: () => void,
+  lastPressed: string,
+): ReactNode => (
+  <>
+    <IngredientCard
+      {...BASE}
+      kind="own"
+      actions={
+        <>
+          <button type="button" className="btn btn--small" onClick={onUse}>
+            Use
+          </button>
+          <button type="button" className="btn btn--small" onClick={onRestock}>
+            Restock
+          </button>
+        </>
+      }
+    >
+      <Jars />
+    </IngredientCard>
+    <output>{lastPressed ? `${lastPressed} pressed` : 'Nothing pressed'}</output>
+  </>
 );
 
 // The coven's Quick Look eye in the start slot, at the foot's bottom left, with the
 // other actions kept at its right (M12.5). In a story the eye is a plain link.
-const withStartActionsNode = (
+const withStartActionsNode = (onRestock: () => void): ReactNode => (
   <IngredientCard
     {...BASE}
     kind="own"
@@ -189,7 +202,7 @@ const withStartActionsNode = (
       />
     }
     actions={
-      <button type="button" className="btn btn--small">
+      <button type="button" className="btn btn--small" onClick={onRestock}>
         Restock
       </button>
     }
@@ -262,29 +275,41 @@ const lastEditedNode = (
 
 // Every state of the card in one grid. The cell is the card's narrowest column.
 export const States: Story = {
-  render: () => (
-    <StatesGrid
-      cell="22rem"
-      states={{
-        'Own With Jars': ownWithJarsNode,
-        'Caution': cautionNode,
-        'Mineral Name': mineralNameNode,
-        'In Cupboard': inCupboardNode,
-        Retired: retiredNode,
-        'Many Forms': manyFormsNode,
-        'No Forms Line': noFormsLineNode,
-        'Long Name': longNameNode,
-        'One Long Word': oneLongWordNode,
-        'No Formal Name': noFormalNameNode,
-        'With Actions': withActionsNode,
-        'With Start Actions': withStartActionsNode,
-        'Many Categories': manyCategoriesNode,
-        'Compact': compactNode,
-        'New And Updated': newAndUpdatedNode,
-        'New Without Safety': newWithoutSafetyNode,
-        'Last Edited': lastEditedNode,
-        Compendium: defaultNode,
-      }}
-    />
-  ),
+  args: { onUse: fn(), onRestock: fn(), lastPressed: '' },
+  render: function Render({ onUse, onRestock, lastPressed }) {
+    const [, updateArgs] = useArgs<{ lastPressed: string }>();
+    const use = () => {
+      onUse();
+      updateArgs({ lastPressed: 'Use' });
+    };
+    const restock = () => {
+      onRestock();
+      updateArgs({ lastPressed: 'Restock' });
+    };
+    return (
+      <StatesGrid
+        cell="22rem"
+        states={{
+          'Own With Jars': ownWithJarsNode,
+          Caution: cautionNode,
+          'Mineral Name': mineralNameNode,
+          'In Cupboard': inCupboardNode,
+          Retired: retiredNode,
+          'Many Forms': manyFormsNode,
+          'No Forms Line': noFormsLineNode,
+          'Long Name': longNameNode,
+          'One Long Word': oneLongWordNode,
+          'No Formal Name': noFormalNameNode,
+          'With Actions': withActionsNode(use, restock, lastPressed),
+          'With Start Actions': withStartActionsNode(restock),
+          'Many Categories': manyCategoriesNode,
+          Compact: compactNode,
+          'New And Updated': newAndUpdatedNode,
+          'New Without Safety': newWithoutSafetyNode,
+          'Last Edited': lastEditedNode,
+          Compendium: defaultNode,
+        }}
+      />
+    );
+  },
 };
