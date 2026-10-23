@@ -470,6 +470,16 @@ describe('FacetPanel', () => {
       expect(screen.getByRole('option', { name: 'Testwren' })).toBeInTheDocument();
     });
 
+    it('holds no count placeholder on a picked coven while the live counts are pending', () => {
+      // The panel is loading, and Elements (a counted facet) holds its placeholder: the state In My
+      // Covens could have taken. It has no counts (decision 10(b)), so it never shows one.
+      open({ covens: ['coven-w'], elements: ['water'] }, { covens: COVENS, loading: true });
+      const pending = (chipName: string) =>
+        screen.getByRole('button', { name: chipName }).closest('li')?.querySelector('.is-pending');
+      expect(pending('Remove Element: Water')).not.toBeNull();
+      expect(pending('Remove Coven: Testhollow')).toBeNull();
+    });
+
     it('reports a picked coven as a patch of only that part, by id', () => {
       const onChange = vi.fn();
       open({ covens: [] }, { covens: COVENS, onChange });

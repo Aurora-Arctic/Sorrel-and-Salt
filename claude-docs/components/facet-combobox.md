@@ -13,21 +13,22 @@ box's state.
 
 `FacetComboboxProps` (`types.ts`):
 
-| Prop               | What it is                                                                                                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`            | The field's name above the box and the box's accessible name, in title case: "Elements"                                                           |
-| `name`             | The parameter each chosen value is sent under, once per value                                                                                     |
-| `choices`          | The `ComboboxChoice`s on offer: `label`, and `count` where it is known; `icon` and `qualifier` draw as the multi-select draws them                |
-| `values`           | The values chosen, in the order chosen                                                                                                            |
-| `onChange`         | Called with the whole new list after a value is added or taken out                                                                                |
-| `typeahead`        | Type to narrow the list: the typed box in place of the select-style one. Also used whenever a choice has a `group`. Off unless set                |
-| `placeholder`      | A short action shown, muted, while a choice is left: "Add an element"                                                                             |
-| `emptyPlaceholder` | Shown instead of the placeholder when nothing is chosen and every value is left out (all counts 0): defaults to "No" and the label, "No Elements" |
-| `removeNoun`       | Names a chip's x "Remove {Noun}: {Value}", "Remove Element: Water"                                                                                |
-| `loading`          | The counts are still being read: each chip holds a placeholder where its count will be                                                            |
-| `hideZeros`        | Defaults to true: a value with a count of 0 is left out of the list; a chosen value keeps its chip whatever its count                             |
-| `hint`             | The field's `InfoTip` text, if any                                                                                                                |
-| `className`        | Added to the field's wrapper                                                                                                                      |
+| Prop               | What it is                                                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`            | The field's name above the box and the box's accessible name, in title case: "Elements"                                                                              |
+| `name`             | The parameter each chosen value is sent under, once per value                                                                                                        |
+| `choices`          | The `ComboboxChoice`s on offer: `label`, and `count` where it is known; `icon` and `qualifier` draw as the multi-select draws them                                   |
+| `values`           | The values chosen, in the order chosen                                                                                                                               |
+| `onChange`         | Called with the whole new list after a value is added or taken out                                                                                                   |
+| `typeahead`        | Type to narrow the list: the typed box in place of the select-style one. Also used whenever a choice has a `group`. Off unless set                                   |
+| `placeholder`      | A short action shown, muted, while a choice is left: "Add an element"                                                                                                |
+| `emptyPlaceholder` | Shown instead of the placeholder when nothing is chosen and every value is left out (all counts 0): defaults to "No" and the label, "No Elements"                    |
+| `removeNoun`       | Names a chip's x "Remove {Noun}: {Value}", "Remove Element: Water"                                                                                                   |
+| `loading`          | The counts are still being read: each chip holds a placeholder where its count will be                                                                               |
+| `counts`           | Whether the values carry counts; on unless `false`. A field without counts (In My Covens, M12.55) draws no count and no loading placeholder, whatever `loading` says |
+| `hideZeros`        | Defaults to true: a value with a count of 0 is left out of the list; a chosen value keeps its chip whatever its count                                                |
+| `hint`             | The field's `InfoTip` text, if any                                                                                                                                   |
+| `className`        | Added to the field's wrapper                                                                                                                                         |
 
 ## Contracts
 

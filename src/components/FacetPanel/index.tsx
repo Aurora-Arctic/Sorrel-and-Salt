@@ -489,6 +489,7 @@ export default function FacetPanel({
                           placeholder="Add Coven"
                           removeNoun="Coven"
                           loading={loading}
+                          counts={false}
                           choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
                           values={filter.covens ?? []}
                           onChange={(picked) => onChange({ covens: picked })}
