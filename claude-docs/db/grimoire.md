@@ -1,20 +1,42 @@
 ## The grimoire (M10.2)
 
-`src/modules/grimoire/schema/spells.ts` and `src/modules/grimoire/schema/spell-ingredients.ts` hold
-DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration.
+`src/modules/grimoire/schema/spells.ts` and `src/modules/grimoire/schema/spell-steps.ts` hold
+DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration, and
+`0083_spell-steps-expand.sql` made the second one a list of steps (M13.1).
 What a workspace _makes_, as against what exists (the compendium) and what it
 holds (`inventory_items`).
 
 - **`spells`** — §5's columns, with the full six-column audit spread. Stories
   47 and 50's table.
-- **`spell_ingredients`** — §5's columns, `ingredientId` nullable, with the
+- **`spell_steps`** — §5's columns, `ingredientId` nullable, with the
   full six-column audit spread: soft-deleted (MB.110), keyed on the surrogate `id`,
-  with `(spell_id, layer_order)` unique among live rows. Stories 50 and 57's
-  table: a layer is an ingredient the workspace knows or a custom name written
-  for this one jar. M10.2 shipped it keyed on `(spell_id, ingredient_id)`;
+  with `(spell_id, position)` unique among live rows. Stories 50, 57 and 80's
+  table: a step is an instruction (`body`), an ingredient laid in the jar (a
+  layer), or both, and a layer's ingredient is one the workspace knows or a
+  custom name written for this one jar. It was `spell_ingredients`, every row a
+  layer, until M13.1 ("Steps (M13.1)" below). M10.2 shipped it keyed on `(spell_id, ingredient_id)`;
   MB.40 moved the key onto the layer (`0017`) once a row could exist without
   the pair, and MB.110 off it (`0029`) once a removed layer's tombstone would
   have held its depth.
+
+### Steps (M13.1)
+
+M13.1 made the recipe one ordered list ([`m13.1-spell-steps.md`](../design-decisions/m13.1-spell-steps.md)):
+`0083` renamed `spell_ingredients` to `spell_steps`, with every index, CHECK
+and foreign key renamed after it, and added `position` and `body`. Until M13.9
+contracts it, three things from before stay:
+
+- **A view named `spell_ingredients`**, `SELECT * FROM spell_steps`, made after
+  the `ADD COLUMN`s so it carries `position` and `body` too. The deploy before
+  `0083` reads and writes the rows through it.
+- **`layer_order`**, the old name of `position`. The code writes both, the same
+  number. `position` is nullable until M13.9, because the deploy before writes
+  `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
+  `position` from `layer_order` for the rows already there.
+- **`spells.instructions`**, the old name of `spells.note`, written beside it
+  the same way and filled into it by `0083`.
+
+`tests/db/schema-drift.test.ts` lists all three in `PENDING_DROPS`.
 
 **`visibility` arrived a wave later than the rest of the table** (M10.3,
 `0018_spell-visibility.sql`), after M1.23 had seeded spells against it — which
@@ -25,84 +47,95 @@ free (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). The rule it carries is
 
 ### The join names the ingredient, never the stock row
 
-`spell_ingredients.ingredientId` references `ingredients`. Stock is what a
+`spell_steps.ingredientId` references `ingredients`. Stock is what a
 workspace happens to hold today; a recipe pointing at it would be damaged by
 running out of something, and M10.21 tests exactly that. The test proves the
 target rather than asserting it twice: an id that exists only in
 `inventory_items` is refused with a foreign-key violation naming
-`spell_ingredients_ingredient_id_ingredients_id_fk`, while the same insert
+`spell_steps_ingredient_id_ingredients_id_fk`, while the same insert
 against an ingredient the workspace holds no stock of is accepted. Repoint the
 key and the pair swaps which one reddens.
 
-### Layer order is the identity, and what that costs the reorder
+### Position is the identity, and what that costs the reorder
 
-`layerOrder` is `integer NOT NULL` and unique within a spell among live rows:
-`spell_ingredients_spell_id_layer_order_unique` on
-`(spell_id, layer_order) WHERE deleted_at IS NULL`. M10.2 had the pair as a
+`position` is an integer unique within a spell among live rows:
+`spell_steps_spell_id_position_unique` on
+`(spell_id, position) WHERE deleted_at IS NULL`. It was `layer_order` until
+M13.1, and until M13.9 `layer_order` stays beside it, `NOT NULL`, under its
+own index `spell_steps_spell_id_layer_order_unique`, which the code keeps
+equal ("Steps (M13.1)" above). M10.2 had the pair as a
 unique index beside a `(spell_id, ingredient_id)` key; MB.40 made it the
 primary key once a row could exist without an ingredient id; MB.110 moved the
 key onto a surrogate `id` once removing a layer became a soft delete, because
 a tombstone in a key column would hold its depth for good. Each part is
 load-bearing:
 
-- **Stored, not inferred.** Story 51 makes layering part of the recipe, and no
+- **Stored, not inferred.** Stories 51 and 80 make the order part of the recipe, and no
   query may lean on insertion order.
-- **NOT NULL**, because a nullable column would satisfy neither half of "stored
-  and unique within a spell": distinct NULLs collide with nothing, so an
-  unordered row would sit outside the index meant to constrain it.
+- **NOT NULL from M13.9**, because a nullable column would satisfy neither half
+  of "stored and unique within a spell": distinct NULLs collide with nothing, so
+  an unordered row would sit outside the index meant to constrain it. Until
+  then `layer_order`'s `NOT NULL` holds that line, and the code writes both.
 - **Leading on `spell_id`**, which both scopes the index to the one jar and
-  makes it the one that answers "read this spell's ingredients in order" —
+  makes it the one that answers "read this spell's steps in order" —
   every read of the table in M10.9 and MB.6.
-- **Partial on `deleted_at IS NULL`**, so a removed layer frees its depth for
-  the next layer written into the jar — and, by the same predicate on the other
+- **Partial on `deleted_at IS NULL`**, so a removed step frees its place for
+  the next step written into the spell — and, by the same predicate on the other
   two indexes, its ingredient and its custom name.
 - **A surrogate `id`, which says nothing about the jar.** It is the key
-  because the layer can no longer be, and it is how a service names one layer
+  because the place can no longer be, and it is how a service names one step
   to the writer's by-id methods (`updateById`, `softDeleteByIds`), since it
   cannot build a `where`.
 
 A unique index is checked per row rather than at end of statement, so
-**M10.16's reorder cannot be a single `set layer_order = layer_order + 1`
+**M10.16's reorder cannot be a single `set position = position + 1`
 sweep** even though the final state is conflict-free. Nor can it remove and
-re-add the jar's rows, which would leave a tombstone per layer on every
-reorder. It moves the live rows in place, in one transaction: every depth out
+re-add the spell's rows, which would leave a tombstone per step on every
+reorder. It moves the live rows in place, in one transaction: every place out
 of range by a scratch offset, then each to its new one. The schema test pins
-both — the sweep is refused by the layer index, and the two-step move reorders
-the jar and leaves no tombstone — so the constraint the reorder has to work
+both — the sweep is refused by the position index, and the two-step move reorders
+the steps and leaves no tombstone — so the constraint the reorder has to work
 within is written down before the reorder is.
 
 ### Custom ingredients (MB.40)
 
-For story 57, a row in `spell_ingredients` is either an ingredient the workspace knows
+For story 57, a step's ingredient is either one the workspace knows
 (`ingredient_id`) or a name written for this one jar (`name`, with an optional
-free-text `form`) — exactly one of the two. The design argument is in DESIGN.md
+free-text `form`) — at most one of the two, and none on an instruction-only
+step (story 80). The design argument is in DESIGN.md
 §5 and [`mb.40-custom-spell-ingredients.md`](../design-decisions/mb.40-custom-spell-ingredients.md);
 this is what holds it in the database.
 
 - **`ingredient_id` is nullable, and the foreign key stays.** Nullability costs
   nothing in integrity because the first CHECK below forbids the row that would
   exploit it — §14's "nullable FKs plus `num_nonnulls`" idiom.
-- **Four CHECKs**, each named so a refusal says which rule it broke:
-  `spell_ingredients_ingredient_or_name` is
-  `num_nonnulls(ingredient_id, name) = 1`;
-  `spell_ingredients_form_only_on_custom` is
+- **The CHECKs**, each named so a refusal says which rule it broke:
+  `spell_steps_one_identity` is `num_nonnulls(ingredient_id, name) <= 1`, so
+  a step never names both; `spell_steps_not_empty` is
+  `num_nonnulls(ingredient_id, name, body) >= 1`, so a step is never empty.
+  The two replaced MB.40's `spell_ingredients_ingredient_or_name`,
+  `num_nonnulls(ingredient_id, name) = 1`, in M13.1, once a row could be an
+  instruction alone. `spell_steps_amount_on_ingredient` refuses `quantity`,
+  `unit` or `note` on a step with no ingredient, since each describes one, and
+  `spell_steps_body_not_blank` is the not-blank idiom on `body`.
+  `spell_steps_form_only_on_custom` is
   `ingredient_id is null or form is null`, because `form` beside an ingredient
   id would be a second copy of half that ingredient's identity;
-  `spell_ingredients_name_not_blank` and `spell_ingredients_form_not_blank` are
+  `spell_steps_name_not_blank` and `spell_steps_form_not_blank` are
   the `ingredients_form_not_blank` idiom, since a blank name would satisfy
   `num_nonnulls` and name nothing.
 - **Two partial unique indexes, one per kind of row.**
-  `spell_ingredients_spell_id_variant_id_unique` on
+  `spell_steps_spell_id_variant_id_unique` on
   `(spell_id, variant_id)`, live rows only, is one form per jar since MB.217,
   where `spell_ingredients_spell_id_ingredient_id_unique` was one ingredient
   per jar — what the M10.2 key used to give. A linked layer names its form in
   `variant_id`, set exactly when `ingredient_id` is
-  (`spell_ingredients_variant_with_ingredient`) and held to it by the
-  composite key `spell_ingredients_variant_fk`, so a jar may lay Rosemary
+  (`spell_steps_variant_with_ingredient`) and held to it by the
+  composite key `spell_steps_variant_fk`, so a jar may lay Rosemary
   herb and Rosemary oil. Migration `0063` filled each existing linked layer
   from its ingredient's one live variant, refusing a database where one had
   none or several; and
-  `spell_ingredients_spell_id_custom_name_unique` on
+  `spell_steps_spell_id_custom_name_unique` on
   `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
   jar, the shape of `ingredients_workspace_label_unique`. Both are partial on
   the discriminator, so each index covers exactly the rows that have the column
@@ -117,12 +150,15 @@ this is what holds it in the database.
 - **`form` is text, not a foreign key**, for the reason a variant's `form` is
   not (DESIGN.md §5).
 
-`spell-ingredients-schema.test.ts` proves every refusal by its
+`spell-steps-schema.test.ts` proves every refusal by its
 `constraint_name` and pairs each with the insert that shows why it could have
 succeeded: `form` on a linked row is refused where the same `form` on a custom
 row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
 not across two; the same ingredient twice is refused by the partial index, a
-layer collision by the layer index. That a removal frees the depth, the
+place collision by the position index; an instruction-only step, an
+ingredient-only step and a step with both are each accepted, and an empty
+step, a blank instruction and an amount on an instruction alone are each
+refused. That a removal frees the depth, the
 ingredient and the custom name is `tests/db/partial-unique-indexes.test.ts`'s,
 once for every partial unique index (MB.226). What Wave 13 inherits — the Zod exclusive-or, the
 skip in derived categories, no suppression, no held/not-held, no safety source
@@ -140,11 +176,11 @@ skip in derived categories, no suppression, no held/not-held, no safety source
 - **`title` is the only required field on a spell.** §8's acceptance example
   creates one with a workspace and a title and nothing else, and a draft is the
   state a spell is saved in _before_ it is finished. `intent`, `jarSize`,
-  `sealWaxColor`, `moonPhase`, `dayOfWeek` and `instructions` are all nullable
+  `sealWaxColor`, `moonPhase`, `dayOfWeek` and `note` are all nullable
   free text — §5's rule that a vocabulary a member writes is text, and there is
   no curated list of moon phases or wax colours anywhere in the design to make a
   foreign key out of.
-- **`spell_ingredients.unit` is M9.2's `inventory_unit`**, the same Postgres
+- **`spell_steps.unit` is M9.2's `inventory_unit`**, the same Postgres
   type and not a second copy of it: a tablespoon in a spell is the tablespoon a
   jar is measured in, and M9.5 converts between them. The type keeps its
   `inventory_unit` name — renaming it to suit a second consumer would be a
@@ -153,13 +189,13 @@ skip in derived categories, no suppression, no held/not-held, no safety source
   `inventory_items.quantityOnHand` exactly, so "do I have enough for this spell"
   loses no precision on the comparison. Both are nullable: a layer may name no
   measurement at all.
-- **No `unitDimension` and no dimension CHECK on `spell_ingredients`.** §5 names
+- **No `unitDimension` and no dimension CHECK on `spell_steps`.** §5 names
   neither on this table, the dimension is derivable through `src/modules/ingredients/schema/units.ts`,
   and the query that groups stock by dimension has no counterpart here.
 - **No index and no CHECK on `spells`**, beyond the primary key's. §5 names
   none, the grimoire's own lookups are M10.9's, and a spell title is not unique
   — two workings may share a name in one coven.
-- **No reverse index on `spell_ingredients`.** §5 asks for one on
+- **No reverse index on `spell_steps`.** §5 asks for one on
   `ingredient_categories` ("what is in this category") and asks for none here;
   no v1 feature lists spells by ingredient, so the asymmetry is §5's rather than
   an oversight.
