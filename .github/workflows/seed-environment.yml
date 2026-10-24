@@ -6,9 +6,11 @@ name: Seed an environment
 # only. claude-docs/ci/deploy.md, "Seeding an environment by hand" is the
 # walkthrough.
 #
-# Dry run is on by default: each seed runs in full inside its transaction and
-# is rolled back, so the summary shows what a real run would do and nothing is
-# written. Force is off by default: it passes `--force` to the compendium seed,
+# One command, db:seed:reference, runs all six in a single transaction, dry
+# run or not, so each seed reads what the ones before it wrote and a real run
+# lands whole or not at all. Dry run is on by default: the six run in full and
+# the transaction is rolled back once, so the summary shows what a real run
+# would do and nothing is written. Force is off by default: it passes `--force` to the compendium seed,
 # which then updates every marked entry that refusals 1 to 4 would refuse, and
 # clears the curator mark on each one it overwrites. It never lifts an
 # identity change or a form a coven holds (claude-docs/db/compendium-seed/README.md,
@@ -45,7 +47,7 @@ jobs:
     # The same lock migrate.yml's caller takes in deploy.yml: concurrency
     # groups are repository-wide, so a run started during a migration waits
     # for it, and a deploy started during this run waits for this. Never
-    # cancelled, because a seed stopped halfway rolls back only its own step.
+    # cancelled: a run that has started finishes or rolls back whole.
     concurrency:
       group: migrate
       cancel-in-progress: false
@@ -145,8 +147,9 @@ jobs:
           node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probe-database.ts \
             --file "$RESOLVED_ENV_FILE"
 
-      # migrate.yml's order. `--adopt` only lists the ADOPTED lines; the seed
-      # adopts a baseline either way. A refused compendium entry exits 1.
+      # migrate.yml's order, in one transaction (src/db/seed/reference-data.ts).
+      # `--adopt` only lists the ADOPTED lines; the seed adopts a baseline
+      # either way. A refused compendium entry exits 1.
       - name: Seed the reference data
         id: seed
         if: steps.guard.outputs.enabled == 'true'
@@ -155,11 +158,7 @@ jobs:
           FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
           set -o pipefail
-          : > seed.log
-          for target in categories forms astrology deities sources; do
-            npm run "db:seed:$target" -- $DRY_RUN 2>&1 | tee -a seed.log
-          done
-          npm run db:seed:compendium -- --adopt $DRY_RUN $FORCE 2>&1 | tee -a seed.log
+          npm run db:seed:reference -- --adopt $DRY_RUN $FORCE 2>&1 | tee seed.log
 
       # Every UPDATED, REFUSED, ADOPTED, RETIRED and PENDING line, each
       # entry's `differs:` line, and the totals, whatever the outcome: the
