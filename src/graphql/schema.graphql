@@ -241,6 +241,9 @@ type Deity {
   description: String!
   id: ID!
   name: String!
+
+  """The other names the deity answers to, alphabetically."""
+  otherNames: [String!]!
   slug: String!
   tradition: DeityTradition!
 }
@@ -248,6 +251,7 @@ type Deity {
 input DeityInput {
   description: String!
   name: String!
+  otherNames: [String!]
   traditionId: ID!
 }
 

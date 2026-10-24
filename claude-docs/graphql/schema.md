@@ -511,7 +511,8 @@ type QueryCompendiumConnectionEdge {
   `variantsByIngredient` (MB.218); `Category.group`,
   `IngredientFormValue.group` and `Deity.tradition` through the three id-keyed
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
-  `deityTraditionsById`; and a variant's `formChoice` through
+  `deityTraditionsById`; `Deity.otherNames` through `otherNamesByDeity`
+  (M14.23); and a variant's `formChoice` through
   `ingredientFormsById` (MB.167; ["Loaders"](loaders.md)).
 - **`FolkName` is an id and a name** (DESIGN.md §7, M12.1). The id is the live
   row's, so a client can name one to `promoteFolkName`; it carries no `audit`.
@@ -1365,8 +1366,13 @@ the pick's `IngredientDeityInput`.
   `traditionId` narrow it as `categories`' two arguments do, a
   `traditionId` that is not a uuid an empty page. `deityTraditions` is the
   live traditions by name and carries no count.
-- **`DeityInput`** is `name`, `description` and `traditionId`, required;
-  **`DeityTraditionInput`** is `name` and `description`. No slug, which
+- **`DeityInput`** is `name`, `description` and `traditionId`, required,
+  and `otherNames`, optional (M14.23): the whole list, so a save brings the
+  stored names to the list sent and an absent list clears them. A name the
+  list repeats in any case, or another live deity of the tradition holds, is
+  `VALIDATION` on `['otherNames', index]`, naming the deity that holds it.
+  `Deity.otherNames` is non-null, `[]` with none, and alphabetical, read
+  through `otherNamesByDeity`. **`DeityTraditionInput`** is `name` and `description`. No slug, which
   follows the name, and a deity's its tradition too; no `endRedirect`, since a
   deity moves no entry's address.
 - **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
@@ -1384,7 +1390,8 @@ the pick's `IngredientDeityInput`.
   collide is `VALIDATION` on `name`. It is never `FORBIDDEN` for a
   compendium entry's pick.
 - **The writes clear the loaders an earlier root field may have filled**:
-  `deitiesByIngredient` on every deity and tradition write but a create, and
+  `deitiesByIngredient` on every deity and tradition write but a create,
+  `otherNamesByDeity` on a deity's update and delete, and
   `deityTraditionsById` on a tradition's update and delete.
   Each write expires the `compendium` tag (M8.7).
 

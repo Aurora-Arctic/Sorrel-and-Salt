@@ -15,6 +15,7 @@ export * from './services/deity-traditions';
 // vocabularies' do; the rest of the file is the module's own.
 export { describeEntry, redirectRefusal } from './services/held-entries';
 export * from './loaders/groups-by-id';
+export * from './loaders/other-names-by-deity';
 export * from './graphql/suggestions';
 export * from './graphql/categories';
 export * from './graphql/category-groups';

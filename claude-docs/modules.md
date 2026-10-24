@@ -32,7 +32,8 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `celestialBodySuggestions`, `zodiacSuggestions`, `formSuggestions` and
 `deitySuggestions` connections, and `Deity` and `DeityTradition` with the
-`deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
+`deityTraditionsById` and `ingredientFormsById` loaders (MB.167) and the
+`otherNamesByDeity` loader (M14.23); `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
 the workspace ingredient mutations, the compendium's three (M5.5), and `CommonNameSuggestion` and
