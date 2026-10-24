@@ -10,7 +10,8 @@ so a new vocabulary is a kind rather than another copy. The flat kinds had a
 copy of their own, `VocabularyValueForm`, until MB.115 folded it in.
 
 It has a name and a description, and for a grouped kind the group the value
-is filed under — a deity's is its tradition. It saves through the kind's
+is filed under — a deity's is its tradition. A deity also has its Other
+Names (M14.23). It saves through the kind's
 create or update mutation (`createCategory`, `updateIngredientFormValue`,
 `createCelestialBody` and so on). On an existing value it also offers a delete
 behind a confirmation. It holds no modal of its own: the page puts it in one.
@@ -25,12 +26,12 @@ long form the owner chose at MB.115's sign-off.
 
 `GroupedValueFormProps` (`types.ts`):
 
-| Prop     | What it is                                                                                                                         |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says                                        |
-| `value`  | The value to edit, as `{ id, name, description, groupId }`, `groupId` absent for a flat kind                                       |
-| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35), a form group's also its `icon` (M12.7); none for a flat kind |
-| `onDone` | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it                     |
+| Prop     | What it is                                                                                                                             |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says                                            |
+| `value`  | The value to edit, as `{ id, name, description, groupId, otherNames }`, `groupId` absent for a flat kind, `otherNames` a deity's alone |
+| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35), a form group's also its `icon` (M12.7); none for a flat kind     |
+| `onDone` | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it                         |
 
 Without `value`, the form adds one.
 
@@ -45,19 +46,24 @@ its three mutation documents, and nothing else:
   group field's `label`, `placeholder`, what it shows until one is chosen
   ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, set only on the kinds whose suggestions match the description as well as the name (form, deity, celestial body, zodiac sign), since that is a flow the label does not say, and absent on a category, whose label and placeholder say it (the owner's call, 2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"); `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
-  whose rename reaches further than its row (every kind but the category).
+  whose rename reaches further than its row (every kind but the category); and
+  `otherNamesHint`, the Other Names list's info tip, set only on the deity,
+  which draws the list.
 - **Its schema and input**: `schema`, the shared schema the values pass
   before any request, and `toInput`, the values as the kind's mutation input.
-  The form's values are always `{ name, description, groupId }`. For the
+  The form's values are always `{ name, description, groupId, folkNames, drafts }`,
+  the last two a deity's other names and the box they are typed in (below). For the
   category and form kinds the schema is the shared one itself — `CategoryInput`
   or `IngredientFormValueInput` (`src/modules/vocabulary/validation/`) — and
-  `toInput` is the identity. A kind whose input names the group otherwise
+  `toInput` keeps the name, the description and the group. A kind whose input names the group otherwise
   supplies its shared schema with that key renamed to `groupId`, a `toInput`
   that renames it back, and `inputKeys`, which says where the server paths
   it, so its refusal still lands beside the group field. The deity kind is
   one: `DeityInput` calls the group `traditionId`, so its schema is
   `DeityInput` with `traditionId` swapped for `groupId`, and its
-  `inputKeys` is `{ groupId: 'traditionId' }`.
+  `inputKeys` is `{ groupId: 'traditionId' }`. Its `otherNames` is swapped
+  too, for `folkNames`, the list of `{ value }` entries the field keeps, and
+  `toInput` sends their texts back as `otherNames`.
 - **No group, for a flat kind.** A celestial body or a zodiac sign has no `group`, so the
   form draws no group field. Its values still carry `groupId`, always `''`,
   so every kind has one shape; its schema, `CelestialBodyInput` or
@@ -75,7 +81,8 @@ its three mutation documents, and nothing else:
   service runs the same schema again (DESIGN.md §7, "Errors").
 - **A server field error lands beside its field.** A `VALIDATION` error's
   `fieldErrors` go to `setError` by path: `name`, `description` or the
-  group's input key (`groupId`, or a deity's `traditionId`). Anything else
+  group's input key (`groupId`, or a deity's `traditionId`), and an other
+  name's, `['otherNames', i]`, on that entry of the list. Anything else
   renders above the fields in a `role="alert"` notice. The slug collision is pathed to `name`, since the
   slug is derived from the name and has no field of its own (MB.43).
 - **The group, where the kind has one, is a closed set typed into**, on the
@@ -92,7 +99,19 @@ its three mutation documents, and nothing else:
   before the name (M12.7), the generic spoon for a group with no icon; the
   icon is decoration, outside the option's accessible name. A category group's
   and a tradition's rows carry none.
-- **Every field is required**, as the schema and the columns say, and
+- **A deity's Other Names** (M14.23) is the ingredient form's
+  [`ListField`](ingredient-form.md), the list its common names use: a box
+  labelled "Other Name" with an Add Other Name button, each name added shown
+  as a chip inside it. It sits under Name, and opens on the deity's names,
+  alphabetically. A save sends the whole list, and the service brings the
+  stored names to it (DESIGN.md §5, `deity_other_names`). The field keeps its
+  entries under the ingredient form's keys, `folkNames` and
+  `drafts.folkNames`, because `ListField`'s paths are that form's; so the box
+  refuses, as a folk name's does, a name already listed in any case and the
+  deity's own name. The service refuses a name another deity of the tradition
+  holds, naming that deity, and the refusal lands on the entry. Every other
+  kind draws no list and sends none.
+- **Every field but Other Names is required**, as the schema and the columns say, and
   each label carries an asterisk in the error red. The asterisk is hidden from
   the field's name: a screen reader hears "Name" and the control's
   `aria-required`.

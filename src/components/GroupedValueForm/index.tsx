@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
 import { graphql } from '../../gql';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
@@ -20,6 +21,7 @@ import {
   useFormHistory,
 } from '../Field';
 import Notice from '../Notice';
+import { ListField } from '../IngredientForm/fields';
 import {
   CelestialBodyInput,
   ZodiacSignInput,
@@ -168,7 +170,13 @@ const DeleteZodiacSignDocument = graphql(`
 const FIELDS = ['name', 'description', 'groupId'] as const;
 type FieldName = (typeof FIELDS)[number];
 
-const EMPTY: GroupedValueValues = { name: '', description: '', groupId: '' };
+const EMPTY: GroupedValueValues = {
+  name: '',
+  description: '',
+  groupId: '',
+  folkNames: [],
+  drafts: { folkNames: '' },
+};
 
 /**
  * A kind as the form uses it, from its declaration: the input type stays
@@ -215,14 +223,21 @@ const USED_RENAME_NOTE = 'Saving renames it on every compendium entry that uses 
 const SEARCHED_DESCRIPTION_HINT =
   "What it is, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name.";
 
+/** A grouped kind's input, where it calls the group `groupId` too: the other names it never shows are left out. */
+const withGroup = ({ name, description, groupId }: GroupedValueValues) => ({
+  name,
+  description,
+  groupId,
+});
+
 /** A flat kind's input is its name and description: the group field it never shows is left out. */
 const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, description });
 
 /**
  * What differs between the vocabularies: their copy, their schema and input,
  * and their mutations. A kind whose input names the group otherwise maps it
- * back with `inputKeys` and `toInput`; the category and form inputs are the
- * values themselves, and a flat kind has no group at all.
+ * back with `inputKeys` and `toInput`; the category and form inputs name it
+ * as the values do, and a flat kind has no group at all.
  */
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
@@ -241,7 +256,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     deleteNote:
       "Covens' ingredients and spells filed under it stay in their lists, but can no longer be filtered by it.",
     schema: CategoryInput,
-    toInput: (values) => values,
+    toInput: withGroup,
     create: CreateCategoryDocument,
     update: UpdateCategoryDocument,
     remove: DeleteCategoryDocument,
@@ -262,7 +277,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     // since MB.220.
     renameNote: USED_RENAME_NOTE,
     schema: IngredientFormValueInput,
-    toInput: (values) => values,
+    toInput: withGroup,
     create: CreateIngredientFormValueDocument,
     update: UpdateIngredientFormValueDocument,
     remove: DeleteIngredientFormValueDocument,
@@ -271,7 +286,9 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     noun: LIST_KINDS.deity.label,
     describe: 'Who they are and what they are honoured for',
     descriptionHint:
-      "Who they are, with the other spellings a reader types, such as Hekate. The ingredient form's suggestions match it as well as the name.",
+      "Who they are, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name; the other names they go by are Other Names.",
+    otherNamesHint:
+      "The other names and spellings a source calls them by, such as Hekate. The ingredient form's suggestions find them by these, and the compendium seed links a source's name to them.",
     group: {
       label: 'Tradition',
       placeholder: 'Choose a tradition',
@@ -281,12 +298,20 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     // A rename carries onto every compendium entry that picked the deity
     // (MB.162), though no entry's address moves: a deity is no part of one.
     renameNote: USED_RENAME_NOTE,
-    // The input calls the group its tradition; the form's field stays `groupId`.
+    // The input calls the group its tradition, and the other names
+    // `otherNames`; the form's fields stay `groupId` and `folkNames`, a
+    // list of entries as ListField keeps one (GroupedValueValues says why).
     inputKeys: { groupId: 'traditionId' },
-    schema: DeityInput.omit({ traditionId: true }).extend({
+    schema: DeityInput.omit({ traditionId: true, otherNames: true }).extend({
       groupId: DeityInput.shape.traditionId,
+      folkNames: z.array(z.object({ value: z.string().trim() })),
     }),
-    toInput: ({ groupId, ...rest }) => ({ ...rest, traditionId: groupId }),
+    toInput: ({ name, description, groupId, folkNames }) => ({
+      name,
+      description,
+      traditionId: groupId,
+      otherNames: folkNames.map(({ value }) => value),
+    }),
     create: CreateDeityDocument,
     update: UpdateDeityDocument,
     remove: DeleteDeityDocument,
@@ -336,7 +361,13 @@ const GroupedValueForm = ({
   const { noun, group, deleteNote, renameNote } = spec;
   const methods = useForm<GroupedValueValues>({
     defaultValues: value
-      ? { name: value.name, description: value.description, groupId: value.groupId ?? '' }
+      ? {
+          ...EMPTY,
+          name: value.name,
+          description: value.description,
+          groupId: value.groupId ?? '',
+          folkNames: (value.otherNames ?? []).map((name) => ({ value: name })),
+        }
       : EMPTY,
     resolver: spec.resolver,
   });
@@ -372,9 +403,13 @@ const GroupedValueForm = ({
       await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      placeServerIssues(error, setError, ({ path: [key, ...rest] }) =>
-        rest.length === 0 ? fieldOf(spec, key) : undefined,
-      );
+      // An other name's refusal, `['otherNames', 2]`, lands on that entry.
+      placeServerIssues(error, setError, ({ path: [key, ...rest] }) => {
+        if (key === 'otherNames' && typeof rest[0] === 'number') {
+          return `folkNames.${rest[0]}.value` as const;
+        }
+        return rest.length === 0 ? fieldOf(spec, key) : undefined;
+      });
     }
   };
 
@@ -440,6 +475,15 @@ const GroupedValueForm = ({
             autoComplete="off"
             required
           />
+          {spec.otherNamesHint && (
+            <ListField
+              name="folkNames"
+              legend="Other Names"
+              entry="Other Name"
+              placeholder="Add a name"
+              hint={spec.otherNamesHint}
+            />
+          )}
           <TextField<GroupedValueValues>
             name="description"
             label="Description"
