@@ -186,6 +186,11 @@ export type SeedDeityTradition = Pick<typeof deityTraditions.$inferInsert, 'name
 export type SeedDeity = Pick<typeof deities.$inferInsert, 'name' | 'description'> & {
   /** The `name` of the tradition in DEITY_TRADITIONS this is filed under. */
   tradition: string;
+  /**
+   * The other names the deity answers to (M14.23): a spelling or a by-name
+   * the vocabulary calls the same deity, never a related figure of its own.
+   */
+  otherNames?: string[];
 };
 
 export type SeedAstrologyValue = Pick<

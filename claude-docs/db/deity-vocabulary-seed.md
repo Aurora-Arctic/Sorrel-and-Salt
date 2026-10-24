@@ -20,7 +20,8 @@ this one is already cased, and not every word is capitalised (`Manannan mac
 Lir`). Every name is plain ASCII, so a slug is the name and its tradition
 lower-cased and hyphenated (`apollo-greek`, MB.132), and the other
 spellings a reader might type — _Hekate_, _Freyja_, _Bast_, _Guanyin_ — are
-in the description, which the autofill matches (§5). **A deity is filed under one tradition** even where several honour it:
+the deity's other names, rows of `deity_other_names` the autofill matches
+(M14.23; "Other names" below). **A deity is filed under one tradition** even where several honour it:
 Apollo is Greek, and his description says Roman too; Lilith is Akkadian &
 Babylonian, and hers names Jewish folklore. A practice that wants a second
 row, a Roman Apollo, can have one under the same name: the slug carries the
@@ -47,12 +48,144 @@ changed: the sources below stand as they were, and so does every slug, since
 `0066_ampersand-deity-traditions.sql` renames the five on databases already
 seeded, wherever a row still holds its old seeded name.
 
-**A description is a gloss**, as the celestial bodies' are: the tradition, what the
-deity is god or goddess of, and the other names, because the suggestion query
-matches descriptions and a name match outranks a description match. It names
+**A description is a gloss**, as the celestial bodies' are: the tradition and what the
+deity is god or goddess of. Before M14.23 it also carried the other names,
+because the suggestion query matched descriptions; those names are now rows of
+their own, and the descriptions still name them only because the seed never
+rewrites a description it has landed. It names
 no herb: which plants are sacred to a deity is an ingredient's correspondence,
 recorded on the ingredient, not the vocabulary's. Descriptions are pairwise
 distinct within each table, and so are names.
+
+### Other names
+
+The other names a deity answers to (M14.23), `otherNames` on the seed's literal,
+seeded as `deity_other_names` rows on the deity its seed key finds. They are
+the bare names each description gives after "also", plus the spellings the
+compendium seed lanes met in sources: Ganesh and Ganish (Ganesha), Hyacinthos
+(Hyacinthus) and Nuit (Nut).
+
+**A name is an other name only when the vocabulary calls it the same deity**,
+the owner's ruling of 2026-10-23: a related but separate figure stays its own
+deity, so Luna is not Selene's and Cronus not Saturn's. So a description's
+counterpart in another tradition is left out — Roman Bacchus beside Dionysus,
+Greek Eros beside Cupid, Yoruba Sopona beside Sagbata, the Haitian lwa beside
+Dan, Candomble's Nana beside Nana Buluku, Palo's Nsambi and Sambia beside
+Nzambi Mpungu, and the Simbi lwa beside Simbi — as are Trivia (Hecate's Roman
+name), cymbee (the Lowcountry name for the bisimbi), Kalunga Line (a place) and
+Mother Earth (a title any earth goddess bears). A Fante name keeps the name and
+drops the people: Asase Efua, Tando. A name that differs from the deity's own
+only in case is not repeated (`uNkulunkulu`): the match folds case.
+
+The seed adds a name only where the deity has never held it and no live deity
+of its tradition holds it, so an admin's removal stands and the service's
+refusal holds; it adds nothing to a deity an admin retired, and updates nothing.
+Papa Legba's other name, Legba, is the name of the Fon & Ewe vodun too: the
+refusal is per tradition, so both stand.
+
+| Deity         | Tradition                          | Other names                                                |
+| ------------- | ---------------------------------- | ---------------------------------------------------------- |
+| Asclepius     | Greek                              | Asklepios                                                  |
+| Dionysus      | Greek                              | Dionysos                                                   |
+| Gaia          | Greek                              | Gaea, Ge                                                   |
+| Hecate        | Greek                              | Hekate                                                     |
+| Hephaestus    | Greek                              | Hephaistos                                                 |
+| Hyacinthus    | Greek                              | Hyakinthos, Hyacinthos                                     |
+| Hygieia       | Greek                              | Hygeia                                                     |
+| Persephone    | Greek                              | Kore                                                       |
+| Bacchus       | Roman                              | Liber                                                      |
+| Cupid         | Roman                              | Amor                                                       |
+| Jupiter       | Roman                              | Jove                                                       |
+| Pluto         | Roman                              | Dis Pater                                                  |
+| Amun          | Egyptian                           | Amon, Amen                                                 |
+| Anubis        | Egyptian                           | Anpu, Inpu                                                 |
+| Bastet        | Egyptian                           | Bast                                                       |
+| Isis          | Egyptian                           | Aset                                                       |
+| Maat          | Egyptian                           | Ma'at                                                      |
+| Nephthys      | Egyptian                           | Nebet-Het                                                  |
+| Nut           | Egyptian                           | Nuit                                                       |
+| Ra            | Egyptian                           | Re                                                         |
+| Sekhmet       | Egyptian                           | Sakhmet                                                    |
+| Set           | Egyptian                           | Seth, Sutekh                                               |
+| Thoth         | Egyptian                           | Djehuty                                                    |
+| Lilith        | Akkadian & Babylonian              | Lilitu                                                     |
+| Anat          | Canaanite & Phoenician             | Anath                                                      |
+| Asherah       | Canaanite & Phoenician             | Athirat                                                    |
+| Astarte       | Canaanite & Phoenician             | Ashtoreth, Ashtart                                         |
+| Baal          | Canaanite & Phoenician             | Hadad                                                      |
+| Anahita       | Persian                            | Aredvi Sura Anahita                                        |
+| Mithra        | Persian                            | Mithras                                                    |
+| Baldur        | Norse                              | Balder, Baldr                                              |
+| Freya         | Norse                              | Freyja                                                     |
+| Freyr         | Norse                              | Frey, Yngvi                                                |
+| Frigg         | Norse                              | Frigga                                                     |
+| Idun          | Norse                              | Idunn, Iduna                                               |
+| Njord         | Norse                              | Njordr                                                     |
+| Odin          | Norse                              | Woden, Wotan                                               |
+| Thor          | Norse                              | Donar, Thunor                                              |
+| Tyr           | Norse                              | Tiw                                                        |
+| Berchta       | Anglo-Saxon & Continental Germanic | Perchta, Bertha                                            |
+| Eostre        | Anglo-Saxon & Continental Germanic | Ostara                                                     |
+| Holda         | Anglo-Saxon & Continental Germanic | Holle, Hulda                                               |
+| Aengus        | Irish                              | Angus, Oengus                                              |
+| Airmed        | Irish                              | Airmid                                                     |
+| Boann         | Irish                              | Boand                                                      |
+| Brigid        | Irish                              | Brighid, Brigit, Bride                                     |
+| Danu          | Irish                              | Anu, Dana                                                  |
+| Dian Cecht    | Irish                              | Diancecht                                                  |
+| Ogma          | Irish                              | Oghma                                                      |
+| Cerridwen     | Welsh                              | Ceridwen, Kerridwen                                        |
+| Belenus       | Gaulish & British                  | Belenos, Bel                                               |
+| Cernunnos     | Gaulish & British                  | Kernunnos                                                  |
+| Mokosh        | Slavic                             | Makosh                                                     |
+| Morana        | Slavic                             | Marzanna, Morena, Marena                                   |
+| Veles         | Slavic                             | Volos                                                      |
+| Laima         | Baltic                             | Laime                                                      |
+| Zemyna        | Baltic                             | Zemynele                                                   |
+| Ganesha       | Hindu                              | Ganapati, Ganesh, Ganish                                   |
+| Lakshmi       | Hindu                              | Laxmi                                                      |
+| Saraswati     | Hindu                              | Sarasvati                                                  |
+| Shiva         | Hindu                              | Siva, Mahadeva                                             |
+| Xi Wangmu     | Taoist                             | Xiwangmu, Hsi Wang Mu                                      |
+| Kuan Yin      | Chinese Buddhist                   | Guanyin, Kwan Yin, Kannon                                  |
+| Amaterasu     | Japanese                           | Amaterasu Omikami                                          |
+| Benzaiten     | Japanese                           | Benten                                                     |
+| Inari         | Japanese                           | Oinari                                                     |
+| Tsukuyomi     | Japanese                           | Tsukiyomi                                                  |
+| Nyame         | Akan                               | Onyame, Nyankopon, Onyankopon, Odomankoma                  |
+| Asase Yaa     | Akan                               | Asase Ya, Asaase Yaa, Aberewa, Asase Efua                  |
+| Tano          | Akan                               | Ta Kora, Tano Kora, Tando                                  |
+| Bosomtwe      | Akan                               | Bosomtwi, Bosumtwi                                         |
+| Chukwu        | Igbo                               | Chineke, Chi Ukwu, Chukwu Okike, Obasi                     |
+| Ala           | Igbo                               | Ani, Ana, Ale, Ali                                         |
+| Amadioha      | Igbo                               | Amadiora, Kamalu, Kalu                                     |
+| Agwu          | Igbo                               | Agwu Nsi                                                   |
+| Njoku Ji      | Igbo                               | Ahiajoku, Ahiajioku, Ifejioku                              |
+| Nana Buluku   | Fon & Ewe                          | Nana Buruku, Nana Buku, Nanan-bouclou                      |
+| Mawu-Lisa     | Fon & Ewe                          | Mawu, Lisa, Mahu                                           |
+| Sagbata       | Fon & Ewe                          | Sakpata, Shapata                                           |
+| Xevioso       | Fon & Ewe                          | Hevioso, Heviosso, Sogbo, So                               |
+| Gu            | Fon & Ewe                          | Egu, Gou                                                   |
+| Dan           | Fon & Ewe                          | Da, Dan Ayido Hwedo, Aido Hwedo                            |
+| Elegba        | Yoruba                             | Eleggua, Eshu, Exu                                         |
+| Obatala       | Yoruba                             | Oxala                                                      |
+| Ogun          | Yoruba                             | Ogoun, Ogum                                                |
+| Osanyin       | Yoruba                             | Osain, Ossaim                                              |
+| Oshun         | Yoruba                             | Ochun, Oxum                                                |
+| Oya           | Yoruba                             | Yansa, Iansa                                               |
+| Shango        | Yoruba                             | Chango, Xango                                              |
+| Yemaya        | Yoruba                             | Yemoja, Iemanja                                            |
+| Nzambi Mpungu | Kongo                              | Nzambi a Mpungu, Nzambi Ampungu, Nzambi                    |
+| Simbi         | Kongo                              | bisimbi, basimbi                                           |
+| Kalunga       | Kongo                              | Nzambi Kalunga                                             |
+| Unkulunkulu   | Zulu                               | Nkulunkulu                                                 |
+| Umvelinqangi  | Zulu                               | Mvelinqangi, iNkosi yeZulu                                 |
+| Nomkhubulwane | Zulu                               | Nomkhubulwana, Nomkubulwana, Inkosazana, iNkosazana yeZulu |
+| Mamlambo      | Zulu                               | uMamlambo, Momlambo, Nomhoyi                               |
+| Damballah     | Haitian Vodou                      | Danbala, Damballa                                          |
+| Erzulie       | Haitian Vodou                      | Ezili                                                      |
+| Papa Legba    | Haitian Vodou                      | Legba                                                      |
+| Ixchel        | Maya                               | Ix Chel, Chak Chel                                         |
 
 ### Traditions
 
