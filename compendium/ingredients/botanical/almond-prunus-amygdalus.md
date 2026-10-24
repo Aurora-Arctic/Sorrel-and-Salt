@@ -144,6 +144,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 2661111ac133ce6bdb07fcf8341eb876dc0aab5ca8ed1379ff5cb07d3ea9d399
 ---
 
 # Almond

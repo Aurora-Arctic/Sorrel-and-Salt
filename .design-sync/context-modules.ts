@@ -28,3 +28,9 @@ import '../.storybook/typography.scss';
 import '../.storybook/layout.scss';
 import '../.storybook/primitives.scss';
 import './preview-host.scss';
+
+// Marks a single-story page (`?story=`, what compare captures) so preview-host.scss can cancel the
+// preview frame's 24px body padding there only. A card's own page keeps its padding.
+if (typeof document !== 'undefined' && /[?&]story=/.test(location.search)) {
+  document.documentElement.classList.add('ds-solo');
+}

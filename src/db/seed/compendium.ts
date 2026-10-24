@@ -62,6 +62,13 @@ export interface SeedCompendiumOptions {
   manifest?: Record<string, string> | null;
   /** Decide and report, then roll the transaction back. */
   dryRun?: boolean;
+  /**
+   * Update every marked entry that refusals 1 to 4 would refuse — curator
+   * reviewed, edited on the site, a child edited on the site, no baseline —
+   * as if each file said `overwriteEditor: true` (M14.26). It never lifts an
+   * identity change or a form in use, and never updates an unmarked file.
+   */
+  force?: boolean;
 }
 
 /** Throws, listing every issue, when the files fail the guard (with what the loader could not read); writes nothing. */
@@ -91,13 +98,6 @@ export function seedItems(input: LoadedCompendium): SeedItem[] {
     }));
 }
 
-/** Thrown inside the transaction to roll a dry run back, and caught outside it. */
-class DryRunRollback extends Error {
-  constructor(readonly report: SeedCompendiumReport) {
-    super('dry run');
-  }
-}
-
 /**
  * Checks `input`, by default the files under `compendium/`, against the
  * guard, then seeds it in a transaction of its
@@ -108,19 +108,16 @@ class DryRunRollback extends Error {
 export async function seedCompendium(
   db: SeedDatabase,
   input: LoadedCompendium = loadCompendium(),
-  { manifest = readConversionManifest(), dryRun = false }: SeedCompendiumOptions = {},
+  {
+    manifest = readConversionManifest(),
+    dryRun = false,
+    force = false,
+  }: SeedCompendiumOptions = {},
 ): Promise<SeedCompendiumReport> {
   assertCompendiumValid(input);
-  try {
-    return await beginSeedTransaction(db, async (tx) => {
-      const report = await seedCompendiumContent(tx, input, { manifest });
-      if (dryRun) throw new DryRunRollback(report);
-      return report;
-    });
-  } catch (error) {
-    if (error instanceof DryRunRollback) return error.report;
-    throw error;
-  }
+  return beginSeedTransaction(db, (tx) => seedCompendiumContent(tx, input, { manifest, force }), {
+    dryRun,
+  });
 }
 
 /**
@@ -135,7 +132,7 @@ export async function seedCompendium(
 export async function seedCompendiumContent(
   tx: SeedTransaction,
   input: LoadedCompendium,
-  { manifest = null }: Pick<SeedCompendiumOptions, 'manifest'> = {},
+  { manifest = null, force = false }: Pick<SeedCompendiumOptions, 'manifest' | 'force'> = {},
 ): Promise<SeedCompendiumReport> {
   const report = emptyReport();
   const items = seedItems(input);
@@ -165,6 +162,7 @@ export async function seedCompendiumContent(
     referenceTexts: await readReferenceTexts(tx),
     inUse,
     manifest,
+    force,
   };
 
   for (const { item, id } of met) {
@@ -182,7 +180,7 @@ export async function seedCompendiumContent(
         report.retired.push(item.where);
         break;
       case 'pending':
-        report.pending.push(item.where);
+        report.pending.push({ where: item.where, differs: outcome.differs });
         break;
       case 'refused':
         report.refused.push({

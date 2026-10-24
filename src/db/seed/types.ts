@@ -29,6 +29,15 @@ export type SeedDatabase = PostgresJsDatabase<Record<string, unknown>>;
 /** The handle inside `db.transaction()`, so a seed module can run inside the caller's transaction. */
 export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>[0]>[0];
 
+/**
+ * How a reference-data seed runs (M14.26). `dryRun` does every read and
+ * write, then rolls the seed's transaction back, so the database is left as
+ * it was.
+ */
+export interface SeedRunOptions {
+  dryRun?: boolean;
+}
+
 /** The stamps `applyAudit('insert', …)` supplies, so a caller's row is typed without them. */
 export type InsertStamps = StampField;
 

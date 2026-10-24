@@ -104,6 +104,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: c324fbfea2ed90e14b993bbfd3d03b28162ea91e1eca23777217f3d2163a89e6
 ---
 
 # Lobelia

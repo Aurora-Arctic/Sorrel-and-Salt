@@ -122,6 +122,7 @@ variants:
           - form
           - safetyNotes
           - toxic
+seedUpdate: 86b34f232485895ee410c90d70cbb675f255e4961479db56974a2e1643158ff2
 ---
 
 # Bittersweet Nightshade

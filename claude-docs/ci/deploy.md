@@ -238,6 +238,14 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   separately — one `job-summary` call each — so a failed seed does not read as
   a failed migration, and a failed seed blocks `deploy` for free, because it
   fails the job `deploy` already depends on.
+  On every run, failed or not, the seed summary also carries the compendium
+  seed's per-entry lines (M14.1): a step before it cuts every `UPDATED`,
+  `PENDING`, `REFUSED`, `ADOPTED` and `RETIRED` line (the step runs the
+  compendium seed with `--adopt`, which is what prints `ADOPTED` lines), each with its
+  `  differs:` line, out of `seed.log` and hands them to `job-summary`'s
+  `details` input as a collapsed block headed by the count and the totals
+  line, or as one line saying there were none, so drift reported as
+  `PENDING` is seen without opening the raw step log.
   One failure is reported a step further (M14.7): when the compendium seed
   refuses an update, it exits 1 with a `REFUSED` line per entry and the
   fields that differ, and three fail-only steps find the pull request the
@@ -245,6 +253,31 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   those lines out of `seed.log` and post them through `pr-comment`, which is
   why the workflow holds `pull-requests: write`. A commit no pull request
   carries gets the job summary alone.
+- **Seeding an environment by hand (M14.26)** is a second way in, for a site
+  admin who needs the seed without a deploy: `seed-environment.yml`, started
+  only from the Actions tab (`workflow_dispatch`). It takes three inputs:
+  `environment` (`preview`, which is staging, or `production`), `dry-run`
+  (on by default) and `force` (off by default). It checks out the branch the
+  environment deploys from — `staging` or `main` — whichever branch the run
+  was started from, so the files seeded are the ones that environment runs.
+  It pulls and resolves `DATABASE_URL` as `migrate.yml` does for the two
+  long-lived targets, probes the database, then runs the same six seeds in
+  the same order, through one command, `npm run db:seed:reference`, which
+  runs them in a single transaction. Its job takes the `migrate` concurrency group, the lock
+  `deploy.yml` puts on `migrate.yml`: groups are repository-wide, so a run
+  started during a migration waits for it, and a deploy waits for the run.
+  A dry run passes `--dry-run`: all six run in full and the one transaction
+  is rolled back at the end. One transaction rather than six because each
+  seed reads what the seeds before it wrote. Run apart, a dry-run deity seed
+  would roll its new traditions back before the sources seed looked for them,
+  and the sources seed would stop with "which no seed wrote". A real run uses
+  the same transaction, so it lands whole or not at all; `migrate.yml` still
+  runs the six apart, each committing on its own. `force` passes `--force` to the
+  compendium seed (claude-docs/db/compendium-seed/README.md, "Refusals").
+  The job summary says whether the run was a dry run and whether it was
+  forced, and lists every `UPDATED`, `REFUSED`, `ADOPTED`, `RETIRED` and
+  `PENDING` line with the counts. It posts no pull request comment, since no
+  pull request started it.
 - **`deploy.yml`'s `seed-changed` job** diffs
   `github.event.before`..`github.sha` over the seeds' own files
   (`src/db/seed/categories.ts` and the `category-groups.ts` data it reads, `src/db/seed/forms.ts`,

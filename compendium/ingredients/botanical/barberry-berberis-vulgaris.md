@@ -120,6 +120,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 7454a8193aef535901297f8ff1de09eada06fa63d8ba6c83427adcfc1fcea9f8
 ---
 
 # Barberry

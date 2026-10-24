@@ -19,12 +19,12 @@ export interface RefusedEntry extends EntryOutcome {
 export interface SeedCompendiumReport {
   /** Entries absent before the run and inserted whole. */
   inserted: number;
-  /** Entries whose stored hash equals the file's: nothing to do. */
+  /** Entries whose stored hash equals the file's and whose row matches it: nothing to do. */
   skipped: number;
   /** Entries whose marked update was applied. */
   updated: string[];
-  /** Entries whose file changed but is not marked for update, or whose mark is stale. */
-  pending: string[];
+  /** Entries whose file and row disagree but whose file is not marked for update, or whose mark is stale, with what differs. */
+  pending: EntryOutcome[];
   /** Entries a curator soft-deleted, which the seed never revives. */
   retired: string[];
   /** Rows with no stored hash that took the conversion manifest's hash as their baseline. */
@@ -51,10 +51,11 @@ export function hasRefusals(report: SeedCompendiumReport): boolean {
 
 /**
  * The run's lines: one per `UPDATED`, `PENDING`, `RETIRED` and `REFUSED`
- * entry, a `REFUSED` line followed by the fields that differ, and a totals
+ * entry, a `PENDING` or `REFUSED` line followed by the fields that differ, and a totals
  * line. `ADOPTED` lines, each with what differs, print only under `adopt`:
- * `db:seed:compendium -- --adopt --dry-run` is how the owner reads what
- * adoption would make the baseline.
+ * the deploy's seed passes `--adopt` so its job summary names each adopted
+ * row (M14.1), and `db:seed:compendium -- --adopt --dry-run` is how the owner
+ * reads what adoption would make the baseline before a deploy.
  */
 export function formatReport(
   report: SeedCompendiumReport,
@@ -62,7 +63,10 @@ export function formatReport(
 ): string {
   const lines: string[] = [];
   for (const where of report.updated) lines.push(`UPDATED ${where}`);
-  for (const where of report.pending) lines.push(`PENDING ${where}`);
+  for (const { where, differs } of report.pending) {
+    lines.push(`PENDING ${where}`);
+    if (differs.length > 0) lines.push(`  differs: ${differs.join(', ')}`);
+  }
   for (const where of report.retired) lines.push(`RETIRED ${where}`);
   if (adopt) {
     for (const { where, differs } of report.adopted) {

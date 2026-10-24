@@ -5,7 +5,13 @@ import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { deityOtherNames } from '../../modules/vocabulary/schema/deity-other-names';
-import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } from './types';
+import type {
+  SeedDatabase,
+  SeedRunOptions,
+  SeedDeity,
+  SeedDeityTradition,
+  SeedTransaction,
+} from './types';
 
 // MB.127's deity vocabulary: thirty-five traditions and the deities filed
 // under them, a starting set an admin may edit. Reference data, not a
@@ -1621,8 +1627,8 @@ export function deitiesNamed(name: string): string[] {
  * Seeds the traditions, then the deities, in a transaction of its own. Writes
  * go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedDeities(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedDeityVocabulary);
+export async function seedDeities(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
+  await beginSeedTransaction(db, seedDeityVocabulary, options);
 }
 
 /**

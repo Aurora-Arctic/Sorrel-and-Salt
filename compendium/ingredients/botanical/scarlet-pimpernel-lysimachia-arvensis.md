@@ -94,6 +94,7 @@ variants:
         nameBasis: stated
         supports:
           - colours
+seedUpdate: 138ea8bcbe6d2351705375642221f170a0efb525c31a12fc2754d463068540d8
 ---
 
 # Scarlet Pimpernel
