@@ -23,3 +23,5 @@
 **M14.24 joined on 2026-10-23**, the owner's call: a sourcing score on each compendium entry, shown to curators with the facts behind it. It sits **after MB.249**, so curators have it when they review the finished seed ([`tasks/m14.md`](../tasks/m14.md)).
 
 **M14.25 joined on 2026-10-23**, the owner's call: the categories the seed lanes found in their sources and the vocabulary lacked are mapped or added, then linked. It sits **after M14.15 and ahead of M14.16 to M14.21**, so the addendum lanes link the new categories as they write their files ([`tasks/m14.md`](../tasks/m14.md)).
+
+**M14.26 joined on 2026-10-24**, the owner's call: a workflow started by hand runs the reference seeds on the environment chosen, as a dry run unless that is turned off, with an option to force the compendium update past refusals 1 to 4. It sits **after M14.14 and ahead of M14.22**.
