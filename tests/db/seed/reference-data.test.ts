@@ -71,7 +71,13 @@ describe('seedReferenceData', () => {
     const report = await seedReferenceData(db);
 
     expect(report.inserted).toBeGreaterThan(0);
-    for (const table of ['category_groups', 'ingredient_forms', 'zodiac_signs', 'deities']) {
+    for (const table of [
+      'category_groups',
+      'ingredient_forms',
+      'zodiac_signs',
+      'deities',
+      'deity_other_names',
+    ]) {
       const [{ count }] = await sql.unsafe<{ count: string }[]>(`select count(*) from "${table}"`);
       expect(Number(count), table).toBeGreaterThan(0);
     }

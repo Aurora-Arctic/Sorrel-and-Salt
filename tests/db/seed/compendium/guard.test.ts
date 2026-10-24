@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkCompendium } from '@/db/seed/compendium/guard';
+import { CURATED, checkCompendium } from '@/db/seed/compendium/guard';
 import { FIXTURE_SHARD, wordsOf } from '../compendium-fixture';
 import type { SeedCompendiumEntry, SeedCompendiumShard } from '@/db/seed/types';
 
@@ -132,6 +132,41 @@ describe('checkCompendium', () => {
       ],
     ])('refuses a %s off its list', (_, edit) => {
       expect(checkCompendium(edited(edit))).toHaveLength(1);
+    });
+  });
+
+  // M14.23: an entry may name a deity by a spelling the deity seed gives it
+  // as an other name, as its source prints it: Kynes's Woden is Odin.
+  describe('a deity named by one of its other names', () => {
+    it('is admitted, though the name is no deity of its own', () => {
+      const shards = edited((shard) => testwort(shard).deities?.push('Woden'));
+
+      expect(checkCompendium(shards)).toEqual([]);
+      // Why it could have been refused: Woden is not on the literal's names,
+      // and a name nobody answers to still is.
+      expect(checkCompendium(edited((shard) => testwort(shard).deities?.push('Wodenson')))).toEqual(
+        [expect.stringContaining('"Wodenson" is not a curated deity')],
+      );
+    });
+
+    it('is refused beside the same deity under its own name, as a repeat', () => {
+      const shards = edited((shard) => testwort(shard).deities?.push('Odin', 'Woden'));
+
+      expect(checkCompendium(shards)).toEqual([
+        expect.stringContaining('"Woden" is Odin, already linked'),
+      ]);
+    });
+
+    it('is refused when it is an other name of more than one deity, naming them', () => {
+      const shards = edited((shard) => testwort(shard).deities?.push('Fixturon'));
+      const curated = {
+        ...CURATED,
+        deities: (name: string) => (name === 'Fixturon' ? ['Hecate', 'Artemis'] : [name]),
+      };
+
+      expect(checkCompendium(shards, { curated })).toEqual([
+        expect.stringContaining('"Fixturon" is an other name of Hecate and Artemis'),
+      ]);
     });
   });
 

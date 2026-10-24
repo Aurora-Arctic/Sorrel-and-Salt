@@ -31,8 +31,10 @@ column before Edit is Updated (MB.260): who last edited the value and when
 
 A `GroupedValueListEntry` is the value's id, name, slug and description,
 plus `groupName`, `editHref`, `groupColors` where its group has a chip
-pair, and `groupIcon` for a form's group (its icon name, `null` for a group
-with none). Categories come by group then name (MB.126); forms are live forms
+pair, `groupIcon` for a form's group (its icon name, `null` for a group
+with none), and `otherNames` for a deity (M14.23), its other names
+alphabetically, which the Name cell lists on a muted caption-sized line under
+the name, "Also called Testrina, Tess"; a deity with none shows its name alone. Categories come by group then name (MB.126); forms are live forms
 under live groups, by name, as the service reads them — a form under a
 deleted group is no longer curated, so it is not listed. Deities are live
 deities under live traditions, by tradition name then name, on the same
@@ -193,7 +195,7 @@ shows its list narrowing.
 | First Page, Middle Page     | Categories, Next alone and "Page 1 of 2" beside it; and a middle page                                                                                                                         |
 | Filtered, No Matches, Empty | Categories with a filter, with a filter that matches nothing, and with no rows                                                                                                                |
 | Forms                       | A form's row, drawing its group's icon                                                                                                                                                        |
-| Deities                     | Deities under invented traditions, slugged by `deitySlug`                                                                                                                                     |
+| Deities                     | Deities under invented traditions, slugged by `deitySlug`, one with other names                                                                                                               |
 | Celestial Bodies            | A flat kind, with no group column or filter                                                                                                                                                   |
 
 `Pending` is its own story: the page's pending state inside the admin frame. These stories stand for the page, in the admin layout's frame with the

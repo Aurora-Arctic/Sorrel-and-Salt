@@ -55,9 +55,21 @@ export const DeityRef = curatedVocabularyWrites({
     type: DeityTraditionRef,
     loader: (loaders) => loaders.deityTraditionsById,
   },
+  // The names a source may call the deity by (M14.23), written whole with it:
+  // a save brings the stored names to the list sent, an absent list clearing them.
+  fields: (t) => ({
+    otherNames: t.stringList({
+      description: 'The other names the deity answers to, alphabetically.',
+      resolve: (deity, _args, context) => context.loaders.otherNamesByDeity.load(deity.id),
+    }),
+  }),
+  input: (t) => ({
+    otherNames: t.stringList({ required: false }),
+  }),
   services: { create: createDeity, update: updateDeity, delete: deleteDeity },
-  // An earlier root field of this request may have read it as an ingredient's pick.
-  clears: ['deitiesByIngredient'],
+  // An earlier root field of this request may have read it as an ingredient's
+  // pick, or read its other names.
+  clears: ['deitiesByIngredient', 'otherNamesByDeity'],
   descriptions: {
     update:
       'Replaces the deity; the slug follows the name and the tradition. A rename is carried onto every live compendium entry that picked the deity.',

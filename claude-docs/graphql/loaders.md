@@ -37,7 +37,8 @@ merely absent:
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `IngredientVariant.formChoice`;
-  the last two MB.167's), and `stockByIngredient` (`ingredients`, for
+  the last two MB.167's), `otherNamesByDeity` (`vocabulary`, for
+  `Deity.otherNames`, M14.23), and `stockByIngredient` (`ingredients`, for
   `Ingredient.stock`, M9.4: keyed `{ ingredientId, workspaceId }`, cached by
   `workspaceId:ingredientId`, a refused coven a `Forbidden` in its own slots;
   `clearStock` drops one key after an add or update, and `deleteStock` clears

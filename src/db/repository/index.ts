@@ -76,6 +76,8 @@ export {
   findCuratedRowsByIds,
   findCuratedRowsByName,
   findDeityCount,
+  findDeityOtherNameHolders,
+  findDeityOtherNames,
   findDeityPage,
   findGroupCount,
   findGroupPage,

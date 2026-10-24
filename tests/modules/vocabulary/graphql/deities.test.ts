@@ -34,6 +34,8 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
+  await sql`delete from deity_other_names where deity_id in (
+    select id from deities where name like 'Fixture%')`;
   await sql`delete from deities where name like 'Fixture%'`;
   await sql`delete from deity_traditions where name like 'Fixture %'`;
 });
@@ -139,6 +141,24 @@ describe('createDeity', () => {
       name: 'Fixture Testra',
       slug: 'fixture-testra-greek',
       tradition: { name: 'Greek' },
+    });
+  });
+
+  it('carries the other names in and reads them back, and answers a repeat as VALIDATION on its row', async () => {
+    const result = await run<{ createDeity: { otherNames: string[] } }>(
+      asUser(E),
+      `mutation ($input: DeityInput!) { createDeity(input: $input) { otherNames } }`,
+      { input: { ...input(), otherNames: ['Fixture Tess', 'Fixture Testrina'] } },
+    );
+    const repeated = await run(asUser(E), CREATE, {
+      input: { ...input('Fixture Mockra'), otherNames: ['Fixture Mock', 'fixture mock'] },
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.createDeity.otherNames).toEqual(['Fixture Tess', 'Fixture Testrina']);
+    expect(repeated.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['otherNames', 1] }],
     });
   });
 

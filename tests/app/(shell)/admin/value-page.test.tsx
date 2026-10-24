@@ -41,6 +41,7 @@ const listDeities = vi.fn();
 const listDeityTraditions = vi.fn();
 const getDeityBySlug = vi.fn();
 const countDeities = vi.fn();
+const deityOtherNamesOf = vi.fn(async (ids: readonly string[]) => ids.map((): string[] => []));
 const listAstrologyValues = vi.fn();
 const getAstrologyValueBySlug = vi.fn();
 const countAstrologyValues = vi.fn();
@@ -57,6 +58,7 @@ vi.mock('@/modules/vocabulary', () => ({
   listDeityTraditions,
   getDeityBySlug,
   countDeities,
+  deityOtherNamesOf,
   listAstrologyValues,
   getAstrologyValueBySlug,
   countAstrologyValues,
@@ -396,4 +398,35 @@ describe('a curated value page, for each other kind', () => {
       );
     },
   );
+
+  // M14.23: a deity's other names, read once for the page and once for the
+  // deity the modal edits, so its row says them and its form opens on them.
+  it("reads each deity's other names into its row and into the form that edits it", async () => {
+    const row = { ...VALUE, description: 'A deity', traditionId: GROUPS[1].id };
+    listDeities.mockReset();
+    listDeities.mockResolvedValue([entry(row)]);
+    countDeities.mockReset();
+    countDeities.mockResolvedValue({ totalCount: 1, countBefore: 0 });
+    listDeityTraditions.mockReset();
+    listDeityTraditions.mockResolvedValue(GROUPS.map(entry));
+    getDeityBySlug.mockReset();
+    getDeityBySlug.mockResolvedValue(row);
+    deityOtherNamesOf.mockReset();
+    deityOtherNamesOf.mockResolvedValue([['Testrina', 'Tess']]);
+
+    await renderPage({ edit: 'testwort-shard' }, 'deity');
+
+    expect(deityOtherNamesOf.mock.calls).toEqual([[[VALUE.id]], [[VALUE.id]]]);
+    const table = screen.getByRole('table');
+    expect(
+      within(table).getByRole('cell', { name: 'Testwort Shard Also called Testrina, Tess' }),
+    ).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', {
+      name: 'Edit Deity, Testwort Shard, Fixture Protection',
+    });
+    const names = within(dialog).getByRole('group', { name: 'Other Names' });
+    for (const name of ['Testrina', 'Tess']) {
+      expect(within(names).getByRole('button', { name: `Remove ${name}` })).toBeInTheDocument();
+    }
+  });
 });

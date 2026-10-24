@@ -1,7 +1,10 @@
-import { beginSeedTransaction } from './idempotent';
-import { deitySlug } from '../../lib/slugify';
+import { eq } from 'drizzle-orm';
+import { beginSeedTransaction, insertStamped } from './idempotent';
+import { deitySlug, slugify } from '../../lib/slugify';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
+import { deities } from '../../modules/vocabulary/schema/deities';
+import { deityOtherNames } from '../../modules/vocabulary/schema/deity-other-names';
 import type {
   SeedDatabase,
   SeedRunOptions,
@@ -217,6 +220,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Asclepius',
     tradition: 'Greek',
+    otherNames: ['Asklepios'],
     description:
       'Greek god of medicine and healing, whose staff bears a serpent; also Asklepios, Roman Aesculapius.',
   },
@@ -241,6 +245,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Dionysus',
     tradition: 'Greek',
+    otherNames: ['Dionysos'],
     description:
       'Greek god of wine, the vine, ivy, ecstasy and theatre; also Dionysos, Roman Bacchus.',
   },
@@ -252,6 +257,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Gaia',
     tradition: 'Greek',
+    otherNames: ['Gaea', 'Ge'],
     description: 'Greek primordial goddess of the Earth, mother of all; also Gaea, Ge.',
   },
   {
@@ -263,6 +269,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Hecate',
     tradition: 'Greek',
+    otherNames: ['Hekate'],
     description:
       'Greek goddess of witchcraft, crossroads, keys, the night and the dead; also Hekate, Trivia.',
   },
@@ -275,6 +282,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Hephaestus',
     tradition: 'Greek',
+    otherNames: ['Hephaistos'],
     description:
       'Greek god of the forge, fire, smiths and metalwork; also Hephaistos, Roman Vulcan.',
   },
@@ -297,12 +305,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Hyacinthus',
     tradition: 'Greek',
+    otherNames: ['Hyakinthos', 'Hyacinthos'],
     description:
       'Greek divine youth beloved of Apollo, from whose blood the hyacinth sprang, honoured as a hero at Amyclae; also Hyakinthos.',
   },
   {
     name: 'Hygieia',
     tradition: 'Greek',
+    otherNames: ['Hygeia'],
     description:
       'Greek goddess of health, cleanliness and the prevention of illness, daughter of Asclepius; also Hygeia, Roman Salus.',
   },
@@ -331,6 +341,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Persephone',
     tradition: 'Greek',
+    otherNames: ['Kore'],
     description:
       'Greek queen of the underworld and maiden of spring, daughter of Demeter, bound by the pomegranate; also Kore, Roman Proserpina.',
   },
@@ -362,6 +373,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Bacchus',
     tradition: 'Roman',
+    otherNames: ['Liber'],
     description: 'Roman god of wine, revelry and the grape harvest; also Liber, Greek Dionysus.',
   },
   {
@@ -379,6 +391,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Cupid',
     tradition: 'Roman',
+    otherNames: ['Amor'],
     description: 'Roman god of love and desire, with bow and arrows; also Amor, Greek Eros.',
   },
   {
@@ -417,6 +430,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Jupiter',
     tradition: 'Roman',
+    otherNames: ['Jove'],
     description:
       'Roman king of the gods, god of the sky, thunder, oaths and the oak; also Jove, Greek Zeus.',
   },
@@ -443,6 +457,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Pluto',
     tradition: 'Roman',
+    otherNames: ['Dis Pater'],
     description: 'Roman god of the underworld and its wealth; also Dis Pater, Greek Hades.',
   },
   {
@@ -496,18 +511,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Amun',
     tradition: 'Egyptian',
+    otherNames: ['Amon', 'Amen'],
     description:
       'Egyptian king of the gods, the hidden one, joined with the Sun as Amun-Ra; also Amon, Amen.',
   },
   {
     name: 'Anubis',
     tradition: 'Egyptian',
+    otherNames: ['Anpu', 'Inpu'],
     description:
       'Egyptian jackal-headed god of embalming, cemeteries and the guiding of souls; also Anpu, Inpu.',
   },
   {
     name: 'Bastet',
     tradition: 'Egyptian',
+    otherNames: ['Bast'],
     description: 'Egyptian cat goddess of the home, protection, joy, women and perfume; also Bast.',
   },
   {
@@ -536,12 +554,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Isis',
     tradition: 'Egyptian',
+    otherNames: ['Aset'],
     description:
       'Egyptian goddess of magic, healing, motherhood and the throne, wife of Osiris; also Aset.',
   },
   {
     name: 'Maat',
     tradition: 'Egyptian',
+    otherNames: ["Ma'at"],
     description:
       "Egyptian goddess of truth, justice, balance and cosmic order, whose feather weighs the heart; also Ma'at.",
   },
@@ -554,12 +574,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nephthys',
     tradition: 'Egyptian',
+    otherNames: ['Nebet-Het'],
     description:
       'Egyptian goddess of mourning, night, the dead and protection, sister of Isis; also Nebet-Het.',
   },
   {
     name: 'Nut',
     tradition: 'Egyptian',
+    otherNames: ['Nuit'],
     description:
       'Egyptian goddess of the sky, whose body arches over the earth and swallows the Sun each night.',
   },
@@ -577,24 +599,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ra',
     tradition: 'Egyptian',
+    otherNames: ['Re'],
     description:
       'Egyptian god of the Sun and creation, sailing his barque across the sky; also Re.',
   },
   {
     name: 'Sekhmet',
     tradition: 'Egyptian',
+    otherNames: ['Sakhmet'],
     description:
       'Egyptian lioness goddess of war, plague and healing, the Eye of Ra; also Sakhmet.',
   },
   {
     name: 'Set',
     tradition: 'Egyptian',
+    otherNames: ['Seth', 'Sutekh'],
     description:
       'Egyptian god of storms, the desert, chaos and foreigners, slayer of Osiris; also Seth, Sutekh.',
   },
   {
     name: 'Thoth',
     tradition: 'Egyptian',
+    otherNames: ['Djehuty'],
     description:
       'Egyptian ibis-headed god of writing, knowledge, magic, the Moon and the reckoning of time; also Djehuty.',
   },
@@ -628,6 +654,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Lilith',
     tradition: 'Akkadian & Babylonian',
+    otherNames: ['Lilitu'],
     description:
       'Akkadian and Babylonian night spirit of storms and childbirth, carried into Jewish folklore and honoured as a goddess in modern practice; also Lilitu.',
   },
@@ -642,24 +669,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Anat',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Anath'],
     description:
       'Canaanite goddess of war and fierce protection, sister and consort of Baal; also Anath.',
   },
   {
     name: 'Asherah',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Athirat'],
     description:
       'Canaanite mother goddess and consort of El, worshipped at sacred trees and poles; also Athirat.',
   },
   {
     name: 'Astarte',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Ashtoreth', 'Ashtart'],
     description:
       'Phoenician and Canaanite goddess of love, fertility, war and the evening star; also Ashtoreth, Ashtart.',
   },
   {
     name: 'Baal',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Hadad'],
     description: 'Canaanite god of storms, rain and the fertility they bring; also Hadad.',
   },
 
@@ -667,12 +698,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Anahita',
     tradition: 'Persian',
+    otherNames: ['Aredvi Sura Anahita'],
     description:
       'Persian goddess of the waters, fertility, healing and wisdom; also Aredvi Sura Anahita.',
   },
   {
     name: 'Mithra',
     tradition: 'Persian',
+    otherNames: ['Mithras'],
     description:
       'Persian god of covenants, light and the rising sun, and of the Roman mysteries as Mithras.',
   },
@@ -681,6 +714,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Baldur',
     tradition: 'Norse',
+    otherNames: ['Balder', 'Baldr'],
     description:
       'Norse god of light, beauty and goodness, slain by a mistletoe dart; also Balder, Baldr.',
   },
@@ -692,17 +726,20 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Freya',
     tradition: 'Norse',
+    otherNames: ['Freyja'],
     description: 'Norse goddess of love, beauty, fertility, war and seidr magic; also Freyja.',
   },
   {
     name: 'Freyr',
     tradition: 'Norse',
+    otherNames: ['Frey', 'Yngvi'],
     description:
       "Norse god of fertility, sunshine, rain and the harvest's plenty, brother of Freya; also Frey, Yngvi.",
   },
   {
     name: 'Frigg',
     tradition: 'Norse',
+    otherNames: ['Frigga'],
     description:
       'Norse queen of the gods, goddess of marriage, the home and foresight, wife of Odin; also Frigga.',
   },
@@ -715,6 +752,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Idun',
     tradition: 'Norse',
+    otherNames: ['Idunn', 'Iduna'],
     description:
       'Norse goddess of youth and spring, keeper of the apples that keep the gods young; also Idunn, Iduna.',
   },
@@ -726,12 +764,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Njord',
     tradition: 'Norse',
+    otherNames: ['Njordr'],
     description:
       'Norse god of the sea, seafaring, wind and wealth, father of Freya and Freyr; also Njordr.',
   },
   {
     name: 'Odin',
     tradition: 'Norse',
+    otherNames: ['Woden', 'Wotan'],
     description:
       'Norse all-father, god of wisdom, poetry, the runes, magic, war and death; also Woden, Wotan.',
   },
@@ -749,12 +789,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Thor',
     tradition: 'Norse',
+    otherNames: ['Donar', 'Thunor'],
     description:
       'Norse god of thunder, storms, strength and the protection of people, wielding the hammer Mjolnir; also Donar, Thunor.',
   },
   {
     name: 'Tyr',
     tradition: 'Norse',
+    otherNames: ['Tiw'],
     description:
       'Norse god of law, justice, oaths and war, who gave his hand to bind Fenrir; also Tiw.',
   },
@@ -763,18 +805,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Berchta',
     tradition: 'Anglo-Saxon & Continental Germanic',
+    otherNames: ['Perchta', 'Bertha'],
     description:
       "Continental Germanic and Alpine goddess of spinning, the Twelve Nights and the household's order; also Perchta, Bertha.",
   },
   {
     name: 'Eostre',
     tradition: 'Anglo-Saxon & Continental Germanic',
+    otherNames: ['Ostara'],
     description:
       'Anglo-Saxon goddess of spring and the dawn, named by Bede, whom Easter recalls; also Ostara.',
   },
   {
     name: 'Holda',
     tradition: 'Anglo-Saxon & Continental Germanic',
+    otherNames: ['Holle', 'Hulda'],
     description:
       'Continental Germanic goddess of winter, spinning and the hearth, who shakes snow from her featherbed; also Holle, Hulda.',
   },
@@ -789,6 +834,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Aengus',
     tradition: 'Irish',
+    otherNames: ['Angus', 'Oengus'],
     description:
       'Irish god of love, youth and poetic inspiration, son of the Dagda; also Angus, Oengus.',
   },
@@ -801,18 +847,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Airmed',
     tradition: 'Irish',
+    otherNames: ['Airmid'],
     description:
       "Irish goddess of healing and herbalism, who gathered the herbs that grew from her brother Miach's grave; also Airmid.",
   },
   {
     name: 'Boann',
     tradition: 'Irish',
+    otherNames: ['Boand'],
     description:
       'Irish goddess of the river Boyne, of poetry, fertility and knowledge; also Boand.',
   },
   {
     name: 'Brigid',
     tradition: 'Irish',
+    otherNames: ['Brighid', 'Brigit', 'Bride'],
     description:
       'Irish goddess of poetry, healing, smithcraft, fire and holy wells, honoured at Imbolc; also Brighid, Brigit, Bride.',
   },
@@ -825,11 +874,13 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Danu',
     tradition: 'Irish',
+    otherNames: ['Anu', 'Dana'],
     description: 'Irish mother goddess of the Tuatha De Danann; also Anu, Dana.',
   },
   {
     name: 'Dian Cecht',
     tradition: 'Irish',
+    otherNames: ['Diancecht'],
     description:
       'Irish god of healing and physician to the Tuatha De Danann, father of Airmed; also Diancecht.',
   },
@@ -854,6 +905,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ogma',
     tradition: 'Irish',
+    otherNames: ['Oghma'],
     description:
       'Irish god of eloquence, strength and writing, said to have made the ogham alphabet; also Oghma.',
   },
@@ -873,6 +925,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Cerridwen',
     tradition: 'Welsh',
+    otherNames: ['Ceridwen', 'Kerridwen'],
     description:
       'Welsh enchantress and goddess of the cauldron, transformation, inspiration and herbal brewing; also Ceridwen, Kerridwen.',
   },
@@ -898,12 +951,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Belenus',
     tradition: 'Gaulish & British',
+    otherNames: ['Belenos', 'Bel'],
     description:
       'Gaulish and British god of light, the Sun and healing springs; also Belenos, Bel.',
   },
   {
     name: 'Cernunnos',
     tradition: 'Gaulish & British',
+    otherNames: ['Kernunnos'],
     description: 'Gaulish horned god of animals, the wild, fertility and wealth; also Kernunnos.',
   },
   {
@@ -941,12 +996,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Mokosh',
     tradition: 'Slavic',
+    otherNames: ['Makosh'],
     description:
       "Slavic goddess of women, spinning, moist earth and fertility, the one goddess of Vladimir's pantheon; also Makosh.",
   },
   {
     name: 'Morana',
     tradition: 'Slavic',
+    otherNames: ['Marzanna', 'Morena', 'Marena'],
     description:
       'Slavic goddess of winter and death in Polish, Czech and Slovak rite, whose effigy is drowned in spring, and of spring and the waters in Ukrainian; also Marzanna, Morena, Marena.',
   },
@@ -958,6 +1015,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Veles',
     tradition: 'Slavic',
+    otherNames: ['Volos'],
     description: 'Slavic god of the underworld, cattle, wealth, waters and magic; also Volos.',
   },
 
@@ -965,6 +1023,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Laima',
     tradition: 'Baltic',
+    otherNames: ['Laime'],
     description:
       'Latvian and Lithuanian goddess of fate, birth and luck, linked with the linden; also Laime.',
   },
@@ -976,6 +1035,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Zemyna',
     tradition: 'Baltic',
+    otherNames: ['Zemynele'],
     description:
       'Lithuanian goddess of the earth and everything that grows from it; also Zemynele.',
   },
@@ -1015,6 +1075,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ganesha',
     tradition: 'Hindu',
+    otherNames: ['Ganapati', 'Ganesh', 'Ganish'],
     description:
       'Hindu elephant-headed god of beginnings, wisdom and the removal of obstacles; also Ganapati.',
   },
@@ -1037,6 +1098,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Lakshmi',
     tradition: 'Hindu',
+    otherNames: ['Laxmi'],
     description:
       'Hindu goddess of wealth, fortune, prosperity and beauty, wife of Vishnu, honoured at Diwali; also Laxmi.',
   },
@@ -1048,11 +1110,13 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Saraswati',
     tradition: 'Hindu',
+    otherNames: ['Sarasvati'],
     description: 'Hindu goddess of knowledge, music, art, speech and learning; also Sarasvati.',
   },
   {
     name: 'Shiva',
     tradition: 'Hindu',
+    otherNames: ['Siva', 'Mahadeva'],
     description:
       'Hindu god of destruction, transformation, yoga and meditation, the auspicious one; also Siva, Mahadeva.',
   },
@@ -1078,6 +1142,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Xi Wangmu',
     tradition: 'Taoist',
+    otherNames: ['Xiwangmu', 'Hsi Wang Mu'],
     description:
       'Taoist Queen Mother of the West, goddess of immortality and keeper of the peaches of long life; also Xiwangmu, Hsi Wang Mu.',
   },
@@ -1086,6 +1151,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Kuan Yin',
     tradition: 'Chinese Buddhist',
+    otherNames: ['Guanyin', 'Kwan Yin', 'Kannon'],
     description:
       'Chinese Buddhist bodhisattva of compassion and mercy, honoured as a goddess in folk religion across East Asia; also Guanyin, Kwan Yin, Kannon.',
   },
@@ -1102,24 +1168,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Amaterasu',
     tradition: 'Japanese',
+    otherNames: ['Amaterasu Omikami'],
     description:
       'Japanese Shinto goddess of the Sun and the Plain of High Heaven, ancestor of the imperial line; also Amaterasu Omikami.',
   },
   {
     name: 'Benzaiten',
     tradition: 'Japanese',
+    otherNames: ['Benten'],
     description:
       'Japanese goddess of water, music, eloquence, wealth and knowledge, come from Saraswati; also Benten.',
   },
   {
     name: 'Inari',
     tradition: 'Japanese',
+    otherNames: ['Oinari'],
     description:
       'Japanese Shinto deity of rice, grain, agriculture, foxes and prosperity, whose shrines are kept by fox messengers; also Oinari.',
   },
   {
     name: 'Tsukuyomi',
     tradition: 'Japanese',
+    otherNames: ['Tsukiyomi'],
     description:
       'Japanese Shinto god of the Moon and the night, brother of Amaterasu; also Tsukiyomi.',
   },
@@ -1128,18 +1198,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nyame',
     tradition: 'Akan',
+    otherNames: ['Onyame', 'Nyankopon', 'Onyankopon', 'Odomankoma'],
     description:
       'Akan supreme god of the sky, creator of the world and giver of rain and sunshine, born on Saturday; also Onyame, Nyankopon, Onyankopon, Odomankoma.',
   },
   {
     name: 'Asase Yaa',
     tradition: 'Akan',
+    otherNames: ['Asase Ya', 'Asaase Yaa', 'Aberewa', 'Asase Efua'],
     description:
       'Akan goddess of the earth, fertility and truth, second only to Nyame, whose Thursday no one tills; also Asase Ya, Asaase Yaa, Aberewa, Mother Earth, Fante Asase Efua.',
   },
   {
     name: 'Tano',
     tradition: 'Akan',
+    otherNames: ['Ta Kora', 'Tano Kora', 'Tando'],
     description:
       'Akan obosom of the Tano river and head of the river gods, god of thunder and of war among the Asante, son of Nyame and Asase Yaa; also Ta Kora, Tano Kora, Fante Tando.',
   },
@@ -1152,6 +1225,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Bosomtwe',
     tradition: 'Akan',
+    otherNames: ['Bosomtwi', 'Bosumtwi'],
     description:
       'Akan obosom of Lake Bosomtwe, son of Nyame and Asase Yaa, honoured in the form of an antelope; also Bosomtwi, Bosumtwi.',
   },
@@ -1160,18 +1234,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Chukwu',
     tradition: 'Igbo',
+    otherNames: ['Chineke', 'Chi Ukwu', 'Chukwu Okike', 'Obasi'],
     description:
       'Igbo supreme god and creator, who made the alusi and gives every person a chi; also Chineke, Chi Ukwu, Chukwu Okike, Obasi.',
   },
   {
     name: 'Ala',
     tradition: 'Igbo',
+    otherNames: ['Ani', 'Ana', 'Ale', 'Ali'],
     description:
       'Igbo alusi of the earth, fertility, morality and the dead, who holds the ancestors in her womb and judges by custom, honoured in mbari houses; also Ani, Ana, Ale, Ali.',
   },
   {
     name: 'Amadioha',
     tradition: 'Igbo',
+    otherNames: ['Amadiora', 'Kamalu', 'Kalu'],
     description:
       'Igbo alusi of thunder, lightning and justice, who strikes the oppressor, shown as a white ram; also Amadiora, Kamalu, Kalu.',
   },
@@ -1184,12 +1261,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Agwu',
     tradition: 'Igbo',
+    otherNames: ['Agwu Nsi'],
     description:
       'Igbo alusi of divination and medicine, patron of the dibia, who possesses the healer to show the cure; also Agwu Nsi.',
   },
   {
     name: 'Njoku Ji',
     tradition: 'Igbo',
+    otherNames: ['Ahiajoku', 'Ahiajioku', 'Ifejioku'],
     description:
       'Igbo alusi of the yam and its farming, guardian of the farm, honoured at the planting festival; also Ahiajoku, Ahiajioku, Ifejioku.',
   },
@@ -1198,30 +1277,35 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nana Buluku',
     tradition: 'Fon & Ewe',
+    otherNames: ['Nana Buruku', 'Nana Buku', 'Nanan-bouclou'],
     description:
       "Fon and Ewe creator of the world, mother of Mawu and Lisa, who made all things and withdrew; also Nana Buruku, Nana Buku, Nanan-bouclou, Candomble's Nana.",
   },
   {
     name: 'Mawu-Lisa',
     tradition: 'Fon & Ewe',
+    otherNames: ['Mawu', 'Lisa', 'Mahu'],
     description:
       'Fon and Ewe twin creator vodun, Mawu of the Moon, night and gentleness and Lisa of the Sun, day and strength, spoken of as one; also Mawu, Lisa, Mahu.',
   },
   {
     name: 'Sagbata',
     tradition: 'Fon & Ewe',
+    otherNames: ['Sakpata', 'Shapata'],
     description:
       'Fon and Ewe vodun of the earth and of smallpox, who watches over fields and waters and punishes with disease, head of the earth pantheon; also Sakpata, Shapata, Yoruba Sopona.',
   },
   {
     name: 'Xevioso',
     tradition: 'Fon & Ewe',
+    otherNames: ['Hevioso', 'Heviosso', 'Sogbo', 'So'],
     description:
       'Fon and Ewe vodun of thunder, lightning and rain, who sends the fertilising rains and strikes liars and thieves with the thunderbolt, shown as a ram with a double axe; also Hevioso, Heviosso, Sogbo, So.',
   },
   {
     name: 'Gu',
     tradition: 'Fon & Ewe',
+    otherNames: ['Egu', 'Gou'],
     description:
       'Fon and Ewe vodun of iron, metalwork, tools and war, twin of Xevioso and counterpart of Yoruba Ogun; also Egu, Gou.',
   },
@@ -1234,6 +1318,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Dan',
     tradition: 'Fon & Ewe',
+    otherNames: ['Da', 'Dan Ayido Hwedo', 'Aido Hwedo'],
     description:
       'Fon and Ewe serpent vodun of the rainbow, riches and cool breezes, who carried Mawu-Lisa at the creation and coils beneath the earth; also Da, Dan Ayido Hwedo, Aido Hwedo, Haitian Damballah and Ayida Wedo.',
   },
@@ -1248,18 +1333,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Elegba',
     tradition: 'Yoruba',
+    otherNames: ['Eleggua', 'Eshu', 'Exu'],
     description:
       'Yoruba and Lucumi orisha of crossroads, roads and doorways, who opens the way; also Eleggua, Eshu, Exu.',
   },
   {
     name: 'Obatala',
     tradition: 'Yoruba',
+    otherNames: ['Oxala'],
     description:
       'Yoruba orisha of purity, wisdom, peace and creation, eldest of the orishas and sculptor of humankind; also Oxala.',
   },
   {
     name: 'Ogun',
     tradition: 'Yoruba',
+    otherNames: ['Ogoun', 'Ogum'],
     description:
       'Yoruba orisha of iron, metalwork, labour, war and the clearing of paths; also Ogoun, Ogum.',
   },
@@ -1271,30 +1359,35 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Osanyin',
     tradition: 'Yoruba',
+    otherNames: ['Osain', 'Ossaim'],
     description:
       'Yoruba orisha of herbs, leaves, medicine and healing, who holds the knowledge of every plant; also Osain, Ossaim.',
   },
   {
     name: 'Oshun',
     tradition: 'Yoruba',
+    otherNames: ['Ochun', 'Oxum'],
     description:
       'Yoruba orisha of rivers, fresh water, love, beauty, sweetness and fertility; also Ochun, Oxum.',
   },
   {
     name: 'Oya',
     tradition: 'Yoruba',
+    otherNames: ['Yansa', 'Iansa'],
     description:
       'Yoruba orisha of winds, storms, transformation and the cemetery gates; also Yansa, Iansa.',
   },
   {
     name: 'Shango',
     tradition: 'Yoruba',
+    otherNames: ['Chango', 'Xango'],
     description:
       'Yoruba orisha of thunder, lightning, fire, drumming and justice; also Chango, Xango.',
   },
   {
     name: 'Yemaya',
     tradition: 'Yoruba',
+    otherNames: ['Yemoja', 'Iemanja'],
     description: 'Yoruba orisha of the sea, motherhood and protection; also Yemoja, Iemanja.',
   },
 
@@ -1302,6 +1395,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nzambi Mpungu',
     tradition: 'Kongo',
+    otherNames: ['Nzambi a Mpungu', 'Nzambi Ampungu', 'Nzambi'],
     description:
       "Kongo supreme god and creator, lord of the sky and the Sun's fire, who made the world and withdrew above it; also Nzambi a Mpungu, Nzambi Ampungu, Nzambi, and Palo's Nsambi, Sambia.",
   },
@@ -1314,12 +1408,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Simbi',
     tradition: 'Kongo',
+    otherNames: ['bisimbi', 'basimbi'],
     description:
       'Kongo spirits of water and the wild honoured as nature deities, the bisimbi of springs, pools and rocks who held the land before people came and guide the dead across the water; also bisimbi, basimbi, cymbee, the Simbi lwa of Haitian Vodou.',
   },
   {
     name: 'Kalunga',
     tradition: 'Kongo',
+    otherNames: ['Nzambi Kalunga'],
     description:
       'Kongo god and force of the beginning, the fire from which the world came, the ocean, and the watery line between the living and the dead; also Kalunga Line, Nzambi Kalunga.',
   },
@@ -1334,24 +1430,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Unkulunkulu',
     tradition: 'Zulu',
+    otherNames: ['Nkulunkulu'],
     description:
       'Zulu creator and first ancestor, the old, old one who came forth at the beginning and gave the first people fire, cattle and marriage; also uNkulunkulu, Nkulunkulu.',
   },
   {
     name: 'Umvelinqangi',
     tradition: 'Zulu',
+    otherNames: ['Mvelinqangi', 'iNkosi yeZulu'],
     description:
       'Zulu supreme being and Lord of the Sky, the first to come forth, god of thunder, lightning and the heavens, often identified with Unkulunkulu; also uMvelinqangi, Mvelinqangi, iNkosi yeZulu.',
   },
   {
     name: 'Nomkhubulwane',
     tradition: 'Zulu',
+    otherNames: ['Nomkhubulwana', 'Nomkubulwana', 'Inkosazana', 'iNkosazana yeZulu'],
     description:
       'Zulu princess of heaven, goddess of rain, the rainbow, spring, fertility and the crops, honoured by girls at her planting rite; also Nomkhubulwana, Nomkubulwana, Inkosazana, iNkosazana yeZulu.',
   },
   {
     name: 'Mamlambo',
     tradition: 'Zulu',
+    otherNames: ['uMamlambo', 'Momlambo', 'Nomhoyi'],
     description:
       'Zulu goddess of rivers, a great water serpent of the deep pools whose favour is both sought and feared; also uMamlambo, Momlambo, Nomhoyi.',
   },
@@ -1365,12 +1465,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Damballah',
     tradition: 'Haitian Vodou',
+    otherNames: ['Danbala', 'Damballa'],
     description:
       'Haitian Vodou serpent lwa of creation, wisdom, springs, waterfalls and peace; also Danbala, Damballa, from the Fon serpent Dan.',
   },
   {
     name: 'Erzulie',
     tradition: 'Haitian Vodou',
+    otherNames: ['Ezili'],
     description:
       'Haitian Vodou family of lwa of love, beauty, jealousy and motherhood, among them Erzulie Freda and Erzulie Dantor; also Ezili.',
   },
@@ -1382,6 +1484,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Papa Legba',
     tradition: 'Haitian Vodou',
+    otherNames: ['Legba'],
     description:
       'Haitian Vodou lwa of the crossroads, gatekeeper between the living and the lwa, who opens every ceremony; also Legba.',
   },
@@ -1420,6 +1523,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ixchel',
     tradition: 'Maya',
+    otherNames: ['Ix Chel', 'Chak Chel'],
     description:
       'Maya goddess of midwifery, medicine, weaving and fertility, the Moon in popular account; also Ix Chel, Chak Chel.',
   },
@@ -1496,6 +1600,29 @@ export const DEITIES: SeedDeity[] = [
   },
 ];
 
+const DEITY_BY_SLUG = new Map(DEITIES.map((deity) => [slugify(deity.name), deity.name]));
+const DEITIES_BY_OTHER_NAME = new Map<string, string[]>();
+for (const deity of DEITIES) {
+  for (const other of deity.otherNames ?? []) {
+    const key = slugify(other);
+    DEITIES_BY_OTHER_NAME.set(key, [...(DEITIES_BY_OTHER_NAME.get(key) ?? []), deity.name]);
+  }
+}
+
+/**
+ * The deities a compendium entry file means by `name` (M14.23), by this
+ * literal's names: the deity named so when one is, else every deity giving it
+ * as an other name, so an entry can keep its source's spelling (Kynes's
+ * Woden is Odin). A deity's own name wins, which is why Legba is the Fon &
+ * Ewe vodun though it is Papa Legba's other name too. One answer is a link;
+ * none, or more than one, is for the guard to refuse.
+ */
+export function deitiesNamed(name: string): string[] {
+  const key = slugify(name);
+  const own = DEITY_BY_SLUG.get(key);
+  return own === undefined ? (DEITIES_BY_OTHER_NAME.get(key) ?? []) : [own];
+}
+
 /**
  * Seeds the traditions, then the deities, in a transaction of its own. Writes
  * go through the handle the caller gives, not `withAudit` — see minimal.ts.
@@ -1518,4 +1645,61 @@ export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
     itemNoun: 'Deity',
     slugOf: deitySlug,
   });
+  await seedDeityOtherNames(tx);
+}
+
+/**
+ * Each deity's `otherNames` (M14.23), on the live deity its seed key finds,
+ * so a renamed deity still takes them and a retired one takes none. A name
+ * is passed over when the deity has ever held it, live or removed, so an
+ * admin's removal stands as a vocabulary row's does (MB.172), and when a live
+ * deity of the tradition holds it, the refusal the service makes. Nothing
+ * present is updated. Case folded as the unique index folds it.
+ */
+async function seedDeityOtherNames(tx: SeedTransaction): Promise<void> {
+  const live = await tx
+    .select({
+      id: deities.id,
+      seedKey: deities.seedKey,
+      traditionId: deities.traditionId,
+      deletedAt: deities.deletedAt,
+    })
+    .from(deities);
+  const held = await tx
+    .select({
+      deityId: deityOtherNames.deityId,
+      name: deityOtherNames.name,
+      deletedAt: deityOtherNames.deletedAt,
+      traditionId: deities.traditionId,
+      deityDeletedAt: deities.deletedAt,
+    })
+    .from(deityOtherNames)
+    .innerJoin(deities, eq(deities.id, deityOtherNames.deityId));
+
+  const byKey = new Map(
+    live
+      .filter((deity) => deity.deletedAt === null && deity.seedKey !== null)
+      .map((deity) => [deity.seedKey, deity]),
+  );
+  const everOnDeity = new Set(held.map((row) => `${row.deityId}|${row.name.toLowerCase()}`));
+  const liveInTradition = new Set(
+    held
+      .filter((row) => row.deletedAt === null && row.deityDeletedAt === null)
+      .map((row) => `${row.traditionId}|${row.name.toLowerCase()}`),
+  );
+
+  const rows: { deityId: string; name: string }[] = [];
+  for (const item of DEITIES) {
+    const deity = byKey.get(slugify(item.name));
+    if (!deity) continue;
+    for (const name of item.otherNames ?? []) {
+      const onDeity = `${deity.id}|${name.toLowerCase()}`;
+      const inTradition = `${deity.traditionId}|${name.toLowerCase()}`;
+      if (everOnDeity.has(onDeity) || liveInTradition.has(inTradition)) continue;
+      everOnDeity.add(onDeity);
+      liveInTradition.add(inTradition);
+      rows.push({ deityId: deity.id, name });
+    }
+  }
+  await insertStamped(tx, deityOtherNames, rows);
 }

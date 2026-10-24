@@ -1,14 +1,24 @@
 import 'server-only';
-import { findDeityCount, findDeityPage, findOneBySlug, withAudit } from '../../../db/repository';
+import {
+  findDeityCount,
+  findDeityOtherNameHolders,
+  findDeityOtherNames,
+  findDeityPage,
+  findManyByIds,
+  findOneBySlug,
+  withAudit,
+} from '../../../db/repository';
+import type { AuditWriter } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound } from '../../../lib/errors';
+import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { deitySlug } from '../../../lib/slugify';
 import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { assertCurator } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
-import { DeityInput } from '../validation/deity';
+import { deityOtherNames } from '../schema/deity-other-names';
+import { DeityInput, otherNameHeldBy, otherNameRepeats } from '../validation/deity';
 import { cachedFilteredList } from './curated-lists';
 import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
 import { refuseWhileHeld } from './held-entries';
@@ -82,11 +92,12 @@ export async function getDeityBySlug(slug: string): Promise<DeityRow> {
  */
 export async function createDeity(session: Session, input: DeityInput): Promise<DeityRow> {
   assertCurator(session);
-  const { fields, traditionName } = await parseDeity(input);
+  const { fields, traditionName, otherNames } = await parseDeity(input);
   const slug = deitySlug(fields.name, traditionName);
 
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(deities, { ...fields, slug });
+    await replaceOtherNames(write, row.id, otherNames);
     return row;
   }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
   expireCompendium();
@@ -114,7 +125,7 @@ export async function updateDeity(
   input: DeityInput,
 ): Promise<DeityRow> {
   const curator = assertCurator(session);
-  const { fields, traditionName } = await parseDeity(input);
+  const { fields, traditionName, otherNames } = await parseDeity(input, id);
   const current = await liveRow(DEITIES, id);
   const slug = deitySlug(fields.name, traditionName);
 
@@ -122,6 +133,7 @@ export async function updateDeity(
     const [row] = await write.updateById(deities, id, { ...fields, slug });
     if (!row) throw new NotFound('No such deity');
     if (current.name !== fields.name) await write.carryDeityRename(curator, id, fields.name);
+    await replaceOtherNames(write, id, otherNames);
     return row;
   }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
   expireCompendium();
@@ -163,16 +175,100 @@ export async function deleteDeity(session: Session, id: string): Promise<void> {
 }
 
 /**
+ * Each deity's live other names (M14.23), alphabetically, in the order of
+ * `ids` — an empty list for a deity with none. Public reference data, as the
+ * deity is (MB.80), so no session.
+ */
+export async function deityOtherNamesOf(ids: readonly string[]): Promise<string[][]> {
+  const rows = await findDeityOtherNames(ids);
+  return ids.map((id) =>
+    rows
+      .filter((row) => row.deityId === id)
+      .map((row) => row.name)
+      .sort((a, b) => a.localeCompare(b)),
+  );
+}
+
+/**
  * The input parsed, its tradition checked live — a foreign key admits a
- * retired one — and the tradition's name, which the slug carries.
+ * retired one — and the tradition's name, which the slug carries; and its
+ * other names, blanks dropped, each refused that the list repeats or another
+ * live deity of the tradition holds (M14.23). The refusal sits on the name's
+ * row in the list sent, so a blank row still counts, and names the deity
+ * holding it: this one for a repeat in the list. `id` is the deity being
+ * rewritten, whose own names hold nothing against it.
  */
 async function parseDeity(
   input: DeityInput,
-): Promise<{ fields: DeityInput; traditionName: string }> {
+  id?: string,
+): Promise<{
+  fields: Omit<DeityInput, 'otherNames'>;
+  traditionName: string;
+  otherNames: string[];
+}> {
   const { fields, parent } = await parseUnderLiveParent(DeityInput, input, {
     table: deityTraditions,
     column: 'traditionId',
     refusal: 'Choose a tradition',
   });
-  return { fields, traditionName: parent.name };
+  const { otherNames: sent, ...deity } = fields;
+  const listed = sent ?? [];
+
+  const issues = otherNameRepeats(listed).map((index) => ({
+    path: ['otherNames', index],
+    message: otherNameHeldBy(deity.name),
+  }));
+  const held = await findDeityOtherNameHolders(
+    deity.traditionId,
+    listed.filter((name) => name !== '').map((name) => name.toLowerCase()),
+    id,
+  );
+  if (held.length > 0) {
+    const holders = new Map(
+      (await findManyByIds(deities, [...new Set(held.map((row) => row.deityId))])).map((row) => [
+        row.id,
+        row.name,
+      ]),
+    );
+    const holderOf = new Map(held.map((row) => [row.name.toLowerCase(), row.deityId]));
+    listed.forEach((name, index) => {
+      const holder = holderOf.get(name.toLowerCase());
+      if (name === '' || holder === undefined) return;
+      if (issues.some((issue) => issue.path[1] === index)) return;
+      issues.push({
+        path: ['otherNames', index],
+        message: otherNameHeldBy(holders.get(holder) ?? ''),
+      });
+    });
+  }
+  if (issues.length > 0) {
+    throw new ValidationError(issues.sort((a, b) => Number(a.path[1]) - Number(b.path[1])));
+  }
+
+  return {
+    fields: deity,
+    traditionName: parent.name,
+    otherNames: listed.filter((name) => name !== ''),
+  };
+}
+
+/**
+ * Brings a deity's live other names to `names`, as an entry's folk names are
+ * brought to its list: compared as written, so a change of case is a new
+ * name, and a dropped name soft-deleted before a new one is written, so the
+ * per-deity index never sees both.
+ */
+async function replaceOtherNames(
+  write: AuditWriter,
+  deityId: string,
+  names: readonly string[],
+): Promise<void> {
+  const current = await findDeityOtherNames([deityId]);
+  const wanted = new Set(names);
+  const dropped = current.filter((row) => !wanted.has(row.name)).map((row) => row.id);
+  if (dropped.length > 0) await write.softDeleteByIds(deityOtherNames, dropped);
+  const kept = new Set(current.map((row) => row.name));
+  for (const name of wanted) {
+    if (!kept.has(name)) await write.insert(deityOtherNames, { deityId, name });
+  }
 }

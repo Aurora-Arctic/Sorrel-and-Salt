@@ -80,6 +80,8 @@ export interface ValueRow {
   description: string;
   /** The group it is filed under; none for a flat kind. */
   groupId?: string;
+  /** A deity's other names, alphabetically (M14.23); none for the other kinds. */
+  otherNames?: readonly string[];
   /** Its audit stamps, which the Updated column reads (MB.260). */
   updatedBy: string;
   updatedAt: Date;

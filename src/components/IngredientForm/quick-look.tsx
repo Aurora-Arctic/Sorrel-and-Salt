@@ -73,6 +73,7 @@ const DuplicateQuickLookDocument = graphql(`
       deities {
         name
         deity {
+          otherNames
           tradition {
             name
           }
@@ -130,6 +131,7 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
     deities: looked.deities.map(({ name, deity }) => ({
       name,
       tradition: deity?.tradition?.name ?? null,
+      otherNames: deity?.otherNames ?? [],
     })),
     substitutes: [],
     references: [],

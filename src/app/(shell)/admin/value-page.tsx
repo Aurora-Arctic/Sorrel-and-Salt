@@ -143,6 +143,7 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
       name: node.name,
       slug: node.slug,
       description: node.description,
+      otherNames: node.otherNames,
       groupName: own?.name ?? '',
       // A chip only for a group with a pair: a category's.
       groupColors:
@@ -186,6 +187,7 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
                   name: edited.name,
                   description: edited.description,
                   groupId: edited.groupId,
+                  otherNames: edited.otherNames,
                 },
               }
         }
