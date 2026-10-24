@@ -82,6 +82,22 @@ describe('GroupedValueList', () => {
     expect(within(rows[1]).getByRole('cell', { name: entries[0].description })).toBeInTheDocument();
   });
 
+  // M14.23: a deity is found by any of its other names, so its row says them.
+  it("names a deity's other names under its name, and nothing for a deity with none", () => {
+    const [testra, mockra] = entries;
+    render(
+      <GroupedValueList
+        {...props({ values: [{ ...testra, otherNames: ['Testrina', 'Tess'] }, mockra] })}
+      />,
+    );
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    expect(
+      within(rows[1]).getByRole('cell', { name: 'Testra Also called Testrina, Tess' }),
+    ).toBeInTheDocument();
+    expect(within(rows[2]).getByRole('cell', { name: 'Mockra' })).toBeInTheDocument();
+  });
+
   // MB.260: who last edited each row, and when, as the coven's member list has it.
   it('shows who last edited each row and when in an Updated column', () => {
     render(<GroupedValueList {...props()} />);
