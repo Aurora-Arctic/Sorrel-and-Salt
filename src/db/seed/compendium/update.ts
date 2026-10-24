@@ -485,7 +485,7 @@ export function planUpdate(item: SeedItem, state: PresentState, ctx: UpdateConte
 export type Outcome =
   | { kind: 'skip' }
   | { kind: 'retired' }
-  | { kind: 'pending' }
+  | { kind: 'pending'; differs: string[] }
   | { kind: 'refused'; reason: string; differs: string[] }
   | { kind: 'update'; plan: UpdatePlan };
 
@@ -508,27 +508,27 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
   const { row } = state;
   if (row.deletedAt !== null) return { outcome: { kind: 'retired' } };
 
+  const plan = planUpdate(item, state, ctx);
   let stored = row.seedContentHash;
   let adopt: Decision['adopt'];
   if (stored === null) {
     const manifest = ctx.manifest?.[identityOf(item.entry)];
     if (manifest !== undefined && wholeAndUntouched(state)) {
-      adopt = { hash: manifest, differs: planUpdate(item, state, ctx).differs };
+      adopt = { hash: manifest, differs: plan.differs };
       stored = manifest;
     } else {
-      return {
-        outcome: {
-          kind: 'refused',
-          reason: REASONS.noBaseline,
-          differs: planUpdate(item, state, ctx).differs,
-        },
-      };
+      return { outcome: { kind: 'refused', reason: REASONS.noBaseline, differs: plan.differs } };
     }
   }
-  if (stored === item.hash) return { adopt, outcome: { kind: 'skip' } };
-  if (item.seedUpdate !== item.hash) return { adopt, outcome: { kind: 'pending' } };
+  // A matching hash skips only a row that matches its file too (M14.1): a row
+  // seeded before its file changed can hold the new hash, the manifest's,
+  // without the new content, and then goes on as a changed file does.
+  if (stored === item.hash && plan.differs.length === 0)
+    return { adopt, outcome: { kind: 'skip' } };
+  if (item.seedUpdate !== item.hash) {
+    return { adopt, outcome: { kind: 'pending', differs: plan.differs } };
+  }
 
-  const plan = planUpdate(item, state, ctx);
   const refused = (reason: string): Decision => ({
     adopt,
     outcome: { kind: 'refused', reason, differs: plan.differs },
