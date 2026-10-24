@@ -47,7 +47,7 @@ export const AUDITED_TABLES = [
   'references',
   'retired_ingredient_slugs',
   'spell_categories',
-  'spell_ingredients',
+  'spell_steps',
   'spells',
   'user_privilege_changes',
   'users',

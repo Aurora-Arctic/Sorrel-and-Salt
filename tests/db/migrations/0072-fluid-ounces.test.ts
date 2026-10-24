@@ -27,24 +27,28 @@ let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
 // The type as `0013` made it, committed before `0072` runs, as on a database
-// that has been migrated before.
+// that has been migrated before. The `spell_ingredients` view (0083) reads
+// `unit`, and Postgres refuses to change the type of a column a view reads,
+// so the view is dropped first and made again after.
 beforeEach(async () => {
   await sql.unsafe(`
+    DROP VIEW spell_ingredients;
     ALTER TABLE inventory_items DROP CONSTRAINT inventory_items_unit_matches_dimension;
     ALTER TABLE inventory_items ALTER COLUMN unit TYPE text;
-    ALTER TABLE spell_ingredients ALTER COLUMN unit TYPE text;
+    ALTER TABLE spell_steps ALTER COLUMN unit TYPE text;
     DROP TYPE inventory_unit;
     CREATE TYPE inventory_unit AS ENUM('mg', 'g', 'kg', 'oz', 'lb', 'ml', 'l', 'tsp', 'tbsp',
       'fl_oz', 'cup', 'piece', 'drop', 'pinch');
     ALTER TABLE inventory_items ALTER COLUMN unit TYPE inventory_unit
       USING (CASE WHEN unit LIKE 'fl_oz%' THEN 'fl_oz' ELSE unit END)::inventory_unit;
-    ALTER TABLE spell_ingredients ALTER COLUMN unit TYPE inventory_unit
+    ALTER TABLE spell_steps ALTER COLUMN unit TYPE inventory_unit
       USING (CASE WHEN unit LIKE 'fl_oz%' THEN 'fl_oz' ELSE unit END)::inventory_unit;
     ALTER TABLE inventory_items ADD CONSTRAINT inventory_items_unit_matches_dimension CHECK (
       (unit is null) = (unit_dimension is null) and (unit is null or
       ((unit_dimension = 'weight' and unit in ('mg', 'g', 'kg', 'oz', 'lb')) or
        (unit_dimension = 'volume' and unit in ('ml', 'l', 'tsp', 'tbsp', 'fl_oz', 'cup')) or
        (unit_dimension = 'count' and unit in ('piece', 'drop', 'pinch')))));
+    CREATE VIEW spell_ingredients AS SELECT * FROM spell_steps;
   `);
 });
 

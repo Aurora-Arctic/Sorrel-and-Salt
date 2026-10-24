@@ -7,7 +7,7 @@ import { tableFacts } from '../support/db/table-metadata';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
-import * as spellIngredients from '@/modules/grimoire/schema/spell-ingredients';
+import * as spellSteps from '@/modules/grimoire/schema/spell-steps';
 import * as spells from '@/modules/grimoire/schema/spells';
 import * as adminRoleChangePauses from '@/modules/identity/schema/admin-role-change-pauses';
 import * as auth from '@/modules/identity/schema/auth';
@@ -46,13 +46,24 @@ import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 // (claude-docs/testing/db-harness.md, "The db test harness"). A `view` is the
 // old name a renamed table leaves behind for the deploy before it, its `table`
 // and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a
-// table").
+// table"). A pending column the code still declares, as a renamed column is
+// until its old name goes, is compared like any other: only the database side
+// of an undeclared one is set aside (M13.1).
 const PENDING_DROPS: readonly {
   table: string;
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
   name: string;
   droppedBy: string;
-}[] = [];
+}[] = [
+  {
+    table: 'spell_ingredients',
+    kind: 'view',
+    name: 'spell_ingredients',
+    droppedBy: 'M13.9',
+  },
+  { table: 'spell_steps', kind: 'column', name: 'layer_order', droppedBy: 'M13.9' },
+  { table: 'spells', kind: 'column', name: 'instructions', droppedBy: 'M13.9' },
+];
 
 const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
   new Set(
@@ -65,7 +76,7 @@ const MODULES = [
   invitations,
   workspaces,
   spellCategories,
-  spellIngredients,
+  spellSteps,
   spells,
   adminRoleChangePauses,
   auth,
@@ -225,21 +236,27 @@ async function migrated(name: string) {
   };
 }
 
-/** The migrated facts less what `PENDING_DROPS` declares is on its way out. */
-async function migratedAndKept(name: string) {
+/**
+ * The migrated facts less what `PENDING_DROPS` declares is on its way out and
+ * the code no longer declares.
+ */
+async function migratedAndKept(name: string, code: ReturnType<typeof declared>) {
   const all = await migrated(name);
+  const nameOf = (row: { name: string } | string) => (typeof row === 'string' ? row : row.name);
   const kept = <T extends { name: string } | string>(
     rows: T[],
     kind: 'column' | 'index' | 'check' | 'foreignKey',
+    stillDeclared: readonly ({ name: string } | string)[],
   ) => {
+    const declaredNames = new Set(stillDeclared.map(nameOf));
     const pending = pendingIn(name, kind);
-    return rows.filter((row) => !pending.has(typeof row === 'string' ? row : row.name));
+    return rows.filter((row) => !pending.has(nameOf(row)) || declaredNames.has(nameOf(row)));
   };
   return {
-    columns: kept(all.columns, 'column'),
-    foreignKeys: kept(all.foreignKeys, 'foreignKey'),
-    checks: kept(all.checks, 'check'),
-    indexes: kept(all.indexes, 'index'),
+    columns: kept(all.columns, 'column', code.columns),
+    foreignKeys: kept(all.foreignKeys, 'foreignKey', code.foreignKeys),
+    checks: kept(all.checks, 'check', code.checks),
+    indexes: kept(all.indexes, 'index', code.indexes),
   };
 }
 
@@ -283,7 +300,7 @@ describe('the Drizzle schema against the migrated database', () => {
     '%s: columns, types, foreign keys, CHECK names and indexes match',
     async (name) => {
       const code = declared(byName.get(name) as PgTable);
-      const database = await migratedAndKept(name);
+      const database = await migratedAndKept(name, code);
 
       expect(code.columns.length).toBeGreaterThan(0);
       expect(database).toEqual(code);

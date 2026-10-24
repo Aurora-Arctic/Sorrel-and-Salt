@@ -7,7 +7,7 @@ import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
 // §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
-// "The grimoire".
+// "The grimoire". `note` replaces `instructions`, both held until M13.9.
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -17,6 +17,7 @@ const OWN_COLUMNS = [
   'seal_wax_color',
   'moon_phase',
   'day_of_week',
+  'note',
   'instructions',
   'status',
   'visibility',
@@ -92,10 +93,20 @@ describe('spells table', () => {
       'seal_wax_color',
       'moon_phase',
       'day_of_week',
+      'note',
       'instructions',
     ]) {
       expect(row[column]).toBeNull();
     }
+  });
+
+  // The single free-text note on a spell (story 80), beside its steps.
+  it('holds a note', async () => {
+    const id = await record({ note: 'Keep by the hearth.', instructions: 'Keep by the hearth.' });
+
+    const [row] = await sql`select note from spells where id = ${id}`;
+
+    expect(row.note).toBe('Keep by the hearth.');
   });
 
   // A title identifies nothing: neither the coven nor the title is unique.

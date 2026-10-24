@@ -38,7 +38,7 @@ async function cast(
   const {
     workspaceId: _workspaceId,
     categories: _categories,
-    layers: _layers,
+    steps: _steps,
     ...row
   } = makeSpell({ visibility });
 

@@ -144,14 +144,18 @@ function referenceLink(column: string, target: string, row: () => Promise<Row>) 
 }
 
 let layer = 0;
-async function spellIngredient(linked: boolean): Promise<Row> {
+async function spellStep(linked: boolean): Promise<Row> {
   const spell = stamped({ workspace_id: WORKSPACE_W_ID, title: `Testwort Ward ${token()}` });
   const layered = linked ? await formed() : { ingredient_id: null, variant_id: null };
+  // One counter for both: `position` and `layer_order` stay equal until M13.9
+  // drops `layer_order`, and a row sharing neither leaves the clash to one index.
+  const at = layer++;
   return stamped({
     spell_id: await idOf('spells', spell),
     ...layered,
     name: linked ? null : `Testwort ${token()}`,
-    layer_order: layer++,
+    position: at,
+    layer_order: at,
   });
 }
 
@@ -257,10 +261,11 @@ const ROWS: Record<string, PartialIndexRow> = {
     row: referenceLink('zodiac_sign_id', 'zodiac_signs', zodiacSign),
   },
   references_seed_key_unique: { row: reference },
-  spell_ingredients_spell_id_custom_name_unique: { row: () => spellIngredient(false) },
-  spell_ingredients_spell_id_layer_order_unique: { row: () => spellIngredient(true) },
-  spell_ingredients_spell_id_variant_id_unique: {
-    row: () => spellIngredient(true),
+  spell_steps_spell_id_custom_name_unique: { row: () => spellStep(false) },
+  spell_steps_spell_id_layer_order_unique: { row: () => spellStep(true) },
+  spell_steps_spell_id_position_unique: { row: () => spellStep(true) },
+  spell_steps_spell_id_variant_id_unique: {
+    row: () => spellStep(true),
     clash: ['spell_id', 'ingredient_id', 'variant_id'],
   },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },

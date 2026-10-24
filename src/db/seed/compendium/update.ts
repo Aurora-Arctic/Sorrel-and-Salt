@@ -31,7 +31,7 @@ import { ingredientSubstitutes } from '../../../modules/ingredients/schema/ingre
 import { inventoryItems } from '../../../modules/ingredients/schema/inventory-items';
 import { referenceLinks } from '../../../modules/ingredients/schema/reference-links';
 import { references } from '../../../modules/ingredients/schema/references';
-import { spellIngredients } from '../../../modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '../../../modules/grimoire/schema/spell-steps';
 import type { CitationFields } from '../../../lib/types';
 import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from '../types';
 
@@ -166,11 +166,9 @@ export async function readStates(
       .where(and(inArray(inventoryItems.variantId, variantIds), isNull(inventoryItems.deletedAt))))
       inUse.add(variantId);
     for (const { variantId } of await tx
-      .select({ variantId: spellIngredients.variantId })
-      .from(spellIngredients)
-      .where(
-        and(inArray(spellIngredients.variantId, variantIds), isNull(spellIngredients.deletedAt)),
-      ))
+      .select({ variantId: spellSteps.variantId })
+      .from(spellSteps)
+      .where(and(inArray(spellSteps.variantId, variantIds), isNull(spellSteps.deletedAt))))
       if (variantId !== null) inUse.add(variantId);
   }
   return { states, inUse };

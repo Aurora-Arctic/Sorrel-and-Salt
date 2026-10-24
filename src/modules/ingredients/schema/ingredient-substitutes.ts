@@ -43,7 +43,7 @@ export const ingredientSubstitutes = pgTable(
       .on(table.variantId)
       .where(sql`${table.deletedAt} is null`),
     // One live link and one live name per ingredient, case folded — the shapes
-    // `spell_ingredients` gives its links and custom names. Partial per rule 4,
+    // `spell_steps` gives its links and custom names. Partial per rule 4,
     // and split by `variant_id` (MB.217): the parent's list and each form's
     // are kept apart, so a form may repeat a substitute its ingredient lists.
     uniqueIndex('ingredient_substitutes_link_unique')

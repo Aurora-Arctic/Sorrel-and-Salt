@@ -9,7 +9,7 @@ import type {
   SOURCED,
   SourcedKey,
 } from '../../modules/ingredients/schema/reference-links';
-import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
+import type { spellSteps } from '../../modules/grimoire/schema/spell-steps';
 import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import type { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import type { CitationFields } from '../../lib/types';
@@ -102,26 +102,27 @@ export type SeedLayerIngredient =
     }
   | { tier: 'custom'; name: string; form: string };
 
-/** One layer. `layerOrder` is its position in `SeedSpell['layers']`, so two layers cannot share a depth. */
-export type SeedLayer = Pick<typeof spellIngredients.$inferInsert, 'quantity' | 'unit' | 'note'> & {
-  ingredient: SeedLayerIngredient;
-};
+/**
+ * One step: an instruction (`body`), a layer (`ingredient`), or both. Its
+ * `position` is its place in `SeedSpell['steps']`, so two steps cannot share
+ * one. An amount and a note belong to a layer, so an instruction-only step
+ * carries neither, as the table's CHECK requires.
+ */
+export type SeedStep =
+  | (Pick<typeof spellSteps.$inferInsert, 'quantity' | 'unit' | 'note'> & {
+      ingredient: SeedLayerIngredient;
+      body?: string;
+    })
+  | { body: string; ingredient?: undefined };
 
 export type SeedSpell = Pick<
   typeof spells.$inferInsert,
-  | 'title'
-  | 'intent'
-  | 'jarSize'
-  | 'sealWaxColor'
-  | 'moonPhase'
-  | 'dayOfWeek'
-  | 'instructions'
-  | 'status'
+  'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note' | 'status'
 > & {
   id: string;
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
   categories: string[];
-  layers: SeedLayer[];
+  steps: SeedStep[];
 };
 
 // The reference vocabularies: the shape the two-tier ones share, then the
