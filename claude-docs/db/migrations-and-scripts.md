@@ -90,7 +90,7 @@
   ["The compendium read"](compendium-read.md).
 - **`0029_spell-layers-soft-delete.sql`** (MB.110) makes `spell_ingredients`
   soft-deleted — see
-  ["Layer order is the identity"](grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder)
+  ["Position is the identity"](grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder)
   under the grimoire.
   `drizzle-kit generate` wrote the statements and the file was reordered by
   hand, as 0017 was: the delete columns and the partial layer index first,

@@ -669,7 +669,7 @@ describe('a deleted entry', () => {
   // (claude-docs/db/spell-visibility.md, "What a spell holds").
   it('stays in a spell that holds it, for every member who may read the spell', async () => {
     const id = await seed();
-    await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), B.id);
+    await insertSpell(sql, makeSpell({ steps: [{ ingredientId: id }] }), B.id);
 
     await deleteCompendiumEntry(admin, id);
 
@@ -684,9 +684,9 @@ describe('a deleted entry', () => {
   // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
   it('leaves every layer holding it as it was', async () => {
     const id = await seed();
-    const spellId = await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), B.id);
+    const spellId = await insertSpell(sql, makeSpell({ steps: [{ ingredientId: id }] }), B.id);
     const layerOf = async () => {
-      const [layer] = await sql`select * from spell_ingredients where spell_id = ${spellId}`;
+      const [layer] = await sql`select * from spell_steps where spell_id = ${spellId}`;
       return layer;
     };
     const before = await layerOf();

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findManyInSpell, findOneSpell } from '@/db/repository';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
-import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
@@ -244,9 +244,9 @@ describe('Grimoire — the spell and what it is made of', () => {
     });
   });
 
-  describe('spell_ingredients and spell_categories, by direct spell id', () => {
+  describe('spell_steps and spell_categories, by direct spell id', () => {
     const JOIN_TABLES = [
-      { label: 'spell_ingredients', table: spellIngredients },
+      { label: 'spell_steps', table: spellSteps },
       { label: 'spell_categories', table: spellCategories },
     ] as const;
 

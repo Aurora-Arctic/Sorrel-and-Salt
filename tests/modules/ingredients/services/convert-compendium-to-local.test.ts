@@ -92,19 +92,18 @@ async function spellOfEntry(): Promise<{ spellId: string; layerId: string }> {
     makeSpell({
       workspaceId: WORKSPACE_W_ID,
       visibility: 'workspace',
-      layers: [{ ingredientId: entry }],
+      steps: [{ ingredientId: entry }],
     }),
     A.id,
   );
   const [layer] = await sql`
-    update spell_ingredients set variant_id = ${form}
+    update spell_steps set variant_id = ${form}
     where spell_id = ${spellId} returning id`;
   return { spellId, layerId: layer.id as string };
 }
 
 const jarRow = async (id: string) => (await sql`select * from inventory_items where id = ${id}`)[0];
-const layerRow = async (id: string) =>
-  (await sql`select * from spell_ingredients where id = ${id}`)[0];
+const layerRow = async (id: string) => (await sql`select * from spell_steps where id = ${id}`)[0];
 const cupboardRow = async () =>
   (await sql`select * from workspace_compendium_entries where id = ${cupboardId}`)[0];
 const ownEntries = () => sql`
@@ -244,8 +243,8 @@ describe('convertCompendiumEntryToLocal', () => {
   it('moves both layers of a spell laying two of its forms, each to its own', async () => {
     const { spellId, layerId } = await spellOfEntry();
     const [other] = await sql`
-      insert into spell_ingredients (spell_id, ingredient_id, variant_id, layer_order, created_by, updated_by)
-      values (${spellId}, ${entry}, ${otherForm}, 99, ${A.id}, ${A.id}) returning id`;
+      insert into spell_steps (spell_id, ingredient_id, variant_id, position, layer_order, created_by, updated_by)
+      values (${spellId}, ${entry}, ${otherForm}, 99, 99, ${A.id}, ${A.id}) returning id`;
 
     const { entry: own } = await convert();
 

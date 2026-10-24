@@ -18,7 +18,7 @@ import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-ca
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
-import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -335,10 +335,10 @@ describe('the Membership proof (M6.3)', () => {
       findOneInWorkspace(membership, spells, eq(spells.id, WORKSPACE_W_ID));
 
     const readLayersUnscoped = () =>
-      // @ts-expect-error — `spell_ingredients` carries no workspace_id and so
+      // @ts-expect-error — `spell_steps` carries no workspace_id and so
       // would pass as unscoped; the `spell_id` is what refuses it, because its
       // scope and its visibility are the parent spell's (findManyInSpell).
-      findMany(spellIngredients);
+      findMany(spellSteps);
 
     const readAssignmentsUnscoped = () =>
       // @ts-expect-error — the same for `spell_categories`.
@@ -347,7 +347,7 @@ describe('the Membership proof (M6.3)', () => {
     const readLayersThroughTheHatch = () =>
       // @ts-expect-error — the escape hatch takes the unscoped side too, where
       // every coven's layers would come back, removed ones and private spells' included.
-      findManyIncludingSoftDeleted(spellIngredients);
+      findManyIncludingSoftDeleted(spellSteps);
 
     const scopeAJoinTableByWorkspace = (membership: Membership) =>
       // @ts-expect-error — `spell_categories` has no workspace_id to AND on,
@@ -355,16 +355,14 @@ describe('the Membership proof (M6.3)', () => {
       findManyInWorkspace(membership, spellCategories);
 
     const readLayersAsAnIngredientsChildren = () =>
-      // @ts-expect-error — `spell_ingredients` carries an ingredient_id too, but
+      // @ts-expect-error — `spell_steps` carries an ingredient_id too, but
       // its reach is its spell's: read through a compendium entry, it would be
       // every coven's layers of that entry, private spells included.
-      findManyOfIngredients([], spellIngredients, [WORKSPACE_W_ID]);
+      findManyOfIngredients([], spellSteps, [WORKSPACE_W_ID]);
 
     const readLayersAsAHeldIngredientsChildren = (membership: Membership) =>
       // @ts-expect-error — nor are layers a held ingredient's children.
-      findManyOfSpellIngredientsIncludingSoftDeleted(membership, spellIngredients, [
-        WORKSPACE_W_ID,
-      ]);
+      findManyOfSpellIngredientsIncludingSoftDeleted(membership, spellSteps, [WORKSPACE_W_ID]);
 
     expect(readSpellsWithoutTheVisibilityRule).toBeInstanceOf(Function);
     expect(readOneSpellWithoutTheVisibilityRule).toBeInstanceOf(Function);

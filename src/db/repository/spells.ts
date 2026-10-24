@@ -1,6 +1,6 @@
 import { and, eq, inArray, or, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
-import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '../../modules/grimoire/schema/spell-steps';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
@@ -48,7 +48,7 @@ export function findOneSpell(
 }
 
 /**
- * A spell's rows in `spell_ingredients` or `spell_categories` — readable
+ * A spell's rows in `spell_steps` or `spell_categories` — readable
  * exactly when the spell is. Neither table carries a `workspace_id` to scope
  * itself by, so the correlated `EXISTS` over the parent is where both the
  * coven and the visibility come from; filtering after the fetch would hand a
@@ -89,13 +89,10 @@ export function findIngredientsInSpellsIncludingSoftDeleted(
       inArray(ingredients.id, [...ingredientIds]),
       inTiers([membership], ingredients),
       existsIn(
-        spellIngredients,
+        spellSteps,
         and(
-          eq(spellIngredients.ingredientId, ingredients.id),
-          existsIn(
-            spells,
-            and(eq(spells.id, spellIngredients.spellId), readableSpells(membership)),
-          ),
+          eq(spellSteps.ingredientId, ingredients.id),
+          existsIn(spells, and(eq(spells.id, spellSteps.spellId), readableSpells(membership))),
         ),
       ),
     ),
@@ -131,39 +128,40 @@ export async function findManyOfSpellIngredientsIncludingSoftDeleted<
 }
 
 /**
- * The writes that move a coven's spell layers from one form to another
+ * The writes that move a coven's spell steps from one form to another
  * (M12.21), spread into the writer. Here rather than in the grimoire module,
  * because the ingredients module moves them and may not import the
- * grimoire's schema; the repository belongs to no module. Every layer is read
+ * grimoire's schema; the repository belongs to no module. Every step is read
  * through its spell, scoped to the proof's coven and live, so another coven's
- * layers are never touched. Private spells are not filtered out: a layer is
- * moved because its form is going, whoever may read the spell.
+ * steps are never touched. Private spells are not filtered out: a step is
+ * moved because its form is going, whoever may read the spell. Only a step
+ * that lays an ingredient names a form, so only those are touched.
  */
-export function spellLayerWrites({
+export function spellStepWrites({
   tx,
   update,
-}: WriterContext): Pick<AuditWriter, 'lockLayersOfVariants' | 'moveLayers'> {
+}: WriterContext): Pick<AuditWriter, 'lockStepsOfVariants' | 'moveSteps'> {
   const inCovenSpell = (membership: Membership) =>
-    existsIn(spells, and(eq(spells.id, spellIngredients.spellId), scopedTo(membership, spells)));
+    existsIn(spells, and(eq(spells.id, spellSteps.spellId), scopedTo(membership, spells)));
   return {
-    lockLayersOfVariants: (membership, variantIds) => {
+    lockStepsOfVariants: (membership, variantIds) => {
       if (variantIds.length === 0) return Promise.resolve([]);
       return selectFrom(
-        spellIngredients,
+        spellSteps,
         and(
-          notSoftDeleted(spellIngredients),
-          inArray(spellIngredients.variantId, [...variantIds]),
+          notSoftDeleted(spellSteps),
+          inArray(spellSteps.variantId, [...variantIds]),
           inCovenSpell(membership),
         ),
-        { lockIn: tx, lockOrder: spellIngredients.id },
+        { lockIn: tx, lockOrder: spellSteps.id },
       );
     },
-    moveLayers: (membership, layerIds, to) => {
-      if (layerIds.length === 0) return Promise.resolve([]);
+    moveSteps: (membership, stepIds, to) => {
+      if (stepIds.length === 0) return Promise.resolve([]);
       return update(
-        spellIngredients,
+        spellSteps,
         { ingredientId: to.ingredientId, variantId: to.variantId },
-        and(inArray(spellIngredients.id, [...layerIds]), inCovenSpell(membership)),
+        and(inArray(spellSteps.id, [...stepIds]), inCovenSpell(membership)),
       );
     },
   };

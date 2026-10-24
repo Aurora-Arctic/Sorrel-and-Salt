@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
 import type { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
-import type { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import type { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import type { spells } from '@/modules/grimoire/schema/spells';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 
@@ -96,23 +96,32 @@ export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'
 export type VariantInput = NonNullable<z.input<typeof LocalIngredientInput>['variants']>[number];
 
 /**
- * One layer of the stack: it points at an ingredient *or* names one of its own
- * (`num_nonnulls(ingredient_id, name) = 1`), with `form` only beside a name.
+ * One step of the recipe: an instruction (`body`), an ingredient, or both. A
+ * layer points at an ingredient *or* names one of its own
+ * (`num_nonnulls(ingredient_id, name) <= 1`), with `form` only beside a name.
  */
-export interface SpellLayerFixture extends Required<
+export interface SpellStepFixture extends Required<
   Pick<
-    typeof spellIngredients.$inferInsert,
-    'ingredientId' | 'name' | 'form' | 'quantity' | 'unit' | 'note' | 'layerOrder'
+    typeof spellSteps.$inferInsert,
+    | 'ingredientId'
+    | 'name'
+    | 'form'
+    | 'quantity'
+    | 'unit'
+    | 'note'
+    | 'body'
+    | 'position'
+    | 'layerOrder'
   >
 > {}
 
 /**
- * What a test says about a layer. `layerOrder` is the position in the array,
- * so it cannot be stated as well.
+ * What a test says about a step. `position` and `layerOrder` are the index in
+ * the array, so neither can be stated as well.
  */
-export type SpellLayerOverrides = Omit<Overrides<SpellLayerFixture>, 'layerOrder'>;
+export type SpellStepOverrides = Omit<Overrides<SpellStepFixture>, 'position' | 'layerOrder'>;
 
-/** A spell, plus the categories it intends and the layers it is built from. */
+/** A spell, plus the categories it intends and the steps of its recipe. */
 export interface SpellFixture extends Required<
   Pick<
     typeof spells.$inferInsert,
@@ -123,6 +132,7 @@ export interface SpellFixture extends Required<
     | 'sealWaxColor'
     | 'moonPhase'
     | 'dayOfWeek'
+    | 'note'
     | 'instructions'
     | 'status'
     | 'visibility'
@@ -130,9 +140,9 @@ export interface SpellFixture extends Required<
 > {
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
   categories: string[];
-  layers: SpellLayerFixture[];
+  steps: SpellStepFixture[];
 }
 
-export type SpellOverrides = Omit<Overrides<SpellFixture>, 'layers'> & {
-  layers?: SpellLayerOverrides[];
+export type SpellOverrides = Omit<Overrides<SpellFixture>, 'steps'> & {
+  steps?: SpellStepOverrides[];
 };

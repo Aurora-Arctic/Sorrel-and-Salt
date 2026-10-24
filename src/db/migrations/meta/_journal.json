@@ -582,6 +582,13 @@
       "when": 1792809160001,
       "tag": "0082_deity-other-names",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1792810977828,
+      "tag": "0083_spell-steps-expand",
+      "breakpoints": true
     }
   ]
 }

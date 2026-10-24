@@ -1,4 +1,4 @@
-export interface LayerRow {
+export interface StepRow {
   spellId?: string;
   ingredientId?: string | null;
   /** The form laid; the ingredient's first seeded variant when left out of a linked layer. */
@@ -7,6 +7,9 @@ export interface LayerRow {
   form?: string | null;
   quantity?: string | null;
   unit?: string | null;
+  position?: number;
+  /** The old place column, written beside `position` until M13.9; `position` when left out. */
   layerOrder?: number;
   note?: string | null;
+  body?: string | null;
 }

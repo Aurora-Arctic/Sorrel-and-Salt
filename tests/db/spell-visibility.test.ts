@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findManyInSpell, findManySpells, findOneSpell, withAudit } from '@/db/repository';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
-import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
@@ -48,17 +48,18 @@ async function cast(
   const {
     workspaceId: _workspaceId,
     categories: _categories,
-    layers: _layers,
+    steps: _steps,
     ...row
   } = makeSpell({ visibility });
 
   return withAudit(session, async (write) => {
     const [spell] = await write.insertInWorkspace(membership, spells, row);
 
-    await write.insert(spellIngredients, {
+    await write.insert(spellSteps, {
       spellId: spell.id,
       name: 'Fixture Ash',
       form: 'ash',
+      position: 1,
       layerOrder: 1,
     });
     await write.insert(spellCategories, { spellId: spell.id, categoryId: CATEGORY_ID });
@@ -177,7 +178,7 @@ describe('findOneSpell', () => {
 // visibility — from the spell they hang off.
 describe('findManyInSpell', () => {
   const JOIN_TABLES = [
-    { label: 'spell_ingredients', table: spellIngredients },
+    { label: 'spell_steps', table: spellSteps },
     { label: 'spell_categories', table: spellCategories },
   ] as const;
 
