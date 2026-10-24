@@ -117,6 +117,7 @@ const DeitySuggestionsDocument = graphql(`
           value
           description
           tradition
+          matchedName
           curated
         }
       }
@@ -274,6 +275,12 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
     ...correspondenceOption(node),
     // The tradition tells two same-named deities apart, as a form's group does.
     label: qualified(node.value, node.tradition),
+    // The other name the server found it by (M14.23), which its own name does
+    // not show: "Astarte (Canaanite)" found by "ashtoreth" says why.
+    note:
+      [node.matchedName && `Also called ${node.matchedName}`, node.description]
+        .filter(Boolean)
+        .join(' · ') || undefined,
     // A curated deity is what a pick links, and its pill reads with its
     // tradition (MB.169); one only in use has no row, and adds as text.
     link: node.id

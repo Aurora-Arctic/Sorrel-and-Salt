@@ -33,7 +33,7 @@ function position({ key, id }: Cursor): SQL {
 
 /**
  * One page of `source`, a parenthesised, aliased statement whose rows carry
- * `tier`, `id`, `value`, `description`, `group_name`, `group_icon`, `fold` and `tiebreak` — and
+ * `tier`, `id`, `value`, `description`, `group_name`, `group_icon`, `matched_name`, `fold` and `tiebreak` — and
  * `claimants` when `claimed` — sorted by `(tier, fold, tiebreak)` and cut by
  * cursor as a whole.
  */
@@ -55,6 +55,7 @@ export async function readSuggestionPage(
         description: column<string | null>('description'),
         group: column<string | null>('group_name'),
         icon: column<FormGroupIcon | null>('group_icon'),
+        matchedName: column<string | null>('matched_name'),
         fold: column<string>('fold'),
         tiebreak: column<string>('tiebreak'),
         claimants: claimed

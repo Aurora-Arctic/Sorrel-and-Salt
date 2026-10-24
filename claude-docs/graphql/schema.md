@@ -322,9 +322,15 @@ type DeitySuggestion {
   description: String # the curated row's; null for a value only in use
   tradition: String # the curated row's tradition; null for a value only in use
   curated: Boolean!
+  matchedName: String # the other name the query matched (M14.23); null when the name matched, or for a value in use
 }
 ```
 
+- **A deity is found by its other names too** (M14.23). A query that matches
+  none of the deity's name but one of its live `deity_other_names` finds it in
+  tier 0, and `matchedName` carries the closest such name, so the picker can
+  say "Also called Woden" on Odin's row. A pick still sends the deity's `id`
+  and its `value`, never the other name.
 - **`tradition` is `formSuggestions`' `group`** under the vocabulary's own
   word. It tells two same-named deities apart, and a client renders
   "Hecate (Greek)". A deity under a soft-deleted tradition comes back as a

@@ -348,6 +348,7 @@ describe('LookupListField', () => {
     value: 'Hecate',
     description: 'Of crossroads and the moon.',
     tradition: 'Greek',
+    matchedName: null,
     curated: true,
   };
   const HECATE_ROMAN: DeityNode = {
@@ -355,6 +356,7 @@ describe('LookupListField', () => {
     value: 'Hecate',
     description: null,
     tradition: 'Roman',
+    matchedName: null,
     curated: true,
   };
   // In use only: no curated row, so nothing to pick.
@@ -363,6 +365,7 @@ describe('LookupListField', () => {
     value: 'Hecate Fixturia',
     description: null,
     tradition: null,
+    matchedName: null,
     curated: false,
   };
   const COMPENDIUM_ID = '0d4f2c1a-6b3e-4a5d-8c7f-9e0a1b2c3d4e';
@@ -515,6 +518,31 @@ describe('LookupListField', () => {
       { deityId: GREEK_HECATE_ID },
       { deityId: ROMAN_HECATE_ID },
     ]);
+  });
+
+  // M14.23: the server finds a deity by any of its other names; the row says
+  // which one matched, since the deity's own name does not show it.
+  it('shows the other name a deity was found by in its row, and picks the deity itself', async () => {
+    const send = renderList(DEITIES);
+    const TESTARA_ID = '7e8f9a0b-1c2d-4e3f-8a4b-5c6d7e8f9a0b';
+    const calls = offerDeities([
+      {
+        id: TESTARA_ID,
+        value: 'Testara',
+        description: null,
+        tradition: 'Testfolk',
+        matchedName: 'Quillabine',
+        curated: true,
+      },
+    ]);
+
+    await lookUp('Deity', calls, 'quillab');
+    const row = await screen.findByRole('option', { name: /^Testara \(Testfolk\)/ });
+    expect(row).toHaveTextContent('Quillabine');
+    fireEvent.click(row);
+
+    expect(changes('Deities')).toHaveTextContent('Testara (Testfolk)');
+    expect((await send()).deities).toEqual([{ deityId: TESTARA_ID }]);
   });
 
   it('adds a deity only in use as its name, read and sent as typed', async () => {

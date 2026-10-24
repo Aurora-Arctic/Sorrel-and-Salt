@@ -261,6 +261,11 @@ type DeitySuggestion {
 
   """The curated row, which a pick sends; null for a value only in use."""
   id: ID
+
+  """
+  The other name the query matched (M14.23), which the deity's own name does not show; null when its name matched, or it was found another way.
+  """
+  matchedName: String
   tradition: String
   value: String!
 }
