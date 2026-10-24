@@ -1,8 +1,8 @@
 ## The compendium seed (MB.240 to MB.249)
 
-The compendium's starting entries are seeded on staging and production, as reference data, by `npm run db:seed:compendium` (MB.242), the way the five curated vocabularies are. Until 2026-10-11 the plan was for an admin to type every entry by hand; the owner reversed that and asked for a researched, sourced list of **614 ingredients**. This folder holds the rules every entry is written to and the candidate list the entries are drawn from. The entries themselves are markdown files under `compendium/` at the repository root, one per entry, each citing its own sources ("An entry, field by field").
+The compendium's starting entries are seeded on staging and production, as reference data, by `npm run db:seed:compendium` (MB.242), the way the five curated vocabularies are. Until 2026-10-11 the plan was for an admin to type every entry by hand; the owner reversed that and asked for a researched, sourced list of **1,111 ingredients**. This folder holds the rules every entry is written to and the candidate list the entries are drawn from. The entries themselves are markdown files under `compendium/` at the repository root, one per entry, each citing its own sources ("An entry, field by field").
 
-- [`candidates.md`](candidates.md): the 614 candidate entries, each with its label, formal name, naming system and shard, and the works the list was drawn from.
+- [`candidates.md`](candidates.md): the 1,111 candidate entries (a roster of 614 and an addendum of 497), each with its label, formal name, naming system and shard, and the works the list was drawn from.
 - Until M14.10 the entries were TypeScript files, one per shard, each with a doc of its sources here. M14.10 deleted the TypeScript and moved the seven docs to `claude-docs/archive/compendium-seed-shards/`.
 - The plan that scoped the work: [`design-decisions/mb.240-plan.md`](../../design-decisions/mb.240-plan.md). Why it is shaped this way: [`design-decisions/mb.240-compendium-seed.md`](../../design-decisions/mb.240-compendium-seed.md).
 
@@ -10,7 +10,7 @@ The compendium's starting entries are seeded on staging and production, as refer
 
 ### What is seeded, and where
 
-An _entry_ is one row of `ingredients` in the compendium tier, keyed by its formal name (an ingredient's identity, DESIGN.md §5). Beneath it, one row of `ingredient_variants` per form it is sold or used in: the herb, the oil, the root. Only entries count toward the 614; forms are extra rows beneath them (MB.215).
+An _entry_ is one row of `ingredients` in the compendium tier, keyed by its formal name (an ingredient's identity, DESIGN.md §5). Beneath it, one row of `ingredient_variants` per form it is sold or used in: the herb, the oil, the root. Only entries count toward the 1,111; forms are extra rows beneath them (MB.215).
 
 The candidate list divides its rows among the content tasks by **shard**, a group of about 50 to 135 rows, so that no task's pull request is too large to review. Each entry in a shard is still one file of its own. The counts are the candidate list's:
 
@@ -24,7 +24,7 @@ The candidate list divides its rows among the content tasks by **shard**, a grou
 | MB.247 | `resins-woods-and-other`: resins, woods, incense; animal products, salts, waters | 48      |
 | MB.248 | `stones-and-metals`: minerals, rocks, metals and alloys                          | 136     |
 
-From M14.10 a content task writes one markdown file per entry under `compendium/`, and nothing under `src/db/seed/compendium/`. The pilot's 14 are rows of the candidate list, so they count toward the 614: MB.242 names them, and the shards they come from research them no further. The plan split the plants at A–C, D–K, L–R and S–Z; the list moved the split points to Co, L and R, which balance the four at 98 to 116 rows rather than 87 to 130. The resins, woods and other ingredients came in at 48 against the plan's estimate of about 80, because few of the sources read name them and no row was added without a source.
+From M14.10 a content task writes one markdown file per entry under `compendium/`, and nothing under `src/db/seed/compendium/`. The pilot's 14 are rows of the candidate list, so they count toward the 1,111: MB.242 names them, and the shards they come from research them no further. The plan split the plants at A–C, D–K, L–R and S–Z; the list moved the split points to Co, L and R, which balance the four at 98 to 116 rows rather than 87 to 130. The resins, woods and other ingredients came in at 48 against the plan's estimate of about 80, because few of the sources read name them and no row was added without a source.
 
 ### An entry, field by field
 
@@ -166,7 +166,10 @@ An entry's formal name is its identity: two entries may share a label, never a f
 
 - **Plants** take the accepted name in Plants of the World Online (POWO), in `Genus species` form, with `subsp.`, `var.` or a quoted cultivar where the entry is one (`Lavandula angustifolia 'Hidcote'`). Where practice does not split a genus into species, the genus alone. Where the candidate list names a group within a genus by its rank, the rank stays in the name (`Rubus subg. Rubus`, `Vaccinium sect. Cyanococcus`), and the guard takes that shape (MB.243).
 - **Fungi** take their binomial, with `nomenclature: 'fungal'`.
-- **Minerals** take `<Species> var. <variety>` where the stone is a variety, as `standard` does (`Quartz var. amethyst`), so amethyst, citrine and rose quartz stay three entries. A rock rather than a mineral species is named as the mineral system names it (`Lapis lazuli`). Mindat is the reference for mineral names.
+- **Minerals** take the stone's own name as Wikipedia or Mindat heads it (`Malachite`, `Apache tears`, `Herkimer diamond`, `Chevron amethyst`), and a rock rather than a mineral species is named as the mineral system names it (`Lapis lazuli`). `<Species> var. <variety>` is written only where a source read names the variety that way; the roster's first 614 rows use it as `standard` does (`Quartz var. amethyst`, already seeded under that key), and those rows stand unchanged, so amethyst, citrine and rose quartz stay three entries. A new row never coins the shape (`Obsidian var. Apache tear` is wrong). Mindat is the preferred reference for mineral names. Under the owner's decisions of 2026-10-11 ([`design-decisions/mb.240-compendium-seed.md`](../../design-decisions/mb.240-compendium-seed.md), "Addendum"):
+  - **A named sort of stone is its own entry, never a form**: Apache tear, snowflake, mahogany and rainbow obsidian, chevron and pineapple amethyst, Herkimer diamond, phantom quartz, tree agate, picture jasper, hawk's eye, watermelon tourmaline, and every coloured sort of calcite, jasper, agate or tourmaline that Hall or Cunningham gives its own heading or paragraph.
+  - **A stone treated in a laboratory is an entry** where Hall heads it (aqua aura, opal aura, rainbow aura, rose aura, ruby aura, sunshine aura, titanium quartz, Siberian blue quartz), and its description says it is treated.
+  - **A crystal formation is a form**: Hall's cluster, point, wand, double terminated, elestial, record keeper, sceptre, phantom, generator and her other shape headings are variants beneath Clear Quartz, and a geode is a form of the stone it holds. A variant is only ever a physical form.
 - **Metals and salts** take their chemical name, with `nomenclature: 'chemical'` (`Sodium chloride`).
 - **Animal products** are forms beneath the animal's binomial: honey and beeswax are both _Apis mellifera_, with `Honey` and `Wax` as its forms.
 - **A preparation no naming system names** (black salt, moon water) takes `nomenclature: 'none'` and no formal name. `none` is an answer, not a gap.
@@ -339,14 +342,14 @@ Cunningham's _Magical Herbs_ also prints, under each heading, the formal name th
 
 ### The candidate list
 
-[`candidates.md`](candidates.md) lists the 614 entries to research. Its rules:
+[`candidates.md`](candidates.md) lists the 1,111 entries to research (rows 1 to 614 the roster, 615 to 1,111 the addendum). Its rules:
 
 - one row per entry: the label, the formal name, the naming system, and the shard it belongs to;
 - **no two rows share an identity** (the formal name lower-cased, or the label where the naming system is `none`);
 - every formal name and naming system satisfies the rules under "Formal names" above, `none` with no formal name;
 - the list is drawn from several works, each named in its own sources section in Chicago form, so the selection is no one book's.
 
-The list holds 451 `botanical` rows, 6 `fungal`, 7 `zoological`, 118 `mineral`, 14 `chemical`, 7 `unknown` and 11 `none`. 149 rows rest on a single source and are marked `(single source)`. The rows were checked against the rules above when MB.240 committed them: 614 rows, no shared identity, every shard one of the six and every naming system paired correctly with its formal name.
+The roster's 614 rows hold 451 `botanical` rows, 6 `fungal`, 7 `zoological`, 118 `mineral`, 14 `chemical`, 7 `unknown` and 11 `none`. 149 rows rest on a single source and are marked `(single source)`. The rows were checked against the rules above when MB.240 committed them: 614 rows, no shared identity, every shard one of the six and every naming system paired correctly with its formal name. The addendum's 497 rows (M14.14) hold 425 `botanical`, 10 `fungal`, 9 `zoological`, 10 `mineral`, 2 `chemical` and 41 `unknown`, and are described in `candidates.md`, "The addendum"; together they are 1,111 rows.
 
 A content task researches its shard's rows. Its entry files plus the "What is left out" rows in its pull request body equal its rows in the list; a lane that would leave out more than a tenth of its rows stops and raises it with the owner first.
 

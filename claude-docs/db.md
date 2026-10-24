@@ -271,7 +271,7 @@ Thirty-five traditions and 216 deities, the owner's starting list, with their de
 
 ## The compendium seed (MB.240 to MB.249)
 
-The compendium's 614 starting entries, seeded on staging and production as reference data by `db:seed:compendium`: the entry template, the closed lists an entry may name, the formal-name and sourcing rules, write-once, the owner's book library and the candidate list. [`db/compendium-seed/README.md`](db/compendium-seed/README.md)
+The compendium's 1,111 starting entries, seeded on staging and production as reference data by `db:seed:compendium`: the entry template, the closed lists an entry may name, the formal-name and sourcing rules, write-once, the owner's book library and the candidate list. [`db/compendium-seed/README.md`](db/compendium-seed/README.md)
 
 ## The standard scenario (M1.22)
 

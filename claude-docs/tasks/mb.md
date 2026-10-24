@@ -1232,6 +1232,8 @@ _Acceptance criteria:_
 - An entry a seed run adds shows on the public compendium without waiting for the hour's revalidation
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
+**MB.250 — Retired into M14.14 on 2026-10-23.** The roster addendum it described is M14.14's work, widened by the owner from 614 to 1,111 rows. Its branch `feature/mb.250-compendium-roster-addendum` (commit 1c8ac0cbe) is superseded, and its mineral rule and notes were carried into the candidate list and `compendium/left-out.md`.
+
 **MB.251 — Call the planets Celestial Bodies wherever a person reads them** · 3h
 
 _Story:_ As an admin, I want the vocabulary that holds the Sun, the Moon, the asteroids and the lunar nodes called Celestial Bodies, so that its name says what it holds.
