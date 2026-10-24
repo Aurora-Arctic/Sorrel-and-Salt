@@ -53,8 +53,9 @@ export function hasRefusals(report: SeedCompendiumReport): boolean {
  * The run's lines: one per `UPDATED`, `PENDING`, `RETIRED` and `REFUSED`
  * entry, a `PENDING` or `REFUSED` line followed by the fields that differ, and a totals
  * line. `ADOPTED` lines, each with what differs, print only under `adopt`:
- * `db:seed:compendium -- --adopt --dry-run` is how the owner reads what
- * adoption would make the baseline.
+ * the deploy's seed passes `--adopt` so its job summary names each adopted
+ * row (M14.1), and `db:seed:compendium -- --adopt --dry-run` is how the owner
+ * reads what adoption would make the baseline before a deploy.
  */
 export function formatReport(
   report: SeedCompendiumReport,

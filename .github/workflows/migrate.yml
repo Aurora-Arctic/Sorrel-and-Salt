@@ -254,7 +254,7 @@ jobs:
           npm run db:seed:astrology 2>&1 | tee -a seed.log
           npm run db:seed:deities 2>&1 | tee -a seed.log
           npm run db:seed:sources 2>&1 | tee -a seed.log
-          npm run db:seed:compendium 2>&1 | tee -a seed.log
+          npm run db:seed:compendium -- --adopt 2>&1 | tee -a seed.log
 
       # The compendium seed's per-entry lines (report.ts's formatReport), each
       # with its `  differs:` line, go into the job summary on every run, in a

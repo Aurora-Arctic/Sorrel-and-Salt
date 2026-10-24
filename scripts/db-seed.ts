@@ -9,6 +9,7 @@
 //        npm run db:seed:categories | db:seed:forms | db:seed:astrology | db:seed:deities
 //        npm run db:seed:sources      # after the vocabularies it links
 //        npm run db:seed:compendium   # after the vocabularies and sources
+//        npm run db:seed:compendium -- --adopt   # also list the adopted rows, as migrate.yml does
 //        npm run db:seed:compendium -- --dry-run [--adopt]   # decide and report, write nothing
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed

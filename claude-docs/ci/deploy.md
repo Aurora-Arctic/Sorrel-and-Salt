@@ -240,7 +240,8 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   fails the job `deploy` already depends on.
   On every run, failed or not, the seed summary also carries the compendium
   seed's per-entry lines (M14.1): a step before it cuts every `UPDATED`,
-  `PENDING`, `REFUSED`, `ADOPTED` and `RETIRED` line, each with its
+  `PENDING`, `REFUSED`, `ADOPTED` and `RETIRED` line (the step runs the
+  compendium seed with `--adopt`, which is what prints `ADOPTED` lines), each with its
   `  differs:` line, out of `seed.log` and hands them to `job-summary`'s
   `details` input as a collapsed block headed by the count and the totals
   line, or as one line saying there were none, so drift reported as
