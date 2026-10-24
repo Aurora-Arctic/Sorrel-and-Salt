@@ -133,6 +133,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 576446f1d6e789505a36e70f54e0762db13e01dfea4e263b2d080da3eca263d1
 ---
 
 # Camphor

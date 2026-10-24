@@ -100,6 +100,7 @@ variants:
         nameBasis: unaudited
         supports:
           - form
+seedUpdate: 6c6c12abde61be58505c2d8fa56697f2b9dc5c7f7c9f5f302eaf27efbb8b66da
 ---
 
 # Fumitory

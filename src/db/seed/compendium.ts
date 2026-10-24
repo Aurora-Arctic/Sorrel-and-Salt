@@ -182,7 +182,7 @@ export async function seedCompendiumContent(
         report.retired.push(item.where);
         break;
       case 'pending':
-        report.pending.push(item.where);
+        report.pending.push({ where: item.where, differs: outcome.differs });
         break;
       case 'refused':
         report.refused.push({

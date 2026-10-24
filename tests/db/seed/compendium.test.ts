@@ -518,7 +518,7 @@ describe('the update path (M14.7)', () => {
 
     const report = await run([edited(TESTWORT, reword(121), { mark: false }), fileOf(SAMPLEWORT)]);
 
-    expect(report.pending).toEqual([PATH]);
+    expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
     expect(report.updated).toEqual([]);
     expect(report.refused).toEqual([]);
     expect(await compendiumRows()).toEqual(before);
@@ -538,7 +538,7 @@ describe('the update path (M14.7)', () => {
       seedCompendiumContent(tx, loaded, { manifest: null }),
     );
 
-    expect(report.pending).toEqual([PATH]);
+    expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
     expect(report.updated).toEqual([]);
     expect(await compendiumRows()).toEqual(before);
   });
@@ -797,6 +797,113 @@ describe('the update path (M14.7)', () => {
       expect(report.refused).toHaveLength(1);
       expect(report.refused[0]).toMatchObject({ where: PATH, reason: REASONS.noBaseline });
       expect((await testwortRow()).seed_content_hash).toBeNull();
+    });
+  });
+
+  // M14.1: a row seeded before its file said `toxic: true` can hold the file's
+  // hash (the conversion manifest's, adopted) without its content. A matching
+  // hash skips only a row that matches its file as well.
+  describe('a row whose hash matches its file but whose content does not', () => {
+    const fileHash = () => parsed(fileOf(TESTWORT)).hash;
+    /** Marked for update at its own hash: the file as it stands, approved. */
+    const marked = () => edited(TESTWORT, () => {});
+
+    async function toxicOf(): Promise<boolean> {
+      const [row] = await sql<{ toxic: boolean }[]>`
+        select toxic from ingredients where seed_key = ${identityOf(TESTWORT)}`;
+      return row.toxic;
+    }
+
+    /** The row as the old shards wrote it: unflagged, under the hash of a file that flags it. */
+    async function unflag(): Promise<void> {
+      await sql`update ingredients set toxic = false where seed_key = ${identityOf(TESTWORT)}`;
+      expect(TESTWORT.toxic).toBe(true);
+      expect(await toxicOf()).toBe(false);
+      expect((await testwortRow()).seed_content_hash).toBe(fileHash());
+    }
+
+    it('reports an unmarked file as pending with what differs, and writes nothing', async () => {
+      await unflag();
+      const before = await compendiumRows();
+
+      const report = await run(baseline());
+
+      expect(report.pending).toEqual([{ where: PATH, differs: ['toxic'] }]);
+      expect(report.skipped).toBe(1);
+      expect(report.updated).toEqual([]);
+      expect(report.refused).toEqual([]);
+      expect(await compendiumRows()).toEqual(before);
+    });
+
+    it('applies a marked file, flagging the row', async () => {
+      await unflag();
+
+      const report = await run([marked(), fileOf(SAMPLEWORT)]);
+
+      expect(report.updated).toEqual([PATH]);
+      expect(report.refused).toEqual([]);
+      expect(await toxicOf()).toBe(true);
+      const after = await testwortRow();
+      expect(after.seed_content_hash).toBe(fileHash());
+      expect(after.updated_by).toBe(BOOTSTRAP_USER_ID);
+    });
+
+    /** A matching hash, a differing field and a person's work: the work stays, and the run says nothing of it. */
+    async function expectQuietSkip(): Promise<void> {
+      const before = await compendiumRows();
+
+      const report = await run([marked(), fileOf(SAMPLEWORT)]);
+
+      expect(report).toEqual({ ...emptyReport(), skipped: 2 });
+      expect(await toxicOf()).toBe(false);
+      expect(await compendiumRows()).toEqual(before);
+    }
+
+    it('skips a marked file quietly when a person edited the row on the site, keeping the edit', async () => {
+      await unflag();
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
+      });
+      expect((await testwortRow()).updated_by).toBe(A_ID);
+
+      await expectQuietSkip();
+      expect((await testwortRow()).updated_by).toBe(A_ID);
+    });
+
+    it('skips a marked file quietly when a curator reviewed the row, keeping the review', async () => {
+      await unflag();
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = ${identityOf(TESTWORT)}`;
+      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+
+      await expectQuietSkip();
+      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+    });
+
+    it('adopts the manifest hash and then applies a marked file in the same run', async () => {
+      await unflag();
+      await sql`update ingredients set seed_content_hash = null where seed_key = ${identityOf(TESTWORT)}`;
+
+      const report = await run([marked(), fileOf(SAMPLEWORT)], {
+        manifest: { [identityOf(TESTWORT)]: fileHash() },
+      });
+
+      expect(report.adopted).toEqual([{ where: PATH, differs: ['toxic'] }]);
+      expect(report.updated).toEqual([PATH]);
+      expect(report.refused).toEqual([]);
+      expect(await toxicOf()).toBe(true);
+      expect((await testwortRow()).seed_content_hash).toBe(fileHash());
+    });
+
+    it('still skips a marked file whose row matches it, writing nothing', async () => {
+      expect(await toxicOf()).toBe(true);
+      expect((await testwortRow()).seed_content_hash).toBe(fileHash());
+      const before = await compendiumRows();
+
+      const report = await run([marked(), fileOf(SAMPLEWORT)]);
+
+      expect(report).toEqual({ ...emptyReport(), skipped: 2 });
+      expect(await compendiumRows()).toEqual(before);
     });
   });
 

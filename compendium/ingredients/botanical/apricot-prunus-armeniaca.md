@@ -169,6 +169,7 @@ variants:
         nameBasis: unaudited
         supports:
           - safetyNotes
+seedUpdate: c6145702dd7f71acc02da1d97af719061cb69982c8cf3c16c48d01ce5097c865
 ---
 
 # Apricot

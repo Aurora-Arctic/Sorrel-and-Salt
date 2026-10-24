@@ -105,6 +105,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 675661f086d23d1341ce5860522e7bfe3dba1823bd6a052e5a89a24782c575d6
 ---
 
 # Fly Agaric
