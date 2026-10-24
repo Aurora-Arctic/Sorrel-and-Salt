@@ -20,6 +20,6 @@ export function compareSpellCategories(
   const intendedSet = new Set(intended);
   return {
     intendedNotPresent: [...intendedSet].filter((id) => !presentSet.has(id)),
-    presentNotIntended: [...new Set(present)].filter((id) => !intendedSet.has(id)),
+    presentNotIntended: [...presentSet].filter((id) => !intendedSet.has(id)),
   };
 }
