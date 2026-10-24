@@ -1594,6 +1594,29 @@ export const DEITIES: SeedDeity[] = [
   },
 ];
 
+const DEITY_BY_SLUG = new Map(DEITIES.map((deity) => [slugify(deity.name), deity.name]));
+const DEITIES_BY_OTHER_NAME = new Map<string, string[]>();
+for (const deity of DEITIES) {
+  for (const other of deity.otherNames ?? []) {
+    const key = slugify(other);
+    DEITIES_BY_OTHER_NAME.set(key, [...(DEITIES_BY_OTHER_NAME.get(key) ?? []), deity.name]);
+  }
+}
+
+/**
+ * The deities a compendium entry file means by `name` (M14.23), by this
+ * literal's names: the deity named so when one is, else every deity giving it
+ * as an other name, so an entry can keep its source's spelling (Kynes's
+ * Woden is Odin). A deity's own name wins, which is why Legba is the Fon &
+ * Ewe vodun though it is Papa Legba's other name too. One answer is a link;
+ * none, or more than one, is for the guard to refuse.
+ */
+export function deitiesNamed(name: string): string[] {
+  const key = slugify(name);
+  const own = DEITY_BY_SLUG.get(key);
+  return own === undefined ? (DEITIES_BY_OTHER_NAME.get(key) ?? []) : [own];
+}
+
 /**
  * Seeds the traditions, then the deities, in a transaction of its own. Writes
  * go through the handle the caller gives, not `withAudit` — see minimal.ts.
