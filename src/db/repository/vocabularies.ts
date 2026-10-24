@@ -17,6 +17,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
+import { deityOtherNames } from '../../modules/vocabulary/schema/deity-other-names';
 import {
   ingredientFormGroups,
   ingredientForms,
@@ -216,9 +217,26 @@ function vocabularyArms(
   );
 }
 
-/** A deity filter's arms: its tradition is the group it is filed under. */
+/**
+ * A deity filter's arms: its tradition is the group it is filed under, and
+ * its name fragment finds a deity by its own name or by a live other name
+ * (M14.23), so "Ganish" finds Ganesha. An `EXISTS` rather than a join, so a
+ * deity with two matching other names is still one row, in the page and in
+ * its count alike.
+ */
 function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
-  return vocabularyArms(deities, { query, groupId: traditionId });
+  return and(
+    vocabularyArms(deities, { groupId: traditionId }),
+    query
+      ? or(
+          containsText(deities.name, query),
+          existsIn(
+            deityOtherNames,
+            and(eq(deityOtherNames.deityId, deities.id), containsText(deityOtherNames.name, query)),
+          ),
+        )
+      : undefined,
+  );
 }
 
 /**
@@ -277,6 +295,49 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
 ): Promise<TVocabulary['$inferSelect'][]> {
   if (ids.length === 0) return Promise.resolve([]);
   return selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids])));
+}
+
+/**
+ * The live other names of the deities among `deityIds` (M14.22), in no
+ * particular order — a loader's batch read. Global reference data, so no proof.
+ */
+export function findDeityOtherNames(
+  deityIds: readonly string[],
+): Promise<(typeof deityOtherNames.$inferSelect)[]> {
+  if (deityIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    deityOtherNames,
+    and(notSoftDeleted(deityOtherNames), inArray(deityOtherNames.deityId, [...deityIds])),
+  );
+}
+
+/**
+ * The live other names among `folds` — trimmed and lower-cased — that a live
+ * deity of `traditionId` holds, `exceptId` excepted: what refuses one name on
+ * two deities of one tradition (M14.23), which no index can, since the
+ * tradition is the deity's column and not the name's.
+ */
+export function findDeityOtherNameHolders(
+  traditionId: string,
+  folds: readonly string[],
+  exceptId?: string,
+): Promise<(typeof deityOtherNames.$inferSelect)[]> {
+  if (folds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    deityOtherNames,
+    and(
+      notSoftDeleted(deityOtherNames),
+      inArray(sql`lower(${deityOtherNames.name})`, [...folds]),
+      existsIn(
+        deities,
+        and(
+          eq(deities.id, deityOtherNames.deityId),
+          eq(deities.traditionId, traditionId),
+          exceptId === undefined ? undefined : ne(deities.id, exceptId),
+        ),
+      ),
+    ),
+  );
 }
 
 /**
@@ -444,6 +505,23 @@ export async function findVocabularySuggestions(
     ? sql`lower(${grouping.groups.name}) || ' ' || ${vocabulary.id}::text`
     : sql`${vocabulary.id}::text`;
 
+  // A deity also matches on its live other names (M14.23), and carries the
+  // nearest one that matched, so the picker can say why "Ashtoreth" found
+  // Astarte; a deity its own name finds carries none.
+  const matchedName =
+    vocabulary === deities && query
+      ? sql`(select ${deityOtherNames.name} from ${deityOtherNames}
+          where ${and(
+            eq(deityOtherNames.deityId, deities.id),
+            notSoftDeleted(deityOtherNames),
+            trigramMatch(deityOtherNames.name, query),
+          )}
+          order by word_similarity(${query}, ${deityOtherNames.name}) desc, ${deityOtherNames.name}
+          limit 1)`
+      : undefined;
+  const byOtherName = matchedName && sql`${matchedName} is not null`;
+  const byNameOrOther = byOtherName ? or(byName, byOtherName) : byName;
+
   // A form or a deity also matches on the group or tradition it is listed
   // under, by the substring the client's grouped dropdowns use, so typing
   // "irish" finds every Irish deity. The join already drops a retired group.
@@ -452,20 +530,21 @@ export async function findVocabularySuggestions(
   // Tier literals are written into the text: a bound 0 and 1 would type the
   // `case` as text, and the union would refuse to stack it on the integer 2.
   const curatedTier = sql`
-    select ${query ? sql`case when ${byName} then 0 else 1 end` : sql`0`} as tier,
+    select ${query ? sql`case when ${byNameOrOther} then 0 else 1 end` : sql`0`} as tier,
       ${vocabulary.id}::text as id, ${vocabulary.name} as value,
       ${vocabulary.description} as description,
       ${grouping ? grouping.groups.name : sql`null`} as group_name,
       ${claimed ? sql`${ingredientFormGroups.icon}::text` : sql`null`} as group_icon,
+      ${matchedName ? sql`case when ${byName} then null else ${matchedName} end` : sql`null`} as matched_name,
       lower(${vocabulary.name}) as fold, ${tiebreak} as tiebreak
     from ${curatedRows}
-    where ${and(live, query ? or(byName, sql`${query} <% ${vocabulary.description}`, byGroup) : undefined)}`;
+    where ${and(live, query ? or(byNameOrOther, sql`${query} <% ${vocabulary.description}`, byGroup) : undefined)}`;
 
   // The spelling most entries use stands for the group; `mode()` breaks a tie
   // by the order it is given, so the choice is stable.
   const uncurated = sql`
     select 2 as tier, null as id, mode() within group (order by btrim(${inUse})) as value,
-      null as description, null as group_name, null as group_icon, ${inUseFold} as fold, ${inUseFold} as tiebreak
+      null as description, null as group_name, null as group_icon, null as matched_name, ${inUseFold} as fold, ${inUseFold} as tiebreak
     from ${inUseFrom}
     where ${and(
       inScope,
@@ -489,11 +568,17 @@ export async function findVocabularySuggestions(
     : suggestions;
 
   const rows = await readSuggestionPage(source, page, { claimed });
-  return rows.map(({ cursor, node: { tier, id, value, description, group, icon, claimants } }) => {
-    const suggestion = { value, description, curated: tier !== 2 };
-    // A form and a deity record the row a member picks, so theirs carry its id.
-    if (claimed) return { cursor, node: { ...suggestion, id, group, icon, claimants } };
-    if (grouping) return { cursor, node: { ...suggestion, id, tradition: group } };
-    return { cursor, node: suggestion };
-  });
+  return rows.map(
+    ({
+      cursor,
+      node: { tier, id, value, description, group, icon, matchedName: matched, claimants },
+    }) => {
+      const suggestion = { value, description, curated: tier !== 2 };
+      // A form and a deity record the row a member picks, so theirs carry its id.
+      if (claimed) return { cursor, node: { ...suggestion, id, group, icon, claimants } };
+      if (grouping)
+        return { cursor, node: { ...suggestion, id, tradition: group, matchedName: matched } };
+      return { cursor, node: suggestion };
+    },
+  );
 }

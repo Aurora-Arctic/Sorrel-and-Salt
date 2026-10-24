@@ -231,6 +231,9 @@ describe('findAstrologyValueCount', () => {
 // tradition, narrowed by a name fragment and a tradition.
 describe('findDeityPage and findDeityCount', () => {
   afterEach(async () => {
+    await sql`
+      delete from deity_other_names
+      where deity_id in (select id from deities where name like 'Fixture%')`;
     await sql`delete from deities where name like 'Fixture%'`;
     await sql`update deities set deleted_at = null, deleted_by = null`;
     await sql`update deity_traditions set deleted_at = null, deleted_by = null`;
@@ -312,6 +315,45 @@ describe('findDeityPage and findDeityCount', () => {
     expect(await names({ traditionId: greek })).toHaveLength(greeks);
     await expect(findDeityCount({ traditionId: greek }, undefined)).resolves.toEqual({
       totalCount: greeks,
+      countBefore: null,
+    });
+  });
+
+  it('finds a deity by a live other name, once however many match, in the page and its count alike', async () => {
+    const greek = await traditionId('Greek');
+    const [deity] = await sql`
+      insert into deities (name, slug, description, tradition_id, created_by, updated_by)
+      values ('Fixture Testwort', 'fixture-testwort', 'A test god', ${greek}, ${A.id}, ${A.id})
+      returning id`;
+    await sql`
+      insert into deity_other_names (deity_id, name, created_by, updated_by)
+      values (${deity.id}, 'Zyxwort', ${A.id}, ${A.id}),
+             (${deity.id}, 'Zyxwort the Elder', ${A.id}, ${A.id})`;
+    await sql`
+      insert into deity_other_names (deity_id, name, created_by, updated_by, deleted_at, deleted_by)
+      values (${deity.id}, 'Qorblin', ${A.id}, ${A.id}, now(), ${A.id})`;
+    const names = async (filter: DeityFilter) => {
+      const page = await resolvePage({ first: 100 }, (request) => findDeityPage(filter, request));
+      return page.edges.map((edge) => edge.node.name);
+    };
+    // The precondition: neither query is in any deity's own name, so only an
+    // other name can find it.
+    const [{ count: byOwnName }] = await sql`
+      select count(*)::int as count from deities
+      where name ilike '%zyxw%' or name ilike '%qorbl%'`;
+    expect(byOwnName).toBe(0);
+
+    // Two of its other names match, and it is still one row and one in the count.
+    expect(await names({ query: 'ZYXW' })).toEqual(['Fixture Testwort']);
+    await expect(findDeityCount({ query: 'ZYXW' }, undefined)).resolves.toEqual({
+      totalCount: 1,
+      countBefore: null,
+    });
+    expect(await names({ query: 'zyxw', traditionId: await traditionId('Roman') })).toEqual([]);
+    // A soft-deleted other name finds nothing.
+    expect(await names({ query: 'qorbl' })).toEqual([]);
+    await expect(findDeityCount({ query: 'qorbl' }, undefined)).resolves.toEqual({
+      totalCount: 0,
       countBefore: null,
     });
   });

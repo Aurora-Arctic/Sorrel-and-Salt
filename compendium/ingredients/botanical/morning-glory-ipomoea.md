@@ -83,6 +83,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: e83196708fcfe8939b3df9b517b17a2230b318c63f60ab15ebdd8dac7082f573
 ---
 
 # Morning Glory

@@ -1,6 +1,6 @@
 {
   "id": "48ffdfd4-b3d1-458b-908d-a4cdfbd68cdb",
-  "prevId": "a5400ff6-d810-4e22-91aa-d3be4dc8e24e",
+  "prevId": "65d2dac7-26a8-4570-8f05-cca732c50d44",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -5553,6 +5553,156 @@
         "deity_traditions_description_not_blank": {
           "name": "deity_traditions_description_not_blank",
           "value": "btrim(description) <> ''"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.deity_other_names": {
+      "name": "deity_other_names",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "deity_id": {
+          "name": "deity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "deity_other_names_unique": {
+          "name": "deity_other_names_unique",
+          "columns": [
+            {
+              "expression": "deity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"name\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"deity_other_names\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "deity_other_names_trgm": {
+          "name": "deity_other_names_trgm",
+          "columns": [
+            {
+              "expression": "\"name\" gin_trgm_ops",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "deity_other_names_deity_id_deities_id_fk": {
+          "name": "deity_other_names_deity_id_deities_id_fk",
+          "tableFrom": "deity_other_names",
+          "tableTo": "deities",
+          "columnsFrom": ["deity_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "deity_other_names_created_by_users_id_fk": {
+          "name": "deity_other_names_created_by_users_id_fk",
+          "tableFrom": "deity_other_names",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "deity_other_names_updated_by_users_id_fk": {
+          "name": "deity_other_names_updated_by_users_id_fk",
+          "tableFrom": "deity_other_names",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "deity_other_names_deleted_by_users_id_fk": {
+          "name": "deity_other_names_deleted_by_users_id_fk",
+          "tableFrom": "deity_other_names",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "deity_other_names_name_not_blank": {
+          "name": "deity_other_names_name_not_blank",
+          "value": "btrim(name) <> ''"
         }
       },
       "isRLSEnabled": false

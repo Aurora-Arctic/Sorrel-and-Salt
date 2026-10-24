@@ -1,4 +1,4 @@
-import type { SeedDatabase } from '@/db/seed/types';
+import type { SeedDatabase, SeedRunOptions } from '@/db/seed/types';
 
 /**
  * One seed entry point under the shape every seed shares: a scenario, or a
@@ -7,8 +7,19 @@ import type { SeedDatabase } from '@/db/seed/types';
  */
 export interface SeedEntry {
   name: string;
+  /** The seeds this one reads from, run for real first. */
+  prepare?: (handle: SeedDatabase) => Promise<void>;
+  /** The seed itself, which a dry run rolls back (M14.26). */
+  seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<void>;
+  /** `prepare`, then `seed`. */
   run: (handle: SeedDatabase) => Promise<void>;
   tables: string[];
+  /**
+   * The tables whose rows the no-resurrection sweep retires one of, when not
+   * every table in `tables`: an entry whose later seed follows the earlier
+   * ones' vocabularies names only the tables a retirement reaches nothing beyond.
+   */
+  retires?: string[];
 }
 
 /** A `celestial_bodies` or `zodiac_signs` row. */

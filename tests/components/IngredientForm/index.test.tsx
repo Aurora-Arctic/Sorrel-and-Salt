@@ -1491,6 +1491,7 @@ describe('IngredientForm', () => {
               description: null,
               tradition: 'Greek',
               curated: true,
+              matchedName: null,
             },
           ]),
           option: /^Hecate \(Greek\)/,

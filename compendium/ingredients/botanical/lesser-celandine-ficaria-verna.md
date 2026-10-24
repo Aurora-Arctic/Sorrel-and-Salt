@@ -82,6 +82,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 41c9a581fd3949bde893231c872cf482bed642a008ec8be4b2173ed7d0db61ef
 ---
 
 # Lesser Celandine

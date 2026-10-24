@@ -17,3 +17,29 @@ html > body {
 .ds-single:has(.app-shell) {
   margin: -24px;
 }
+
+// The same cancelling margin for the stories whose frame (`.workshop-story-frame`, 3rem of
+// gutter) the workshop measures from the viewport edge, but which hold no `.app-shell`. The
+// preview page's 24px body padding left each about 48px narrower and 24px lower than in
+// Storybook, so tables wrapped, nav folded into More and cards stacked (MB.273). The card's
+// own page (no `ds-solo` on <html>) keeps its padding. The selector names the component by its
+// preview script, so no other component's capture moves: a rule on every `.ds-single` would
+// re-frame all of them.
+:root.ds-solo {
+  body:is(
+      :has(script[src$='/AdminNav.js']),
+      :has(script[src$='/CompendiumList.js']),
+      :has(script[src$='/ContextRow.js']),
+      :has(script[src$='/CovenCards.js']),
+      :has(script[src$='/EntryMarks.js']),
+      :has(script[src$='/IngredientEntry.js']),
+      :has(script[src$='/ProviderMark.js']),
+      :has(script[src$='/PublicFrame.js']),
+      :has(script[src$='/SectionNav.js']),
+      :has(script[src$='/ThemeToggle.js']),
+      :has(script[src$='/Welcome.js'])
+    )
+    .ds-single {
+    margin: -24px;
+  }
+}

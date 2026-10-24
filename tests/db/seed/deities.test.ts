@@ -125,3 +125,112 @@ describe('seedDeities(db) over a database an admin has edited', () => {
     expect(apollo.tradition_id).toBe(admin.id);
   });
 });
+
+// M14.23: the other names a deity answers to, loaded beside it. Each listed
+// pair is one the task names; a re-run, and an admin's removal, are held as
+// the deities themselves are.
+describe('seedDeities(db) loads each deity’s other names', () => {
+  beforeEach(async () => {
+    await truncateAllTables(sql);
+    expect(await countOf('deity_other_names')).toBe(0);
+  });
+
+  /** Each deity's live other names, by its seed key. */
+  async function liveOtherNames(): Promise<Map<string, string[]>> {
+    const rows = await sql<{ seed_key: string; name: string }[]>`
+      select d.seed_key, o.name from deity_other_names o
+      join deities d on d.id = o.deity_id
+      where o.deleted_at is null order by o.name`;
+    const names = new Map<string, string[]>();
+    for (const { seed_key, name } of rows)
+      names.set(seed_key, [...(names.get(seed_key) ?? []), name]);
+    return names;
+  }
+
+  it.each([
+    ['astarte', 'Ashtoreth'],
+    ['berchta', 'Bertha'],
+    ['eostre', 'Ostara'],
+    ['mithra', 'Mithras'],
+    ['baldur', 'Balder'],
+    ['holda', 'Holle'],
+    ['maat', "Ma'at"],
+    ['idun', 'Idunn'],
+    ['odin', 'Woden'],
+    ['bastet', 'Bast'],
+    ['ganesha', 'Ganesh'],
+    ['ganesha', 'Ganish'],
+    ['hyacinthus', 'Hyacinthos'],
+    ['nut', 'Nuit'],
+  ])('gives %s the other name %s', async (seedKey, name) => {
+    await seedDeities(db);
+
+    expect((await liveOtherNames()).get(seedKey)).toContain(name);
+  });
+
+  it('stamps each name by the bootstrap user', async () => {
+    await seedDeities(db);
+
+    const authors = await sql<{ created_by: string }[]>`
+      select distinct created_by from deity_other_names`;
+    expect(authors).toEqual([{ created_by: BOOTSTRAP_USER_ID }]);
+  });
+
+  // The owner's ruling (M14.23): a related but separate figure stays its own deity.
+  it('makes no deity another’s other name: Luna stays off Selene, Cronus off Saturn', async () => {
+    await seedDeities(db);
+
+    const names = await liveOtherNames();
+    expect(names.get('selene') ?? []).not.toContain('Luna');
+    expect(names.get('saturn') ?? []).not.toContain('Cronus');
+    // Nor any other: no other name is the name of a deity of its own tradition.
+    const [clash] = await sql<{ count: string }[]>`
+      select count(*) from deity_other_names o
+      join deities holder on holder.id = o.deity_id
+      join deities named on named.tradition_id = holder.tradition_id
+        and lower(named.name) = lower(o.name)`;
+    expect(Number(clash.count)).toBe(0);
+  });
+
+  it('adds nothing on a re-run', async () => {
+    await seedDeities(db);
+    const before = await sql`select * from deity_other_names order by id`;
+    // Precondition: the first run loaded names, so an empty re-run is not trivially equal.
+    expect(before.length).toBeGreaterThan(0);
+
+    await seedDeities(db);
+
+    expect(await sql`select * from deity_other_names order by id`).toEqual(before);
+  });
+
+  it('does not bring back a name an admin removed, and keeps one an admin added', async () => {
+    await seedDeities(db);
+    await sql`
+      update deity_other_names set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where name = 'Woden'`;
+    const [odin] = await sql<{ id: string }[]>`select id from deities where seed_key = 'odin'`;
+    await sql`
+      insert into deity_other_names (deity_id, name, created_by, updated_by)
+      values (${odin.id}, 'Grimnir', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})`;
+
+    await seedDeities(db);
+
+    const odinNames = (await liveOtherNames()).get('odin');
+    expect(odinNames).not.toContain('Woden');
+    expect(odinNames).toEqual(expect.arrayContaining(['Grimnir', 'Wotan']));
+  });
+
+  it('gives a deity an admin retired no names', async () => {
+    await seedAstrology(db);
+    await seedDeities(db);
+    await sql`delete from deity_other_names`;
+    await sql`update deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where seed_key = 'odin'`;
+
+    await seedDeities(db);
+
+    expect((await liveOtherNames()).get('odin')).toBeUndefined();
+    // Why it could have passed: the other deities' names came back.
+    expect((await liveOtherNames()).get('thor')).toContain('Donar');
+  });
+});

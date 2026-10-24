@@ -11,7 +11,9 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
+import { seedReferenceData } from '@/db/seed/reference-data';
 import { loadCompendium } from '@/db/seed/compendium/load';
+import type { SeedDatabase } from '@/db/seed/types';
 import type { SeedEntry, UserRow } from './types';
 
 // The shape every production seed shares, asserted here once over all of them
@@ -140,46 +142,113 @@ describe('resolveScenario', () => {
 // Each entry names the tables it is the seed of: the ones it fills from empty.
 // The six that `migrate.yml` runs on staging and production; the dev-only
 // scenarios are a developer's to see working.
-const SEED_ENTRIES: SeedEntry[] = [
-  { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
-  { name: 'the form seed', run: seedForms, tables: ['ingredient_form_groups', 'ingredient_forms'] },
-  { name: 'the astrology seed', run: seedAstrology, tables: ['celestial_bodies', 'zodiac_signs'] },
-  { name: 'the deity seed', run: seedDeities, tables: ['deity_traditions', 'deities'] },
-  {
-    // A source links rows the two vocabularies wrote, so alone it has nothing to link.
-    name: 'the sources seed, after the vocabularies it links',
-    run: async (db) => {
-      await seedDeities(db);
-      await seedAstrology(db);
-      await seedSources(db);
+const SEED_ENTRIES: SeedEntry[] = (
+  [
+    {
+      name: 'the category seed',
+      seed: seedCategories,
+      tables: ['category_groups', 'categories'],
     },
-    tables: ['references', 'reference_links'],
-  },
-  {
-    // On the production list, read from the files under `compendium/` (M14.10),
-    // after everything it picks from and the sources it may share a work with
-    // (MB.243 moved it off the invented fixture).
-    name: 'the compendium seed, after the vocabularies and sources',
-    run: async (db) => {
-      await seedCategories(db);
-      await seedForms(db);
-      await seedAstrology(db);
-      await seedDeities(db);
-      await seedSources(db);
-      await seedCompendium(db);
+    {
+      name: 'the form seed',
+      seed: seedForms,
+      tables: ['ingredient_form_groups', 'ingredient_forms'],
     },
-    tables: [
-      'ingredients',
-      'ingredient_variants',
-      'ingredient_folk_names',
-      'ingredient_deities',
-      'ingredient_categories',
-      'ingredient_substitutes',
-      'references',
-      'reference_links',
-    ],
+    {
+      name: 'the astrology seed',
+      seed: seedAstrology,
+      tables: ['celestial_bodies', 'zodiac_signs'],
+    },
+    { name: 'the deity seed', seed: seedDeities, tables: ['deity_traditions', 'deities'] },
+    {
+      // A source links rows the two vocabularies wrote, so alone it has nothing to link.
+      name: 'the sources seed, after the vocabularies it links',
+      prepare: async (db) => {
+        await seedDeities(db);
+        await seedAstrology(db);
+      },
+      seed: seedSources,
+      tables: ['references', 'reference_links'],
+    },
+    {
+      // On the production list, read from the files under `compendium/` (M14.10),
+      // after everything it picks from and the sources it may share a work with
+      // (MB.243 moved it off the invented fixture).
+      name: 'the compendium seed, after the vocabularies and sources',
+      prepare: async (db) => {
+        await seedCategories(db);
+        await seedForms(db);
+        await seedAstrology(db);
+        await seedDeities(db);
+        await seedSources(db);
+      },
+      seed: async (db, options) => {
+        await seedCompendium(db, undefined, options);
+      },
+      tables: [
+        'ingredients',
+        'ingredient_variants',
+        'ingredient_folk_names',
+        'ingredient_deities',
+        'ingredient_categories',
+        'ingredient_substitutes',
+        'references',
+        'reference_links',
+      ],
+    },
+    {
+      // M14.26: the six above in one transaction, from empty, for the
+      // hand-started seed workflow.
+      name: 'the six reference seeds in one transaction',
+      seed: async (db, options) => {
+        await seedReferenceData(db, options);
+      },
+      tables: [
+        'category_groups',
+        'categories',
+        'ingredient_form_groups',
+        'ingredient_forms',
+        'celestial_bodies',
+        'zodiac_signs',
+        'deity_traditions',
+        'deities',
+        'references',
+        'reference_links',
+        'ingredients',
+        'ingredient_variants',
+        'ingredient_folk_names',
+        'ingredient_deities',
+        'ingredient_categories',
+        'ingredient_substitutes',
+      ],
+      // The no-resurrection sweep retires one row per table before the second
+      // run. Retiring a vocabulary row here (a deity, a form, a category) makes
+      // every marked entry that names it read as drift under its matching hash
+      // (M14.1), which the compendium seed then follows: the entry's links to
+      // what remains are tombstoned and written again, so a vocabulary table's
+      // retirement reads as rows gained in the compendium's. That is the
+      // compendium following its curated picks, not a revived row, and each
+      // vocabulary's own entry above proves its tables stay retired; so this
+      // sweep retires the compendium's own rows only.
+      retires: [
+        'ingredients',
+        'ingredient_variants',
+        'ingredient_folk_names',
+        'ingredient_deities',
+        'ingredient_categories',
+        'ingredient_substitutes',
+        'references',
+        'reference_links',
+      ],
+    },
+  ] satisfies Omit<SeedEntry, 'run'>[]
+).map((entry: Omit<SeedEntry, 'run'>) => ({
+  ...entry,
+  run: async (db: SeedDatabase) => {
+    await entry.prepare?.(db);
+    await entry.seed(db);
   },
-];
+}));
 
 describe('the shape every seed shares', () => {
   beforeEach(async () => {
@@ -250,10 +319,10 @@ describe('the shape every seed shares', () => {
   // only a second live row, and would let the tombstoned one's twin through.
   it.each(SEED_ENTRIES)(
     '$name does not resurrect a row an admin has since deleted, in any of its tables',
-    async ({ run, tables: own }) => {
+    async ({ run, tables: own, retires }) => {
       await run(db);
 
-      const deletable = own.filter((table) => tombstoned.has(table));
+      const deletable = (retires ?? own).filter((table) => tombstoned.has(table));
       // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
       expect(deletable.length).toBeGreaterThan(0);
       for (const table of deletable) {
@@ -275,6 +344,27 @@ describe('the shape every seed shares', () => {
         expect(await countOf(table), `${table} gained a row`).toBe(before.get(table));
         expect(await countOf(table, 'where deleted_at is not null'), table).toBe(1);
       }
+    },
+  );
+  // M14.26: the hand-started seed workflow runs each seed with --dry-run
+  // first. A dry run does all its reads and writes, then rolls its
+  // transaction back, so every table reads as it did before.
+  it.each(SEED_ENTRIES)(
+    '$name writes nothing on a dry run, anywhere',
+    async ({ prepare, seed: seedOf }) => {
+      await prepare?.(db);
+      const before = await snapshot();
+      const inserts = await countOf(PROBE);
+
+      await seedOf(db, { dryRun: true });
+
+      expect(await snapshot()).toEqual(before);
+      expect(await countOf(PROBE), 'no insert outlived the dry run').toBe(inserts);
+
+      // Precondition: the same run without --dry-run writes, so an unchanged
+      // database is the dry run's doing and not an empty seed's.
+      await seedOf(db);
+      expect(await snapshot()).not.toEqual(before);
     },
   );
 });

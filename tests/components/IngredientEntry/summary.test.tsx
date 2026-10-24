@@ -76,7 +76,7 @@ function full(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
     ...base,
     folkNames: ['Fixture Bane'],
     categories: [category('c1', 'Testwards')],
-    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon' }],
+    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: [] }],
     substitutes: [{ name: 'Fixture Swapleaf', ingredient: null, form: null }],
     variants: [variant('testoil', 'Fixture oil caution.'), variant('testroot', null)],
     ...overrides,
@@ -103,6 +103,26 @@ describe('IngredientSummary', () => {
     ).toBeInTheDocument();
     expect(rowOf('Celestial Bodies')).toBe('Fixture Moon');
     expect(rowOf('Deities')).toBe('Fixtura (Fixture Pantheon)');
+  });
+
+  // M14.23: a curated deity's other names follow its tradition, so a reader
+  // who knows it by another name finds it; a typed name has none to show.
+  it('names each deity with its tradition and its other names', () => {
+    render(
+      <IngredientSummary
+        detail={full({
+          deities: [
+            { name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: ['Fixtra', 'Testura'] },
+            { name: 'Mockis', tradition: null, otherNames: ['Mockon'] },
+            { name: 'Testis', tradition: null, otherNames: [] },
+          ],
+        })}
+      />,
+    );
+
+    expect(rowOf('Deities')).toBe(
+      'Fixtura (Fixture Pantheon; also called Fixtra, Testura), Mockis (also called Mockon), Testis',
+    );
   });
 
   it('names the forms that carry a caution of their own, and no form when none does', () => {

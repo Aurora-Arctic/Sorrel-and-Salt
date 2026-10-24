@@ -953,6 +953,11 @@ export interface DeitySuggestion extends VocabularySuggestion {
   id: string | null;
   /** The curated row's tradition, which tells two same-named deities apart; none in use. */
   tradition: string | null;
+  /**
+   * The other name the query matched (M14.23), which the deity's own name does
+   * not show; none when its name matched, or it was found another way.
+   */
+  matchedName: string | null;
 }
 
 /** An in-scope ingredient already holding a suggested value. */
@@ -973,6 +978,8 @@ export interface SuggestionRow {
   group: string | null;
   /** The form group's icon; none for a deity, a tradition or a value in use. */
   icon: FormGroupIcon | null;
+  /** A deity's other name the query matched; none for anything else. */
+  matchedName: string | null;
   fold: string;
   /** The curated row's id; an in-use value's fold, which its tier holds once. */
   tiebreak: string;

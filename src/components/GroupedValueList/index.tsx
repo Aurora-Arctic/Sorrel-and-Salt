@@ -62,7 +62,22 @@ const GroupedValueList = ({
             whose groups are drawn in chips taller than a line of text. */}
         <StackTable
           columns={[
-            { heading: 'Name', cell: (entry) => shown(entry.name) },
+            {
+              heading: 'Name',
+              // A deity's other names under its name (M14.23), since the
+              // filter and the picker find it by them too.
+              cell: (entry) =>
+                entry.otherNames && entry.otherNames.length > 0 ? (
+                  <>
+                    {shown(entry.name)}{' '}
+                    <span className="grouped-value-list__other-names">
+                      Also called {entry.otherNames.join(', ')}
+                    </span>
+                  </>
+                ) : (
+                  shown(entry.name)
+                ),
+            },
             group && {
               heading: group.label,
               cell: (entry) => (

@@ -37,10 +37,24 @@ export function correspondences(source: Correspondences, deities?: readonly Deit
   if (deities) {
     rows.push({
       label: 'Deities',
-      values: deities.map(({ name, tradition }) => (tradition ? `${name} (${tradition})` : name)),
+      values: deities.map(deityMention),
     });
   }
   return rows;
+}
+
+/**
+ * A deity as the Deities row names it: its tradition, then its other names
+ * (M14.23), in brackets after the name, so a reader who knows it by another
+ * name finds it. A semicolon parts the two because the row joins its values
+ * with commas.
+ */
+function deityMention({ name, tradition, otherNames }: DeityDetail): string {
+  const parts = [
+    tradition ?? [],
+    otherNames.length > 0 ? `also called ${otherNames.join(', ')}` : [],
+  ].flat();
+  return parts.length > 0 ? `${name} (${parts.join('; ')})` : name;
 }
 
 /** The ids one block of a section takes: its heading's, and what names its content. */

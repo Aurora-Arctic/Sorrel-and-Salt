@@ -533,6 +533,7 @@ describe('GroupedValueForm, a deity', () => {
           name: 'Testra',
           description: 'A god the test made',
           traditionId: TRADITIONS[0].id,
+          otherNames: [],
         },
       },
     ]);
@@ -563,9 +564,90 @@ describe('GroupedValueForm, a deity', () => {
           name: 'Mockra',
           description: 'A god the test holds',
           traditionId: TRADITIONS[1].id,
+          otherNames: [],
         },
       },
     ]);
+  });
+
+  // M14.23: a deity's other names, a list as an entry's common names are.
+  describe('its Other Names', () => {
+    const otherNames = () => screen.getByRole('group', { name: 'Other Names' });
+    const box = () => screen.getByRole('combobox', { name: 'Other Name' });
+    const listed = () =>
+      within(otherNames())
+        .queryAllByRole('button', { name: /^Remove / })
+        .map((button) => button.getAttribute('aria-label'));
+    const addName = (text: string) => {
+      typeIn(box(), text);
+      press('Add Other Name');
+    };
+
+    it("is a deity's alone", () => {
+      renderForm({ kind: 'category', groups: CATEGORY_GROUPS });
+
+      expect(screen.queryByRole('group', { name: 'Other Names' })).not.toBeInTheDocument();
+    });
+
+    it('opens on the names the deity holds, and saves the list as it is left', async () => {
+      const calls: UpdateDeityMutationVariables[] = [];
+      mockGraphQLMutation<UpdateDeityMutation, UpdateDeityMutationVariables>(
+        'UpdateDeity',
+        (variables) => {
+          calls.push(variables);
+          return { updateDeity: { id: DEITY.id, slug: 'testra-mockish' } };
+        },
+      );
+      const onDone = renderDeity({ value: { ...DEITY, otherNames: ['Testrina', 'Tess'] } });
+
+      expect(listed()).toEqual(['Remove Testrina', 'Remove Tess']);
+      expect(save()).toBeDisabled();
+      press('Remove Testrina');
+      addName('Testrix');
+      press('Save Deity');
+
+      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+      expect(calls).toEqual([
+        {
+          id: DEITY.id,
+          input: {
+            name: 'Testra',
+            description: 'A god the test holds',
+            traditionId: TRADITIONS[1].id,
+            otherNames: ['Tess', 'Testrix'],
+          },
+        },
+      ]);
+    });
+
+    it("refuses at the box a name the list holds, or the deity's own name", () => {
+      renderDeity({ value: { ...DEITY, otherNames: ['Testrina'] } });
+
+      addName('testrina');
+      expect(box()).toHaveAccessibleDescription(/already listed/);
+      typeIn(box(), 'Testra');
+      press('Add Other Name');
+      expect(box()).toHaveAccessibleDescription(/already the name/);
+
+      expect(listed()).toEqual(['Remove Testrina']);
+    });
+
+    it("lands the server's refusal of one name on that name, naming the deity holding it", async () => {
+      mockGraphQLError('UpdateDeity', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['otherNames', 1], message: 'Mockra already has this other name' }],
+      });
+      const onDone = renderDeity({ value: { ...DEITY, otherNames: ['Testrina'] } });
+
+      addName('Mockrina');
+      press('Save Deity');
+
+      await waitFor(() =>
+        expect(box()).toHaveAccessibleDescription(/Mockrina: Mockra already has this other name/),
+      );
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(onDone).not.toHaveBeenCalled();
+    });
   });
 
   it("lands the server's `traditionId` refusal beside Tradition", async () => {
