@@ -3,5 +3,6 @@
 // the module.
 export * from './services/spell-visibility';
 export type { SpellVisibility } from './types';
+export * from './categories/summarize';
 export * from './categories/compare';
-export type { CategoryComparison } from './categories/types';
+export type { StepCategories, CategoryComparison } from './categories/types';

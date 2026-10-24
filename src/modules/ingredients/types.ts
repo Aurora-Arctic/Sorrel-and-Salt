@@ -296,11 +296,13 @@ export interface CategoryDetail {
 /**
  * A deity as the entry page shows it: its name, and the tradition the curated
  * deity sits in, null for a typed name and once the deity or its tradition
- * is retired.
+ * is retired, and the curated deity's other names (M14.23), alphabetically,
+ * none for a typed name.
  */
 export interface DeityDetail {
   name: string;
   tradition: string | null;
+  otherNames: string[];
 }
 
 /**

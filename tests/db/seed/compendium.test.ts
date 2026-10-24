@@ -354,6 +354,24 @@ describe('seedCompendium', () => {
     expect(deities).toEqual([{ name: 'Artemis', position: 0 }]);
   });
 
+  // M14.23: a source's spelling, which the deity seed loads as an other name.
+  it('links a deity an entry names by one of its other names, stored under the deity name', async () => {
+    await seedVocabularies();
+    const testwort = fileOf(TESTWORT, (file) => file.entry.deities?.push('Ganesh'));
+
+    await seedCompendium(db, loadedOf([testwort, fileOf(SAMPLEWORT)]));
+
+    const deities = await sql<{ name: string; seed_key: string; position: number }[]>`
+      select d.name, v.seed_key, d.position from ingredient_deities d
+      join deities v on v.id = d.deity_id
+      where d.ingredient_id = ${await ingredientId('fixtura testalis')} order by d.position`;
+    expect(deities).toEqual([
+      { name: 'Hecate', seed_key: 'hecate', position: 0 },
+      { name: 'Artemis', seed_key: 'artemis', position: 1 },
+      { name: 'Ganesha', seed_key: 'ganesha', position: 2 },
+    ]);
+  });
+
   it('throws on a form no seed wrote, and writes nothing', async () => {
     await seedCategories(db);
     await seedAstrology(db);
@@ -551,6 +569,26 @@ describe('the update path (M14.7)', () => {
 
     await expect(run([marked, fileOf(SAMPLEWORT)])).rejects.toThrow(/stale seedUpdate/);
     expect(await compendiumRows()).toEqual(before);
+  });
+
+  // M14.23: the edit the entry files waiting on M14.23 make once marked.
+  it('links a deity a marked edit adds by one of its other names, under the deity name', async () => {
+    const report = await run([
+      edited(TESTWORT, (entry) => entry.deities?.push('Woden')),
+      fileOf(SAMPLEWORT),
+    ]);
+
+    expect(report.updated).toEqual([PATH]);
+    const deities = await sql<{ name: string; seed_key: string; position: number }[]>`
+      select d.name, v.seed_key, d.position from ingredient_deities d
+      join deities v on v.id = d.deity_id
+      where d.ingredient_id = ${(await testwortRow()).id} and d.deleted_at is null
+      order by d.position`;
+    expect(deities).toEqual([
+      { name: 'Hecate', seed_key: 'hecate', position: 0 },
+      { name: 'Artemis', seed_key: 'artemis', position: 1 },
+      { name: 'Odin', seed_key: 'odin', position: 2 },
+    ]);
   });
 
   it('applies a marked edit to the entry and its children, keeping the forms it keeps', async () => {

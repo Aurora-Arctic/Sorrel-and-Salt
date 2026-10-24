@@ -194,7 +194,10 @@ const deitiesNode = (
     kind="deity"
     values={[
       deity('Fixturo', 'Fixtural', 'Another, keeper of nothing in particular.'),
-      deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
+      {
+        ...deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
+        otherNames: ['Testrina', 'Tess'],
+      },
       deity('Mockra', 'Mockish', 'Invented too.'),
     ]}
     filter={NO_FILTER}

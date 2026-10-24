@@ -145,3 +145,30 @@ a tradition. The traditions page lists the live traditions by name
 (`findGroupPage`, the finder every group vocabulary can page through),
 narrowed by a name query, a case-insensitive fragment matched in SQL, as the
 deities' is (MB.115).
+
+### Other names (M14.22, M14.23)
+
+A deity's other names are the spellings and by-names a source uses for the
+same deity, such as Woden for Odin. They are rows of `deity_other_names`
+(M14.22; its columns are DESIGN.md §5's), read and written since M14.23:
+
+- **The deity form writes them as one list**, as the ingredient form writes an
+  entry's common names. A save brings the live rows to the list sent: a kept
+  name keeps its row, a dropped one is soft-deleted, a new one is added. Only
+  a curator or an admin writes them, through `services/deities.ts`.
+- **A name is refused twice on one deity, or on two live deities of one
+  tradition**, in any case, and the refusal names the deity holding it. The
+  same name under two traditions is allowed, since one god honoured under two
+  traditions is two rows.
+- **The deity picker finds a deity by an other name** and says which name
+  matched. The entry page and the admin deities list show a deity's other
+  names beside its name.
+- **The admin deities list's filter finds a deity by an other name** as well
+  as by its own: "Ganish" finds Ganesha. A soft-deleted other name finds
+  nothing, and a deity two of whose other names match is one row, in the
+  page and in its count alike (`deityArms` in
+  `src/db/repository/vocabularies.ts`).
+- **The seed loads them** from `DEITIES[].otherNames`, never re-adding a name
+  an admin removed ([the seed's doc](deity-vocabulary-seed.md#other-names)),
+  and a compendium entry file may name a deity by one of them
+  ([the compendium seed's rule](compendium-seed/README.md)).

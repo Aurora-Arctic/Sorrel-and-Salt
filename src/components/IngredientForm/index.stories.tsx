@@ -154,6 +154,7 @@ const DEITIES = [
     description: 'Goddess of crossroads, witchcraft and the night.',
     tradition: 'Greek',
     curated: true,
+    matchedName: null,
   },
   {
     id: '00000000-0000-4000-8000-000000000202',
@@ -161,6 +162,7 @@ const DEITIES = [
     description: 'Called Trivia in Rome, goddess of the three-way crossroads.',
     tradition: 'Roman',
     curated: true,
+    matchedName: null,
   },
   {
     id: '00000000-0000-4000-8000-000000000203',
@@ -168,6 +170,7 @@ const DEITIES = [
     description: null,
     tradition: 'Greek',
     curated: true,
+    matchedName: null,
   },
   {
     id: '00000000-0000-4000-8000-000000000204',
@@ -175,6 +178,7 @@ const DEITIES = [
     description: null,
     tradition: 'Roman',
     curated: true,
+    matchedName: null,
   },
   {
     id: '00000000-0000-4000-8000-000000000205',
@@ -182,6 +186,7 @@ const DEITIES = [
     description: null,
     tradition: 'Norse',
     curated: true,
+    matchedName: null,
   },
   {
     id: null,
@@ -189,6 +194,7 @@ const DEITIES = [
     description: null,
     tradition: null,
     curated: false,
+    matchedName: null,
   },
 ];
 

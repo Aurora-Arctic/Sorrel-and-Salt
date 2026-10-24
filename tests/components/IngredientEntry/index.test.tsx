@@ -214,7 +214,7 @@ function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
     cupboardEntry: null,
     folkNames: ['Fixture Bane', 'Testing Weed'],
     categories: [category('Testwards'), category('Mockcraft')],
-    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon' }],
+    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: [] }],
     substitutes: [
       { name: 'Fixture Mockroot', ingredient: LINKED, form: null },
       { name: 'Typed Testleaf', ingredient: null, form: null },

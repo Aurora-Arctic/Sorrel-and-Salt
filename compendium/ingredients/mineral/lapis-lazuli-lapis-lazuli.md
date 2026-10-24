@@ -12,6 +12,7 @@ colours:
 deities:
   - Isis
   - Venus
+  - Nuit
 categories:
   - Healing
   - Love
@@ -76,7 +77,3 @@ Wikipedia describes lapis lazuli as a deep-blue metamorphic rock composed of laz
 #### Questions for the Curator
 
 Wikipedia (Lapis lazuli, lines 5–15) calls lapis lazuli a metamorphic rock composed of several minerals (lazurite, pyrite, diopside, calcite), not a mineral species. The roster gives nomenclature 'mineral'. Lead to decide the nomenclature.
-
-#### Edit Notes for Claude
-
-- Other name: Nuit (Cunningham, p. 107) is a spelling of Nut; link once M14.23 seeds it as an other name.

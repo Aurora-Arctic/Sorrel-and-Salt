@@ -139,6 +139,7 @@ const editingADeityNode = (
         name: 'Testra',
         description: 'An invented deity, for the workshop.',
         groupId: TRADITIONS[0].id,
+        otherNames: ['Testrina', 'Tess'],
       }}
       groups={TRADITIONS}
       onDone={done}

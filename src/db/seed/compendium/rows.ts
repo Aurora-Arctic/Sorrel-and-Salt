@@ -1,6 +1,7 @@
 import { and, isNotNull, isNull } from 'drizzle-orm';
 import { requireFrom } from '../idempotent';
 import { identityOf } from '../standard';
+import { deitiesNamed } from '../deities';
 import { citationText } from '../../../lib/citation';
 import { ingredientSlug, slugify } from '../../../lib/slugify';
 import { ingredients } from '../../../modules/ingredients/schema/ingredients';
@@ -196,14 +197,22 @@ export type DeityRow = Pick<
   'ingredientId' | 'deityId' | 'name' | 'position'
 >;
 
-/** The entry's deities in its order, each linked to the curated row under its current name; a retired pick is left off. */
+/**
+ * The entry's deities in its order, each linked to the curated row under its
+ * current name; a retired pick is left off. A name may be one of the deity's
+ * other names (M14.23), linked to the one deity it means; the guard has
+ * refused a name meaning none or several before this runs.
+ */
 export function deityRows(
   entry: SeedCompendiumEntry,
   ingredientId: string,
   picks: Picks,
 ): DeityRow[] {
   return (entry.deities ?? [])
-    .flatMap((name) => pick(picks, 'deities', name) ?? [])
+    .flatMap((name) => {
+      const meant = deitiesNamed(name);
+      return pick(picks, 'deities', meant.length === 1 ? meant[0] : name) ?? [];
+    })
     .map((deity, position) => ({ ingredientId, deityId: deity.id, name: deity.name, position }));
 }
 

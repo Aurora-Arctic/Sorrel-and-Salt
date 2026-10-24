@@ -36,6 +36,8 @@ export interface GroupedValueListEntry extends UpdatedStamp {
   name: string;
   slug: string;
   description: string;
+  /** A deity's other names, alphabetically (M14.23); absent for the other kinds, which have none. */
+  otherNames?: readonly string[];
   /** The group's name; `''` for a flat kind, which shows no group column. */
   groupName: string;
   /** The group's chip pair, which its name is drawn in; none draws it plain. */

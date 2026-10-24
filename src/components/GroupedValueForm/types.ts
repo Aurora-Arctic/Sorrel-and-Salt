@@ -28,6 +28,15 @@ export interface GroupedValueValues {
   name: string;
   description: string;
   groupId: string;
+  /**
+   * A deity's other names (M14.23), empty for every other kind, which never
+   * shows or sends them. Under the ingredient form's `folkNames` key and its
+   * box at `drafts.folkNames`, because the field is that form's `ListField`,
+   * whose paths are its own: so the list also refuses the value's own name, as
+   * a folk name refuses its ingredient's.
+   */
+  folkNames: { value: string }[];
+  drafts: { folkNames: string };
 }
 
 /** The value being edited, as the form starts from it; a flat kind's has no group. */
@@ -36,6 +45,8 @@ export interface EditedGroupedValue {
   name: string;
   description: string;
   groupId?: string;
+  /** A deity's other names, alphabetically; absent for every other kind. */
+  otherNames?: readonly string[];
 }
 
 export interface GroupedValueFormProps {
@@ -75,6 +86,8 @@ export interface GroupedValueCopy {
   deleteNote: string;
   /** What a rename says above the actions, for a kind whose rename reaches further than its row. */
   renameNote?: string;
+  /** The Other Names list's hint, for the kind that has the list: a deity (M14.23). */
+  otherNamesHint?: string;
   /**
    * A field's key in the kind's input, where it is not the field's own: a
    * server refusal pathed to that key lands beside the field.
@@ -83,11 +96,12 @@ export interface GroupedValueCopy {
 }
 
 /**
- * What a kind's schema parses to: a name and a description, and the group
- * under the form's own name where the kind has one.
+ * What a kind's schema parses to: a name and a description, the group under
+ * the form's own name where the kind has one, and a deity's other names. The
+ * box's draft is never parsed.
  */
-export type GroupedValueParsed = Omit<GroupedValueValues, 'groupId'> &
-  Partial<Pick<GroupedValueValues, 'groupId'>>;
+export type GroupedValueParsed = Pick<GroupedValueValues, 'name' | 'description'> &
+  Partial<Pick<GroupedValueValues, 'groupId' | 'folkNames'>>;
 
 /** One kind as declared: its copy, its values schema, its input, and its three mutations. */
 export interface GroupedValueKindSpec<Input extends object> extends GroupedValueCopy {

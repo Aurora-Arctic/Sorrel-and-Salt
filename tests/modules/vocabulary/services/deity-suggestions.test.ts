@@ -26,6 +26,8 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
+  await sql`delete from deity_other_names where deity_id in (
+    select id from deities where slug like 'test-%')`;
   await sql`delete from deities where slug like 'test-%'`;
   await sql`delete from deity_traditions where slug like 'test-%'`;
   // The seed soft-deletes nothing, so every row live is the seeded state.
@@ -57,6 +59,15 @@ async function addTradition(tradition: string, names: string[]): Promise<void> {
     values (${tradition}, ${`test-${tradition.toLowerCase()}`}, 'Written by the test.', ${A.id}, ${A.id})
   `;
   for (const name of names) await addDeity(name, tradition);
+}
+
+/** An other name for the deity of this name (M14.23), live unless `dropped`. */
+async function addOtherName(deity: string, name: string, dropped = false): Promise<void> {
+  await sql`
+    insert into deity_other_names (deity_id, name, created_by, updated_by, deleted_at, deleted_by)
+    select id, ${name}, ${A.id}, ${A.id}, ${dropped ? new Date() : null}, ${dropped ? A.id : null}
+    from deities where name = ${deity} and deleted_at is null
+  `;
 }
 
 async function retire(table: 'deities' | 'deity_traditions', name: string) {
@@ -141,6 +152,7 @@ describe('suggestDeities', () => {
         value: 'Hermes Trismegistus',
         description: null,
         tradition: null,
+        matchedName: null,
         curated: false,
       });
     });
@@ -211,7 +223,14 @@ describe('suggestDeities', () => {
 
       // The spelling most entries use stands for the group.
       expect(hecates).toEqual([
-        { id: null, value: 'Hecate', description: null, tradition: null, curated: false },
+        {
+          id: null,
+          value: 'Hecate',
+          description: null,
+          tradition: null,
+          matchedName: null,
+          curated: false,
+        },
       ]);
     });
 
@@ -252,6 +271,7 @@ describe('suggestDeities', () => {
         value: 'Hecate',
         description: null,
         tradition: null,
+        matchedName: null,
         curated: false,
       });
     });
@@ -381,6 +401,39 @@ describe('suggestDeities', () => {
       const forged = encodeCursor({ key: ['hecate'], id: 'hecate' });
 
       await expect(pageOf(asUser(B), '', { after: forged })).rejects.toThrow(InvalidCursor);
+    });
+  });
+
+  // M14.23: a source's other name for a deity reaches the deity, and the
+  // picker says which name it matched, since the deity's own does not show it.
+  describe('other names', () => {
+    beforeEach(async () => {
+      await addTradition('Testfolk', ['Testara', 'Mockara']);
+      await addOtherName('Testara', 'Quillabine');
+      await addOtherName('Mockara', 'Vellowmere', true);
+    });
+
+    it('finds a deity by an other name, among the name matches, carrying the name that matched', async () => {
+      // Why it could have missed: neither the name nor the description holds it.
+      expect(await similarity('quillabine', 'Testara')).toBe(0);
+      expect(await wordSimilarity('quillabine', await descriptionOf('Testara'))).toBeLessThan(0.3);
+
+      const suggestions = await all(asUser(B), 'quillab');
+
+      expect(suggestions[0]).toMatchObject({
+        value: 'Testara',
+        tradition: 'Testfolk',
+        matchedName: 'Quillabine',
+        curated: true,
+      });
+    });
+
+    it('carries no matched name on a deity found by its own name', async () => {
+      expect(find(await all(asUser(B), 'testara'), 'Testara').matchedName).toBeNull();
+    });
+
+    it('finds nothing by a dropped other name', async () => {
+      expect(valuesOf(await all(asUser(B), 'vellowmere'))).toEqual([]);
     });
   });
 

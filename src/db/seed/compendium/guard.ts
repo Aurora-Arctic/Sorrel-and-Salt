@@ -1,7 +1,7 @@
 import { WORKS } from './works';
 import { COLOURS } from './colours';
 import { CATEGORIES } from '../categories';
-import { DEITIES } from '../deities';
+import { deitiesNamed } from '../deities';
 import { FORMS } from '../forms';
 import { CELESTIAL_BODIES, ZODIAC_SIGNS } from '../astrology';
 import { identityOf } from '../standard';
@@ -31,11 +31,15 @@ import type {
 // throwing at the first, so a lane sees its whole list at once. The rules are
 // claude-docs/db/compendium-seed/README.md's.
 
-/** The curated vocabularies an entry may name, each by the slug of a name its seed literal holds. */
+/**
+ * The curated vocabularies an entry may name, each by the slug of a name its
+ * seed literal holds. A deity may be named by one of its other names too
+ * (M14.23), so `deities` answers the curated deities a name can mean.
+ */
 export interface CuratedNames {
   forms: ReadonlySet<string>;
   categories: ReadonlySet<string>;
-  deities: ReadonlySet<string>;
+  deities: (name: string) => readonly string[];
   celestialBodies: ReadonlySet<string>;
   zodiacSigns: ReadonlySet<string>;
 }
@@ -47,7 +51,7 @@ const slugsOf = (rows: readonly { name: string }[]) =>
 export const CURATED: CuratedNames = {
   forms: slugsOf(FORMS),
   categories: slugsOf(CATEGORIES),
-  deities: slugsOf(DEITIES),
+  deities: deitiesNamed,
   celestialBodies: slugsOf(CELESTIAL_BODIES),
   zodiacSigns: slugsOf(ZODIAC_SIGNS),
 };
@@ -310,9 +314,23 @@ function checkDeities(
   curated: CuratedNames,
   issues: string[],
 ): void {
+  // By the deity each name means, so Woden beside Odin is one link twice.
+  // A plain repeat, Odin twice, is the caller's repeat check instead.
+  const linked = new Map<string, string>();
   for (const deity of entry.deities ?? []) {
-    if (!curated.deities.has(slugify(deity)))
+    const meant = curated.deities(deity);
+    if (meant.length === 0) {
       issues.push(`${where}: "${deity}" is not a curated deity.`);
+    } else if (meant.length > 1) {
+      issues.push(
+        `${where}: "${deity}" is an other name of ${meant.join(' and ')}; name the deity meant.`,
+      );
+    } else {
+      const earlier = linked.get(meant[0]);
+      if (earlier !== undefined && slugify(earlier) !== slugify(deity))
+        issues.push(`${where}: "${deity}" is ${meant[0]}, already linked as "${earlier}".`);
+      if (earlier === undefined) linked.set(meant[0], deity);
+    }
   }
 }
 

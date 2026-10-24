@@ -15,6 +15,7 @@ import {
 } from './ingredient-children';
 import {
   categoryGroupsOf,
+  deityOtherNamesOf,
   deityTraditionsOf,
   formChoicesOf,
   formGroupsOf,
@@ -95,7 +96,7 @@ export async function ingredientDetailOf(
     workspaceId,
   }));
   const picked = deities.flatMap(({ deity }) => deity ?? []);
-  const [variantCategories, variantSubstitutes, variantReferences, traditions, forms] =
+  const [variantCategories, variantSubstitutes, variantReferences, traditions, otherNames, forms] =
     await Promise.all([
       categoriesOfVariants(session, variantRefs, heldBy).then((answers) =>
         answers.map((a) => only([a])),
@@ -107,6 +108,7 @@ export async function ingredientDetailOf(
         answers.map((a) => only([a])),
       ),
       deityTraditionsOf(picked.map((deity) => deity.traditionId)),
+      deityOtherNamesOf(picked.map((deity) => deity.id)),
       formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
     ]);
 
@@ -142,6 +144,7 @@ export async function ingredientDetailOf(
     });
 
   const traditionOf = new Map(picked.map((deity, i) => [deity.id, nameOf(traditions[i])]));
+  const otherNamesOf = new Map(picked.map((deity, i) => [deity.id, otherNames[i]]));
 
   // A form's icon is its curated form's group's; an uncurated form has none,
   // and neither does one whose form or group has since been retired.
@@ -183,6 +186,7 @@ export async function ingredientDetailOf(
     deities: deities.map(({ name, deity }): DeityDetail => ({
       name,
       tradition: deity ? (traditionOf.get(deity.id) ?? null) : null,
+      otherNames: deity ? (otherNamesOf.get(deity.id) ?? []) : [],
     })),
     substitutes: substitutes.map(toSubstitute),
     references,

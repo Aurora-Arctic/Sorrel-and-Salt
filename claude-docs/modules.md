@@ -32,7 +32,8 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `celestialBodySuggestions`, `zodiacSuggestions`, `formSuggestions` and
 `deitySuggestions` connections, and `Deity` and `DeityTradition` with the
-`deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
+`deityTraditionsById` and `ingredientFormsById` loaders (MB.167) and the
+`otherNamesByDeity` loader (M14.23); `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
 the workspace ingredient mutations, the compendium's three (M5.5), and `CommonNameSuggestion` and
@@ -74,7 +75,7 @@ a service lands in the module that owns the table it writes.
 | `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                                                          | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
 | `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `celestial_bodies`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`, `workspace_compendium_entries` (M12.13); `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`, `cupboard-entries.ts` (M12.14); `schema/units.ts` is the unit vocabulary                                              |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                                                              | `spell-visibility.ts`, `categories/compare.ts` (M10.8, pure)                                                                                                                                                    |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                                                              | `spell-visibility.ts`, `categories/summarize.ts` (M10.7, pure), `categories/compare.ts` (M10.8, pure)                                                                                                           |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
