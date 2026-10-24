@@ -82,7 +82,7 @@ references:
       - colours
 variants:
   - form: Resin
-    safetyNotes: Large doses, of 30 grams or more a day, give some people harmless flatulence. It slows the absorption of some medicines from the gut, amoxicillin among them.
+    safetyNotes: Large doses, of 30 grams or more a day, give some people flatulence. It slows the absorption of some medicines from the gut, amoxicillin among them.
     references:
       - source: wikipedia-gum-arabic
         nameBasis: unaudited

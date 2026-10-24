@@ -3,7 +3,7 @@ status: approved
 nomenclature: botanical
 canonicalName: Malus domestica
 toxic: true
-safetyNotes: The seeds contain amygdalin, which releases cyanide once digested. A few seeds do no harm, but very large amounts can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.
+safetyNotes: The seeds contain amygdalin, which releases cyanide once digested. Very large amounts of seeds can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.
 elements:
   - water
   - air
@@ -39,6 +39,8 @@ deities:
   - Manannan mac Lir
   - Minerva
   - Rhiannon
+  - Idun
+  - Baldur
 categories:
   - Love
   - Healing
@@ -169,8 +171,17 @@ variants:
         supports:
           - form
           - description
+seedUpdate: b080428b893fa4b3a78630b3845e7e8eb14de67f2b2e9aeaa1637c1253f121c6
 ---
 
 # Apple
 
 The orchard apple is a deciduous tree whose round fruit is now grown all over the world. It comes from Central Asia, where the wild species it descends from, Malus sieversii, can still be found, and was cultivated across Eurasia for thousands of years before European colonists carried it to the Americas. In spring it bears five-petalled blossoms, rose-pink as they open and paling to white, and the fruit ripens in late summer or autumn around a core of seed chambers. Grieve records charred apples in the Swiss lake dwellings and the English custom of wassailing orchards with cider at Christmas, and in Norse myth the goddess Iðunn kept the apples that gave the gods their youth. Celtic lore made it a fruit of knowledge, prophecy and the otherworld: Avalon takes its name from the Welsh for apple tree, and a branch bearing bud, blossom and ripe fruit together was a charm for entering the land of the gods. Wiccan altars are heaped with apples at Samhain, when the fruit is counted among the foods of the dead. In magic the apple belongs above all to love: it is halved and shared with a lover, given to the one desired, and its seeds are counted to foretell a marriage. It also serves healing, rubbed on an ailing part and buried while the Moon wanes, and stands for immortality.
+
+#### Edit Notes for Claude
+
+Deity gap: Olwen (Cunningham, under "Apple"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Badb (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
+
+Deity gap: Macha (Kynes, under "Apple"), not in the vocabulary; link once M14.15 adds it.
