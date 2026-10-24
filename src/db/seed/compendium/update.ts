@@ -96,6 +96,11 @@ export interface UpdateContext {
   inUse: Set<string>;
   /** The conversion manifest, identity to hash, or `null` when it is gone (load.ts). */
   manifest: Record<string, string> | null;
+  /**
+   * The run's `--force` (M14.26): lifts refusals 1 to 4 for every marked
+   * entry, as `overwriteEditor` lifts 1 to 3 for one file.
+   */
+  force: boolean;
 }
 
 /** Reads every child of `rows` in six statements, and the usage of their forms in two more. */
@@ -503,6 +508,10 @@ export const REASONS = {
   formInUse: 'form in use',
 } as const;
 
+/** Whether the site's work on `item`'s row gives way: its file's `overwriteEditor`, or the run's `--force`. */
+const overwrites = (item: SeedItem, ctx: UpdateContext): boolean =>
+  item.overwriteEditor === true || ctx.force;
+
 /** The state table, one entry at a time. Reads only; `applyUpdate` writes. */
 export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext): Decision {
   const { row } = state;
@@ -516,19 +525,23 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
     if (manifest !== undefined && wholeAndUntouched(state)) {
       adopt = { hash: manifest, differs: plan.differs };
       stored = manifest;
-    } else {
+    } else if (!ctx.force) {
       return { outcome: { kind: 'refused', reason: REASONS.noBaseline, differs: plan.differs } };
     }
+    // Forced with no baseline: `stored` stays null, so the entry goes on to
+    // the mark check below as an edit, never a skip.
   }
   // A matching hash (M14.1): a row that matches its file is skipped; one that
   // differs because a person worked on it is skipped quietly, keeping the work,
-  // since the file has not changed since that work and only --force overrides
-  // it; one that differs with nobody's work on it is drift, as a row seeded
-  // before its file changed is, and goes on as a changed file does.
+  // since the file has not changed since that work. Only the run's --force
+  // (M14.26) goes past that skip, to the mark check and the refusals it lifts:
+  // the file's overwriteEditor does not, since it was already on the file when
+  // the work was done. One that differs with nobody's work on it is drift, as
+  // a row seeded before its file changed is, and goes on as a changed file does.
   if (stored === item.hash) {
     if (plan.differs.length === 0) return { adopt, outcome: { kind: 'skip' } };
     const worked = row.curatorReviewedAt !== null || touched(row) || touchedChild(state) !== null;
-    if (worked) return { adopt, outcome: { kind: 'skip' } };
+    if (worked && !ctx.force) return { adopt, outcome: { kind: 'skip' } };
   }
   if (item.seedUpdate !== item.hash) {
     return { adopt, outcome: { kind: 'pending', differs: plan.differs } };
@@ -539,7 +552,7 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
     outcome: { kind: 'refused', reason, differs: plan.differs },
   });
   if (plan.identityChange) return refused(REASONS.identity);
-  if (!item.overwriteEditor) {
+  if (!overwrites(item, ctx)) {
     if (row.curatorReviewedAt !== null) return refused(REASONS.reviewed);
     if (touched(row)) return refused(REASONS.edited);
     const child = touchedChild(state);
@@ -560,7 +573,7 @@ const tombstone = () => applyAudit('delete', {}, BOOTSTRAP_SESSION);
 /**
  * Applies a planned update inside the seed's transaction, stamped by the
  * bootstrap user: the scalars and the hash on the row, then each child list
- * reconciled in place. `overwriteEditor` clears the curator mark in the same
+ * reconciled in place. `overwriteEditor` or `--force` clears the curator mark in the same
  * statement, since the content is no longer what was reviewed.
  */
 export async function applyUpdate(
@@ -586,7 +599,7 @@ export async function applyUpdate(
         {
           ...entryColumns(entry, picks),
           seedContentHash: item.hash,
-          ...(item.overwriteEditor ? { curatorReviewedAt: null, curatorReviewedBy: null } : {}),
+          ...(overwrites(item, ctx) ? { curatorReviewedAt: null, curatorReviewedBy: null } : {}),
         },
         BOOTSTRAP_SESSION,
       ),

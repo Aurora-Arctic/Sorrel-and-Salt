@@ -657,6 +657,14 @@ describe('the update path (M14.7)', () => {
     expect(await variantIdOf(sql, id, 'Oil')).toBe(oil);
     expect(await compendiumRows()).toEqual(before);
 
+    // M14.26: --force lifts refusals 1 to 4 only; a form in use stays refused.
+    const forced = await run(files(), { force: true });
+
+    expect(forced.refused).toHaveLength(1);
+    expect(forced.refused[0]).toMatchObject({ where: PATH, reason: REASONS.formInUse });
+    expect(forced.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+
     await sql`update inventory_items set deleted_at = now(), deleted_by = ${A_ID} where id = ${stock}`;
     const retry = await run(files());
 
@@ -665,72 +673,94 @@ describe('the update path (M14.7)', () => {
     expect((await variantRowsOf(sql, id)).find((v) => v.form === 'Oil')?.deleted_at).not.toBeNull();
   });
 
+  /**
+   * Refusals 1 to 3: someone worked on the entry at the site. Each case sets
+   * the work up, checks it took, and names the reason the run prints.
+   */
+  const SITE_WORK: { name: string; reason: string; setUp: () => Promise<void> }[] = [
+    {
+      name: 'a curator-reviewed entry',
+      reason: REASONS.reviewed,
+      setUp: async () => {
+        await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+          where seed_key = ${identityOf(TESTWORT)}`;
+        expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+      },
+    },
+    {
+      name: 'an entry a person last changed',
+      reason: REASONS.edited,
+      setUp: async () => {
+        await asTouch(sql, async (tx) => {
+          await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
+        });
+        expect((await testwortRow()).updated_by).toBe(A_ID);
+      },
+    },
+    {
+      name: 'an entry whose form a person last changed',
+      reason: `child ${REASONS.edited}: ingredient_variants`,
+      setUp: async () => {
+        const { id } = await testwortRow();
+        await asTouch(sql, async (tx) => {
+          await tx`update ingredient_variants set updated_by = ${A_ID}
+            where ingredient_id = ${id} and form = 'Herb'`;
+        });
+        // The entry row itself is the seed's, so the child is what is refused on.
+        expect((await testwortRow()).updated_by).toBe(BOOTSTRAP_USER_ID);
+      },
+    },
+    {
+      name: 'an entry whose folk name a person deleted',
+      reason: `child ${REASONS.edited}: ingredient_folk_names`,
+      setUp: async () => {
+        const { id } = await testwortRow();
+        await asTouch(sql, async (tx) => {
+          await tx`update ingredient_folk_names set deleted_at = now(), deleted_by = ${A_ID}
+            where ingredient_id = ${id} and name = 'Proofleaf'`;
+        });
+        expect((await testwortRow()).updated_by).toBe(BOOTSTRAP_USER_ID);
+      },
+    },
+  ];
+
+  /**
+   * Refused with `reason` and nothing written; then the same marked edit,
+   * with the file's `overwriteEditor` or the run's `force`, lands, and the
+   * row comes out unreviewed.
+   */
+  async function expectRefusedThenLanded(
+    reason: string,
+    lift: { overwrite: true } | { force: true },
+  ): Promise<void> {
+    const before = await compendiumRows();
+
+    const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
+
+    expect(report.refused).toHaveLength(1);
+    expect(report.refused[0]).toMatchObject({ where: PATH, reason });
+    expect(report.refused[0].differs).toContain('description');
+    expect(hasRefusals(report)).toBe(true);
+    expect(report.updated).toEqual([]);
+    expect(await compendiumRows()).toEqual(before);
+
+    const landed =
+      'overwrite' in lift
+        ? await run([edited(TESTWORT, reword(121), { overwrite: true }), fileOf(SAMPLEWORT)])
+        : await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)], { force: true });
+
+    expect(landed.refused).toEqual([]);
+    expect(landed.updated).toEqual([PATH]);
+    const after = await testwortRow();
+    expect(after.description).toBe(wordsOf(121));
+    expect(after.seed_content_hash).toBe(hashOf(TESTWORT, reword(121)));
+    expect(after.curator_reviewed_at).toBeNull();
+  }
+
   describe('refuses an entry someone worked on at the site, unless the file says to overwrite', () => {
-    /** Refused with `reason` and nothing written; then the same file with `overwriteEditor` lands. */
-    async function expectRefusedThenOverwritten(reason: string | RegExp): Promise<void> {
-      const before = await compendiumRows();
-
-      const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)]);
-
-      expect(report.refused).toHaveLength(1);
-      expect(report.refused[0].where).toBe(PATH);
-      if (typeof reason === 'string') expect(report.refused[0].reason).toBe(reason);
-      else expect(report.refused[0].reason).toMatch(reason);
-      expect(report.refused[0].differs).toContain('description');
-      expect(hasRefusals(report)).toBe(true);
-      expect(report.updated).toEqual([]);
-      expect(await compendiumRows()).toEqual(before);
-
-      const forced = await run([
-        edited(TESTWORT, reword(121), { overwrite: true }),
-        fileOf(SAMPLEWORT),
-      ]);
-
-      expect(forced.refused).toEqual([]);
-      expect(forced.updated).toEqual([PATH]);
-      expect((await testwortRow()).description).toBe(wordsOf(121));
-    }
-
-    it('a curator-reviewed entry', async () => {
-      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
-        where seed_key = ${identityOf(TESTWORT)}`;
-      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
-
-      await expectRefusedThenOverwritten(REASONS.reviewed);
-
-      expect((await testwortRow()).curator_reviewed_at).toBeNull();
-    });
-
-    it('an entry a person last changed', async () => {
-      await asTouch(sql, async (tx) => {
-        await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
-      });
-      expect((await testwortRow()).updated_by).toBe(A_ID);
-
-      await expectRefusedThenOverwritten(REASONS.edited);
-    });
-
-    it('an entry whose form a person last changed', async () => {
-      const { id } = await testwortRow();
-      await asTouch(sql, async (tx) => {
-        await tx`update ingredient_variants set updated_by = ${A_ID}
-          where ingredient_id = ${id} and form = 'Herb'`;
-      });
-      // The entry row itself is the seed's, so the child is what is refused on.
-      expect((await testwortRow()).updated_by).toBe(BOOTSTRAP_USER_ID);
-
-      await expectRefusedThenOverwritten(`child ${REASONS.edited}: ingredient_variants`);
-    });
-
-    it('an entry whose folk name a person deleted', async () => {
-      const { id } = await testwortRow();
-      await asTouch(sql, async (tx) => {
-        await tx`update ingredient_folk_names set deleted_at = now(), deleted_by = ${A_ID}
-          where ingredient_id = ${id} and name = 'Proofleaf'`;
-      });
-      expect((await testwortRow()).updated_by).toBe(BOOTSTRAP_USER_ID);
-
-      await expectRefusedThenOverwritten(`child ${REASONS.edited}: ingredient_folk_names`);
+    it.each(SITE_WORK)('$name', async ({ reason, setUp }) => {
+      await setUp();
+      await expectRefusedThenLanded(reason, { overwrite: true });
     });
   });
 
@@ -745,6 +775,73 @@ describe('the update path (M14.7)', () => {
     expect(report.refused[0].differs).toContain('description');
     expect(report.updated).toEqual([]);
     expect(await compendiumRows()).toEqual(before);
+  });
+
+  // M14.26: `db:seed:compendium -- --force` lifts refusals 1 to 4 for every
+  // entry in the run, with no `overwriteEditor` in any file. The mark rule
+  // still holds: an edit nobody marked stays pending.
+  describe('--force lifts refusals 1 to 4 for every entry', () => {
+    it.each(SITE_WORK)('$name', async ({ reason, setUp }) => {
+      await setUp();
+      await expectRefusedThenLanded(reason, { force: true });
+    });
+
+    it('an entry with no baseline hash that no manifest names', async () => {
+      await sql`update ingredients set seed_content_hash = null where seed_key = ${identityOf(TESTWORT)}`;
+      expect((await testwortRow()).seed_content_hash).toBeNull();
+
+      await expectRefusedThenLanded(REASONS.noBaseline, { force: true });
+    });
+
+    it('a curator-reviewed entry and an edited one in the same run, each losing the curator mark', async () => {
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}`;
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(SAMPLEWORT)}`;
+      });
+      expect(
+        await countOf('ingredients', 'where curator_reviewed_at is not null'),
+        'both rows start reviewed',
+      ).toBe(2);
+
+      const report = await run([edited(TESTWORT, reword(121)), edited(SAMPLEWORT, reword(111))], {
+        force: true,
+      });
+
+      expect(report.refused).toEqual([]);
+      expect([...report.updated].sort()).toEqual([PATH, entryFilePath(SAMPLEWORT)].sort());
+      expect(await countOf('ingredients', 'where curator_reviewed_at is not null')).toBe(0);
+    });
+
+    it('leaves an edit nobody marked pending, and writes nothing', async () => {
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = ${identityOf(TESTWORT)}`;
+      const before = await compendiumRows();
+
+      const report = await run(
+        [edited(TESTWORT, reword(121), { mark: false }), fileOf(SAMPLEWORT)],
+        {
+          force: true,
+        },
+      );
+
+      expect(report.pending).toEqual([{ where: PATH, differs: ['description'] }]);
+      expect(report.updated).toEqual([]);
+      expect(await compendiumRows()).toEqual(before);
+    });
+
+    it('decides a forced dry run, then writes nothing', async () => {
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = ${identityOf(TESTWORT)}`;
+      const before = await compendiumRows();
+
+      const report = await run([edited(TESTWORT, reword(121)), fileOf(SAMPLEWORT)], {
+        force: true,
+        dryRun: true,
+      });
+
+      expect(report.updated).toEqual([PATH]);
+      expect(await compendiumRows()).toEqual(before);
+    });
   });
 
   describe('adoption of a hash the conversion manifest holds', () => {
@@ -806,7 +903,7 @@ describe('the update path (M14.7)', () => {
   describe('a row whose hash matches its file but whose content does not', () => {
     const fileHash = () => parsed(fileOf(TESTWORT)).hash;
     /** Marked for update at its own hash: the file as it stands, approved. */
-    const marked = () => edited(TESTWORT, () => {});
+    const marked = (options: { overwrite?: boolean } = {}) => edited(TESTWORT, () => {}, options);
 
     async function toxicOf(): Promise<boolean> {
       const [row] = await sql<{ toxic: boolean }[]>`
@@ -820,6 +917,21 @@ describe('the update path (M14.7)', () => {
       expect(TESTWORT.toxic).toBe(true);
       expect(await toxicOf()).toBe(false);
       expect((await testwortRow()).seed_content_hash).toBe(fileHash());
+    }
+
+    /** A person's edit on the row: the seed's stamp replaced by A's. */
+    async function editedByA(): Promise<void> {
+      await asTouch(sql, async (tx) => {
+        await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
+      });
+      expect((await testwortRow()).updated_by).toBe(A_ID);
+    }
+
+    /** A curator's mark on the row. */
+    async function reviewed(): Promise<void> {
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = ${identityOf(TESTWORT)}`;
+      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
     }
 
     it('reports an unmarked file as pending with what differs, and writes nothing', async () => {
@@ -849,10 +961,10 @@ describe('the update path (M14.7)', () => {
     });
 
     /** A matching hash, a differing field and a person's work: the work stays, and the run says nothing of it. */
-    async function expectQuietSkip(): Promise<void> {
+    async function expectQuietSkip(files = [marked(), fileOf(SAMPLEWORT)]): Promise<void> {
       const before = await compendiumRows();
 
-      const report = await run([marked(), fileOf(SAMPLEWORT)]);
+      const report = await run(files);
 
       expect(report).toEqual({ ...emptyReport(), skipped: 2 });
       expect(await toxicOf()).toBe(false);
@@ -861,10 +973,7 @@ describe('the update path (M14.7)', () => {
 
     it('skips a marked file quietly when a person edited the row on the site, keeping the edit', async () => {
       await unflag();
-      await asTouch(sql, async (tx) => {
-        await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
-      });
-      expect((await testwortRow()).updated_by).toBe(A_ID);
+      await editedByA();
 
       await expectQuietSkip();
       expect((await testwortRow()).updated_by).toBe(A_ID);
@@ -872,12 +981,72 @@ describe('the update path (M14.7)', () => {
 
     it('skips a marked file quietly when a curator reviewed the row, keeping the review', async () => {
       await unflag();
-      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
-        where seed_key = ${identityOf(TESTWORT)}`;
-      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+      await reviewed();
 
       await expectQuietSkip();
       expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+    });
+
+    it('skips a marked file quietly even with the overwrite flag, which was on the file when the person worked', async () => {
+      await unflag();
+      await editedByA();
+
+      await expectQuietSkip([marked({ overwrite: true }), fileOf(SAMPLEWORT)]);
+      expect((await testwortRow()).updated_by).toBe(A_ID);
+    });
+
+    // M14.26: the run's --force is the one thing that goes past the quiet skip,
+    // since the owner's rule is that a person's edit stays until a forced refresh.
+    describe('under --force', () => {
+      it('applies a marked file when a person edited the row, overwriting the edit', async () => {
+        await unflag();
+        await editedByA();
+
+        const report = await run([marked(), fileOf(SAMPLEWORT)], { force: true });
+
+        expect(report.updated).toEqual([PATH]);
+        expect(report.refused).toEqual([]);
+        expect(await toxicOf()).toBe(true);
+        const after = await testwortRow();
+        expect(after.updated_by).toBe(BOOTSTRAP_USER_ID);
+        expect(after.seed_content_hash).toBe(fileHash());
+      });
+
+      it('applies a marked file when a curator reviewed the row, clearing the mark', async () => {
+        await unflag();
+        await reviewed();
+
+        const report = await run([marked(), fileOf(SAMPLEWORT)], { force: true });
+
+        expect(report.updated).toEqual([PATH]);
+        expect(report.refused).toEqual([]);
+        expect(await toxicOf()).toBe(true);
+        expect((await testwortRow()).curator_reviewed_at).toBeNull();
+      });
+
+      it('leaves an unmarked file pending when a person edited the row, and writes nothing', async () => {
+        await unflag();
+        await editedByA();
+        const before = await compendiumRows();
+
+        const report = await run(baseline(), { force: true });
+
+        expect(report.pending).toEqual([{ where: PATH, differs: ['toxic'] }]);
+        expect(report.updated).toEqual([]);
+        expect(await toxicOf()).toBe(false);
+        expect(await compendiumRows()).toEqual(before);
+      });
+
+      it('still skips a marked file whose row matches it, keeping the edit', async () => {
+        await editedByA();
+        expect(await toxicOf()).toBe(true);
+        const before = await compendiumRows();
+
+        const report = await run([marked(), fileOf(SAMPLEWORT)], { force: true });
+
+        expect(report).toEqual({ ...emptyReport(), skipped: 2 });
+        expect(await compendiumRows()).toEqual(before);
+      });
     });
 
     it('adopts the manifest hash and then applies a marked file in the same run', async () => {
@@ -907,22 +1076,30 @@ describe('the update path (M14.7)', () => {
     });
   });
 
-  it('refuses a change of identity, which is the admin screens, even with the overwrite flag', async () => {
-    const rename = (entry: SeedCompendiumEntry) => {
-      entry.name = 'Testwort Proper';
-    };
-    const before = await compendiumRows();
+  it.each([
+    { lift: 'the overwrite flag', overwrite: true, force: false },
+    { lift: '--force', overwrite: false, force: true },
+  ])(
+    'refuses a change of identity, which is the admin screens, even with $lift',
+    async ({ overwrite, force }) => {
+      const rename = (entry: SeedCompendiumEntry) => {
+        entry.name = 'Testwort Proper';
+      };
+      const before = await compendiumRows();
 
-    const report = await run([edited(TESTWORT, rename, { overwrite: true }), fileOf(SAMPLEWORT)]);
+      const report = await run([edited(TESTWORT, rename, { overwrite }), fileOf(SAMPLEWORT)], {
+        force,
+      });
 
-    expect(report.refused).toHaveLength(1);
-    expect(report.refused[0]).toMatchObject({
-      where: entryFilePath({ ...TESTWORT, name: 'Testwort Proper' }),
-      reason: REASONS.identity,
-    });
-    expect(report.updated).toEqual([]);
-    expect(await compendiumRows()).toEqual(before);
-  });
+      expect(report.refused).toHaveLength(1);
+      expect(report.refused[0]).toMatchObject({
+        where: entryFilePath({ ...TESTWORT, name: 'Testwort Proper' }),
+        reason: REASONS.identity,
+      });
+      expect(report.updated).toEqual([]);
+      expect(await compendiumRows()).toEqual(before);
+    },
+  );
 
   // M14.8: the seed never sets the curator mark. A row it inserts, and a row it
   // updates, both come out unreviewed; only a curator's switch marks an entry.
