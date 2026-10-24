@@ -131,6 +131,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: ea3de10698c2c92e6f6e6954beec862861b13add4311f90c595d71f2a9615ac8
 ---
 
 # Avocado

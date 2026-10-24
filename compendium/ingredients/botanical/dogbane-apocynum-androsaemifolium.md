@@ -65,6 +65,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 6b035b1e82920224850d85d4ebe362d31492b3bca8eede98583c5b80571278ef
 ---
 
 # Dogbane

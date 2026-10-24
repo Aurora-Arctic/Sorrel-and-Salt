@@ -145,6 +145,7 @@ variants:
         resolvedBy: wikipedia-jacobaea-vulgaris
         supports:
           - description
+seedUpdate: 58f7b4fd267ac8edc9bc5753d0aa84687f741294abbb59b2eb73d4d8412bda03
 ---
 
 # Ragwort

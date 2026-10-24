@@ -11,7 +11,8 @@
 //        npm run db:seed:compendium   # after the vocabularies and sources
 //        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
 //        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
-//          --adopt lists the ADOPTED lines; --force lifts refusals 1 to 4 (M14.26)
+//          --adopt also lists the ADOPTED lines, as migrate.yml does
+//          --force lifts refusals 1 to 4 (M14.26)
 //        npm run db:seed:reference -- [--dry-run] [--adopt] [--force]
 //          all six above in one transaction, which a dry run rolls back once (M14.26)
 //        npm run db:drop              # drop the schema, nothing else

@@ -122,6 +122,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 651b5dd0fc43a7efd2f44d332de8df0224e21a59c4d51821d499c030747d5a6d
 ---
 
 # Arnica

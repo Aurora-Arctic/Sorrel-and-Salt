@@ -14,6 +14,12 @@ export interface SeedEntry {
   /** `prepare`, then `seed`. */
   run: (handle: SeedDatabase) => Promise<void>;
   tables: string[];
+  /**
+   * The tables whose rows the no-resurrection sweep retires one of, when not
+   * every table in `tables`: an entry whose later seed follows the earlier
+   * ones' vocabularies names only the tables a retirement reaches nothing beyond.
+   */
+  retires?: string[];
 }
 
 /** A `celestial_bodies` or `zodiac_signs` row. */

@@ -115,7 +115,8 @@
       "viewport": "1000x900"
     },
     "CompendiumList": {
-      "cardMode": "column"
+      "cardMode": "column",
+      "viewport": "900x713"
     },
     "CovenCards": {
       "cardMode": "column"
@@ -125,7 +126,8 @@
       "primaryStory": "States"
     },
     "EntryMarks": {
-      "cardMode": "column"
+      "cardMode": "column",
+      "viewport": "900x955"
     },
     "FacetPanel": {
       "cardMode": "column",
@@ -171,7 +173,8 @@
     },
     "IngredientEntry": {
       "cardMode": "single",
-      "primaryStory": "QuickLook"
+      "primaryStory": "QuickLook",
+      "viewport": "900x2000"
     },
     "InvitationAcceptance": {
       "cardMode": "single",
@@ -185,7 +188,8 @@
       "cardMode": "column"
     },
     "ContextRow": {
-      "cardMode": "column"
+      "cardMode": "column",
+      "viewport": "900x1015"
     },
     "PublicFrame": {
       "cardMode": "column"

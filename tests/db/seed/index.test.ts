@@ -221,6 +221,25 @@ const SEED_ENTRIES: SeedEntry[] = (
         'ingredient_categories',
         'ingredient_substitutes',
       ],
+      // The no-resurrection sweep retires one row per table before the second
+      // run. Retiring a vocabulary row here (a deity, a form, a category) makes
+      // every marked entry that names it read as drift under its matching hash
+      // (M14.1), which the compendium seed then follows: the entry's links to
+      // what remains are tombstoned and written again, so a vocabulary table's
+      // retirement reads as rows gained in the compendium's. That is the
+      // compendium following its curated picks, not a revived row, and each
+      // vocabulary's own entry above proves its tables stay retired; so this
+      // sweep retires the compendium's own rows only.
+      retires: [
+        'ingredients',
+        'ingredient_variants',
+        'ingredient_folk_names',
+        'ingredient_deities',
+        'ingredient_categories',
+        'ingredient_substitutes',
+        'references',
+        'reference_links',
+      ],
     },
   ] satisfies Omit<SeedEntry, 'run'>[]
 ).map((entry: Omit<SeedEntry, 'run'>) => ({
@@ -300,10 +319,10 @@ describe('the shape every seed shares', () => {
   // only a second live row, and would let the tombstoned one's twin through.
   it.each(SEED_ENTRIES)(
     '$name does not resurrect a row an admin has since deleted, in any of its tables',
-    async ({ run, tables: own }) => {
+    async ({ run, tables: own, retires }) => {
       await run(db);
 
-      const deletable = own.filter((table) => tombstoned.has(table));
+      const deletable = (retires ?? own).filter((table) => tombstoned.has(table));
       // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
       expect(deletable.length).toBeGreaterThan(0);
       for (const table of deletable) {
