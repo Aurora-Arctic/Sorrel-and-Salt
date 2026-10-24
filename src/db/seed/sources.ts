@@ -9,6 +9,7 @@ import { deities, deityTraditions } from '../../modules/vocabulary/schema/deitie
 import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type {
   SeedDatabase,
+  SeedRunOptions,
   SeedSource,
   SeedSourceLink,
   SeedTransaction,
@@ -4529,8 +4530,8 @@ export const SOURCES: SeedSource[] = [
  * Seeds the references, then their links, in a transaction of its own. Writes
  * go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedSources(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedVocabularySources);
+export async function seedSources(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
+  await beginSeedTransaction(db, seedVocabularySources, options);
 }
 
 /**
