@@ -62,6 +62,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: d847b76db90f0e92b89bd2391123930056da834f5991b4ca2e78e8162b7a404c
 ---
 
 # Cotton

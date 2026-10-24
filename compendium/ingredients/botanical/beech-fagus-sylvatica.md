@@ -189,6 +189,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 63006189b8c69b6decdb30f391993b1cca90c57e8124fa17102a3bfd6f01d324
 ---
 
 # Beech

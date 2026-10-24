@@ -60,6 +60,7 @@ variants:
           - description
           - safetyNotes
           - toxic
+seedUpdate: 451ac452ccea9c89cd465de818e82d9fa74887f56547dd9309276eb01d0eb54b
 ---
 
 # Male Fern

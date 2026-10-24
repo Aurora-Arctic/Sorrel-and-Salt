@@ -95,6 +95,7 @@ variants:
         supports:
           - description
           - safetyNotes
+seedUpdate: 192a6731ee0a7c4d6f91b48e1394cb627d340ef3441c1e7b208d601ba906e4a7
 ---
 
 # Larkspur
