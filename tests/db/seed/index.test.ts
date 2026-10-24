@@ -11,6 +11,7 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
+import { seedReferenceData } from '@/db/seed/reference-data';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import type { SeedEntry, UserRow } from './types';
@@ -193,6 +194,32 @@ const SEED_ENTRIES: SeedEntry[] = (
         'ingredient_substitutes',
         'references',
         'reference_links',
+      ],
+    },
+    {
+      // M14.26: the six above in one transaction, from empty, for the
+      // hand-started seed workflow.
+      name: 'the six reference seeds in one transaction',
+      seed: async (db, options) => {
+        await seedReferenceData(db, options);
+      },
+      tables: [
+        'category_groups',
+        'categories',
+        'ingredient_form_groups',
+        'ingredient_forms',
+        'celestial_bodies',
+        'zodiac_signs',
+        'deity_traditions',
+        'deities',
+        'references',
+        'reference_links',
+        'ingredients',
+        'ingredient_variants',
+        'ingredient_folk_names',
+        'ingredient_deities',
+        'ingredient_categories',
+        'ingredient_substitutes',
       ],
     },
   ] satisfies Omit<SeedEntry, 'run'>[]
