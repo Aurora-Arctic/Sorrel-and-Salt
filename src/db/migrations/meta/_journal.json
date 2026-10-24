@@ -575,6 +575,13 @@
       "when": 1792737838320,
       "tag": "0081_compendium-seed-state-expand",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792809160001,
+      "tag": "0082_deity-other-names",
+      "breakpoints": true
     }
   ]
 }
