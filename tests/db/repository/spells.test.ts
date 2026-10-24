@@ -9,7 +9,7 @@ import {
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { A, B, C, D, E, asUser } from '../../support/as-user';
@@ -43,7 +43,7 @@ const softDelete = (table: 'ingredients' | 'spells', id: string) =>
 /** Pulls the layer holding `ingredientId` out of the spell, as B. */
 const removeLayer = (spellId: string, ingredientId: string) =>
   sql`
-    update spell_ingredients set deleted_at = now(), deleted_by = ${B.id}
+    update spell_steps set deleted_at = now(), deleted_by = ${B.id}
     where spell_id = ${spellId} and ingredient_id = ${ingredientId} and deleted_at is null`;
 
 /** A compendium entry, filed under Protection, with a live and a removed folk name. */
@@ -79,7 +79,7 @@ const spellHolding = (
 ) =>
   insertSpell(
     sql,
-    makeSpell({ visibility, layers: ingredientIds.map((ingredientId) => ({ ingredientId })) }),
+    makeSpell({ visibility, steps: ingredientIds.map((ingredientId) => ({ ingredientId })) }),
     author.id,
   );
 
@@ -159,7 +159,7 @@ describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
     const xLocalId = await local(WORKSPACE_X_ID, D);
     await insertSpell(
       sql,
-      makeSpell({ workspaceId: WORKSPACE_X_ID, layers: [{ ingredientId: xLocalId }] }),
+      makeSpell({ workspaceId: WORKSPACE_X_ID, steps: [{ ingredientId: xLocalId }] }),
       D.id,
     );
     // Why it could have been answered: X's own member is handed it.
@@ -180,7 +180,7 @@ describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
     const spellId = await spellHolding([localId, xLocalId]);
     // Why it could have been answered: the layer is there, beside one that is.
     const [layer] = await sql`
-      select count(*)::int as count from spell_ingredients
+      select count(*)::int as count from spell_steps
       where spell_id = ${spellId} and ingredient_id = ${xLocalId}`;
     expect(layer.count).toBe(1);
 
@@ -267,15 +267,15 @@ describe('a layer removed from a spell', () => {
     const localId = await local(WORKSPACE_W_ID, A);
     const spellId = await spellHolding([entryId, localId]);
     // Why it could have been answered: both layers are read until the removal.
-    const before = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    const before = await findManyInSpell(await proofFor(B), spellSteps, spellId);
     expect(before.map((row) => row.ingredientId).sort()).toEqual([entryId, localId].sort());
 
     await removeLayer(spellId, localId);
 
-    const after = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    const after = await findManyInSpell(await proofFor(B), spellSteps, spellId);
     expect(after.map((row) => row.ingredientId)).toEqual([entryId]);
     const [tombstone] = await sql`
-      select deleted_by from spell_ingredients
+      select deleted_by from spell_steps
       where spell_id = ${spellId} and ingredient_id = ${localId}`;
     expect(tombstone.deleted_by).toBe(B.id);
   });
@@ -336,16 +336,18 @@ describe('a layer removed from a spell', () => {
   it('is replaced, not revived, when the ingredient is laid back in the jar', async () => {
     const localId = await local(WORKSPACE_W_ID, A);
     const spellId = await spellHolding([localId]);
-    const [removed] = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    const [removed] = await findManyInSpell(await proofFor(B), spellSteps, spellId);
     await removeLayer(spellId, localId);
 
     await sql`
-      insert into spell_ingredients
-        (spell_id, ingredient_id, variant_id, layer_order, created_by, updated_by)
-      values (${spellId}, ${localId}, ${removed.variantId}, 1, ${B.id}, ${B.id})`;
+      insert into spell_steps
+        (spell_id, ingredient_id, variant_id, position, layer_order, created_by, updated_by)
+      values (${spellId}, ${localId}, ${removed.variantId}, 1, 1, ${B.id}, ${B.id})`;
 
-    const layers = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
-    expect(layers).toEqual([expect.objectContaining({ ingredientId: localId, layerOrder: 1 })]);
+    const layers = await findManyInSpell(await proofFor(B), spellSteps, spellId);
+    expect(layers).toEqual([
+      expect.objectContaining({ ingredientId: localId, position: 1, layerOrder: 1 }),
+    ]);
     expect(layers[0].id).not.toBe(removed.id);
     await expect(
       findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),

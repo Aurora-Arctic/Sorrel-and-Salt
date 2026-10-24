@@ -4,7 +4,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
-import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '../../modules/grimoire/schema/spell-steps';
 import { categoryIdByName } from './categories';
 import { assertCompendiumValid, seedCompendiumContent } from './compendium';
 import { loadCompendium } from './compendium/load';
@@ -167,11 +167,13 @@ export const DEMO_SPELLS: SeedSpell[] = [
     sealWaxColor: 'Black',
     moonPhase: 'Waning crescent',
     dayOfWeek: 'Saturday',
-    instructions:
-      'Layer dry to damp, tamping each down before the next. Seal with black wax while it is still warm and bury it at the front step, upright.',
+    note: 'Keep it upright once buried: a jar knocked over is made again, not set back.',
     status: 'complete',
     categories: ['Warding', 'Protection', 'Home Blessing'],
-    layers: [
+    // The recipe in order: layers, with instruction-only steps between them
+    // and one step that is both (story 80).
+    steps: [
+      { body: 'Layer dry to damp, from the bottom of the jar up.' },
       {
         ingredient: fromCompendium('Sea Salt', 'Sodium chloride'),
         quantity: '2.000',
@@ -184,6 +186,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         unit: 'tbsp',
         note: null,
       },
+      { body: 'Tamp the salts down before the next layer goes in.' },
       {
         ingredient: fromWorkspace(HEARTH_ASH),
         quantity: '1.000',
@@ -204,6 +207,9 @@ export const DEMO_SPELLS: SeedSpell[] = [
         unit: null,
         note: 'A sprig laid on top, whole, before the wax goes on.',
       },
+      {
+        body: 'Seal with black wax while it is still warm and bury it at the front step, upright.',
+      },
     ],
   },
   {
@@ -214,12 +220,12 @@ export const DEMO_SPELLS: SeedSpell[] = [
     sealWaxColor: null,
     moonPhase: 'Full',
     dayOfWeek: 'Monday',
-    instructions:
-      'Crush the mugwort between your hands before it goes in. Stitch the bag closed and keep it inside the pillowcase; empty and refill it when it stops smelling of anything.',
+    note: 'Empty and refill it when it stops smelling of anything.',
     status: 'draft',
     categories: ['Dream Work', 'Sleep', 'Divination'],
-    layers: [
+    steps: [
       {
+        body: 'Crush the mugwort between your hands before it goes in.',
         ingredient: fromCompendium('Mugwort', 'Artemisia vulgaris'),
         quantity: '1.000',
         unit: 'tbsp',
@@ -243,6 +249,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
         unit: 'piece',
         note: 'A tumbled stone, small enough not to be felt through the pillow.',
       },
+      { body: 'Stitch the bag closed and keep it inside the pillowcase.' },
     ],
   },
 ];
@@ -275,7 +282,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
-    await insertMissingLayers(tx, ingredientIds, await variantIdByIngredient(tx));
+    await insertMissingSteps(tx, ingredientIds, await variantIdByIngredient(tx));
     await insertMissingSpellCategories(tx, await categoryIdByName(tx));
     await insertMissingStock(tx, DEMO_STOCK, ingredientIds);
   });
@@ -325,8 +332,11 @@ async function workspaceIngredientIds(tx: SeedTransaction): Promise<Map<string, 
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
   await insertMissingBy(tx, spells, DEMO_SPELLS, {
     columns: ['id'],
-    toRow: ({ categories: _categories, layers: _layers, ...spell }) => ({
+    // The note is written to `instructions` too until M13.9 drops it: the
+    // deploy before reads only that column.
+    toRow: ({ categories: _categories, steps: _steps, ...spell }) => ({
       ...spell,
+      instructions: spell.note,
       workspaceId: WORKSPACE_W_ID,
     }),
   });
@@ -354,8 +364,19 @@ async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, s
   return new Map([...first].map(([ingredientId, row]) => [ingredientId, row.id]));
 }
 
+/** An instruction-only step: no identity, and so no amount or note. */
+const NO_LAYER = {
+  ingredientId: null,
+  variantId: null,
+  name: null,
+  form: null,
+  quantity: null,
+  unit: null,
+  note: null,
+} as const;
+
 /**
- * Exactly one of `ingredientId` and `name` is set, `variantId` rides with the
+ * For a layer, exactly one of `ingredientId` and `name` is set, `variantId` rides with the
  * first (MB.217) and `form` with the second.
  */
 function layerIdentity(
@@ -378,32 +399,39 @@ function layerIdentity(
 }
 
 /**
- * A jar's stack is seeded whole or not at all: a layer's identity is a depth in
- * a shared sequence, so patching one into an edited stack collides on either
- * index. A jar that already has layers is left as it is
+ * A jar's recipe is seeded whole or not at all: a step's identity is a place in
+ * a shared sequence, so patching one into an edited recipe collides on either
+ * index. A jar that already has steps is left as it is
  * (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
  */
-async function insertMissingLayers(
+async function insertMissingSteps(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
   variantIds: Map<string, string>,
 ): Promise<void> {
   const wanted = DEMO_SPELLS.flatMap((spell) =>
-    spell.layers.map((layer, index) => ({ spellId: spell.id, layer, index })),
+    spell.steps.map((step, index) => ({ spellId: spell.id, step, index })),
   );
 
-  // Keyed by the jar, not the layer, so a stocked jar keeps every layer out —
-  // a removed layer's tombstone included, since the jar has been edited.
-  await insertMissingBy(tx, spellIngredients, wanted, {
+  // Keyed by the jar, not the step, so a stocked jar keeps every step out —
+  // a removed step's tombstone included, since the jar has been edited.
+  await insertMissingBy(tx, spellSteps, wanted, {
     columns: ['spellId'],
-    toRow: ({ spellId, layer, index }) => ({
+    toRow: ({ spellId, step, index }) => ({
       spellId,
-      ...layerIdentity(layer.ingredient, ingredientIds, variantIds),
-      quantity: layer.quantity,
-      unit: layer.unit,
-      // The position in the array, one per jar from 1.
+      body: step.body ?? null,
+      ...(step.ingredient
+        ? {
+            ...layerIdentity(step.ingredient, ingredientIds, variantIds),
+            quantity: step.quantity,
+            unit: step.unit,
+            note: step.note,
+          }
+        : NO_LAYER),
+      // The place in the array, one per jar from 1, written to `layer_order`
+      // too until M13.9 drops it.
+      position: index + 1,
       layerOrder: index + 1,
-      note: layer.note,
     }),
   });
 }

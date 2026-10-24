@@ -79,5 +79,5 @@ The deciding argument above does not reach it. What reads through a layer does
 so by `existsIn` (MB.100), which ANDs the layer's `deleted_at IS NULL` by
 construction, so there is no filter left for a service to remember. What it
 cost is the surrogate key and the partial indexes, under
-["Layer order is the identity"](grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder)
+["Position is the identity"](grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder)
 in the grimoire.

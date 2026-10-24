@@ -35,7 +35,7 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
 );
 
 // What a workspace holds. Stock hangs off the ingredient, not the other way
-// round, which is also why `spell_ingredients` references `ingredients` and
+// round, which is also why `spell_steps` references `ingredients` and
 // not this table.
 export const inventoryItems = pgTable(
   'inventory_items',

@@ -19,7 +19,7 @@ import type { referenceLinks } from '../../modules/ingredients/schema/reference-
 import type { references } from '../../modules/ingredients/schema/references';
 import type { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
+import type { spellSteps } from '../../modules/grimoire/schema/spell-steps';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
@@ -585,26 +585,26 @@ export interface AuditWriter {
   /** The proof's coven's live jars of its ingredient `ingredientId`, locked in jar-id order. */
   lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
   /**
-   * The live layers, in live spells of the proof's coven, that lay any of
-   * these forms, locked in layer-id order until the transaction ends: what a
+   * The live steps, in live spells of the proof's coven, that lay any of
+   * these forms, locked in step-id order until the transaction ends: what a
    * convert moves and checks for a spell that would hold one form twice
    * (M12.21). Private spells included, whoever wrote them; another coven's
-   * layers never.
+   * steps never.
    */
-  lockLayersOfVariants(
+  lockStepsOfVariants(
     membership: Membership,
     variantIds: readonly string[],
-  ): Promise<SpellLayerRow[]>;
+  ): Promise<SpellStepRow[]>;
   /**
-   * Points these layers, each in a live spell of the proof's coven, at another
+   * Points these steps, each in a live spell of the proof's coven, at another
    * ingredient's form, stamped from the session, and answers the rows moved.
-   * Nothing else on the layer changes.
+   * Nothing else on the step changes.
    */
-  moveLayers(
+  moveSteps(
     membership: Membership,
-    layerIds: readonly string[],
+    stepIds: readonly string[],
     to: { ingredientId: string; variantId: string },
-  ): Promise<SpellLayerRow[]>;
+  ): Promise<SpellStepRow[]>;
   /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
@@ -1038,8 +1038,8 @@ export type CupboardEntryRow = typeof workspaceCompendiumEntries.$inferSelect;
 /** A form of an ingredient, as a finder or a write returns it. */
 export type VariantRow = typeof ingredientVariants.$inferSelect;
 
-/** One `spell_ingredients` row, a layer of a spell, as the writer reads it. */
-export type SpellLayerRow = typeof spellIngredients.$inferSelect;
+/** One `spell_steps` row, a step of a spell, as the writer reads it. */
+export type SpellStepRow = typeof spellSteps.$inferSelect;
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {

@@ -12,14 +12,14 @@ export {
   variantInput,
 } from './ingredient';
 export { mergeFixture, stated } from './merge';
-export { makeSpell, spellColumns, spellLayerColumns } from './spell';
+export { makeSpell, spellColumns, spellStepColumns } from './spell';
 export { makeWorkspace, workspaceColumns } from './workspace';
 export type {
   IngredientFixture,
   Overrides,
   SpellFixture,
-  SpellLayerFixture,
-  SpellLayerOverrides,
+  SpellStepFixture,
+  SpellStepOverrides,
   SpellOverrides,
   VariantFixture,
   VariantInput,

@@ -640,11 +640,11 @@ export async function convertCompendiumEntryToLocal(
           variantId: copyOf.get(jar.variantId)!,
         });
       }
-      const layers = await write.lockLayersOfVariants(membership, [...copyOf.keys()]);
+      const steps = await write.lockStepsOfVariants(membership, [...copyOf.keys()]);
       for (const [formId, copy] of copyOf) {
-        await write.moveLayers(
+        await write.moveSteps(
           membership,
-          layers.filter((layer) => layer.variantId === formId).map((layer) => layer.id),
+          steps.filter((step) => step.variantId === formId).map((step) => step.id),
           { ingredientId: own.id, variantId: copy },
         );
       }

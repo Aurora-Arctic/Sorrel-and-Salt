@@ -152,7 +152,9 @@
 // label does (space 3 against 2): the chip steps down by the difference. Before the script the
 // categories are a plain field, with no difference.
 .facet-panel__quick--picker {
-  padding-block-start: space(1);
+  @media (min-width: $shell-tablet-width) {
+    padding-block-start: space(1);
+  }
 }
 
 // A count after a name (Filters, an option, a switch): small, in the muted ink, the same font,
@@ -181,6 +183,17 @@
 
 .facet-chip__group {
   margin: 0;
+}
+
+// The spacer stands where a neighbour's label does, so a chip beside a field starts level
+// with its box. Stacked (below the tablet width) there is no neighbour, so it is only
+// an empty line and a gap above the chip.
+.facet-chip__spacer {
+  display: none;
+
+  @media (min-width: $shell-tablet-width) {
+    display: block;
+  }
 }
 
 .facet-chip__details {

@@ -3,7 +3,12 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
-import { DEMO_STOCK, WORKSPACE_W_CUPBOARD, WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
+import {
+  DEMO_SPELLS,
+  DEMO_STOCK,
+  WORKSPACE_W_CUPBOARD,
+  WORKSPACE_W_INGREDIENTS,
+} from '@/db/seed/demo';
 import { COMPENDIUM_INGREDIENTS, WORKSPACE_W_ID, identityOf } from '@/db/seed/standard';
 import { loadCompendium } from '@/db/seed/compendium/load';
 
@@ -109,7 +114,7 @@ describe('seed(db, { scenario: "demo" })', () => {
   it('lays the compendium variants where a jar once named an own row, and leaves no jar on an entry the cupboard lacks', async () => {
     const layers = await sql`
       select i.identity_key, v.form
-      from spell_ingredients l
+      from spell_steps l
       join ingredients i on i.id = l.ingredient_id and i.workspace_id is null
       join ingredient_variants v on v.id = l.variant_id
       where i.identity_key in ('salvia rosmarinus', 'matricaria chamomilla')`;
@@ -122,6 +127,24 @@ describe('seed(db, { scenario: "demo" })', () => {
         where c.workspace_id = s.workspace_id and c.ingredient_id = s.ingredient_id
           and c.deleted_at is null)`;
     expect(unheld).toEqual([]);
+  });
+
+  it('lays a jar’s instruction-only steps between its ingredient steps, read back in position (story 80)', async () => {
+    const [jar] = DEMO_SPELLS;
+    const steps = await sql`
+      select position, layer_order, body, ingredient_id is null and name is null as instruction_only
+      from spell_steps where spell_id = ${jar.id} and deleted_at is null
+      order by position`;
+
+    // Why the order is the seed's and not the insert's: each step's position is its index in the file.
+    expect(steps.map((step) => step.position)).toEqual(jar.steps.map((_, index) => index + 1));
+    expect(steps.map((step) => step.layer_order)).toEqual(steps.map((step) => step.position));
+    expect(steps.map((step) => [step.instruction_only, step.body])).toEqual(
+      jar.steps.map((step) => [!step.ingredient, step.body ?? null]),
+    );
+    // An instruction-only step sits between two ingredient steps.
+    const flags = steps.map((step) => step.instruction_only);
+    expect(flags.some((only, at) => only && at > 0 && !flags[at - 1] && !flags[at + 1])).toBe(true);
   });
 
   it("keeps W's Cat's Claw an own stub with no formal name, and none of the five compendium Cat's Claws in the cupboard", async () => {

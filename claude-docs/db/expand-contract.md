@@ -297,7 +297,7 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Seventeen migrations carry findings today, and each has its sidecar:
+Eighteen migrations carry findings today, and each has its sidecar:
 
 | Migration                              | Findings                                                                                                                                                                                                                                                                                     |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -318,6 +318,7 @@ Seventeen migrations carry findings today, and each has its sidecar:
 | `0064_drop-form-and-canonical-key.sql` | `ingredients.canonical_key`, `form` and `form_id` dropped with their two CHECKs, the pick's foreign key and three indexes, the contract half of MB.220 and MB.222's switch to `identity_key` and `ingredient_variants` (MB.223)                                                              |
 | `0067_celestial-bodies-expand.sql`     | `planets` renamed `celestial_bodies` with its indexes, CHECK and foreign keys, a `planets` view standing in, and `reference_links_one_row` dropped and re-added counting either link column (MB.252)                                                                                         |
 | `0069_drop-planet-columns.sql`         | `ingredients.planets`, `ingredient_variants.planets` and `reference_links.planet_id` with its foreign key and unique index dropped, and the `planets` view, the contract half of MB.253's switch (MB.254); `reference_links_one_row` dropped and re-added counting `celestial_body_id` alone |
+| `0083_spell-steps-expand.sql`          | `spell_ingredients` renamed `spell_steps` with its indexes, CHECKs and foreign keys, a `spell_ingredients` view standing in, and `spell_ingredients_ingredient_or_name` dropped for two wider CHECKs so a step may be an instruction alone (M13.1)                                           |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
