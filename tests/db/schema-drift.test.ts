@@ -27,6 +27,7 @@ import * as retiredIngredientSlugs from '@/modules/ingredients/schema/retired-in
 import * as astrology from '@/modules/vocabulary/schema/astrology';
 import * as categories from '@/modules/vocabulary/schema/categories';
 import * as deities from '@/modules/vocabulary/schema/deities';
+import * as deityOtherNames from '@/modules/vocabulary/schema/deity-other-names';
 import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 
 // One comparison of the Drizzle schema against the migrated database, table by
@@ -85,6 +86,7 @@ const MODULES = [
   astrology,
   categories,
   deities,
+  deityOtherNames,
   ingredientForms,
 ];
 
