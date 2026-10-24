@@ -21,6 +21,7 @@ deities:
   - Durga
   - Kali
   - Krishna
+  - Ganish
 categories:
   - Purification
   - Banishing
@@ -102,7 +103,3 @@ variants:
 # Turmeric
 
 Turmeric is the rhizome of Curcuma longa, ground into the deep orange-yellow spice used in curries. Wikipedia says the rhizomes are used fresh, or boiled and dried and then ground, and that the powder is also used as a colouring. Cunningham lists purification as its power and gives the Hawaiian folk name Olena. He has salt water and turmeric sprinkled about, and has turmeric scattered about the circle for protection. Kynes gives earth and fire, with Mars, Mercury and the Sun, and the deities Durga, Kali and Krishna. Her powers include banishing, confidence, fertility, healing, prosperity, protection and purification, and she sells the whole or powdered root and an essential oil. Cunningham prints the name as Cucurma longa, which Wikipedia's Turmeric article settles as Curcuma longa. The hazards the sources record are set out in the safety notes.
-
-#### Edit Notes for Claude
-
-- Other name: Ganish (Kynes, under "Turmeric") is a spelling of Ganesha; link once M14.23 seeds it as an other name.

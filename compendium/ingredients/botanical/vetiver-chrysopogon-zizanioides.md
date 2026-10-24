@@ -25,6 +25,7 @@ deities:
   - Oshun
   - Shiva
   - Yemaya
+  - Ganesh
 categories:
   - Love
   - Hex-Breaking
@@ -104,7 +105,3 @@ variants:
 # Vetiver
 
 Vetiver is a perennial bunchgrass of the grass family, Poaceae, commonly known as vetiver and khus, according to Wikipedia, which lists Andropogon zizanioides, Phalaris zizanioides and Vetiveria zizanioides among its older names. Cunningham heads his entry Vetivert under two of those older names, and calls it feminine, with Venus and earth. He lists love and hex-breaking, among others, and has the root burned to overcome evil spells, used in love powders, sachets and incenses, and put in a sachet in the bathwater. Kynes gives earth and fire, Capricorn, Libra and Taurus, and Jupiter, Saturn and Venus, with the deities Ganesh, Oshun, Shiva and Yemaya. Her powers include love, peace, prosperity and protection. She sells an essential oil, a hydrosol, incense and a basket. The American Herbal Products Association says the root is not for use in pregnancy except under supervision, as set out in the safety notes.
-
-#### Edit Notes for Claude
-
-- Other name: Ganesh (Kynes, under "Vetiver") is a spelling of Ganesha; link once M14.23 seeds it as an other name.

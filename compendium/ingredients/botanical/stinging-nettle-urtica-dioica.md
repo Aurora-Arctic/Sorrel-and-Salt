@@ -24,6 +24,7 @@ folkNames:
   - Burn-Hazel
 deities:
   - Thor
+  - Woden
 categories:
   - Protection
   - Healing
@@ -97,7 +98,3 @@ variants:
 # Stinging Nettle
 
 Stinging nettle is a herbaceous perennial of the family Urticaceae, native to Europe, temperate Asia and western North Africa and now found worldwide. Wikipedia says it grows up to about two metres tall with serrated leaves, and that most subspecies bear stinging hairs that inject histamine and other chemicals, causing a sting. It has a long history as a medicine, food, tea and a source of fibre. Cunningham calls it masculine, with Mars and fire, and links it to Thor. He lists exorcism, protection, healing and lust. A poppet or sachet of it removes and returns a curse, it is sprinkled round the house, thrown on a fire to avert danger, and carried with yarrow to allay fear. Kynes adds Aries, Scorpio and Pluto, and powers including courage, confidence, justice, peace and release, and has the dried leaves sprinkled round a property. Kynes and Wikipedia record the sting, set out in the safety notes.
-
-#### Edit Notes for Claude
-
-- Other name: Woden (Kynes, under "Nettle") is another name of Odin; link once M14.23 seeds it as an other name.
