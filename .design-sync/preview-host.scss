@@ -36,6 +36,7 @@ html > body {
       :has(script[src$='/ProviderMark.js']),
       :has(script[src$='/PublicFrame.js']),
       :has(script[src$='/SectionNav.js']),
+      :has(script[src$='/ThemeToggle.js']),
       :has(script[src$='/Welcome.js'])
     )
     .ds-single {
