@@ -520,11 +520,16 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
       return { outcome: { kind: 'refused', reason: REASONS.noBaseline, differs: plan.differs } };
     }
   }
-  // A matching hash skips only a row that matches its file too (M14.1): a row
-  // seeded before its file changed can hold the new hash, the manifest's,
-  // without the new content, and then goes on as a changed file does.
-  if (stored === item.hash && plan.differs.length === 0)
-    return { adopt, outcome: { kind: 'skip' } };
+  // A matching hash (M14.1): a row that matches its file is skipped; one that
+  // differs because a person worked on it is skipped quietly, keeping the work,
+  // since the file has not changed since that work and only --force overrides
+  // it; one that differs with nobody's work on it is drift, as a row seeded
+  // before its file changed is, and goes on as a changed file does.
+  if (stored === item.hash) {
+    if (plan.differs.length === 0) return { adopt, outcome: { kind: 'skip' } };
+    const worked = row.curatorReviewedAt !== null || touched(row) || touchedChild(state) !== null;
+    if (worked) return { adopt, outcome: { kind: 'skip' } };
+  }
   if (item.seedUpdate !== item.hash) {
     return { adopt, outcome: { kind: 'pending', differs: plan.differs } };
   }

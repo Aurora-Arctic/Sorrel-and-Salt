@@ -848,20 +848,36 @@ describe('the update path (M14.7)', () => {
       expect(after.updated_by).toBe(BOOTSTRAP_USER_ID);
     });
 
-    it('still refuses a marked file when a person edited the row on the site', async () => {
+    /** A matching hash, a differing field and a person's work: the work stays, and the run says nothing of it. */
+    async function expectQuietSkip(): Promise<void> {
+      const before = await compendiumRows();
+
+      const report = await run([marked(), fileOf(SAMPLEWORT)]);
+
+      expect(report).toEqual({ ...emptyReport(), skipped: 2 });
+      expect(await toxicOf()).toBe(false);
+      expect(await compendiumRows()).toEqual(before);
+    }
+
+    it('skips a marked file quietly when a person edited the row on the site, keeping the edit', async () => {
       await unflag();
       await asTouch(sql, async (tx) => {
         await tx`update ingredients set updated_by = ${A_ID} where seed_key = ${identityOf(TESTWORT)}`;
       });
       expect((await testwortRow()).updated_by).toBe(A_ID);
-      const before = await compendiumRows();
 
-      const report = await run([marked(), fileOf(SAMPLEWORT)]);
+      await expectQuietSkip();
+      expect((await testwortRow()).updated_by).toBe(A_ID);
+    });
 
-      expect(report.refused).toEqual([{ where: PATH, reason: REASONS.edited, differs: ['toxic'] }]);
-      expect(report.updated).toEqual([]);
-      expect(await toxicOf()).toBe(false);
-      expect(await compendiumRows()).toEqual(before);
+    it('skips a marked file quietly when a curator reviewed the row, keeping the review', async () => {
+      await unflag();
+      await sql`update ingredients set curator_reviewed_at = now(), curator_reviewed_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = ${identityOf(TESTWORT)}`;
+      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
+
+      await expectQuietSkip();
+      expect((await testwortRow()).curator_reviewed_at).not.toBeNull();
     });
 
     it('adopts the manifest hash and then applies a marked file in the same run', async () => {
