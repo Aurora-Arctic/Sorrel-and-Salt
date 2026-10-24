@@ -254,14 +254,17 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   was started from, so the files seeded are the ones that environment runs.
   It pulls and resolves `DATABASE_URL` as `migrate.yml` does for the two
   long-lived targets, probes the database, then runs the same six seeds in
-  the same order. Its job takes the `migrate` concurrency group, the lock
+  the same order, through one command, `npm run db:seed:reference`, which
+  runs them in a single transaction. Its job takes the `migrate` concurrency group, the lock
   `deploy.yml` puts on `migrate.yml`: groups are repository-wide, so a run
   started during a migration waits for it, and a deploy waits for the run.
-  A dry run passes `--dry-run` to every seed: each runs in full and rolls its
-  own transaction back. Each seed rolls back alone, so a later seed reads the
-  database as it stands, not as an earlier dry-run seed would have left it,
-  and a source or compendium file naming a vocabulary row the same run adds
-  stops the dry run with "which no seed wrote". `force` passes `--force` to the
+  A dry run passes `--dry-run`: all six run in full and the one transaction
+  is rolled back at the end. One transaction rather than six because each
+  seed reads what the seeds before it wrote. Run apart, a dry-run deity seed
+  would roll its new traditions back before the sources seed looked for them,
+  and the sources seed would stop with "which no seed wrote". A real run uses
+  the same transaction, so it lands whole or not at all; `migrate.yml` still
+  runs the six apart, each committing on its own. `force` passes `--force` to the
   compendium seed (claude-docs/db/compendium-seed/README.md, "Refusals").
   The job summary says whether the run was a dry run and whether it was
   forced, and lists every `UPDATED`, `REFUSED`, `ADOPTED`, `RETIRED` and
