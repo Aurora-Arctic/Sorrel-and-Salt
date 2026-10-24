@@ -178,6 +178,10 @@ const ROWS: Record<string, PartialIndexRow> = {
   celestial_bodies_slug_unique: { row: celestialBody },
   deities_seed_key_unique: { row: deity },
   deities_slug_unique: { row: deity },
+  deity_other_names_unique: {
+    row: async () =>
+      stamped({ deity_id: await idOf('deities', await deity()), name: `Testarion ${token()}` }),
+  },
   deity_traditions_seed_key_unique: { row: tradition },
   deity_traditions_slug_unique: { row: tradition },
   ingredient_deities_link_unique: { row: () => ingredientDeity(true) },

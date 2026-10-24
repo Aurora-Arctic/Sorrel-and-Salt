@@ -32,6 +32,7 @@ export const AUDITED_TABLES = [
   'category_groups',
   'celestial_bodies',
   'deities',
+  'deity_other_names',
   'deity_traditions',
   'ingredient_categories',
   'ingredient_deities',
