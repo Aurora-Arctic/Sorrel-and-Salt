@@ -111,15 +111,15 @@ In [`db/stock.md`](db/stock.md#nullability-and-why-zero-is-not-the-same-as-nothi
 
 ## The grimoire (M10.2)
 
-`spells` and `spell_ingredients`: a layer names an ingredient rather than a stock row or may name a custom one instead (MB.40), is soft-deleted, and its order is unique among the spell's live layers. [`db/grimoire.md`](db/grimoire.md)
+`spells` and `spell_steps` (`spell_ingredients` until M13.1): a step is an instruction, an ingredient, or both; its ingredient is one the workspace knows rather than a stock row, or a custom name (MB.40); it is soft-deleted, and its position is unique among the spell's live steps. [`db/grimoire.md`](db/grimoire.md)
 
 ### The join names the ingredient, never the stock row
 
 In [`db/grimoire.md`](db/grimoire.md#the-join-names-the-ingredient-never-the-stock-row).
 
-### Layer order is the identity, and what that costs the reorder
+### Position is the identity, and what that costs the reorder
 
-In [`db/grimoire.md`](db/grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder).
+In [`db/grimoire.md`](db/grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder).
 
 ### Custom ingredients (MB.40)
 
