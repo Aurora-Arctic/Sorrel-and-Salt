@@ -163,6 +163,11 @@ same deity, such as Woden for Odin. They are rows of `deity_other_names`
 - **The deity picker finds a deity by an other name** and says which name
   matched. The entry page and the admin deities list show a deity's other
   names beside its name.
+- **The admin deities list's filter finds a deity by an other name** as well
+  as by its own: "Ganish" finds Ganesha. A soft-deleted other name finds
+  nothing, and a deity two of whose other names match is one row, in the
+  page and in its count alike (`deityArms` in
+  `src/db/repository/vocabularies.ts`).
 - **The seed loads them** from `DEITIES[].otherNames`, never re-adding a name
   an admin removed ([the seed's doc](deity-vocabulary-seed.md#other-names)),
   and a compendium entry file may name a deity by one of them

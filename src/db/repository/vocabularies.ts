@@ -217,9 +217,26 @@ function vocabularyArms(
   );
 }
 
-/** A deity filter's arms: its tradition is the group it is filed under. */
+/**
+ * A deity filter's arms: its tradition is the group it is filed under, and
+ * its name fragment finds a deity by its own name or by a live other name
+ * (M14.23), so "Ganish" finds Ganesha. An `EXISTS` rather than a join, so a
+ * deity with two matching other names is still one row, in the page and in
+ * its count alike.
+ */
 function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
-  return vocabularyArms(deities, { query, groupId: traditionId });
+  return and(
+    vocabularyArms(deities, { groupId: traditionId }),
+    query
+      ? or(
+          containsText(deities.name, query),
+          existsIn(
+            deityOtherNames,
+            and(eq(deityOtherNames.deityId, deities.id), containsText(deityOtherNames.name, query)),
+          ),
+        )
+      : undefined,
+  );
 }
 
 /**
