@@ -3,3 +3,5 @@
 // the module.
 export * from './services/spell-visibility';
 export type { SpellVisibility } from './types';
+export * from './categories/summarize';
+export type { StepCategories } from './categories/types';
