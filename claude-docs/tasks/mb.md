@@ -274,6 +274,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
 | MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
 | MB.273 | Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook                                                | Bugfixes | —                      |
+| MB.274 | Seeded Compendium Content Stays Stale After a Deploy                                                                     | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1758,6 +1759,32 @@ _Acceptance criteria:_
 - Every listed story grades "match" after the fix, except three that grade "close" and that the owner accepted on 2026-10-24. Welcome States: Storybook captures the whole page, 96px taller than the window, and the preview is captured at window height. IngredientEntry States: Storybook is 2011px tall against the 2000px capture cap. PublicFrame Loading The Compendium: Storybook's reference shows no skeleton while the preview shows the one the story means to show; the cause is not frame size or timing, and is open. Applied: scoped CSS that cancels the preview body's 24px padding on single-story pages for eleven components (`.design-sync/preview-host.scss`), and `viewport` overrides for CompendiumList, EntryMarks, ContextRow and IngredientEntry (`.design-sync/config.json`).
 - The fix and its reason are recorded in `.design-sync/NOTES.md`, and no other component's grade drops below what it is today.
 - The fixed components are re-uploaded to the Claude Design project, with `_ds_sync.json` written last.
+
+**MB.274 — Seeded Compendium Content Stays Stale After a Deploy** · 2h
+
+_Story:_ As a developer shipping a change to the compendium seed, I want the first page load after the deploy to show the seeded content, so that a seed change is live the moment its deployment is.
+
+The compendium's shared reads are cached by `cachedCompendiumRead` in `src/lib/compendium-cache.ts`, under one tag with a one-hour timer (`COMPENDIUM_REVALIDATE_SECONDS`). Only an admin's write through `/api/graphql` clears that tag. The seed (`npm run db:seed`) is a script that runs outside Next.js, so it cannot clear it. Vercel keeps this cache from one deployment to the next, so for up to an hour after a deploy that seeded, both the public compendium pages and the admin's screens show the content from before the seed. The fix adds the deployment's id to every cache key, so each new deployment reads under fresh keys and its first read of each entry goes to Postgres. Vercel's `VERCEL_DEPLOYMENT_ID` is the likely source. It has not been checked yet; if it is not set while the app runs, the build stamps in the commit hash instead.
+
+Found on 2026-10-24, by reading the code and Vercel's docs, and seen locally, on staging and on production; wrong result. Steps to reproduce:
+
+1. Edit a seeded compendium entry's file under `compendium/` (for example, change its description), marked for update with `seedUpdate`.
+2. Push it to staging.
+3. The Deploy workflow's `migrate` job runs the reference seed, then the `deploy` job ships a new deployment.
+4. Within an hour of the deploy, open that entry's page at `/compendium/ingredients/<slug>` on staging, signed out.
+
+Actual: the page shows the content from before the seed until the one-hour timer runs out or an admin saves any compendium edit.
+Expected: the first load after the deploy shows the seeded content.
+
+Locally the same thing happens when `npm run db:seed` runs under a running server. This task does not fix that case: locally the key part stays fixed, and a restart clears the cache.
+
+_Acceptance criteria:_
+
+- A regression test, written first and failing before the fix, shows that a cached compendium read made under one deployment id is read from Postgres again under a different id.
+- Every key `cachedCompendiumRead` builds includes the deployment id, which comes from Vercel's own deployment variable when the app runs there, or else from the commit hash stamped in at build time.
+- Local and test runs with neither value use one fixed key part, and the existing cache tests still pass unchanged.
+- An admin write still clears every cached entry under the current deployment.
+- Docs: `claude-docs/db/compendium-cache.md` says how the key part is built, and that reseeding locally under a running server still needs a restart.
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
