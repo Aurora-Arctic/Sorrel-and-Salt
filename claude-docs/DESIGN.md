@@ -1469,7 +1469,6 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 55. Save as draft.
 56. As any workspace member including viewers, read every workspace-visible spell in the grimoire (a private spell stays with its author).
 57. Add a one-off ingredient by name and form, so a spell can call for something I will never stock — it goes in the jar and nowhere else.
-58. Record a spell's steps in one order, each an instruction, an ingredient, or both, so the ritual is kept beside what goes in the jar.
 
 ### Email and admin (M2.9)
 
@@ -1486,6 +1485,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### References (MB.151)
 
 64. As a reader of the compendium, see where an entry's information came from, so that I can judge a claim and read further.
+
+### Spell steps (M13.1)
+
+80. Record a spell's steps in one order, each an instruction, an ingredient, or both, so the ritual is kept beside what goes in the jar.
 
 Keeping a spell `private` while building it, and the one-way widen to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 
