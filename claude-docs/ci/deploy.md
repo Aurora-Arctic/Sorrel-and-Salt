@@ -245,6 +245,28 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   those lines out of `seed.log` and post them through `pr-comment`, which is
   why the workflow holds `pull-requests: write`. A commit no pull request
   carries gets the job summary alone.
+- **Seeding an environment by hand (M14.26)** is a second way in, for a site
+  admin who needs the seed without a deploy: `seed-environment.yml`, started
+  only from the Actions tab (`workflow_dispatch`). It takes three inputs:
+  `environment` (`preview`, which is staging, or `production`), `dry-run`
+  (on by default) and `force` (off by default). It checks out the branch the
+  environment deploys from — `staging` or `main` — whichever branch the run
+  was started from, so the files seeded are the ones that environment runs.
+  It pulls and resolves `DATABASE_URL` as `migrate.yml` does for the two
+  long-lived targets, probes the database, then runs the same six seeds in
+  the same order. Its job takes the `migrate` concurrency group, the lock
+  `deploy.yml` puts on `migrate.yml`: groups are repository-wide, so a run
+  started during a migration waits for it, and a deploy waits for the run.
+  A dry run passes `--dry-run` to every seed: each runs in full and rolls its
+  own transaction back. Each seed rolls back alone, so a later seed reads the
+  database as it stands, not as an earlier dry-run seed would have left it,
+  and a source or compendium file naming a vocabulary row the same run adds
+  stops the dry run with "which no seed wrote". `force` passes `--force` to the
+  compendium seed (claude-docs/db/compendium-seed/README.md, "Refusals").
+  The job summary says whether the run was a dry run and whether it was
+  forced, and lists every `UPDATED`, `REFUSED`, `ADOPTED`, `RETIRED` and
+  `PENDING` line with the counts. It posts no pull request comment, since no
+  pull request started it.
 - **`deploy.yml`'s `seed-changed` job** diffs
   `github.event.before`..`github.sha` over the seeds' own files
   (`src/db/seed/categories.ts` and the `category-groups.ts` data it reads, `src/db/seed/forms.ts`,
