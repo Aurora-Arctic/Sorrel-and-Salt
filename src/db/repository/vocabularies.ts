@@ -17,6 +17,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
+import { deityOtherNames } from '../../modules/vocabulary/schema/deity-other-names';
 import {
   ingredientFormGroups,
   ingredientForms,
@@ -277,6 +278,49 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
 ): Promise<TVocabulary['$inferSelect'][]> {
   if (ids.length === 0) return Promise.resolve([]);
   return selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids])));
+}
+
+/**
+ * The live other names of the deities among `deityIds` (M14.22), in no
+ * particular order — a loader's batch read. Global reference data, so no proof.
+ */
+export function findDeityOtherNames(
+  deityIds: readonly string[],
+): Promise<(typeof deityOtherNames.$inferSelect)[]> {
+  if (deityIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    deityOtherNames,
+    and(notSoftDeleted(deityOtherNames), inArray(deityOtherNames.deityId, [...deityIds])),
+  );
+}
+
+/**
+ * The live other names among `folds` — trimmed and lower-cased — that a live
+ * deity of `traditionId` holds, `exceptId` excepted: what refuses one name on
+ * two deities of one tradition (M14.23), which no index can, since the
+ * tradition is the deity's column and not the name's.
+ */
+export function findDeityOtherNameHolders(
+  traditionId: string,
+  folds: readonly string[],
+  exceptId?: string,
+): Promise<(typeof deityOtherNames.$inferSelect)[]> {
+  if (folds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    deityOtherNames,
+    and(
+      notSoftDeleted(deityOtherNames),
+      inArray(sql`lower(${deityOtherNames.name})`, [...folds]),
+      existsIn(
+        deities,
+        and(
+          eq(deities.id, deityOtherNames.deityId),
+          eq(deities.traditionId, traditionId),
+          exceptId === undefined ? undefined : ne(deities.id, exceptId),
+        ),
+      ),
+    ),
+  );
 }
 
 /**
