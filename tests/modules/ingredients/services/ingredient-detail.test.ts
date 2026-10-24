@@ -107,6 +107,13 @@ beforeAll(async () => {
       tradition_id: tradition.id,
       ...stamps,
     })} returning id`;
+  // Its other names (M14.23): two live, read alphabetically, and one dropped.
+  await sql`
+    insert into deity_other_names ${sql([
+      { deity_id: deityId, name: 'Fixturion', deleted_at: null, deleted_by: null, ...stamps },
+      { deity_id: deityId, name: 'Fixtor', deleted_at: null, deleted_by: null, ...stamps },
+      { deity_id: deityId, name: 'Fixtorius', deleted_at: new Date(), deleted_by: A.id, ...stamps },
+    ])}`;
   const [group] = await sql`
     insert into ingredient_form_groups ${sql({
       name: 'Fixture Forms',
@@ -205,8 +212,8 @@ describe('ingredientDetailOf', () => {
     ]);
     for (const { category, group } of detail.categories) expect(group.id).toBe(category.groupId);
     expect(detail.deities).toEqual([
-      { name: 'Typed deity', tradition: null },
-      { name: 'Fixturus', tradition: 'Fixturan' },
+      { name: 'Typed deity', tradition: null, otherNames: [] },
+      { name: 'Fixturus', tradition: 'Fixturan', otherNames: ['Fixtor', 'Fixturion'] },
     ]);
     expect(detail.substitutes).toEqual([
       {
