@@ -9,7 +9,9 @@
 //        npm run db:seed:categories | db:seed:forms | db:seed:astrology | db:seed:deities
 //        npm run db:seed:sources      # after the vocabularies it links
 //        npm run db:seed:compendium   # after the vocabularies and sources
-//        npm run db:seed:compendium -- --dry-run [--adopt]   # decide and report, write nothing
+//        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
+//        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
+//          --adopt lists the ADOPTED lines; --force lifts refusals 1 to 4 (M14.26)
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -29,36 +31,59 @@ import { dropSchema } from '../src/db/seed/reset.ts';
 
 const target = process.argv[2] ?? 'scenario';
 const flags = new Set(process.argv.slice(3));
+
+// The flags each target takes: every reference seed has a dry run (M14.26),
+// and only the compendium reports adoptions or can be forced.
+const FLAGS: Record<string, readonly string[]> = {
+  categories: ['--dry-run'],
+  forms: ['--dry-run'],
+  astrology: ['--dry-run'],
+  deities: ['--dry-run'],
+  sources: ['--dry-run'],
+  compendium: ['--dry-run', '--adopt', '--force'],
+};
+const allowed = FLAGS[target] ?? [];
 for (const flag of flags) {
-  if (flag !== '--dry-run' && flag !== '--adopt') {
-    throw new Error(`Unknown flag "${flag}": the compendium target takes --dry-run and --adopt.`);
+  if (!allowed.includes(flag)) {
+    throw new Error(
+      `Unknown flag "${flag}" for "${target}": it takes ${allowed.length > 0 ? allowed.join(', ') : 'no flags'}.`,
+    );
   }
 }
+const dryRun = flags.has('--dry-run');
+
+/** The line a reference seed ends on: what it seeded, or that a dry run wrote nothing. */
+const done = (what: string): void => {
+  console.log(
+    dryRun ? `Dry run: ${what} were seeded and rolled back; nothing written.` : `Seeded ${what}.`,
+  );
+};
 
 try {
   if (target === 'categories') {
-    await seedCategories(db);
-    console.log('Seeded DESIGN.md §6 category groups and categories.');
+    await seedCategories(db, { dryRun });
+    done('DESIGN.md §6 category groups and categories');
   } else if (target === 'forms') {
-    await seedForms(db);
-    console.log('Seeded DESIGN.md §5 ingredient form groups and forms.');
+    await seedForms(db, { dryRun });
+    done('DESIGN.md §5 ingredient form groups and forms');
   } else if (target === 'astrology') {
-    await seedAstrology(db);
-    console.log('Seeded DESIGN.md §5 planet and zodiac vocabularies.');
+    await seedAstrology(db, { dryRun });
+    done('DESIGN.md §5 planet and zodiac vocabularies');
   } else if (target === 'deities') {
-    await seedDeities(db);
-    console.log('Seeded the deity traditions and deities.');
+    await seedDeities(db, { dryRun });
+    done('the deity traditions and deities');
   } else if (target === 'sources') {
-    await seedSources(db);
-    console.log("Seeded the vocabularies' sources and their links.");
+    await seedSources(db, { dryRun });
+    done("the vocabularies' sources and their links");
   } else if (target === 'compendium') {
     // M14.7: one line per entry the run updated, refused, left pending or
     // found retired, then the totals; a refused entry exits 1, which fails
     // the deploy's seed step so the refusal is read, not buried.
-    const dryRun = flags.has('--dry-run');
-    const report = await seedCompendium(db, undefined, { dryRun });
+    const force = flags.has('--force');
+    const report = await seedCompendium(db, undefined, { dryRun, force });
     console.log(formatReport(report, { adopt: flags.has('--adopt') }));
     if (hasRefusals(report)) process.exitCode = 1;
+    if (force) console.log('Forced: refusals 1 to 4 were lifted for every marked entry.');
     console.log(
       dryRun
         ? 'Dry run: the compendium was decided and nothing written.'
