@@ -57,9 +57,33 @@ for (const subject of git('log', ref, '--format=%s').split('\n')) {
   }
 }
 
-// Completed without a commit that names them — dashboard or console work. Add an
-// id here when the skill's `verify` mode finds the board ticked and git silent.
-for (const id of ['M1.1']) done.add(id);
+// Completed without a commit that names them in one of the three forms above —
+// dashboard or console work, or a merge whose branch and subjects omit the id
+// (`M14.8: …` with a colon is not a completion form). Add an id here when the
+// skill's `verify` mode finds the board ticked and git silent.
+for (const id of [
+  'M1.1',
+  'M9.10',
+  'M10.33',
+  'M10.34',
+  'M12.5',
+  'M12.11',
+  'M12.43',
+  'M14.2',
+  'M14.5',
+  'M14.6',
+  'M14.7',
+  'M14.8',
+  'M14.9',
+  'M14.10',
+  'M14.11',
+  'M14.12',
+  'MB.79',
+  'MB.266',
+  'MB.268',
+  'MB.269',
+])
+  done.add(id);
 
 // Task branches, local or pushed, whose id has not merged: work under way, PR or not.
 const open = new Set();
