@@ -1755,7 +1755,7 @@ The owner accepted these "close" grades for M12.53 and asked for this follow-up.
 _Acceptance criteria:_
 
 - A regression check fails before the fix: a scoped `compare.mjs` run grades at least one listed story "close", and the cause is the frame size or the capture timing.
-- Every listed story grades "match" after the fix. Candidate fixes: `viewport` overrides in `.design-sync/config.json` (IngredientEntry 900x2000, EntryMarks 900x1000, ContextRow 900x1015, Welcome 900x760); a wider frame, or no body padding, for the shell and table stories; a PublicFrame `settleMs` of about 1000.
+- Every listed story grades "match" after the fix, except three that grade "close" and that the owner accepted on 2026-10-24. Welcome States: Storybook captures the whole page, 96px taller than the window, and the preview is captured at window height. IngredientEntry States: Storybook is 2011px tall against the 2000px capture cap. PublicFrame Loading The Compendium: Storybook's reference shows no skeleton while the preview shows the one the story means to show; the cause is not frame size or timing, and is open. Applied: scoped CSS that cancels the preview body's 24px padding on single-story pages for eleven components (`.design-sync/preview-host.scss`), and `viewport` overrides for CompendiumList, EntryMarks, ContextRow and IngredientEntry (`.design-sync/config.json`).
 - The fix and its reason are recorded in `.design-sync/NOTES.md`, and no other component's grade drops below what it is today.
 - The fixed components are re-uploaded to the Claude Design project, with `_ds_sync.json` written last.
 
