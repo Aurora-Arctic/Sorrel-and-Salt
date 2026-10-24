@@ -116,6 +116,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 53a2e3f6f22ae51cf310d0fc5f5b3182e8f70e32d0b9ccc9eb2d20459826621d
 ---
 
 # Daisy

@@ -4,26 +4,44 @@ import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { applyAudit, publishActor } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { FlatTable, GroupTable, ItemTable } from '../vocabularies';
-import type { InsertStamps, SeedDatabase, SeedTransaction } from './types';
+import type { InsertStamps, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // The moves every seed makes. Writes go through the handle the caller
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
+
+/** Thrown inside the transaction to roll a dry run back, and caught outside it. */
+class DryRunRollback<T> extends Error {
+  constructor(readonly result: T) {
+    super('dry run');
+  }
+}
 
 /**
  * The seed's transaction: the bootstrap user published as the actor by
  * `publishActor`, as `withAudit` publishes its session — all four settings,
  * transaction-local — and present before `body` writes a row that names it as
- * creator.
+ * creator. On a dry run (M14.26) `body` runs in full and the transaction is
+ * then rolled back, so every read and constraint is the real one and nothing
+ * is left behind; `body`'s result is still returned. A rollback rather than a
+ * separate planning pass, so a dry run cannot drift from the run it previews.
  */
 export async function beginSeedTransaction<T>(
   db: SeedDatabase,
   body: (tx: SeedTransaction) => Promise<T>,
+  { dryRun = false }: SeedRunOptions = {},
 ): Promise<T> {
-  return db.transaction(async (tx) => {
-    await publishActor(tx, { userId: BOOTSTRAP_USER_ID });
-    await insertBootstrapAdmin(tx);
-    return body(tx);
-  });
+  try {
+    return await db.transaction(async (tx) => {
+      await publishActor(tx, { userId: BOOTSTRAP_USER_ID });
+      await insertBootstrapAdmin(tx);
+      const result = await body(tx);
+      if (dryRun) throw new DryRunRollback(result);
+      return result;
+    });
+  } catch (error) {
+    if (error instanceof DryRunRollback) return error.result as T;
+    throw error;
+  }
 }
 
 /**

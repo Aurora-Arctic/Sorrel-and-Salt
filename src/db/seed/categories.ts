@@ -4,7 +4,7 @@ import { categories } from '../../modules/vocabulary/schema/categories';
 import { CATEGORY_GROUPS } from './category-groups';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
-import type { SeedCategory, SeedDatabase, SeedTransaction } from './types';
+import type { SeedCategory, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // DESIGN.md §6's vocabulary: eight groups and every category, a starting set
 // an admin may edit. Not a scenario — migrate.yml seeds it on its own after
@@ -350,8 +350,11 @@ export const CATEGORIES: SeedCategory[] = [
  * Seeds §6's groups, then its categories, in a transaction of its own. Writes
  * go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedCategories(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedCategoryVocabulary);
+export async function seedCategories(
+  db: SeedDatabase,
+  options: SeedRunOptions = {},
+): Promise<void> {
+  await beginSeedTransaction(db, seedCategoryVocabulary, options);
 }
 
 /**

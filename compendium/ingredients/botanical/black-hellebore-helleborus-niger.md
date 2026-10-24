@@ -116,6 +116,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: e59aa0dba710c540a59f06c0131e6dc4569753ce1a8ae71b8f8adef6fe9621fd
 ---
 
 # Black Hellebore

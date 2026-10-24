@@ -102,6 +102,7 @@ variants:
           - safetyNotes
           - toxic
           - colours
+seedUpdate: 73eb5c9863896ce3ae1760a842950de5967eae710f4cfef9307d12e0eb5834c8
 ---
 
 # Mayapple

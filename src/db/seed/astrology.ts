@@ -1,7 +1,7 @@
 import { beginSeedTransaction } from './idempotent';
 import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { seedFlatVocabulary } from './flat-vocabulary';
-import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types';
+import type { SeedAstrologyValue, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // DESIGN.md §5's celestial body and zodiac vocabularies, a starting set an admin may
 // edit. Reference data, not a scenario — migrate.yml seeds it alone, so it
@@ -168,8 +168,8 @@ export const ZODIAC_SIGNS: SeedAstrologyValue[] = [
  * Seeds both vocabularies in a transaction of their own. Writes go through the
  * handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedAstrology(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedAstrologyVocabularies);
+export async function seedAstrology(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
+  await beginSeedTransaction(db, seedAstrologyVocabularies, options);
 }
 
 /**

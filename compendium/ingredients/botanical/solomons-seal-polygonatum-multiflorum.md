@@ -122,6 +122,7 @@ variants:
           - form
           - description
           - colours
+seedUpdate: ebc3ea5f971c622d36325383386b87ab3698b80d8f222b22e5f50558148307c6
 ---
 
 # Solomon's Seal

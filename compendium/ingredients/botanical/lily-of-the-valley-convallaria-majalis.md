@@ -119,6 +119,7 @@ variants:
         supports:
           - description
           - colours
+seedUpdate: 03fc74880fd2dd511f2331c57ea90a983ed4a7d8ac84d0cea92eb0d93b64f887
 ---
 
 # Lily of the Valley

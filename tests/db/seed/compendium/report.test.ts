@@ -17,7 +17,7 @@ function fullReport(): SeedCompendiumReport {
     inserted: 3,
     skipped: 4,
     updated: [UPDATED],
-    pending: [PENDING],
+    pending: [{ where: PENDING, differs: ['toxic'] }],
     retired: [RETIRED],
     adopted: [{ where: ADOPTED, differs: ['description', 'variants'] }],
     refused: [
@@ -33,6 +33,14 @@ describe('formatReport', () => {
     expect(lines).toContain(`UPDATED ${UPDATED}`);
     expect(lines).toContain(`PENDING ${PENDING}`);
     expect(lines).toContain(`RETIRED ${RETIRED}`);
+  });
+
+  it('prints a pending entry, then the fields that differ on the next line', () => {
+    const lines = formatReport(fullReport()).split('\n');
+
+    const at = lines.indexOf(`PENDING ${PENDING}`);
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(lines[at + 1]).toBe('  differs: toxic');
   });
 
   it('prints a refused entry with its reason, then the fields that differ on the next line', () => {

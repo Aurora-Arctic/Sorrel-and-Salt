@@ -94,6 +94,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 807af5e191fb046506a237967603d0adf82e91c34893d3a1a795da775eaf7c52
 ---
 
 # Black Locust

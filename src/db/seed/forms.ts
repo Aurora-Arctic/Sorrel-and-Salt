@@ -4,6 +4,7 @@ import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
 import type {
   SeedDatabase,
+  SeedRunOptions,
   SeedIngredientForm,
   SeedIngredientFormGroup,
   SeedTransaction,
@@ -357,8 +358,8 @@ export const FORMS: SeedIngredientForm[] = [
  * Seeds §5's groups, then its forms, in a transaction of its own. Writes go
  * through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedForms(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedFormVocabulary);
+export async function seedForms(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
+  await beginSeedTransaction(db, seedFormVocabulary, options);
 }
 
 /**

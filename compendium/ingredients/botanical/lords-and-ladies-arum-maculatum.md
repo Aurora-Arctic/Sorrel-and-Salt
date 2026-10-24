@@ -110,6 +110,7 @@ variants:
         nameBasis: unaudited
         supports:
           - colours
+seedUpdate: eee835e4116ec7b6b5b2c8b84bb5b888cf203ebebb4ce3d84a293dd1cd11281e
 ---
 
 # Lords and Ladies

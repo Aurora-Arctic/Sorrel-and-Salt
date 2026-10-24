@@ -112,6 +112,7 @@ variants:
         supports:
           - form
           - colours
+seedUpdate: 4cec74c4c27c8af859607fa9af035c70978e742c20432320be35ebc523857164
 ---
 
 # Black Nightshade
