@@ -12,6 +12,8 @@
 //        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
 //        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
 //          --adopt lists the ADOPTED lines; --force lifts refusals 1 to 4 (M14.26)
+//        npm run db:seed:reference -- [--dry-run] [--adopt] [--force]
+//          all six above in one transaction, which a dry run rolls back once (M14.26)
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -26,6 +28,7 @@ import { seedForms } from '../src/db/seed/forms.ts';
 import { seedDeities } from '../src/db/seed/deities.ts';
 import { seedSources } from '../src/db/seed/sources.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
+import { seedReferenceData } from '../src/db/seed/reference-data.ts';
 import { formatReport, hasRefusals } from '../src/db/seed/compendium/report.ts';
 import { dropSchema } from '../src/db/seed/reset.ts';
 
@@ -41,6 +44,7 @@ const FLAGS: Record<string, readonly string[]> = {
   deities: ['--dry-run'],
   sources: ['--dry-run'],
   compendium: ['--dry-run', '--adopt', '--force'],
+  reference: ['--dry-run', '--adopt', '--force'],
 };
 const allowed = FLAGS[target] ?? [];
 for (const flag of flags) {
@@ -75,19 +79,25 @@ try {
   } else if (target === 'sources') {
     await seedSources(db, { dryRun });
     done("the vocabularies' sources and their links");
-  } else if (target === 'compendium') {
+  } else if (target === 'compendium' || target === 'reference') {
     // M14.7: one line per entry the run updated, refused, left pending or
     // found retired, then the totals; a refused entry exits 1, which fails
-    // the deploy's seed step so the refusal is read, not buried.
+    // the deploy's seed step so the refusal is read, not buried. `reference`
+    // runs the five vocabulary seeds first, in the same transaction (M14.26).
     const force = flags.has('--force');
-    const report = await seedCompendium(db, undefined, { dryRun, force });
+    const report =
+      target === 'reference'
+        ? await seedReferenceData(db, { dryRun, force })
+        : await seedCompendium(db, undefined, { dryRun, force });
     console.log(formatReport(report, { adopt: flags.has('--adopt') }));
     if (hasRefusals(report)) process.exitCode = 1;
     if (force) console.log('Forced: refusals 1 to 4 were lifted for every marked entry.');
+    const what =
+      target === 'reference'
+        ? 'the five vocabularies, their sources and the compendium'
+        : 'the compendium: its entries, their forms and their sources';
     console.log(
-      dryRun
-        ? 'Dry run: the compendium was decided and nothing written.'
-        : 'Seeded the compendium: its entries, their forms and their sources.',
+      dryRun ? `Dry run: decided ${what}, then rolled back; nothing written.` : `Seeded ${what}.`,
     );
   } else if (target === 'drop') {
     // The one guard on the one destructive verb: nothing in CI calls it, so a
@@ -103,7 +113,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "reference" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {
