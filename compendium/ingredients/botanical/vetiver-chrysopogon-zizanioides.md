@@ -100,6 +100,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 77afdc1a7c769a6819bba2fa999fe5f14b04e481421a07ae249369e378ccc866
 ---
 
 # Vetiver

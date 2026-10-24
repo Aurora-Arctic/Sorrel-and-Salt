@@ -93,6 +93,7 @@ variants:
           - form
           - safetyNotes
           - description
+seedUpdate: 7330501ce20643f6882772cdf22accc366ad4b86d514ab4d450bd458f10d46a4
 ---
 
 # Stinging Nettle

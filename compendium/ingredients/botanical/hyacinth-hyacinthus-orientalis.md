@@ -89,6 +89,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d373b3e9b9844d79a54b1da75e4a108cc1b6f92f0c1392e332e3155f7a3457d3
 ---
 
 # Hyacinth

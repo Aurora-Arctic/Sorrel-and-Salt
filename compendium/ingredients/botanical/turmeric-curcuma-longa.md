@@ -98,6 +98,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: d774a61fa55b2f4d28bc2c0d214f4e92b7e6d57f737551636b06b88457bffcbb
 ---
 
 # Turmeric
