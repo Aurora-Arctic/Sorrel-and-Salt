@@ -6,8 +6,11 @@ bar along the bottom edge of the global bar while a navigation is on its way.
 
 ## The look
 
-- 3px tall, in `$accent`, `position: fixed` under the global bar, above the
+- 3px tall, in `$accent`, `position: fixed` on the bottom edge of the global bar, above the
   page (`layer('banner')`), and never takes a click.
+- Where a page draws no global bar (`/` shows the site name alone) it sits at the top of the
+  window. A `:root:has(.app-shell__bar, .public-frame__bar)` rule lowers it onto the bar's edge
+  only when a frame draws one; a browser without `:has()` leaves it at the top.
 - A segment 40% of the width sweeps across every `$shimmer-duration` (1.4s)
   through `loading-motion`. Under reduced motion the segment fills the bar and
   pulses on `loading-pulse` instead.
