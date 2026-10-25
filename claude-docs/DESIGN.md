@@ -487,7 +487,7 @@ A stock row is of one form: `variantId` is `NOT NULL`, since a jar of Rosemary h
 
 `lowStockThreshold` is written onto the row at creation with a dimension-appropriate default (3 for count, 10 g for weight, 15 ml for volume, converted into the row's unit), not left null and defaulted at read time.
 
-**`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`, `sealWaxColor`, `moonPhase`, `dayOfWeek`, `note`, `status` (`draft` | `complete`), `visibility` (`private` | `workspace`, default `workspace`), + audit. `note` is a free-text line on the spell as a whole; the ritual itself is its steps, below (story 80, M13.1). Until M13.9 the table also keeps `instructions`, the old name of `note`, which the code writes as well, because the deploy before M13.1 still reads it ([`m13.1-spell-steps.md`](design-decisions/m13.1-spell-steps.md)).
+**`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`, `sealWaxColor`, `moonPhase`, `dayOfWeek`, `note`, `status` (`draft` | `complete`), `visibility` (`private` | `workspace`, default `workspace`), `revision`, + audit. `title` is nullable while the spell is a draft, because it is saved as it is typed before it has a name, and `CHECK (status <> 'complete' OR title IS NOT NULL)` requires it to complete (M13.15); a draft with no title reads as "Untitled Spell". `revision` is a counter, `integer NOT NULL DEFAULT 1`, that the shared trigger function `bump_revision()` raises by one on every update; a write that names the revision it read is refused when the row has moved on, which is how two people editing one spell are told apart (story 81, M13.14 to M13.19; [`m13.14-autosave.md`](design-decisions/m13.14-autosave.md)). `note` is a free-text line on the spell as a whole; the ritual itself is its steps, below (story 80, M13.1). Until M13.9 the table also keeps `instructions`, the old name of `note`, which the code writes as well, because the deploy before M13.1 still reads it ([`m13.1-spell-steps.md`](design-decisions/m13.1-spell-steps.md)).
 
 **Visibility.** A `workspace` spell is readable by every member, viewers included. A `private` spell is readable only by its author — against owners too. Owners and members create and edit; viewers create and edit nothing, including private spells.
 
@@ -1450,7 +1450,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 29. Only `name` required, so I can save a stub and enrich it later.
 30. Pick categories from the category picker, its chosen categories as chips inside the control (MB.126).
 31. See inline validation errors.
-32. Get a discard warning on unsaved changes.
+32. Get a discard warning on unsaved changes: closing the modal, and on every long form closing or reloading the tab or following a link (M13.14).
 33. Edit form pre-filled; reachable from the list row and from the entry page, never from the shell (MB.7).
 34. List reflects the edit immediately on save.
 
@@ -1491,6 +1491,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### Spell steps (M13.1)
 
 80. Record a spell's steps in one order, each an instruction, an ingredient, or both, so the ritual is kept beside what goes in the jar.
+
+### Autosave (M13.14–M13.19)
+
+81. As a coven member, I want nothing I type into a spell to be lost, so that I can build it over several sittings and devices. A spell saves to its own row as it is typed, 3 seconds after the last change and at most 30 seconds apart, on a draft and on a complete spell alike, and the person is warned before closing the tab or following a link with a change not yet saved (M13.14 extends story 32 to every long form). A save names the revision it read; if someone else saved first, the builder offers Reload Latest or Keep My Version. While the builder is open it checks the spell every 10 seconds: fields the person has not touched update by themselves, and another member whose save is under 2 minutes old is shown as editing.
 
 Keeping a spell `private` while building it, and the one-way widen to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 
@@ -1809,6 +1813,8 @@ One PL/pgSQL trigger applied to every table. Because it reads `to_jsonb(NEW)` ge
 Store only changed keys in `old_values`/`new_values`, with `changed_keys` as the index; reconstruct by replaying forward. Collapse revisions older than a year into a snapshot.
 
 Visibility flips on notes land in `changed_keys`, giving a queryable record of exactly when something went public and who did it.
+
+`spells.revision` is already the v1 counter: M13.15 adds it with the shared `bump_revision()` function and a trigger per table, for the edit-conflict check (story 81). In v2 the same function also inserts the `record_revisions` row from `OLD` and `NEW`, so the two counters cannot disagree, and `record_revisions.revision` for a spell equals `spells.revision` for the same change. v1 builds no history table, snapshots or timeline ([`design-decisions/m13.14-autosave.md`](design-decisions/m13.14-autosave.md)).
 
 **A spell pins what went into it.** In v1 a layer reaches its ingredient's row as the row is now, deleted or not (§5, `spell_steps`). In v2 a layer references the exact revision of its ingredient. When the ingredient has been modified since, the spell says so, and the user can pull that precise modification into the spell — as a new revision of the spell, never a silent change to a record of a working. A working (M13.4) is made from a finished recipe that stays editable, so in v2 each working pins the spell revision it was made from, as a layer pins its ingredient's ([`m13.1-plan.md`](design-decisions/m13.1-plan.md)).
 
