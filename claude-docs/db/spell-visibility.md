@@ -144,3 +144,26 @@ proof's clause, so another coven's row and a compendium row are written
 nothing and returned as nothing. Like `updateByIdInWorkspace` it admits
 `spells`, whose visibility its type cannot see, so a spell's delete reads
 `findOneSpell` first, as `setSpellVisibility` does.
+
+### The spell service (M10.5)
+
+`src/modules/grimoire/services/spells.ts` is where a coven's members meet the
+grimoire. Owners and members hold `spell: create` and `update`, a viewer holds
+`read` alone, and `assertMembership` refuses everyone else, a site admin
+included.
+
+| Call                               | Does                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| `createSpell` / `updateSpell`      | write the spell's own fields; `updateSpell` never changes the visibility       |
+| `listSpells` / `getSpell`          | read through `findManySpells` / `findOneSpell`; `getSpell` adds the steps      |
+| `addSpellStep` / `updateSpellStep` | write a one-off ingredient or an instruction, only on a spell the caller reads |
+
+A call that names a spell reads it first as the caller. A private spell of
+someone else, and a spell of another coven, both come back `NotFound`, so the
+refusal does not confirm the spell exists. A step has no scope of its own, so
+the spell read is what makes it writable exactly when its spell is readable.
+
+`getSpell` resolves each linked step's ingredient through
+`findIngredientsInSpellsIncludingSoftDeleted` and marks one deleted since with
+`deleted: true`. Linking a step to an ingredient, with the tier check that
+goes with it, and the list's paging are M10.10 and M10.9.

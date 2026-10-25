@@ -2,7 +2,19 @@
 // `@/modules/grimoire/schema/*`; `services/*` and `types.ts` are internal to
 // the module.
 export * from './services/spell-visibility';
-export type { SpellVisibility } from './types';
+export * from './services/spells';
+export type {
+  SpellDetail,
+  SpellInput,
+  SpellRow,
+  SpellStepInput,
+  SpellStepIngredient,
+  SpellStepRow,
+  SpellStepUpdate,
+  SpellStepView,
+  SpellUpdate,
+  SpellVisibility,
+} from './types';
 export * from './categories/summarize';
 export * from './categories/compare';
 export type { StepCategories, CategoryComparison } from './categories/types';
