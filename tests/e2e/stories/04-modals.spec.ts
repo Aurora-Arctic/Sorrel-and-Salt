@@ -569,6 +569,51 @@ test(
       await page.keyboard.press('Escape');
       await expect(reopened).toHaveCount(0);
     });
+
+    // Leaving the page (M13.14): a reload raises the browser's own question,
+    // whose wording is the browser's, and a link in the site asks the form's.
+    await test.step('a reload with unsaved input raises the browser’s question', async () => {
+      const reopened = await openAddIngredient(page);
+      await nameField(reopened).fill('Halvenseed');
+      const asked = page.waitForEvent('dialog').then(async (raised) => {
+        const kind = raised.type();
+        await raised.accept();
+        return kind;
+      });
+      await page.reload();
+      expect(await asked).toBe('beforeunload');
+      expect(await savedRows(coven.id, 'Halvenseed')).toHaveLength(0);
+    });
+
+    await test.step('a link away from a page form with a typed name asks Discard or Keep Editing', async () => {
+      await withSql((sql) =>
+        sql.begin(async (tx) => {
+          // A grant made by hand declares its route, as accounts-setup.ts's does:
+          // the privilege trigger refuses an undeclared change to the right.
+          await tx`select set_config('app.privilege_route', 'manual', true)`;
+          await tx`update users set can_create_workspace = true where id = ${coven.users.B}`;
+        }),
+      );
+      await page.goto('/coven/new');
+      const covenName = page.getByRole('textbox', { name: 'Name' });
+      await covenName.fill('Fixture Unmade Coven Story 32');
+      const away = page
+        .getByRole('navigation', { name: 'Site' })
+        .getByRole('link', { name: 'Compendium' });
+      const discard = page.getByRole('button', { name: 'Discard Changes' });
+      const keep = page.getByRole('button', { name: 'Keep Editing' });
+
+      await away.click();
+      await expect(keep).toBeFocused();
+      await keep.click();
+      await expect(keep).toHaveCount(0);
+      await expect(page).toHaveURL(/\/coven\/new$/);
+      await expect(covenName).toHaveValue('Fixture Unmade Coven Story 32');
+
+      await away.click();
+      await discard.click();
+      await expect(page).toHaveURL(/\/compendium$/);
+    });
   },
 );
 
