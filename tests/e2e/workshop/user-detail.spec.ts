@@ -139,7 +139,9 @@ for (const [width, height] of SIZES) {
       await page.goto('/?path=/story/admin-user-detail--in-a-modal&globals=theme:dark');
       const frame = page.frameLocator('#storybook-preview-iframe').first();
       const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });
-      await expect(dialog).toBeVisible();
+      // A fresh `storybook dev` compiles the first story on its first load, and in CI
+      // that takes longer than the 5 s default.
+      await expect(dialog).toBeVisible({ timeout: 30_000 });
       const button = dialog.getByRole('button', { name: control, exact: true });
       await button.click();
       await confirm(dialog);
@@ -183,7 +185,7 @@ for (const { name, control, confirm } of CONTROLS) {
     await page.goto('/?path=/story/admin-user-detail--in-a-modal&globals=theme:dark');
     const frame = page.frameLocator('#storybook-preview-iframe').first();
     const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });
-    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeVisible({ timeout: 30_000 });
     const button = dialog.getByRole('button', { name: control, exact: true });
     await button.click();
     await confirm(dialog);

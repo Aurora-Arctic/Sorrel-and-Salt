@@ -26,8 +26,8 @@ export const spells = pgTable('spells', {
   sealWaxColor: text('seal_wax_color'),
   moonPhase: text('moon_phase'),
   dayOfWeek: text('day_of_week'),
-  // The old name of `note`, kept until M13.9 drops it: the deploy before this
-  // one writes only this column, so the code writes the same value to both.
+  // The old name of `note`, kept until M13.9 drops it. Nothing writes it: no
+  // spell has been written in production, so `note` alone is live.
   instructions: text('instructions'),
   // The spell's single free-text note. What to do lives in its steps
   // (`spell_steps.body`) now, not here.
