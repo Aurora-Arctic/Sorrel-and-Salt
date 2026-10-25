@@ -19,6 +19,19 @@ export const COMPENDIUM_TAG = 'compendium';
 export const COMPENDIUM_REVALIDATE_SECONDS = 3600;
 
 /**
+ * The deployment's own key part, so a new deployment reads under fresh keys.
+ * The seed runs outside Next and cannot expire the tag, and Vercel keeps the
+ * data cache from one deployment to the next, so without it a seeded change
+ * stays hidden for up to an hour. Vercel sets both variables at build and at
+ * runtime; with neither (local, tests) there is no part, so the keys are
+ * stable (claude-docs/db/compendium-cache.md, "The deployment key part").
+ */
+function deploymentKeyPart(): string[] {
+  const id = process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA;
+  return id ? [id] : [];
+}
+
+/**
  * `read`, held in the data cache under `COMPENDIUM_TAG` and keyed by `key` and
  * its arguments, so each argument list is an entry of its own. Only a read
  * every viewer sees alike may be wrapped: its arguments are the whole key, so
@@ -35,7 +48,7 @@ export function cachedCompendiumRead<A extends unknown[], R>(
 ): (...args: A) => Promise<R> {
   const cached = unstable_cache(
     async (...args: A) => superjson.stringify(await read(...args)),
-    [key],
+    [key, ...deploymentKeyPart()],
     { tags: [COMPENDIUM_TAG], revalidate: COMPENDIUM_REVALIDATE_SECONDS },
   );
   return async (...args) => superjson.parse<R>(await cached(...args));
