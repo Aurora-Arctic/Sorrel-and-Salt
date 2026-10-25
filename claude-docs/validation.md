@@ -17,7 +17,7 @@ surface"):
 | ------------------------------------------------------------ | --------------------------------------------------- |
 | `src/modules/ingredients/validation/ingredient.ts`           | `LocalIngredientInput`, `CompendiumIngredientInput` |
 | `src/modules/ingredients/validation/stock.ts`                | `StockInput`                                        |
-| `src/modules/grimoire/validation/spell.ts`                   | `SpellInput`                                        |
+| `src/modules/grimoire/validation/spell.ts`                   | `SpellInput`, `UpdateSpellInput`                    |
 | `src/modules/grimoire/validation/spell-step.ts`              | `SpellStepInput`                                    |
 | `src/modules/vocabulary/validation/category.ts`              | `CategoryInput`                                     |
 | `src/modules/vocabulary/validation/category-group.ts`        | `CategoryGroupInput`                                |

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_QUANTITY } from '@/modules/ingredients/schema/quantities';
 import { UNITS } from '@/modules/ingredients/schema/units';
-import { spellVisibility } from '@/modules/grimoire/schema/spells';
-import { SpellInput } from '@/modules/grimoire/validation/spell';
+import { spellStatus, spellVisibility } from '@/modules/grimoire/schema/spells';
+import { SpellInput, UpdateSpellInput } from '@/modules/grimoire/validation/spell';
 import { SpellStepInput } from '@/modules/grimoire/validation/spell-step';
 
 // The schema mirrors spell_steps' CHECKs so the database is never what a user
@@ -126,16 +126,40 @@ describe('SpellStepInput', () => {
 });
 
 describe('SpellInput', () => {
-  it('needs only a title; steps default to none', () => {
+  it('needs no title, and steps default to none', () => {
     expect(SpellInput.parse({ title: ' Testwort Jar ' })).toMatchObject({
       title: 'Testwort Jar',
       steps: [],
     });
   });
 
-  it('refuses a blank or missing title', () => {
-    expect(SpellInput.safeParse({ title: '  ' }).success).toBe(false);
-    expect(SpellInput.safeParse({}).success).toBe(false);
+  // M13.15 CHECK: status <> 'complete' OR title IS NOT NULL
+  it('takes a draft with no title, blank or missing', () => {
+    expect(SpellInput.safeParse({}).success).toBe(true);
+    expect(SpellInput.safeParse({ status: 'draft' }).success).toBe(true);
+    expect(SpellInput.parse({ status: 'draft', title: '  ' }).title).toBeNull();
+  });
+
+  it('refuses a complete spell with no title, at the title', () => {
+    for (const title of [undefined, null, '', '   ']) {
+      const result = SpellInput.safeParse({ status: 'complete', title });
+      expect(
+        result.error?.issues.map((issue) => issue.path),
+        String(title),
+      ).toEqual([['title']]);
+      expect(result.error?.issues[0]?.message).toMatch(/title/i);
+    }
+  });
+
+  it('takes a complete spell with a title', () => {
+    expect(SpellInput.parse({ status: 'complete', title: ' T ' }).title).toBe('T');
+  });
+
+  it('lists the statuses the column holds, and refuses any other', () => {
+    for (const status of spellStatus.enumValues) {
+      expect(SpellInput.safeParse({ title: 'T', status }).success, status).toBe(true);
+    }
+    expect(SpellInput.safeParse({ title: 'T', status: 'archived' }).success).toBe(false);
   });
 
   it('takes the two visibilities and refuses any other', () => {
@@ -171,5 +195,34 @@ describe('SpellInput', () => {
   it('reports a bad step at its index', () => {
     const result = SpellInput.safeParse({ title: 'T', steps: [{ body: 'One' }, {}] });
     expect(result.error?.issues.map((issue) => issue.path.slice(0, 2))).toEqual([['steps', 1]]);
+  });
+});
+
+describe('UpdateSpellInput', () => {
+  it('takes the revision it was loaded at, or null to overwrite', () => {
+    expect(UpdateSpellInput.parse({ title: 'T', expectedRevision: 3 }).expectedRevision).toBe(3);
+    expect(
+      UpdateSpellInput.parse({ title: 'T', expectedRevision: null }).expectedRevision,
+    ).toBeNull();
+  });
+
+  it('refuses a missing or malformed revision, at its field', () => {
+    for (const expectedRevision of [undefined, 0, -1, 1.5, '2']) {
+      const result = UpdateSpellInput.safeParse({ title: 'T', expectedRevision });
+      expect(
+        result.error?.issues.map((issue) => issue.path),
+        String(expectedRevision),
+      ).toEqual([['expectedRevision']]);
+    }
+  });
+
+  it('holds the same rules as the create input', () => {
+    expect(
+      UpdateSpellInput.safeParse({ status: 'complete', expectedRevision: 1 }).error?.issues[0]
+        ?.path,
+    ).toEqual(['title']);
+    expect(
+      UpdateSpellInput.safeParse({ title: 'T', expectedRevision: 1, steps: [{}] }).success,
+    ).toBe(false);
   });
 });

@@ -1,23 +1,62 @@
 import { z } from 'zod';
-import { optionalText, requiredText } from '../../../lib/validation';
-import type { SpellVisibility } from '../types';
+import { optionalText } from '../../../lib/validation';
+import type { SpellStatus, SpellVisibility } from '../types';
 import { SpellStepInput } from './spell-step';
 
 // A spell as the builder and the mutation both read it. Pure: it imports no
 // server-only module, so the form runs the same schema the service does
 // (claude-docs/validation.md).
 
+// Both lists are written out because the table's enums would pull the database
+// schema into the browser; the `satisfies` and a test keep each equal to its
+// column.
 const VISIBILITIES = ['private', 'workspace'] as const satisfies readonly SpellVisibility[];
+const STATUSES = ['draft', 'complete'] as const satisfies readonly SpellStatus[];
 
-export const SpellInput = z.object({
-  // The only required field: a spell is a workspace and a title.
-  title: requiredText('Give the spell a title'),
-  // Listed here because the table's enum would pull the database schema into
-  // the browser; the `satisfies` and the test keep it equal to the column.
+// Kept apart from the rule below because Zod will not extend a schema that
+// already carries a refinement, and the update input extends this one.
+const SpellFields = z.object({
+  // Optional here, required once the spell is complete (see `titleRule`). A
+  // blank title is no title, as `optionalText` reads it.
+  title: optionalText(),
   // `public` is deferred with the notes subsystem (§13).
   visibility: z.enum(VISIBILITIES, { error: 'Choose private or workspace' }).optional(),
+  // Left out means the column's default (a draft) on create, and unchanged on
+  // update.
+  status: z.enum(STATUSES, { error: 'Choose draft or complete' }).optional(),
   // The spell's single free-text note; blank is none.
   note: optionalText(),
   // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
 });
+
+// Mirrors M13.15's CHECK, `status <> 'complete' OR title IS NOT NULL`, so the
+// database never refuses what validation passed. A draft saved as the member
+// types may have no title yet.
+function titleRule(
+  spell: { title?: string | null; status?: SpellStatus },
+  context: z.RefinementCtx,
+) {
+  if (spell.status === 'complete' && spell.title == null) {
+    context.addIssue({
+      code: 'custom',
+      path: ['title'],
+      message: 'Give the spell a title before marking it complete',
+    });
+  }
+}
+
+export const SpellInput = SpellFields.superRefine(titleRule);
+
+// An update also says which revision of the spell it was written against, so
+// a save over someone else's change is caught (claude-docs/design-decisions/
+// m13.14-plan.md, "Server contract"). Null overwrites without checking: the
+// "Keep My Version" path. Required, never left out by accident. Revisions
+// count from 1.
+export const UpdateSpellInput = SpellFields.extend({
+  expectedRevision: z
+    .number({ error: 'Expected revision must be a number or null' })
+    .int({ error: 'Expected revision must be a whole number' })
+    .positive({ error: 'Expected revision must be at least 1' })
+    .nullable(),
+}).superRefine(titleRule);
