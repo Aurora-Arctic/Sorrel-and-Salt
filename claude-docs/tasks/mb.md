@@ -1900,6 +1900,8 @@ M4.5 covers ingredient and category only. M10.10 needs the spell equivalent. It 
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the layer list becomes one ordered `steps` list (M13.1). A step is `{ body?, ingredientId + variantId | name + form?, quantity?, unit?, note? }`: at least one of an instruction (`body`) or an identity, at most one identity, and `quantity`, `unit` and `note` only beside an identity. A linked ingredient always names its variant, as `spell_steps_variant_with_ingredient` requires (MB.215). The spell gains its free-text `note`.
 
+**Amended 2026-10-25 by the autosave plan** ([`design-decisions/m13.14-plan.md`](../design-decisions/m13.14-plan.md)): the title is optional while `status` is `draft` and required when it is `complete`, as a `superRefine` over the pair that mirrors M13.15's CHECK (`status <> 'complete' OR title IS NOT NULL`), so the database never refuses what validation passed. The update input takes `expectedRevision: number | null`. The step schema is unchanged.
+
 _Acceptance criteria:_
 
 - One schema shared by client and server
