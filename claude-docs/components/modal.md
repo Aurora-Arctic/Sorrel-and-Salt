@@ -245,7 +245,18 @@ the tab, reloading, and on a page form a link (see the last point below).
   Editing** (`.btn--quiet`), on a `.modal__actions` row. A form with a
   question of its own asks this one first, in that one's place, since it is
   what a way out would lose; Keep Editing brings the other back.
-- **Focus.** The question takes the focus on Keep Editing, the safe answer,
+- **On a page the question is a dialog of its own** (M13.14, the owner's
+  call). A form outside a modal has no modal to ask over, and a card in the
+  page's own form read as part of it. So `DiscardQuestion`, finding no
+  `CloseGuardContext` slot, renders a `Modal` titled "Discard Changes?",
+  portalled to the document body so it is not inside the form, with the same
+  sentence and the same two answers. The form draws it the same way, so a
+  page form needs nothing of its own. The focus goes to Keep Editing as it
+  opens; Escape, Close and a click outside are Keep Editing; the modal gives
+  the focus back to what had it, usually the link that was followed. Discard
+  Changes closes it and lets the navigation go. Nothing flashes, since the
+  page behind is inert while it is open.
+- **Focus** (in a modal). The question takes the focus on Keep Editing, the safe answer,
   as the forms' Delete questions do. Keep Editing puts it away with nothing
   lost and the focus back where it was: Cancel, which stays beneath the
   question now, the field Escape was pressed in, or the Close button. If
@@ -254,7 +265,7 @@ the tab, reloading, and on a page form a link (see the last point below).
   browser drew no ring for it, since it draws a scripted focus's ring only when
   the focus it replaced had one, so the card's quiet answer shows its keyboard
   look on any `:focus` (M8.16, measured in Chromium).
-- **Tried again while asking, it flashes** (MB.115, the owner's call), so
+- **Tried again while asking, it flashes** (in a modal; MB.115, the owner's call), so
   the person sees why nothing closed. Each try by Close, Escape or the
   backdrop counts in `guard.flashes`, which the card carries as
   `data-flash`, and draws a fresh `.confirm-overlay__flash` layer over the

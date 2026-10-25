@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { type ReactElement, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,7 +15,8 @@ const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigat
 // an in-app navigation asks Discard or Keep Editing from a form on a page. In
 // a modal the page behind is inert, and the navigations that start there are
 // the form's own, after a save or a discard, so they go unheld
-// (claude-docs/components/modal.md, "Unsaved changes").
+// (claude-docs/components/modal.md, "Unsaved changes"). On a page the
+// question opens as a dialog of its own; in a modal it is drawn over the form.
 
 /** A form with one field, guarded, drawing the question over itself while asking. */
 function GuardedForm({ close = () => {} }: { close?: () => void }): ReactElement {
@@ -79,23 +80,40 @@ describe('useDiscardGuard on a page', () => {
     expect(router.push).toHaveBeenCalledWith('/elsewhere');
   });
 
-  it('asks before a navigation leaves what was typed, and goes on Discard Changes', () => {
+  const question = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
+
+  it('asks in a dialog before a navigation leaves what was typed, and goes on Discard Changes', async () => {
     renderPage();
     type('Testwort');
     expect(unload()).toBe(true);
 
     fireEvent.click(button('Go'));
-    expect(asking()).toBeInTheDocument();
+    const dialog = question();
+    expect(dialog).toBeInTheDocument();
+    // A dialog of its own, not a card in the form.
+    expect(dialog!.closest('form')).toBeNull();
+    await waitFor(() =>
+      expect(within(dialog!).getByRole('button', { name: 'Keep Editing' })).toHaveFocus(),
+    );
     expect(router.push).not.toHaveBeenCalled();
 
-    fireEvent.click(button('Keep Editing'));
-    expect(asking()).toBeNull();
+    fireEvent.click(within(dialog!).getByRole('button', { name: 'Keep Editing' }));
+    expect(question()).toBeNull();
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
     expect(router.push).not.toHaveBeenCalled();
 
+    // Escape is Keep Editing too.
     fireEvent.click(button('Go'));
-    act(() => fireEvent.click(button('Discard Changes')));
+    fireEvent(question()!, new Event('cancel', { cancelable: true }));
+    expect(question()).toBeNull();
+    expect(router.push).not.toHaveBeenCalled();
+
+    fireEvent.click(button('Go'));
+    act(() =>
+      fireEvent.click(within(question()!).getByRole('button', { name: 'Discard Changes' })),
+    );
     expect(router.push).toHaveBeenCalledWith('/elsewhere');
+    expect(question()).toBeNull();
   });
 });
 
