@@ -28,6 +28,13 @@ function open() {
   fireEvent.click(trigger());
 }
 
+/** A tab close or reload as the browser raises it: true when something cancelled it. */
+function unload(): boolean {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
 function type(address: string) {
   fireEvent.change(emailField(), { target: { value: address } });
 }
@@ -211,9 +218,13 @@ describe('InviteDialog', () => {
   });
 
   // The guard's own shape is tests/components/Modal's; this is its wiring here.
-  it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', async () => {
+  // A navigation from inside a modal goes unheld (tests/components/Modal/discard.test.tsx),
+  // so the leave guard here is the tab close and reload (M13.14).
+  it('asks before Cancel, Escape or a tab close discards what was typed, and closes on Discard Changes', async () => {
     open();
+    expect(unload()).toBe(false);
     type('ada@example.test');
+    expect(unload()).toBe(true);
     const discard = () => screen.queryByRole('button', { name: 'Discard Changes' });
 
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
@@ -229,6 +240,7 @@ describe('InviteDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
+    expect(unload()).toBe(false);
   });
 
   it('opens blank again after an invitation was sent', async () => {
