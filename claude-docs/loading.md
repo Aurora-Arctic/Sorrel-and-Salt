@@ -212,6 +212,11 @@ exported from its `index.ts`.
   reads it from the store. On `PendingLink` the same thing is the prop
   `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
 
+A navigation waits first on any mounted page form with unsaved changes
+(`useLeaveGuard`, M13.14): that form asks Discard Changes or Keep Editing,
+and the navigation starts only on Discard Changes. A refresh is never held
+([`components/modal.md`](components/modal.md), "Unsaved changes").
+
 Under the hood, `NavigationProvider` holds the site-wide wait (who started it
 and its target) in React context, so the bar and the regions can follow a
 navigation that a button elsewhere in the tree started.

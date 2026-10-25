@@ -216,7 +216,8 @@ browser.
 Every admin form asks before its changes are thrown away (MB.115, the
 owner's call): Cancel, the Close button, Escape and a click outside alike.
 One guard does it for all of them, in `discard.tsx`, rather than a copy in
-each form.
+each form. Since M13.14 the same guard also covers leaving the page: closing
+the tab, reloading, and on a page form a link (see the last point below).
 
 - **The form says whether it has changes.** `useDiscardGuard(dirty)` takes
   the form's `formState.isDirty`, the flag that turns its Save on (the
@@ -230,7 +231,8 @@ each form.
   would make; a form with changes holds that close back and asks. Nothing is
   consulted once the modal is closing. A slot rather than a prop because the
   form sits inside the modal's render prop, out of its owner's reach. Outside
-  a modal there is no slot, and the guard covers Cancel alone.
+  a modal there is no slot: the guard covers the form's Cancel, and leaving
+  the page as below.
 - **Saving and deleting never ask.** They close through `children(close)`,
   the modal's own close, which nothing guards, since a form just saved still
   reads as changed until it resets.
@@ -266,9 +268,42 @@ each form.
   a repeat is a change and is read again. Keep Editing sets the count back
   to 0.
 - **Undo can release the guard.** A form with undo and redo ([`field.md`](field.md#undo-and-redo)) that is undone back to its starting values is no longer dirty, so Cancel and the other ways out close at once again. The undo is off while the question is asked.
-- **The browser's own ways out are not covered.** Back, a reload or closing
-  the tab leave without asking: no `beforeunload` handler is added, since the
-  modals are opened by their address and Back is how one is left.
+- **Leaving the page asks too** (M13.14, story 32). `useDiscardGuard` calls
+  `useLeaveGuard(dirty, request)` from `src/lib/navigation/leave-guard.tsx`:
+  - **Closing the tab or reloading** with changes raises the browser's own
+    question. While the form has changes a `beforeunload` listener (the
+    event a browser fires as a tab is about to close or reload) cancels the
+    unload; the wording is the browser's, since a page's own text is ignored.
+    The listener is removed as soon as the form has no changes, or goes,
+    because a page that always listens can lose the browser's back-forward
+    cache. This holds in a modal and on a page alike.
+  - **A link or any other in-app navigation** from a page form asks this
+    same question. `NavigationProvider` owns a slot, `LeaveGuardContext`,
+    which the hook fills while the form is mounted, and `navigate()` — the
+    one way the site navigates, `PendingLink` included — consults it before
+    it starts: with no changes it goes at once; with changes it is held, and
+    Discard Changes lets it go. Where several guarded forms are mounted, the
+    first with changes asks.
+  - **In a modal, navigation is not held** (`holdNavigation: false`). The page
+    behind a modal is inert, so no link there can be pressed; the
+    navigations that start from a modal are the form's own — the page it
+    goes to after a save, and `RouteModal`'s close after Discard Changes —
+    and the form still reads as changed at that moment, so holding them would
+    ask after a save, or ask again after Discard.
+  - **A page form busy saving does not ask.** `CreateWorkspaceForm` passes
+    `!empty && !busy`, so its own navigation to the new coven goes unheld.
+  - **Back, Forward and an address-bar edit are not covered.** Next 16 gives
+    no way to cancel a history move, and patching `history.pushState` is
+    fragile; autosave (M13.16, M13.17) protects the spell builder there.
+  - **`onHide`**, an option of `useLeaveGuard`, is called when the tab
+    becomes hidden (`visibilitychange` to `hidden`), the one moment phones
+    report reliably, where `beforeunload` often never fires. Nothing passes it
+    yet; M13.16's autosave will, to save at once.
+  - **Every form is held to it** by `tests/guards/leave-guard.test.ts`: a
+    component that draws a `<form>`, renders `FormActions` or calls
+    react-hook-form's `useForm` must call `useDiscardGuard` or
+    `useLeaveGuard`, or be named in that test's list with why. `NameForm`
+    and `EmailForm`, one short field each, are on it.
 
 ## Asking over the form
 
