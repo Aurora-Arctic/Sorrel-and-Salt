@@ -38,5 +38,5 @@ Run this only when the user asks to check against the board ("verify", "check th
 ## Notes
 
 - Everything is read-only: the skill changes no files, branches or issues. The one exception is an edit to `tally.mjs` that the user approves in verify mode. `create-pr` ends the body of each PR it opens or updates with `tally.mjs`'s output; that write is `create-pr`'s, not this skill's.
-- The open-branch count is any `feature/*`/`hotfix/*` branch, local or pushed, whose id has not merged — even one with no commits yet. It measures work under way, not open PRs.
+- The open-branch count is any `feature/*`/`hotfix/*` branch, local or pushed, whose id has not merged — even one with no commits yet. A retired id is excluded. It measures work under way, not open PRs.
 - A task done in a PR whose branch and subject both omit its id will read as remaining. Verify mode catches it, and the fix is the done-outside-git list, not a looser regex. An id mentioned mid-sentence is a reference, not a completion.

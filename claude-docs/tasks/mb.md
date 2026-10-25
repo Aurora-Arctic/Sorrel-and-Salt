@@ -253,6 +253,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9   | MB.249                 |
 | MB.248 | The compendium seed: stones and metals                                                                                   | Wave 14  | MB.249                 |
 | MB.249 | Close the compendium seed                                                                                                | Wave 14  | —                      |
+| MB.250 | ~~Add the compendium roster addendum~~ — **retired into M14.14, not done**                                               | —        | —                      |
 | MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8   | MB.253, MB.254         |
 | MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9   | MB.253                 |
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9   | MB.254                 |

@@ -91,7 +91,7 @@ for (const branch of git('branch', '-a', '--format=%(refname:short)').split('\n'
   const m = /(?:^|\/)(?:feature|hotfix)\/(?:backlog-)?(m[a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-/i.exec(
     branch,
   );
-  if (m && !done.has(norm(m[1]))) open.add(norm(m[1]));
+  if (m && !done.has(norm(m[1])) && !plan.get(norm(m[1]))?.retired) open.add(norm(m[1]));
 }
 
 const t = { done: 0, doneH: 0, left: 0, leftH: 0, retired: 0 };
