@@ -59,7 +59,7 @@ describe('createSpell', () => {
     });
   });
 
-  it('keeps the author’s choice of visibility and writes the free-text note to both columns', async () => {
+  it('keeps the author’s choice of visibility and writes the free-text note', async () => {
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Quiet Working',
       visibility: 'private',
@@ -69,7 +69,6 @@ describe('createSpell', () => {
     expect(spell).toMatchObject({
       visibility: 'private',
       note: 'Do it at dusk.',
-      instructions: 'Do it at dusk.',
     });
   });
 
@@ -136,10 +135,10 @@ describe('updateSpell', () => {
     expect(updated.visibility).toBe('private');
   });
 
-  it('writes a changed note to both columns', async () => {
+  it('writes a changed note', async () => {
     const id = await seed(B);
     const updated = await updateSpell(asUser(B), WORKSPACE_W_ID, id, { note: 'New note' });
-    expect(updated).toMatchObject({ note: 'New note', instructions: 'New note' });
+    expect(updated).toMatchObject({ note: 'New note' });
   });
 
   it('refuses a viewer on a spell they can read', async () => {

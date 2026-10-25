@@ -332,11 +332,8 @@ async function workspaceIngredientIds(tx: SeedTransaction): Promise<Map<string, 
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
   await insertMissingBy(tx, spells, DEMO_SPELLS, {
     columns: ['id'],
-    // The note is written to `instructions` too until M13.9 drops it: the
-    // deploy before reads only that column.
     toRow: ({ categories: _categories, steps: _steps, ...spell }) => ({
       ...spell,
-      instructions: spell.note,
       workspaceId: WORKSPACE_W_ID,
     }),
   });

@@ -33,8 +33,8 @@ contracts it, three things from before stay:
   number. `position` is nullable until M13.9, because the deploy before writes
   `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
   `position` from `layer_order` for the rows already there.
-- **`spells.instructions`**, the old name of `spells.note`, written beside it
-  the same way and filled into it by `0083`.
+- **`spells.instructions`**, the old name of `spells.note`, filled into it by
+  `0083`. The code writes `note` alone from M10.5 on.
 
 `tests/db/schema-drift.test.ts` lists all three in `PENDING_DROPS`.
 

@@ -35,16 +35,6 @@ async function readableSpell(membership: Membership, spellId: string): Promise<S
 }
 
 /**
- * `note` is written to `instructions` too, until M13.9 drops the old column:
- * the deploy before this one writes only `instructions`.
- */
-function withInstructionsMirror<T extends { note?: string | null }>(
-  values: T,
-): T & { instructions?: string | null } {
-  return 'note' in values ? { ...values, instructions: values.note } : values;
-}
-
-/**
  * Makes a spell in the coven. It starts a draft, and shared unless the author
  * says `private`.
  *
@@ -57,7 +47,7 @@ export async function createSpell(
 ): Promise<SpellRow> {
   const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
   const [spell] = await withAudit(session, (write) =>
-    write.insertInWorkspace(membership, spells, withInstructionsMirror(input)),
+    write.insertInWorkspace(membership, spells, input),
   );
   return spell;
 }
@@ -78,7 +68,7 @@ export async function updateSpell(
   const membership = await assertMembership(session, workspaceId, { spell: ['update'] });
   await readableSpell(membership, spellId);
   const [spell] = await withAudit(session, (write) =>
-    write.updateByIdInWorkspace(membership, spells, spellId, withInstructionsMirror(input)),
+    write.updateByIdInWorkspace(membership, spells, spellId, input),
   );
   return spell;
 }
