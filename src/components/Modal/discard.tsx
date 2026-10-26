@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useContext, useEffect, useRef, useState } from 'react';
+import { useLeaveGuard } from '@/lib/navigation';
 import { CloseGuardContext } from './close-guard';
 import { ConfirmOverlay } from './confirm-overlay';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
@@ -13,12 +14,18 @@ import './index.scss';
 // changes and where Cancel goes, and draws the question over itself, as its
 // Delete question is (claude-docs/components/modal.md, "Unsaved changes").
 // Saving and deleting close through the modal's own close, which nothing
-// guards.
+// guards. Leaving the page is guarded too, through useLeaveGuard (M13.14):
+// closing the tab or reloading asks the browser's question, and on a page an
+// in-app navigation asks this one. In a modal navigations go unheld: the page
+// behind is inert, and what navigates from there is the form itself, after a
+// save, or the modal's close after Discard Changes, while the form still reads
+// as changed.
 
 /**
  * Guards a form's way out while `dirty`, its own `formState.isDirty`, the
  * flag that enables its Save. Inside a `Modal` it also guards the modal's
- * Close button, Escape and backdrop.
+ * Close button, Escape and backdrop; outside one, an in-app navigation. A
+ * tab close or reload asks the browser's question either way.
  */
 export function useDiscardGuard(dirty: boolean): DiscardGuard {
   const slot = useContext(CloseGuardContext);
@@ -51,11 +58,14 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
     return slot.put((close) => latest.current(close));
   }, [slot]);
 
+  const request = (close: () => void) => {
+    if (consult(close)) close();
+  };
+  useLeaveGuard(dirty, request, { holdNavigation: slot === null });
+
   return {
     asking,
-    request: (close) => {
-      if (consult(close)) close();
-    },
+    request,
     discard: () => held.current?.(),
     flashes,
     keepEditing: () => {

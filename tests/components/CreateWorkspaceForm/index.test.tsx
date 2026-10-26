@@ -11,6 +11,7 @@ const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
+const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // The create-workspace page's form (M9.16, Story 3). The mutation is answered
 // by MSW in the shape /api/graphql answers, so a refusal is read through the
@@ -127,5 +128,71 @@ describe('CreateWorkspaceForm', () => {
       'Creating a coven needs an invitation',
     );
     expect(push).not.toHaveBeenCalled();
+  });
+
+  // Leaving with a name typed (M13.14): the page sits in the site's
+  // NavigationProvider, as the providers put it.
+  describe('guarding a typed name', () => {
+    /** A link elsewhere on the page, as the site menu is. */
+    function Go() {
+      const navigation = usePendingNavigation();
+      return (
+        <button type="button" onClick={() => navigation.navigate('/compendium')}>
+          Compendium
+        </button>
+      );
+    }
+
+    function renderOnPage() {
+      renderForm(
+        <NavigationProvider>
+          <CreateWorkspaceForm />
+          <Go />
+        </NavigationProvider>,
+      );
+    }
+
+    /** A tab close or reload as the browser raises it: true when something cancelled it. */
+    function unload(): boolean {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    }
+
+    const link = () => screen.getByRole('button', { name: 'Compendium' });
+    const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
+
+    it('asks before a link or a tab close leaves a typed name, and goes on Discard Changes', () => {
+      renderOnPage();
+      fireEvent.click(link());
+      expect(push).toHaveBeenCalledExactlyOnceWith('/compendium');
+      expect(unload()).toBe(false);
+      push.mockClear();
+
+      fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+      expect(unload()).toBe(true);
+      fireEvent.click(link());
+      expect(asking()).toBeInTheDocument();
+      expect(push).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
+      expect(asking()).toBeNull();
+      expect(nameField()).toHaveValue('Fixture Coven');
+
+      fireEvent.click(link());
+      fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+      expect(push).toHaveBeenCalledExactlyOnceWith('/compendium');
+    });
+
+    it('lands in the new coven without asking', async () => {
+      acceptCreate('fixture-coven-2');
+      renderOnPage();
+
+      fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+      submit();
+
+      await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'));
+      expect(asking()).toBeNull();
+    });
   });
 });

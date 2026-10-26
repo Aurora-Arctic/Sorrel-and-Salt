@@ -7,6 +7,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
 // The create-workspace page's form (M9.16): one name, sent to M6.7's
@@ -64,6 +65,10 @@ const CreateWorkspaceForm = (): ReactElement => {
   const busy = mutation.isPending || leaving;
   // A blank name has nothing to create: the service would refuse it.
   const empty = value.trim() === '';
+  // A typed name, kept from a link, a tab close or a reload (M13.14). Not
+  // while busy: the navigation to the new coven is this form's own, and the
+  // render it reads is the one the request left busy.
+  const discard = useDiscardGuard(!empty && !busy);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -104,6 +109,7 @@ const CreateWorkspaceForm = (): ReactElement => {
           dirty={!empty}
           submitting={busy}
         />
+        {discard.asking && <DiscardQuestion guard={discard} />}
       </form>
     </>
   );
