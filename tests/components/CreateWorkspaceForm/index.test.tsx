@@ -160,7 +160,7 @@ describe('CreateWorkspaceForm', () => {
     }
 
     const link = () => screen.getByRole('button', { name: 'Compendium' });
-    const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
+    const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
 
     it('asks before a link or a tab close leaves a typed name, and goes on Discard Changes', () => {
       renderOnPage();
@@ -172,7 +172,9 @@ describe('CreateWorkspaceForm', () => {
       fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
       expect(unload()).toBe(true);
       fireEvent.click(link());
+      // A dialog of its own, not a card in the page's form.
       expect(asking()).toBeInTheDocument();
+      expect(asking()!.closest('form')).toBeNull();
       expect(push).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));

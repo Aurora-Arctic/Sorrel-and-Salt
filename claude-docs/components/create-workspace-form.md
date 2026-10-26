@@ -38,8 +38,8 @@ the creation service still refuses a user without the right
 With a name typed, the form asks before it is left (M13.14, story 32):
 closing the tab or reloading raises the browser's own question, and a link
 or any other in-app navigation asks "You have unsaved changes. Discard
-them?" with Discard Changes and Keep Editing, drawn in place beneath the
-form. It is `useDiscardGuard`, as the modal forms use
+them?" with Discard Changes and Keep Editing, in a dialog titled "Discard
+Changes?" over the page, not in the form's card (the owner's call). It is `useDiscardGuard`, as the modal forms use
 ([`modal.md`](modal.md), "Unsaved changes"), given `!empty && !busy`, so
 nothing asks while the coven is being made or on the way to it.
 

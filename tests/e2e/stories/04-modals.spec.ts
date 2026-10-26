@@ -604,6 +604,8 @@ test(
       const keep = page.getByRole('button', { name: 'Keep Editing' });
 
       await away.click();
+      // Its own dialog over the page, not a card in the page's form.
+      await expect(page.getByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
       await expect(keep).toBeFocused();
       await keep.click();
       await expect(keep).toHaveCount(0);
