@@ -14,8 +14,8 @@ import {
   throwWhenEmpty,
 } from '@/lib/graphql-client';
 import { expectConsole } from '../support/console-guard';
-import { GraphQLClientError } from '@/lib/graphql-client-error';
-import { graphqlLink, mockGraphQLQuery } from '../support/msw/graphql';
+import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
+import { graphqlLink, mockGraphQLError, mockGraphQLQuery } from '../support/msw/graphql';
 import { server } from '../support/msw/server';
 import type { OkQuery, OkQueryVariables, EchoQuery, EchoQueryVariables } from './types';
 
@@ -119,6 +119,25 @@ describe('graphqlRequest', () => {
     refuseOk();
 
     await expect(graphqlRequest(OkDocument)).rejects.toBeInstanceOf(GraphQLClientError);
+  });
+
+  it('throws StaleWriteError, carrying the revision the row is at now, for STALE_WRITE', async () => {
+    // The body is built by the route's own mapping, so this is the server's
+    // StaleWrite as the browser receives it.
+    mockGraphQLError('Ok', { code: 'STALE_WRITE', currentRevision: 7 });
+
+    const error = await graphqlRequest(OkDocument).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(StaleWriteError);
+    // Still a GraphQLClientError, so the form readers and the retry policy read it as one.
+    expect(error).toBeInstanceOf(GraphQLClientError);
+    expect((error as StaleWriteError).currentRevision).toBe(7);
+  });
+
+  it('throws a plain GraphQLClientError for any other code', async () => {
+    refuseOk();
+
+    await expect(graphqlRequest(OkDocument)).rejects.not.toBeInstanceOf(StaleWriteError);
   });
 
   it('refuses to run outside the browser, where no session cookie rides along', async () => {

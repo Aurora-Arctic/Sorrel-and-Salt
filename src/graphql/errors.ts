@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { maskError as yogaMaskError, type YogaServerOptions } from 'graphql-yoga';
-import { Forbidden, NotFound, ValidationError } from '../lib/errors';
+import { Forbidden, NotFound, StaleWrite, ValidationError } from '../lib/errors';
 import type { ErrorExtensions } from './types';
 
 // The transport's half of src/lib/errors.ts: each service error leaves with a
@@ -15,6 +15,9 @@ function extensionsFor(error: unknown): ErrorExtensions | null {
   }
   if (error instanceof Forbidden) return { code: 'FORBIDDEN' };
   if (error instanceof NotFound) return { code: 'NOT_FOUND' };
+  if (error instanceof StaleWrite) {
+    return { code: 'STALE_WRITE', currentRevision: error.currentRevision };
+  }
   return null;
 }
 

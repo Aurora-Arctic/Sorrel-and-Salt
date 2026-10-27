@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
 import { apiPath } from './api-path';
-import { GraphQLClientError } from './graphql-client-error';
+import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
 import type { VariablesArg } from './types';
 
 // The browser's half of the API: a small fetch wrapper sends a codegen document and
@@ -58,6 +58,11 @@ async function send<TResult, TVariables extends object>(
   // Typed by the result alone: `VariablesArg` has already held the variables
   // to the document's own at the call site. A partial answer never resolves.
   if (!response.ok || body?.errors?.length || body?.data == null) {
+    const stale = body?.errors?.find(({ extensions }) => extensions?.code === 'STALE_WRITE');
+    const currentRevision = stale?.extensions?.currentRevision;
+    if (typeof currentRevision === 'number') {
+      throw new StaleWriteError({ status: response.status, errors: body?.errors, currentRevision });
+    }
     throw new GraphQLClientError({ status: response.status, errors: body?.errors });
   }
   return body.data;
@@ -65,7 +70,8 @@ async function send<TResult, TVariables extends object>(
 
 /**
  * Runs one typed document against /api/graphql. Rejects with
- * `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole.
+ * `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole,
+ * and with its `StaleWriteError` subclass when the answer is STALE_WRITE.
  */
 export function graphqlRequest<TResult, TVariables extends object>(
   document: TypedDocumentNode<TResult, TVariables>,
