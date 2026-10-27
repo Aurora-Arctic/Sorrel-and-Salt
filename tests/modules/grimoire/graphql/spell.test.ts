@@ -71,7 +71,7 @@ const PAGE = `query (
 
 type SpellNode = {
   id: string;
-  title: string;
+  title: string | null;
   categories: { name: string }[];
   derivedCategories: { name: string }[];
   categoryGaps: {
@@ -258,6 +258,37 @@ describe('grimoire', () => {
       status: 'complete',
     });
     expect(titles(complete)).toEqual(['Alder Jar', 'Cedar Knot']);
+  });
+
+  // M13.15 lets a draft go untitled, so the title reads as null rather than
+  // failing the whole page, and an untitled draft sorts after every title.
+  it('reads an untitled draft as a null title, last by title', async () => {
+    for (const title of ['Birch Charm', 'Alder Jar']) {
+      await insertSpell(sql, makeSpell({ workspaceId: WORKSPACE_W_ID, title }), B.id);
+    }
+    const untitled = await insertSpell(
+      sql,
+      makeSpell({ workspaceId: WORKSPACE_W_ID, title: null, status: 'draft' }),
+      B.id,
+    );
+
+    const one = await run<{ spell: SpellNode }>(asUser(A), ONE, {
+      workspaceId: WORKSPACE_W_ID,
+      id: untitled,
+    });
+    expect(one.errors).toBeUndefined();
+    expect(one.data!.spell).toMatchObject({ id: untitled, title: null });
+
+    const byTitle = await run<Page>(asUser(A), PAGE, {
+      workspaceId: WORKSPACE_W_ID,
+      orderBy: 'TITLE_ASC',
+    });
+    expect(byTitle.errors).toBeUndefined();
+    expect(byTitle.data!.grimoire.edges.map((edge) => edge.node.title)).toEqual([
+      'Alder Jar',
+      'Birch Charm',
+      null,
+    ]);
   });
 
   it('refuses a non-member FORBIDDEN', async () => {

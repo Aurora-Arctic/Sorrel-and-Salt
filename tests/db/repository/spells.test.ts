@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import {
   findFormsInSpellsIncludingSoftDeleted,
+  findGrimoirePage,
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpell,
   findManyOfIngredients,
@@ -9,9 +10,11 @@ import {
   findManySpells,
   findOneIngredient,
   findOneSpell,
+  findPageInReadableSpells,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
+import { spells } from '@/modules/grimoire/schema/spells';
 import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
@@ -97,11 +100,21 @@ describe('the spell finders', () => {
     await sql`update spells set intent = 'Two' where id = ${id}`;
     const membership = await proofFor(B);
 
+    const page = { limit: 2, inverted: false };
+
     const one = await findOneSpell(membership, id);
     const many = await findManySpells(membership);
+    const readable = await findPageInReadableSpells(membership, spells, [spells.id], page);
+    const grimoire = await findGrimoirePage(membership, page, { order: 'UPDATED_DESC' });
 
     expect(one?.revision).toBe(3);
-    expect(many.map((row) => [row.id, row.revision])).toEqual([[id, 3]]);
+    for (const rows of [
+      many,
+      readable.map((entry) => entry.node),
+      grimoire.map((entry) => entry.node),
+    ]) {
+      expect(rows.map((row) => [row.id, row.revision])).toEqual([[id, 3]]);
+    }
   });
 });
 

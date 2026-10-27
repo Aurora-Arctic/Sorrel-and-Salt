@@ -1066,10 +1066,9 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
     | `CREATED_DESC`           | newest first, by `createdAt`           |
     | `TITLE_ASC`              | by title, A to Z, untitled spells last |
 
-    A title is required today, but M13.15 lets a draft go untitled, so
-    `TITLE_ASC` is already written for a missing title: it sorts on whether
-    the title is missing first, then on the title read as empty when missing.
-    A cursor compares its key as one row value, which a null part would break.
+    A draft may go untitled (M13.15), so `TITLE_ASC` sorts on whether the
+    title is missing first, then on the title read as empty when missing. A
+    cursor compares its key as one row value, which a null part would break.
 
   - `status` is the `SpellStatus` enum, `draft` or `complete`. Given, it
     keeps only the spells of that status, filtered in SQL; left out, the page
@@ -1080,7 +1079,9 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
   `NOT_FOUND`.
 - **`Spell`** carries its own columns, `status` and `visibility` as the
   `SpellStatus` and `SpellVisibility` enums built from the columns, and three
-  lists that each load through a loader ([`loaders.md`](loaders.md)):
+  lists that each load through a loader ([`loaders.md`](loaders.md)). Its
+  `title` is nullable, because a draft may go untitled until it is complete
+  (M13.15). The lists:
   - `steps` (`stepsBySpell`): every live step in recipe order, instructions
     and one-off rows included.
   - `categories` (`assignedCategoriesBySpell`): the categories the author

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { sql as sqlExpression } from 'drizzle-orm';
 import type postgres from 'postgres';
 import {
   findGrimoirePage,
@@ -6,6 +7,7 @@ import {
   findOneSpell,
   findPageInReadableSpells,
   type GrimoireQuery,
+  type SortPart,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -35,6 +37,12 @@ beforeEach(async () => {
 
 type User = typeof A;
 
+/** By title. A draft may go untitled (M13.15), and a sort key must be NOT NULL. */
+const byTitle: SortPart = {
+  expression: sqlExpression`coalesce(${spells.title}, '')`,
+  type: 'text',
+};
+
 const FIRST_PAGE: PageRequest = { limit: 100, inverted: false };
 
 const proofFor = (user: User, workspaceId: string = WORKSPACE_W_ID): Promise<Membership> =>
@@ -53,7 +61,7 @@ const spellBy = (
   );
 
 const spellPage = async (membership: Membership) =>
-  (await findPageInReadableSpells(membership, spells, [spells.title], FIRST_PAGE)).map(
+  (await findPageInReadableSpells(membership, spells, [byTitle], FIRST_PAGE)).map(
     (entry) => entry.node.title,
   );
 
@@ -88,7 +96,7 @@ describe('findPageInReadableSpells', () => {
     expect(await findOneSpell(await proofFor(B), bPrivate)).toMatchObject({ id: bPrivate });
 
     await expect(findOneSpell(owner, bPrivate)).resolves.toBeUndefined();
-    const page = await findPageInReadableSpells(owner, spells, [spells.title], FIRST_PAGE);
+    const page = await findPageInReadableSpells(owner, spells, [byTitle], FIRST_PAGE);
     expect(page.map((entry) => entry.node.id)).not.toContain(bPrivate);
   });
 
@@ -120,14 +128,14 @@ describe('findPageInReadableSpells', () => {
 
   it('continues from a cursor under the same rule', async () => {
     const owner = await proofFor(A);
-    const [first, ...rest] = await findPageInReadableSpells(owner, spells, [spells.title], {
+    const [first, ...rest] = await findPageInReadableSpells(owner, spells, [byTitle], {
       limit: 1,
       inverted: false,
     });
     expect(first.node.title).toBe('Ash Ward');
     expect(rest).toEqual([]);
 
-    const next = await findPageInReadableSpells(owner, spells, [spells.title], {
+    const next = await findPageInReadableSpells(owner, spells, [byTitle], {
       limit: 10,
       inverted: false,
       after: first.cursor,

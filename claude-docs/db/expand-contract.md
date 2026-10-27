@@ -236,9 +236,11 @@ a PR for five forms:
   `spells.title`, and adds `revision` as `NOT NULL` with `DEFAULT 1`, so
   the deploy before it, which never names `revision`, still inserts. A
   widened column is safe for the old deploy's writes, but not always for its
-  reads: after 0084 a row may hold a null title, which the old deploy's types
-  call a string. That was acceptable here because no screen read spells when
-  it landed. A widening migration under a live reader needs the reader made
+  reads: after 0084 a row may hold a null title, which the old deploy's
+  GraphQL `Spell.title` declares non-null, so an untitled spell would fail
+  that deploy's grimoire read. That was acceptable here because nothing could
+  write an untitled spell when it landed: no screen and no mutation saved a
+  spell yet. A widening migration under a live writer needs the reader made
   tolerant first, in an earlier release.
 
 - **`RENAME`** (column or table). An index rename is caught too, though it

@@ -1741,7 +1741,11 @@ type Spell {
 
   """The recipe: every step in position order, instructions included."""
   steps: [SpellStep!]!
-  title: String!
+
+  """
+  Null on a draft not yet named: only a complete spell must carry a title (M13.15).
+  """
+  title: String
   visibility: SpellVisibility!
 }
 
