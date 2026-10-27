@@ -3,6 +3,7 @@ import { findManyInSpell, findOneSpell, withAudit } from '../../../db/repository
 import { spells } from '../schema/spells';
 import { spellSteps } from '../schema/spell-steps';
 import { checkRecipe, writeRecipe } from './recipe';
+import { checkCategories, heldCategories, writeCategories } from './spell-categories';
 import { assertWidens } from './visibility-rule';
 import {
   SpellInput as SpellInputSchema,
@@ -74,8 +75,8 @@ function spellColumns(input: {
  * unless the author says `private`. Only a complete spell needs a title.
  *
  * @throws {Forbidden} the caller may not write this coven's grimoire.
- * @throws {ValidationError} the input breaks a rule, or a step links an
- * ingredient this coven may not lay.
+ * @throws {ValidationError} the input breaks a rule, a step links an
+ * ingredient this coven may not lay, or a category id names no live category.
  */
 export async function createSpell(
   session: Session,
@@ -85,16 +86,20 @@ export async function createSpell(
   const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
   const parsed = parseInput(SpellInputSchema, input);
   await checkRecipe(membership, parsed.steps, []);
+  const categoryIds = parsed.categoryIds ?? [];
+  await checkCategories(categoryIds);
   return withAudit(session, async (write) => {
     const [spell] = await write.insertInWorkspace(membership, spells, spellColumns(parsed));
     await writeRecipe(write, spell.id, parsed.steps, []);
+    await writeCategories(write, spell.id, categoryIds, []);
     return spell;
   });
 }
 
 /**
  * Saves a spell: the fields it names, each left out unchanged, and when it
- * names its steps, the whole recipe in order. A save written against a
+ * names its steps, the whole recipe in order; when it names its categories,
+ * the whole set it is assigned. A save written against a
  * revision the spell has moved past is refused, and null overwrites (M13.15).
  * Visibility only widens, as `setSpellVisibility` holds it.
  *
@@ -102,7 +107,8 @@ export async function createSpell(
  * save narrows a shared spell.
  * @throws {NotFound} no such spell here, or none this caller may read.
  * @throws {ValidationError} the input breaks a rule, names a step this spell
- * has no live row for, or links an ingredient this coven may not lay.
+ * has no live row for, links an ingredient this coven may not lay, or names
+ * no live category.
  * @throws {StaleWrite} `expectedRevision` is not the spell's revision.
  */
 export async function updateSpell(
@@ -118,6 +124,9 @@ export async function updateSpell(
 
   const existing = parsed.steps ? await findManyInSpell(membership, spellSteps, spellId) : [];
   if (parsed.steps) await checkRecipe(membership, parsed.steps, existing);
+  const { categoryIds } = parsed;
+  if (categoryIds) await checkCategories(categoryIds);
+  const held = categoryIds ? await heldCategories(membership, spellId) : [];
 
   return withAudit(session, async (write) => {
     const [spell] = await write.updateRevisioned(
@@ -130,6 +139,7 @@ export async function updateSpell(
     // Read a moment ago, so only a delete in between leaves nothing here.
     if (!spell) throw new NotFound('No such spell in this coven');
     if (parsed.steps) await writeRecipe(write, spellId, parsed.steps, existing);
+    if (categoryIds) await writeCategories(write, spellId, categoryIds, held);
     return spell;
   });
 }
