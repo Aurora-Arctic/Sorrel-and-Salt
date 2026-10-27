@@ -350,8 +350,9 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
 }) => {
   await signInAgainAs(page, users.admin.id);
   // A width where the bolder current tab tips the count: the compendium
-  // page, loaded fresh, fits one tab fewer than the forms page does.
-  await page.setViewportSize({ width: 681, height: 800 });
+  // page, loaded fresh, fits fewer tabs than the forms page does, whose
+  // tabs all fit with no More. From about 880px to 889px in Chromium.
+  await page.setViewportSize({ width: 884, height: 800 });
   await page.goto('/admin/compendium');
   const fresh = await rowLinks(await fittedAdminNav(page)).count();
 
@@ -420,3 +421,56 @@ test('before the script runs, a desktop admin row shows every tab and no More', 
   expect(new Set(hrefs).size).toBe(6);
   release();
 });
+
+// A tab goes behind More only when the row has no room for it (a fix found along the way in
+// M10.11: the owner found the coven's tabs "dropping into More too soon"). More was reserved
+// as wide as the widest tab it hid, as though it would wear that tab's label, though it wears
+// only the current page's, so at 680px the coven row showed Overview alone where Overview,
+// Ingredients and More fit. Each width is checked by putting the first tab behind More back
+// into the row, More with it while any other tab stays hidden: that row must overflow, or
+// the tab was hidden with room for it. Swept across the tablet band, since where the fonts
+// put the edge varies by a few pixels.
+async function tuckedWithRoom(nav: Locator): Promise<boolean> {
+  return nav
+    .getByRole('list')
+    .first()
+    .evaluate((list) => {
+      const items = Array.from(list.children) as HTMLElement[];
+      const more = items.find((item) => item.querySelector(':scope > button'));
+      const hidden = items.filter(
+        (item) => item !== more && getComputedStyle(item).display === 'none',
+      );
+      if (!more || hidden.length === 0) return false;
+      const [first] = hidden;
+      first!.style.display = 'flex';
+      // With its last hidden tab back, the row draws no More.
+      if (hidden.length === 1) more.style.display = 'none';
+      const fits = list.scrollWidth <= list.clientWidth;
+      first!.style.display = '';
+      more.style.display = '';
+      return fits;
+    });
+}
+
+for (const [who, label, path] of [
+  ['member', 'Coven', `/coven/${ALPHA.slug}`],
+  ['admin', 'Admin', '/admin'],
+] as const) {
+  test(`across the tablet band, the ${label.toLowerCase()} row puts a tab behind More only when it has no room`, async ({
+    page,
+  }) => {
+    await signInAgainAs(page, users[who].id);
+    let tucked = 0;
+    for (let width = 660; width <= 900; width += 20) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(path);
+      const nav = page.getByRole('navigation', { name: label });
+      await expect(nav).toHaveAttribute('data-fit', '');
+      if ((await nav.getByRole('button', { name: /More/ }).count()) > 0) tucked += 1;
+      expect(await tuckedWithRoom(nav), `a tab hidden with room for it at ${width}px`).toBe(false);
+      expect(await rowOverflows(nav)).toBe(false);
+    }
+    // Why it could have failed: some width in the sweep does put a tab behind More.
+    expect(tucked).toBeGreaterThan(0);
+  });
+}
