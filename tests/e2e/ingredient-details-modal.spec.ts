@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAs, signInAgainAs } from './session';
+import { signInAs } from './session';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { ingredientSlug } from '@/lib/slugify';
@@ -13,7 +13,7 @@ import {
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
-import { discardQuestion, editIngredientDialog } from './stories/ingredient-dialogs';
+import { editIngredientDialog } from './stories/ingredient-dialogs';
 
 // M12.5: an entry's details in a modal over its list, opened by the Quick Look
 // eye, left of the name on the admin Compendium list and at the card's foot on
@@ -21,9 +21,10 @@ import { discardQuestion, editIngredientDialog } from './stories/ingredient-dial
 // proves what no story walks: the eye opens the details and every close gives
 // it the focus back, the details show the entry's sections on every list, the name itself still reaches the entry's page, Edit
 // opens the edit modal over the details and closes back to them, a coven's
-// Edit is an owner's and a member's and not a viewer's, a save there shows in
-// the details and the list, an unsaved close asks first, and the open details
-// pass axe and hold at a phone's width. On the public compendium a visitor with no
+// save there shows in the details and the list, and the open details pass axe
+// and hold at a phone's width. Who gets a coven's Edit, and an unsaved close's
+// question, are details-dialog's component test's and story 33's; a delete
+// from the details is that component test's and story 25's. On the public compendium a visitor with no
 // account opens them too, and reads the entry's sections there.
 
 test.beforeAll(async () => {
@@ -47,10 +48,6 @@ const detailsDialog = (page: Page, name = NAME) => page.getByRole('dialog', { na
  */
 const editIn = (dialog: Locator, name = NAME) =>
   dialog.getByRole('link', { name: `Edit ${name}, ${FORMAL}`, exact: true });
-
-/** A coven's own entry's bin in the details, the card's, named as it names the entry. */
-const binIn = (dialog: Locator, name = NAME) =>
-  dialog.getByRole('button', { name: `Delete Ingredient ${name}, ${FORMAL}`, exact: true });
 
 test.describe('on the admin Compendium list', () => {
   const slug = ingredientSlug(NAME, FORMAL);
@@ -332,49 +329,27 @@ test.describe('on the admin Compendium list', () => {
 });
 
 test.describe("on a coven's Ingredients", () => {
-  test("Edit is an owner's and a member's, not a viewer's; a save shows in the details and the list, and an unsaved close asks first", async ({
+  // Who gets Edit, and the unsaved close's question, are details-dialog's component test's and
+  // story 33's (tests/e2e/stories/04-modals.spec.ts); this is the real save behind the details.
+  test('a save from the details goes back to them, renamed there and on the list', async ({
     page,
   }) => {
     const coven = await seedCoven(page, 'Fixture Coven Details Modal', 'details-modal.test', {
       A: 'owner',
-      B: 'member',
-      C: 'viewer',
     });
     await withSql((sql) =>
       localIngredient(sql, coven.id, coven.users.A, {
         name: NAME,
         canonicalName: FORMAL,
-        safetyNotes: 'Fixture coven caution.',
-        folkNames: ['Fixture Covenbane'],
       }),
     );
     const listPath = `/coven/${coven.slug}/ingredients`;
     const details = detailsDialog(page);
 
-    await test.step('a viewer reads the details, with no Edit', async () => {
-      await signInAgainAs(page, coven.users.C);
-      await page.goto(listPath);
-      await quickLook(page).click();
-      // Why Edit could be there: the details are open, with their other action.
-      await expect(details.getByRole('link', { name: 'See in Your Cupboard' })).toBeVisible();
-      await expect(editIn(details)).toHaveCount(0);
-      // The entry's sections, read for the coven.
-      await expect(
-        details.getByRole('region', { name: 'Caution' }).getByText('Fixture coven caution.'),
-      ).toBeVisible();
-      await expect(
-        details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Covenbane'),
-      ).toBeVisible();
-    });
-
-    for (const key of ['B', 'A'] as const) {
-      await test.step(`${key === 'A' ? 'the owner' : 'a member'} gets Edit in the details`, async () => {
-        await signInAgainAs(page, coven.users[key]);
-        await page.goto(listPath);
-        await quickLook(page).click();
-        await expect(editIn(details)).toBeVisible();
-      });
-    }
+    // seedCoven leaves the owner signed in.
+    await page.goto(listPath);
+    await quickLook(page).click();
+    await expect(editIn(details)).toBeVisible();
 
     const RENAMED = 'Fixture Seenwort';
     const renamedDetails = detailsDialog(page, RENAMED);
@@ -391,63 +366,6 @@ test.describe("on a coven's Ingredients", () => {
       await expect(rowOf(ingredientList(page), RENAMED)).toHaveCount(1);
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
     });
-
-    await test.step('closing an edit with a change asks before discarding it', async () => {
-      await editIn(renamedDetails, RENAMED).click();
-      const editing = editIngredientDialog(page, RENAMED, FORMAL);
-      await expect(editing).toBeVisible();
-      await editing.getByRole('button', { name: 'Open All' }).click();
-      await editing.getByRole('textbox', { name: 'Name', exact: true }).fill('Fixture Unsavedwort');
-
-      await editing.getByRole('button', { name: 'Close', exact: true }).click();
-      const question = discardQuestion(editing);
-      await expect(question.keep).toBeFocused();
-      await question.discard.click();
-
-      await expect(editing).toHaveCount(0);
-      await expect(renamedDetails).toBeVisible();
-      await expect(rowOf(ingredientList(page), RENAMED)).toHaveCount(1);
-    });
-  });
-
-  test("a delete from the details closes them back onto the list, without the entry's row", async ({
-    page,
-  }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Details Delete', 'details-delete.test', {
-      A: 'owner',
-    });
-    const KEPT = 'Fixture Keptwort';
-    const gone = await withSql(async (sql) => {
-      await localIngredient(sql, coven.id, coven.users.A, {
-        name: KEPT,
-        canonicalName: 'Fixtura servata',
-      });
-      return localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL });
-    });
-    const listPath = `/coven/${coven.slug}/ingredients`;
-    const list = ingredientList(page);
-
-    // Why it could stay: the entry is on the list, live, and its details are open.
-    await page.goto(listPath);
-    await expect(rowOf(list, NAME)).toHaveCount(1);
-    await quickLook(page).click();
-    const details = detailsDialog(page);
-    await expect(details).toBeVisible();
-    await expect(page).toHaveURL(/[?&]entry=/);
-
-    await binIn(details).click();
-    const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
-    await expect(question).toContainText(NAME);
-    await question.getByRole('button', { name: 'Delete', exact: true }).click();
-
-    await expect(details).toHaveCount(0);
-    await expect(page).toHaveURL((url) => url.pathname === listPath && !url.search);
-    await expect(rowOf(list, NAME)).toHaveCount(0);
-    await expect(rowOf(list, KEPT)).toHaveCount(1);
-    const [row] = await withSql(
-      (sql) => sql`select deleted_at from ingredients where id = ${gone.ingredientId}`,
-    );
-    expect(row.deleted_at).not.toBeNull();
   });
 
   test('the open details pass axe and hold at a phone width', async ({ page }) => {
