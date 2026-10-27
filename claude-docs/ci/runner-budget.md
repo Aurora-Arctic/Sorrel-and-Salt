@@ -146,3 +146,40 @@ MB.96's sizing of the Blacksmith tier, at the ~245 runs a month counted then (hi
 | vitest on 4 vCPU              | ~3 min                                | ~750                 | Fits comfortably; three workers, so only the image cache |
 | vitest + playwright on 8 vCPU | ~9 min                                | ~2,200 (73%)         | Fits only while MB.98 holds; the second step             |
 | Every job on Blacksmith       | ~15+ min                              | ~3,700               | Over, on legs that are free today                        |
+
+## Splitting the Vitest job
+
+M14.27 split `vitest.yml` from one job into four, so a PR that touches only
+the backend sees its answer sooner and a timeout in one kind of test no longer
+fails the others.
+
+| Job           | Runs                                  | Postgres service |
+| ------------- | ------------------------------------- | ---------------- |
+| `vitest-dom`  | `--project dom` (happy-dom)           | No               |
+| `vitest-node` | `--project unit --project rsc`        | No               |
+| `vitest-db`   | `--project db --project db-mocking`   | Yes              |
+| `vitest`      | Merges the three; applies the 80% bar | No               |
+
+- **Each part writes a blob.** `vitest run … --coverage --reporter=blob`
+  writes the part's results and its coverage map to
+  `.reports/blobs/blob-<part>.json`, uploaded as the artifact
+  `vitest-blob-<part>`. A part switches the four coverage thresholds off
+  (`--coverage.thresholds.*=0`): it sees only its own projects' share of
+  `src/`, so it would fail an 80% bar that only the whole tree meets.
+- **Why a merge job.** `vitest run --mergeReports .reports/blobs --coverage`
+  joins the three coverage maps, so the 80% thresholds apply once over the
+  whole tree, and writes the same JSON the single job did (per-file
+  `startTime` and `endTime` included, checked locally), so
+  `summarize-vitest.mjs` and `lib/slowest-files.mjs` are unchanged. It runs
+  no tests. It is named `vitest` because the caller's job is also `vitest`,
+  which makes the required check `vitest / vitest`; the ruleset needs no change.
+  The parts are `vitest / vitest-dom` and so on, and are not required checks.
+- **A doc-only PR skips the whole run, never one part.** `should-run` is false
+  for every job, so each completes under its own name. A single part is never
+  path-skipped: the merge needs all three blobs and fails when one is missing.
+- **`npm run test:coverage` is unchanged** for local use: one run, one lock.
+- **Next lever: sharding `vitest-dom`.** `dom` is the long pole. Once this PR's
+  run has measured the four wall times, a matrix over `--shard 1/2` and
+  `--shard 2/2` (blob names carrying the shard) cuts it with no test change;
+  the merge job takes any number of blobs. `vitest-db` is not worth sharding,
+  because each shard would build its own template database.
