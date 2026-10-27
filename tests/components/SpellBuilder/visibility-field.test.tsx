@@ -10,6 +10,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
@@ -22,6 +23,8 @@ const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 // the builder shows that refusal's words in its notice.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
+  // The builder reads the coven's categories as it opens (M10.14).
+  offerCategories([]);
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />

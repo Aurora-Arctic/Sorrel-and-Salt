@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
@@ -729,5 +729,128 @@ describe('updateSpell, with its recipe', () => {
     expect((await sql`select visibility from spells where id = ${hidden.id}`)[0].visibility).toBe(
       'workspace',
     );
+  });
+});
+
+describe('a spell’s assigned categories', () => {
+  // A test here soft-deletes a seeded category; the next one finds it live.
+  afterEach(async () => {
+    await sql`update categories set deleted_at = null, deleted_by = null where deleted_at is not null`;
+  });
+
+  const idOf = async (name: string): Promise<string> =>
+    (await sql`select id from categories where name = ${name} and deleted_at is null`)[0].id;
+
+  /** The spell's assigned categories by name, read raw, so a soft-deleted one shows too. */
+  const assigned = async (spellId: string): Promise<string[]> =>
+    (
+      await sql`
+        select categories.name from spell_categories
+        join categories on categories.id = spell_categories.category_id
+        where spell_categories.spell_id = ${spellId}
+        order by categories.name`
+    ).map((row) => row.name as string);
+
+  it('writes the categories a new spell names, a repeat once, stamped with the author', async () => {
+    const protection = await idOf('Protection');
+    const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
+      title: 'Hearth Jar',
+      categoryIds: [protection, await idOf('Warding'), protection],
+    });
+    expect(await assigned(spell.id)).toEqual(['Protection', 'Warding']);
+    const stamps = await sql`select created_by from spell_categories where spell_id = ${spell.id}`;
+    expect(stamps.map((row) => row.created_by)).toEqual([B.id, B.id]);
+  });
+
+  it('assigns none when a new spell names none', async () => {
+    const spell = await createSpell(asUser(B), WORKSPACE_W_ID, { title: 'Bare Jar' });
+    expect(await assigned(spell.id)).toEqual([]);
+  });
+
+  it('brings the set to exactly the ids an update names, and leaves it when it names none', async () => {
+    const id = await seed(B, 'workspace', { categories: ['Protection', 'Warding'] });
+
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      categoryIds: [await idOf('Warding'), await idOf('Release')],
+    });
+    expect(await assigned(id)).toEqual(['Release', 'Warding']);
+
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, title: 'Renamed' });
+    expect(await assigned(id)).toEqual(['Release', 'Warding']);
+
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, categoryIds: [] });
+    expect(await assigned(id)).toEqual([]);
+  });
+
+  it('refuses an id naming no live category, at its index, and writes nothing', async () => {
+    const id = await seed(B, 'workspace', { title: 'Untouched', categories: ['Protection'] });
+    const retired = await idOf('Cleansing');
+    await sql`update categories set deleted_at = now(), deleted_by = ${E.id} where id = ${retired}`;
+    const unknown = '44444444-4444-4444-8444-444444444444';
+
+    const save = updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      title: 'Edited',
+      categoryIds: [await idOf('Warding'), retired, unknown],
+    });
+    await expect(save).rejects.toBeInstanceOf(ValidationError);
+    await expect(save).rejects.toMatchObject({
+      issues: [
+        { path: ['categoryIds', 1], message: expect.stringMatching(/No such category/) },
+        { path: ['categoryIds', 2], message: expect.stringMatching(/No such category/) },
+      ],
+    });
+    expect(await assigned(id)).toEqual(['Protection']);
+    expect((await sql`select title from spells where id = ${id}`)[0].title).toBe('Untouched');
+
+    await expect(
+      createSpell(asUser(B), WORKSPACE_W_ID, { categoryIds: [unknown] }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(await countSpells()).toBe(1);
+  });
+
+  it('keeps a pair whose category was deleted since, for a restore to bring back', async () => {
+    const id = await seed(B, 'workspace', { categories: ['Protection', 'Warding'] });
+    await sql`update categories set deleted_at = now(), deleted_by = ${E.id} where name = 'Warding'`;
+
+    // The builder never shows the deleted category, so its save leaves it out.
+    await updateSpell(asUser(B), WORKSPACE_W_ID, id, {
+      expectedRevision: null,
+      categoryIds: [await idOf('Release')],
+    });
+    expect(await assigned(id)).toEqual(['Release', 'Warding']);
+  });
+
+  it('refuses a viewer by direct id, and leaves the categories as they were', async () => {
+    const id = await seed(B, 'workspace', { categories: ['Protection'] });
+    const save = { expectedRevision: null, categoryIds: [await idOf('Release')] };
+    // Why it could have succeeded: C reads the spell, and a member's identical
+    // save is written.
+    await expect(readSpell(asUser(C), WORKSPACE_W_ID, id)).resolves.toBeDefined();
+    const other = await seed(B, 'workspace', { categories: ['Protection'] });
+    await updateSpell(asUser(B), WORKSPACE_W_ID, other, save);
+    expect(await assigned(other)).toEqual(['Release']);
+
+    await expect(updateSpell(asUser(C), WORKSPACE_W_ID, id, save)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    expect(await assigned(id)).toEqual(['Protection']);
+  });
+
+  it('refuses a member of another coven by direct id, naming either coven', async () => {
+    const id = await seed(B, 'workspace', { categories: ['Protection'] });
+    const save = { expectedRevision: null, categoryIds: [await idOf('Release')] };
+    // Why this could have succeeded: D assigns categories to their own coven's
+    // spell with the same save.
+    const own = await seed(D, 'workspace', {}, WORKSPACE_X_ID);
+    await updateSpell(asUser(D), WORKSPACE_X_ID, own, save);
+    expect(await assigned(own)).toEqual(['Release']);
+
+    await expect(updateSpell(asUser(D), WORKSPACE_W_ID, id, save)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    await expect(updateSpell(asUser(D), WORKSPACE_X_ID, id, save)).rejects.toBeInstanceOf(NotFound);
+    expect(await assigned(id)).toEqual(['Protection']);
   });
 });

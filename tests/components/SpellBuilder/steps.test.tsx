@@ -15,6 +15,7 @@ import { UNMEASURABLE_UNIT } from '@/modules/grimoire/validation/step-unit';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
@@ -145,6 +146,8 @@ function acceptUpdate(steps: SpellBuilderSpell['steps'] = []) {
 }
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
+  // The builder reads the coven's categories as it opens (M10.14).
+  offerCategories([]);
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />

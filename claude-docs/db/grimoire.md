@@ -175,6 +175,33 @@ save that leaves it out is refused as `VALIDATION`, so a client that forgets
 it cannot overwrite another member's save. A visibility in the input follows
 the one-way rule of [spell-visibility.md](spell-visibility.md).
 
+### Saving its categories (M10.14)
+
+A spell has two kinds of category. The ones its author **assigns** say what
+the spell intends, and live in `spell_categories`. The ones **derived** from
+its ingredients are read from those ingredients and never written here. Only
+the assigned ones are saved, by `createSpell` and `updateSpell` taking
+`categoryIds` (`services/spell-categories.ts`).
+
+- The ids are the whole set, the same way `steps` is the whole recipe: a
+  category on the spell that the save leaves out is unassigned. On
+  `updateSpell`, leaving `categoryIds` out leaves the set as it is, and `[]`
+  empties it. An id sent twice is written once, because a category is a chip
+  that is either on or off.
+- An id that names no live category (one deleted since the builder loaded
+  it, or one that never existed) is refused before anything is written,
+  at `['categoryIds', index]`. An id that is not a uuid is refused earlier,
+  by the schema, at the same path.
+- A kept pair is not written again; a dropped one is hard-deleted, because
+  the table has no `deleted_at` (MB.34); a new one is inserted, stamped by the
+  session. **A pair whose category was soft-deleted since is kept**, even
+  though the save leaves it out. The builder never shows a deleted category,
+  so it could never send it, and keeping the pair lets a restore of the
+  category bring it back. The ingredient form's categories work the same
+  way (`replaceCategories` in `ingredients/services/ingredient-rows.ts`).
+- The table carries no `workspace_id`. The spell is read as the caller
+  first, so its pairs can be written exactly when the spell can.
+
 ### Custom ingredients (MB.40)
 
 For story 57, a step's ingredient is either one the workspace knows

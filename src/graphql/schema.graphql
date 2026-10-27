@@ -1768,6 +1768,10 @@ type Spell {
 
 """A new spell: a draft needs nothing but its status."""
 input SpellInput {
+  """
+  The categories the spell is assigned: what it intends, not what its ingredients bring.
+  """
+  categoryIds: [ID!]
   dayOfWeek: String
   intent: String
   jarSize: String
@@ -1936,6 +1940,10 @@ input UpdateJarInput {
 Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens.
 """
 input UpdateSpellInput {
+  """
+  The whole set of categories the spell is assigned: one left out is unassigned. Left out, they are unchanged.
+  """
+  categoryIds: [ID!]
   dayOfWeek: String
 
   """

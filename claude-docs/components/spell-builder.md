@@ -2,23 +2,24 @@
 
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
 (M10.12, story 47): its title, intent, jar size, seal wax colour, moon phase,
-day of the week and note, and its jar of ingredients (M10.15, stories 49, 50,
-57 and 77). It is a client component. The new-spell page,
+day of the week and note, the categories it is assigned (M10.14, story 48),
+and its jar of ingredients (M10.15, stories 49, 50, 57 and 77). It is a client
+component. The new-spell page,
 `/coven/[slug]/grimoire/new`, draws it empty, reached from New Spell at the
 Grimoire's heading, which only an owner or a member is shown; M13.10's edit page,
 `/coven/[slug]/grimoire/[id]/edit`, will draw it with a saved spell. Reordering
-the steps (M10.16), instruction steps (M13.3), intent categories (M10.14) and
-Mark Complete (M10.20) are later tasks that extend it. There is
+the steps (M10.16), instruction steps (M13.3) and Mark Complete (M10.20) are
+later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
 
 `SpellBuilderProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `workspaceId` | The coven the spell belongs to, sent with every save                                                                           |
-| `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility` and the seven fields (null for one not set). Without it, all empty |
+| Prop          | What it is                                                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                                        |
+| `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, `steps`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
 
 ## Saving
 
@@ -43,6 +44,10 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   recipe: on an update the service keeps the steps sent by id, adds the new
   ones and removes the rest, so a step the builder does not send is deleted. A
   saved instruction step is read in and sent back unchanged for that reason.
+  The categories go as `categoryIds` only when the picks differ from the last
+  save, as a set in any order; left out, the service keeps the spell's set as
+  it is, and an empty list clears it ([`../db/grimoire.md`](../db/grimoire.md),
+  "Saving its categories"). A changed pick turns Save on like a changed field.
 - **After a save the form starts again from the answer**, so Save goes
   disabled until the next change. The address stays at
   `/coven/[slug]/grimoire/new` after a create: there is no page for one spell
@@ -89,7 +94,7 @@ refusal's words, which explain the rule and name Delete, show in the
 As in the ingredient form (M5.9): the shared schema runs as the form's
 resolver, so a field it refuses shows its error beneath that field before
 the save, and a `VALIDATION` answer's `fieldErrors` for one of the seven
-fields show beneath it after, through the same element (`aria-invalid` and
+fields, or for a pick at `['categoryIds', index]`, show beneath that field after, through the same element (`aria-invalid` and
 `aria-describedby`), as does an issue the server places on a step's
 quantity or unit (`steps.<i>.quantity`, `steps.<i>.unit`). Anything else, such as a viewer's `FORBIDDEN`, goes to
 the `Notice` above the fields, in the server's words. The reading is
@@ -153,6 +158,18 @@ stored as typed: the columns are free text
   rest of the disc in shadow (the owner, 2026-10-27). A phase typed outside the list, such as "Dark",
   shows its words with no drawing (the owner, 2026-10-27).
 
+- **Categories** (`categories-field.tsx`, after Intent) are what the spell
+  is meant to do: the categories its author assigns it, never the ones its
+  ingredients bring, which are read from them and shown apart (DESIGN.md,
+  "Two kinds of spell category"). The field is the ingredient form's
+  `CategoryPicker` ([`category-picker.md`](category-picker.md)) on the same
+  `PickerCategories` query (`CategoriesDocument`, exported from
+  `IngredientForm/categories.tsx`): a box named Category in a group headed
+  Categories, each pick a chip in its group's colour with a × to remove it.
+  A pick the service refuses (a category deleted since the builder loaded) is
+  marked invalid, and its message names it. The builder shows its picks
+  as the picker's chips; the grimoire's spell card shows the saved ones with
+  `CategoryChips`.
 - **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
 - **Intent and Note** are multi-line. Title, Jar Size and Seal Wax Colour are
@@ -225,7 +242,13 @@ surfaces, and the discard question. `visibility-field.test.tsx` covers the
 visibility control: on by default and sent with a create, off sent as private and
 left open, a choice alone not saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the
-control shut with its reason on a shared spell. `steps.test.tsx` covers the
+control shut with its reason on a shared spell.
+`tests/components/SpellBuilder/categories-field.test.tsx` covers the
+Categories field: the picks sent with a first save, Save on with a pick and
+off once it is removed, a saved spell's categories opened and the set left
+after a removal sent (an empty set to clear them), the categories left out of
+a save that did not change them, and a refused pick shown beside the field
+by name. `steps.test.tsx` covers the
 jar: the two headings, one row per form, a pick adding its row and clearing
 the search, a form already in the jar disabled, a one-off and its two
 refusals, the ids sent, Remove updating Derived Categories, the unit rule both
@@ -234,8 +257,10 @@ on its step. `tests/modules/grimoire/services/spell-ingredient-steps.test.ts`
 reads the rows a save leaves, and asserts a member of another coven and a
 viewer are refused by direct id. The page is
 `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx`: the builder for an
-owner and a member, and the 404 for a viewer. Story 47 in
-`tests/e2e/stories/06-grimoire.spec.ts` walks it in a browser, and stories 49, 50, 57 and 77 walk the jar. No story walks the visibility control, since §5's rule governs it rather than a
+owner and a member, and the 404 for a viewer. Stories 47 and 48 in
+`tests/e2e/stories/06-grimoire.spec.ts` walk it in a browser; story 48 picks
+two categories, removes one, saves, and finds the one left on the spell's
+card under Drafts. Stories 49, 50, 57 and 77 walk the jar. No story walks the visibility control, since §5's rule governs it rather than a
 story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
 then shared in one confirmed action and the control shut, each step read from the
 database. Story 56 checks the Private badge on the author's card.

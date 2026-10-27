@@ -100,10 +100,10 @@ describe('createSpell', () => {
     });
   });
 
-  it('reads a status, visibility or recipe sent as null as left out', async () => {
+  it('reads a status, visibility, recipe or category list sent as null as left out', async () => {
     const result = await run<{ createSpell: SpellNode }>(asUser(B), CREATE, {
       workspaceId: WORKSPACE_W_ID,
-      input: { status: null, visibility: null, steps: null },
+      input: { status: null, visibility: null, steps: null, categoryIds: null },
     });
 
     expect(result.errors).toBeUndefined();
@@ -183,6 +183,43 @@ describe('updateSpell', () => {
         { position: 2, body: 'Stir three times.' },
       ],
     });
+  });
+
+  it('answers the assigned categories the save names, read fresh after the spell was read in the same request', async () => {
+    const id = await insertSpell(
+      sql,
+      makeSpell({ workspaceId: WORKSPACE_W_ID, categories: ['Protection'] }),
+      B.id,
+    );
+    const [release] = await sql<{ id: string }[]>`select id from categories where name = 'Release'`;
+    const session = asUser(B);
+    const context = { loaders: createLoaders(session) };
+    const CATEGORIES = `query ($workspaceId: ID!, $id: ID!) {
+      spell(workspaceId: $workspaceId, id: $id) { categories { name } }
+    }`;
+    const before = await run<{ spell: { categories: { name: string }[] } }>(
+      session,
+      CATEGORIES,
+      { workspaceId: WORKSPACE_W_ID, id },
+      context,
+    );
+    expect(before.data!.spell.categories).toEqual([{ name: 'Protection' }]);
+
+    const result = await run<{ updateSpell: { categories: { name: string }[] } }>(
+      session,
+      `mutation ($workspaceId: ID!, $id: ID!, $input: UpdateSpellInput!) {
+        updateSpell(workspaceId: $workspaceId, id: $id, input: $input) { categories { name } }
+      }`,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        id,
+        input: { expectedRevision: null, categoryIds: [release!.id] },
+      },
+      context,
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data!.updateSpell.categories).toEqual([{ name: 'Release' }]);
   });
 
   it('answers STALE_WRITE with the revision the spell is at now, and writes nothing', async () => {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalText } from '../../../lib/validation';
+import { RowId, optionalText } from '../../../lib/validation';
 import type { SpellStatus, SpellVisibility } from '../types';
 import { SpellStepInput } from './spell-step';
 
@@ -34,7 +34,27 @@ const SpellFields = z.object({
   note: optionalText(),
   // The recipe, in order: a step's place is its index.
   steps: z.array(SpellStepInput).default([]),
+  // The categories the spell is assigned, what it intends (M10.14), never the
+  // ones derived from its ingredients. The whole set when given, so an id left
+  // out is unassigned; left out altogether, they are unchanged on update and
+  // none on create.
+  categoryIds: z.array(z.string().trim()).optional(),
 });
+
+// Each category is an id. A repeat is not refused: a category is a chip, on
+// or off, so one sent twice is one, and the service writes it once.
+function categoryRule(spell: { categoryIds?: string[] }, context: z.RefinementCtx) {
+  spell.categoryIds?.forEach((id, index) => {
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    if (!RowId.safeParse(id).success) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryIds', index],
+        message: 'No such category',
+      });
+    }
+  });
+}
 
 type StepIdentity = {
   id?: string | null;
@@ -86,7 +106,9 @@ function titleRule(
   }
 }
 
-export const SpellInput = SpellFields.superRefine(titleRule).superRefine(distinctSteps);
+export const SpellInput = SpellFields.superRefine(titleRule)
+  .superRefine(distinctSteps)
+  .superRefine(categoryRule);
 
 // An update also says which revision of the spell it was written against, so
 // a save over someone else's change is caught (claude-docs/design-decisions/
@@ -106,4 +128,5 @@ export const UpdateSpellInput = SpellFields.extend({
     .nullable(),
 })
   .superRefine(titleRule)
-  .superRefine(distinctSteps);
+  .superRefine(distinctSteps)
+  .superRefine(categoryRule);

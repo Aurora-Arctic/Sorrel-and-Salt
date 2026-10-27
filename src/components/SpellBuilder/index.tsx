@@ -17,6 +17,7 @@ import {
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
+import { SpellCategoriesField, sameCategories } from './categories-field';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { SpellSteps } from './steps';
 import type { SpellStepSend } from './steps/types';
@@ -106,6 +107,7 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
     steps: (spell?.steps ?? []).map(stepValueOf),
     // A new spell is the coven's unless chosen otherwise (§5).
     visibility: spell?.visibility ?? 'workspace',
+    categoryIds: [...(spell?.categoryIds ?? [])],
   };
 }
 
@@ -173,11 +175,15 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   // Something to save: a field that reads differently from the last save,
   // blank and spaces alike reading as none, as the schema reads them.
   const typed = useWatch({ control, name: [...FIELDS] });
+  const picked = useWatch({ control, name: 'categoryIds' });
+  const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
   const steps = useWatch({ control, name: 'steps' });
   const dirty =
+    categoriesChanged ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
-    ) || stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
+    ) ||
+    stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
   // A unit the jar cannot be measured in holds Save, as the service would refuse it.
   const unitRefused = unitIssues(steps).size > 0;
 
@@ -213,13 +219,21 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
       visibility: values.visibility,
       steps: values.steps,
     };
+    // The categories go only when the picks differ from the last save: left
+    // out, the service keeps the spell's set as it is (M10.14).
+    const categoryIds = values.categoryIds ?? [];
+    if (!sameCategories(categoryIds, defaultValues?.categoryIds)) input.categoryIds = categoryIds;
     try {
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
       // What was saved is the new start: Save goes off until the next change.
-      reset(valuesOf(answer));
+      reset({ ...valuesOf(answer), categoryIds });
     } catch (error) {
       placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+        // A refused pick is pathed to its index, as the ids were sent.
+        if (field === 'categoryIds') {
+          return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
+        }
         if (rest.length === 0 && isField(field)) return field;
         // A step's amount, beside it; anything else of a step above the form.
         const [index, part] = rest;
@@ -253,6 +267,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             multiline
             rows={3}
           />
+          <SpellCategoriesField />
           <TextField<SpellBuilderValues>
             name="jarSize"
             label="Jar Size"

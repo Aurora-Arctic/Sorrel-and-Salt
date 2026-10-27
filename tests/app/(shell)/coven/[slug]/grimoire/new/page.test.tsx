@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 
 // The new-spell page (M10.12, story 47): the guard on the slug from the address, the
 // builder for a role that may create a spell, and the 404 a stranger gets for a viewer.
@@ -38,6 +39,8 @@ async function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // The builder's Categories field reads every category as it opens (M10.14).
+  offerCategories([]);
 });
 
 describe('the new-spell page', () => {

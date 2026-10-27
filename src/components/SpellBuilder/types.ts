@@ -10,19 +10,23 @@ export type SpellBuilderField =
 
 /**
  * The form's values: each field as typed, blank for none, who can see the
- * spell (M10.13), and the jar's steps (M10.15).
+ * spell (M10.13), the ids of the categories it is assigned (M10.14), none for
+ * none, and the jar's steps (M10.15).
  */
 export type SpellBuilderValues = Record<SpellBuilderField, string> & {
   visibility: SpellVisibility;
+  categoryIds: string[];
   steps: SpellStepValue[];
 };
 
 /**
  * The form's values as a save sends them: trimmed, and null for blank, as the
- * schema reads them, and each step as its input.
+ * schema reads them; each step as its input; and the categories only when
+ * they changed (M10.14).
  */
 export type SpellBuilderInput = Record<SpellBuilderField, string | null> & {
   visibility: SpellVisibility;
+  categoryIds?: string[];
   steps: SpellStepSend[];
 };
 
@@ -35,7 +39,10 @@ export type SpellBuilderSpell = {
   visibility: SpellVisibility;
   /** Its recipe in order (M10.15): required, so a page opening a saved spell must read them. */
   steps: SpellBuilderStepFragment[];
-} & Record<SpellBuilderField, string | null>;
+} & Record<SpellBuilderField, string | null> & {
+    /** The categories it is assigned (M10.14); left out, none. */
+    categoryIds?: readonly string[];
+  };
 
 export interface SpellBuilderProps {
   /** The coven the spell is written in. */

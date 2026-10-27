@@ -9,6 +9,7 @@ import {
   seedCoven,
   withSql,
 } from './coven-ingredients';
+import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 
 // Stories 47 to 57 and 76 to 80: the grimoire, from naming a spell to the
 // workings recorded against it. Every story here is a scaffold: the page it
@@ -83,15 +84,9 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
 });
 
-test.fixme(
+test(
   'a member assigns categories describing what the spell is meant to do',
-  {
-    tag: '@story-48',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.14 builds the intent category control in the spell builder',
-    },
-  },
+  { tag: '@story-48' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Forty-Eight', 'story-48.test', {
       A: 'owner',
@@ -99,14 +94,26 @@ test.fixme(
     });
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
+    const builder = page.getByRole('main');
+    const save = page.getByRole('button', { name: 'Save' });
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    const categories = page.getByRole('combobox', { name: 'Categories' });
-    await categories.fill('Protection');
-    await page.getByRole('option', { name: 'Protection' }).click();
-    await expect(page.getByRole('button', { name: /Remove Protection/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Save' }).click();
-    await page.reload();
-    await expect(page.getByRole('button', { name: /Remove Protection/ })).toBeVisible();
+    for (const category of ['Protection', 'Cleansing']) {
+      await pickCategoryIn(builder, category);
+      await expect(categoryChip(builder, category)).toBeVisible();
+    }
+    // A pick's × takes it out again before the save.
+    await categoryChip(builder, 'Cleansing').click();
+    await expect(categoryChip(builder, 'Cleansing')).toHaveCount(0);
+    await save.click();
+    await expect(save).toBeDisabled();
+    await expect(save).not.toHaveAttribute('aria-busy', 'true');
+    // Saved: the spell's card in the grimoire's Drafts carries the category assigned, and only it.
+    await page.getByRole('link', { name: 'Back to Grimoire' }).click();
+    await page.getByRole('link', { name: 'Drafts' }).click();
+    await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+    const card = grimoireList(page).getByRole('listitem').filter({ hasText: 'Fixture Working' });
+    const chips = card.getByRole('list', { name: 'Categories' });
+    await expect(chips.getByRole('listitem')).toHaveText(['Protection']);
   },
 );
 

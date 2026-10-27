@@ -10,6 +10,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { offerCategories } from '../../support/msw/ingredient-lookups';
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
@@ -97,6 +98,9 @@ const LABELS = [
 
 beforeEach(() => {
   push.mockClear();
+  // The Categories field reads every category as the builder opens; its own
+  // tests are categories-field.test.tsx's.
+  offerCategories([]);
 });
 
 describe('SpellBuilder', () => {
