@@ -9,7 +9,8 @@ import type { EmptyGrimoireProps } from './types';
 //   - No Matches: a filter is in force and matched nothing. The search sentence above
 //     already says so and names the filter, so this says only what to do.
 // Which state is the search sentence's own test, `hasFilter`, so the two never disagree.
-// No first add yet: the spell builder is M10.12's. claude-docs/components/grimoire-list.md.
+// No first add here: New Spell at the Grimoire's heading opens the builder (M10.12).
+// claude-docs/components/grimoire-list.md.
 
 const EmptyGrimoire = ({ status, filter }: EmptyGrimoireProps): ReactElement => {
   const { hasFilter } = buildSearchSentence({ filter, total: 0 });

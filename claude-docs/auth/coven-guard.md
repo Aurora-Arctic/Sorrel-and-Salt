@@ -197,11 +197,14 @@ the axe scans, the open dialog included).
 the coven guard, then answers a viewer with the `notFound()` a stranger gets,
 from `rolePermits(role, { spell: ['create'] })`, since a viewer writes
 nothing. Hiding the page is a convenience: `createSpell` checks
-`spell: create` again, so a viewer is refused by the API too. Nothing on the
-grimoire list links to the page yet.
+`spell: create` again, so a viewer is refused by the API too. The Grimoire's heading links to the
+page through New Spell, drawn by `grimoire/(list)/layout.tsx` under the same
+`rolePermits` check, so a viewer is never shown a link to a 404.
 
 Tests: `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx` (an owner
-and a member get the builder, a viewer the 404).
+and a member get the builder, a viewer the 404), and the Grimoire layout's
+tests in `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx` (an
+owner and a member get New Spell, a viewer does not).
 
 ## The create page (M9.16)
 

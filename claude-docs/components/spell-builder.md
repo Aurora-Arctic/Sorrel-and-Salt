@@ -3,7 +3,8 @@
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
 (M10.12, story 47): its title, intent, jar size, seal wax colour, moon phase,
 day of the week and note. It is a client component. The new-spell page,
-`/coven/[slug]/grimoire/new`, draws it empty; M13.10's edit page,
+`/coven/[slug]/grimoire/new`, draws it empty, reached from New Spell at the
+Grimoire's heading, which only an owner or a member is shown; M13.10's edit page,
 `/coven/[slug]/grimoire/[id]/edit`, will draw it with a saved spell. The
 recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13), intent categories
 (M10.14) and Mark Complete (M10.20) are later tasks that extend it. There is

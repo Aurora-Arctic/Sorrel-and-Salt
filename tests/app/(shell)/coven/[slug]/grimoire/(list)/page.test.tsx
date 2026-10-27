@@ -184,6 +184,39 @@ describe('the Grimoire layout', () => {
     );
   });
 
+  async function renderLayoutAs(role: 'owner' | 'member' | 'viewer') {
+    requireCovenMembership.mockResolvedValue({
+      workspace: COVEN,
+      membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
+    });
+    render(
+      (await Layout({
+        params: Promise.resolve({ slug: COVEN.slug }),
+        children: <p>Fixture Tab</p>,
+      })) as ReactElement,
+    );
+    // The heading drew for this member, so a missing action is the role's, not a refusal.
+    expect(requireCovenMembership).toHaveBeenCalledWith('fixture-coven');
+    expect(screen.getByRole('heading', { level: 1, name: 'Grimoire' })).toBeInTheDocument();
+  }
+
+  it.each(['owner', 'member'] as const)(
+    'links New Spell to the builder at the heading for a coven %s, who may create a spell',
+    async (role) => {
+      await renderLayoutAs(role);
+      expect(screen.getByRole('link', { name: 'New Spell' })).toHaveAttribute(
+        'href',
+        '/coven/fixture-coven/grimoire/new',
+      );
+    },
+  );
+
+  it('draws no New Spell for a viewer, who reads the grimoire but may not create a spell', async () => {
+    await renderLayoutAs('viewer');
+    expect(screen.getByRole('link', { name: 'Spells' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'New Spell' })).not.toBeInTheDocument();
+  });
+
   it('draws nothing for a non-member, whom the guard refuses', async () => {
     requireCovenMembership.mockRejectedValue(new Error('NEXT_NOT_FOUND'));
     await expect(

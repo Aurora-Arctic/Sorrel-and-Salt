@@ -16,9 +16,14 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The spell builder (M10.12), at the route that task builds. */
+/**
+ * The spell builder (M10.12), reached as a member reaches it: from the Grimoire, through the
+ * New Spell at its heading, which only a role that may create a spell is shown.
+ */
 async function openBuilder(page: Page, slug: string): Promise<void> {
-  await page.goto(`/coven/${slug}/grimoire/new`);
+  await page.goto(`/coven/${slug}/grimoire`);
+  await page.getByRole('link', { name: 'New Spell' }).click();
+  await expect(page).toHaveURL(`/coven/${slug}/grimoire/new`);
   await expect(page.getByRole('heading', { name: 'New Spell' })).toBeVisible();
 }
 
@@ -56,7 +61,8 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await expect(save).toBeDisabled();
   await expect(save).not.toHaveAttribute('aria-busy', 'true');
   // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
-  await page.goto(`/coven/${coven.slug}/grimoire`);
+  await page.getByRole('link', { name: 'Back to Grimoire' }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
   await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
