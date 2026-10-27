@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
 import { MOON_PHASES } from '../SpellBuilder/constants';
 import MoonPhaseIcon from '.';
+import './index.stories.scss';
 
 // Render-only, for the owner's review of the drawings: each phase in the
 // list's order with its name beneath, the maria on its lit part. Waxing Moon
@@ -14,7 +15,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const Row = (): ReactElement => (
-  <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', listStyle: 'none', padding: 0 }}>
+  <ul className="moon-phase-icon-story">
     {MOON_PHASES.map((phase) => (
       <li
         key={phase}
