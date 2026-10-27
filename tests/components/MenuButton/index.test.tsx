@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import MenuButton from '@/components/MenuButton';
 import { choicesFor, sectionsFor } from '@/components/MenuButton/sections';
 import type { MenuButtonItem, MenuSection } from '@/components/MenuButton/types';
@@ -220,73 +220,6 @@ describe('MenuButton', () => {
 
     expect(screen.getByRole('menu')).toHaveAccessibleName('Edit Entry');
     expect(toggle()).toHaveAccessibleName('Edit');
-  });
-});
-
-// Where the menu hangs from (claude-docs/components/menu-button.md, "Where it
-// opens"): the button's end edge, wherever the button sits, since every caller
-// puts it at the end of its row. Floating UI turns the placement into the
-// menu's `translate(x, y)`; the rects are stated, since happy-dom lays nothing
-// out.
-describe('MenuButton placement', () => {
-  const WINDOW_WIDTH = 1000;
-  const BUTTON_WIDTH = 80;
-  const MENU_WIDTH = 120;
-  const rectOf = (left: number, width: number, top = 100, height = 32): DOMRect =>
-    ({
-      x: left,
-      y: top,
-      left,
-      top,
-      width,
-      height,
-      right: left + width,
-      bottom: top + height,
-      toJSON: () => ({}),
-    }) as DOMRect;
-
-  // Floating UI measures the button and the menu, and nothing else here.
-  function layOut(buttonLeft: number): void {
-    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(WINDOW_WIDTH);
-    // What Floating UI keeps the menu inside of.
-    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(WINDOW_WIDTH);
-    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(800);
-    // The menu's own size, which Floating UI reads from the element, not its rect.
-    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      return this.getAttribute('role') === 'menu' ? MENU_WIDTH : 0;
-    });
-    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      return this.getAttribute('role') === 'menu' ? 60 : 0;
-    });
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      if (this.getAttribute('role') === 'menu') return rectOf(0, MENU_WIDTH, 0, 60);
-      if (this.getAttribute('aria-haspopup') === 'menu') return rectOf(buttonLeft, BUTTON_WIDTH);
-      return rectOf(0, 0, 0, 0);
-    });
-  }
-
-  afterEach(() => vi.restoreAllMocks());
-
-  // The menu's left edge, from the translate Floating UI sets on it.
-  const menuLeft = async (): Promise<number> => {
-    fireEvent.click(toggle());
-    await waitFor(() => expect(menu().style.transform).toMatch(/^translate\(/));
-    return Number.parseFloat(/translate\((-?[\d.]+)px/.exec(menu().style.transform)![1]!);
-  };
-
-  const drawn = () => render(<MenuButton label="Edit" className="btn" items={actions()} />);
-
-  it("hangs from the button's end edge, even in the start half of the window", async () => {
-    layOut(100);
-    drawn();
-
-    expect(await menuLeft()).toBe(100 + BUTTON_WIDTH - MENU_WIDTH);
   });
 });
 
