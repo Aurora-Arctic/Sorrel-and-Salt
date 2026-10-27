@@ -1766,7 +1766,7 @@ type SpellStep {
   quantity: Float
   unit: InventoryUnit
 
-  """The form laid, on a linked step; null once that form alone is deleted."""
+  """The form laid, on a linked step, still shown once deleted since."""
   variant: IngredientVariant
 }
 

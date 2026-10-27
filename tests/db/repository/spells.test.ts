@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import {
+  findFormsInSpellsIncludingSoftDeleted,
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpell,
   findManyOfIngredients,
@@ -255,6 +256,35 @@ describe('findManyOfSpellIngredientsIncludingSoftDeleted', () => {
       findManyOfSpellIngredientsIncludingSoftDeleted(await proofFor(B), ingredientCategories, [
         unheldId,
       ]),
+    ).resolves.toEqual([]);
+  });
+});
+
+describe('findFormsInSpellsIncludingSoftDeleted', () => {
+  it('hands a deleted form through a spell holding its ingredient, and withholds it elsewhere', async () => {
+    const localId = await local(WORKSPACE_W_ID, A);
+    const unheldId = await insertIngredient(
+      sql,
+      makeIngredient({ workspaceId: WORKSPACE_W_ID, name: 'Fixture Root', nomenclature: 'none' }),
+      A.id,
+    );
+    await spellHolding([localId], { author: B, visibility: 'private' });
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+      where ingredient_id in ${sql([localId, unheldId])}`;
+
+    // The author reads the deleted form: the hatch skips the form's tombstone.
+    const forms = await findFormsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]);
+    expect(forms).toEqual([expect.objectContaining({ ingredientId: localId })]);
+    expect(forms[0].deletedAt).not.toBeNull();
+
+    // And no other filter: not through a spell A may not read, nor for an
+    // ingredient no spell holds.
+    await expect(
+      findFormsInSpellsIncludingSoftDeleted(await proofFor(A), [localId]),
+    ).resolves.toEqual([]);
+    await expect(
+      findFormsInSpellsIncludingSoftDeleted(await proofFor(B), [unheldId]),
     ).resolves.toEqual([]);
   });
 });

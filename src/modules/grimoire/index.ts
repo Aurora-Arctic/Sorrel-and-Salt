@@ -15,6 +15,7 @@ export type {
   SpellStepIngredient,
   SpellStepRow,
   SpellStepUpdate,
+  SpellStepVariant,
   SpellStepView,
   SpellUpdate,
   SpellVisibility,

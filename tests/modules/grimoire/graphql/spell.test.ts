@@ -18,6 +18,7 @@ const repository = vi.hoisted(() => ({
   findManyInSpells: vi.fn(),
   findIngredientsInSpellsIncludingSoftDeleted: vi.fn(),
   findManyOfSpellIngredientsIncludingSoftDeleted: vi.fn(),
+  findFormsInSpellsIncludingSoftDeleted: vi.fn(),
   findManyByIds: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -148,6 +149,26 @@ describe('spell', () => {
     expect(names(spell.derivedCategories)).toEqual(['Banishing', 'Protection']);
     expect(names(spell.categoryGaps.intendedNotPresent)).toEqual(['Release']);
     expect(names(spell.categoryGaps.presentNotIntended)).toEqual(['Banishing']);
+  });
+
+  it('still shows a form deleted since, as the step laid it', async () => {
+    const root = await ingredient('Testroot', []);
+    const id = await insertSpell(
+      sql,
+      makeSpell({ workspaceId: WORKSPACE_W_ID, steps: [{ ingredientId: root }] }),
+      B.id,
+    );
+    await sql`update ingredient_variants set deleted_at = now() where ingredient_id = ${root}`;
+
+    const result = await run<{ spell: SpellNode }>(asUser(C), ONE, {
+      workspaceId: WORKSPACE_W_ID,
+      id,
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data!.spell.steps).toEqual([
+      expect.objectContaining({ form: 'Testform', variant: { form: 'Testform' } }),
+    ]);
   });
 
   it('answers NOT_FOUND for another author’s private spell, and FORBIDDEN outside the coven', async () => {

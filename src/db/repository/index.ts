@@ -2,7 +2,7 @@
 // (claude-docs/db/client-imports.md, "Who may import the client"). `db` is not re-exported and
 // callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
 // write mechanism, so no write can skip audit stamping. Rule 4: every exported
-// finder applies `deleted_at IS NULL` but the six named `…IncludingSoftDeleted`
+// finder applies `deleted_at IS NULL` but the seven named `…IncludingSoftDeleted`
 // hatches and the coven Ingredients list's three readers, which admit a
 // retired compendium entry the coven's cupboard still names through an
 // internal hatch (M12.32), and the two read builders are not re-exported
@@ -26,6 +26,7 @@ export {
   findPageInWorkspace,
 } from './finders';
 export {
+  findFormsInSpellsIncludingSoftDeleted,
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpell,
   findManyInSpells,

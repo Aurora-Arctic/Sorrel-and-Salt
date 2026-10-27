@@ -1,11 +1,10 @@
 import 'server-only';
 import {
+  findFormsInSpellsIncludingSoftDeleted,
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpells,
-  findManyOfSpellIngredientsIncludingSoftDeleted,
 } from '../../../db/repository';
 import { spellSteps } from '../schema/spell-steps';
-import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import type { Membership } from '@/modules/coven';
 import type { SpellStepView } from '../types';
 
@@ -16,9 +15,9 @@ import type { SpellStepView } from '../types';
  * from its index.
  *
  * A linked ingredient is read through the finder that keeps a deleted one,
- * marked `deleted`, and its forms through the one that keeps the deleted
- * ingredient's forms: a spell records a working, so what went into the jar
- * stays in it (M5.3). A link to another coven's ingredient reads `null`, as
+ * and its forms through the one that keeps deleted forms, each marked
+ * `deleted`: a spell records a working, so what went into the jar stays in
+ * it, whether the ingredient or only its form was deleted since (M5.3, M10.9). A link to another coven's ingredient reads `null`, as
  * the finder withholds it. Four statements whatever the number of spells: the
  * steps, the ingredients, and the forms, which read their parents again.
  *
@@ -34,7 +33,7 @@ export async function stepsInSpells(
   ];
   const [held, forms] = await Promise.all([
     findIngredientsInSpellsIncludingSoftDeleted(membership, linked),
-    findManyOfSpellIngredientsIncludingSoftDeleted(membership, ingredientVariants, linked),
+    findFormsInSpellsIncludingSoftDeleted(membership, linked),
   ]);
   const ingredientById = new Map(held.map((row) => [row.id, row]));
   const formById = new Map(forms.map((row) => [row.id, row]));
@@ -49,7 +48,10 @@ export async function stepsInSpells(
         ...step,
         ingredient: ingredient ? { ...ingredient, deleted: ingredient.deletedAt !== null } : null,
         // A form carries its ingredient's tier, which the GraphQL type reads (MB.215).
-        variant: form && ingredient ? { ...form, workspaceId: ingredient.workspaceId } : null,
+        variant:
+          form && ingredient
+            ? { ...form, workspaceId: ingredient.workspaceId, deleted: form.deletedAt !== null }
+            : null,
       };
     });
 

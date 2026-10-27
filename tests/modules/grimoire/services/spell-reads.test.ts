@@ -177,6 +177,24 @@ describe('stepsOfSpells', () => {
     ]);
   });
 
+  it('keeps a form deleted since on its own, marked deleted', async () => {
+    const root = await ingredient('Testroot');
+    const spell = await seed(B, 'workspace', { steps: [{ ingredientId: root }] });
+    // Precondition: the step lays a form, live and unmarked.
+    const [before] = await stepsOfSpells(asUser(C), [key(spell)]);
+    expect(before).toMatchObject([{ variant: { ingredientId: root, deleted: false } }]);
+    await sql`update ingredient_variants set deleted_at = now() where ingredient_id = ${root}`;
+
+    const [steps] = await stepsOfSpells(asUser(C), [key(spell)]);
+
+    expect(steps).toMatchObject([
+      {
+        ingredient: { id: root, deleted: false },
+        variant: { id: (before as { variantId: string }[])[0].variantId, deleted: true },
+      },
+    ]);
+  });
+
   it('answers a batch, a refused coven’s slot Forbidden and a hidden spell’s empty', async () => {
     const first = await seed(B, 'workspace', { steps: [{ body: 'First.' }] });
     const second = await seed(A, 'workspace', { steps: [{ body: 'Second.' }] });
@@ -238,6 +256,16 @@ describe('derivedCategoriesOf', () => {
     const [derived] = await derivedCategoriesOf(asUser(C), [key(spell)]);
 
     expect(names(derived)).toEqual(['Binding', 'Cleansing', 'Protection']);
+  });
+
+  it('still counts the categories of a form deleted since on its own', async () => {
+    const root = await ingredient('Testroot', ['Protection'], ['Warding']);
+    const spell = await seed(B, 'workspace', { steps: [{ ingredientId: root }] });
+    await sql`update ingredient_variants set deleted_at = now() where ingredient_id = ${root}`;
+
+    const [derived] = await derivedCategoriesOf(asUser(C), [key(spell)]);
+
+    expect(names(derived)).toEqual(['Protection', 'Warding']);
   });
 
   it('answers a refused coven Forbidden and a hidden spell nothing', async () => {

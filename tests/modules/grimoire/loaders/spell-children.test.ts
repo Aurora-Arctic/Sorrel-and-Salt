@@ -21,6 +21,7 @@ const repository = vi.hoisted(() => ({
   findManyInSpells: vi.fn(),
   findIngredientsInSpellsIncludingSoftDeleted: vi.fn(),
   findManyOfSpellIngredientsIncludingSoftDeleted: vi.fn(),
+  findFormsInSpellsIncludingSoftDeleted: vi.fn(),
   findManyByIds: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -94,9 +95,10 @@ describe('the spell loaders', () => {
     // Steps: steps, ingredients, forms. Assigned: links, categories. Derived:
     // steps, pairs, categories. Eight, at one spell or five.
     expect(reads()).toBe(8);
-    // The forms and the derived pairs both come through the finder that keeps
-    // an ingredient deleted since, never the live-only one.
-    expect(repository.findManyOfSpellIngredientsIncludingSoftDeleted).toHaveBeenCalledTimes(2);
+    // The forms and the derived pairs come through the finders that keep what
+    // was deleted since, never the live-only ones.
+    expect(repository.findFormsInSpellsIncludingSoftDeleted).toHaveBeenCalledTimes(1);
+    expect(repository.findManyOfSpellIngredientsIncludingSoftDeleted).toHaveBeenCalledTimes(1);
   });
 
   it('refuses a signed-out request without a read', async () => {

@@ -72,7 +72,7 @@ const SpellStepRef = builder.objectRef<SpellStepView>('SpellStep').implement({
     variant: t.field({
       type: IngredientVariantRef,
       nullable: true,
-      description: 'The form laid, on a linked step; null once that form alone is deleted.',
+      description: 'The form laid, on a linked step, still shown once deleted since.',
       resolve: (step) => step.variant,
     }),
     form: t.string({

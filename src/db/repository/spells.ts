@@ -2,6 +2,7 @@ import { and, eq, inArray, or, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { spellSteps } from '../../modules/grimoire/schema/spell-steps';
 import { spells } from '../../modules/grimoire/schema/spells';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import { inTiers, notSoftDeleted, scopedTo } from './predicates';
@@ -143,6 +144,30 @@ export async function findManyOfSpellIngredientsIncludingSoftDeleted<
         table.ingredientId,
         held.map((row) => row.id),
       ),
+    ),
+  );
+}
+
+/**
+ * The forms of the ingredients a readable spell holds, deleted or not, so a
+ * step whose form was deleted still shows the form it laid (M10.9). The third
+ * spell escape hatch, beside M5.3's two. It skips the form's own soft-delete
+ * filter and no other: the ingredient is read through the finder above, which
+ * holds the spell, the layer and the tier. A form's category pairs need no
+ * hatch of their own: `ingredient_categories` has no `deleted_at`, and a
+ * form's soft delete leaves its pairs in place.
+ */
+export async function findFormsInSpellsIncludingSoftDeleted(
+  membership: Membership,
+  ingredientIds: readonly string[],
+): Promise<(typeof ingredientVariants.$inferSelect)[]> {
+  const held = await findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds);
+  if (held.length === 0) return [];
+  return selectFrom(
+    ingredientVariants,
+    inArray(
+      ingredientVariants.ingredientId,
+      held.map((row) => row.id),
     ),
   );
 }

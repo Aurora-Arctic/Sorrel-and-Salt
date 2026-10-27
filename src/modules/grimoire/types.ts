@@ -56,15 +56,17 @@ export type SpellStepUpdate = SpellStepInput;
 /** The ingredient a linked step names, with whether it has been deleted since. */
 export type SpellStepIngredient = IngredientRow & { deleted: boolean };
 
+/** The form a linked step lays, with whether it has been deleted since (M10.9). */
+export type SpellStepVariant = IngredientVariantRow & { deleted: boolean };
+
 /**
  * A step with its ingredient and the form it lays resolved, each `null` for
- * an instruction or a one-off row. The variant is read as its ingredient is,
- * kept when the ingredient has been deleted since; a form deleted on its own
- * reads `null`.
+ * an instruction or a one-off row. Each is kept when deleted since, and says
+ * so: the ingredient whether it or only its form went, the form either way.
  */
 export type SpellStepView = SpellStepRow & {
   ingredient: SpellStepIngredient | null;
-  variant: IngredientVariantRow | null;
+  variant: SpellStepVariant | null;
 };
 
 /** One spell, with its steps in order. */
