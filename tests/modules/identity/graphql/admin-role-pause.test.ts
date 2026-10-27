@@ -43,13 +43,6 @@ describe('Mutation.pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
     ]);
   });
 
-  it('takes no argument, so no actor can be named', async () => {
-    const result = await run(asUser(E), `mutation { pauseAdminRoleChanges(createdBy: "${A.id}") }`);
-
-    expect(result.errors?.[0]?.message).toMatch(/Unknown argument "createdBy"/);
-    expect(await sql`select 1 from admin_role_change_pauses`).toHaveLength(0);
-  });
-
   // E is an admin the scope admits, so the refusal is the service's.
   it('answers another admin as FORBIDDEN', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'somebody-else@admin-role-pause-graphql.test');

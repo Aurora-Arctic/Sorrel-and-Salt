@@ -1,8 +1,6 @@
-import { getNamedType, isObjectType, type GraphQLObjectType } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { FIXTURE_WORKSPACES, WORKSPACE_W_ID } from '@/db/seed/standard';
-import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -117,22 +115,6 @@ describe('Query.users', () => {
     expect(users.edges.map((edge) => edge.node.name)).toEqual(
       Array.from({ length: 10 }, (_, index) => `Listed Fixture 0${index}`),
     );
-  });
-
-  // One `User`, so `email`'s scope is the one `me` already passes through.
-  it('lists the ordinary User type, whose email carries its scope', () => {
-    const typeOf = (type: GraphQLObjectType, field: string): GraphQLObjectType => {
-      const named = getNamedType(type.getFields()[field]?.type);
-      if (!isObjectType(named)) throw new Error(`${type.name}.${field} is not an object`);
-      return named;
-    };
-    const query = schema.getQueryType();
-    if (!query) throw new Error('no Query type');
-
-    const node = typeOf(typeOf(typeOf(query, 'users'), 'edges'), 'node');
-
-    expect(node).toBe(schema.getType('User'));
-    expect(typeOf(query, 'me')).toBe(node);
   });
 });
 

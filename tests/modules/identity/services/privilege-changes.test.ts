@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { Forbidden, ValidationError } from '@/lib/errors';
+import { ValidationError } from '@/lib/errors';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import {
@@ -235,21 +235,6 @@ describe('listPrivilegeChanges', () => {
       ValidationError,
     );
   });
-
-  // Why the refusal is the role's: the same call as an admin reads these rows,
-  // including the ones about the caller themselves. The check reads the site
-  // role alone, so one non-admin — A, a coven owner — stands for every one.
-  it('refuses a non-admin with Forbidden', async () => {
-    expect(asUser(A).role).toBe('user');
-    const theirs = (await newestFirst()).filter((row) => row.user_id === A.id);
-    expect(theirs.length).toBeGreaterThan(0);
-    expect(await ids({ userId: A.id })).toEqual(theirs.map((row) => row.id));
-
-    await expect(listPrivilegeChanges(asUser(A), {}, PAGE)).rejects.toThrow(Forbidden);
-    await expect(listPrivilegeChanges(asUser(A), { userId: A.id }, PAGE)).rejects.toThrow(
-      Forbidden,
-    );
-  });
 });
 
 describe('usersForAdmin', () => {
@@ -264,16 +249,6 @@ describe('usersForAdmin', () => {
       A.id,
       B.id,
     ]);
-  });
-
-  it('refuses every slot to a non-admin, whose own row an admin would be answered', async () => {
-    expect(asUser(A).role).toBe('user');
-    const [own] = await usersForAdmin(asUser(E), [A.id]);
-    expect(own).toMatchObject({ id: A.id });
-
-    const answers = await usersForAdmin(asUser(A), [A.id, B.id]);
-
-    expect(answers).toEqual([expect.any(Forbidden), expect.any(Forbidden)]);
   });
 });
 
@@ -299,17 +274,6 @@ describe('countPrivilegeChanges', () => {
     });
     expect(await countPrivilegeChanges(asUser(E), { privilege: 'admin' }, undefined)).toMatchObject(
       { totalCount: 2 },
-    );
-  });
-
-  it('refuses a non-admin with Forbidden, whose count an admin reads', async () => {
-    expect(asUser(A).role).toBe('user');
-    expect((await countPrivilegeChanges(asUser(E), { userId: A.id }, undefined)).totalCount).toBe(
-      1,
-    );
-
-    await expect(countPrivilegeChanges(asUser(A), { userId: A.id }, undefined)).rejects.toThrow(
-      Forbidden,
     );
   });
 

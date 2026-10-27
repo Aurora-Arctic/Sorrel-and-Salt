@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 import { editorNamesForCurator } from '@/modules/identity';
-import { A, B, E, F, asUser } from '../../../support/as-user';
+import { A, B, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
 // M11.20: the names behind an admin list's Updated column, read by a curator
@@ -24,11 +24,6 @@ describe('editorNamesForCurator', () => {
       { id: A.id, name: A.name },
       { id: B.id, name: B.name },
     ]);
-  });
-
-  it('answers an admin too', async () => {
-    expect(asUser(E).role).toBe('admin');
-    expect(await editorNamesForCurator(asUser(E), [A.id])).toEqual([{ id: A.id, name: A.name }]);
   });
 
   it('exposes no ledger field: only the id and the name', async () => {

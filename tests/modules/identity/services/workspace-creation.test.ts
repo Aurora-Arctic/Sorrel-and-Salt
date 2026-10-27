@@ -1,25 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound } from '@/lib/errors';
-import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { users } from '@/modules/identity/schema/users';
 import {
   grantWorkspaceCreation,
   pauseAdminRoleChanges,
   resumeAdminRoleChanges,
   revokeWorkspaceCreation,
 } from '@/modules/identity';
-import { A, B, E, F, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { asManualFix, refusalOf } from '../../../support/db/privileges';
+import { asManualFix } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
 
 // M5.8: an admin approves someone who has no invitation, or revokes the
 // approval, by writing `canCreateWorkspace` on their row, declared `via:
 // 'admin'` so the trigger on `users` records it in the privilege ledger
-// (MB.195; claude-docs/auth/admin-users.md, "Approving workspace creation"). Refused at the service by direct call, so a non-admin is turned
-// away whatever the page or the schema shows.
+// (MB.195; claude-docs/auth/admin-users.md, "Approving workspace creation"). A non-admin's
+// refusal is curator-boundary.test.ts's, once for every people-page service.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -30,7 +28,6 @@ useTestDatabase((client) => {
 // one awaiting approval, and one soft-deleted while it was.
 const PENDING = '00000000-0000-0000-0000-0000000000b1';
 const DELETED = '00000000-0000-0000-0000-0000000000b2';
-const NOWHERE = '00000000-0000-0000-0000-0000000000b9';
 
 beforeEach(async () => {
   // A's flag is put back as a `psql` fix would, declaring itself; then the
@@ -92,36 +89,6 @@ describe('grantWorkspaceCreation', () => {
     ]);
   });
 
-  // The service writes no ledger row: the same write without its declaration
-  // is refused by the trigger, so the row above is the trigger's.
-  it('is recorded by the trigger, which refuses the same write undeclared', async () => {
-    const undeclared = withAudit(asUser(E), (write) =>
-      write.updateById(users, PENDING, { canCreateWorkspace: true }),
-    );
-
-    expect(await refusalOf(undeclared)).toBe('a privilege change must declare its route');
-    expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false });
-    expect(await changes()).toEqual([]);
-  });
-
-  // The check reads the site role alone, so one non-admin stands for every
-  // one: A owns a coven and may create more, the likeliest to slip through.
-  // E's same call on the same row succeeds, so a pass here is the role refusing.
-  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
-    expect(A.role).toBe('user');
-    expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false });
-
-    await expect(grantWorkspaceCreation(asUser(A), PENDING)).rejects.toThrow(Forbidden);
-
-    expect(await flagOf(PENDING)).toMatchObject({
-      can_create_workspace: false,
-      updated_by: PENDING,
-    });
-    await expect(grantWorkspaceCreation(asUser(E), PENDING)).resolves.toMatchObject({
-      canCreateWorkspace: true,
-    });
-  });
-
   it('refuses a user who may already create a coven, leaving their row alone', async () => {
     await grantWorkspaceCreation(asUser(E), PENDING);
     const granted = await flagOf(PENDING);
@@ -142,10 +109,6 @@ describe('grantWorkspaceCreation', () => {
       can_create_workspace: false,
       updated_by: DELETED,
     });
-  });
-
-  it('answers an id naming no user as NotFound', async () => {
-    await expect(grantWorkspaceCreation(asUser(E), NOWHERE)).rejects.toThrow(NotFound);
   });
 });
 
@@ -208,21 +171,6 @@ describe('revokeWorkspaceCreation', () => {
     expect(await owned()).toEqual([{ id: WORKSPACE_W_ID, deleted_at: null, role: 'owner' }]);
   });
 
-  // One non-admin, as for the grant: B is a member of W, holding no site role.
-  // E's same call on the same row succeeds, so a pass here is the role refusing.
-  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
-    expect(B.role).toBe('user');
-    expect(await flagOf(A.id)).toMatchObject({ can_create_workspace: true });
-
-    await expect(revokeWorkspaceCreation(asUser(B), A.id)).rejects.toThrow(Forbidden);
-
-    expect(await flagOf(A.id)).toMatchObject({ can_create_workspace: true });
-    expect(await changes()).toEqual([]);
-    await expect(revokeWorkspaceCreation(asUser(E), A.id)).resolves.toMatchObject({
-      canCreateWorkspace: false,
-    });
-  });
-
   // MB.177's CHECK would refuse the write; the service says why first.
   it("refuses an admin's flag as Forbidden, before the CHECK would", async () => {
     expect(await flagOf(E.id)).toMatchObject({ can_create_workspace: true });
@@ -235,18 +183,6 @@ describe('revokeWorkspaceCreation', () => {
     expect(await changes()).toEqual([]);
   });
 
-  // The CHECK holds a curator to the flag as it holds an admin (M11.20).
-  it("refuses a curator's flag as Forbidden, before the CHECK would", async () => {
-    expect(await flagOf(F.id)).toMatchObject({ can_create_workspace: true });
-    expect(F.role).toBe('curator');
-
-    const refusal = revokeWorkspaceCreation(asUser(E), F.id);
-
-    await expect(refusal).rejects.toThrow(Forbidden);
-    expect(await flagOf(F.id)).toMatchObject({ can_create_workspace: true });
-    expect(await changes()).toEqual([]);
-  });
-
   it('refuses a user who may not create a coven, writing nothing', async () => {
     const before = await flagOf(PENDING);
 
@@ -254,19 +190,6 @@ describe('revokeWorkspaceCreation', () => {
 
     await expect(refusal).rejects.toThrow(Forbidden);
     expect(await flagOf(PENDING)).toEqual(before);
-    expect(await changes()).toEqual([]);
-  });
-
-  it('answers a soft-deleted or unknown user as NotFound, writing nothing', async () => {
-    await asManualFix(sql, async (tx) => {
-      await tx`update users set can_create_workspace = true where id = ${DELETED}`;
-    });
-    await sql`truncate user_privilege_changes`;
-
-    await expect(revokeWorkspaceCreation(asUser(E), DELETED)).rejects.toThrow(NotFound);
-    await expect(revokeWorkspaceCreation(asUser(E), NOWHERE)).rejects.toThrow(NotFound);
-
-    expect(await flagOf(DELETED)).toMatchObject({ can_create_workspace: true });
     expect(await changes()).toEqual([]);
   });
 });

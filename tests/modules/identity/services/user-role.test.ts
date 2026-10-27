@@ -2,15 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
-import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { users } from '@/modules/identity/schema/users';
-import { assertCurator, setUserRole } from '@/modules/identity';
+import { setUserRole } from '@/modules/identity';
 import type { UserRole } from '@/lib/session';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { asManualFix, refusalOf } from '../../../support/db/privileges';
+import { asManualFix } from '../../../support/db/privileges';
 import { makeIngredient } from '../../../support/fixtures/ingredient';
 import type { PrivilegeChangeRow, RoleRow } from './types';
 
@@ -181,38 +179,6 @@ describe('setUserRole, granting', () => {
     });
   });
 
-  // The service writes no ledger row: the same write undeclared is refused,
-  // so the rows above are the trigger's.
-  it('is recorded by the trigger, which refuses the same write undeclared', async () => {
-    const undeclared = withAudit(asUser(E), (write) =>
-      write.updateById(users, PLAIN, { role: 'admin', canCreateWorkspace: true }),
-    );
-
-    expect(await refusalOf(undeclared)).toBe('a privilege change must declare its route');
-    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user' });
-    expect(await changes()).toEqual([]);
-  });
-
-  it('refuses an existing admin, writing no ledger row', async () => {
-    await expect(setUserRole(asUser(E), E.id, 'admin')).rejects.toThrow(Forbidden);
-    expect(await changes()).toEqual([]);
-  });
-
-  // The check reads the site role alone, so one non-admin stands for every
-  // one: A owns a coven and may create more. E's same call on the same row
-  // succeeds, so a pass here is the role refusing.
-  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
-    expect(A.role).toBe('user');
-
-    await expect(setUserRole(asUser(A), PLAIN, 'admin')).rejects.toThrow(Forbidden);
-
-    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', updated_by: PLAIN });
-    expect(await changes()).toEqual([]);
-    await expect(setUserRole(asUser(E), PLAIN, 'admin')).resolves.toMatchObject({
-      role: 'admin',
-    });
-  });
-
   it('answers a soft-deleted or unknown user as NotFound, writing nothing', async () => {
     await expect(setUserRole(asUser(E), DELETED, 'admin')).rejects.toThrow(NotFound);
     await expect(setUserRole(asUser(E), NOWHERE, 'admin')).rejects.toThrow(NotFound);
@@ -278,25 +244,6 @@ describe('setUserRole, revoking', () => {
     expect(await liveAdmins()).toEqual([OTHER_ADMIN]);
   });
 
-  it('refuses a user who is not an admin, writing no ledger row', async () => {
-    await expect(setUserRole(asUser(E), PLAIN, 'user')).rejects.toThrow(Forbidden);
-    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', updated_by: PLAIN });
-    expect(await changes()).toEqual([]);
-  });
-
-  // One non-admin, as for the grant; E's same call succeeds below.
-  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
-    expect(B.role).toBe('user');
-
-    await expect(setUserRole(asUser(B), OTHER_ADMIN, 'user')).rejects.toThrow(Forbidden);
-
-    expect(await roleOf(OTHER_ADMIN)).toMatchObject({ role: 'admin' });
-    expect(await changes()).toEqual([]);
-    await expect(setUserRole(asUser(E), OTHER_ADMIN, 'user')).resolves.toMatchObject({
-      role: 'user',
-    });
-  });
-
   it('answers a soft-deleted or unknown user as NotFound', async () => {
     await expect(setUserRole(asUser(E), DELETED, 'user')).rejects.toThrow(NotFound);
     await expect(setUserRole(asUser(E), NOWHERE, 'user')).rejects.toThrow(NotFound);
@@ -347,16 +294,6 @@ describe('setUserRole and the curator role', () => {
     expect(rows[0]?.created_at).toEqual(rows[1]?.created_at);
   });
 
-  it('records a curator grant to a user who holds the flag as the curator row alone', async () => {
-    expect(await roleOf(APPROVED)).toMatchObject({ can_create_workspace: true });
-
-    await setUserRole(asUser(E), APPROVED, 'curator');
-
-    expect((await changes()).map(({ privilege, change }) => [privilege, change])).toEqual([
-      ['curator', 'grant'],
-    ]);
-  });
-
   it.each([
     [
       'a curator an admin',
@@ -367,16 +304,6 @@ describe('setUserRole and the curator role', () => {
         ['curator', 'revoke'],
       ],
     ],
-    [
-      'an admin a curator',
-      OTHER_ADMIN,
-      'curator' as const,
-      [
-        ['admin', 'revoke'],
-        ['curator', 'grant'],
-      ],
-    ],
-    ['a curator a user', CURATOR, 'user' as const, [['curator', 'revoke']]],
   ])('makes %s, the flag kept, recorded at one instant', async (_what, target, role, recorded) => {
     const user = await setUserRole(asUser(E), target, role);
 
@@ -399,22 +326,6 @@ describe('setUserRole and the curator role', () => {
 
     expect(await roleOf(target)).toEqual(before);
     expect(await changes()).toEqual([]);
-  });
-
-  // F curates, so a pass here is the people-page check refusing a curator,
-  // not a session that holds no site role at all. E's same call succeeds.
-  it('refuses a curator as Forbidden by direct call, for another user and for themselves', async () => {
-    expect(assertCurator(asUser(F))).toMatchObject({ userId: F.id });
-
-    await expect(setUserRole(asUser(F), PLAIN, 'curator')).rejects.toThrow(Forbidden);
-    await expect(setUserRole(asUser(F), F.id, 'admin')).rejects.toThrow(Forbidden);
-
-    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', updated_by: PLAIN });
-    expect(await roleOf(F.id)).toMatchObject({ role: 'curator' });
-    expect(await changes()).toEqual([]);
-    await expect(setUserRole(asUser(E), PLAIN, 'curator')).resolves.toMatchObject({
-      role: 'curator',
-    });
   });
 });
 

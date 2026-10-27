@@ -15,7 +15,7 @@ import {
   revokeAdminInvitation,
 } from '@/modules/identity';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { A, B, C, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
@@ -269,18 +269,6 @@ describe('createAdminInvitation', () => {
       ]);
     });
   });
-
-  // E creates one in the first test. The check reads the site role alone, so
-  // one non-admin — A, a coven owner — stands for every one.
-  it('refuses a non-admin as Forbidden by direct call, writing and mailing nothing', async () => {
-    expect(asUser(A).role).toBe('user');
-
-    await expect(
-      createAdminInvitation(asUser(A), INVITED, 'admin', undefined, sender()),
-    ).rejects.toThrow(Forbidden);
-    expect(await invitations()).toEqual([]);
-    expect(send).not.toHaveBeenCalled();
-  });
 });
 
 describe('revokeAdminInvitation', () => {
@@ -311,17 +299,6 @@ describe('revokeAdminInvitation', () => {
     await expect(
       revokeAdminInvitation(asUser(E), '00000000-0000-0000-0000-00000000dead'),
     ).rejects.toThrow(NotFound);
-  });
-
-  // The direct id is a real pending invitation, which E then revokes; B holds
-  // no site role, which is all the check reads.
-  it('refuses a non-admin as Forbidden by direct id, leaving it pending', async () => {
-    const id = await invite();
-    expect(asUser(B).role).toBe('user');
-
-    await expect(revokeAdminInvitation(asUser(B), id)).rejects.toThrow(Forbidden);
-    expect((await invitations())[0].revoked_at).toBeNull();
-    await expect(revokeAdminInvitation(asUser(E), id)).resolves.toMatchObject({ id });
   });
 });
 
@@ -436,14 +413,6 @@ describe('listPendingAdminInvitations', () => {
     expect(ids(second)).toEqual([id(5)]);
     expect(second.pageInfo.hasNextPage).toBe(false);
   });
-
-  it('refuses a non-admin as Forbidden', async () => {
-    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
-    expect(await pending()).toHaveLength(1);
-    expect(asUser(C).role).toBe('user');
-
-    await expect(listPendingAdminInvitations(asUser(C), {}, PAGE)).rejects.toThrow(Forbidden);
-  });
 });
 
 describe('countPendingAdminInvitations', () => {
@@ -477,15 +446,6 @@ describe('countPendingAdminInvitations', () => {
       totalCount: 4,
       countBefore: null,
     });
-  });
-
-  // Why the refusal is the role's: the same count as an admin finds a row.
-  it('refuses a non-admin as Forbidden', async () => {
-    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
-    expect((await countPendingAdminInvitations(asUser(E), {}, undefined)).totalCount).toBe(1);
-    expect(asUser(C).role).toBe('user');
-
-    await expect(countPendingAdminInvitations(asUser(C), {}, undefined)).rejects.toThrow(Forbidden);
   });
 });
 
