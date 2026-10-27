@@ -181,4 +181,7 @@ confirmed, a refused share, a refused narrowing shown in the notice, and the
 control shut with its reason on a shared spell. The page is
 `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx`: the builder for an
 owner and a member, and the 404 for a viewer. Story 47 in
-`tests/e2e/stories/06-grimoire.spec.ts` walks it in a browser.
+`tests/e2e/stories/06-grimoire.spec.ts` walks it in a browser. No story walks the visibility control, since §5's rule governs it rather than a
+story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
+then shared in one confirmed action and the control shut, each step read from the
+database. Story 56 checks the Private badge on the author's card.
