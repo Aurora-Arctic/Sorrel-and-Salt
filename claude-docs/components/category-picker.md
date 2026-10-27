@@ -3,7 +3,7 @@
 `src/components/CategoryPicker/` — the categories picked from one box, as a
 list field's entries are (MB.126): typing narrows the live categories, listed
 under their groups, and a pick is a chip inside the control in its group's
-colour. The ingredient form's Categories field, and the compendium list's
+colour. The ingredient form's Categories field, the spell builder's (M10.14, `SpellBuilder/categories-field.tsx`), and the compendium list's
 Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for the box's text.
 
 ## Props

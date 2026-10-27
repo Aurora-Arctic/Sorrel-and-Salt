@@ -17,6 +17,7 @@ import {
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
+import { SpellCategoriesField, sameCategories } from './categories-field';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
@@ -79,17 +80,24 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/** The fields as the save sends them: trimmed, and null for blank, as the schema reads them. */
-type SpellBuilderInput = Record<SpellBuilderField, string | null>;
+/**
+ * The fields as the save sends them: trimmed, and null for blank, as the
+ * schema reads them; the categories only when they changed (M10.14).
+ */
+type SpellBuilderInput = Record<SpellBuilderField, string | null> & { categoryIds?: string[] };
 
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
 /** The form's values for a spell: none for a new one, and blank for a field it has not set. */
 function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
-  return Object.fromEntries(
-    FIELDS.map((field) => [field, spell?.[field] ?? '']),
-  ) as SpellBuilderValues;
+  return {
+    ...(Object.fromEntries(FIELDS.map((field) => [field, spell?.[field] ?? ''])) as Record<
+      SpellBuilderField,
+      string
+    >),
+    categoryIds: [...(spell?.categoryIds ?? [])],
+  };
 }
 
 /**
@@ -131,9 +139,13 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   // Something to save: a field that reads differently from the last save,
   // blank and spaces alike reading as none, as the schema reads them.
   const typed = useWatch({ control, name: [...FIELDS] });
-  const dirty = FIELDS.some(
-    (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
-  );
+  const picked = useWatch({ control, name: 'categoryIds' });
+  const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
+  const dirty =
+    categoriesChanged ||
+    FIELDS.some(
+      (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
+    );
 
   const discard = useDiscardGuard(dirty && !isSubmitting);
   const root = useRef<HTMLFormElement>(null);
@@ -158,18 +170,26 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   const send = async (values: SpellBuilderInput): Promise<void> => {
     // Only the builder's fields: the schema's defaults (an empty recipe)
     // would otherwise replace a saved spell's steps.
-    const input = Object.fromEntries(
+    const input: SpellBuilderInput = Object.fromEntries(
       FIELDS.map((field) => [field, values[field] ?? null]),
-    ) as SpellBuilderInput;
+    ) as Record<SpellBuilderField, string | null>;
+    // The categories go only when the picks differ from the last save: left
+    // out, the service keeps the spell's set as it is (M10.14).
+    const categoryIds = values.categoryIds ?? [];
+    if (!sameCategories(categoryIds, defaultValues?.categoryIds)) input.categoryIds = categoryIds;
     try {
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
       // What was saved is the new start: Save goes off until the next change.
-      reset(valuesOf(answer));
+      reset({ ...valuesOf(answer), categoryIds });
     } catch (error) {
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
-        rest.length === 0 && isField(field) ? field : undefined,
-      );
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+        // A refused pick is pathed to its index, as the ids were sent.
+        if (field === 'categoryIds') {
+          return rest.length === 0 ? 'categoryIds' : `categoryIds.${Number(rest[0])}`;
+        }
+        return rest.length === 0 && isField(field) ? field : undefined;
+      });
     }
   };
 
@@ -192,6 +212,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             multiline
             rows={3}
           />
+          <SpellCategoriesField />
           <TextField<SpellBuilderValues>
             name="jarSize"
             label="Jar Size"

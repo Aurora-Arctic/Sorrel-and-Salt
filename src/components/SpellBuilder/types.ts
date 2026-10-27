@@ -5,15 +5,21 @@ import type { FieldProps } from '../Field/types';
 export type SpellBuilderField =
   'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
 
-/** The form's values: each field as typed, blank for none. */
-export type SpellBuilderValues = Record<SpellBuilderField, string>;
+/**
+ * The form's values: each field as typed, blank for none, and the ids of the
+ * categories the spell is assigned (M10.14), none for none.
+ */
+export type SpellBuilderValues = Record<SpellBuilderField, string> & { categoryIds: string[] };
 
 /** A saved spell the builder opens, as the `spell` query answers it (M13.10). */
 export type SpellBuilderSpell = {
   id: string;
   /** The revision it was read at, sent back with the next save as `expectedRevision`. */
   revision: number;
-} & Record<SpellBuilderField, string | null>;
+} & Record<SpellBuilderField, string | null> & {
+    /** The categories it is assigned (M10.14); left out, none. */
+    categoryIds?: readonly string[];
+  };
 
 export interface SpellBuilderProps {
   /** The coven the spell is written in. */

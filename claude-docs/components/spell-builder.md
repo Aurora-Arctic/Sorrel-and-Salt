@@ -2,22 +2,21 @@
 
 `src/components/SpellBuilder/` is the form that writes a spell's own fields
 (M10.12, story 47): its title, intent, jar size, seal wax colour, moon phase,
-day of the week and note. It is a client component. The new-spell page,
+day of the week and note, and the categories it is assigned (M10.14, story 48). It is a client component. The new-spell page,
 `/coven/[slug]/grimoire/new`, draws it empty, reached from New Spell at the
 Grimoire's heading, which only an owner or a member is shown; M13.10's edit page,
 `/coven/[slug]/grimoire/[id]/edit`, will draw it with a saved spell. The
-recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13), intent categories
-(M10.14) and Mark Complete (M10.20) are later tasks that extend it. There is
+recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13) and Mark Complete (M10.20) are later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
 
 `SpellBuilderProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `workspaceId` | The coven the spell belongs to, sent with every save                                                             |
-| `spell`       | Optional: a saved spell, its `id`, `revision` and the seven fields (null for one not set). Without it, all empty |
+| Prop          | What it is                                                                                                                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                 |
+| `spell`       | Optional: a saved spell, its `id`, `revision`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
 
 ## Saving
 
@@ -39,7 +38,11 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 - **What it sends.** The seven fields, trimmed, and null for a blank one, so
   an emptied field is cleared rather than left as it was. Only these seven:
   the schema's default empty `steps` is never sent, so a save from here
-  cannot replace a saved spell's recipe.
+  cannot replace a saved spell's recipe. The categories go as
+  `categoryIds` only when the picks differ from the last save, as a set in
+  any order; left out, the service keeps the spell's set as it is, and an
+  empty list clears it ([`../db/grimoire.md`](../db/grimoire.md), "Saving its
+  categories"). A changed pick turns Save on like a changed field.
 - **After a save the form starts again from the answer**, so Save goes
   disabled until the next change. The address stays at
   `/coven/[slug]/grimoire/new` after a create: there is no page for one spell
@@ -51,7 +54,7 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 As in the ingredient form (M5.9): the shared schema runs as the form's
 resolver, so a field it refuses shows its error beneath that field before
 the save, and a `VALIDATION` answer's `fieldErrors` for one of the seven
-fields show beneath it after, through the same element (`aria-invalid` and
+fields, or for a pick at `['categoryIds', index]`, show beneath that field after, through the same element (`aria-invalid` and
 `aria-describedby`). Anything else, such as a viewer's `FORBIDDEN`, goes to
 the `Notice` above the fields, in the server's words. The reading is
 `placeServerIssues`. Today no builder field has a rule the schema can break
@@ -114,6 +117,18 @@ stored as typed: the columns are free text
   rest of the disc in shadow (the owner, 2026-10-27). A phase typed outside the list, such as "Dark",
   shows its words with no drawing (the owner, 2026-10-27).
 
+- **Categories** (`categories-field.tsx`, after Intent) are what the spell
+  is meant to do: the categories its author assigns it, never the ones its
+  ingredients bring, which are read from them and shown apart (DESIGN.md,
+  "Two kinds of spell category"). The field is the ingredient form's
+  `CategoryPicker` ([`category-picker.md`](category-picker.md)) on the same
+  `PickerCategories` query (`CategoriesDocument`, exported from
+  `IngredientForm/categories.tsx`): a box named Category in a group headed
+  Categories, each pick a chip in its group's colour with a × to remove it.
+  A pick the service refuses (a category deleted since the builder loaded) is
+  marked invalid, and its message names it. The builder shows its picks
+  as the picker's chips; the grimoire's spell card shows the saved ones with
+  `CategoryChips`.
 - **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
 - **Intent and Note** are multi-line. Title, Jar Size and Seal Wax Colour are
@@ -140,7 +155,15 @@ empty fields and no Instructions box, no Cancel, nothing to save until a
 field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
-surfaces, and the discard question. The page is
+surfaces, and the discard question.
+`tests/components/SpellBuilder/categories-field.test.tsx` covers the
+Categories field: the picks sent with a first save, Save on with a pick and
+off once it is removed, a saved spell's categories opened and the set left
+after a removal sent (an empty set to clear them), the categories left out of
+a save that did not change them, and a refused pick shown beside the field
+by name. The page is
 `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx`: the builder for an
-owner and a member, and the 404 for a viewer. Story 47 in
-`tests/e2e/stories/06-grimoire.spec.ts` walks it in a browser.
+owner and a member, and the 404 for a viewer. Stories 47 and 48 in
+`tests/e2e/stories/06-grimoire.spec.ts` walk it in a browser; story 48 picks
+two categories, removes one, saves, and finds the one left on the spell's
+card under Drafts.
