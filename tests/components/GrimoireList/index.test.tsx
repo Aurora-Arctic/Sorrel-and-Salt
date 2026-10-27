@@ -37,9 +37,17 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
       title: 'Fixture Working',
       intent: 'To test a list.',
       status: 'complete',
+      visibility: 'workspace',
       categories: [],
     },
-    { id: 's2', title: 'Testwort Charm', intent: null, status: 'complete', categories: [] },
+    {
+      id: 's2',
+      title: 'Testwort Charm',
+      intent: null,
+      status: 'complete',
+      visibility: 'workspace',
+      categories: [],
+    },
   ],
   filter: { query: '', categories: [], categoryMode: 'all' },
   categories: [

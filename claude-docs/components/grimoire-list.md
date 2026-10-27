@@ -98,7 +98,7 @@ Tokens only, before the section's design review. `index.scss` sets the two empty
 - `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`: the membership guard on
   both tabs and the layout, each tab's status and page size, the address read into the
   query, the tab's status winning, the categories and the editors each read in one batch,
-  and the pager's link.
+  a private spell badged Private (M10.13), and the pager's link.
 - `tests/components/CovenNav/index.test.tsx`: the Grimoire link, current on Drafts too.
 - `tests/e2e/stories/06-grimoire.spec.ts`: story 56 in the browser, a private spell listed
   for its author alone.
