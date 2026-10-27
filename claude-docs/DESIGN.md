@@ -1514,6 +1514,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 
 64. As a reader of the compendium, see where an entry's information came from, so that I can judge a claim and read further.
 
+### Step units (M13.2)
+
+77. Give a step that lays a form my coven holds stock of a unit that stock can be measured in (any weight against weight, any volume against volume, the same unit for a count), so that making the spell can take it out of stock.
+
 ### Spell steps (M13.1)
 
 80. Record a spell's steps in one order, each an instruction, an ingredient, or both, so the ritual is kept beside what goes in the jar.

@@ -25,7 +25,7 @@ test('…', { tag: ['@story-4', '@story-5'] }, async ({ page }) => {});
 The checklist reads the tag. A test in this directory with no `@story-N` tag
 fails the run. A tag naming a number DESIGN.md §10 does not list is reported as
 "Not a v1 story" and does not fail it (35–46 belong to v2 and are not reused;
-76–80 wait for M13.1, M13.2 and M13.4 to add them; 81 has no scaffold until M13.17 adds its flows). A story passes when every test tagged
+76, 78 and 79 wait for M13.4 to add them; 81 has no scaffold until M13.17 adds its flows). A story passes when every test tagged
 with it passes. A test that passes only on its retry counts as failing: CI
 retries once so the run finishes, and the checklist lists the story as flaky,
 its box unticked: `FLAKY (failed, then passed on retry)`.
