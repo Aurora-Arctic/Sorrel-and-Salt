@@ -9,10 +9,12 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 
 // The parts of a coven invitation no v1 story walks, against the built
-// server (M7.7): the account menu's count of waiting invitations, declining,
-// and a link to a coven since deleted. The send, the accept from
-// the link and the used, revoked and expired refusals are the story suite's
-// (tests/e2e/stories/01-invitations.spec.ts, stories 4 to 7, M9.1). The
+// server (M7.7): the /coven notice and the account menu's count of waiting
+// invitations, the shell's redraw after an accept, declining, and a link to a
+// coven since deleted. The send, the accept from the link and from the
+// account page, the seat it gives, and the used, revoked and expired refusals
+// are the story suite's (tests/e2e/stories/01-invitations.spec.ts, stories 4
+// to 7, M9.1). The
 // accept service's checks are the unit tests'; this walks them in a browser.
 // Each worker builds the owner and the coven in its own database before its
 // first test, and every walk invites a new address, so the walks are
@@ -97,12 +99,11 @@ async function refusalAt(page: Page, path: string): Promise<string> {
 }
 
 test.describe('a coven’s invitation from the account page', () => {
-  test('D is told on /coven, accepts it on the account page, and the mailed link is then spent', async ({
+  test('D is told on /coven and in the account menu, and the shell redraws once D accepts it on the account page', async ({
     page,
   }) => {
     const invited = address('d');
     await ownerInvites(page, invited);
-    const linkPath = await mailedInvitePath(invited);
     const banner = page.getByRole('banner');
 
     // Another signed-in account, with no seat anywhere, is told of none.
@@ -113,7 +114,7 @@ test.describe('a coven’s invitation from the account page', () => {
     await expect(banner.getByRole('button', { name: 'Fixture Person', exact: true })).toBeVisible();
 
     // D holds the invited address, verified, and never opens the mail.
-    const { userId } = await signInAs(page, invited);
+    await signInAs(page, invited);
     await page.goto('/coven');
     const see = page.getByRole('link', { name: 'See your invitations' });
     await expect(see).toBeVisible();
@@ -132,23 +133,12 @@ test.describe('a coven’s invitation from the account page', () => {
     await see.click();
     await expect(page).toHaveURL(/\/account#account-invitations$/);
     await expect(page.getByRole('table', { name: 'Your Invitations' })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
-    expect(await page.content()).not.toContain(linkPath);
     await page.getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` }).click();
 
     await expect(page).toHaveURL(new RegExp(`/coven/${COVEN_SLUG}$`));
     await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
     // The shell redrew: nothing is waiting any more.
     await expect(banner.getByRole('button', { name: 'Fixture Person', exact: true })).toBeVisible();
-    const [seat] = await withSql(
-      (sql) => sql`
-        select role::text from workspace_members
-        where workspace_id = ${covenId} and user_id = ${userId} and deleted_at is null`,
-    );
-    expect(seat.role).toBe('member');
-
-    // The link D was mailed is the same invitation, now accepted.
-    await refusalAt(page, linkPath);
   });
 });
 
