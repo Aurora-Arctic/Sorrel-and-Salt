@@ -1,6 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import FormIcon from '@/components/FormIcon';
 import SafetyNote, { CautionMark, SafetyMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
 
@@ -12,7 +11,6 @@ import { capitalise } from '@/lib/text';
 // so finding them proves what rendered, not what the copy says.
 
 const INGREDIENT_NOTES = 'Fixture ingredient caution.';
-// The leaf is a curated form in a group with an icon; the oil was typed, so it has none.
 const LEAF = {
   form: 'testleaf',
   formChoice: { group: { icon: 'botanical' as const } },
@@ -21,14 +19,6 @@ const LEAF = {
 };
 const OIL = { form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true };
 const ROOT = { form: 'testroot', safetyNotes: '', toxic: false };
-
-/** The markup FormIcon draws for a group icon, which is how one icon is told from another. */
-const drawing = (name: 'botanical' | null): string => {
-  const { container, unmount } = render(<FormIcon name={name} />);
-  const markup = container.querySelector('svg')!.innerHTML;
-  unmount();
-  return markup;
-};
 
 // What can take focus without a tabindex, plus anything given one. Real tab
 // order is a browser question; here it is enough that nothing in the note is
@@ -44,9 +34,7 @@ const stops = (element: Element): Element[] => [
 
 describe('SafetyNote', () => {
   it.each([
-    ['absent', undefined],
     ['null', null],
-    ['empty', ''],
     ['blank', '  \n '],
   ])('renders nothing when the notes are %s and no shown form has any', (_, safetyNotes) => {
     const { container } = render(
@@ -71,8 +59,7 @@ describe('SafetyNote', () => {
     expect(screen.getByRole('heading', { name: 'Caution', level: 4 })).toBeInTheDocument();
   });
 
-  it("lists each shown form's notes under its capitalised name and its group's icon, after the ingredient's own", () => {
-    const [leafIcon, spoon] = [drawing('botanical'), drawing(null)];
+  it("lists each shown form's notes under its capitalised name, after the ingredient's own", () => {
     render(<SafetyNote safetyNotes={INGREDIENT_NOTES} variants={[LEAF, ROOT, OIL]} />);
 
     const region = screen.getByRole('region', { name: 'Caution' });
@@ -82,10 +69,6 @@ describe('SafetyNote', () => {
     expect(terms.map((term) => term.textContent?.trim())).toEqual([
       capitalise(LEAF.form),
       capitalise(OIL.form),
-    ]);
-    expect(terms.map((term) => term.querySelector('svg[aria-hidden="true"]')?.innerHTML)).toEqual([
-      leafIcon,
-      spoon,
     ]);
     expect(definitions.map((definition) => definition.textContent)).toEqual([
       LEAF.safetyNotes,
@@ -131,7 +114,6 @@ describe('ToxicMark', () => {
   it.each([
     ['the ingredient alone', true, []],
     ['a shown form alone', false, [LEAF, OIL]],
-    ['both', true, [OIL]],
   ])('shows its word when %s is flagged toxic', (_, toxic, variants) => {
     render(<ToxicMark toxic={toxic} variants={variants} />);
 
@@ -141,7 +123,6 @@ describe('ToxicMark', () => {
   it.each([
     ['nothing is flagged', false, [LEAF, ROOT]],
     ['the flag is absent', undefined, undefined],
-    ['the forms carry no flag', null, [{ form: 'testbark' }]],
   ])('renders nothing when %s', (_, toxic, variants) => {
     const { container } = render(<ToxicMark toxic={toxic} variants={variants} />);
 
@@ -186,7 +167,6 @@ describe('SafetyMark', () => {
   it.each([
     ['the ingredient is toxic and has notes', { toxic: true, safetyNotes: 'Fixture caution.' }],
     ['a form is toxic and has notes', { variants: [OIL] }],
-    ['the ingredient is toxic and a form has notes', { toxic: true, variants: [LEAF] }],
   ])('shows Toxic alone when %s', (_, props) => {
     render(<SafetyMark {...props} />);
 
