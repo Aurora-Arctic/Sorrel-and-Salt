@@ -32,7 +32,8 @@ import './index.scss';
 // it, and following a scroll or a resize while open. Which side it opens
 // toward is the room's to decide (M8.17). claude-docs/components/menu-button.md.
 
-const Chevron = (): ReactElement => (
+// Exported for a caller that draws the chevron alone as its `icon`: the bar's Add Ingredient split button.
+export const Chevron = (): ReactElement => (
   <svg
     className="menu-button__chevron"
     viewBox="0 0 16 16"
@@ -119,6 +120,7 @@ export default function MenuButton({
   busyLabel,
   buttonType = false,
   icon,
+  menuLabel,
   ref,
   state,
   ...choices
@@ -286,7 +288,7 @@ export default function MenuButton({
         ref={setList}
         id={menuId}
         role="menu"
-        aria-label={label}
+        aria-label={menuLabel ?? label}
         aria-hidden={!open || undefined}
         inert={!open}
         hidden={!drawn}

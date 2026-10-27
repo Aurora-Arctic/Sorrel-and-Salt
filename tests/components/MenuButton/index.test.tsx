@@ -158,14 +158,6 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('is busy and shut while an item is in flight', () => {
-    draw(actions(), true);
-
-    const busy = screen.getByRole('button', { name: 'Adding' });
-    expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(busy).toHaveAttribute('aria-disabled', 'true');
-  });
-
   // MB.120: the busy button was `disabled`, and a browser drops the focus of a control that is
   // disabled under it to the body, so the keyboard lost its place while an add ran. It is
   // `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and
@@ -198,6 +190,8 @@ describe('MenuButton', () => {
       fireEvent.click(busy);
       fireEvent.keyDown(busy, { key: 'ArrowDown' });
 
+      expect(busy).toHaveAttribute('aria-busy', 'true');
+      expect(busy).toHaveAttribute('aria-disabled', 'true');
       expect(busy).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByRole('menu')).toBeNull();
     });
@@ -206,7 +200,7 @@ describe('MenuButton', () => {
   // An icon in place of the words (M8.17's card More): the label still names
   // the button and its menu, read by a screen reader though not shown.
   it("keeps its label as its name and its menu's with an icon in place of the words", () => {
-    const { rerender } = render(
+    render(
       <MenuButton
         label="Edit"
         className="btn"
@@ -215,19 +209,17 @@ describe('MenuButton', () => {
       />,
     );
     fireEvent.click(toggle());
+    // `menu()` finds it by the name Edit.
     expect(within(menu()).getAllByRole('menuitem')).toHaveLength(2);
+  });
 
-    rerender(
-      <MenuButton
-        label="Edit"
-        className="btn"
-        items={actions()}
-        icon={<svg aria-hidden="true" />}
-        busy
-        busyLabel="Adding"
-      />,
-    );
-    expect(screen.getByRole('button', { name: 'Adding' })).toHaveAttribute('aria-disabled', 'true');
+  // The bar's Add Ingredient chevron is "Choose Where to Add" and its menu "Add Ingredient To".
+  it('names its menu by menuLabel where it is given, the button keeping its label', () => {
+    render(<MenuButton label="Edit" menuLabel="Edit Entry" className="btn" items={actions()} />);
+    fireEvent.click(toggle());
+
+    expect(screen.getByRole('menu')).toHaveAccessibleName('Edit Entry');
+    expect(toggle()).toHaveAccessibleName('Edit');
   });
 });
 
