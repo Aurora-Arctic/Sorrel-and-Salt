@@ -46,14 +46,16 @@ CREATE OR REPLACE TRIGGER bump_revision BEFORE UPDATE ON "spells" FOR EACH ROW E
 -- counter is the database's bookkeeping, not the row's content, and leaving
 -- it out holds whichever order the two triggers run in. Same name and
 -- signature as 0079's, so every table's trigger picks the new body up
--- unchanged; the rest of the body is 0079's.
+-- unchanged; the rest of the body is 0081's, whose seed and review columns
+-- (M14.5) stay ignored beside it.
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE
 	ignored text[];
 BEGIN
 	IF current_setting('app.touch_row', true) IS DISTINCT FROM 'on' THEN
-		SELECT ARRAY['updated_at', 'updated_by', 'revision'] || coalesce(array_agg(attname::text), '{}')
+		SELECT ARRAY['updated_at', 'updated_by', 'seed_content_hash', 'curator_reviewed_at', 'curator_reviewed_by', 'revision']
+			|| coalesce(array_agg(attname::text), '{}')
 		INTO ignored
 		FROM pg_attribute
 		WHERE attrelid = TG_RELID AND attgenerated <> '' AND NOT attisdropped;

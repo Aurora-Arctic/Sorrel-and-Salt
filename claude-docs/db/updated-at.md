@@ -27,8 +27,11 @@ disambiguate.
   now keeps the row's old `updated_at` and `updated_by`, so "when was this last
   changed" can be read from the column (the compendium's New and Updated
   markers, the sitemap's `lastModified`). "Changes nothing" compares the row as
-  JSON with four things left out: `updated_at` and `updated_by`, because
-  `withAudit` sends both on every write; `revision` (M13.15,
+  JSON with five things left out: `updated_at` and `updated_by`, because
+  `withAudit` sends both on every write; an ingredient's seed and review
+  state, `seed_content_hash`, `curator_reviewed_at` and `curator_reviewed_by`
+  (M14.5, `0081_compendium-seed-state-expand.sql`), because a seed run or a
+  review mark changes nothing a reader sees; `revision` (M13.15,
   `0084_spells-revision-and-draft-title.sql`), because the `bump_revision`
   trigger moves it on every update and, by name order, runs first; and
   generated columns (an ingredient's `identity_key`), because Postgres
