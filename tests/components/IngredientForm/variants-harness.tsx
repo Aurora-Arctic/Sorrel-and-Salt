@@ -157,6 +157,98 @@ export const twoForms = (
   ],
 });
 
+// What a variant copies from the ingredient (MB.115), and an entry holding
+// something in each.
+export const CATEGORY_A = '8a9b0c1d-2e3f-4b4c-8d5e-6f7a8b9c0d1e';
+export const CATEGORY_B = '9b0c1d2e-3f4a-4c5d-9e6f-7a8b9c0d1e2f';
+export const REFERENCE_ID = '6f7a8b9c-0d1e-4f2a-8b3c-4d5e6f7a8b9c';
+export const OTHER_REFERENCE_ID = '7a8b9c0d-1e2f-4a3b-9c4d-5e6f7a8b9c0d';
+export const reference = (id: string, title: string, locator: string) => ({
+  value: title,
+  link: { id, isGlobal: true, kind: 'book' as const, title, authors: null, container: null },
+  locator,
+});
+export const COPIED = [
+  'Description',
+  'Safety Notes',
+  'Element',
+  'Celestial Bodies',
+  'Zodiac Signs',
+  'Colours',
+  'Categories',
+  'Substitute Ingredients',
+  'References',
+];
+export const copyOf = (scope: HTMLElement, field: string) =>
+  within(scope).getByRole('button', { name: `Copy From Ingredient: ${field}` });
+
+/** An entry whose ingredient holds something in every field a variant copies, its Oil some of it already. */
+export const filled = (): IngredientFormValues => {
+  const base = twoForms({
+    safetyNotes: 'Dilute before use.',
+    celestialBodies: [{ value: 'venus' }],
+    colors: [{ value: 'Fixture Red' }],
+    elements: ['fire'],
+    categoryIds: [CATEGORY_B],
+    substitutes: [{ value: 'Fixture fern' }],
+    references: [reference(OTHER_REFERENCE_ID, 'The Second Herbal', '')],
+  });
+  return {
+    ...base,
+    description: 'A fixture herb.',
+    safetyNotes: 'Keep from children.',
+    elements: ['fire', 'water'],
+    celestialBodies: [{ value: 'Mercury' }, { value: 'Venus' }],
+    zodiacSigns: [{ value: 'Gemini' }],
+    colors: [{ value: 'Fixture Red' }, { value: 'Fixture Green' }],
+    categoryIds: [CATEGORY_A, CATEGORY_B],
+    substitutes: [
+      {
+        value: 'Oilwort',
+        link: {
+          id: OILWORT_ID,
+          canonicalName: null,
+          forms: [' OIL'],
+          description: null,
+          isGlobal: true,
+          variants: [{ id: OILWORT_OIL_ID, form: ' OIL', group: null }],
+        },
+      },
+      {
+        value: 'Tinctwort',
+        link: {
+          id: TINCTWORT_ID,
+          canonicalName: null,
+          forms: ['Tincture'],
+          description: null,
+          isGlobal: true,
+          variants: [{ id: '6e7f8a9b-0c1d-4e2f-9a3b-5c6d7e8f9a0b', form: 'Tincture', group: null }],
+        },
+      },
+      {
+        value: 'Plainwort',
+        link: {
+          id: PLAINWORT_ID,
+          canonicalName: null,
+          forms: [],
+          description: null,
+          isGlobal: true,
+          variants: [],
+        },
+      },
+      { value: 'Fixture moss' },
+    ],
+    references: [
+      reference(REFERENCE_ID, 'The Fixture Herbal', 'p. 112'),
+      reference(OTHER_REFERENCE_ID, 'The Second Herbal', 'p. 9'),
+    ],
+  };
+};
+
+/** The notice beneath a variant's substitutes of what a copy skipped. */
+export const skippedNotice = (scope: HTMLElement) =>
+  within(scope).getByRole('status', { name: 'Substitute Ingredients skipped' });
+
 /** Types a form into the New Form box and presses its Add. */
 export const addVariant = (form: string) => {
   type(document.body, 'New Form', form);
