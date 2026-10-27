@@ -59,9 +59,10 @@ the Welcome test in `smoke.spec.ts` checks the width and scans in each theme
 in turn, `page.emulateMedia({ colorScheme })` before each scan, and the 403
 test in `admin.spec.ts` checks the width before its scan; the account page
 test in `account.spec.ts` does as the Welcome test does, and the unverified
-account's email page gets a scan and the width check; `sign-in.spec.ts` checks
-the width; `sign-in-configured-providers.spec.ts` and
-`admin/privilege-changes.spec.ts` scan in both themes too. It is one per template rather than one per page
+account's email page gets a scan and the width check; story 1's sign-in test
+in `stories/01-accounts.spec.ts` checks the width;
+`sign-in-configured-providers.spec.ts` and the privilege ledger's story in
+`stories/08-email-and-admin.spec.ts` scan in both themes too. It is one per template rather than one per page
 because the frame decides the width and the surfaces text sits on, and every
 page on a template shares them; the rest of the scans stay single, which
 keeps the run short.
@@ -232,8 +233,8 @@ ignores that spec too
   the background of the request that caused it. The address goes in quoted:
   unquoted, Mailpit's query language splits it at a `+`. A spec that follows
   a mailed link gives its recipient a fresh address, so a retry or a parallel
-  worker cannot read another's message; `tests/e2e/admin-invitations.spec.ts`
-  is the example. A spec asserts the recipient and the link, never the
+  worker cannot read another's message;
+  `tests/e2e/stories/01-invitations.spec.ts` is the example. A spec asserts the recipient and the link, never the
   subject or body: the wording is the email's own test's, and the link is
   what the reader follows. Compose and `playwright.yml` both run Mailpit;
   outside them the helper throws on the unset URL rather than reporting that
@@ -421,9 +422,9 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
   under `flock /tmp/sorrel-e2e.lock` (below). It needs what `npm run e2e`
   needs from the devcontainer: `BETTER_AUTH_SECRET` on the command line, and
   the ports free. A failure it finds becomes its own task, never a fix in the
-  PR that ran it; four specs walk focus by pressing Tab until an element is
-  reached (`sign-in.spec.ts`, `coven.spec.ts`, `coven-create.spec.ts`,
-  `shell.spec.ts`) and are the WebKit failures the task expected rather than
+  PR that ran it; the specs that walk focus by pressing Tab until an element
+  is reached (story 1's in `stories/01-accounts.spec.ts`, `coven.spec.ts`,
+  `shell.spec.ts`) are the WebKit failures the task expected rather than
   knew; the first audit's PR names what it found.
   The first audit (MB.255) found the session cookie never reaching a WebKit
   page, fixed under "A signed-in browser without a provider", and then three

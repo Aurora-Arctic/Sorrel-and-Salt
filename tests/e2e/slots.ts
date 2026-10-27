@@ -24,7 +24,7 @@ const WORKSHOP_OFFSET = CACHE_OFFSET + 1;
  * server there would silently answer the tests instead of the production build.
  * Read by the runner and by every worker alike, which inherit its environment.
  */
-export function portBase(env: SlotEnv = process.env): number {
+function portBase(env: SlotEnv = process.env): number {
   const raw = env.E2E_PORT_BASE;
   if (raw === undefined) return 8001;
 
@@ -48,7 +48,7 @@ export const CONFIGURED_PROVIDERS_PORT = FIRST_SLOT_PORT + 99;
 export const COMPENDIUM_CACHE_PORT = FIRST_SLOT_PORT + CACHE_OFFSET;
 /** The workshop server, for playwright.workshop.config.ts alone. */
 export const WORKSHOP_PORT = FIRST_SLOT_PORT + WORKSHOP_OFFSET;
-export const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
+const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
 
 /**
  * `E2E_WORKERS`, or else half the CPUs floored at one — Playwright's own
@@ -57,7 +57,7 @@ export const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
  * two stories (claude-docs/testing/e2e.md, "Where a run's time goes"). This is
  * the local default only; CI sets `E2E_WORKERS` itself.
  */
-export function slotCount(env: SlotEnv = process.env, cpus = os.cpus().length): number {
+function slotCount(env: SlotEnv = process.env, cpus = os.cpus().length): number {
   const raw = env.E2E_WORKERS;
   if (raw === undefined) return Math.max(1, Math.floor(cpus / 2));
 

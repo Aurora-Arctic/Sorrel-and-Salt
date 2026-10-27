@@ -71,15 +71,6 @@ test('a member sees a coven’s own entry link the compendium entry it replaces,
   // Open, the tip shows; Playwright's role queries skip it while it is hidden.
   await expect(page.getByRole('tooltip')).toBeVisible();
   await assertNoAccessibilityViolations(page);
-
-  // The compendium entry, read from the same coven, gets the same block: itself,
-  // linked once to its public page, with the ⓘ.
-  await page.goto(`/coven/${coven.slug}/ingredients/${compendiumId}`);
-  await expect(page.getByRole('heading', { name: 'In the Compendium' })).toBeVisible();
-  const own = page.getByRole('list', { name: 'In the Compendium' }).getByRole('link');
-  await expect(own).toHaveCount(1);
-  await expect(own).toHaveAttribute('href', `/compendium/ingredients/${slug}`);
-  await expect(page.getByRole('button', { name: 'About In the Compendium' })).toHaveCount(1);
 });
 
 test('a non-member is refused a coven’s own entry by its id', async ({

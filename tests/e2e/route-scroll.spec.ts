@@ -1,7 +1,6 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
-import { slotUrl } from './slots';
 
 // A move to another page lands at the top (M12.33). The page has
 // `scroll-behavior: smooth` (src/app/globals.scss), and unless <html> carries
@@ -19,14 +18,8 @@ const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844 },
 ];
 
-test.beforeAll(async ({ browser, slot }) => {
+test.beforeAll(async () => {
   await recreateE2eDatabase();
-  const setup = await browser.newPage({ baseURL: slotUrl(slot) });
-  try {
-    await signInAs(setup, 'admin@route-scroll.test', ['discord'], 'admin');
-  } finally {
-    await setup.close();
-  }
 });
 
 for (const { name, ...viewport } of VIEWPORTS) {

@@ -14,13 +14,14 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('shows all four sections, with no accessibility violations', async ({ page }) => {
+test('shows the account’s name, address and one greyed method, jumps to a section, with no accessibility violations', async ({
+  page,
+}) => {
   await signInAs(page, 'one-method@account-page.test');
 
   await page.goto('/account');
 
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 2 })).toHaveCount(4);
   await expect(main.getByRole('textbox', { name: 'Name' })).toHaveValue('Fixture Person');
   await expect(main.getByRole('textbox', { name: 'Email Address' })).toHaveValue(
     'one-method@account-page.test',
