@@ -72,8 +72,5 @@ export type SpellStepView = SpellStepRow & {
   variant: SpellStepVariant | null;
 };
 
-/** One spell, with its steps in order. */
-export type SpellDetail = { spell: SpellRow; steps: SpellStepView[] };
-
 /** What a spell's batched fields are keyed by: the spell, and the coven it is asked about in. */
 export type SpellKey = Pick<SpellRow, 'id' | 'workspaceId'>;
