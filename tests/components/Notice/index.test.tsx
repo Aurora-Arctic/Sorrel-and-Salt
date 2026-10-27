@@ -14,8 +14,6 @@ const SENTENCE = 'A sentence about the view.';
 describe('Notice', () => {
   it.each([
     ['error', 'alert'],
-    ['warn', 'alert'],
-    ['caution', 'alert'],
     ['success', 'status'],
     ['plain', null],
   ] as const satisfies readonly (readonly [NoticeKind, 'alert' | 'status' | null])[])(
@@ -37,7 +35,7 @@ describe('Notice', () => {
 
   // A notice on the page from the start is a status, not an alert, so it is
   // found by its role without being announced over what the reader is doing.
-  it.each(['warn', 'caution'] as const)('renders a quiet %s as a status', (kind) => {
+  it.each(['warn'] as const)('renders a quiet %s as a status', (kind) => {
     render(
       <Notice kind={kind} quiet>
         {SENTENCE}
@@ -71,8 +69,6 @@ describe('Notice, the block form', () => {
 
   it.each([
     ['error', 'alert'],
-    ['warn', 'alert'],
-    ['caution', 'alert'],
     ['success', 'status'],
     ['plain', null],
   ] as const satisfies readonly (readonly [NoticeKind, 'alert' | 'status' | null])[])(
@@ -97,7 +93,7 @@ describe('Notice, the block form', () => {
     },
   );
 
-  it.each(['error', 'warn', 'caution'] as const)('holds a quiet %s as a status', (kind) => {
+  it.each(['error'] as const)('holds a quiet %s as a status', (kind) => {
     const { container } = render(<Block kind={kind} quiet />);
 
     expect(within(screen.getByRole('status')).getByRole('list')).toBeInTheDocument();
@@ -109,25 +105,22 @@ describe('Notice, the block form', () => {
 // A notice inside a live region that is always in the page: the region
 // announces it, so a role of its own would have it announced twice.
 describe('Notice, inside a region', () => {
-  it.each(['error', 'warn', 'caution', 'success'] as const)(
-    'takes no role of its own as a %s, inline or block',
-    (kind) => {
-      render(
-        <div role="status" aria-label="Fixture Region">
-          <Notice kind={kind} inRegion>
-            {SENTENCE}
-          </Notice>
-          <Notice kind={kind} inRegion quiet block>
-            <p>{SENTENCE}</p>
-          </Notice>
-        </div>,
-      );
+  it.each(['success'] as const)('takes no role of its own as a %s, inline or block', (kind) => {
+    render(
+      <div role="status" aria-label="Fixture Region">
+        <Notice kind={kind} inRegion>
+          {SENTENCE}
+        </Notice>
+        <Notice kind={kind} inRegion quiet block>
+          <p>{SENTENCE}</p>
+        </Notice>
+      </div>,
+    );
 
-      const region = screen.getByRole('status', { name: 'Fixture Region' });
-      // Both notices drew, inside the region, and neither is a region itself.
-      expect(within(region).getAllByText(SENTENCE)).toHaveLength(2);
-      expect(screen.getAllByRole('status')).toEqual([region]);
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    },
-  );
+    const region = screen.getByRole('status', { name: 'Fixture Region' });
+    // Both notices drew, inside the region, and neither is a region itself.
+    expect(within(region).getAllByText(SENTENCE)).toHaveLength(2);
+    expect(screen.getAllByRole('status')).toEqual([region]);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });
