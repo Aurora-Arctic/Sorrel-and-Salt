@@ -5,8 +5,16 @@
 // The columns stay free text (claude-docs/db/grimoire.md).
 
 /**
- * The moon's eight phases, in their cycle's order: the four principal phases
- * and the four between them. Source: Wikipedia, "Lunar phase".
+ * The moon's phases, in the owner's order (2026-10-27): the cycle's eight
+ * phases, New Moon to Waning Crescent, then the three names that are not one
+ * of the eight. Dark Moon is the span around the new moon when no crescent
+ * shows; Waxing Moon and Waning Moon are the two halves of the cycle, new to
+ * full and full to new, for a recipe that asks for a half rather than one
+ * phase.
+ *
+ * Sources: Wikipedia, "Lunar Phase," accessed October 27, 2026,
+ * https://en.wikipedia.org/wiki/Lunar_phase; Wikipedia, "Dark Moon,"
+ * accessed October 27, 2026, https://en.wikipedia.org/wiki/Dark_moon.
  */
 export const MOON_PHASES = [
   'New Moon',
@@ -17,6 +25,9 @@ export const MOON_PHASES = [
   'Waning Gibbous',
   'Last Quarter',
   'Waning Crescent',
+  'Dark Moon',
+  'Waxing Moon',
+  'Waning Moon',
 ] as const;
 
 /**

@@ -3,9 +3,10 @@ import type { ReactElement } from 'react';
 import { MOON_PHASES } from '../SpellBuilder/constants';
 import MoonPhaseIcon from '.';
 
-// Render-only, for the owner's review of the eight drawings: each phase in
-// its cycle's order with its name beneath, the maria on its lit part. The
-// toolbar's theme control shows each theme's colours.
+// Render-only, for the owner's review of the drawings: each phase in the
+// list's order with its name beneath, the maria on its lit part. Waxing Moon
+// and Waning Moon show their names with no drawing until theirs are chosen.
+// The toolbar's theme control shows each theme's colours.
 const meta = {
   title: 'Surfaces / Moon Phase Icon',
 } satisfies Meta;
@@ -28,5 +29,5 @@ const Row = (): ReactElement => (
   </ul>
 );
 
-// The eight phases in a row, New Moon to Waning Crescent.
+// Every listed phase in a row, New Moon to Waning Moon.
 export const AllPhases: Story = { render: () => <Row /> };

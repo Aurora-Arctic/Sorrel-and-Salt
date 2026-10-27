@@ -80,9 +80,12 @@ stored as typed: the columns are free text
   ([`combobox.md`](combobox.md)), `SpellSuggestField` in
   `suggest-field.tsx`. Each suggests a fixed list from `constants.ts`,
   narrowed to what is typed: the eight phases of Wikipedia's "Lunar phase",
-  New Moon to Waning Crescent, and the seven days, Monday first, with no
-  planet beside them. A pick fills the box with the name; anything else typed
-  is kept as typed, so a value saved before the lists existed ("Full") opens
+  New Moon to Waning Crescent, then Dark Moon (Wikipedia's "Dark moon": the
+  span around the new moon when no crescent shows), Waxing Moon and Waning
+  Moon (the two halves of the cycle, for a recipe that asks for a half rather
+  than one phase); and the seven days, Monday first, with no planet beside
+  them (the owner, 2026-10-27). A pick fills the box with the name; anything
+  else typed is kept as typed, so a value saved before the lists existed ("Full") opens
   unchanged. The lists are constants rather than vocabulary tables: each set
   is closed, and adding a name is a one-line change, unlike the celestial
   bodies (MB.91), which keep growing (the owner, 2026-10-27).
@@ -99,9 +102,12 @@ stored as typed: the columns are free text
   formula, so the shapes can be drawn again. Mare Nectaris and the craters
   Tycho and Copernicus are left out, as each is under 1.5px across at a 20px
   icon. A thin outline at half the text's ink closes the disc. The drawings
-  are hidden from screen readers, since the name always stands beside them. A
-  phase typed outside the eight, such as "Dark", shows its words with no
-  drawing (the owner, 2026-10-27).
+  are hidden from screen readers, since the name always stands beside them.
+  New Moon is the shadowed disc; Dark Moon is the outline alone, with no shadow inside,
+  so the two read apart. Waxing Moon and Waning Moon have no drawing yet, and
+  show their names alone until the owner picks one. A phase typed outside the
+  list, such as "Dark", shows its words with no drawing (the owner,
+  2026-10-27).
 
 - **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).

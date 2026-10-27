@@ -7,16 +7,20 @@ import './index.scss';
 // builder: on FormIcon's 24-unit square. Its fills are three theme tokens
 // rather than `currentColor`, so the lit part is the paler of the two in
 // either theme (the owner, 2026-10-27): the shadowed disc, the lit part, and
-// the maria clipped to the lit part. The outline is the text's ink. Hidden from assistive technology, since the phase's name always
-// stands beside it. claude-docs/components/spell-builder.md, "The fields".
+// the maria clipped to the lit part. The outline is the text's ink. Dark
+// Moon is the outline alone, with no shadowed disc, so it reads apart from
+// New Moon (the owner, 2026-10-27). Hidden from assistive technology, since
+// the phase's name always stands beside it.
+// claude-docs/components/spell-builder.md, "The fields".
 
 const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement | null => {
   // An id per icon, so two on one page clip each to its own lit part.
   const clipId = useId();
   // An own-property check rather than an index: the field is free text, and a
-  // phase outside the eight draws nothing.
+  // phase with no drawing draws nothing.
   if (!Object.prototype.hasOwnProperty.call(LIT_PARTS, phase)) return null;
   const lit = LIT_PARTS[phase as keyof typeof LIT_PARTS];
+  const shadowed = phase !== 'Dark Moon';
   return (
     <svg
       className={className ? `moon-phase-icon ${className}` : 'moon-phase-icon'}
@@ -25,7 +29,7 @@ const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement |
       aria-hidden="true"
       focusable="false"
     >
-      <circle className="moon-phase-icon__shadow" cx="12" cy="12" r="8" />
+      {shadowed && <circle className="moon-phase-icon__shadow" cx="12" cy="12" r="8" />}
       {lit && (
         <>
           <clipPath id={clipId}>{lit}</clipPath>

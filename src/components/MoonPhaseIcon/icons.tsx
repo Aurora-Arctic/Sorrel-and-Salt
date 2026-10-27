@@ -1,14 +1,16 @@
 import type { ReactElement } from 'react';
-import type { MoonPhase } from './types';
+import type { DrawnMoonPhase } from './types';
 
 // The lit part of the moon in each phase, on a disc of radius 8 centred on
 // (12, 12). Drawn for the northern hemisphere, where a waxing moon is lit on
 // its right and a waning one on its left; in the southern hemisphere the
 // sides swap. Each crescent and gibbous edge is the half-ellipse from the top
-// of the disc (12, 4) to its foot (12, 20), 4.5 wide. New Moon has no lit
-// part, so it is the shadowed disc alone.
-export const LIT_PARTS: Record<MoonPhase, ReactElement | null> = {
+// of the disc (12, 4) to its foot (12, 20), 4.5 wide. New Moon and Dark
+// Moon have no lit part: New Moon is the shadowed disc, and Dark Moon the
+// outline alone with no shadow inside (index.tsx; the owner, 2026-10-27).
+export const LIT_PARTS: Record<DrawnMoonPhase, ReactElement | null> = {
   'New Moon': null,
+  'Dark Moon': null,
   'Waxing Crescent': <path d="M12 4A8 8 0 0 1 12 20A4.5 8 0 0 0 12 4Z" />,
   'First Quarter': <path d="M12 4A8 8 0 0 1 12 20Z" />,
   'Waxing Gibbous': <path d="M12 4A8 8 0 0 1 12 20A4.5 8 0 0 1 12 4Z" />,

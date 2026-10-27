@@ -104,7 +104,8 @@ const resolver = zodResolver(SpellInput) as unknown as Resolver<
 >;
 
 // A moon phase's drawing beside its name, null for a phase typed outside
-// the eight so the box draws no empty mark. Module-level so the field's
+// the list so the box draws no empty mark; MoonPhaseIcon itself draws
+// nothing for a listed phase with no drawing yet (Waxing Moon, Waning Moon). Module-level so the field's
 // suggestions are not rebuilt each render.
 const moonPhaseIcon = (phase: string): ReactElement | null =>
   (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;

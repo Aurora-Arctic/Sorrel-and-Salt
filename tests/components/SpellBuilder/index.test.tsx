@@ -304,7 +304,7 @@ describe('SpellBuilder', () => {
       expect(within(group).queryByRole('textbox', { name: 'Jar Size' })).toBeNull();
     });
 
-    it('offers the eight moon phases and the seven days', () => {
+    it('offers the moon phases and the seven days', () => {
       renderBuilder();
 
       fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
@@ -317,6 +317,9 @@ describe('SpellBuilder', () => {
         'Waning Gibbous',
         'Last Quarter',
         'Waning Crescent',
+        'Dark Moon',
+        'Waxing Moon',
+        'Waning Moon',
       ]);
       fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
 
