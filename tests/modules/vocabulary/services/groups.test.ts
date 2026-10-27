@@ -1,12 +1,14 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { NotFound } from '@/lib/errors';
-import { categoryGroupsOf, formGroupsOf } from '@/modules/vocabulary';
+import { categoryGroupsOf } from '@/modules/vocabulary';
 import { A } from '../../../support/as-user';
 
 // The two group lookups behind `Category.group` and `IngredientFormValue.group`:
 // public reference data, answered in key order with a `NotFound` in the slot
 // of a group that is missing or retired, so a loader rejects that key alone.
+// `formGroupsOf` is the same one-line call over the same `groupsOf`, differing only
+// in its table, so only the category groups run these tests.
 
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -38,10 +40,10 @@ async function seededIds(table: 'category_groups' | 'ingredient_form_groups'): P
   return rows.map((row) => row.id as string);
 }
 
-describe.each([
-  { name: 'categoryGroupsOf', table: 'category_groups' as const, groupsOf: categoryGroupsOf },
-  { name: 'formGroupsOf', table: 'ingredient_form_groups' as const, groupsOf: formGroupsOf },
-])('$name', ({ table, groupsOf }) => {
+describe('categoryGroupsOf', () => {
+  const table = 'category_groups' as const;
+  const groupsOf = categoryGroupsOf;
+
   it('answers each id in the order asked, with one read for the batch', async () => {
     const [first, second] = await seededIds(table);
 

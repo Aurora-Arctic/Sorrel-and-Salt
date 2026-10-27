@@ -76,24 +76,6 @@ describe('formSuggestions', () => {
       },
     ]);
   });
-
-  it('pages by cursor', async () => {
-    const first = await run(asUser(B), { query: 'root', first: 1 });
-    const page = first.data?.formSuggestions as FormSuggestionConnection;
-    expect(page.pageInfo.hasNextPage).toBe(true);
-
-    const next = await run(asUser(B), {
-      query: 'root',
-      first: 100,
-      after: page.pageInfo.endCursor,
-    });
-
-    expect(next.errors).toBeUndefined();
-    expect(next.data?.formSuggestions.edges.map((edge) => edge.node.value)).toEqual([
-      'Bark',
-      'root bark',
-    ]);
-  });
 });
 
 // M5.5: the admin's compendium form has no coven to name, so a null

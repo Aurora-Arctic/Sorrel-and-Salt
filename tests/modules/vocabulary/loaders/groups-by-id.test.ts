@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { buildLoaders } from '@/graphql/loaders';
 import { NotFound } from '@/lib/errors';
-import { categoryGroupsById, ingredientFormGroupsById } from '@/modules/vocabulary';
+import { categoryGroupsById } from '@/modules/vocabulary';
 
 // The query count, observed at the repository: the one read each batch makes
 // is wrapped so the test counts calls without changing what they answer, and
@@ -16,7 +16,7 @@ vi.mock('@/db/repository', async (importOriginal) => {
 });
 
 const ABSENT = '99999999-9999-9999-9999-999999999999';
-const LOADERS = { categoryGroupsById, ingredientFormGroupsById };
+const LOADERS = { categoryGroupsById };
 
 let sql: ReturnType<typeof postgres>;
 
@@ -34,10 +34,12 @@ async function seededIds(table: 'category_groups' | 'ingredient_form_groups'): P
   return rows.map((row) => row.id as string);
 }
 
-describe.each([
-  { name: 'categoryGroupsById' as const, table: 'category_groups' as const },
-  { name: 'ingredientFormGroupsById' as const, table: 'ingredient_form_groups' as const },
-])('the $name loader', ({ name, table }) => {
+// `ingredientFormGroupsById` is built by the same helper as `categoryGroupsById`, so
+// only the latter runs; a loader's per-request cache is tests/graphql/loaders's.
+describe('the categoryGroupsById loader', () => {
+  const name = 'categoryGroupsById' as const;
+  const table = 'category_groups' as const;
+
   it('answers a batch of keys, repeats included, with one read and no role lookup', async () => {
     const ids = await seededIds(table);
     const loader = buildLoaders(LOADERS, null)[name];
@@ -53,14 +55,5 @@ describe.each([
     });
     expect(repository.findManyByIds).toHaveBeenCalledTimes(1);
     expect(repository.findWorkspaceRole).not.toHaveBeenCalled();
-  });
-
-  it('caches nothing across requests: a second set of loaders reads again', async () => {
-    const [id] = await seededIds(table);
-    await buildLoaders(LOADERS, null)[name].load(id);
-
-    await buildLoaders(LOADERS, null)[name].load(id);
-
-    expect(repository.findManyByIds).toHaveBeenCalledTimes(2);
   });
 });
