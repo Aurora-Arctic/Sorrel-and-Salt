@@ -2,7 +2,13 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
-import { insertSpell, seedCoven, withSql } from './coven-ingredients';
+import {
+  compendiumVariant,
+  insertSpell,
+  insertStock,
+  seedCoven,
+  withSql,
+} from './coven-ingredients';
 
 // Stories 47 to 57 and 76 to 80: the grimoire, from naming a spell to the
 // workings recorded against it. Every story here is a scaffold: the page it
@@ -37,11 +43,20 @@ function grimoireList(page: Page): Locator {
   return page.getByRole('list', { name: 'Grimoire' });
 }
 
-/** Adds a step for the named ingredient through the type-ahead picker. */
+/**
+ * Adds a step through the type-ahead picker, which offers one row per form,
+ * "Rosemary (Herb)", and returns the step's row in the list.
+ */
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
   await page.getByRole('combobox', { name: 'Search Ingredients' }).fill(name);
   await page.getByRole('option', { name }).first().click();
   return stepList(page).getByRole('listitem').filter({ hasText: name });
+}
+
+/** Chooses a step's unit: the Unit field is a combobox of the unit codes. */
+async function pickUnit(step: Locator, unit: string): Promise<void> {
+  await step.getByRole('combobox', { name: /^Unit/ }).click();
+  await step.page().getByRole('option', { name: unit, exact: true }).click();
 }
 
 test('a member names a spell and states its intent', { tag: '@story-47' }, async ({ page }) => {
@@ -95,41 +110,39 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'a member searches and filters ingredients with the same controls as the ingredients page',
-  {
-    tag: '@story-49',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.15 builds the ingredient picker in the spell builder',
-    },
-  },
+  { tag: '@story-49' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Forty-Nine', 'story-49.test', {
       A: 'owner',
       B: 'member',
     });
+    // The coven holds Rosemary, so it is offered under Your Ingredients.
+    await withSql(async (sql) =>
+      insertStock(
+        sql,
+        coven.id,
+        await compendiumVariant(sql, 'Rosemary', 'Herb'),
+        { quantity: 20, unit: 'g', threshold: 0 },
+        coven.users.A,
+      ),
+    );
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     const search = page.getByRole('combobox', { name: 'Search Ingredients' });
     await search.fill('Rose');
-    await expect(page.getByRole('group', { name: 'Your Ingredients' })).toBeVisible();
+    const yours = page.getByRole('group', { name: 'Your Ingredients' });
+    await expect(yours.getByRole('option', { name: /Rosemary \(Herb\)/ })).toBeVisible();
     await expect(page.getByRole('group', { name: 'Compendium' })).toBeVisible();
-    await expect(page.getByRole('option', { name: /Rosemary/ }).first()).toBeVisible();
     await search.fill('Fixture Nothing Matches');
     await expect(page.getByRole('option')).toHaveCount(0);
   },
 );
 
-test.fixme(
+test(
   'a member adds an ingredient with a quantity and a unit',
-  {
-    tag: '@story-50',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.15 builds add and remove ingredients in the spell builder',
-    },
-  },
+  { tag: '@story-50' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty', 'story-50.test', {
       A: 'owner',
@@ -138,14 +151,26 @@ test.fixme(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    const step = await addIngredientStep(page, 'Rosemary');
-    await step.getByRole('spinbutton', { name: 'Quantity' }).fill('2');
-    await step.getByLabel('Unit').selectOption('g');
-    await page.getByRole('button', { name: 'Save' }).click();
-    await page.reload();
-    const saved = stepList(page).getByRole('listitem').filter({ hasText: 'Rosemary' });
-    await expect(saved.getByRole('spinbutton', { name: 'Quantity' })).toHaveValue('2');
-    await expect(saved.getByLabel('Unit')).toHaveValue('g');
+    const step = await addIngredientStep(page, 'Rosemary (Herb)');
+    await step.getByRole('spinbutton', { name: /^Quantity/ }).fill('2');
+    await pickUnit(step, 'g');
+    const save = page.getByRole('button', { name: 'Save' });
+    await save.click();
+    // Saved: nothing left to save.
+    await expect(save).toBeDisabled();
+    await expect(save).not.toHaveAttribute('aria-busy', 'true');
+    // The builder has no page to reopen a saved spell on until M13.10, so the
+    // step is read where the save left it.
+    const rows = await withSql(
+      (sql) => sql<{ quantity: string; unit: string; name: string | null }[]>`
+        select st.quantity, st.unit, st.name from spell_steps st
+        join spells s on s.id = st.spell_id
+        where s.workspace_id = ${coven.id} and s.title = 'Fixture Working'
+          and st.deleted_at is null`,
+    );
+    expect(rows.map((row) => ({ ...row, quantity: Number(row.quantity) }))).toEqual([
+      { quantity: 2, unit: 'g', name: null },
+    ]);
   },
 );
 
@@ -317,15 +342,9 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member adds a one-off ingredient by name and form, and it goes in the jar and nowhere else',
-  {
-    tag: '@story-57',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.15 builds the one-off ingredient entry in the spell builder',
-    },
-  },
+  { tag: '@story-57' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Seven', 'story-57.test', {
       A: 'owner',
@@ -340,9 +359,13 @@ test.fixme(
     await expect(
       stepList(page).getByRole('listitem').filter({ hasText: 'Testwort' }),
     ).toBeVisible();
-    await page.getByRole('button', { name: 'Save' }).click();
+    const save = page.getByRole('button', { name: 'Save' });
+    await save.click();
+    await expect(save).toBeDisabled();
+    await expect(save).not.toHaveAttribute('aria-busy', 'true');
     // Nowhere else: the coven's ingredients page does not list it.
     await page.goto(`/coven/${coven.slug}/ingredients`);
+    await expect(page.getByRole('heading', { name: 'Ingredients', level: 1 })).toBeVisible();
     await expect(page.getByText('Testwort')).toHaveCount(0);
   },
 );
@@ -378,29 +401,38 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'a step carries a unit the jar can be measured against',
-  {
-    tag: '@story-77',
-    annotation: {
-      type: 'fixme',
-      description: 'M10.15 shows the unit rule M13.2 adds, on the builder unit field',
-    },
-  },
+  { tag: '@story-77' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Seven', 'story-77.test', {
       A: 'owner',
       B: 'member',
     });
+    // The coven's jar of Rosemary is kept by weight.
+    await withSql(async (sql) =>
+      insertStock(
+        sql,
+        coven.id,
+        await compendiumVariant(sql, 'Rosemary', 'Herb'),
+        { quantity: 20, unit: 'g', threshold: 0 },
+        coven.users.A,
+      ),
+    );
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
-    const step = await addIngredientStep(page, 'Rosemary');
-    // Rosemary's jar is measured by weight, so a volume is refused with a reason.
-    await step.getByLabel('Unit').selectOption('ml');
-    await expect(step.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
-    await step.getByLabel('Unit').selectOption('g');
-    await expect(step.getByRole('alert')).toHaveCount(0);
+    const step = await addIngredientStep(page, 'Rosemary (Herb)');
+    const unit = step.getByRole('combobox', { name: /^Unit/ });
+    const save = page.getByRole('button', { name: 'Save' });
+    // A volume is refused with a reason, and nothing can be saved.
+    await pickUnit(step, 'ml');
+    await expect(unit).toHaveAttribute('aria-invalid', 'true');
+    await expect(unit).toHaveAccessibleDescription(/measured in/);
+    await expect(save).toBeDisabled();
+    // A weight is accepted, and the spell can be saved.
+    await pickUnit(step, 'g');
+    await expect(unit).not.toHaveAttribute('aria-invalid', 'true');
+    await expect(save).toBeEnabled();
   },
 );
 
