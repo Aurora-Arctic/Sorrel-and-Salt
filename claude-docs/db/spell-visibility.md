@@ -18,7 +18,7 @@ path — a seed, a fixture, a service that never mentions visibility — joins t
 shared grimoire. The failure mode of the other default is silent: a spell
 nobody but its author can see, in a coven that cannot tell it is missing.
 
-### Reading: one predicate, five finders, and why the generic ones refuse
+### Reading: one predicate, eight finders, and why the generic ones refuse
 
 `readableSpells(membership)` is the predicate, and the only one: the coven from
 the proof, `deleted_at IS NULL`, and `visibility = 'workspace' OR created_by =
@@ -33,13 +33,16 @@ so a service has nothing to do with a condition. It builds that condition and
 runs nothing, which `tests/db/repository/readable-spells-predicate.test.ts`
 shows with the database client replaced by one that throws.
 
-Five finders in `spells.ts` read through it:
+Eight finders read through it, six of them in `spells.ts`:
 
 | Finder                                                                             | Reads                                                                  |
 | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `findManySpells(membership)`                                                       | every spell of the coven this member may read                          |
 | `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell              |
 | `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                  |
+| `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)    |
+| `findPageInReadableSpells(membership, table, order, page, where?)` (`finders.ts`)  | a cursor page of `spells` or a `spell_id` table (M10.9)                |
+| `findGrimoirePage(membership, page)` (`grimoire.ts`)                               | the grimoire's page, newest first, through the one above               |
 | `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)   |
 | `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above |
 

@@ -1043,6 +1043,62 @@ hold `NOT_FOUND`, and a taken label or an own entry of the same identity
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Converting a compendium entry into our own").
 
+### The grimoire: `Spell`, `grimoire` and `spell`
+
+The coven's spells as the API reads them (M10.9), registered by `grimoire` in
+`graphql/spell.ts` over `services/spell-reads.ts`. Every read asks the proof
+for `spell: read`, which every role in the coven holds, and every row comes
+through the finders that keep a private spell its author's
+([`db/spell-visibility.md`](../db/spell-visibility.md)). So a private spell
+never reaches a resolver: it is left out of a list in SQL, and by id it is
+`NOT_FOUND`, the same answer as a spell that does not exist.
+
+- **`grimoire(workspaceId, first, after)`** is a cursor page (a page that
+  resumes from the last row it gave, rather than counting rows to skip) of the
+  coven's shared spells and the caller's own private ones, newest first. It is
+  declared with `t.pagedConnection` and reads through `findGrimoirePage`, so
+  the order is `createdAt`, not the title, which M13.15 makes optional.
+- **`spell(id, workspaceId): Spell!`** is one spell. It takes the coven as
+  `ingredient(id, workspaceId)` does, so the membership check runs before any
+  read. A spell in another coven, or another author's private spell, is
+  `NOT_FOUND`.
+- **`Spell`** carries its own columns, `status` and `visibility` as the
+  `SpellStatus` and `SpellVisibility` enums built from the columns, and three
+  lists that each load through a loader ([`loaders.md`](loaders.md)):
+  - `steps` (`stepsBySpell`): every live step in recipe order, instructions
+    and one-off rows included.
+  - `categories` (`assignedCategoriesBySpell`): the categories the author
+    assigned, what the spell intends.
+  - `derivedCategories` (`derivedCategoriesBySpell`): what the spell is made
+    of. Each linked step contributes its ingredient's own categories and those
+    of the form it lays, never another form's. A one-off row and an
+    instruction contribute none. An ingredient deleted since still
+    contributes (M5.3).
+
+  `categoryGaps` is a `CategoryComparison`: `intendedNotPresent`, assigned but
+  carried by no ingredient, and `presentNotIntended`, carried but not
+  assigned. It is worked out by `compareSpellCategories` from the two category
+  loaders' cached answers, so it costs no read of its own.
+
+- **`SpellStep`** is one step. `ingredient` is the linked ingredient, kept and
+  answered even once it has been deleted, and `variant` the form it lays,
+  `null` when that form alone has been deleted. `name` and `form` read the
+  linked row's when there is one and the step's own text otherwise.
+  `quantity` is a `Float`, turned from Postgres's `numeric` text, and `unit`
+  the stock's `InventoryUnit` enum.
+
+A page of spells with all three lists costs the same reads as one spell: the
+page, then eight batched reads (three for the steps, two for the assigned
+categories, three for the derived ones), plus one membership check per coven
+named. A coven the caller is not in refuses at the field, `FORBIDDEN` with the
+field's path.
+
+`tests/modules/grimoire/graphql/spell.test.ts` holds the transport's half: the
+fields, the gaps both ways, the refusal codes by direct id, the paging, and the
+read count for a page of one and of four. Which reader sees which spell is
+`services/spell-reads.test.ts`'s, and the loaders' read counts
+`loaders/spell-children.test.ts`'s.
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
