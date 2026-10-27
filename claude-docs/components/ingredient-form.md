@@ -1545,7 +1545,7 @@ Undo exactly as it was. `Modal` exports `HeaderSlotContext` for this.
 
 ## Forms are shown in title case
 
-A variant's `form` is stored as typed. Wherever the site shows one, it passes through `formLabel` (`src/modules/ingredients/validation/form-label.ts`), which calls `titleCase` in `src/lib/text.ts`: each word and each hyphenated part is capitalised, the small words (of, and, in, on, the, a, an, or, for, to, with, at, by, from) stay lowercase unless first, and a word with an inner capital is left alone. This is display only. A field the user is typing into keeps their text, a suggestion fills the stored text, and the GraphQL output, the services and the seeds are unchanged. A label folds (`lower(btrim(x))`) to the same identity as the stored text, apart from a run of inner spaces, which the label collapses. `tests/guards/form-label.test.ts` flags a component that renders `.form` without it.
+A variant's `form` is stored as typed. Wherever the site shows one, it passes through `formLabel` (`src/modules/ingredients/validation/form-label.ts`), which calls `titleCase` in `src/lib/text.ts`: each word and each hyphenated part is capitalised, the small words (of, and, in, on, the, a, an, or, for, to, with, at, by, from) stay lowercase unless first, and a word with an inner capital is left alone. This is display only. A field the user is typing into keeps their text, a suggestion fills the stored text, and the GraphQL output, the services and the seeds are unchanged. A label folds (`lower(btrim(x))`) to the same identity as the stored text, apart from a run of inner spaces, which the label collapses. the lint rule `sorrel/form-shown-through-form-label` flags a component that renders `.form` without it.
 
 ## On the compendium
 
