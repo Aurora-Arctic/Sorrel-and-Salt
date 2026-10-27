@@ -14,21 +14,15 @@ const INPUT = {
 } as const;
 
 describe('covenInvitationMessage', () => {
-  it('addresses the mail and carries the link in both the html and the text', async () => {
+  // Story 4's acceptance test reads the token from the text part with this pattern.
+  it('puts a token the acceptance pattern reads in the text part, once, and addresses the mail', async () => {
     const message = await covenInvitationMessage(INPUT);
 
     expect(message.to).toBe(INPUT.to);
     expect(message.html).toContain(`href="${URL}"`);
-    expect(message.text).toContain(URL);
     expect(message.text).not.toMatch(/<[a-z]/i);
-  });
-
-  // Story 4's acceptance test reads the token from the text part with this pattern.
-  it('puts a token the acceptance pattern reads in the text part, once', async () => {
-    const { text } = await covenInvitationMessage(INPUT);
-
-    expect(text.match(/\/invite\/([A-Za-z0-9_-]+)/)?.[1]).toBe('fixture-token');
-    expect(text.split(URL)).toHaveLength(2);
+    expect(message.text.match(/\/invite\/([A-Za-z0-9_-]+)/)?.[1]).toBe('fixture-token');
+    expect(message.text.split(URL)).toHaveLength(2);
   });
 
   it('names the coven and the role it was invited into', async () => {

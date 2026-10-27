@@ -1,5 +1,5 @@
 import { readdirSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
 import { verifyEmailMessage } from '@/emails/verify-email';
@@ -70,6 +70,14 @@ const MAILS: {
   },
 ];
 
+// Each mail is rendered once, here, and every test below reads that result:
+// rendering a React Email template is the slow part, and the tests only read it.
+const rendered = new Map<string, Message>();
+
+beforeAll(async () => {
+  for (const mail of MAILS) rendered.set(mail.name, await mail.message());
+});
+
 const collapse = (value: string) => value.replace(/\s+/g, ' ').trim();
 
 function decode(value: string): string {
@@ -88,9 +96,9 @@ function sentences(html: string): string[] {
   );
 }
 
-describe.each(MAILS)('$name', ({ link, message }) => {
-  it('has a text part that says everything the HTML does', async () => {
-    const { html, text } = await message();
+describe.each(MAILS)('$name', ({ name, link }) => {
+  it('has a text part that says everything the HTML does', () => {
+    const { html, text } = rendered.get(name)!;
     const said = collapse(text);
     const expected = sentences(html)
       // HTML only by design: the text part has the link once, as its own line.
@@ -102,28 +110,16 @@ describe.each(MAILS)('$name', ({ link, message }) => {
     for (const sentence of expected) expect(said).toContain(sentence);
   });
 
-  it('writes the address out as text, not only behind a button', async () => {
-    const { html } = await message();
+  it('writes the address out as text, not only behind a button', () => {
+    const { html } = rendered.get(name)!;
 
     expect(html).toContain(`>${link.replace(/&/g, '&amp;')}<`);
   });
 
-  it('puts the action first among the addresses in the text part', async () => {
-    const { text } = await message();
+  it('puts the action first among the addresses in the text part', () => {
+    const { text } = rendered.get(name)!;
 
     expect(text.match(/https?:\/\/\S+/)?.[0]).toBe(link);
-  });
-});
-
-// The layout marks where Outlook's conditional comments go with placeholder
-// elements and renderParts swaps them in: none may survive into either part.
-describe.each(MAILS)('$name, once rendered', ({ message }) => {
-  it('leaves no placeholder in the HTML or the text part', async () => {
-    const { html, text } = await message();
-
-    expect(html).toContain('<!--[if mso]><table');
-    expect(html).not.toContain('data-mso');
-    expect(text).not.toMatch(/mso|<!--/);
   });
 });
 
@@ -133,20 +129,9 @@ describe.each(MAILS)('$name, once rendered', ({ message }) => {
 // claude-docs/email.md, "Design"). So the page is painted by a gradient as well
 // as a colour, and every run of text sits directly inside an anchor that
 // carries a gradient of its own.
-describe.each(MAILS)('$name, in Zoho Mail', ({ message }) => {
-  const PAGE_PAINT = 'background:#14120e linear-gradient(#14120e,#14120e)';
-
-  it('paints the page and the surround by a gradient Zoho keeps, not a colour alone', async () => {
-    const { html } = await message();
-
-    expect(html).toMatch(
-      new RegExp(`<body class="ss-body" [^>]*style="[^"]*${escape(PAGE_PAINT)}`),
-    );
-    expect(html).toMatch(new RegExp(`<td class="ss-page" style="[^"]*${escape(PAGE_PAINT)}`));
-  });
-
-  it('gives every anchor a gradient background and no background colour', async () => {
-    const { html } = await message();
+describe.each(MAILS)('$name, in Zoho Mail', ({ name }) => {
+  it('gives every anchor a gradient background and no background colour', () => {
+    const { html } = rendered.get(name)!;
     const anchors = html.match(/<a\b[^>]*>/g) ?? [];
 
     expect(anchors.length).toBeGreaterThan(3);
@@ -156,8 +141,8 @@ describe.each(MAILS)('$name, in Zoho Mail', ({ message }) => {
     }
   });
 
-  it('sets every heading and paragraph directly inside an anchor, with no text outside one', async () => {
-    const { html } = await message();
+  it('sets every heading and paragraph directly inside an anchor, with no text outside one', () => {
+    const { html } = rendered.get(name)!;
     const blocks = [...html.matchAll(/<(h1|p)\b[^>]*>(.*?)<\/\1>/gs)].map(([, , inner]) => inner);
 
     expect(blocks.length).toBeGreaterThan(2);
@@ -166,9 +151,43 @@ describe.each(MAILS)('$name, in Zoho Mail', ({ message }) => {
       expect(outside).not.toMatch(/\S/);
     }
   });
+});
 
-  it('resets the gradients in the light theme, so a client that honours it still goes light', async () => {
-    const { html } = await message();
+/** `value` as a literal inside a RegExp. */
+function escape(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// The rules for the shared layout, which every template wears: asserted on one
+// mail, not on each (rule 5). The first row stands in for them all.
+describe('the shared layout', () => {
+  // The layout marks where Outlook's conditional comments go with placeholder
+  // elements and renderParts swaps them in: none may survive into either part.
+  it('leaves no placeholder in the HTML or the text part', () => {
+    const { html, text } = rendered.get(MAILS[0].name)!;
+
+    expect(html).toContain('<!--[if mso]><table');
+    expect(html).not.toContain('data-mso');
+    expect(text).not.toMatch(/mso|<!--/);
+  });
+
+  // Zoho Mail drops the stylesheet and, in its Night mode, rewrites every inline
+  // `color` and `background-color` to an inverted `!important` value, except on
+  // an <a> whose background is an image (MB.262, measured; claude-docs/email.md,
+  // "Design"). So the page is painted by a gradient as well as a colour.
+  const PAGE_PAINT = 'background:#14120e linear-gradient(#14120e,#14120e)';
+
+  it('paints the page and the surround by a gradient Zoho keeps, not a colour alone', () => {
+    const { html } = rendered.get(MAILS[0].name)!;
+
+    expect(html).toMatch(
+      new RegExp(`<body class="ss-body" [^>]*style="[^"]*${escape(PAGE_PAINT)}`),
+    );
+    expect(html).toMatch(new RegExp(`<td class="ss-page" style="[^"]*${escape(PAGE_PAINT)}`));
+  });
+
+  it('resets the gradients in the light theme, so a client that honours it still goes light', () => {
+    const { html } = rendered.get(MAILS[0].name)!;
 
     expect(html).toContain('.ss-page{background:#efe9da!important;color:#23201a!important;}');
     expect(html).toContain(
@@ -176,12 +195,47 @@ describe.each(MAILS)('$name, in Zoho Mail', ({ message }) => {
     );
     expect(html).toContain('.ss-body{background:#efe9da!important;}');
   });
-});
 
-/** `value` as a literal inside a RegExp. */
-function escape(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+  const page = () => rendered.get(MAILS[0].name)!.html;
+
+  // iOS Mail, iCloud, Yahoo, AOL, o2.pl, Seznam and Outlook.com each applied
+  // the light text rules and not the light page rule, leaving dark text on
+  // the dark page. So every light rule hangs off the one cell that carries
+  // the page colour: a client that loses that rule loses them all. (Zoho was
+  // on that list from a preview tool; measured, it reads no stylesheet at all
+  // — MB.262.)
+  it('scopes every light rule beneath the one cell that carries the page colour', () => {
+    const html = page();
+    const light = html.match(/@media \(prefers-color-scheme: light\)\{(.*?)\}\}/s)?.[1] ?? '';
+    const selectors = light.match(/[^{}]+(?=\{)/g) ?? [];
+
+    expect(selectors.length).toBeGreaterThan(5);
+    for (const selector of selectors) {
+      expect(selector).toMatch(/^(\.ss-page( \.ss-[a-z]+)?|\.ss-body)$/);
+    }
+    // No ss- rule lives outside the light block.
+    expect(html.replace(light, '')).not.toMatch(/\.ss-[a-z]+[^{]*\{/);
+    // The class is on exactly one element, the cell with the inline dark page.
+    expect(html.match(/class="[^"]*ss-page[^"]*"/g)).toEqual(['class="ss-page"']);
+  });
+
+  // Backgrounds rather than <img>, so the text can run over their edges: Gmail
+  // strips the negative margins an overlap would otherwise take.
+  it('sets the photographs behind the text, from the origin the link points at', () => {
+    const html = page();
+    const image = (name: string) => `url(${ORIGIN}/email/images/${name}.png)`;
+
+    for (const corner of ['sorrel', 'salt']) {
+      expect(html).toMatch(
+        new RegExp(`class="ss-${corner}"[^>]*background-image:${escape(image(`${corner}-dark`))}`),
+      );
+      expect(html).toContain(
+        `.ss-page .ss-${corner}{background-image:${image(`${corner}-light`)}!important;}`,
+      );
+    }
+    expect(html).not.toContain('<img');
+  });
+});
 
 describe('the templates', () => {
   // A new template cannot ship without a row above.
