@@ -6,17 +6,17 @@ day of the week and note, and the categories it is assigned (M10.14, story 48). 
 `/coven/[slug]/grimoire/new`, draws it empty, reached from New Spell at the
 Grimoire's heading, which only an owner or a member is shown; M13.10's edit page,
 `/coven/[slug]/grimoire/[id]/edit`, will draw it with a saved spell. The
-recipe's steps (M10.15, M10.16, M13.3), visibility (M10.13) and Mark Complete (M10.20) are later tasks that extend it. There is
+recipe's steps (M10.15, M10.16, M13.3) and Mark Complete (M10.20) are later tasks that extend it. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Props
 
 `SpellBuilderProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                                           |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                 |
-| `spell`       | Optional: a saved spell, its `id`, `revision`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
+| Prop          | What it is                                                                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `workspaceId` | The coven the spell belongs to, sent with every save                                                                                                               |
+| `spell`       | Optional: a saved spell, its `id`, `revision`, `visibility`, the seven fields (null for one not set) and its `categoryIds` (left out, none). Without it, all empty |
 
 ## Saving
 
@@ -36,7 +36,8 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   set to the revision the last save answered. Opened with a `spell`, every
   Save is an update. This is the shape M13.17's autosave adapter takes.
 - **What it sends.** The seven fields, trimmed, and null for a blank one, so
-  an emptied field is cleared rather than left as it was. Only these seven:
+  an emptied field is cleared rather than left as it was, and `visibility`
+  (below). Only these:
   the schema's default empty `steps` is never sent, so a save from here
   cannot replace a saved spell's recipe. The categories go as
   `categoryIds` only when the picks differ from the last save, as a set in
@@ -48,6 +49,42 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
   `/coven/[slug]/grimoire/new` after a create: there is no page for one spell
   to go to until MB.6 and M13.10, so reloading the page opens an empty
   builder, and the saved spell is listed under the grimoire's Drafts tab.
+
+## Visibility
+
+Who can see the spell (M10.13): `SpellVisibilityField`, in
+`visibility-field.tsx`, drawn after Note. It is a `SwitchField`
+([`field.md`](field.md)) labelled Share With the Coven (the owner's call,
+2026-10-27): on is the coven (`workspace`), which every member can see, and
+off is private (`private`), which only its author can. A line under the
+switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
+ingredient form's Toxic switch does, rather than centred as in a filter bar
+(`index.scss`, on the form's `spell-builder` class).
+The rule it follows is DESIGN.md §5's: visibility only widens.
+
+- **A new spell** opens with the switch on, the coven being the database's
+  default, and it may be turned either way. The choice goes out with the first save. A choice alone is
+  something to save (the owner's call, 2026-10-27): a visibility other than
+  the last save's makes the form dirty, so Save Spell enables and the discard
+  question asks before a link leaves it.
+- **A saved private spell** keeps the switch open. Turning it on asks
+  "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
+  Share saves the whole form with `visibility: workspace` at once, so the
+  spell is shared in one action. Any other unsaved changes go with it, which
+  the question says. A refusal lands in the `Notice` and the spell stays
+  private.
+- **A spell shared with the coven** shows the switch on and disabled, with
+  the note: "Shared with the coven, so it cannot be made private again.
+  Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
+  the coven shuts the control the same way, as soon as the save answers.
+
+Which state shows is read from the form's starting values (the last save's)
+and whether the spell has been created, so the builder passes only
+`created` and its `send`. Every save carries the visibility the form holds.
+A save from a stale page, after the spell was shared elsewhere, therefore
+says `private` and is refused by the service (`assertWidens`, M10.6); the
+refusal's words, which explain the rule and name Delete, show in the
+`Notice`, never a bare "Forbidden".
 
 ## Two error surfaces
 
@@ -144,7 +181,9 @@ tokens is the grimoire's design review's.
 ## Stories
 
 `index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
-control that chooses Empty, Title Typed, Saved Spell or Refused After Saving,
+control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
+its visibility shut), Private Spell, Share Question, Phase Outside the List
+or Refused After Saving,
 inside the app shell and the page's frame and heading.
 
 ## Testing
@@ -155,8 +194,11 @@ empty fields and no Instructions box, no Cancel, nothing to save until a
 field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
-surfaces, and the discard question.
-`tests/components/SpellBuilder/categories-field.test.tsx` covers the
+surfaces, and the discard question. `visibility-field.test.tsx` covers the
+visibility control: on by default and sent with a create, off sent as private and
+left open, a choice alone saveable, the share question kept and
+confirmed, a refused share, a refused narrowing shown in the notice, and the
+control shut with its reason on a shared spell. `tests/components/SpellBuilder/categories-field.test.tsx` covers the
 Categories field: the picks sent with a first save, Save on with a pick and
 off once it is removed, a saved spell's categories opened and the set left
 after a removal sent (an empty set to clear them), the categories left out of
@@ -167,3 +209,7 @@ owner and a member, and the 404 for a viewer. Stories 47 and 48 in
 `tests/e2e/stories/06-grimoire.spec.ts` walk it in a browser; story 48 picks
 two categories, removes one, saves, and finds the one left on the spell's
 card under Drafts.
+No story walks the visibility control, since §5's rule governs it rather than a
+story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
+then shared in one confirmed action and the control shut, each step read from the
+database. Story 56 checks the Private badge on the author's card.

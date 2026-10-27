@@ -21,12 +21,15 @@ import { SpellCategoriesField, sameCategories } from './categories-field';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
+import { SpellVisibilityField } from './visibility-field';
 import type {
   SpellBuilderField,
+  SpellBuilderInput,
   SpellBuilderProps,
   SpellBuilderSpell,
   SpellBuilderValues,
 } from './types';
+import './index.scss';
 
 // The spell builder (M10.12): a spell's title, intent, jar and note, on the
 // new-spell page now and on the edit page once M13.10 opens it with a saved
@@ -50,6 +53,7 @@ const CreateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      visibility
     }
   }
 `);
@@ -66,6 +70,7 @@ const UpdateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      visibility
     }
   }
 `);
@@ -80,12 +85,6 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/**
- * The fields as the save sends them: trimmed, and null for blank, as the
- * schema reads them; the categories only when they changed (M10.14).
- */
-type SpellBuilderInput = Record<SpellBuilderField, string | null> & { categoryIds?: string[] };
-
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
@@ -96,6 +95,8 @@ function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
       SpellBuilderField,
       string
     >),
+    // A new spell is the coven's unless chosen otherwise (§5).
+    visibility: spell?.visibility ?? 'workspace',
     categoryIds: [...(spell?.categoryIds ?? [])],
   };
 }
@@ -137,12 +138,16 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   } = methods;
 
   // Something to save: a field that reads differently from the last save,
-  // blank and spaces alike reading as none, as the schema reads them.
+  // blank and spaces alike reading as none, as the schema reads them, or a
+  // visibility other than the last save's, which is a choice worth saving on
+  // its own (the owner's call, 2026-10-27).
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
+  const visibility = useWatch({ control, name: 'visibility' });
   const dirty =
     categoriesChanged ||
+    visibility !== defaultValues?.visibility ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
     );
@@ -170,9 +175,13 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   const send = async (values: SpellBuilderInput): Promise<void> => {
     // Only the builder's fields: the schema's defaults (an empty recipe)
     // would otherwise replace a saved spell's steps.
-    const input: SpellBuilderInput = Object.fromEntries(
-      FIELDS.map((field) => [field, values[field] ?? null]),
-    ) as Record<SpellBuilderField, string | null>;
+    const input: SpellBuilderInput = {
+      ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
+        SpellBuilderField,
+        string | null
+      >),
+      visibility: values.visibility,
+    };
     // The categories go only when the picks differ from the last save: left
     // out, the service keeps the spell's set as it is (M10.14).
     const categoryIds = values.categoryIds ?? [];
@@ -196,7 +205,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form" onSubmit={handleSubmit(send)} noValidate>
+        <form ref={root} className="form spell-builder" onSubmit={handleSubmit(send)} noValidate>
           <FormHistoryButtons />
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <TextField<SpellBuilderValues>
@@ -250,6 +259,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             placeholder="Add a note"
             multiline
           />
+          <SpellVisibilityField created={saved !== null} save={send} />
           <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
           {discard.asking && <DiscardQuestion guard={discard} />}
         </form>

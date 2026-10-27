@@ -51,6 +51,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
+    visibility: input.visibility ?? 'workspace',
   };
 }
 
@@ -152,6 +153,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: null,
         note: null,
+        visibility: 'workspace',
       },
     });
   });
@@ -178,6 +180,7 @@ describe('SpellBuilder', () => {
       moonPhase: 'Waxing gibbous',
       dayOfWeek: 'Monday',
       note: 'Kept on the sill',
+      visibility: 'workspace',
     });
   });
 
@@ -233,6 +236,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
       },
     });
 
@@ -257,6 +261,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
         expectedRevision: 4,
       },
     });
@@ -392,6 +397,7 @@ describe('SpellBuilder', () => {
           moonPhase: 'Full',
           dayOfWeek: 'saturday',
           note: null,
+          visibility: 'workspace',
         },
       });
 
@@ -425,6 +431,27 @@ describe('SpellBuilder', () => {
       );
       type('Title', 'Fixture Working');
 
+      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
+
+      expect(asking()).toBeInTheDocument();
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it('asks before a link leaves an unsaved visibility choice', () => {
+      render(
+        <QueryClientProvider client={makeQueryClient()}>
+          <NavigationProvider>
+            <SpellBuilder workspaceId="w1" />
+            <Go />
+          </NavigationProvider>
+        </QueryClientProvider>,
+      );
+      // Why the link could have gone: nothing typed, so no question yet.
+      fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
+      expect(asking()).toBeNull();
+      push.mockClear();
+
+      fireEvent.click(screen.getByRole('switch', { name: 'Share With the Coven' }));
       fireEvent.click(screen.getByRole('button', { name: 'Grimoire' }));
 
       expect(asking()).toBeInTheDocument();

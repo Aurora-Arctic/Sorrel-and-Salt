@@ -1,21 +1,36 @@
 import type { ReactNode } from 'react';
 import type { FieldProps } from '../Field/types';
+import type { SpellVisibility } from '@/modules/grimoire';
 
 /** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
 export type SpellBuilderField =
   'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
 
 /**
- * The form's values: each field as typed, blank for none, and the ids of the
- * categories the spell is assigned (M10.14), none for none.
+ * The form's values: each field as typed, blank for none, who can see the spell
+ * (M10.13), and the ids of the categories it is assigned (M10.14), none for none.
  */
-export type SpellBuilderValues = Record<SpellBuilderField, string> & { categoryIds: string[] };
+export type SpellBuilderValues = Record<SpellBuilderField, string> & {
+  visibility: SpellVisibility;
+  categoryIds: string[];
+};
+
+/**
+ * The form's values as a save sends them: trimmed, and null for blank, as the
+ * schema reads them; the categories only when they changed (M10.14).
+ */
+export type SpellBuilderInput = Record<SpellBuilderField, string | null> & {
+  visibility: SpellVisibility;
+  categoryIds?: string[];
+};
 
 /** A saved spell the builder opens, as the `spell` query answers it (M13.10). */
 export type SpellBuilderSpell = {
   id: string;
   /** The revision it was read at, sent back with the next save as `expectedRevision`. */
   revision: number;
+  /** Who can see it: its author alone, or the whole coven, which is for good (M10.13). */
+  visibility: SpellVisibility;
 } & Record<SpellBuilderField, string | null> & {
     /** The categories it is assigned (M10.14); left out, none. */
     categoryIds?: readonly string[];
@@ -39,4 +54,11 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
    * box; `null` for a value with none, such as one typed outside the list.
    */
   icon?: (value: string) => ReactNode;
+}
+
+export interface SpellVisibilityFieldProps {
+  /** The spell is saved, so its visibility is the saved one's: Only Me may widen, Coven is for good. */
+  created: boolean;
+  /** Saves the form with the given values, as Save Spell does; it reports a refusal itself. */
+  save: (values: SpellBuilderInput) => Promise<void>;
 }

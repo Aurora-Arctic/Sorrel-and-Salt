@@ -1,12 +1,13 @@
 # SpellCard
 
 `src/components/SpellCard/` draws one spell in the grimoire's list (M10.11, story 56). It
-shows five things:
+shows six things:
 
 - the spell's title, or "Untitled Spell" when it has none (`UNTITLED_SPELL`), since a draft
   may have no title;
 - its intent, the member's own sentence saying what the spell is for;
 - a Draft badge, on a draft only;
+- a Private badge, on a private spell only (M10.13);
 - the categories its author assigned it, as `CategoryChips`;
 - who last edited it and when, as `LastEdit` ([last-edit.md](last-edit.md)), in the card's
   foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27).
@@ -22,6 +23,7 @@ The card is presentational: it takes props and works nothing out from the data, 
 | `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                   |
 | `intent`     | The intent, or null. Without one the card draws no paragraph                                  |
 | `status`     | `draft` or `complete`                                                                         |
+| `visibility` | `private` or `workspace`: who can see it                                                      |
 | `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5) |
 | `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line       |
 | `level`      | The title's heading level, 2 by default                                                       |
@@ -39,6 +41,15 @@ complete is the default state, so marking it says nothing (the owner, 2026-10-27
 M10.11's "Draft and complete are visually distinct"). The badge is `.badge--draft`, whose
 palette in `$badge-palettes` (`src/scss/_variables.scss`) takes Retired's muted tint and
 its contrast-checked inks: an unfinished spell is a fact about it, not a warning.
+
+## Only a private spell is marked
+
+A private spell's card carries a Private badge, and a spell shared with the coven carries
+none, for the same reason: the coven is the default (M10.13). The service lists a private
+spell to its author alone (M10.6), so the badge is seen only by the one person it is about,
+and tells them no one else in the coven sees it. It is the word "Private", so it does not
+rely on colour. `.badge--private` takes Draft's muted tint and inks, and sits after Draft
+when a spell is both.
 
 ## No link yet
 

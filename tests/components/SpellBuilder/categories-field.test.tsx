@@ -78,6 +78,7 @@ function answer(id: string, revision: number, input: CreateSpellMutationVariable
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
+    visibility: input.visibility ?? ('workspace' as const),
   };
 }
 
@@ -122,6 +123,7 @@ const savedSpell = (categoryIds: string[]): SpellBuilderSpell => ({
   moonPhase: null,
   dayOfWeek: null,
   note: null,
+  visibility: 'workspace',
   categoryIds,
 });
 

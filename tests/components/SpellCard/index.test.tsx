@@ -11,6 +11,7 @@ const BASE = {
   title: 'Fixture Working',
   intent: 'To keep the testwort fresh.',
   status: 'complete' as const,
+  visibility: 'workspace' as const,
   categories: [],
 };
 
@@ -47,6 +48,22 @@ describe('SpellCard', () => {
     const card = screen.getByRole('article', { name: 'Fixture Working' });
     expect(within(card).queryByText('Draft')).not.toBeInTheDocument();
     expect(within(card).queryByText('Complete')).not.toBeInTheDocument();
+  });
+
+  // Only its author lists a private spell (M10.6), so the badge tells them it
+  // is theirs alone (M10.13). A word, not a colour, so it reads without one.
+  it('marks a private spell Private, and a spell shared with the coven with nothing', () => {
+    const { rerender } = render(<SpellCard {...BASE} visibility="private" />);
+    expect(within(screen.getByRole('article')).getByText('Private')).toBeInTheDocument();
+    rerender(<SpellCard {...BASE} visibility="workspace" />);
+    expect(within(screen.getByRole('article')).queryByText('Private')).not.toBeInTheDocument();
+  });
+
+  it('marks a private draft with both badges', () => {
+    render(<SpellCard {...BASE} status="draft" visibility="private" />);
+    const card = within(screen.getByRole('article'));
+    expect(card.getByText('Draft')).toBeInTheDocument();
+    expect(card.getByText('Private')).toBeInTheDocument();
   });
 
   // Who last changed the spell, drawn from what the caller hands in, as IngredientCard's.
