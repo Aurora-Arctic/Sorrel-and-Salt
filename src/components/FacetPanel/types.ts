@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import type { CompendiumFacetCounts, ReviewSetting } from '../CompendiumList/types';
+import type { PickerCategory } from '../CategoryPicker/types';
 
 /**
  * What the panel shows as chosen. Every facet but the last three is a list of
@@ -85,4 +86,29 @@ export interface FacetShellProps {
   className?: string;
   /** The filters, drawn between the panel's head and its Apply Filters, Close and Clear All. */
   children: ReactNode;
+}
+
+/**
+ * One category the Categories line offers: its slug as `value`, its name as `label`, and its
+ * group's colours. `count` is how many rows picking it would leave, where the list reads one;
+ * without it the line shows every category and no number (the grimoire, M10.11).
+ */
+export interface CategoryLineChoice {
+  value: string;
+  label: string;
+  group: PickerCategory['group'];
+  count?: number;
+}
+
+/** The Categories line: the picker and its Match chip, the one line every list's filters share. */
+export interface CategoryLineProps {
+  categories: readonly CategoryLineChoice[];
+  /** The chosen categories' slugs. */
+  values: readonly string[];
+  mode: CategoryMode;
+  /** What the list holds, with its article, for Match's tip: "an ingredient", "a spell". */
+  noun: string;
+  /** The counts are still being read. */
+  loading?: boolean;
+  onChange: (patch: { categories?: string[]; categoryMode?: CategoryMode }) => void;
 }
