@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   CreateSpellMutation,
@@ -293,6 +293,16 @@ describe('SpellBuilder', () => {
   // typed (the owner, 2026-10-27): the columns stay free text.
   describe('the moon phase and day of the week suggestions', () => {
     const listed = () => screen.getAllByRole('option').map((option) => option.textContent);
+
+    // The recipe's timing, when to work the spell, grouped under its own heading.
+    it('groups the two under When to Work It', () => {
+      renderBuilder();
+
+      const group = screen.getByRole('group', { name: 'When to Work It' });
+      expect(within(group).getByRole('combobox', { name: 'Moon Phase' })).toBeInTheDocument();
+      expect(within(group).getByRole('combobox', { name: 'Day of the Week' })).toBeInTheDocument();
+      expect(within(group).queryByRole('textbox', { name: 'Jar Size' })).toBeNull();
+    });
 
     it('offers the eight moon phases and the seven days', () => {
       renderBuilder();

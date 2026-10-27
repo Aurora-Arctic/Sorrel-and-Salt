@@ -197,18 +197,24 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             placeholder="Add a colour"
             autoComplete="off"
           />
-          <SpellSuggestField
-            name="moonPhase"
-            label="Moon Phase"
-            placeholder="Add a phase"
-            options={MOON_PHASES}
-          />
-          <SpellSuggestField
-            name="dayOfWeek"
-            label="Day of the Week"
-            placeholder="Add a day"
-            options={DAYS_OF_THE_WEEK}
-          />
+          {/* The recipe's timing: when to work the spell, not when it was worked,
+              which a working's own date gives (M13.4). The shared .fieldset
+              primitive, so the legend names the group to a screen reader. */}
+          <fieldset className="fieldset">
+            <legend className="fieldset__legend">When to Work It</legend>
+            <SpellSuggestField
+              name="moonPhase"
+              label="Moon Phase"
+              placeholder="Add a phase"
+              options={MOON_PHASES}
+            />
+            <SpellSuggestField
+              name="dayOfWeek"
+              label="Day of the Week"
+              placeholder="Add a day"
+              options={DAYS_OF_THE_WEEK}
+            />
+          </fieldset>
           <TextField<SpellBuilderValues>
             name="note"
             label="Note"
