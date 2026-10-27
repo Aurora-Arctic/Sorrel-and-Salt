@@ -5,7 +5,7 @@ import IngredientSearch, {
   IngredientSearchForm,
   useSearchText,
 } from '@/components/IngredientSearch';
-import type { IngredientSearchMatch } from '@/components/IngredientSearch/types';
+import type { IngredientSearchMatch, SearchSource } from '@/components/IngredientSearch/types';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { filterForm } from '../../support/filter-form';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
@@ -50,7 +50,7 @@ function offer(matches: IngredientSearchMatch[], hasNextPage = false) {
 /** A slot field that reads the text typed, as a filter applying on its change would. */
 const SlotField = (): ReactElement => <output aria-label="Typed">{useSearchText()}</output>;
 
-function renderSearch(query = '', workspaceId?: string) {
+function renderSearch(query = '', source?: SearchSource) {
   return renderWithClient(
     <IngredientSearch
       search={
@@ -60,8 +60,8 @@ function renderSearch(query = '', workspaceId?: string) {
           query={query}
           shown={[query]}
           searchHref={searchHref}
-          pickHref={pickHref}
-          workspaceId={workspaceId}
+          pickHref={source?.kind === 'grimoire' ? undefined : pickHref}
+          source={source}
         >
           <SlotField />
         </IngredientSearchForm>
@@ -393,7 +393,7 @@ describe('IngredientSearch', () => {
 
     it("asks the coven's ingredients with its id, and never the compendium", async () => {
       const cupboardAsked = offerCupboard([match(1)]);
-      renderSearch('', WORKSPACE);
+      renderSearch('', { kind: 'cupboard', workspaceId: WORKSPACE });
 
       typeName('wort');
       await act(async () => {
@@ -411,7 +411,7 @@ describe('IngredientSearch', () => {
 
     it("names a row by the coven's label where the cupboard sets one", async () => {
       const cupboardAsked = offerCupboard([{ ...match(2), label: 'Granny Wort' }, match(3)]);
-      renderSearch('', WORKSPACE);
+      renderSearch('', { kind: 'cupboard', workspaceId: WORKSPACE });
 
       typeName('wort');
       await act(async () => {
@@ -434,6 +434,88 @@ describe('IngredientSearch', () => {
 
       expect(asked.length).toBeGreaterThan(0);
       expect(cupboardAsked).toHaveLength(0);
+    });
+  });
+  describe('in a grimoire', () => {
+    const WORKSPACE = 'workspace-w';
+    const GRIMOIRE: SearchSource = { kind: 'grimoire', workspaceId: WORKSPACE, status: 'complete' };
+
+    /** Answers the grimoire lookup with `titles`, recording the compendium lookup if it is ever sent. */
+    function offerSpells(titles: (string | null)[]) {
+      asked = [];
+      const spellsAsked: Record<string, unknown>[] = [];
+      mockGraphQLQuery('IngredientSearchMatches', (variables) => {
+        asked.push(variables);
+        return { compendium: { pageInfo: { hasNextPage: false }, edges: [] } };
+      });
+      mockGraphQLQuery('GrimoireSearchMatches', (variables) => {
+        spellsAsked.push(variables);
+        return {
+          grimoire: {
+            pageInfo: { hasNextPage: false },
+            edges: titles.map((title, n) => ({ node: { id: `spell-${n}`, title } })),
+          },
+        };
+      });
+      return spellsAsked;
+    }
+
+    const titleBox = () => screen.getByRole('combobox', { name: 'Title' });
+
+    async function typeTitle(text: string, spellsAsked: Record<string, unknown>[]) {
+      act(() => titleBox().focus());
+      typeIn(titleBox(), text);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      await waitFor(() => expect(spellsAsked.length).toBeGreaterThan(0));
+    }
+
+    it("asks the coven's grimoire of the tab's status, and never the compendium", async () => {
+      const spellsAsked = offerSpells(['Hearth Ward', null]);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+
+      expect(spellsAsked[spellsAsked.length - 1]).toMatchObject({
+        workspaceId: WORKSPACE,
+        query: 'hearth',
+        status: 'complete',
+      });
+      expect(asked).toHaveLength(0);
+      expect(await screen.findByRole('option', { name: 'Hearth Ward' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Untitled Spell' })).toBeInTheDocument();
+    });
+
+    // No spell has a page until MB.6, so a pick narrows the list to it instead.
+    it('applies a picked title as the search', async () => {
+      const spellsAsked = offerSpells(['Hearth Ward', null]);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+      fireEvent.click(await screen.findByRole('option', { name: 'Hearth Ward' }));
+
+      expect(router.push.mock.calls).toEqual([[searchHref('Hearth Ward')]]);
+    });
+
+    it('applies the typed text for a picked untitled spell', async () => {
+      const spellsAsked = offerSpells(['Hearth Ward', null]);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+      fireEvent.click(await screen.findByRole('option', { name: 'Untitled Spell' }));
+
+      expect(router.push.mock.calls).toEqual([[searchHref('hearth')]]);
+    });
+
+    it('clears by its own label and applies the empty search', () => {
+      offerSpells([]);
+      renderSearch('hearth', GRIMOIRE);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Clear Title' }));
+
+      expect(titleBox()).toHaveValue('');
+      expect(router.push.mock.calls).toEqual([[searchHref('')]]);
     });
   });
 });

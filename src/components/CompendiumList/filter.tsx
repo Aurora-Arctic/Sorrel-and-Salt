@@ -250,7 +250,7 @@ const CompendiumListFilterRow = ({
       clear={false}
       className="compendium-list__row"
       searchHref={(query) => hrefFor(filter, panel, query, where)}
-      workspaceId={coven ? workspaceId : undefined}
+      source={coven && workspaceId ? { kind: 'cupboard', workspaceId } : undefined}
       // The list as shown, the typed text not applied: the modal opens over it.
       pickHref={(match) => {
         if (where.covenSlug !== undefined) {

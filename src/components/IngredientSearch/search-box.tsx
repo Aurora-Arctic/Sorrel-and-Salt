@@ -12,7 +12,11 @@ import Combobox from '../Combobox';
 import { MagnifierIcon } from '../Field/icons';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
-import type { IngredientSearchBoxProps, IngredientSearchOption } from './types';
+import type {
+  IngredientSearchBoxProps,
+  IngredientSearchMatch,
+  IngredientSearchOption,
+} from './types';
 import './index.scss';
 
 // The search row's first control (M8.10): a type-ahead over the compendium's
@@ -42,8 +46,8 @@ const IngredientSearchMatchesDocument = graphql(`
 
 // The same type-ahead over one coven's own ingredients: the entries it made and
 // the compendium entries its cupboard names, shown by the coven's label where
-// the cupboard sets one. Asked instead of the compendium when a `workspaceId`
-// is given, never alongside it.
+// the cupboard sets one. Asked for a cupboard `source`, never alongside another
+// source's document.
 const IngredientSearchCupboardMatchesDocument = graphql(`
   query IngredientSearchCupboardMatches($workspaceId: ID!, $query: String, $first: Int) {
     workspaceIngredients(workspaceId: $workspaceId, query: $query, first: $first) {
@@ -66,6 +70,39 @@ const IngredientSearchCupboardMatchesDocument = graphql(`
   }
 `);
 
+// The same type-ahead over one coven's grimoire (M10.11): its spells by title,
+// of the tab's status, searched by title and intent and ranked best match first.
+const GrimoireSearchMatchesDocument = graphql(`
+  query GrimoireSearchMatches(
+    $workspaceId: ID!
+    $query: String
+    $status: SpellStatus
+    $first: Int
+  ) {
+    grimoire(workspaceId: $workspaceId, query: $query, status: $status, first: $first) {
+      pageInfo {
+        hasNextPage
+      }
+      edges {
+        node {
+          id
+          title
+        }
+      }
+    }
+  }
+`);
+
+/** The words the box uses for what it searches: an ingredient's name, or a spell's title. */
+const WORDING = {
+  ingredient: {
+    label: 'Name',
+    placeholder: 'Search names, forms & descriptions',
+    clear: 'Clear Name',
+  },
+  spell: { label: 'Title', placeholder: 'Search titles & intents', clear: 'Clear Title' },
+} as const;
+
 /** The dropdown's rows: the first page of the ranked search, never a second. */
 const MATCH_ROWS = 25;
 
@@ -73,14 +110,30 @@ const MATCH_ROWS = 25;
 const searchable = (text: string): boolean =>
   Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
 
+/** An ingredient's dropdown row, labelled with its formal name where it has one. */
+const ingredientRow = ({
+  id,
+  slug,
+  name,
+  canonicalName,
+  nomenclature,
+}: IngredientSearchMatch): IngredientSearchOption => ({
+  key: id,
+  value: name,
+  label: canonicalName ? `${name} (${canonicalName})` : name,
+  match: { id, slug, name, canonicalName, nomenclature },
+});
+
 const IngredientSearchBox = ({
   text,
   onText,
   searchHref,
   pickHref,
   pickHeading,
-  workspaceId,
+  source = { kind: 'compendium' },
 }: IngredientSearchBoxProps): ReactElement => {
+  const wording = source.kind === 'grimoire' ? WORDING.spell : WORDING.ingredient;
+  const workspaceId = source.kind === 'compendium' ? '' : source.workspaceId;
   const controlId = useId();
   const input = useRef<HTMLInputElement>(null);
   const apply = useApplyFilter();
@@ -97,57 +150,75 @@ const IngredientSearchBox = ({
   const belowFloor = text.trim() !== '' && !searchable(text.trim());
   const compendium = useQuery({
     ...graphqlQuery(IngredientSearchMatchesDocument, { query, first: MATCH_ROWS }),
-    enabled: active && searchesNow && !workspaceId,
+    enabled: active && searchesNow && source.kind === 'compendium',
     placeholderData: keepPreviousData,
     throwOnError: false,
   });
   const cupboard = useQuery({
     ...graphqlQuery(IngredientSearchCupboardMatchesDocument, {
-      workspaceId: workspaceId ?? '',
+      workspaceId,
       query,
       first: MATCH_ROWS,
     }),
-    enabled: active && searchesNow && !!workspaceId,
+    enabled: active && searchesNow && source.kind === 'cupboard',
     placeholderData: keepPreviousData,
     throwOnError: false,
   });
-  const isFetching = workspaceId ? cupboard.isFetching : compendium.isFetching;
-  // Both answers become the same match: the coven's label stands in for the name.
-  const answer = useMemo(() => {
-    if (workspaceId) {
+  const status = source.kind === 'grimoire' ? source.status : undefined;
+  const grimoire = useQuery({
+    ...graphqlQuery(GrimoireSearchMatchesDocument, {
+      workspaceId,
+      query,
+      status,
+      first: MATCH_ROWS,
+    }),
+    enabled: active && searchesNow && source.kind === 'grimoire',
+    placeholderData: keepPreviousData,
+    throwOnError: false,
+  });
+  const isFetching = { compendium, cupboard, grimoire }[source.kind].isFetching;
+  // Every answer becomes the same rows. The coven's label stands in for an
+  // ingredient's name; a spell carries no match, and an untitled one stands for
+  // the text typed, which a pick then applies.
+  const answer = useMemo((): { hasNextPage: boolean; rows: IngredientSearchOption[] } | null => {
+    if (source.kind === 'grimoire') {
+      const page = grimoire.data?.grimoire;
+      return page
+        ? {
+            hasNextPage: page.pageInfo.hasNextPage,
+            rows: page.edges.map(({ node }) => ({
+              key: node.id,
+              value: node.title ?? query,
+              label: node.title ?? 'Untitled Spell',
+            })),
+          }
+        : null;
+    }
+    if (source.kind === 'cupboard') {
       const page = cupboard.data?.workspaceIngredients;
       return page
         ? {
             hasNextPage: page.pageInfo.hasNextPage,
-            nodes: page.edges.map(({ node }) => ({
-              id: node.id,
-              slug: node.slug,
-              name: node.cupboardEntry?.label ?? node.name,
-              canonicalName: node.canonicalName,
-              nomenclature: node.nomenclature,
-            })),
+            rows: page.edges.map(({ node }) =>
+              ingredientRow({ ...node, name: node.cupboardEntry?.label ?? node.name }),
+            ),
           }
         : null;
     }
     const page = compendium.data?.compendium;
     return page
-      ? { hasNextPage: page.pageInfo.hasNextPage, nodes: page.edges.map(({ node }) => node) }
+      ? {
+          hasNextPage: page.pageInfo.hasNextPage,
+          rows: page.edges.map(({ node }) => ingredientRow(node)),
+        }
       : null;
-  }, [workspaceId, cupboard.data, compendium.data]);
+  }, [source.kind, query, grimoire.data, cupboard.data, compendium.data]);
 
   // Under the floor the service ignores the query and returns the unranked
   // browse list, so no rows are offered, and the kept previous answer is not
   // shown either.
   const options = useMemo(
-    (): IngredientSearchOption[] =>
-      searchesNow && !belowFloor && answer
-        ? answer.nodes.map((node) => ({
-            key: node.id,
-            value: node.name,
-            label: node.canonicalName ? `${node.name} (${node.canonicalName})` : node.name,
-            match: node,
-          }))
-        : [],
+    (): IngredientSearchOption[] => (searchesNow && !belowFloor && answer ? answer.rows : []),
     [answer, searchesNow, belowFloor],
   );
   const hasMore = searchesNow && !belowFloor && answer?.hasNextPage === true;
@@ -161,6 +232,11 @@ const IngredientSearchBox = ({
   // list's Edit link does.
   function pick(_value: string, option: IngredientSearchOption | null) {
     if (!option) return;
+    // A row with nothing to open, a spell's, applies its text as the search.
+    if (!pickHref || !option.match) {
+      apply(searchHref(option.value.trim()));
+      return;
+    }
     const href = pickHref(option.match);
     if (modal && pickHeading) modal.open(href, pickHeading(option.match));
     else {
@@ -174,7 +250,7 @@ const IngredientSearchBox = ({
     // own visually hidden label (the owner's call, 2026-10-19), so no FieldShell here.
     <Combobox<IngredientSearchOption>
       id={controlId}
-      label="Name"
+      label={wording.label}
       name="query"
       value={text}
       onChange={onText}
@@ -195,12 +271,12 @@ const IngredientSearchBox = ({
       }
       offerTyped={false}
       noun="result"
-      placeholder="Search names, forms & descriptions"
+      placeholder={wording.placeholder}
       inputRef={input}
       // The clear empties the box and applies the empty search (the owner's
       // call), so the list drops its name filter and keeps the others.
       clear={{
-        label: 'Clear Name',
+        label: wording.clear,
         onClear: () => {
           onText('');
           input.current?.focus();

@@ -1,4 +1,5 @@
 import type { ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
+import type { SpellStatus } from '@/modules/grimoire';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { FilterValue } from '../FilterForm/types';
@@ -18,10 +19,20 @@ export interface IngredientSearchMatch {
   nomenclature: string;
 }
 
-/** A dropdown row: the combobox's option, carrying the match it stands for. */
+/** A dropdown row: the combobox's option, carrying the ingredient it stands for. A spell's row carries none. */
 export interface IngredientSearchOption extends ComboboxOption {
-  match: IngredientSearchMatch;
+  match?: IngredientSearchMatch;
 }
+
+/**
+ * What the type-ahead suggests from. The compendium is the default; a coven's
+ * cupboard suggests its own ingredients by the coven's label; a coven's grimoire
+ * suggests its spells by title, of the tab's status when given (M10.11).
+ */
+export type SearchSource =
+  | { kind: 'compendium' }
+  | { kind: 'cupboard'; workspaceId: string }
+  | { kind: 'grimoire'; workspaceId: string; status?: SpellStatus };
 
 export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
   /** The consumer's client filter row, normally an `IngredientSearchForm`. */
@@ -49,20 +60,19 @@ export interface IngredientSearchFormProps {
   shown: readonly FilterValue[];
   /** The list with `query` set to `text` and the other filters kept, from the first page. */
   searchHref: (text: string) => Route;
-  /** Where a picked match opens. */
-  pickHref: (match: IngredientSearchMatch) => Route;
+  /**
+   * Where a picked ingredient opens. Left out, a pick applies its row's text
+   * as the search, as a grimoire's does until a spell has a page (MB.6).
+   */
+  pickHref?: (match: IngredientSearchMatch) => Route;
   /**
    * The head of the route modal a pick opens, shown at once while the
    * modal's content loads. Given, a pick opens `pickHref` as a route modal
    * over the list as it stands; left out, a pick is a plain navigation.
    */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
-  /**
-   * A coven's id. Given, the type-ahead suggests from that coven's own
-   * ingredients, by the coven's label where it sets one, instead of from the
-   * compendium.
-   */
-  workspaceId?: string;
+  /** What the type-ahead suggests from: the compendium when left out. */
+  source?: SearchSource;
   /** Draw the form's own Clear while a filter is shown. Default true. */
   clear?: boolean;
   /** Joins the form's class. */
@@ -76,9 +86,9 @@ export interface IngredientSearchBoxProps {
   text: string;
   onText: (text: string) => void;
   searchHref: IngredientSearchFormProps['searchHref'];
-  pickHref: IngredientSearchFormProps['pickHref'];
+  pickHref?: IngredientSearchFormProps['pickHref'];
   pickHeading?: IngredientSearchFormProps['pickHeading'];
-  workspaceId?: IngredientSearchFormProps['workspaceId'];
+  source?: IngredientSearchFormProps['source'];
 }
 
 /** The kinds of filter the search sentence can name, in the order it names them. */
