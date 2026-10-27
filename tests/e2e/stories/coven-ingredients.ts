@@ -188,19 +188,24 @@ export async function insertStock(
   });
 }
 
-/** A spell in the coven's grimoire, as raw SQL: the spell factory imports the whole seed. */
+/**
+ * A spell in the coven's grimoire, as raw SQL: the spell factory imports the whole seed. A
+ * draft unless `status` says otherwise, as the table's default is; the Grimoire lists a
+ * complete spell on its Spells tab and a draft on its Drafts tab (M10.11).
+ */
 export async function insertSpell(
   sql: postgres.Sql,
   covenId: string,
   title: string,
   visibility: 'private' | 'workspace',
   author: string,
+  status: 'draft' | 'complete' = 'draft',
 ): Promise<string> {
   return sql.begin(async (tx) => {
     await tx`select set_config('app.current_user_id', ${author}, true)`;
     const [row] = await tx<{ id: string }[]>`
-      insert into spells (workspace_id, title, visibility, created_by, updated_by)
-      values (${covenId}, ${title}, ${visibility}, ${author}, ${author})
+      insert into spells (workspace_id, title, visibility, status, created_by, updated_by)
+      values (${covenId}, ${title}, ${visibility}, ${status}, ${author}, ${author})
       returning id`;
     return row.id;
   });

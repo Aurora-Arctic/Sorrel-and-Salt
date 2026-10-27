@@ -284,12 +284,9 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'any member, a viewer included, reads every workspace-visible spell, and a private spell stays with its author',
-  {
-    tag: '@story-56',
-    annotation: { type: 'fixme', description: 'M10.11 builds /coven/[slug]/grimoire' },
-  },
+  { tag: '@story-56' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Six', 'story-56.test', {
       A: 'owner',
@@ -298,8 +295,9 @@ test.fixme(
     });
     const { A, B, C } = coven.users;
     await withSql(async (sql) => {
-      await insertSpell(sql, coven.id, 'Shared Working', 'workspace', A);
-      await insertSpell(sql, coven.id, 'Private Working', 'private', A);
+      // Complete, so both list on the Spells tab, the grimoire's own address.
+      await insertSpell(sql, coven.id, 'Shared Working', 'workspace', A, 'complete');
+      await insertSpell(sql, coven.id, 'Private Working', 'private', A, 'complete');
     });
     const path = `/coven/${coven.slug}/grimoire`;
     // Why the private spell's absence is the rule's: its author sees it.
