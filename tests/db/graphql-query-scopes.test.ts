@@ -452,6 +452,12 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   promoteFolkName: write(
     `mutation { promoteFolkName(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", folkNameId: "${NOWHERE}") { id } }`,
   ),
+  createSpell: write(
+    `mutation { createSpell(workspaceId: "${WORKSPACE_W_ID}", input: { status: complete }) { id } }`,
+  ),
+  updateSpell: write(
+    `mutation { updateSpell(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: { expectedRevision: null }) { id } }`,
+  ),
   updateReference: write(
     `mutation { updateReference(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
   ),
@@ -618,6 +624,9 @@ const OPEN_WRITES = [
   'createReference',
   'updateReference',
   'promoteFolkName',
+  // The coven's `spell: create` and `spell: update` decide, which the spell service checks (M10.10).
+  'createSpell',
+  'updateSpell',
 ];
 
 const adminProbe = (field: string): ScopeProbe =>
