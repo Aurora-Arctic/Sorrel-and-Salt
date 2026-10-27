@@ -23,12 +23,15 @@ import type { SpellStepSend } from './steps/types';
 import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
+import { SpellVisibilityField } from './visibility-field';
 import type {
   SpellBuilderField,
+  SpellBuilderInput,
   SpellBuilderProps,
   SpellBuilderSpell,
   SpellBuilderValues,
 } from './types';
+import './index.scss';
 
 // The spell builder (M10.12): a spell's title, intent, jar and note, on the
 // new-spell page now and on the edit page once M13.10 opens it with a saved
@@ -55,6 +58,7 @@ const CreateSpellDocument = graphql(`
       steps {
         ...SpellBuilderStep
       }
+      visibility
     }
   }
 `);
@@ -74,6 +78,7 @@ const UpdateSpellDocument = graphql(`
       steps {
         ...SpellBuilderStep
       }
+      visibility
     }
   }
 `);
@@ -88,20 +93,19 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/** The fields as the save sends them: trimmed, and null for blank, as the schema reads them; and the steps. */
-type SpellBuilderInput = Record<SpellBuilderField, string | null> & { steps: SpellStepSend[] };
-
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
 /** The form's values for a spell: none for a new one, and blank for a field it has not set. */
-function valuesOf(spell?: SpellBuilderSpell): SpellBuilderValues {
+function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
   return {
     ...(Object.fromEntries(FIELDS.map((field) => [field, spell?.[field] ?? ''])) as Record<
       SpellBuilderField,
       string
     >),
     steps: (spell?.steps ?? []).map(stepValueOf),
+    // A new spell is the coven's unless chosen otherwise (§5).
+    visibility: spell?.visibility ?? 'workspace',
   };
 }
 
@@ -198,12 +202,17 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
 
   /** Saves the fields; a refusal lands beside its field, or above them all. */
   const send = async (values: SpellBuilderInput): Promise<void> => {
-    // The fields and the whole recipe: on an update, the steps sent are the
-    // spell's steps, and a saved step left out of them is removed.
-    const input = {
-      ...Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])),
+    // The fields, who can see the spell, and the whole recipe: on an update,
+    // the steps sent are the spell's steps, and a saved step left out of them
+    // is removed.
+    const input: SpellBuilderInput = {
+      ...(Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])) as Record<
+        SpellBuilderField,
+        string | null
+      >),
+      visibility: values.visibility,
       steps: values.steps,
-    } as SpellBuilderInput;
+    };
     try {
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
@@ -228,7 +237,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form" onSubmit={handleSubmit(send)} noValidate>
+        <form ref={root} className="form spell-builder" onSubmit={handleSubmit(send)} noValidate>
           <FormHistoryButtons />
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <TextField<SpellBuilderValues>
@@ -282,6 +291,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             placeholder="Add a note"
             multiline
           />
+          <SpellVisibilityField created={saved !== null} save={send} />
           <FormActions noun="Spell" dirty={dirty && !unitRefused} submitting={isSubmitting} />
           {discard.asking && <DiscardQuestion guard={discard} />}
         </form>

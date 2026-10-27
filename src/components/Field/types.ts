@@ -149,6 +149,8 @@ export interface SwitchFieldProps {
   disabled?: boolean;
   /** Optional: what the switch is for, behind an info tip beside the label. */
   hint?: string;
+  /** Optional: a line under the toggle, read with it, saying what its state means (M10.13). */
+  note?: string;
 }
 
 /** One choice of a `RadioGroupField`: its value, its name and what it means. */

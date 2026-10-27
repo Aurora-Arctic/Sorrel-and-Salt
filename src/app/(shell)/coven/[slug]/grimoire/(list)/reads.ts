@@ -64,6 +64,7 @@ export const readGrimoire = cache(
         title: node.title,
         intent: node.intent,
         status: node.status,
+        visibility: node.visibility,
         categories: answer.flatMap(({ id }): CardCategory[] => {
           const category = byId.get(id);
           return category ? [{ category: { id, name: category.name }, group: category.group }] : [];

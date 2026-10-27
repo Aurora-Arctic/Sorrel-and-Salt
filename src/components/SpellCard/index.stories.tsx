@@ -25,6 +25,7 @@ const BASE = {
   title: 'Hearth Warding Jar',
   intent: 'To keep the house and everyone under its roof safe through the winter.',
   status: 'complete' as const,
+  visibility: 'workspace' as const,
   categories: CATEGORIES,
 };
 
@@ -36,6 +37,16 @@ export const States: Story = {
       states={{
         Complete: <SpellCard {...BASE} id="complete" />,
         Draft: <SpellCard {...BASE} id="draft" status="draft" title="Dreaming Sachet" />,
+        Private: <SpellCard {...BASE} id="private" visibility="private" />,
+        'Private Draft': (
+          <SpellCard
+            {...BASE}
+            id="private-draft"
+            status="draft"
+            visibility="private"
+            title="Dreaming Sachet"
+          />
+        ),
         Untitled: <SpellCard {...BASE} id="untitled" status="draft" title={null} />,
         'No Intent': <SpellCard {...BASE} id="no-intent" intent={null} />,
         'No Categories': <SpellCard {...BASE} id="no-categories" categories={[]} />,

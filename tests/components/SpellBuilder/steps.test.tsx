@@ -115,6 +115,7 @@ function answer(id: string, revision: number, steps: SpellBuilderSpell['steps'] 
     moonPhase: null,
     dayOfWeek: null,
     note: null,
+    visibility: 'workspace' as const,
     steps,
   };
 }

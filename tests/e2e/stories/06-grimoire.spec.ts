@@ -332,6 +332,10 @@ test(
     await signInAgainAs(page, A);
     await page.goto(path);
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
+    // Its author is told it is theirs alone, in a word, not a colour (M10.13).
+    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    await expect(item('Private Working').getByText('Private', { exact: true })).toBeVisible();
+    await expect(item('Shared Working').getByText('Private', { exact: true })).toHaveCount(0);
     for (const reader of [B, C]) {
       await signInAgainAs(page, reader);
       await page.goto(path);

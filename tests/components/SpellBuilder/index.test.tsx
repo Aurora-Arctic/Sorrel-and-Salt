@@ -51,6 +51,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
     steps: [],
+    visibility: input.visibility ?? 'workspace',
   };
 }
 
@@ -150,6 +151,7 @@ describe('SpellBuilder', () => {
         dayOfWeek: null,
         note: null,
         steps: [],
+        visibility: 'workspace',
       },
     });
   });
@@ -177,6 +179,7 @@ describe('SpellBuilder', () => {
       dayOfWeek: 'Monday',
       note: 'Kept on the sill',
       steps: [],
+      visibility: 'workspace',
     });
   });
 
@@ -233,6 +236,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        visibility: 'workspace',
       },
     });
 
@@ -258,6 +262,7 @@ describe('SpellBuilder', () => {
         dayOfWeek: 'Monday',
         note: null,
         steps: [],
+        visibility: 'workspace',
         expectedRevision: 4,
       },
     });
@@ -394,6 +399,7 @@ describe('SpellBuilder', () => {
           moonPhase: 'Full',
           dayOfWeek: 'saturday',
           note: null,
+          visibility: 'workspace',
         },
       });
 
