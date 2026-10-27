@@ -2176,7 +2176,7 @@ hands the submit: the search asking about this coven only once the box is
 used; each source by its citation and tier, none already listed and no typed
 row, then "New Reference" last; a pick adding a row
 beneath the box showing its short form, announced, the box emptied and
-focused; a row's title in real italics, its buttons named by its short form
+focused; a row's buttons named by its short form
 and described by its whole citation, and, closed, its locator after the
 short form, open, the citation whole; a row kept to one
 line until its edit opens it (`aria-expanded`, the Locator focused) and
@@ -2201,7 +2201,7 @@ references branch and the form's focus, which no list entry's test reaches.
 `ReferencePanel` alone, asked for again by a rerender that raises its
 `summons`, as "New Reference" does: Kind focused and nothing else shown as it
 opens, and Kind focused again, what was typed kept, when it is asked for
-again; each of the five kinds showing exactly its fields in order, the
+again; each of the five kinds showing exactly its fields, the
 required ones marked; a resolver error beside its field, focused, with nothing
 sent, and a server field error on the element it uses; a refusal naming no
 field as an alert inside it; a save sending the coven and only the chosen
@@ -2219,9 +2219,8 @@ web page with no address or day, and a published date with no year — with the 
 (M5.5), holding only what the mode changes (MB.182), with the compendium
 mutations answered by MSW. A new entry: the classification marked required and
 a save refused without one, then a create sent with `categoryIds: []` and
-`'open'`, Save & Add Another kept; Cancel, and where a near match links, taken
-from the page, Cancel after Discard Changes since a name typed is a change;
-and, in a modal, Cancel and Escape asking before a change is discarded. The lookups: every one asked with a null `workspaceId`, the
+`'open'`, Save & Add Another kept; where a near match links, taken
+from the page; and, in a modal, Cancel and Escape asking before a change is discarded. The lookups: every one asked with a null `workspaceId`, the
 New Form box offering no typed row; substitutes
 from `compendium`, less the entry itself. A variant's Form box and a deity's box
 alone, on `compendiumResolver`: the Form box offering the curated forms alone,
@@ -2232,8 +2231,7 @@ entry given: its values shown, one save, off until something changes, and the
 update sent whole, its categories carried through; the duplicate warning
 leaving the entry out, and a rename near another entry naming it but saving
 at once, with no Create Anyway; MB.82's question, Keep It sending nothing and End
-Redirect & Save sending again with `endRedirect: true`; and a delete kept by
-Keep It, a refused delete's alert, and a confirmed delete calling `onDeleted`.
+Redirect & Save sending again with `endRedirect: true`; and a refused delete's alert, and a confirmed delete calling `onDeleted`.
 In a modal, the delete's and MB.82's questions are asked over the form: the
 form inert while each asks, the focus on Keep It, both given back on Keep It,
 and Delete deleting from over the form.

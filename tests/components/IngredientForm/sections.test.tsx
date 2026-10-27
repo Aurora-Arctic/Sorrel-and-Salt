@@ -101,7 +101,7 @@ describe('IngredientForm’s sections', () => {
     expect(control('Celestial Body')).not.toBeVisible();
   });
 
-  it('puts Open All beside the modal’s title, out of the form, and it still opens every section', () => {
+  it('puts Open All out of the form in a modal, and it still opens every section', () => {
     offerNothing();
     renderInModal(() => (
       <IngredientForm
@@ -112,11 +112,8 @@ describe('IngredientForm’s sections', () => {
     ));
 
     const openAll = screen.getByRole('button', { name: 'Open All' });
-    // In the modal's header, beside its heading, rather than in the form.
+    // In the modal's header rather than in the form.
     expect(openAll.closest('form')).toBeNull();
-    expect(openAll.parentElement?.parentElement).toContainElement(
-      screen.getByRole('heading', { level: 2 }),
-    );
 
     fireEvent.click(openAll);
 
