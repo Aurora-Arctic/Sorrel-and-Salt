@@ -173,13 +173,18 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   } = methods;
 
   // Something to save: a field that reads differently from the last save,
-  // blank and spaces alike reading as none, as the schema reads them.
+  // blank and spaces alike reading as none, as the schema reads them, or a
+  // visibility other than the last save's, which is a choice worth saving on
+  // its own (the owner's call, 2026-10-27), a changed category pick, or a
+  // changed step.
   const typed = useWatch({ control, name: [...FIELDS] });
   const picked = useWatch({ control, name: 'categoryIds' });
   const categoriesChanged = !sameCategories(picked, defaultValues?.categoryIds);
+  const visibility = useWatch({ control, name: 'visibility' });
   const steps = useWatch({ control, name: 'steps' });
   const dirty =
     categoriesChanged ||
+    visibility !== defaultValues?.visibility ||
     FIELDS.some(
       (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
     ) ||
