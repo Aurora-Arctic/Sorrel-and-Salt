@@ -4,8 +4,8 @@ import { MOON_PHASES } from '../SpellBuilder/constants';
 import MoonPhaseIcon from '.';
 
 // Render-only, for the owner's review of the eight drawings: each phase in
-// its cycle's order with its name beneath. The toolbar's theme control shows
-// each theme.
+// its cycle's order with its name beneath, the maria on its lit part. The
+// toolbar's theme control shows each theme's colours.
 const meta = {
   title: 'Surfaces / Moon Phase Icon',
 } satisfies Meta;

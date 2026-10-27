@@ -91,11 +91,17 @@ stored as typed: the columns are free text
   open list and in the closed box (`MoonPhaseIcon`, in
   `src/components/MoonPhaseIcon/`). The drawings follow the northern
   hemisphere, where a waxing moon is lit on its right and a waning one on its
-  left. They are drawn as the form icons are, in the text's own colour: the
-  lit part solid and the shadowed part the same colour faint, so both read in
-  either theme. They are hidden from screen readers, since the name always
-  stands beside them. A phase typed outside the eight, such as "Dark", shows
-  its words with no drawing (the owner, 2026-10-27).
+  left. The lit part is always the paler of the two in either theme, from
+  three theme tokens: `--moon-lit`, `--moon-shadow` and `--moon-mare`. On
+  the lit part sit the near side's seven largest maria, the dark lava plains,
+  as simple ellipses placed from their published centres and diameters by an
+  orthographic projection; `icons.tsx` holds the table, its sources and the
+  formula, so the shapes can be drawn again. Mare Nectaris and the craters
+  Tycho and Copernicus are left out, as each is under 1.5px across at a 20px
+  icon. A thin outline at half the text's ink closes the disc. The drawings
+  are hidden from screen readers, since the name always stands beside them. A
+  phase typed outside the eight, such as "Dark", shows its words with no
+  drawing (the owner, 2026-10-27).
 
 - **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).

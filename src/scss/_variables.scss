@@ -116,6 +116,17 @@ $drawer-shade-light: rgba($iron-gall, 0.22);
 $drawer-shade-fade-light: rgba($iron-gall, 0.2);
 $drawer-shade-edge-light: rgba($iron-gall, 0.12);
 
+// The moon phase icons' three fills (MoonPhaseIcon): the lit part always the
+// paler of lit and shadow, in either theme, and the maria between the two, so
+// they read on the lit part (the owner, 2026-10-27). Dark lights the moon in
+// chalk; light lights it in the card's own parchment, edged by the outline.
+$moon-lit-dark: $chalk;
+$moon-shadow-dark: rgba($chalk, 0.2);
+$moon-mare-dark: color.mix($chalk, $soot, 60%);
+$moon-lit-light: $parchment-raised;
+$moon-shadow-light: rgba($iron-gall, 0.55);
+$moon-mare-light: color.mix($iron-gall, $parchment-raised, 25%);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);

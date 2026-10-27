@@ -7,3 +7,17 @@
   height: 1.25em;
   vertical-align: -0.25em;
 }
+
+// The three fills are theme tokens (src/scss/_mixins.scss), so the lit part
+// is the paler of the two in either theme.
+.moon-phase-icon__shadow {
+  fill: var(--moon-shadow);
+}
+
+.moon-phase-icon__lit {
+  fill: var(--moon-lit);
+}
+
+.moon-phase-icon__maria {
+  fill: var(--moon-mare);
+}

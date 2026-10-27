@@ -1111,6 +1111,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --notice-button-ink: var(--accent);
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
+  --moon-lit: #{$moon-lit-dark};
+  --moon-shadow: #{$moon-shadow-dark};
+  --moon-mare: #{$moon-mare-dark};
 
   @include semantic-tokens(dark);
   @include font-smoothing-antialiased;
@@ -1151,6 +1154,9 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --last-edit-ink: var(--text-muted);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
+  --moon-lit: #{$moon-lit-light};
+  --moon-shadow: #{$moon-shadow-light};
+  --moon-mare: #{$moon-mare-light};
 
   @include semantic-tokens(light);
 
