@@ -224,6 +224,27 @@ compendium search's fold ([The compendium read](compendium-read.md)).
   from the index; it reads the coven's spells in full only to join the matches
   back to them, a hash join that costs less than the search.
 
+### The Categories filter's counts
+
+The grimoire list's Categories filter (M10.11) shows how many spells each
+category holds: `findGrimoireCategoryCounts` in `src/db/repository/grimoire.ts`,
+behind `countGrimoireCategories` in `spell-reads.ts`. It is one grouped read,
+in the shape of the ingredient facets' `categoryFacet`
+([The compendium read](compendium-read.md)): the spells the page would list,
+joined to their `spell_categories` pairs and each pair's live category,
+`count(distinct spells.id)` per category.
+
+- **Visibility is the page's.** The read's `where` is `readableSpells`, the
+  rule every spell finder ANDs, so another member's private spell is never
+  counted (rule 7).
+- **The rest of the query applies:** the tab's status and the search, through
+  the same `whereOf` and `searchMatch` as the page. Under `all` the chosen
+  categories stay in force, so each count is that category and the chosen
+  ones together; under `any` they leave the query, so each count is that
+  category alone under the rest of it.
+- **A category no spell carries is absent** rather than at zero; the page
+  reads a missing count as zero and the picker does not offer it.
+
 ### The rest of the calls, and the ones not made
 
 - **`status` is a `spell_status` enum defaulting to `draft`**, on the column

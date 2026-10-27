@@ -28,7 +28,8 @@ draws the tab row; `page.tsx` and `drafts/page.tsx` set their titles and each ca
 `grimoireTab()` (`grimoire-tab.tsx`) with its status. `grimoireTab` is an async function the
 page returns, rather than a component, so a page test can await the page whole. It reads the
 address through `GRIMOIRE_PARAMS`, the page through `readNumberedPage` at `CARD_PAGE_SIZE`
-(24), and each card's assigned categories in one batch (`reads.ts`). The page's editors are
+(24), each card's assigned categories in one batch, and the Categories filter's counts in one
+grouped read beside the page (`reads.ts`, `readGrimoireCategoryCounts`). The page's editors are
 named in one batch too: the page reads through the services rather than GraphQL, so it calls
 `displayNamesOf` (`@/modules/identity`) once with every spell's `updatedBy`, and each card's
 `lastEdit` is that name, or null for an editor the viewer cannot name, with `updatedAt`.
@@ -44,7 +45,7 @@ named in one batch too: the page reads through the services rather than GraphQL,
 | `status`                   | The tab's status, which the title search keeps to and the empty state names |
 | `spells`                   | The page's spells, each as its card draws it                                |
 | `filter`                   | The address's filter: the search text, the categories and their Match mode  |
-| `categories`               | Every category the filter offers, by slug                                   |
+| `categories`               | Every category the filter offers, by slug, each with its count on this tab  |
 | `position`                 | The page number and the page count, for the pager                           |
 | `total`                    | How many spells the filter found on this tab, every page                    |
 | `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                 |
@@ -62,8 +63,14 @@ variables, so a search and its categories live in the address and combine.
   the spell, since the spell has no page until MB.6.
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
   ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, nothing
-  else. The grimoire's categories show without counts. A pick is held while the panel is
-  open and applied to the tab's address, as a slug, when it shuts.
+  else. Each category shows how many spells on this tab, under the search, the viewer can
+  read in it, and one that holds none is not offered (`hideZeros`). The counts are
+  `countGrimoireCategories`'s, read with the page under the filter the address holds, not
+  the one held in the open panel: unlike the compendium's, they do not follow a pick until
+  it is applied. Under Any the chosen categories are left out of the count, and under All
+  they stay in force, as the ingredient facets count ([`db/grimoire.md`](../db/grimoire.md),
+  "The Categories filter's counts"). A pick is held while the panel is open and applied to
+  the tab's address, as a slug, when it shuts.
 - **The list** is named Grimoire, and each item is named by its spell's title, through the
   card's title id, so a test or a screen reader finds a spell by
   `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
@@ -92,11 +99,13 @@ Tokens only, before the section's design review. `index.scss` sets the two empty
 ## Testing
 
 - `tests/components/GrimoireList/index.test.tsx`: the named list and items, the three empty
-  regions, the title search's address and the category pick applied as a slug.
+  regions, the title search's address, the category pick applied as a slug, and each category
+  offered with its count, a category at zero not offered.
 - `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`: the membership guard on
   both tabs and the layout, each tab's status and page size, the address read into the
   query, the tab's status winning, the categories and the editors each read in one batch,
-  and the pager's link.
+  the category counts read under the tab's status and query and reaching the panel, and the
+  pager's link.
 - `tests/components/CovenNav/index.test.tsx`: the Grimoire link, current on Drafts too.
 - `tests/e2e/stories/06-grimoire.spec.ts`: story 56 in the browser, a private spell listed
   for its author alone.

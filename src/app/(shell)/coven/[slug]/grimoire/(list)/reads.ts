@@ -6,7 +6,12 @@ import type { CardCategory } from '@/components/IngredientCard/types';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { requireSession } from '@/lib/request-session';
-import { assignedCategoriesOf, countGrimoire, listGrimoire } from '@/modules/grimoire';
+import {
+  assignedCategoriesOf,
+  countGrimoire,
+  countGrimoireCategories,
+  listGrimoire,
+} from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
 
@@ -72,5 +77,20 @@ export const readGrimoire = cache(
       };
     });
     return { ...page, spells };
+  },
+);
+
+/**
+ * How many spells of one status each category holds under the filter, as a map from the
+ * category's id to its count: the Categories filter's counts (M10.11), one grouped read, a
+ * private spell counted for its author alone (the service's rule). A category absent from
+ * the map holds no spell here.
+ */
+export const readGrimoireCategoryCounts = cache(
+  async (workspaceId: string, variables: string, status: SpellStatus) => {
+    const session = await requireSession();
+    const query: Query = { order: 'UPDATED_DESC', ...JSON.parse(variables), status };
+    const counts = await countGrimoireCategories(session, workspaceId, query);
+    return new Map(counts.map(({ value, count }) => [value, count]));
   },
 );

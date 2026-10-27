@@ -6,7 +6,7 @@ import { GRIMOIRE_PARAMS } from '@/components/GrimoireList/params';
 import { pagerHrefs } from '@/lib/list-href';
 import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
-import { readGrimoire } from './reads';
+import { readGrimoire, readGrimoireCategoryCounts } from './reads';
 import type { GrimoireTabProps } from './types';
 
 // One grimoire tab, Spells or Drafts (M10.11): the guard on the slug from the address, the
@@ -32,7 +32,15 @@ export async function grimoireTab({
   const categories = await readCategories();
   const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
   const variables = JSON.stringify(GRIMOIRE_PARAMS.variables(filter, lookups));
-  const page = await readGrimoire(workspace.id, variables, status, after, before);
+  const [page, counts] = await Promise.all([
+    readGrimoire(workspace.id, variables, status, after, before),
+    readGrimoireCategoryCounts(workspace.id, variables, status),
+  ]);
+  // A category no readable spell of this tab carries is not in the counts: it holds none.
+  const counted = categories.map((category) => ({
+    ...category,
+    count: counts.get(category.id) ?? 0,
+  }));
 
   return (
     <GrimoireList
@@ -41,7 +49,7 @@ export async function grimoireTab({
       status={status}
       spells={page.spells}
       filter={filter}
-      categories={categories}
+      categories={counted}
       position={page.position}
       total={page.totalCount}
       {...pagerHrefs(page.pageInfo, (cursor) => GRIMOIRE_PARAMS.href(path, filter, { ...cursor }))}
