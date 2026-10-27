@@ -120,7 +120,9 @@ cited by number in the PR table of the task that applies it.
    module graph: the GraphQL field classification, every finder filtering
    soft-delete, the audit columns, the `updated_at` trigger, the
    `bump_revision` trigger (`tests/db/revision-trigger.test.ts`: every table
-   with a `revision` column carries it), the partial unique indexes, the two
+   with a `revision` column carries it), the browser floor
+   (`tests/guards/browser-floor.test.ts`: it reads the `web-features` package,
+   not source text, so no lint rule can carry it), the partial unique indexes, the two
    exemption-count pins, and the test-location check
    ([`where-tests-live.md`](where-tests-live.md), "Where tests live").
 9. **A user story is proved by a browser flow** (M9.1, replacing M9.17's
@@ -247,4 +249,4 @@ scan"; MB.225 to MB.230 apply them, one directory set each, scoped together in
 M14.27 (the 2026-10-27 test-suite audit,
 [`m14.27-test-audit.md`](../design-decisions/m14.27-test-audit.md)) adds to
 rule 1 its two named exceptions, to rule 6 the page-test and rollback-test
-clauses, to rule 8 the `bump_revision` sweep, and to rule 9 "per page state".
+clauses, to rule 8 the `bump_revision` sweep and the browser-floor guard, and to rule 9 "per page state".
