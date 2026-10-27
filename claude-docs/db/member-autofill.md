@@ -194,5 +194,5 @@ services answer — `suggestions.test.ts`,
 `common-name-suggestions.test.ts` hold the
 behaviour, each refusal and scope case with the precondition that made it
 possible; a soft-deleted ingredient's dropping out of each is the `READS`
-tables' in `workspace-ingredients.test.ts` and `compendium-entries.test.ts`
+tables' in `workspace-ingredient-deleted-reads.test.ts` and `compendium-entries.test.ts`
 (MB.187).
