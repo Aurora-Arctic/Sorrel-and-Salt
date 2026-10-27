@@ -113,6 +113,9 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   if (slug && section === 'ingredients' && beneath)
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
+  // The new-spell page is the spell builder, a form (M10.12).
+  if (slug && section === 'grimoire' && beneath === 'new')
+    return { region: 'coven', shape: 'form' };
   // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.
   if (slug && section === 'grimoire' && beneath && beneath !== 'drafts')
     return { region: 'coven', shape: 'page' };

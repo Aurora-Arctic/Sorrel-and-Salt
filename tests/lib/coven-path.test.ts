@@ -104,4 +104,8 @@ describe('covenTarget', () => {
     expect(covenTarget('/coven/a/grimoire/drafts')).toEqual(list);
     expect(covenTarget('/coven/a/grimoire/some-id')).toEqual({ region: 'coven', shape: 'page' });
   });
+
+  it('draws the new-spell page as a form', () => {
+    expect(covenTarget('/coven/a/grimoire/new')).toEqual({ region: 'coven', shape: 'form' });
+  });
 });

@@ -190,6 +190,19 @@ refreshes, reports a refusal), and `tests/e2e/coven.spec.ts` (`@story-5`: the
 tab, the list, Invite on both tabs, a revoke, a member's missing tab and 404,
 the axe scans, the open dialog included).
 
+## The new-spell page (M10.12)
+
+`/coven/[slug]/grimoire/new` draws an empty spell builder
+([`components/spell-builder.md`](../components/spell-builder.md)). It calls
+the coven guard, then answers a viewer with the `notFound()` a stranger gets,
+from `rolePermits(role, { spell: ['create'] })`, since a viewer writes
+nothing. Hiding the page is a convenience: `createSpell` checks
+`spell: create` again, so a viewer is refused by the API too. Nothing on the
+grimoire list links to the page yet.
+
+Tests: `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx` (an owner
+and a member get the builder, a viewer the 404).
+
 ## The create page (M9.16)
 
 `/coven/new` is where someone holding `canCreateWorkspace` names a new
