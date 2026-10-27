@@ -126,9 +126,10 @@ describe('seedDeities(db) over a database an admin has edited', () => {
   });
 });
 
-// M14.23: the other names a deity answers to, loaded beside it. Each listed
-// pair is one the task names; a re-run, and an admin's removal, are held as
-// the deities themselves are.
+// M14.23: the other names a deity answers to, loaded beside it. An admin's
+// removal is held as the deities themselves are; the stamps and a re-run are
+// index.test.ts's sweep, and which names are listed is reviewed in
+// claude-docs/db/deity-vocabulary-seed.md, not tested (M14.27).
 describe('seedDeities(db) loads each deity’s other names', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
@@ -146,62 +147,6 @@ describe('seedDeities(db) loads each deity’s other names', () => {
       names.set(seed_key, [...(names.get(seed_key) ?? []), name]);
     return names;
   }
-
-  it.each([
-    ['astarte', 'Ashtoreth'],
-    ['berchta', 'Bertha'],
-    ['eostre', 'Ostara'],
-    ['mithra', 'Mithras'],
-    ['baldur', 'Balder'],
-    ['holda', 'Holle'],
-    ['maat', "Ma'at"],
-    ['idun', 'Idunn'],
-    ['odin', 'Woden'],
-    ['bastet', 'Bast'],
-    ['ganesha', 'Ganesh'],
-    ['ganesha', 'Ganish'],
-    ['hyacinthus', 'Hyacinthos'],
-    ['nut', 'Nuit'],
-  ])('gives %s the other name %s', async (seedKey, name) => {
-    await seedDeities(db);
-
-    expect((await liveOtherNames()).get(seedKey)).toContain(name);
-  });
-
-  it('stamps each name by the bootstrap user', async () => {
-    await seedDeities(db);
-
-    const authors = await sql<{ created_by: string }[]>`
-      select distinct created_by from deity_other_names`;
-    expect(authors).toEqual([{ created_by: BOOTSTRAP_USER_ID }]);
-  });
-
-  // The owner's ruling (M14.23): a related but separate figure stays its own deity.
-  it('makes no deity another’s other name: Luna stays off Selene, Cronus off Saturn', async () => {
-    await seedDeities(db);
-
-    const names = await liveOtherNames();
-    expect(names.get('selene') ?? []).not.toContain('Luna');
-    expect(names.get('saturn') ?? []).not.toContain('Cronus');
-    // Nor any other: no other name is the name of a deity of its own tradition.
-    const [clash] = await sql<{ count: string }[]>`
-      select count(*) from deity_other_names o
-      join deities holder on holder.id = o.deity_id
-      join deities named on named.tradition_id = holder.tradition_id
-        and lower(named.name) = lower(o.name)`;
-    expect(Number(clash.count)).toBe(0);
-  });
-
-  it('adds nothing on a re-run', async () => {
-    await seedDeities(db);
-    const before = await sql`select * from deity_other_names order by id`;
-    // Precondition: the first run loaded names, so an empty re-run is not trivially equal.
-    expect(before.length).toBeGreaterThan(0);
-
-    await seedDeities(db);
-
-    expect(await sql`select * from deity_other_names order by id`).toEqual(before);
-  });
 
   it('does not bring back a name an admin removed, and keeps one an admin added', async () => {
     await seedDeities(db);
