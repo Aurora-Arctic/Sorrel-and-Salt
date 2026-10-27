@@ -50,6 +50,7 @@ function saved(id: string, revision: number, input: CreateSpellMutationVariables
     moonPhase: input.moonPhase ?? null,
     dayOfWeek: input.dayOfWeek ?? null,
     note: input.note ?? null,
+    steps: [],
   };
 }
 
@@ -148,6 +149,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: null,
         note: null,
+        steps: [],
       },
     });
   });
@@ -174,6 +176,7 @@ describe('SpellBuilder', () => {
       moonPhase: 'Waxing gibbous',
       dayOfWeek: 'Monday',
       note: 'Kept on the sill',
+      steps: [],
     });
   });
 
@@ -222,6 +225,7 @@ describe('SpellBuilder', () => {
       spell: {
         id: 's3',
         revision: 4,
+        steps: [],
         title: 'Fixture Working',
         intent: 'To see clearly',
         jarSize: '4 oz',
@@ -253,6 +257,7 @@ describe('SpellBuilder', () => {
         moonPhase: null,
         dayOfWeek: 'Monday',
         note: null,
+        steps: [],
         expectedRevision: 4,
       },
     });
@@ -381,6 +386,7 @@ describe('SpellBuilder', () => {
         spell: {
           id: 's3',
           revision: 1,
+          steps: [],
           title: null,
           intent: null,
           jarSize: null,

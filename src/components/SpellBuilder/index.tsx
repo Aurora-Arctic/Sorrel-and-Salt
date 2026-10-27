@@ -18,6 +18,9 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
+import { SpellSteps } from './steps';
+import type { SpellStepSend } from './steps/types';
+import { stepInputOf, stepValueOf, stepsChanged, unitIssues } from './steps/values';
 import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
 import type {
@@ -49,6 +52,9 @@ const CreateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      steps {
+        ...SpellBuilderStep
+      }
     }
   }
 `);
@@ -65,6 +71,9 @@ const UpdateSpellDocument = graphql(`
       moonPhase
       dayOfWeek
       note
+      steps {
+        ...SpellBuilderStep
+      }
     }
   }
 `);
@@ -79,29 +88,58 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
-/** The fields as the save sends them: trimmed, and null for blank, as the schema reads them. */
-type SpellBuilderInput = Record<SpellBuilderField, string | null>;
+/** The fields as the save sends them: trimmed, and null for blank, as the schema reads them; and the steps. */
+type SpellBuilderInput = Record<SpellBuilderField, string | null> & { steps: SpellStepSend[] };
 
 const isField = (key: unknown): key is SpellBuilderField =>
   FIELDS.includes(key as SpellBuilderField);
 
 /** The form's values for a spell: none for a new one, and blank for a field it has not set. */
-function valuesOf(spell?: Partial<SpellBuilderSpell>): SpellBuilderValues {
-  return Object.fromEntries(
-    FIELDS.map((field) => [field, spell?.[field] ?? '']),
-  ) as SpellBuilderValues;
+function valuesOf(spell?: SpellBuilderSpell): SpellBuilderValues {
+  return {
+    ...(Object.fromEntries(FIELDS.map((field) => [field, spell?.[field] ?? ''])) as Record<
+      SpellBuilderField,
+      string
+    >),
+    steps: (spell?.steps ?? []).map(stepValueOf),
+  };
 }
 
 /**
- * The shared schema's reading of the builder's fields: trimmed, and null for
- * blank, so the form sends what the service will store, and refuses what it
- * would. Only the builder's own fields are read: the recipe is M13.3's.
+ * The shared schema's reading of the builder's fields and steps: trimmed, and
+ * null for blank, so the form sends what the service will store, and refuses
+ * what it would.
  */
-const resolver = zodResolver(SpellInput) as unknown as Resolver<
-  SpellBuilderValues,
+const schemaResolver = zodResolver(SpellInput) as unknown as Resolver<
+  Omit<SpellBuilderValues, 'steps'> & { steps: SpellStepSend[] },
   unknown,
   SpellBuilderInput
 >;
+
+/**
+ * The schema's reading of the steps as a save sends them, and story 77's unit
+ * rule, which needs the coven's jars and so is not the schema's: a refused
+ * unit is said beside it, under the step's `unit`, as the service says it.
+ */
+const resolver: Resolver<SpellBuilderValues, unknown, SpellBuilderInput> = async (
+  values,
+  context,
+  options,
+) => {
+  const result = await schemaResolver(
+    { ...values, steps: values.steps.map(stepInputOf) },
+    context,
+    options as unknown as Parameters<typeof schemaResolver>[2],
+  );
+  const issues = unitIssues(values.steps);
+  if (issues.size === 0) return result as Awaited<ReturnType<typeof resolver>>;
+  const errors: Record<string, unknown> = { ...result.errors };
+  const steps: Record<string, unknown>[] = Array.isArray(errors.steps) ? [...errors.steps] : [];
+  for (const [index, message] of issues) {
+    steps[index] = { ...steps[index], unit: { type: 'unit', message } };
+  }
+  return { values: {}, errors: { ...errors, steps } } as Awaited<ReturnType<typeof resolver>>;
+};
 
 // A moon phase's drawing beside its name, null for a phase typed outside
 // the list so the box draws no empty mark. Module-level so the field's
@@ -131,9 +169,13 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   // Something to save: a field that reads differently from the last save,
   // blank and spaces alike reading as none, as the schema reads them.
   const typed = useWatch({ control, name: [...FIELDS] });
-  const dirty = FIELDS.some(
-    (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
-  );
+  const steps = useWatch({ control, name: 'steps' });
+  const dirty =
+    FIELDS.some(
+      (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
+    ) || stepsChanged(steps, (defaultValues?.steps ?? []) as SpellBuilderValues['steps']);
+  // A unit the jar cannot be measured in holds Save, as the service would refuse it.
+  const unitRefused = unitIssues(steps).size > 0;
 
   const discard = useDiscardGuard(dirty && !isSubmitting);
   const root = useRef<HTMLFormElement>(null);
@@ -156,20 +198,30 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
 
   /** Saves the fields; a refusal lands beside its field, or above them all. */
   const send = async (values: SpellBuilderInput): Promise<void> => {
-    // Only the builder's fields: the schema's defaults (an empty recipe)
-    // would otherwise replace a saved spell's steps.
-    const input = Object.fromEntries(
-      FIELDS.map((field) => [field, values[field] ?? null]),
-    ) as SpellBuilderInput;
+    // The fields and the whole recipe: on an update, the steps sent are the
+    // spell's steps, and a saved step left out of them is removed.
+    const input = {
+      ...Object.fromEntries(FIELDS.map((field) => [field, values[field] ?? null])),
+      steps: values.steps,
+    } as SpellBuilderInput;
     try {
       const answer = await save.mutateAsync(input);
       setSaved({ id: answer.id, revision: answer.revision });
       // What was saved is the new start: Save goes off until the next change.
       reset(valuesOf(answer));
     } catch (error) {
-      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
-        rest.length === 0 && isField(field) ? field : undefined,
-      );
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+        if (rest.length === 0 && isField(field)) return field;
+        // A step's amount, beside it; anything else of a step above the form.
+        const [index, part] = rest;
+        if (
+          field === 'steps' &&
+          typeof index === 'number' &&
+          (part === 'quantity' || part === 'unit')
+        )
+          return `steps.${index}.${part}` as const;
+        return undefined;
+      });
     }
   };
 
@@ -223,13 +275,14 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
               options={DAYS_OF_THE_WEEK}
             />
           </fieldset>
+          <SpellSteps workspaceId={workspaceId} />
           <TextField<SpellBuilderValues>
             name="note"
             label="Note"
             placeholder="Add a note"
             multiline
           />
-          <FormActions noun="Spell" dirty={dirty} submitting={isSubmitting} />
+          <FormActions noun="Spell" dirty={dirty && !unitRefused} submitting={isSubmitting} />
           {discard.asking && <DiscardQuestion guard={discard} />}
         </form>
       </FormHistoryContext.Provider>

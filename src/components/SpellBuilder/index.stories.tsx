@@ -26,6 +26,7 @@ const SAVED: SpellBuilderSpell = {
   moonPhase: 'Waxing Gibbous',
   dayOfWeek: 'Monday',
   note: null,
+  steps: [],
 };
 
 // Inside the page's frame and head, as src/app/(shell)/coven/[slug]/grimoire/new/page.tsx

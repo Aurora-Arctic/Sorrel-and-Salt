@@ -1,18 +1,22 @@
 import type { ReactNode } from 'react';
+import type { SpellBuilderStepFragment } from '../../gql/graphql';
 import type { FieldProps } from '../Field/types';
+import type { SpellStepValue } from './steps/types';
 
 /** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
 export type SpellBuilderField =
   'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
 
-/** The form's values: each field as typed, blank for none. */
-export type SpellBuilderValues = Record<SpellBuilderField, string>;
+/** The form's values: each field as typed, blank for none, and the jar's steps (M10.15). */
+export type SpellBuilderValues = Record<SpellBuilderField, string> & { steps: SpellStepValue[] };
 
 /** A saved spell the builder opens, as the `spell` query answers it (M13.10). */
 export type SpellBuilderSpell = {
   id: string;
   /** The revision it was read at, sent back with the next save as `expectedRevision`. */
   revision: number;
+  /** Its recipe in order (M10.15): required, so a page opening a saved spell must read them. */
+  steps: SpellBuilderStepFragment[];
 } & Record<SpellBuilderField, string | null>;
 
 export interface SpellBuilderProps {
