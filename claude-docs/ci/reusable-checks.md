@@ -158,9 +158,12 @@
   entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
   official musl support — so every `checks.yml` leg and `vitest` consume it,
   but `playwright` does not; see `build-e2e-image.yml` below.
-- **`vitest.yml`** (M1.14) — `npm run test:coverage` in the same container
-  shape as `checks.yml`'s legs (`inputs.image` from `build-image.yml`),
-  plus a `services: postgres:` block on the `vitest` job keyed off its
+- **`vitest.yml`** (M1.14; split in M14.27) — four jobs, described in
+  [`runner-budget.md`](runner-budget.md), "Splitting the Vitest job": three
+  parts that each run some Vitest projects, and `vitest`, which merges them
+  and is the required check. Each runs in the same container
+  shape as `checks.yml`'s legs (`inputs.image` from `build-image.yml`);
+  only `vitest-db` has a `services: postgres:` block, keyed off its
   `inputs.db-image` — reachable by service name since `vitest` runs inside
   its own `container:`, per DESIGN.md §11's CI table. `db-image` comes in
   from the caller (`pr-gate.yml`'s own top-level
