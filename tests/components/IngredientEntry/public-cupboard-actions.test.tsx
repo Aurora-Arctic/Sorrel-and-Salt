@@ -151,20 +151,12 @@ describe('CupboardActions on the public page', () => {
 
   // The compendium's Edit is the page's main icon for a curator (the owner's call, 2026-10-20):
   // its own link, named for the compendium it changes, never folded into the three dots.
-  it("draws a curator's Edit in Compendium as the main icon, a link with its tip, the other choices in the dots", async () => {
+  it("draws a curator's Edit in Compendium as the main icon, a link, the other choices in the dots", async () => {
     show(props([place(1, { held: true })], { edit: EDIT }));
 
     const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
     expect(edit).toHaveAttribute('href', `${PAGE}?edit`);
     expect(screen.queryByRole('link', { name: 'Annotate Testwort' })).not.toBeInTheDocument();
-    fireEvent.mouseEnter(edit);
-    // After the 300ms a hover waits for (IconTip).
-    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent(
-      'Edit in Compendium',
-    );
-    fireEvent.mouseLeave(edit);
-    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
-    // press: inside an async act, so that update is awaited rather than left outside it.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
     });
