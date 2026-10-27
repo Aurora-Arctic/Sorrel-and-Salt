@@ -39,13 +39,14 @@ describe('SpellCard', () => {
     expect(screen.queryByText('To keep the testwort fresh.')).not.toBeInTheDocument();
   });
 
-  it('marks a draft and a complete spell with different status badges', () => {
+  // Complete is the default, so only a draft is marked (the owner, 2026-10-27).
+  it('marks a draft with a Draft badge, and a complete spell with no status badge', () => {
     const { rerender } = render(<SpellCard {...BASE} status="draft" />);
     expect(within(screen.getByRole('article')).getByText('Draft')).toBeInTheDocument();
-    expect(screen.queryByText('Complete')).not.toBeInTheDocument();
     rerender(<SpellCard {...BASE} status="complete" />);
-    expect(within(screen.getByRole('article')).getByText('Complete')).toBeInTheDocument();
-    expect(screen.queryByText('Draft')).not.toBeInTheDocument();
+    const card = screen.getByRole('article', { name: 'Fixture Working' });
+    expect(within(card).queryByText('Draft')).not.toBeInTheDocument();
+    expect(within(card).queryByText('Complete')).not.toBeInTheDocument();
   });
 
   it('lists the assigned categories as chips', () => {
