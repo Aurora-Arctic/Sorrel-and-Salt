@@ -1069,7 +1069,10 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
  * at nothing lists nothing. A curator cannot delete a row a compendium entry
  * links, but a coven's own entry keeps its link through the delete.
  */
-function pointsLive(vocabulary: typeof categories | typeof deities, column: AnyPgColumn): SQL {
+export function pointsLive(
+  vocabulary: typeof categories | typeof deities,
+  column: AnyPgColumn,
+): SQL {
   return existsIn(vocabulary, and(eq(vocabulary.id, column), inLiveGroup(vocabulary)));
 }
 

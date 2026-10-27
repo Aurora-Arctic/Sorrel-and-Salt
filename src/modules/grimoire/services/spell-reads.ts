@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  findGrimoireCount,
   findGrimoirePage,
   findManyByIds,
   findManyInSpells,
@@ -9,7 +10,7 @@ import {
 } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { summarizeSpellCategories } from '../categories/summarize';
 import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
@@ -20,7 +21,7 @@ import { assertMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
-// The grimoire's reads for the API (M10.9): the paged list, one spell, and
+// The grimoire's reads (M10.9): the paged list and its count (M10.11), one spell, and
 // the batches a spell's fields load through. Every read is a reader's of the
 // coven, `spell: ['read']`, and every row comes through the finders that keep
 // a private spell its author's (claude-docs/db/spell-visibility.md), so a
@@ -28,7 +29,8 @@ import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
 /**
  * One page of the coven's grimoire in `order`: its shared spells and the
- * caller's own private ones, only those of `status` when it is given.
+ * caller's own private ones, narrowed by the query's status, search and
+ * categories.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -40,6 +42,23 @@ export async function listGrimoire(
 ): Promise<PageEntry<SpellRow>[]> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
   return findGrimoirePage(membership, page, query);
+}
+
+/**
+ * How many spells `listGrimoire` lists under `query`, and how many of them
+ * come before `start`: the count the numbered pager reads (M10.11). A private
+ * spell counts for its author alone, as it lists.
+ *
+ * @throws {Forbidden} the caller is not a member of this coven.
+ */
+export async function countGrimoire(
+  session: Session,
+  workspaceId: string,
+  query: GrimoireQuery,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
+  return findGrimoireCount(membership, query, start);
 }
 
 /**

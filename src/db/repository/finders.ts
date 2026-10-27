@@ -210,6 +210,30 @@ export function findPageInReadableSpells<
   );
 }
 
+/**
+ * How many rows `findPageInReadableSpells` would page under the same order and
+ * `where`, and how many sit before `start`: the count a numbered pager reads
+ * (M10.11). It counts under the same `readableSpells` rule as the pages, so a
+ * private spell never reaches another member's count either.
+ */
+export function findPageCountInReadableSpells<
+  TTable extends PgTable & Identified & (typeof spells | (SpellScoped & Unscoped)),
+>(
+  membership: Membership,
+  table: TTable,
+  order: PageOrder,
+  start: Cursor | undefined,
+  where?: SQL,
+): Promise<PageCount> {
+  return readCount(
+    table,
+    and(readableSpellRows(membership, table), notSoftDeleted(table)),
+    order,
+    start,
+    where,
+  );
+}
+
 /** `readableSpells` for `spells` itself, or through the parent spell for a `spell_id` table. */
 function readableSpellRows(
   membership: Membership,

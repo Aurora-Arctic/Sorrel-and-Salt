@@ -1133,6 +1133,16 @@ export interface GrimoireQuery {
   order: (typeof GRIMOIRE_ORDERS)[number];
   /** Only the spells of this status; absent means both. */
   status?: (typeof spells.$inferSelect)['status'];
+  /**
+   * Only the spells whose title or intent holds this text as a word or part of
+   * one, accents and case set aside (M10.11); absent or blank means no search.
+   * It narrows and leaves the order as asked.
+   */
+  query?: string;
+  /** Only the spells assigned these categories, by id; absent or empty means no filter. */
+  categoryIds?: readonly string[];
+  /** Whether a spell needs every chosen category ('all', the default) or any of them. */
+  categoryMode?: CategoryMode;
 }
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
