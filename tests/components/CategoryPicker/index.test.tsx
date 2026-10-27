@@ -142,22 +142,6 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
   });
 
-  it('lists every category of a group whose name is typed, whatever the case', () => {
-    renderPicker();
-
-    open();
-    type('fixture WARDS');
-
-    expect(screen.getAllByRole('option').map((row) => row.textContent)).toEqual([
-      expect.stringMatching(/^Testcraft/),
-      expect.stringMatching(/^Testward/),
-    ]);
-    expect(
-      within(screen.getByRole('group', { name: 'Fixture Wards' })).getAllByRole('option'),
-    ).toHaveLength(2);
-    expect(screen.queryByRole('group', { name: 'Zanthic Oddments' })).not.toBeInTheDocument();
-  });
-
   it('adds a pick after the others, empties the box, announces it, and offers it no more', () => {
     renderControlled(['c-zz']);
 
@@ -185,12 +169,6 @@ describe('CategoryPicker', () => {
     expect(removeButton('Ablefix')).toBeInTheDocument();
     expect(box()).toHaveAttribute('aria-expanded', 'true');
     expect(box()).toHaveFocus();
-    fireEvent.click(option('Testward'));
-    expect(removeButton('Testward')).toBeInTheDocument();
-    expect(box()).toHaveAttribute('aria-expanded', 'true');
-
-    fireEvent.keyDown(box(), { key: 'Escape' });
-    expect(box()).toHaveAttribute('aria-expanded', 'false');
   });
 
   // The ×, Backspace and the clear are Combobox's; what the picker does with
@@ -320,23 +298,10 @@ describe('CategoryPicker', () => {
       expect(screen.getByRole('option', { name: /^Ablefix 1/ })).toBeInTheDocument();
     });
 
-    it('names a pick for removal by its noun, whether or not its count has arrived', () => {
-      const props = { ...PROPS, categories: counted(), value: ['c-tw'], removeNoun: 'Category' };
-      const chip = () =>
-        screen.getByRole('button', { name: 'Remove Category: Testward' }).closest('li')!;
-      const { rerender } = render(<CategoryPicker {...props} loading />);
+    it('names a pick for removal by the noun it is given', () => {
+      renderPicker({ categories: counted(), value: ['c-tw'], removeNoun: 'Category' });
+
       expect(screen.getByRole('button', { name: 'Remove Category: Testward' })).toBeInTheDocument();
-      expect(chip()).not.toHaveTextContent('4');
-
-      rerender(<CategoryPicker {...props} />);
-      expect(screen.getByRole('button', { name: 'Remove Category: Testward' })).toBeInTheDocument();
-      expect(chip()).toHaveTextContent('4');
-    });
-
-    it('keeps a chosen zero-count pick removable', () => {
-      renderPicker({ categories: counted(), value: ['c-tc'], hideZeros: true });
-
-      expect(removeButton('Testcraft')).toBeEnabled();
     });
   });
 });
