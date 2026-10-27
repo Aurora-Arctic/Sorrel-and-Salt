@@ -44,7 +44,14 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
   const { pending, target, go } = useTabSwitch();
   const track = useRef<HTMLUListElement>(null);
   const pill = useRef<HTMLLIElement>(null);
-  const openHref = tabs.find(({ href }) => isAtPath(pathname, href))?.href;
+  // The open tab is the most specific one at the address, the longest: the grimoire's Drafts
+  // lies beneath Spells, so on Drafts both are at it, and the first would mark Spells.
+  const openHref = tabs
+    .filter(({ href }) => isAtPath(pathname, href))
+    .reduce<string | undefined>(
+      (best, { href }) => (best === undefined || href.length > best.length ? href : best),
+      undefined,
+    );
   const pressedHref = pending ? target?.href : undefined;
   const marked = pressedHref ?? openHref;
   useLayoutEffect(() => {
