@@ -31,7 +31,9 @@ import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingr
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
-import { CollapsibleSection } from './section';
+import { CollapsibleSection } from '../CollapsibleSection';
+import type { SectionFold } from '../CollapsibleSection/types';
+import { SectionSummary } from './summaries';
 import { SubstituteForms } from './substitute-forms';
 import { EntryHrefContext } from './substitute-summary';
 import {
@@ -67,7 +69,6 @@ import type {
   RedirectQuestion,
   RestoredVariant,
   SavedIngredient,
-  SectionFold,
   SectionKey,
 } from './types';
 import {
@@ -639,7 +640,11 @@ const IngredientForm = ({
                     )}
                     {/* After Open All, so the header reads Open All, Undo, Redo. */}
                     <FormHistoryButtons />
-                    <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
+                    <CollapsibleSection
+                      title="Identity"
+                      summary={<SectionSummary section="identity" />}
+                      fold={fold('identity')}
+                    >
                       {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
                       <NameField
@@ -711,7 +716,7 @@ const IngredientForm = ({
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Details & Care"
-                      section="details"
+                      summary={<SectionSummary section="details" />}
                       fold={fold('details')}
                     >
                       <TextField<IngredientFormValues>
@@ -733,7 +738,7 @@ const IngredientForm = ({
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Correspondences"
-                      section="correspondences"
+                      summary={<SectionSummary section="correspondences" />}
                       fold={fold('correspondences')}
                     >
                       {/* Several at once, in the order chosen (MB.159); none chosen is
@@ -795,7 +800,7 @@ const IngredientForm = ({
                     </CollapsibleSection>
                     <CollapsibleSection
                       title="Relations"
-                      section="relations"
+                      summary={<SectionSummary section="relations" />}
                       fold={fold('relations')}
                     >
                       {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
@@ -817,7 +822,11 @@ const IngredientForm = ({
                       {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
                       <SubstituteForms name="substitutes" />
                     </CollapsibleSection>
-                    <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
+                    <CollapsibleSection
+                      title="Sources"
+                      summary={<SectionSummary section="sources" />}
+                      fold={fold('sources')}
+                    >
                       {/* Last, as a bibliography is (MB.154): the sources picked, each
             with its locator, and a panel for a new one. */}
                       <ReferencesField workspaceId={workspaceId} />
