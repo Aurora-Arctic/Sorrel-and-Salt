@@ -56,8 +56,8 @@ export type TwoTier = { workspaceId: AnyPgColumn<{ notNull: false }> };
 // And once more for visibility (M10.3), so that a table goes through exactly
 // one finder — claude-docs/db/spell-visibility.md, "Spell visibility". `spells` is
 // workspace-scoped *and* carries a per-row reader rule, so `NotVisibilityScoped`
-// takes it off the generic scoped finders and `findManySpells`/`findOneSpell`
-// name it directly; the two join tables carry a `spell_id` and no workspace of
+// takes it off the generic scoped finders and `findOneSpell` and
+// `findPageInReadableSpells` name it directly; the two join tables carry a `spell_id` and no workspace of
 // their own, so `NotSpellScoped` takes them off the unscoped finders and
 // `findManyInSpell` derives both scopes from the parent spell.
 export type NotVisibilityScoped = { visibility?: never };

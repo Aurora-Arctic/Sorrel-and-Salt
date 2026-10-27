@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { findManyInSpell, findManySpells, findOneSpell, withAudit } from '@/db/repository';
+import { findManyInSpell, findOneSpell, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '@/modules/grimoire';
@@ -15,12 +15,12 @@ import { makeSpell } from '../../support/fixtures';
 // M10.6: who may read which spell, as one matrix of relationship × visibility
 // (DESIGN.md §5; claude-docs/db/spell-visibility.md, "Reading"). Every finder
 // that reads a spell or its rows goes through `readableSpells`, so for each
-// cell the direct-id read, the list and both of the spell's child tables must
-// give the same answer. A finder that disagreed with the others would be a
+// cell the direct-id read and both of the spell's child tables must give the
+// same answer. A finder that disagreed with the others would be a
 // second rule.
 //
 // Every refusal first proves the read could have succeeded: the row is there,
-// live, in the coven, and its author reads it through all four reads.
+// live, in the coven, and its author reads it through all three reads.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -40,17 +40,15 @@ const proofFor = (user: User, workspaceId: string = WORKSPACE_W_ID): Promise<Mem
 const spellBy = (author: User, visibility: SpellVisibility): Promise<string> =>
   insertSpell(sql, makeSpell({ visibility, categories: ['Protection'] }), author.id);
 
-/** What each of the four reads says about the spell, for this proof. */
+/** What each of the three reads says about the spell, for this proof. */
 async function reads(membership: Membership, spellId: string) {
-  const [one, many, steps, categories] = await Promise.all([
+  const [one, steps, categories] = await Promise.all([
     findOneSpell(membership, spellId),
-    findManySpells(membership),
     findManyInSpell(membership, spellSteps, spellId),
     findManyInSpell(membership, spellCategories, spellId),
   ]);
   return {
     findOneSpell: one?.id === spellId,
-    findManySpells: many.some((spell) => spell.id === spellId),
     stepsOfSpell: steps.length > 0,
     categoriesOfSpell: categories.length > 0,
   };
@@ -58,7 +56,6 @@ async function reads(membership: Membership, spellId: string) {
 
 const all = (readable: boolean) => ({
   findOneSpell: readable,
-  findManySpells: readable,
   stepsOfSpell: readable,
   categoriesOfSpell: readable,
 });

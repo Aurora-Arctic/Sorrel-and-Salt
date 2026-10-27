@@ -112,9 +112,8 @@ from … [join …] where …   -- no order, no limit
   finder, the compendium's, the ledger's and the user list's
   (`findUserCount`, MB.115) call one under their own filter (MB.206).
 
-A spell's page, the counterpart of `findManySpells` under the visibility rule,
-is added by the grimoire task that first needs it, as its own finder, like
-the other spell finders.
+A spell's page under the visibility rule is its own finder,
+`findPageInReadableSpells` (M10.9), like the other spell finders.
 
 A page over rows no one table holds writes its own bounds under the same
 rules: `findVocabularySuggestions` and `findCommonNameSuggestions` key a

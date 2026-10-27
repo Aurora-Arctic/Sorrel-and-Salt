@@ -33,11 +33,10 @@ so a service has nothing to do with a condition. It builds that condition and
 runs nothing; what the condition admits is proved over every finder by
 `tests/db/repository/readable-spells.test.ts`.
 
-Nine finders read through it, seven of them in `spells.ts`:
+Eight finders read through it, six of them in `spells.ts`:
 
 | Finder                                                                             | Reads                                                                          |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `findManySpells(membership)`                                                       | every spell of the coven this member may read                                  |
 | `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell                      |
 | `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                          |
 | `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)            |
@@ -51,8 +50,8 @@ Nine finders read through it, seven of them in `spells.ts`:
 `tests/db/repository/readable-spells.test.ts` runs every relationship against
 both visibilities — the author, the owner, another member, a viewer, the author
 after demotion to viewer, a member of another coven by direct id, and the author
-of a soft-deleted spell — and requires `findOneSpell`, `findManySpells` and
-`findManyInSpell` over both child tables to give the same answer in each cell.
+of a soft-deleted spell — and requires `findOneSpell` and `findManyInSpell` over
+both child tables to give the same answer in each cell.
 A site admin and a site curator are refused at the service, because
 `assertMembership` refuses anyone outside the coven before a finder runs: its
 site-admin arm is proved in `tests/modules/coven/services/membership.test.ts`,
