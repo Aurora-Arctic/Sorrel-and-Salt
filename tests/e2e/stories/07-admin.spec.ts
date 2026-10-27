@@ -102,6 +102,13 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
 
       for (const path of ADMIN_ROUTES) await expectNotAuthorized(page, path);
+      // The 403 is drawn inside the shell: the bar stays, still with no way into
+      // the admin area, and the site nav still leads out to the compendium.
+      await expect(page.getByRole('banner')).toBeVisible();
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
+      await expect(
+        page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+      ).toBeVisible();
       await assertNoSidewaysScroll(page, { restore: true });
       await assertNoAccessibilityViolations(page);
     },

@@ -2,7 +2,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, onTestFinished, 
 import postgres from 'postgres';
 import { buildLoaders, createLoaders } from '@/graphql/loaders';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { Forbidden } from '@/lib/errors';
 import { ingredientsById } from '@/modules/ingredients';
 import { A, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -104,13 +103,5 @@ describe('the ingredientsById loader', () => {
     ]);
     expect(crossed).toBeNull();
     expect(home).not.toBeNull();
-  });
-
-  it('refuses every key for a signed-out request, without a query', async () => {
-    const entry = await add('Testwort', null);
-    const { ingredientsById: loader } = buildLoaders({ ingredientsById }, null);
-
-    await expect(loader.load({ id: entry, workspaceId: null })).rejects.toBeInstanceOf(Forbidden);
-    expect(repository.findManyIngredients).not.toHaveBeenCalled();
   });
 });

@@ -20,7 +20,7 @@ import type {
 // no token and no link, the session as the actor, and one refusal per error
 // code, read as the browser reads them. Which callers, addresses and links the
 // services refuse is services/admin-invitations.test.ts's and
-// services/invitation-acceptance.test.ts's; a signed-out caller and the scope
+// services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope
 // are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
@@ -223,7 +223,7 @@ const ACCEPT_BY_ID = `mutation ($id: ID!) { acceptInvitationById(id: $id) { id a
 
 // M10.32, the transport's half: the answer, and one error code per refusal. Whose
 // address admits, and every dead state, are
-// services/invitation-acceptance.test.ts's.
+// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.acceptInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
@@ -287,7 +287,7 @@ const DECLINE_BY_ID = `mutation ($id: ID!) { declineInvitationById(id: $id) { id
 
 // M10.34, the transport's half: the answer, `Invitation.declinedAt`, and one
 // error code per refusal. Whose address admits, and every dead state, are
-// services/invitation-acceptance.test.ts's.
+// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.declineInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };

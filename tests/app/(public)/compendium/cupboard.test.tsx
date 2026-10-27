@@ -245,16 +245,6 @@ describe('the public entry page’s Edit Stock', () => {
 
     expect(readEntryStock).toHaveBeenCalledExactlyOnceWith([]);
   });
-
-  it('offers a coven that holds the entry for stock alone, though its role may not annotate or remove', async () => {
-    // Why it could have been none: no other statement of the role is true for the entry.
-    signedIn(coven('ws-w', 'w'));
-    roles({ 'ws-w': 'member' });
-    holding('ws-w');
-    readEntryStock.mockResolvedValue(new Map([[`ws-w:${ENTRY_ID}`, STOCK]]));
-
-    expect((await covensGiven())?.covens[0].stock).toBe(STOCK);
-  });
 });
 
 describe('the public entry page’s shelf mark', () => {

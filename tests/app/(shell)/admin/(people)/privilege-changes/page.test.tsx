@@ -1,6 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
@@ -170,23 +169,6 @@ describe('the /admin/privilege-changes page', () => {
     expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
   });
 
-  // A cursor copied from another list decodes, then names no row of this one.
-  it('reads the first page when the cursor is not one of this list', async () => {
-    listPrivilegeChanges.mockRejectedValueOnce(new InvalidCursor());
-    const cursor = { key: ['Listed Fixture 25'], id: change(5).id };
-
-    await renderPage({ after: encodeCursor(cursor) });
-
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
-    expect(screen.getAllByRole('row')).toHaveLength(4);
-  });
-
-  it('lets any other failure through', async () => {
-    listPrivilegeChanges.mockRejectedValue(new InvalidCursor());
-
-    await expect(renderPage()).rejects.toThrow(InvalidCursor);
-  });
-
   it('refuses to render a refusal from the user read', async () => {
     usersForAdmin.mockImplementation(async (_session, ids: string[]) =>
       ids.map(() => new Error('refused')),
@@ -195,7 +177,7 @@ describe('the /admin/privilege-changes page', () => {
     await expect(renderPage()).rejects.toThrow('refused');
   });
 
-  it('links the pages either side, keeping the filter, and says where it stands', async () => {
+  it('links the pages either side, keeping the filter', async () => {
     listPrivilegeChanges.mockResolvedValue(
       Array.from({ length: 26 }, (_, index) => entry(index + 1)),
     );
@@ -212,7 +194,6 @@ describe('the /admin/privilege-changes page', () => {
       'href',
       `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 });
 

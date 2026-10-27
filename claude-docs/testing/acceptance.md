@@ -9,7 +9,7 @@ checklist of the v1 user stories, one line each:
 ```
 [x] Story 1: Sign in with an account I already have, so I don't manage another password.
 [ ] Story 2: As a newly signed-in user, be told plainly what I can do next, … — FAILING
-[ ] Story 3: Create a workspace once I hold creation rights, … — FAILING (flaky)
+[ ] Story 3: Create a workspace once I hold creation rights, … — FLAKY (failed, then passed on retry)
 [-] Story 12: View my stock … — skipped
 [ ] Story 28: … — no test yet
 
@@ -39,9 +39,12 @@ decisions make it hold:
 - **A story's status is the state of every test tagged with it.** Any failure
   is _failing_; otherwise any skip is _skipped_; otherwise _passing_. An
   interrupted test reads as failing, so it can never look green.
-- **A flaky story is a failing story.** Retries stay on in CI (one) so the run
-  completes, but a test that passed only on its retry counts as failed, and its
-  line ends ` — FAILING (flaky)`. A flake is a bug to fix, not to tolerate.
+- **A flaky story is not a passing story.** Retries stay on in CI (one) so the
+  run completes, but a test that passed only on its retry counts as failed: its
+  box stays unticked, the tally counts it among the failing, and its line ends
+  ` — FLAKY (failed, then passed on retry)`, or in the PR comment
+  ` — **flaky** (failed, then passed on retry)`. A flake is a bug to fix, not
+  to tolerate.
 - **A test with no tag fails the run.** A test under `stories/` without an
   `@story-N` tag is listed under "No story tag" and the reporter makes the
   run fail. This replaces review of `describe` names. A tag naming a number

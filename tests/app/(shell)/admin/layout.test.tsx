@@ -31,16 +31,6 @@ beforeEach(() => {
 });
 
 describe('the /admin layout', () => {
-  it('shows an admin the admin nav around the page', async () => {
-    requireCuratorSession.mockResolvedValue(ADMIN);
-
-    render(await AdminLayout({ children: <p>The page itself</p> }));
-
-    expect(requireCuratorSession).toHaveBeenCalledOnce();
-    expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
-    expect(screen.getByText('The page itself')).toBeInTheDocument();
-  });
-
   // The row's name is the area's home, as the coven row's switcher is.
   it('leads the row with Admin linking to the admin index', async () => {
     requireCuratorSession.mockResolvedValue(CURATOR);
@@ -52,7 +42,7 @@ describe('the /admin layout', () => {
     expect(lead).toHaveAttribute('href', '/admin');
   });
 
-  it('shows a curator the nav without People, and an admin with it', async () => {
+  it('shows a curator the nav without People, and an admin with it, around the page', async () => {
     requireCuratorSession.mockResolvedValue(CURATOR);
     const { unmount } = render(await AdminLayout({ children: <p>The page itself</p> }));
     expect(navHrefs()).not.toContain('/admin/users');
@@ -62,6 +52,8 @@ describe('the /admin layout', () => {
     requireCuratorSession.mockResolvedValue(ADMIN);
     render(await AdminLayout({ children: <p>The page itself</p> }));
     expect(navHrefs()).toContain('/admin/users');
+    expect(screen.getByText('The page itself')).toBeInTheDocument();
+    expect(requireCuratorSession).toHaveBeenCalledTimes(2);
   });
 
   it('renders nothing when the guard refuses', async () => {

@@ -33,11 +33,10 @@ so a service has nothing to do with a condition. It builds that condition and
 runs nothing; what the condition admits is proved over every finder by
 `tests/db/repository/readable-spells.test.ts`.
 
-Nine finders read through it, seven of them in `spells.ts`:
+Eight finders read through it, six of them in `spells.ts`:
 
 | Finder                                                                             | Reads                                                                          |
 | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `findManySpells(membership)`                                                       | every spell of the coven this member may read                                  |
 | `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell                      |
 | `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                          |
 | `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)            |
@@ -51,12 +50,15 @@ Nine finders read through it, seven of them in `spells.ts`:
 `tests/db/repository/readable-spells.test.ts` runs every relationship against
 both visibilities — the author, the owner, another member, a viewer, the author
 after demotion to viewer, a member of another coven by direct id, and the author
-of a soft-deleted spell — and requires `findOneSpell`, `findManySpells` and
-`findManyInSpell` over both child tables to give the same answer in each cell.
-A site admin and a site curator are refused at the service, by `getSpell` and
-`listSpells` (`tests/modules/grimoire/services/spells.test.ts`), because
-`assertMembership` refuses anyone outside the coven before a finder runs.
-The lint rule `sorrel/spell-visibility-read-in-one-place` (`lint/source-sweeps.js`) reads `src/` as text and fails a
+of a soft-deleted spell — and requires `findOneSpell` and `findManyInSpell` over
+both child tables to give the same answer in each cell.
+A site admin and a site curator are refused at the service, because
+`assertMembership` refuses anyone outside the coven before a finder runs: its
+site-admin arm is proved in `tests/modules/coven/services/membership.test.ts`,
+and `tests/db/workspace-isolation.test.ts` sweeps both roles across the
+grimoire's read check and `setSpellVisibility`. The lint rule
+`sorrel/spell-visibility-read-in-one-place` (`lint/source-sweeps.js`) reads
+`src/` as text and fails a
 spell's visibility compared anywhere outside `readableSpells`: the column in a
 query, the word in a raw `sql` template, or a JavaScript comparison of a
 fetched row. The JavaScript check covers only `src/db/` and `src/modules/`,
@@ -201,7 +203,7 @@ included.
 | Call                               | Does                                                                           |
 | ---------------------------------- | ------------------------------------------------------------------------------ |
 | `createSpell` / `updateSpell`      | write the spell and its whole recipe; `updateSpell` widens visibility only     |
-| `listSpells` / `getSpell`          | read through `findManySpells` / `findOneSpell`; `getSpell` adds the steps      |
+| `listGrimoire` / `readSpell`       | read a page, or one spell without its steps (`spell-reads.ts`)                 |
 | `addSpellStep` / `updateSpellStep` | write a one-off ingredient or an instruction, only on a spell the caller reads |
 
 A call that names a spell reads it first as the caller. A private spell of
@@ -209,9 +211,9 @@ someone else, and a spell of another coven, both come back `NotFound`, so the
 refusal does not confirm the spell exists. A step has no scope of its own, so
 the spell read is what makes it writable exactly when its spell is readable.
 
-`getSpell` resolves each linked step's ingredient through
-`findIngredientsInSpellsIncludingSoftDeleted` and marks one deleted since with
-`deleted: true`. The list's paging is M10.9's. M10.10's saves link a step to
+`stepsOfSpells`, `Spell.steps`' batch, resolves each linked step's ingredient
+through `findIngredientsInSpellsIncludingSoftDeleted` and marks one deleted
+since with `deleted: true`. The list's paging is M10.9's. M10.10's saves link a step to
 an ingredient, checking the link only when it is new: a step may lay a live
 form of a live ingredient in the compendium or this coven, and a saved step
 whose ingredient was deleted since keeps it. `updateSpell` changes the

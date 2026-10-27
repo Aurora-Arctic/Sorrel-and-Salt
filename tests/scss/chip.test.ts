@@ -1,5 +1,6 @@
 import { compileString } from 'sass';
 import { describe, expect, it } from 'vitest';
+import { CHIP_GROUNDS, contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
 
 // A group colour the write check admits stays legible on every surface its
@@ -10,9 +11,9 @@ import { fromRoot } from '../support/paths';
 
 const SCSS_DIR = fromRoot('src/scss');
 
-// What M5.6b checks each column against: the harder of its theme's two
-// surfaces, the dark card and the light page (MB.36).
-const CHECKED = { dark: '#1f1c16', light: '#efe9da' } as const;
+// What M5.6b checks each column against is CHIP_GROUNDS: the harder of its
+// theme's two surfaces, the dark card and the light page (MB.36). The test
+// below proves the theme mixins still draw those two surfaces.
 
 // An invented pair, nowhere in the seed or the Sass map, that clears 4.5:1
 // against what M5.6b checks — what an admin's ninth group might carry.
@@ -39,19 +40,6 @@ function declarations(css: string, selector: string): Record<string, string> {
   );
 }
 
-// WCAG 2.1 contrast between two hexes.
-function relativeLuminance(hex: string): number {
-  const channels = [1, 3, 5]
-    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
-    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-}
-
-function contrastRatio(a: string, b: string): number {
-  const [lighter, darker] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
 describe('MB.36: a group colour the write check admits is legible on its theme', () => {
   /** The page and card surfaces a theme mixin sets. */
   function surfaces(theme: 'dark' | 'light'): { page: string; card: string } {
@@ -70,8 +58,8 @@ describe('MB.36: a group colour the write check admits is legible on its theme',
     'clears 4.5:1 on both surfaces, in both states, for any %s colour the write check admits',
     (theme) => {
       const { page, card } = surfaces(theme);
-      expect([page, card]).toContain(CHECKED[theme]);
-      expect(contrastRatio(NINTH[theme], CHECKED[theme])).toBeGreaterThanOrEqual(4.5);
+      expect([page, card]).toContain(CHIP_GROUNDS[theme]);
+      expect(contrastRatio(NINTH[theme], CHIP_GROUNDS[theme])).toBeGreaterThanOrEqual(4.5);
 
       expect(contrastRatio(NINTH[theme], page)).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio(NINTH[theme], card)).toBeGreaterThanOrEqual(4.5);

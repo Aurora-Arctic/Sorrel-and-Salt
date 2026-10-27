@@ -156,18 +156,22 @@ describe('the public compendium page, for the cards’ held state', () => {
     ['a visitor with no account', null],
     ['someone who only views', shell(coven('w-view', 'aaa', false))],
     ['someone in no coven', shell()],
-  ] as const)('reads nothing per viewer, and marks nothing, for %s', async (_who, viewer) => {
-    viewerIfSignedIn.mockResolvedValue(viewer);
+  ] as const)(
+    'reads nothing per viewer, and marks nothing and names no place, for %s',
+    async (_who, viewer) => {
+      viewerIfSignedIn.mockResolvedValue(viewer);
 
-    const entries = await entriesGiven();
+      const entries = await entriesGiven();
 
-    expect(heldCompendiumEntryIdsIn).not.toHaveBeenCalled();
-    expect(getSession).not.toHaveBeenCalled();
-    expect(propsGiven().workspaceId).toBeUndefined();
-    for (const each of entries) {
-      expect(each.held).toBeUndefined();
-    }
-  });
+      expect(heldCompendiumEntryIdsIn).not.toHaveBeenCalled();
+      expect(getSession).not.toHaveBeenCalled();
+      expect(propsGiven().workspaceId).toBeUndefined();
+      for (const each of entries) {
+        expect(each.held).toBeUndefined();
+        expect(each.places).toEqual([]);
+      }
+    },
+  );
 
   describe('for someone who may write in two covens', () => {
     const both = () =>
@@ -276,18 +280,6 @@ describe('the public compendium page, for the cards’ held state', () => {
         ),
       ).toEqual([['w-1', STOCK]]);
       expect(placesOf(free)).toEqual([]);
-    });
-
-    it('names no coven where the role permits nothing, and none for a visitor', async () => {
-      covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'viewer']]));
-      viewerIfSignedIn.mockResolvedValue(shell(coven('w-1', 'bbb', true)));
-      const [held] = await entriesGiven();
-      expect(placesOf(held)).toEqual([]);
-
-      viewerIfSignedIn.mockResolvedValue(null);
-      covenRolesIfSignedIn.mockResolvedValue(null);
-      const [visited] = await entriesGiven();
-      expect(placesOf(visited)).toEqual([]);
     });
   });
 

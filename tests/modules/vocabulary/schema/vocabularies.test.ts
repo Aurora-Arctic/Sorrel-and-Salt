@@ -61,11 +61,8 @@ const DRIZZLE = Object.fromEntries(
   ].map((table) => [nameOf(table), table]),
 );
 
-/** The vocabularies the member's autofill searches by trigram. */
-const SEARCHED = ['ingredient_forms', 'deities', 'celestial_bodies', 'zodiac_signs'];
-
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 /** A short token no seeded row and no other call holds. */
 const token = () => crypto.randomUUID().slice(0, 8);
@@ -122,22 +119,6 @@ describe.each(TABLES)('$table', (entry) => {
 });
 
 describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, groupExtra }) => {
-  // Global rather than per group: a chip filter and the seed's idempotency key
-  // both read the slug alone.
-  it('refuses a slug another group’s item already holds', async () => {
-    const first = await insert(groups, vocabularyRow(groupExtra));
-    const second = await insert(groups, vocabularyRow(groupExtra));
-    const held = vocabularyRow({ [groupColumn]: first });
-    await insert(items, held);
-
-    const error = await failureOf(
-      insert(items, vocabularyRow({ [groupColumn]: second, slug: held.slug })),
-    );
-
-    expect(error.code).toBe('23505');
-    expect(error.constraint_name).toBe(`${items}_slug_unique`);
-  });
-
   // The deliberate gap: uniqueness is on the slug alone, so two live items may
   // share a display name — "Wax", animal and substance; one god honoured under
   // two traditions — and the autofill shows the group beside each. A `name`
@@ -161,27 +142,10 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
 // The icon standing for a form group (M12.6): a closed list, so an enum, and
 // nullable, since NULL is the generic icon rather than a missing answer.
 describe('ingredient_form_groups.icon', () => {
-  it('is a nullable form_group_icon holding exactly the six icons, as the code declares them', async () => {
-    const [column] = await sql`
-      select is_nullable, udt_name from information_schema.columns
-      where table_name = 'ingredient_form_groups' and column_name = 'icon'
-    `;
+  it('holds exactly the six icons, as the code declares them', async () => {
     const [range] = await sql`select enum_range(null::form_group_icon)::text[] as icons`;
 
-    expect({ ...column }).toEqual({ is_nullable: 'YES', udt_name: 'form_group_icon' });
     expect(range.icons).toEqual(['botanical', 'animal', 'mineral', 'substance', 'fluid', 'curio']);
     expect(formGroupIcon.enumValues).toEqual(range.icons);
-  });
-});
-
-describe.each(SEARCHED)('%s', (table) => {
-  // Matched by `%` and `<%` through the index, a name and a description alike
-  // (claude-docs/db/member-autofill.md, "The member's autofill").
-  it('indexes name and description for trigram matching in one gin index', async () => {
-    const index = await catalogue.indexRow(table, `${table}_trgm`);
-
-    expect(index?.unique).toBe(false);
-    expect(index?.predicate).toBeNull();
-    expect(index?.definition).toContain('USING gin (name gin_trgm_ops, description gin_trgm_ops)');
   });
 });

@@ -162,7 +162,8 @@ describe('updateReference', () => {
   });
 
   // The precondition: B's ingredient cites it, and B reads it there. Citing a
-  // reference is not owning it, under either argument a member could send.
+  // reference is not owning it, under either argument a member could send. The
+  // null arm reads the site role alone, so B stands for every non-admin.
   it('refuses a member the compendium reference their ingredient cites, by direct id', async () => {
     const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
     const ingredient = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
@@ -179,18 +180,6 @@ describe('updateReference', () => {
     ).rejects.toThrow(NotFound);
     await expect(
       updateReference(asUser(B), null, id, { ...BOOK, title: 'Hijacked' }),
-    ).rejects.toThrow(Forbidden);
-    expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
-  });
-
-  // The precondition is the admin's own replace, above, of the same row shape;
-  // the site role alone is read, so the coven's owner stands for every non-admin.
-  it('refuses the coven’s owner a compendium reference by direct id, leaving it as it was', async () => {
-    const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
-    expect(await rowOf(id)).toMatchObject({ workspace_id: null });
-
-    await expect(
-      updateReference(asUser(A), null, id, { ...BOOK, title: 'Hijacked' }),
     ).rejects.toThrow(Forbidden);
     expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
   });

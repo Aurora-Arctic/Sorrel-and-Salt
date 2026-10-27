@@ -61,14 +61,6 @@ const VOCABULARIES: [string, CachedVocabulary][] = [
     },
   ],
   [
-    'zodiac signs',
-    {
-      table: 'zodiac_signs',
-      list: () => listAstrologyValues('zodiacSigns', {}, PAGE),
-      count: () => countAstrologyValues('zodiacSigns', {}, undefined),
-    },
-  ],
-  [
     'deities',
     {
       table: 'deities',

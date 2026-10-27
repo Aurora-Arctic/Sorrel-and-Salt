@@ -39,11 +39,11 @@ describe('PrePaintScripts', () => {
     document.documentElement.removeAttribute('data-js');
   });
 
-  // The Compact switch is on by default, so only a stored "regular" reaches <html>.
+  // The Compact switch is on by default, so only a stored "regular" reaches <html>. A stored
+  // "compact" and nothing stored take the same branch, so the "compact" row covers both.
   describe.each([
     ['regular', 'regular'],
     ['compact', null],
-    [null, null],
   ])('with %s stored for the card density', (stored, expected) => {
     it('sets the attribute only for a stored regular', () => {
       const container = document.createElement('div');

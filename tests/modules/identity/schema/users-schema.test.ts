@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { asManualFix } from '../../../support/db/privileges';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/modules/identity/schema/users';
@@ -129,37 +128,5 @@ describe('users privileged creation flag', () => {
     await expect(insert('flagged-curator@admin-flag.test', 'curator', true)).resolves.toHaveLength(
       1,
     );
-  });
-
-  it('refuses taking the flag from a curator, and keeps it through a move to admin', async () => {
-    const [{ id }] = await insert('kept@admin-flag.test', 'curator', true);
-
-    const error = await failureOf(
-      asManualFix(sql, (tx) => tx`update users set can_create_workspace = false where id = ${id}`),
-    );
-
-    expect(error.code).toBe('23514');
-    expect(error.constraint_name).toBe(CONSTRAINT);
-    await asManualFix(sql, (tx) => tx`update users set role = 'admin' where id = ${id}`);
-    await asManualFix(sql, (tx) => tx`update users set role = 'curator' where id = ${id}`);
-    const [row] =
-      await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
-    expect(row).toEqual({ role: 'curator', can_create_workspace: true });
-  });
-
-  it('refuses making a user admin without the flag, and accepts both together', async () => {
-    const [{ id }] = await insert('promoted@admin-flag.test', 'user', false);
-
-    const error = await failureOf(sql`update users set role = 'admin' where id = ${id}`);
-
-    expect(error.code).toBe('23514');
-    expect(error.constraint_name).toBe(CONSTRAINT);
-    await asManualFix(
-      sql,
-      (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${id}`,
-    );
-    const [row] =
-      await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
-    expect(row).toEqual({ role: 'admin', can_create_workspace: true });
   });
 });

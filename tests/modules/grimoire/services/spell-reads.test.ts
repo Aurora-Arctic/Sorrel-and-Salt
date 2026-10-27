@@ -10,7 +10,7 @@ import {
   stepsOfSpells,
 } from '@/modules/grimoire';
 import type { SpellKey, SpellVisibility } from '@/modules/grimoire';
-import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
+import { A, B, C, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { insertSpell } from '../../../support/db/insert-spell';
@@ -83,7 +83,7 @@ describe('listGrimoire', () => {
     }
   });
 
-  it('refuses a non-member, a site admin and a site curator', async () => {
+  it('refuses a non-member', async () => {
     await seed(B);
     // Why this could have succeeded: D lists their own coven's grimoire.
     const own = await seed(D, 'workspace', {}, WORKSPACE_X_ID);
@@ -91,11 +91,9 @@ describe('listGrimoire', () => {
       ids((await listGrimoire(asUser(D), WORKSPACE_X_ID, PAGE, NEWEST)).map((entry) => entry.node)),
     ).toEqual([own]);
 
-    for (const reader of [D, E, F]) {
-      await expect(
-        listGrimoire(asUser(reader), WORKSPACE_W_ID, PAGE, NEWEST),
-      ).rejects.toBeInstanceOf(Forbidden);
-    }
+    await expect(listGrimoire(asUser(D), WORKSPACE_W_ID, PAGE, NEWEST)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
   });
 });
 

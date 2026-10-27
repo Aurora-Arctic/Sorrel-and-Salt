@@ -79,21 +79,6 @@ describe('the /coven/[slug]/invitations page', () => {
     );
   });
 
-  it('reaches the list with a declined invitation as declined, offering Remove', async () => {
-    listPendingWorkspaceInvitations.mockImplementation(async () => [
-      {
-        ...rows(1)[0],
-        node: { ...rows(1)[0].node, declinedAt: new Date('2026-10-14T09:30:00Z') },
-      },
-    ]);
-    await visit('owner');
-
-    expect(
-      screen.getByRole('button', { name: /^Remove the declined invitation to n0@/ }),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Revoke the invitation to/ })).toBeNull();
-  });
-
   it.each(['member', 'viewer'] as const)(
     'answers a %s with the 404 and reads nothing',
     async (role) => {

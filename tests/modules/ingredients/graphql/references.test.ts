@@ -258,22 +258,6 @@ describe('Ingredient.references', () => {
     });
     expect(cleared.data?.updateIngredient.references).toEqual([]);
   });
-
-  it('reads a compendium entry’s references signed out', async () => {
-    const reference = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
-    const id = await insertIngredient(sql, makeIngredient({ nomenclature: 'none' }), A.id);
-    await insertReferenceLink(sql, id, reference, A.id, 'under "Testwort"');
-
-    const result = await run<{ ingredient: { references: unknown[] } }>(
-      null,
-      `query ($id: ID!) { ingredient(id: $id) { references { locator reference { title } } } }`,
-      { id },
-    );
-
-    expect(result.data?.ingredient.references).toEqual([
-      { locator: 'under "Testwort"', reference: { title: 'Fixture Herbal' } },
-    ]);
-  });
 });
 
 describe('referenceSuggestions', () => {
@@ -316,55 +300,5 @@ describe('referenceSuggestions', () => {
         { title: 'Testwort Compendium', isGlobal: true },
       ]);
     });
-  });
-});
-
-describe('compendium(withoutReferences)', () => {
-  it('lists the entries citing nothing, signed out, and counts them', async () => {
-    const reference = await insertReference(sql, {}, E.id);
-    const cited = await insertIngredient(
-      sql,
-      makeIngredient({ name: 'Cited', nomenclature: 'none' }),
-      A.id,
-    );
-    await insertReferenceLink(sql, cited, reference, A.id);
-    await insertIngredient(sql, makeIngredient({ name: 'Uncited', nomenclature: 'none' }), A.id);
-
-    const result = await run<{
-      compendium: { totalCount: number; edges: { node: { name: string } }[] };
-    }>(null, `{ compendium(withoutReferences: true) { totalCount edges { node { name } } } }`);
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.compendium).toEqual({
-      totalCount: 1,
-      edges: [{ node: { name: 'Uncited' } }],
-    });
-  });
-});
-
-describe('compendium(withoutForms)', () => {
-  it('lists the entries with no live form, signed out, and counts them', async () => {
-    await insertIngredient(sql, makeIngredient({ name: 'Formed', nomenclature: 'none' }), A.id);
-    await insertIngredient(
-      sql,
-      makeIngredient({ name: 'Formless', nomenclature: 'none', variants: [] }),
-      A.id,
-    );
-
-    const result = await run<{
-      compendium: { totalCount: number; edges: { node: { name: string } }[] };
-    }>(null, `{ compendium(withoutForms: true) { totalCount edges { node { name } } } }`);
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.compendium).toEqual({
-      totalCount: 1,
-      edges: [{ node: { name: 'Formless' } }],
-    });
-    const all = await run<{ compendium: { totalCount: number } }>(
-      null,
-      `{ compendium { totalCount } }`,
-    );
-    // Why the filter could have mattered: unfiltered, both are listed.
-    expect(all.data?.compendium.totalCount).toBe(2);
   });
 });

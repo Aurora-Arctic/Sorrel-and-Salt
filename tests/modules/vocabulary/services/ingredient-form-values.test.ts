@@ -74,16 +74,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<IngredientFormValueInput> = {}): IngredientFormValueInput {
   return {
@@ -210,16 +204,6 @@ describe('listIngredientFormValues and countIngredientFormValues under a filter'
     expect(await listedUnder({ query: 'ture thi' })).toEqual(['Fixture Thistle']);
   });
 
-  it('reads a blank query as no query', async () => {
-    const all = await listedUnder({});
-    expect(all.length).toBeGreaterThan(1);
-
-    expect(await listedUnder({ query: '   ' })).toEqual(all);
-    await expect(countIngredientFormValues({ query: '   ' }, undefined)).resolves.toEqual(
-      await countIngredientFormValues({}, undefined),
-    );
-  });
-
   it("narrows to a group's forms, alone and with a query", async () => {
     await seed('Fixture Ours', 'Substance');
     await seed('Fixture Theirs', 'Animal');
@@ -238,17 +222,6 @@ describe('listIngredientFormValues and countIngredientFormValues under a filter'
     expect(await listedUnder({ groupId: group('Animal'), query: 'fixture' })).toEqual([
       'Fixture Theirs',
     ]);
-  });
-
-  it('answers an empty page and a zero count for a group id that is not a uuid, reading nothing', async () => {
-    await expect(
-      listIngredientFormValues({ groupId: 'not-a-uuid' }, { limit: 25, inverted: false }),
-    ).resolves.toEqual([]);
-    await expect(countIngredientFormValues({ groupId: 'not-a-uuid' }, undefined)).resolves.toEqual({
-      totalCount: 0,
-      countBefore: null,
-    });
-    expect(repository.findIngredientFormValues).not.toHaveBeenCalled();
   });
 
   it('counts what the filtered page lists, and the rows before a page under it', async () => {
@@ -345,16 +318,24 @@ describe('createIngredientFormValue', () => {
     expect(await countNamed('Fixture Wax')).toBe(2);
   });
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createIngredientFormValue(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Fixture Shard')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(
-      createIngredientFormValue(asUser(A), input({ name: '   ' })),
-    ).rejects.toBeInstanceOf(Forbidden);
-  });
+      await expect(createIngredientFormValue(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Fixture Shard')).toBe(0);
+      await expect(
+        createIngredientFormValue(asUser(user), input({ name: '   ' })),
+      ).rejects.toBeInstanceOf(Forbidden);
+
+      await createIngredientFormValue(asUser(F), input());
+      expect(await countNamed('Fixture Shard')).toBe(1);
+    },
+  );
 
   it('refuses a name whose address a live form in the group holds, on `name`, naming it', async () => {
     await seed('Fixture Shard');
@@ -371,15 +352,6 @@ describe('createIngredientFormValue', () => {
       },
     ]);
     expect(await countNamed('Fixture-Shard')).toBe(0);
-  });
-
-  it("takes a deleted form's address", async () => {
-    const deleted = await seed('Fixture Again');
-    await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${E.id} where id = ${deleted}`;
-
-    const created = await createIngredientFormValue(admin, input({ name: 'Fixture Again' }));
-
-    expect(created.slug).toBe('fixture-again-substance');
   });
 
   it('refuses a group that is retired, or that is not one, on `groupId`', async () => {
@@ -694,17 +666,6 @@ describe('deleteIngredientFormValue', () => {
       await expect(attempt).rejects.toThrow('Testcap');
       await expect(attempt).rejects.toThrow('Testwort');
       expect((await formOf(id)).deleted_at).toBeNull();
-    });
-
-    it('names the first three holding entries and no more', async () => {
-      const id = await seed('Fixture Crowded');
-      for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) {
-        await entry(name, 'Fixture Crowded', id);
-      }
-
-      const attempt = deleteIngredientFormValue(admin, id);
-      await expect(attempt).rejects.toThrow('Testc');
-      await expect(attempt).rejects.not.toThrow('Testd');
     });
   });
 

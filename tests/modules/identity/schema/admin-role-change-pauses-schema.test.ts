@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { A, E, asUser } from '../../../support/as-user';
-import { findOpenAdminRoleChangePause, withAudit, type AuditWriter } from '@/db/repository';
+import { findOpenAdminRoleChangePause, withAudit } from '@/db/repository';
 import { assertSiteAdmin } from '@/modules/identity';
 import { adminRoleChangePauses } from '@/modules/identity/schema/admin-role-change-pauses';
 import type { NamedWrites } from '@/db/types';
@@ -136,37 +135,8 @@ describe('the repository', () => {
     expect(await findOpenAdminRoleChangePause(admin)).toBeUndefined();
   });
 
-  // No body runs: each `@ts-expect-error` fails `npm run typecheck` the
-  // moment its constraint is loosened, which a runtime assertion cannot see.
-  it('carries the namedWrites mark, and so is refused every generic write at compile time', () => {
-    // The mark itself, as a type: a table that lost it fails this assignment.
-    const marked: NamedWrites = adminRoleChangePauses;
-    const id = ADMIN;
-    const where = eq(adminRoleChangePauses.createdBy, id);
-
-    const writes = [
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no generic insert, so a pause cannot open already ended.
-        write.insert(adminRoleChangePauses, { endedAt: new Date(), endedBy: id }),
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no generic update, so the ended pair is the resume's to stamp.
-        write.update(adminRoleChangePauses, { endedAt: null }, where),
-      (write: AuditWriter) =>
-        // @ts-expect-error — nor by id.
-        write.updateById(adminRoleChangePauses, id, { endedBy: id }),
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no soft delete, though the table carries deleted_at.
-        write.softDelete(adminRoleChangePauses, where),
-      (write: AuditWriter) =>
-        // @ts-expect-error — nor by id.
-        write.softDeleteByIds(adminRoleChangePauses, [id]),
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no hard delete, which deleted_at alone refuses too.
-        write.delete(adminRoleChangePauses, where),
-    ];
-
-    // And nothing at runtime: the cast adds no property for drizzle-kit to see.
-    expect(marked.$writes).toBeUndefined();
-    expect(writes).toHaveLength(6);
+  // The compile-time half of the mark is admin-role-change-pauses-schema.type-check.ts.
+  it('adds no property to the table for drizzle-kit to see', () => {
+    expect((adminRoleChangePauses as NamedWrites).$writes).toBeUndefined();
   });
 });

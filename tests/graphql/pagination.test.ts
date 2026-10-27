@@ -84,29 +84,14 @@ async function run(
 const PAGE = 'edges { cursor node { name } } pageInfo { hasNextPage endCursor }';
 
 describe('a paged connection', () => {
-  it('gives 25 rows when the client names no size', async () => {
-    const result = await run(leafSchema(), `{ leaves { ${PAGE} } }`);
-
-    expect(result.errors).toBeUndefined();
-    expect((result.data as LeavesData).leaves.edges).toHaveLength(25);
-  });
-
-  // Silently and consistently: the literal and the variable get the same answer.
+  // Silently: the clamp is an answer, not a refusal. The default size and the
+  // clamp itself are tests/lib/pagination.test.ts's.
   it('gives 100 rows, and no error, to a literal asking for 1000', async () => {
     const result = await run(leafSchema(), `{ leaves(first: 1000) { ${PAGE} } }`);
 
     expect(result.errors).toBeUndefined();
     expect((result.data as LeavesData).leaves.edges).toHaveLength(100);
     expect((result.data as LeavesData).leaves.pageInfo.hasNextPage).toBe(true);
-  });
-
-  it('gives 100 rows, and no error, to a variable asking for 1000', async () => {
-    const result = await run(leafSchema(), `query ($n: Int) { leaves(first: $n) { ${PAGE} } }`, {
-      n: 1000,
-    });
-
-    expect(result.errors).toBeUndefined();
-    expect((result.data as LeavesData).leaves.edges).toHaveLength(100);
   });
 
   it('continues from endCursor, and the resolver sees a decoded position, not the string', async () => {
@@ -271,27 +256,6 @@ describe('a paged connection given a count', () => {
     expect(next.errors).toBeUndefined();
     expect((next.data as CountedData).leaves).toMatchObject({ totalCount: 250, countBefore: 3 });
     expect(starts).toEqual([{ key: ['Leaf 003'], id: LEAVES[3].id }]);
-  });
-
-  it('counts from no start on an empty page, whose countBefore is null', async () => {
-    const starts: (Cursor | undefined)[] = [];
-    const schema = countedSchema(starts);
-    const last = await run(schema, `{ leaves(last: 1) { ${PAGE} } }`);
-    const after = (last.data as CountedData).leaves.pageInfo.endCursor;
-
-    const past = await run(
-      schema,
-      'query ($after: String) { leaves(after: $after) { totalCount countBefore edges { node { name } } } }',
-      { after },
-    );
-
-    expect(past.errors).toBeUndefined();
-    expect((past.data as CountedData).leaves).toEqual({
-      totalCount: 250,
-      countBefore: null,
-      edges: [],
-    });
-    expect(starts).toEqual([undefined]);
   });
 });
 

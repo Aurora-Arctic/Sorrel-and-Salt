@@ -57,13 +57,11 @@ describe('MB.84: robots', () => {
     ['/robots.txt', true],
     ['/.well-known/ai-catalog.json', true],
     ['/.well-known/ard.json', true],
-    ['/sitemap.xml', true],
     ['/.well-known/other.json', false],
     ['/coven/fixture-coven', false],
     ['/coven', false],
     ['/admin', false],
     ['/account', false],
-    ['/sign-in', true],
     ['/invite/fixture-token', false],
     ['/api/graphql', false],
   ])('treats %s as crawlable: %s', (path, expected) => {

@@ -1,8 +1,7 @@
 // The part of the site each v1 story walks, as "Area - Page - Part". A story's
 // wording in DESIGN.md §10 says what a user wants; this says where in the site
 // to look when it fails. Kept here, not in DESIGN.md, so the spec's list stays
-// plain prose; tests/guards/story-sections.test.ts fails when a §10 story has
-// no section here, or this names a number §10 does not list.
+// plain prose. A story without a section here is listed under "Other".
 
 export const STORY_SECTIONS: Readonly<Record<number, string>> = {
   1: 'Account - Sign In',

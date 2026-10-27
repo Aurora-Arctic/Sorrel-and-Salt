@@ -28,22 +28,6 @@ async function meAs(session: Session, field: string) {
 }
 
 describe.each(['email', 'emailVerified', 'role', 'canCreateWorkspace'])('User.%s', (field) => {
-  it('resolves on the user’s own row', async () => {
-    const result = await meAs(asUser(B), field);
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.me).toMatchObject({ id: B.id, [field]: expect.anything() });
-  });
-
-  it('resolves for a site admin', async () => {
-    expect(asUser(E).role).toBe('admin');
-
-    const result = await meAs(asUser(E), field);
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.me).toMatchObject({ id: B.id });
-  });
-
   it("is refused on another user's row, though the row carries it", async () => {
     // Why this could have succeeded: the row handed back is B's, whole, and
     // the unscoped `name` beside the field resolves for A.
@@ -58,4 +42,15 @@ describe.each(['email', 'emailVerified', 'role', 'canCreateWorkspace'])('User.%s
       extensions: { code: 'FORBIDDEN' },
     });
   });
+});
+
+// One field stands for the four: they share the `selfOrAdmin` scope. The
+// refusals above name each field; this is the admit that makes them a refusal.
+it('resolves for a site admin', async () => {
+  expect(asUser(E).role).toBe('admin');
+
+  const result = await meAs(asUser(E), 'email');
+
+  expect(result.errors).toBeUndefined();
+  expect(result.data?.me).toMatchObject({ id: B.id, email: expect.anything() });
 });

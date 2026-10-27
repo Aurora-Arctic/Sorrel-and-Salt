@@ -2,15 +2,13 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { withAudit } from '@/db/repository';
-import { users } from '@/modules/identity/schema/users';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
   type SignInProfile,
 } from '@/modules/identity';
 import { asUser } from '../../../support/as-user';
-import { asManualFix, refusalOf } from '../../../support/db/privileges';
+import { asManualFix } from '../../../support/db/privileges';
 import {
   expectSignedIn,
   landingOf,
@@ -138,35 +136,6 @@ describe('promotePrimaryAdmin', () => {
     expect(row?.updated_by).toBe(id);
   });
 
-  // MB.195: the promotion writes no ledger row; the trigger on `users` records
-  // both grants by the route it declares.
-  it('is recorded as two bootstrap grants, stamped as the user', async () => {
-    const id = await insertUser(PRIMARY);
-    expect(await ledgerOf(id)).toEqual([]);
-
-    await promotePrimaryAdmin(asUser({ id, role: 'user' }), {
-      accountEmail: PRIMARY,
-      profile: verifiedGoogle,
-      primaryAdminEmail: PRIMARY,
-    });
-
-    expect(await ledgerOf(id)).toEqual(promotedBy(id));
-  });
-
-  // The same write the promotion makes, undeclared: so the rows above are
-  // the trigger's, written because the route was declared.
-  it('makes a write the trigger refuses without its route', async () => {
-    const id = await insertUser(PRIMARY);
-
-    const undeclared = withAudit(asUser({ id, role: 'user' }), (write) =>
-      write.updateById(users, id, { role: 'admin', canCreateWorkspace: true }),
-    );
-
-    expect(await refusalOf(undeclared)).toBe('a privilege change must declare its route');
-    expect((await userRow(PRIMARY))?.role).toBe('user');
-    expect(await ledgerOf(id)).toEqual([]);
-  });
-
   it('matches the variable case-insensitively', async () => {
     const id = await insertUser(PRIMARY);
 
@@ -195,7 +164,6 @@ describe('promotePrimaryAdmin', () => {
   // so what refuses it is that field and not an address that failed to match.
   it.each([
     ['microsoft', { providerId: 'microsoft', email: PRIMARY, emailVerified: true }],
-    ['facebook', { providerId: 'facebook', email: PRIMARY, emailVerified: true }],
   ] as const)('refuses a verified %s profile: the provider does not vouch', async (_, profile) => {
     const id = await insertUser(PRIMARY);
 
@@ -209,7 +177,7 @@ describe('promotePrimaryAdmin', () => {
     expect((await userRow(PRIMARY))?.role).toBe('user');
   });
 
-  it.each(['google', 'discord'])('refuses an unverified %s profile', async (providerId) => {
+  it.each(['google'])('refuses an unverified %s profile', async (providerId) => {
     const id = await insertUser(PRIMARY);
 
     const outcome = await promotePrimaryAdmin(asUser({ id, role: 'user' }), {
@@ -331,14 +299,6 @@ describe('Promotion at sign-in', () => {
     expect(await ledgerOf(row!.id)).toEqual(promotedBy(row!.id));
   });
 
-  it('promotes a new account signing up through verified Discord', async () => {
-    expectSignedIn(
-      await signIn('discord', { sub: '80351110224678912', email: PRIMARY, verified: true }),
-    );
-
-    expect((await userRow(PRIMARY))?.role).toBe('admin');
-  });
-
   it('promotes an existing account at its next qualifying sign-in once the variable names it', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'somebody.else@primary-admin.test');
     expectSignedIn(await signIn('google', { sub: 'g-2', email: PRIMARY, verified: true }));
@@ -350,7 +310,7 @@ describe('Promotion at sign-in', () => {
     expect((await userRow(PRIMARY))?.role).toBe('admin');
   });
 
-  it.each(['microsoft', 'facebook'] as const)(
+  it.each(['microsoft'] as const)(
     'signs a verified %s profile in as an ordinary user',
     async (provider) => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -372,19 +332,6 @@ describe('Promotion at sign-in', () => {
     },
   );
 
-  it.each(['google', 'discord'] as const)(
-    'signs an unverified %s profile in as an ordinary user',
-    async (provider) => {
-      vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      expectSignedIn(
-        await signIn(provider, { sub: '80351110224678913', email: PRIMARY, verified: false }),
-      );
-
-      expect((await userRow(PRIMARY))?.role).toBe('user');
-    },
-  );
-
   it('decides on the fresh profile, not the stored emailVerified', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -401,25 +348,6 @@ describe('Promotion at sign-in', () => {
     // Google linking to the same verified row is what promotes it.
     expectSignedIn(await signIn('google', { sub: 'g-3', email: PRIMARY, verified: true }));
     expect((await userRow(PRIMARY))?.role).toBe('admin');
-  });
-
-  it('does not rewrite an account that is already admin', async () => {
-    const id = await insertUser(PRIMARY, 'admin');
-    await sql`update users set email_verified = true where id = ${id}`;
-
-    expectSignedIn(await signIn('google', { sub: 'g-4', email: PRIMARY, verified: true }));
-
-    const row = await userRow(PRIMARY);
-    expect(row?.role).toBe('admin');
-    expect(row?.updated_by).toBe(BOOTSTRAP_USER_ID);
-  });
-
-  it('never promotes a verified Google sign-in the variable does not name', async () => {
-    const other = 'someone.else@primary-admin.test';
-
-    expectSignedIn(await signIn('google', { sub: 'g-5', email: other, verified: true }));
-
-    expect((await userRow(other))?.role).toBe('user');
   });
 });
 

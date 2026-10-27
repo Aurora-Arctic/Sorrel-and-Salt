@@ -327,7 +327,8 @@ describe('the Membership proof (M6.3)', () => {
   it('refuses the generic finders a spell and its contents at compile time', () => {
     const readSpellsWithoutTheVisibilityRule = (membership: Membership) =>
       // @ts-expect-error — `spells` carries `visibility`, so the generic scoped
-      // finder refuses it: findManySpells is the only way in.
+      // finder refuses it: findOneSpell and findPageInReadableSpells are the only
+      // ways in.
       findManyInWorkspace(membership, spells);
 
     const readOneSpellWithoutTheVisibilityRule = (membership: Membership) =>

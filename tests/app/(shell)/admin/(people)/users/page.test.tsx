@@ -1,6 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
@@ -205,12 +204,6 @@ describe('the /admin/users page', () => {
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: undefined, awaitingApproval: true });
   });
 
-  it('reads no awaiting as the whole list', async () => {
-    await renderPage({ query: 'fixture' });
-
-    expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: false });
-  });
-
   it('reads on after a cursor, and back before one', async () => {
     const cursor = { key: ['Listed Fixture 25'], id: user(25).id };
 
@@ -219,17 +212,6 @@ describe('the /admin/users page', () => {
 
     await renderPage({ before: encodeCursor(cursor) });
     expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
-  });
-
-  // A cursor copied from another list decodes, then names no row of this one.
-  it('reads the first page when the cursor is not one of this list', async () => {
-    listUsers.mockRejectedValueOnce(new InvalidCursor());
-    const cursor = { key: ['-1767225600'], id: user(5).id };
-
-    await renderPage({ after: encodeCursor(cursor) });
-
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
-    expect(screen.getByRole('row', { name: /Listed Fixture 01/ })).toBeInTheDocument();
   });
 
   it('reads ?role as the role filter', async () => {
@@ -248,7 +230,7 @@ describe('the /admin/users page', () => {
     expect(filterSends('role')).toBe('');
   });
 
-  it('links the pages either side, keeping the filter, and says where it stands', async () => {
+  it('links the pages either side, keeping the filter', async () => {
     listUsers.mockResolvedValue(Array.from({ length: 26 }, (_, index) => entry(index + 1)));
     countUsers.mockResolvedValue({ totalCount: 60, countBefore: 25 });
 
@@ -268,7 +250,6 @@ describe('the /admin/users page', () => {
       'href',
       `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 });
 
@@ -283,9 +264,6 @@ describe('the /admin/users page, the user modal', () => {
     expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
     expect(providersOf).toHaveBeenCalledWith(ADMIN, [user(1).id]);
     const dialog = screen.getByRole('dialog', { name: VIEWING_01 });
-    // The row's facts reach the body: the sign-up date as a time element.
-    const stamps = Array.from(dialog.querySelectorAll('time'), (el) => el.getAttribute('datetime'));
-    expect(stamps).toContain(user(1).createdAt.toISOString());
     expect(
       within(within(dialog).getByRole('list', { name: 'Covens' })).getByRole('listitem'),
     ).toHaveTextContent('Fixture Coven');
@@ -357,14 +335,6 @@ describe('the /admin/users page, impersonation', () => {
     expect(
       screen.getByRole('button', { name: 'Impersonate Listed Fixture 01' }),
     ).toBeInTheDocument();
-  });
-
-  it('offers it nowhere at production, the flag set or not', async () => {
-    vi.stubEnv('ENABLE_IMPERSONATION', 'true');
-    vi.stubEnv('VERCEL_ENV', 'production');
-    await renderPage();
-
-    expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 });
 

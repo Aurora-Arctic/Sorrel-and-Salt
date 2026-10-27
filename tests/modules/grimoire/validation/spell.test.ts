@@ -118,11 +118,6 @@ describe('SpellStepInput', () => {
     }
     expect(failedPaths({ name: 'Testwort', unit: 'furlong' })).toEqual([['unit']]);
   });
-
-  it('says what is wrong in words', () => {
-    const result = SpellStepInput.safeParse({});
-    expect(result.error?.issues[0]?.message).not.toMatch(/invalid input/i);
-  });
 });
 
 describe('SpellInput', () => {
@@ -162,17 +157,11 @@ describe('SpellInput', () => {
     expect(SpellInput.safeParse({ title: 'T', status: 'archived' }).success).toBe(false);
   });
 
-  it('takes the two visibilities and refuses any other', () => {
-    for (const visibility of ['private', 'workspace']) {
-      expect(SpellInput.safeParse({ title: 'T', visibility }).success).toBe(true);
-    }
-    expect(SpellInput.safeParse({ title: 'T', visibility: 'public' }).success).toBe(false);
-  });
-
-  it('lists the visibilities the column holds', () => {
+  it('lists the visibilities the column holds, and refuses any other', () => {
     for (const visibility of spellVisibility.enumValues) {
       expect(SpellInput.safeParse({ title: 'T', visibility }).success, visibility).toBe(true);
     }
+    expect(SpellInput.safeParse({ title: 'T', visibility: 'public' }).success).toBe(false);
   });
 
   it('takes a note, and reads a blank note as none', () => {

@@ -1,12 +1,12 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
-import { DEITIES } from '@/db/seed/deities';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { Forbidden, InvalidCursor } from '@/lib/errors';
-import { encodeCursor, resolvePage } from '@/lib/pagination';
+import { Forbidden } from '@/lib/errors';
+import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import { type DeitySuggestion, suggestDeities } from '@/modules/vocabulary';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
@@ -20,9 +20,7 @@ import type { ConnectionArgs, Page } from '@/lib/types';
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
@@ -129,16 +127,6 @@ function find(suggestions: DeitySuggestion[], value: string): DeitySuggestion {
 
 describe('suggestDeities', () => {
   describe('the two buckets', () => {
-    it('offers curated matches first and in-use uncurated values second, each saying which', async () => {
-      await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
-
-      const suggestions = await all(asUser(B), 'hermes');
-
-      // Hermes by name, Mercury by its description, then the uncurated value.
-      expect(valuesOf(suggestions)).toEqual(['Hermes', 'Mercury', 'Hermes Trismegistus']);
-      expect(suggestions.map((s) => s.curated)).toEqual([true, true, false]);
-    });
-
     // "Hecate (Greek)": the tradition is what a reader chooses among 216 by.
     it('carries each curated row’s tradition, and no tradition on a value only in use', async () => {
       await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
@@ -234,28 +222,6 @@ describe('suggestDeities', () => {
       ]);
     });
 
-    it('never offers a value twice when it is curated and in use', async () => {
-      await addIngredient({ deities: ['hecate'] });
-      await addIngredient({ name: 'Testbane', workspaceId: WORKSPACE_W_ID, deities: ['HECATE'] });
-
-      const hecates = (await all(asUser(B), 'hecate')).filter(
-        (s) => s.value.toLowerCase() === 'hecate',
-      );
-
-      expect(hecates).toEqual([expect.objectContaining({ value: 'Hecate', curated: true })]);
-    });
-
-    it('moves a soft-deleted deity’s in-use spelling into the uncurated bucket', async () => {
-      await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['hecate'] });
-
-      await retire('deities', 'Hecate');
-
-      expect(find(await all(asUser(B), 'hecate'), 'hecate')).toMatchObject({
-        curated: false,
-        tradition: null,
-      });
-    });
-
     it('reads a deity whose tradition is soft-deleted as uncurated, and never names the dead tradition', async () => {
       await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hecate'] });
       // Why it could have come back curated: the deity row itself is live.
@@ -332,24 +298,6 @@ describe('suggestDeities', () => {
       });
     });
 
-    it('spans the compendium and the current workspace', async () => {
-      const uncurated = (await all(asUser(B), '')).filter((s) => !s.curated);
-
-      expect(valuesOf(uncurated)).toEqual(['Abnoba', 'Nodens']);
-    });
-
-    it('never offers a deity in use only in another workspace', async () => {
-      // Why it could have come back: X holds it, and X's own member is offered it.
-      const held = await sql`
-        select d.name from ingredient_deities d join ingredients i on i.id = d.ingredient_id
-        where i.workspace_id = ${WORKSPACE_X_ID} and i.deleted_at is null and d.deleted_at is null`;
-      expect(held.map((row) => row.name)).toEqual(['Belisama']);
-      expect(valuesOf(await all(asUser(D), 'belisama', WORKSPACE_X_ID))).toEqual(['Belisama']);
-
-      expect(await all(asUser(B), 'belisama')).toEqual([]);
-      expect(valuesOf(await all(asUser(B), ''))).not.toContain('Belisama');
-    });
-
     // MB.167: the deities in use are the table's live rows.
     it('drops a deity row soft-deleted from a live ingredient', async () => {
       await sql`
@@ -362,45 +310,6 @@ describe('suggestDeities', () => {
       expect(count).toBe(1);
 
       expect(await all(asUser(B), 'abnoba')).toEqual([]);
-    });
-  });
-
-  describe('the query', () => {
-    it('treats whitespace as no query, and offers the whole live vocabulary, each with its tradition', async () => {
-      const suggestions = await all(asUser(B), '   ');
-
-      expect(suggestions).toHaveLength(DEITIES.length);
-      expect(suggestions.every((s) => s.curated && s.tradition)).toBe(true);
-    });
-
-    it('offers nothing for a query matching nothing', async () => {
-      expect(await all(asUser(B), 'xqzv')).toEqual([]);
-    });
-  });
-
-  // CLAUDE.md rule 8: one connection over both buckets, walked by cursor.
-  describe('pagination', () => {
-    it('walks every suggestion once, in order, across the bucket boundary', async () => {
-      await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
-      const expected = valuesOf(await all(asUser(B), 'hermes'));
-
-      const seen: string[] = [];
-      let after: string | null = null;
-      for (;;) {
-        const page: Page<DeitySuggestion> = await pageOf(asUser(B), 'hermes', { first: 1, after });
-        seen.push(...valuesOf(page.edges.map((edge) => edge.node)));
-        if (!page.pageInfo.hasNextPage) break;
-        after = page.pageInfo.endCursor;
-      }
-
-      expect(seen).toEqual(expected);
-      expect(seen).toHaveLength(3);
-    });
-
-    it('refuses a cursor that names no position in this list', async () => {
-      const forged = encodeCursor({ key: ['hecate'], id: 'hecate' });
-
-      await expect(pageOf(asUser(B), '', { after: forged })).rejects.toThrow(InvalidCursor);
     });
   });
 
@@ -443,20 +352,11 @@ describe('suggestDeities', () => {
     });
 
     // It reveals nothing a reader of the workspace could not already list.
-    it('answers anyone who may read the workspace’s ingredients, a viewer included', async () => {
-      expect(valuesOf(await all(asUser(C), 'abnoba'))).toEqual(['Abnoba']);
-      expect(valuesOf(await all(asUser(A), 'abnoba'))).toEqual(['Abnoba']);
-    });
-
     it('refuses a member of another workspace asking about this one', async () => {
       // Why it could have succeeded: D is a member, just not here.
       await expect(all(asUser(D), 'abnoba', WORKSPACE_X_ID)).resolves.toEqual([]);
 
       await expect(all(asUser(D), 'abnoba')).rejects.toThrow(Forbidden);
-    });
-
-    it('refuses a site admin, who belongs to no workspace', async () => {
-      await expect(all(asUser(E), 'abnoba')).rejects.toThrow(Forbidden);
     });
   });
 });

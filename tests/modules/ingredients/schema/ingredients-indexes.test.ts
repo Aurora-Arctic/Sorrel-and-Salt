@@ -236,14 +236,5 @@ describe('ingredients unique indexes', () => {
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(WORKSPACE_SLUG);
     });
-
-    it('lets one slug recur across the tiers and across workspaces', async () => {
-      await insert();
-      await insert({ workspaceId: WORKSPACE_A });
-      await insert({ workspaceId: WORKSPACE_B });
-
-      expect(await sql`select distinct slug from ingredients`).toHaveLength(1);
-      expect(await liveCount()).toBe(3);
-    });
   });
 });

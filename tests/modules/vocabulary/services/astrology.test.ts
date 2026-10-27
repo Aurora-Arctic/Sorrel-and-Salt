@@ -25,7 +25,10 @@ import { makeIngredient } from '../../../support/fixtures';
 // vocabulary curates (MB.162), so a value a live entry's list holds is held:
 // its delete is refused, and its rename is carried onto the list. A coven's
 // ingredient is neither. Every test runs once per vocabulary; the seeded rows
-// stay, so every row a test writes is named `Fixture …`.
+// stay, so every row a test writes is named `Fixture …`. Both vocabularies go through
+// one code path that differs only in its table, input, noun and entry column, so
+// celestial bodies run every test and zodiac signs run one create, one rename
+// carried onto entries and the held-delete refusal, which prove those differences.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -38,16 +41,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 const VOCABULARIES: {
   field: CuratedField;
@@ -67,6 +64,8 @@ const VOCABULARIES: {
 ];
 
 describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
+  const full = field === 'celestialBodies';
+
   beforeEach(async () => {
     await sql`truncate ingredients cascade`;
     await sql`delete from ${sql(table)} where name like 'Fixture%'`;
@@ -123,52 +122,58 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
     return (error as ValidationError).issues;
   }
 
-  describe('listAstrologyValues and countAstrologyValues', () => {
-    const listed = async (query?: string): Promise<string[]> => {
-      const page = await resolvePage({ first: 100 }, (request) =>
-        listAstrologyValues(field, { query }, request),
-      );
-      return page.edges.map((edge) => edge.node.name);
-    };
+  if (full) {
+    describe('listAstrologyValues and countAstrologyValues', () => {
+      const listed = async (query?: string): Promise<string[]> => {
+        const page = await resolvePage({ first: 100 }, (request) =>
+          listAstrologyValues(field, { query }, request),
+        );
+        return page.edges.map((edge) => edge.node.name);
+      };
 
-    it('lists the live rows alphabetically by name, a deleted one left out', async () => {
-      const gone = await seed('Fixture Gone');
-      await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
-      const expected = await sql<{ name: string }[]>`
+      it('lists the live rows alphabetically by name, a deleted one left out', async () => {
+        const gone = await seed('Fixture Gone');
+        await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
+        const expected = await sql<{ name: string }[]>`
         select name from ${sql(table)} where deleted_at is null order by name, id`;
-      expect(expected.length).toBeGreaterThan(10);
+        expect(expected.length).toBeGreaterThan(10);
 
-      expect(await listed()).toEqual(expected.map((row) => row.name));
-      await expect(countAstrologyValues(field, {}, undefined)).resolves.toEqual({
-        totalCount: expected.length,
-        countBefore: null,
+        expect(await listed()).toEqual(expected.map((row) => row.name));
+        await expect(countAstrologyValues(field, {}, undefined)).resolves.toEqual({
+          totalCount: expected.length,
+          countBefore: null,
+        });
+      });
+
+      it('narrows by a name fragment, and reads a blank one as none', async () => {
+        await seed('Fixture Bramble');
+        await seed('Fixture Thistle');
+
+        expect(await listed('BRAMBLE')).toEqual(['Fixture Bramble']);
+        expect(await listed('   ')).toEqual(await listed());
+        await expect(countAstrologyValues(field, { query: 'fixture' }, undefined)).resolves.toEqual(
+          {
+            totalCount: 2,
+            countBefore: null,
+          },
+        );
       });
     });
 
-    it('narrows by a name fragment, and reads a blank one as none', async () => {
-      await seed('Fixture Bramble');
-      await seed('Fixture Thistle');
+    describe('getAstrologyValueBySlug', () => {
+      it('answers the live row holding the address, and NotFound for a deleted or empty one', async () => {
+        const id = await seed('Fixture Found');
+        const gone = await seed('Fixture Gone');
+        await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
 
-      expect(await listed('BRAMBLE')).toEqual(['Fixture Bramble']);
-      expect(await listed('   ')).toEqual(await listed());
-      await expect(countAstrologyValues(field, { query: 'fixture' }, undefined)).resolves.toEqual({
-        totalCount: 2,
-        countBefore: null,
+        await expect(getAstrologyValueBySlug(field, 'fixture-found')).resolves.toMatchObject({
+          id,
+        });
+        await expect(getAstrologyValueBySlug(field, 'fixture-gone')).rejects.toThrow(NotFound);
+        await expect(getAstrologyValueBySlug(field, 'no-such-value')).rejects.toThrow(NotFound);
       });
     });
-  });
-
-  describe('getAstrologyValueBySlug', () => {
-    it('answers the live row holding the address, and NotFound for a deleted or empty one', async () => {
-      const id = await seed('Fixture Found');
-      const gone = await seed('Fixture Gone');
-      await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
-
-      await expect(getAstrologyValueBySlug(field, 'fixture-found')).resolves.toMatchObject({ id });
-      await expect(getAstrologyValueBySlug(field, 'fixture-gone')).rejects.toThrow(NotFound);
-      await expect(getAstrologyValueBySlug(field, 'no-such-value')).rejects.toThrow(NotFound);
-    });
-  });
+  }
 
   describe('createAstrologyValue', () => {
     it.each(CURATORS)(
@@ -192,129 +197,139 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       },
     );
 
-    it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-      await expect(createAstrologyValue(asUser(user), field, input())).rejects.toThrow(Forbidden);
-      expect(await countNamed('Fixture Body')).toBe(0);
-    });
+    if (full) {
+      it.each(NON_ADMINS)(
+        'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+        async (_who, user) => {
+          // Why it could have passed: the guard is all that refuses it. The user
+          // holds no site role, and the same input is written for a curator.
+          expect(asUser(user).role).toBe('user');
+          expect(asUser(F).role).toBe('curator');
 
-    it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-      await expect(
-        createAstrologyValue(asUser(A), field, input({ name: '   ' })),
-      ).rejects.toBeInstanceOf(Forbidden);
-    });
+          await expect(createAstrologyValue(asUser(user), field, input())).rejects.toThrow(
+            Forbidden,
+          );
+          expect(await countNamed('Fixture Body')).toBe(0);
+          await expect(
+            createAstrologyValue(asUser(user), field, input({ name: '   ' })),
+          ).rejects.toBeInstanceOf(Forbidden);
 
-    it('refuses a blank name and a blank description, each on its field', async () => {
-      const issues = await issuesOf(
-        createAstrologyValue(admin, field, input({ name: ' ', description: ' ' })),
-      );
-
-      expect(issues).toEqual([
-        { path: ['name'], message: expect.any(String) },
-        { path: ['description'], message: expect.any(String) },
-      ]);
-    });
-
-    it('refuses a name whose address a live row holds, on `name`, naming it', async () => {
-      await seed('Fixture Body');
-
-      const issues = await issuesOf(
-        createAstrologyValue(admin, field, input({ name: 'fixture-BODY' })),
-      );
-
-      expect(issues).toEqual([
-        {
-          path: ['name'],
-          message: expect.stringContaining('Fixture Body'),
+          await createAstrologyValue(asUser(F), field, input());
+          expect(await countNamed('Fixture Body')).toBe(1);
         },
-      ]);
-      expect(await countNamed('fixture-BODY')).toBe(0);
-    });
+      );
 
-    it("takes a deleted row's address", async () => {
-      const gone = await seed('Fixture Again');
-      await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
+      it('refuses a blank name and a blank description, each on its field', async () => {
+        const issues = await issuesOf(
+          createAstrologyValue(admin, field, input({ name: ' ', description: ' ' })),
+        );
 
-      const created = await createAstrologyValue(admin, field, input({ name: 'Fixture Again' }));
+        expect(issues).toEqual([
+          { path: ['name'], message: expect.any(String) },
+          { path: ['description'], message: expect.any(String) },
+        ]);
+      });
 
-      expect(created.slug).toBe('fixture-again');
-    });
+      it('refuses a name whose address a live row holds, on `name`, naming it', async () => {
+        await seed('Fixture Body');
+
+        const issues = await issuesOf(
+          createAstrologyValue(admin, field, input({ name: 'fixture-BODY' })),
+        );
+
+        expect(issues).toEqual([
+          {
+            path: ['name'],
+            message: expect.stringContaining('Fixture Body'),
+          },
+        ]);
+        expect(await countNamed('fixture-BODY')).toBe(0);
+      });
+    }
   });
 
   describe('updateAstrologyValue', () => {
-    it.each(CURATORS)(
-      'lets %s rewrite it, the slug following the name, created_by kept',
-      async (_who, user) => {
-        const id = await seed('Fixture Old');
+    if (full) {
+      it.each(CURATORS)(
+        'lets %s rewrite it, the slug following the name, created_by kept',
+        async (_who, user) => {
+          const id = await seed('Fixture Old');
 
-        await updateAstrologyValue(asUser(user), field, id, {
-          name: 'Fixture New',
-          description: 'Rewritten',
-        });
+          await updateAstrologyValue(asUser(user), field, id, {
+            name: 'Fixture New',
+            description: 'Rewritten',
+          });
 
-        expect(await rowOf(id)).toMatchObject({
-          name: 'Fixture New',
-          slug: 'fixture-new',
-          description: 'Rewritten',
-          created_by: A.id,
-          updated_by: user.id,
-        });
-      },
-    );
+          expect(await rowOf(id)).toMatchObject({
+            name: 'Fixture New',
+            slug: 'fixture-new',
+            description: 'Rewritten',
+            created_by: A.id,
+            updated_by: user.id,
+          });
+        },
+      );
 
-    // MB.171: the seed recognises its own rows by the key.
-    it("keeps a seeded row's seed key through a rename", async () => {
-      const [seeded] = await sql<{ id: string; seed_key: string }[]>`
+      // MB.171: the seed recognises its own rows by the key.
+      it("keeps a seeded row's seed key through a rename", async () => {
+        const [seeded] = await sql<{ id: string; seed_key: string }[]>`
         select id, seed_key from ${sql(table)}
         where seed_key is not null and deleted_at is null order by name limit 1`;
-      expect(seeded.seed_key).toEqual(expect.any(String));
+        expect(seeded.seed_key).toEqual(expect.any(String));
 
-      await updateAstrologyValue(admin, field, seeded.id, input({ name: 'Fixture Renamed Seed' }));
+        await updateAstrologyValue(
+          admin,
+          field,
+          seeded.id,
+          input({ name: 'Fixture Renamed Seed' }),
+        );
 
-      expect(await rowOf(seeded.id)).toMatchObject({
-        name: 'Fixture Renamed Seed',
-        seed_key: seeded.seed_key,
+        expect(await rowOf(seeded.id)).toMatchObject({
+          name: 'Fixture Renamed Seed',
+          seed_key: seeded.seed_key,
+        });
       });
-    });
 
-    it.each(NON_ADMINS)('refuses %s by id, and leaves the row as it was', async (_who, user) => {
-      const id = await seed('Fixture Kept');
-      const before = await rowOf(id);
+      it.each(NON_ADMINS)('refuses %s by id, and leaves the row as it was', async (_who, user) => {
+        const id = await seed('Fixture Kept');
+        const before = await rowOf(id);
 
-      await expect(updateAstrologyValue(asUser(user), field, id, input())).rejects.toThrow(
-        Forbidden,
-      );
-      expect(await rowOf(id)).toEqual(before);
-    });
+        await expect(updateAstrologyValue(asUser(user), field, id, input())).rejects.toThrow(
+          Forbidden,
+        );
+        expect(await rowOf(id)).toEqual(before);
+      });
 
-    it("refuses a rename onto another row's address, on `name`, leaving the row as it was", async () => {
-      await seed('Fixture Taken');
-      const id = await seed('Fixture Mine');
-      const before = await rowOf(id);
+      it("refuses a rename onto another row's address, on `name`, leaving the row as it was", async () => {
+        await seed('Fixture Taken');
+        const id = await seed('Fixture Mine');
+        const before = await rowOf(id);
 
-      const issues = await issuesOf(
-        updateAstrologyValue(admin, field, id, input({ name: 'Fixture-Taken' })),
-      );
+        const issues = await issuesOf(
+          updateAstrologyValue(admin, field, id, input({ name: 'Fixture-Taken' })),
+        );
 
-      expect(issues).toEqual([
-        {
-          path: ['name'],
-          message: expect.any(String),
-        },
-      ]);
-      expect(await rowOf(id)).toEqual(before);
-    });
+        expect(issues).toEqual([
+          {
+            path: ['name'],
+            message: expect.any(String),
+          },
+        ]);
+        expect(await rowOf(id)).toEqual(before);
+      });
 
-    it('answers NotFound for a deleted row, and for an id that is not a uuid', async () => {
-      const id = await seed('Fixture Deleted Once');
-      await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-      const before = await rowOf(id);
+      it('answers NotFound for a deleted row, and for an id that is not a uuid', async () => {
+        const id = await seed('Fixture Deleted Once');
+        await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+        const before = await rowOf(id);
 
-      await expect(updateAstrologyValue(admin, field, id, input())).rejects.toThrow(NotFound);
-      await expect(updateAstrologyValue(admin, field, 'not-a-uuid', input())).rejects.toThrow(
-        NotFound,
-      );
-      expect(await rowOf(id)).toEqual(before);
-    });
+        await expect(updateAstrologyValue(admin, field, id, input())).rejects.toThrow(NotFound);
+        await expect(updateAstrologyValue(admin, field, 'not-a-uuid', input())).rejects.toThrow(
+          NotFound,
+        );
+        expect(await rowOf(id)).toEqual(before);
+      });
+    }
 
     it('carries a rename onto every live compendium entry holding the value, in place, in the same write', async () => {
       const id = await seed('Fixture Body');
@@ -335,70 +350,74 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       expect((await ingredientOf(gone))[column]).toEqual(['Fixture Body']);
     });
 
-    it('carries a change of case alone', async () => {
-      const id = await seed('Fixture Body');
-      const held = await entry('Testwort', ['Fixture Body']);
+    if (full) {
+      it('carries a change of case alone', async () => {
+        const id = await seed('Fixture Body');
+        const held = await entry('Testwort', ['Fixture Body']);
 
-      await updateAstrologyValue(admin, field, id, input({ name: 'Fixture BODY' }));
+        await updateAstrologyValue(admin, field, id, input({ name: 'Fixture BODY' }));
 
-      expect((await ingredientOf(held))[column]).toEqual(['Fixture BODY']);
-    });
+        expect((await ingredientOf(held))[column]).toEqual(['Fixture BODY']);
+      });
 
-    it('rewrites no entry when the name is unchanged', async () => {
-      const id = await seed('Fixture Body');
-      const held = await entry('Testwort', ['Fixture Body']);
-      const before = await ingredientOf(held);
+      it('rewrites no entry when the name is unchanged', async () => {
+        const id = await seed('Fixture Body');
+        const held = await entry('Testwort', ['Fixture Body']);
+        const before = await ingredientOf(held);
 
-      await updateAstrologyValue(admin, field, id, input({ description: 'Only this' }));
+        await updateAstrologyValue(admin, field, id, input({ description: 'Only this' }));
 
-      expect(await ingredientOf(held)).toEqual(before);
-    });
+        expect(await ingredientOf(held)).toEqual(before);
+      });
 
-    it("never rewrites a coven's ingredient", async () => {
-      const id = await seed('Fixture Body');
-      const coven = await entry('Testwort', ['Fixture Body'], { workspaceId: WORKSPACE_W_ID });
-      const before = await ingredientOf(coven);
-      // The precondition: it holds the value the rename would rewrite.
-      expect(before[column]).toEqual(['Fixture Body']);
+      it("never rewrites a coven's ingredient", async () => {
+        const id = await seed('Fixture Body');
+        const coven = await entry('Testwort', ['Fixture Body'], { workspaceId: WORKSPACE_W_ID });
+        const before = await ingredientOf(coven);
+        // The precondition: it holds the value the rename would rewrite.
+        expect(before[column]).toEqual(['Fixture Body']);
 
-      await updateAstrologyValue(admin, field, id, input({ name: 'Fixture Renamed' }));
+        await updateAstrologyValue(admin, field, id, input({ name: 'Fixture Renamed' }));
 
-      expect(await ingredientOf(coven)).toEqual(before);
-    });
+        expect(await ingredientOf(coven)).toEqual(before);
+      });
 
-    it('leaves the entries as they were when the rename is refused', async () => {
-      await seed('Fixture Taken');
-      const id = await seed('Fixture Body');
-      const held = await entry('Testwort', ['Fixture Body']);
-      const before = await ingredientOf(held);
+      it('leaves the entries as they were when the rename is refused', async () => {
+        await seed('Fixture Taken');
+        const id = await seed('Fixture Body');
+        const held = await entry('Testwort', ['Fixture Body']);
+        const before = await ingredientOf(held);
 
-      await issuesOf(updateAstrologyValue(admin, field, id, input({ name: 'Fixture Taken' })));
+        await issuesOf(updateAstrologyValue(admin, field, id, input({ name: 'Fixture Taken' })));
 
-      expect(await ingredientOf(held)).toEqual(before);
-    });
+        expect(await ingredientOf(held)).toEqual(before);
+      });
+    }
   });
 
   describe('deleteAstrologyValue', () => {
-    it.each(CURATORS)(
-      'lets %s soft-delete one no live compendium entry holds',
-      async (_who, user) => {
-        const id = await seed('Fixture Doomed');
+    if (full) {
+      it.each(CURATORS)(
+        'lets %s soft-delete one no live compendium entry holds',
+        async (_who, user) => {
+          const id = await seed('Fixture Doomed');
 
-        await deleteAstrologyValue(asUser(user), field, id);
+          await deleteAstrologyValue(asUser(user), field, id);
 
-        expect(await rowOf(id)).toMatchObject({
-          deleted_by: user.id,
-          deleted_at: expect.any(Date),
-        });
-      },
-    );
+          expect(await rowOf(id)).toMatchObject({
+            deleted_by: user.id,
+            deleted_at: expect.any(Date),
+          });
+        },
+      );
 
-    it.each(NON_ADMINS)('refuses %s by id, and the row stays live', async (_who, user) => {
-      const id = await seed('Fixture Kept');
+      it.each(NON_ADMINS)('refuses %s by id, and the row stays live', async (_who, user) => {
+        const id = await seed('Fixture Kept');
 
-      await expect(deleteAstrologyValue(asUser(user), field, id)).rejects.toThrow(Forbidden);
-      expect((await rowOf(id)).deleted_at).toBeNull();
-    });
+        await expect(deleteAstrologyValue(asUser(user), field, id)).rejects.toThrow(Forbidden);
+        expect((await rowOf(id)).deleted_at).toBeNull();
+      });
+    }
 
     it('refuses while one live compendium entry holds it, naming it, and the row stays live', async () => {
       const id = await seed('Fixture Body');
@@ -410,39 +429,30 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       expect((await rowOf(id)).deleted_at).toBeNull();
     });
 
-    it('names the first three holding entries and no more', async () => {
-      const id = await seed('Fixture Body');
-      for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) {
-        await entry(name, ['fixture body']);
-      }
+    if (full) {
+      it('passes once no live entry holds it: a deleted entry and a coven’s ingredient never block it', async () => {
+        const id = await seed('Fixture Body');
+        const held = await entry('Testwort', ['Fixture Body']);
+        const coven = await entry('Testleaf', ['Fixture Body'], { workspaceId: WORKSPACE_W_ID });
+        await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(Forbidden);
+        await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${held}`;
+        const covenBefore = await ingredientOf(coven);
+        // The precondition: the coven's ingredient still holds the value.
+        expect(covenBefore[column]).toEqual(['Fixture Body']);
 
-      const attempt = deleteAstrologyValue(admin, field, id);
-      await expect(attempt).rejects.toThrow('Testc');
-      await expect(attempt).rejects.not.toThrow('Testd');
-    });
+        await deleteAstrologyValue(admin, field, id);
 
-    it('passes once no live entry holds it: a deleted entry and a coven’s ingredient never block it', async () => {
-      const id = await seed('Fixture Body');
-      const held = await entry('Testwort', ['Fixture Body']);
-      const coven = await entry('Testleaf', ['Fixture Body'], { workspaceId: WORKSPACE_W_ID });
-      await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(Forbidden);
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${held}`;
-      const covenBefore = await ingredientOf(coven);
-      // The precondition: the coven's ingredient still holds the value.
-      expect(covenBefore[column]).toEqual(['Fixture Body']);
+        expect((await rowOf(id)).deleted_at).toEqual(expect.any(Date));
+        expect(await ingredientOf(coven)).toEqual(covenBefore);
+      });
 
-      await deleteAstrologyValue(admin, field, id);
+      it('answers NotFound for a deleted row, and for an id that is not a uuid', async () => {
+        const id = await seed('Fixture Gone');
+        await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
 
-      expect((await rowOf(id)).deleted_at).toEqual(expect.any(Date));
-      expect(await ingredientOf(coven)).toEqual(covenBefore);
-    });
-
-    it('answers NotFound for a deleted row, and for an id that is not a uuid', async () => {
-      const id = await seed('Fixture Gone');
-      await sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-      await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(NotFound);
-      await expect(deleteAstrologyValue(admin, field, 'not-a-uuid')).rejects.toThrow(NotFound);
-    });
+        await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(NotFound);
+        await expect(deleteAstrologyValue(admin, field, 'not-a-uuid')).rejects.toThrow(NotFound);
+      });
+    }
   });
 });

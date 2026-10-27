@@ -1,11 +1,10 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, ValidationError } from '@/lib/errors';
 import { deitySlug } from '@/lib/slugify';
 import { createDeity, deityOtherNamesOf, updateDeity } from '@/modules/vocabulary';
 import type { DeityInput } from '@/modules/vocabulary/validation/deity';
-import { A, B, C, E, F, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
 // M14.23: a deity's other names, written on the deity form as an entry's
@@ -85,54 +84,37 @@ async function issuesOf(attempt: Promise<unknown>) {
 }
 
 describe('who writes other names', () => {
-  // B and C hold workspace roles that write a coven's ingredients (B) or read
-  // them (C); neither role is a site role, which is all a vocabulary write turns on.
-  it('is testing a member and a viewer of W, whose site role is `user`', async () => {
-    const rows = await sql<{ user_id: string; role: string }[]>`
-      select user_id, role from workspace_members
-      where workspace_id = ${WORKSPACE_W_ID} and user_id in (${B.id}, ${C.id})
-        and deleted_at is null`;
-    expect(Object.fromEntries(rows.map((row) => [row.user_id, row.role]))).toEqual({
-      [B.id]: 'member',
-      [C.id]: 'viewer',
-    });
-    expect([asUser(B).role, asUser(C).role]).toEqual(['user', 'user']);
-  });
-
-  it.each([
-    ['a member', B],
-    ['a viewer', C],
-  ] as const)('refuses %s a create carrying other names, writing nothing', async (_who, user) => {
+  // B is a member of W, whose workspace role writes a coven's ingredients and
+  // is no site role, which is all a vocabulary write turns on. F is a curator.
+  it('refuses a member a create carrying other names, writing nothing', async () => {
     const sent = input({ name: 'Fixture Refused', otherNames: ['Fixture Refusa'] });
+    expect(asUser(B).role).toBe('user');
 
-    await expect(createDeity(asUser(user), sent)).rejects.toThrow(Forbidden);
+    await expect(createDeity(asUser(B), sent)).rejects.toThrow(Forbidden);
     const [row] = await sql`select count(*)::int as n from deity_other_names
       where name = 'Fixture Refusa'`;
     expect(row.n).toBe(0);
 
     // Why it could have passed: the same input is written for a curator.
+    expect(curator.role).toBe('curator');
     const created = await createDeity(curator, sent);
     expect(await liveNames(created.id)).toEqual(['Fixture Refusa']);
   });
 
-  it.each([
-    ['a member', B],
-    ['a viewer', C],
-  ] as const)(
-    "refuses %s an update by the deity's own id, leaving its names as they were",
-    async (_who, user) => {
-      const id = await seed('Fixture Testra', ['Fixture Kept']);
-      const sent = input({ otherNames: ['Fixture Forged'] });
+  it("refuses a member an update by the deity's own id, leaving its names as they were", async () => {
+    const id = await seed('Fixture Testra', ['Fixture Kept']);
+    const sent = input({ otherNames: ['Fixture Forged'] });
+    expect(asUser(B).role).toBe('user');
 
-      await expect(updateDeity(asUser(user), id, sent)).rejects.toThrow(Forbidden);
-      expect(await liveNames(id)).toEqual(['Fixture Kept']);
+    await expect(updateDeity(asUser(B), id, sent)).rejects.toThrow(Forbidden);
+    expect(await liveNames(id)).toEqual(['Fixture Kept']);
 
-      // Why it could have passed: the id is real and live, and the same call
-      // by a curator rewrites the list.
-      await updateDeity(curator, id, sent);
-      expect(await liveNames(id)).toEqual(['Fixture Forged']);
-    },
-  );
+    // Why it could have passed: the id is real and live, and the same call by
+    // a curator rewrites the list.
+    expect(curator.role).toBe('curator');
+    await updateDeity(curator, id, sent);
+    expect(await liveNames(id)).toEqual(['Fixture Forged']);
+  });
 });
 
 describe('saving the list', () => {

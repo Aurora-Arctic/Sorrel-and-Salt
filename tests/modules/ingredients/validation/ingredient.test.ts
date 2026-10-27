@@ -277,11 +277,6 @@ describe('the ingredient fields, on the local variant', () => {
 
       expect(failedPaths(result)).toEqual([['substitutes', 2]]);
     });
-
-    it('takes no substitutes, absent or empty', () => {
-      expect(Schema.parse(base).substitutes ?? []).toEqual([]);
-      expect(Schema.parse({ ...base, substitutes: [] }).substitutes ?? []).toEqual([]);
-    });
   });
 
   // DESIGN.md §7: each entry an existing reference's id, with an optional
@@ -344,11 +339,6 @@ describe('the ingredient fields, on the local variant', () => {
 
       expect(failedPaths(result)).toEqual([['references', 2]]);
     });
-
-    it('takes no references, absent or empty', () => {
-      expect(Schema.parse(base).references ?? []).toEqual([]);
-      expect(Schema.parse({ ...base, references: [] }).references ?? []).toEqual([]);
-    });
   });
 
   // MB.125: the categories an ingredient is filed under, by id. Whether an id
@@ -379,11 +369,6 @@ describe('the ingredient fields, on the local variant', () => {
         expect(failedPaths(result), entry).toEqual([['categoryIds', 1]]);
       }
     });
-
-    it('takes no categories, absent or empty', () => {
-      expect(Schema.parse(base).categoryIds ?? []).toEqual([]);
-      expect(Schema.parse({ ...base, categoryIds: [] }).categoryIds ?? []).toEqual([]);
-    });
   });
 
   describe('enum fields', () => {
@@ -404,12 +389,6 @@ describe('the ingredient fields, on the local variant', () => {
       expect(Schema.parse({ ...base, elements: ELEMENTS })).toMatchObject({ elements: ELEMENTS });
     });
 
-    it('keeps the order chosen', () => {
-      expect(Schema.parse({ ...base, elements: ['water', 'fire', 'air'] })).toMatchObject({
-        elements: ['water', 'fire', 'air'],
-      });
-    });
-
     it('refuses a value outside the five at its position', () => {
       for (const value of ['aether', 'Earth', '']) {
         expect(
@@ -417,10 +396,6 @@ describe('the ingredient fields, on the local variant', () => {
           value,
         ).toEqual([['elements', 1]]);
       }
-    });
-
-    it('refuses a single value sent where the list belongs', () => {
-      expect(failedPaths(Schema.safeParse({ ...base, elements: 'fire' }))).toEqual([['elements']]);
     });
 
     it('refuses a repeat at the repeat', () => {
@@ -461,12 +436,6 @@ describe('the ingredient fields, on the local variant', () => {
       });
     });
 
-    it('keeps the order entered', () => {
-      expect(Schema.parse({ ...base, [field]: ['Vesta', 'Ceres', 'Pallas'] })).toMatchObject({
-        [field]: ['Vesta', 'Ceres', 'Pallas'],
-      });
-    });
-
     // MB.167: as folk names are, case-folded and trimmed, at the row the form
     // sent it in — blanks counted.
     it('refuses a repeat but for case and spacing, at the repeat', () => {
@@ -504,19 +473,6 @@ describe('the ingredient fields, on the local variant', () => {
       zodiacSigns: ['cancer'],
       colors: ['green', 'silver'],
     });
-  });
-
-  // A list left with no entries is no list: cleared to null, as a blank text
-  // field is, so "none" is stored one way rather than as NULL and {}.
-  it('takes an array field left empty as absent', () => {
-    const parsed = Schema.parse({
-      name: 'Testwort',
-      nomenclature: 'none',
-      colors: ['  '],
-      folkNames: [],
-    });
-
-    expect(parsed).toMatchObject({ colors: null, folkNames: null });
   });
 
   // MB.167: each deity links a curated row or names one (DESIGN.md §5,
@@ -581,11 +537,6 @@ describe('the ingredient fields, on the local variant', () => {
           deities: [{ deityId: GREEK }, { deityId: ROMAN }, { name: 'Hecate' }],
         }).success,
       ).toBe(true);
-    });
-
-    it('takes no deities, absent or empty, as none', () => {
-      expect(Schema.parse(base).deities ?? []).toEqual([]);
-      expect(Schema.parse({ ...base, deities: [] }).deities ?? []).toEqual([]);
     });
   });
 

@@ -8,7 +8,6 @@ export * from './loaders/spell-children';
 export * from './graphql/spell';
 export type {
   GrimoireOrder,
-  SpellDetail,
   SpellInput,
   SpellKey,
   SpellRecipeStep,

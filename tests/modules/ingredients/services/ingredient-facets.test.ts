@@ -2,12 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, ValidationError } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import {
   type IngredientFacets,
   compendiumFacets,
-  listWorkspaceIngredients,
+  countWorkspaceIngredients,
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
@@ -498,14 +497,12 @@ describe('workspaceIngredientFacets', () => {
     });
   });
 
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-  ])('counts W for %s', async (_label, user) => {
+  // The viewer stands for every role: reading is one permission owner, member
+  // and viewer all hold (tests/modules/coven/services/access-control.test.ts).
+  it('counts W for C, a viewer', async () => {
     await seedCovens();
 
-    const facets = await workspaceIngredientFacets(asUser(user), WORKSPACE_W_ID, {});
+    const facets = await workspaceIngredientFacets(asUser(C), WORKSPACE_W_ID, {});
 
     expect(countedOf(facets, 'forms')).toContain('Covenform');
   });
@@ -563,10 +560,13 @@ describe('workspaceIngredientFacets', () => {
 /** How many entries the coven list shows `session` in W under `filter`. */
 async function listedCount(
   session: Session,
-  filter: Parameters<typeof listWorkspaceIngredients>[2],
+  filter: Parameters<typeof countWorkspaceIngredients>[2],
 ): Promise<number> {
-  const page = await resolvePage({ first: 100 }, (request) =>
-    listWorkspaceIngredients(session, WORKSPACE_W_ID, filter, request),
+  const { totalCount } = await countWorkspaceIngredients(
+    session,
+    WORKSPACE_W_ID,
+    filter,
+    undefined,
   );
-  return page.edges.length;
+  return totalCount;
 }

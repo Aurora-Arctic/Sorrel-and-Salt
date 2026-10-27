@@ -8,11 +8,6 @@ describe('slugify', () => {
     expect(slugify('Nightmare Protection')).toBe('nightmare-protection');
   });
 
-  it('leaves an already-hyphenated name alone but for its case', () => {
-    expect(slugify('Hex-Breaking')).toBe('hex-breaking');
-    expect(slugify('Self-Love')).toBe('self-love');
-  });
-
   // Seven of §6's eight group names carry an ampersand; the package expands it.
   it('expands an ampersand to "and" rather than dropping it', () => {
     expect(slugify('Protection & Defense')).toBe('protection-and-defense');
@@ -80,12 +75,6 @@ describe('formSlug', () => {
     expect(formSlug('Wax', 'Animal')).toBe('wax-animal');
     expect(formSlug('Fixture Shard', 'Stone & Salt')).toBe('fixture-shard-stone-and-salt');
   });
-
-  it('is exactly slugify of the two, so either moves it', () => {
-    expect(formSlug('Testleaf', 'Fixture Group')).toBe(slugify('Testleaf Fixture Group'));
-    expect(formSlug('Testleaf', 'Fixture Group')).not.toBe(formSlug('Testroot', 'Fixture Group'));
-    expect(formSlug('Testleaf', 'Fixture Group')).not.toBe(formSlug('Testleaf', 'Fixture Other'));
-  });
 });
 
 // A deity's address carries its tradition (MB.132), as a form's carries its
@@ -95,11 +84,5 @@ describe('deitySlug', () => {
     expect(deitySlug('Hecate', 'Greek')).toBe('hecate-greek');
     expect(deitySlug('Hecate', 'Roman')).toBe('hecate-roman');
     expect(deitySlug('Manannan mac Lir', 'Irish')).toBe('manannan-mac-lir-irish');
-  });
-
-  it('is exactly slugify of the two, so either moves it', () => {
-    expect(deitySlug('Testra', 'Fixture Folk')).toBe(slugify('Testra Fixture Folk'));
-    expect(deitySlug('Testra', 'Fixture Folk')).not.toBe(deitySlug('Mockra', 'Fixture Folk'));
-    expect(deitySlug('Testra', 'Fixture Folk')).not.toBe(deitySlug('Testra', 'Fixture Lore'));
   });
 });

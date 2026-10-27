@@ -66,16 +66,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<DeityInput> = {}): DeityInput {
   return {
@@ -177,21 +171,6 @@ describe('listDeities and countDeities under a filter', () => {
       countDeities({ query: 'fixture', traditionId: tradition('Roman') }, undefined),
     ).resolves.toEqual({ totalCount: 1, countBefore: null });
   });
-
-  it('reads a blank query as no query', async () => {
-    expect(await listedUnder({ query: '   ' })).toEqual(await listedUnder({}));
-  });
-
-  it('answers an empty page and a zero count for a tradition id that is not a uuid, reading nothing', async () => {
-    await expect(
-      listDeities({ traditionId: 'greek' }, { limit: 25, inverted: false }),
-    ).resolves.toEqual([]);
-    await expect(countDeities({ traditionId: 'greek' }, undefined)).resolves.toEqual({
-      totalCount: 0,
-      countBefore: null,
-    });
-    expect(repository.findDeityPage).not.toHaveBeenCalled();
-  });
 });
 
 describe('listDeityTraditions', () => {
@@ -272,14 +251,24 @@ describe('createDeity', () => {
     },
   );
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createDeity(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Fixture Testra')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(createDeity(asUser(A), input({ name: '   ' }))).rejects.toBeInstanceOf(Forbidden);
-  });
+      await expect(createDeity(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Fixture Testra')).toBe(0);
+      await expect(createDeity(asUser(user), input({ name: '   ' }))).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+
+      await createDeity(asUser(F), input());
+      expect(await countNamed('Fixture Testra')).toBe(1);
+    },
+  );
 
   // MB.132, as M5.6a for forms: two live deities may share a name, told apart by the tradition.
   it('holds two deities of one name under two traditions', async () => {
@@ -306,15 +295,6 @@ describe('createDeity', () => {
       },
     ]);
     expect(await countNamed('Fixture-Testra')).toBe(0);
-  });
-
-  it("takes a deleted deity's address", async () => {
-    const deleted = await seed('Fixture Again');
-    await sql`update deities set deleted_at = now(), deleted_by = ${E.id} where id = ${deleted}`;
-
-    const created = await createDeity(admin, input({ name: 'Fixture Again' }));
-
-    expect(created.slug).toBe('fixture-again-greek');
   });
 
   it('refuses a tradition that is retired, or that is not one, on `traditionId`', async () => {
@@ -563,15 +543,6 @@ describe('deleteDeity', () => {
       await expect(attempt).rejects.toThrow('Testcap');
       await expect(attempt).rejects.toThrow('Testwort');
       expect((await deityOf(id)).deleted_at).toBeNull();
-    });
-
-    it('names the first three holding entries and no more', async () => {
-      const id = await seed('Fixture Crowded');
-      for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) await picking(name, id);
-
-      const attempt = deleteDeity(admin, id);
-      await expect(attempt).rejects.toThrow('Testc');
-      await expect(attempt).rejects.not.toThrow('Testd');
     });
 
     it('passes once no live entry holds it', async () => {

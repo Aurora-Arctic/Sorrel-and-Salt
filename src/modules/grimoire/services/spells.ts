@@ -1,8 +1,7 @@
 import 'server-only';
-import { findManyInSpell, findManySpells, findOneSpell, withAudit } from '../../../db/repository';
+import { findManyInSpell, findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
 import { spellSteps } from '../schema/spell-steps';
-import { stepsInSpells } from './step-views';
 import { checkRecipe, writeRecipe } from './recipe';
 import { assertWidens } from './visibility-rule';
 import {
@@ -14,7 +13,6 @@ import { parseInput } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
 import type {
-  SpellDetail,
   SpellInput,
   SpellRow,
   SpellStepInput,
@@ -133,37 +131,6 @@ export async function updateSpell(
     if (parsed.steps) await writeRecipe(write, spellId, parsed.steps, existing);
     return spell;
   });
-}
-
-/**
- * Every spell of the coven this caller may read: the shared ones and their own
- * private ones. Not paged, for a caller that needs them all; the API pages
- * through `listGrimoire`.
- *
- * @throws {Forbidden} the caller is not a member of this coven.
- */
-export async function listSpells(session: Session, workspaceId: string): Promise<SpellRow[]> {
-  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-  return findManySpells(membership);
-}
-
-/**
- * One spell with its live steps in order, each with the ingredient and form
- * it links, a deleted ingredient kept and marked (`stepsInSpells`).
- *
- * @throws {Forbidden} the caller is not a member of this coven.
- * @throws {NotFound} no such spell here, or none this caller may read.
- */
-export async function getSpell(
-  session: Session,
-  workspaceId: string,
-  spellId: string,
-): Promise<SpellDetail> {
-  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-  const spell = await readableSpell(membership, spellId);
-
-  const stepsOf = await stepsInSpells(membership, [spellId]);
-  return { spell, steps: stepsOf(spellId) };
 }
 
 /**

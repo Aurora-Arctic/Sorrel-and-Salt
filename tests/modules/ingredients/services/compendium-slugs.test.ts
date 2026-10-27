@@ -22,20 +22,28 @@ beforeEach(async () => {
   clearDataCache();
 });
 
-const seed = (name: string, extra: { workspaceId?: string | null; formal?: boolean } = {}) =>
+const seed = (
+  name: string,
+  extra: { workspaceId?: string | null; formal?: boolean; description?: string } = {},
+) =>
   insertIngredient(
     sql,
     makeIngredient(
       extra.formal
-        ? { name, workspaceId: extra.workspaceId }
-        : { name, nomenclature: 'none', workspaceId: extra.workspaceId },
+        ? { name, workspaceId: extra.workspaceId, description: extra.description }
+        : {
+            name,
+            nomenclature: 'none',
+            workspaceId: extra.workspaceId,
+            description: extra.description,
+          },
     ),
     A.id,
   );
 
 describe('MB.84: listCompendiumSlugs', () => {
-  it('lists every live compendium entry by name, with its formal name and last change', async () => {
-    await seed('Fixture Beta');
+  it('lists every live compendium entry by name, with its formal name, description and last change', async () => {
+    await seed('Fixture Beta', { description: 'A fixture herb.' });
     await seed('Fixture Alpha', { formal: true });
 
     const entries = await listCompendiumSlugs();
@@ -48,7 +56,7 @@ describe('MB.84: listCompendiumSlugs', () => {
       description: null,
       lastModified: expect.any(Date),
     });
-    expect(entries[1].canonicalName).toBeNull();
+    expect(entries[1]).toMatchObject({ canonicalName: null, description: 'A fixture herb.' });
   });
 
   it('leaves out a soft-deleted entry and a coven ingredient, both of which exist', async () => {

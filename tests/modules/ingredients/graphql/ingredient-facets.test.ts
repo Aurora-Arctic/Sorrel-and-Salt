@@ -6,7 +6,6 @@ import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
-import { insertStock } from '../../../support/db/insert-stock';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
@@ -226,6 +225,16 @@ describe('workspaceIngredientFacets', () => {
       value: 'not_toxic',
       count: 1,
     });
+    // How Source, In Stock and Low Stock count is services/ingredient-facets.test.ts's.
+    // Covenwort is W's own and has no jar; W holds no compendium entry.
+    expect(result.data?.workspaceIngredientFacets).toMatchObject({
+      source: [
+        { value: 'local', count: 1 },
+        { value: 'compendium', count: 0 },
+      ],
+      inStock: 0,
+      lowStockOnly: 0,
+    });
 
     // W holds no resin, so nothing is left to count by toxicity.
     const narrowed = await workspaceFacets(asUser(B), { forms: ['resin'] });
@@ -251,52 +260,6 @@ describe('workspaceIngredientFacets', () => {
     // Covenwort has no jar, so it is out of stock.
     expect(await forms({ inStock: true })).toEqual([]);
     expect(await forms({ inStock: false })).toEqual(covenform);
-  });
-
-  it("answers the coven's Source and In Stock counts, zeros kept", async () => {
-    const result = await workspaceFacets(asUser(B));
-
-    expect(result.errors).toBeUndefined();
-    // Covenwort is W's own and has no jar; W holds no compendium entry.
-    expect(result.data?.workspaceIngredientFacets.source).toEqual([
-      { value: 'local', count: 1 },
-      { value: 'compendium', count: 0 },
-    ]);
-    expect(result.data?.workspaceIngredientFacets.inStock).toBe(0);
-
-    const [{ id: ingredientId }] = await sql`select id from ingredients where name = 'Covenwort'`;
-    const [{ id: variantId }] = await sql`
-      select id from ingredient_variants where ingredient_id = ${ingredientId as string}`;
-    await insertStock(
-      sql,
-      {
-        workspaceId: WORKSPACE_W_ID,
-        ingredientId: ingredientId as string,
-        variantId: variantId as string,
-        quantityOnHand: '3',
-      },
-      A.id,
-    );
-    // The compendium source empties the list, yet the counts leave their own setting out.
-    const chosen = await workspaceFacets(asUser(B), { source: 'compendium' });
-    expect(chosen.errors).toBeUndefined();
-    expect(chosen.data?.workspaceIngredientFacets.source).toEqual([
-      { value: 'local', count: 1 },
-      { value: 'compendium', count: 0 },
-    ]);
-    expect(chosen.data?.workspaceIngredientFacets.inStock).toBe(0);
-    const local = await workspaceFacets(asUser(B), { source: 'local' });
-    expect(local.data?.workspaceIngredientFacets.inStock).toBe(1);
-
-    // A jar of 3 with no threshold is not low; at 0 it is out, and the count follows.
-    expect(chosen.data?.workspaceIngredientFacets.lowStockOnly).toBe(0);
-    await sql`update inventory_items set quantity_on_hand = 0 where ingredient_id = ${ingredientId as string}`;
-    const spent = await workspaceFacets(asUser(B), { source: 'local' });
-    expect(spent.data?.workspaceIngredientFacets.lowStockOnly).toBe(1);
-    const narrowed = await workspaceFacets(asUser(B), { lowStockOnly: true });
-    expect(narrowed.data?.workspaceIngredientFacets.forms).toEqual([
-      { value: 'Covenform', count: 1 },
-    ]);
   });
 
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {
@@ -339,15 +302,6 @@ describe('compendiumFacets covenIds (M12.55)', () => {
     ]);
   });
 
-  it('ignores the covens signed out, and for a viewer not in them', async () => {
-    const whole = [
-      { value: 'toxic', count: 1 },
-      { value: 'not_toxic', count: 1 },
-    ];
-    expect(await heldToxic(null)).toEqual(whole);
-    expect(await heldToxic(asUser(D))).toEqual(whole);
-  });
-
   describe('with covensNot', () => {
     const notHeldToxic = async (session: Session | null, covenIds?: string[]) => {
       const result = await runOperation<{ compendiumFacets: Facets }>(
@@ -365,19 +319,6 @@ describe('compendiumFacets covenIds (M12.55)', () => {
 
     it('counts only the entries the picked coven does not hold', async () => {
       expect(await notHeldToxic(asUser(B), [WORKSPACE_W_ID])).toEqual(rest);
-    });
-
-    it("with no coven picked, counts only the entries none of the viewer's covens hold", async () => {
-      expect(await notHeldToxic(asUser(B))).toEqual(rest);
-    });
-
-    it('ignores it signed out, and for a viewer not in the picked coven', async () => {
-      const whole = [
-        { value: 'toxic', count: 1 },
-        { value: 'not_toxic', count: 1 },
-      ];
-      expect(await notHeldToxic(null)).toEqual(whole);
-      expect(await notHeldToxic(asUser(D), [WORKSPACE_W_ID])).toEqual(whole);
     });
   });
 });

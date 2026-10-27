@@ -10,6 +10,7 @@ import {
   categoriesByIngredient,
   categoriesByVariant,
   folkNamesByIngredient,
+  referencesByIngredient,
   referencesByVariant,
   substitutesByIngredient,
   substitutesByVariant,
@@ -22,7 +23,11 @@ import {
   insertSubstituteLink,
   insertVariant,
 } from '../../../support/db/insert-ingredient';
-import { insertReference, insertVariantReferenceLink } from '../../../support/db/insert-reference';
+import {
+  insertReference,
+  insertReferenceLink,
+  insertVariantReferenceLink,
+} from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
 
@@ -102,20 +107,21 @@ async function addIngredient(
  * each with its own folk names and a different subset of the categories —
  * so a slot answered with a neighbour's children shows up as a mismatch.
  */
+// Written concurrently, each in its own transaction over the client's pool:
+// fifty one after another were most of this file's run time, and no case
+// reads the order they were written in.
 async function addFifty(): Promise<Written[]> {
-  const written: Written[] = [];
-  for (let i = 0; i < 50; i++) {
-    const n = String(i).padStart(2, '0');
-    written.push(
-      await addIngredient(
+  return Promise.all(
+    Array.from({ length: 50 }, (_, i) => {
+      const n = String(i).padStart(2, '0');
+      return addIngredient(
         `Fixturewort ${n}`,
         i < 25 ? null : WORKSPACE_W_ID,
         [`Testbane ${n}`, `Mock Root ${n}`],
         CATEGORY_NAMES.filter((_, c) => (i >> c) & 1),
-      ),
-    );
-  }
-  return written;
+      );
+    }),
+  );
 }
 
 const loadersFor = (session: Session | null) =>
@@ -125,6 +131,7 @@ const loadersFor = (session: Session | null) =>
       folkNamesByIngredient,
       substitutesByIngredient,
       variantsByIngredient,
+      referencesByIngredient,
       categoriesByVariant,
       substitutesByVariant,
       referencesByVariant,
@@ -176,6 +183,10 @@ const substituteNames = async (loaders: Loaders, ref: IngredientKey) =>
 /** The forms each ingredient comes in, as `Ingredient.variants` lists them. */
 const variantForms = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.variantsByIngredient.load(ref)).map((variant) => variant.form);
+
+/** The books the ingredient itself cites, as `Ingredient.references` lists them. */
+const citations = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.referencesByIngredient.load(ref)).map(({ reference }) => reference.title);
 
 /** What the second form of `ref`'s ingredient adds, through that form's own loaders. */
 const variantCategoryNames = async (loaders: Loaders, ref: IngredientKey) =>
@@ -259,19 +270,6 @@ describe('the folkNamesByIngredient loader', () => {
       findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
-  });
-
-  it('answers each key with its own folk names, whatever order the keys arrive in', async () => {
-    const written = await addFifty();
-    const shuffled = [...written].reverse().filter((_, i) => i % 3 !== 1);
-
-    const answers = await loadersFor(asUser(C)).folkNamesByIngredient.loadMany(
-      shuffled.map(({ ref }) => ref),
-    );
-
-    expect(
-      answers.map((names) => (names instanceof Error ? names : names.map(({ name }) => name))),
-    ).toEqual(shuffled.map(({ folkNames: names }) => names));
   });
 
   it('leaves out a soft-deleted folk name', async () => {
@@ -383,6 +381,7 @@ describe('who the ingredient-children loaders answer', () => {
     folkNamesByIngredient: folkNames,
     substitutesByIngredient: substituteNames,
     variantsByIngredient: variantForms,
+    referencesByIngredient: citations,
     categoriesByVariant: variantCategoryNames,
     substitutesByVariant: variantSubstituteNames,
     referencesByVariant: variantCitations,
@@ -393,6 +392,7 @@ describe('who the ingredient-children loaders answer', () => {
     substitutesByIngredient: ['Testbane'],
     // The fixture's own form, a variant since MB.216, and the one added.
     variantsByIngredient: ['Fixture Gum', 'Testform'],
+    referencesByIngredient: ['Fixture Herbal'],
     categoriesByVariant: ['Protection'],
     substitutesByVariant: ['Testbane'],
     referencesByVariant: ['Fixture Gums'],
@@ -408,6 +408,11 @@ describe('who the ingredient-children loaders answer', () => {
     compendium = await addIngredient('Mockleaf', null, ['Testbane'], ['Protection']);
     await addVariant(local);
     await addVariant(compendium);
+    // A book the ingredient itself cites, beside the one its form cites.
+    const herbal = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
+    for (const { ref } of [local, compendium]) {
+      await insertReferenceLink(sql, ref.id, herbal, A.id, 'p. 1');
+    }
   });
 
   /** What one read answers, a refusal as `'Forbidden'` so the matrix compares. */

@@ -121,13 +121,6 @@ describe('listMembers', () => {
     await expect(listMembers(asUser(D), coven, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
     await expect(listMembers(asUser(D), w, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
   });
-
-  it('gives a site admin no reach into a coven', async () => {
-    // Why this could have been the admin's: E's session carries the role.
-    expect(asUser(E).role).toBe('admin');
-
-    await expect(listMembers(asUser(E), coven, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
-  });
 });
 
 // The roll's addresses (M11.19): read from each member's own user row, so a

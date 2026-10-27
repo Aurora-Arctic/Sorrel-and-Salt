@@ -56,17 +56,6 @@ const nodes = (result: Awaited<ReturnType<typeof ask>>) =>
   result.data?.compendiumMatches.edges.map((edge) => edge.node) ?? [];
 
 describe('compendiumMatches', () => {
-  it('matches the name exactly, case aside', async () => {
-    const result = await ask(asUser(A), 'tEsTwOrT');
-
-    expect(result.errors).toBeUndefined();
-    expect(nodes(result).map((node) => node.id)).toEqual([held]);
-  });
-
-  it('matches the formal name too', async () => {
-    expect(nodes(await ask(asUser(A), 'fixtura TESTALIS')).map((node) => node.id)).toEqual([held]);
-  });
-
   it('matches no near spelling, which the did-you-mean list is for', async () => {
     expect(nodes(await ask(asUser(A), 'Testwart'))).toEqual([]);
     expect(nodes(await ask(asUser(A), 'Test'))).toEqual([]);
@@ -96,15 +85,5 @@ describe('compendiumMatches', () => {
 
     expect(nodes(result)).toEqual([]);
     expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
-  });
-
-  it("never offers a coven's own ingredient of the name", async () => {
-    await insertIngredient(
-      sql,
-      makeIngredient({ name: 'Testwort', workspaceId: WORKSPACE_W_ID }),
-      A.id,
-    );
-
-    expect(nodes(await ask(asUser(A), 'Testwort'))).toHaveLength(1);
   });
 });

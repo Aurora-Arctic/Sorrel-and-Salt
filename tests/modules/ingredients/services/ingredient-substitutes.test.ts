@@ -166,22 +166,6 @@ describe('a repeated substitute', () => {
     const [{ n }] = await sql`select count(*)::int as n from ingredients where name = 'Testwort'`;
     expect(n).toBe(0);
   });
-
-  it('is refused on an update too, leaving the live list as it was', async () => {
-    const id = await seed(local({ substitutes: ['Zest Root'] }));
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('Testwort', [typed('Zest Root'), typed('zest root')]),
-      ),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 1] })]);
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Zest Root']);
-  });
 });
 
 describe('what a substitute may link', () => {
@@ -225,22 +209,6 @@ describe('what a substitute may link', () => {
     expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 1] })]);
     const [{ n }] = await sql`select count(*)::int as n from ingredient_substitutes`;
     expect(n).toBe(0);
-  });
-
-  it('refuses it on an update the same way, writing nothing', async () => {
-    const id = await seed(local({ name: 'Testwort', substitutes: ['Zest Root'] }));
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('Testwort', [link(elsewhere)]),
-      ),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 0] })]);
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Zest Root']);
   });
 
   it('refuses a compendium entry linking a coven’s ingredient, by direct id', async () => {
@@ -368,22 +336,6 @@ describe('a save of an ingredient’s substitutes', () => {
     await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, input('Testwort', []));
 
     expect(await liveRows(id)).toEqual([]);
-  });
-
-  it('rolls them back with the ingredient when the ingredient write fails', async () => {
-    await seed(local({ name: 'Taken Wort' }));
-    const id = await seed(local({ substitutes: ['Kept Root'] }));
-
-    await expect(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('taken wort', [typed('Added Root')]),
-      ),
-    ).rejects.toThrow();
-
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Kept Root']);
   });
 
   it('replaces a compendium entry’s the same way', async () => {

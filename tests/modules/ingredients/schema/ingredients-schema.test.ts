@@ -13,8 +13,6 @@ import {
   nomenclatureKind,
 } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
-import { workspaces } from '@/modules/coven/schema/workspaces';
-import { users } from '@/modules/identity/schema/users';
 import type { IngredientOverrides } from './types';
 
 // §5's columns and the six audit ones.
@@ -41,21 +39,10 @@ const COLUMNS = [
 ].sort();
 
 describe('ingredients schema', () => {
-  const { byName, nonAuditForeignKeys } = tableFacts(ingredients);
+  const { byName } = tableFacts(ingredients);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(COLUMNS);
-  });
-
-  // Text, not a foreign key, is what keeps an uncurated value writable: the
-  // astrology lists and a deity's name (ingredient_deities) are text over
-  // their vocabularies, and a form is a variant's (MB.222;
-  // claude-docs/db/identity-model.md, "The ingredient identity model").
-  it('keys its workspace, and no vocabulary its text names', () => {
-    expect(nonAuditForeignKeys.map((fk) => [fk.column, fk.foreignTable]).sort()).toEqual([
-      ['curator_reviewed_by', users],
-      ['workspace_id', workspaces],
-    ]);
   });
 });
 
