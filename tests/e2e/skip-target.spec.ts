@@ -120,32 +120,28 @@ async function skipThenTab(page: Page): Promise<void> {
   expect(await activeOuterHtml(page)).toBe(expected);
 }
 
-test.describe('signed out, in the public frame', () => {
-  test('a Tab after a click on plain text goes on from the click', async ({ page }) => {
-    await page.goto('/compendium');
-    await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await clickThenTab(page);
-  });
+// The skip link runs first and the click second on one page load: the skip
+// leaves focus on the page's first control, so that is blurred before the
+// click, which sets where the next Tab starts from on its own.
+async function skipThenClick(page: Page): Promise<void> {
+  await skipThenTab(page);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await clickThenTab(page);
+}
 
-  test('the skip link moves focus to #main, and the next Tab to the page', async ({ page }) => {
-    await page.goto('/compendium');
-    await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await skipThenTab(page);
-  });
+test('signed out, in the public frame: the skip link reaches the page, and a Tab after a click on plain text goes on from the click', async ({
+  page,
+}) => {
+  await page.goto('/compendium');
+  await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
+  await skipThenClick(page);
 });
 
-test.describe('signed in, in the application shell', () => {
-  test('a Tab after a click on plain text goes on from the click', async ({ page }) => {
-    await signInAs(page, 'click@skip-target.test');
-    await page.goto('/compendium');
-    await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
-    await clickThenTab(page);
-  });
-
-  test('the skip link moves focus to #main, and the next Tab to the page', async ({ page }) => {
-    await signInAs(page, 'skip@skip-target.test');
-    await page.goto('/compendium');
-    await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
-    await skipThenTab(page);
-  });
+test('signed in, in the application shell: the skip link reaches the page, and a Tab after a click on plain text goes on from the click', async ({
+  page,
+}) => {
+  await signInAs(page, 'skip@skip-target.test');
+  await page.goto('/compendium');
+  await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
+  await skipThenClick(page);
 });

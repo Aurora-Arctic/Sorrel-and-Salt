@@ -154,21 +154,20 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 `tests/components/IngredientEntry/index.test.tsx` checks, by what renders rather than by its words:
 
 - the `h1` is the entry's name;
-- the formal name is a labelled, non-empty value for all eight cases (the seven kinds, `unknown` with and without a name), in italics for the three binomial kinds only, and an unconfirmed name has more than the name beside it;
+- the formal name is a labelled, non-empty value, in italics for a binomial kind and upright for another (one row of each; which kinds are binomials is `tests/modules/ingredients/schema/ingredient-enums.test.ts`), never blank for `none` or for `unknown` with no name, and an unconfirmed name has more than the name beside it;
 - Local is there for a coven's entry and not for a compendium one;
 - a compendium entry held in the cupboard shows the merged values (the label as the `h1`, a null override falling back, an empty list shown as cleared) and the status Compendium, or Annotated alone, without Compendium, when any override is set; one not held shows neither;
 - a retired entry carries a `status` in its head, and a live one none;
-- a toxic form marks the entry Toxic though the ingredient is not;
-- the head draws one safety badge, Toxic over Caution, read after New or Updated and before the name, and draws it with no back link or recency mark beside it;
 - Folk Names, Categories and Substitutes are lists of that name in Details, with one item each;
 - a linked substitute links to `hrefOf`'s address, a typed one and one `hrefOf` has no page for are text;
-- References: note numbers in page order, the ingredient's then each form's, in a group named References at the end of each section that cites; one note per link, with its locator and a backlink; the bibliography once per source, alphabetical, with `cite` on italic parts, a `url` link with `rel` `noopener` and backlinks to its notes; no references in Details or a form; the empty state; the section last, with a jump entry;
+- References: note numbers in page order, the ingredient's then each form's, in a group named References at the end of each section that cites; one note per link, with its locator and a backlink; the bibliography once per source, alphabetical, with `cite` on italic parts, a `url` link with `rel` `noopener` and backlinks to its notes; no references in Details or a form; the empty state; the section headed References, with Notes and Bibliography a level beneath, and a jump entry;
 - each form's section is a region at `#form-<slug>`, headed by its form, with its own caution and mark, after Details and inside the last element;
 - a form that adds nothing still says something, and a form's section holds only the rows and lists it carries;
 - the jump menu links to Details and each form, the forms in a list named Forms apart from Details, and is absent with no forms; References is a list named References of Notes and Bibliography with sources, and one link without;
-- the correspondences and the three lists share a column inside Details, after the description and caution and holding neither, and no `complementary` landmark is drawn; a form's rows and list do likewise;
+- a form's rows and list share a column inside its section;
 - Edit is there only with `edit`; a press opens the edit dialog over the page, and the dialog's form is drawn only when `edit.opened` is, which a page gives only for a curator on a bare `?edit`;
 - `replaces`, `similar` and `movedAway` link where they say.
+- the badges are wired once each (New, the review mark and its date, a coven's own entry taking no recency mark); their rules, Toxic over Caution and the badges' order among them, are `tests/components/EntryMarks/index.test.tsx`'s and `tests/components/SafetyNote/index.test.tsx`'s, and the 30-day window `tests/lib/entry-recency.test.ts`'s.
 - Stock (M12.29): one jar per form naming its form, with its amount, Unmeasured or No Jar and, for a Low or Out jar, its amount as a Low Stock or Out of Stock button; Edit Stock in the heading for a role that may edit, none for one that may not, and a press opens the dialog; a press on a jar opens the dialog on that form, on an empty jar's with the form added; a viewer's jars are plain; "No stock recorded." with no form; Stock in the jump menu after Details; and no section without `stock`. The vessel pick and the level are `tests/components/JarShelf/`.
 - The route's side, in `tests/app/(shell)/coven/ingredient.test.tsx`: the jars are asked for by this coven's id and the entry's alone; a held entry and an own entry list them, a viewer without Edit Stock; a compendium entry the coven does not hold draws no Stock though a jar was read.
 

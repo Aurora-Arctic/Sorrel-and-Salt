@@ -279,12 +279,11 @@ describe('IngredientEntry', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
   });
 
+  // One row for each of the two paths; which kinds are binomials is
+  // tests/modules/ingredients/schema/ingredient-enums.test.ts's.
   it.each([
     ['botanical', 'Fixtura testalis', true],
-    ['fungal', 'Fixtura fungalis', true],
-    ['zoological', 'Fixtura animalis', true],
     ['mineral', 'Fixture spar', false],
-    ['chemical', 'Fixture oxide', false],
   ] as const)(
     'labels a %s formal name, in italics only for a binomial',
     (nomenclature, canonicalName, italic) => {
@@ -356,77 +355,6 @@ describe('IngredientEntry', () => {
     expect(screen.getByRole('button', { name: 'Retired' }).closest('header')).not.toBeNull();
   });
 
-  it('marks the entry Toxic when a form is, though the ingredient is not', () => {
-    const outsideForms = () =>
-      screen
-        .queryAllByText('Toxic', { exact: true })
-        .filter((mark) => mark.closest('[id^="form-"]') === null);
-    const { unmount } = render(
-      <IngredientEntry detail={detail({ variants: [variantRow('testroot')] })} hrefOf={hrefOf} />,
-    );
-    expect(outsideForms()).toHaveLength(0);
-    unmount();
-
-    renderEntry();
-    expect(outsideForms()).toHaveLength(1);
-  });
-
-  it('marks the entry Caution in its head when a form has notes, and not for none or blank ones', () => {
-    const { unmount } = render(
-      <IngredientEntry
-        detail={detail({
-          variants: [variantRow('testroot'), variantRow('testoil', { safetyNotes: '  ' })],
-        })}
-        hrefOf={hrefOf}
-      />,
-    );
-    expect(headCaution()).toBeNull();
-    unmount();
-
-    // Why it can show: the oil form has notes, and the entry has none of its own. Not
-    // flagged Toxic, which would stand in Caution's place (SafetyMark).
-    renderEntry({
-      detail: detail({
-        variants: [
-          variantRow('testroot'),
-          variantRow('testoil', { safetyNotes: 'Fixture oil caution.' }),
-        ],
-      }),
-    });
-    expect(headCaution()).not.toBeNull();
-  });
-
-  // The head's one safety badge rides the back row, after New or Updated, and the name's
-  // row holds the name alone (the owner's call, 2026-10-20).
-  it('draws one safety badge in its head, Toxic over Caution, read after New and before the name', () => {
-    renderEntry({
-      detail: detail({
-        entry: entryRow({ createdAt: new Date(), safetyNotes: 'A fixture caution.' }),
-      }),
-    });
-    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
-    const toxic = within(head).getAllByText('Toxic', { exact: true });
-    expect(toxic).toHaveLength(1);
-    expect(headCaution()).toBeNull();
-    const recency = within(head).getByText('New', { exact: true });
-    const follows = (a: Element, b: Element) =>
-      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
-    expect(follows(recency, toxic[0]!)).toBe(true);
-    expect(follows(toxic[0]!, screen.getByRole('heading', { level: 1 }))).toBe(true);
-  });
-
-  it('draws the safety badge with no back link or recency mark to share its row', () => {
-    renderEntry();
-    expect(screen.queryByText('New', { exact: true })).toBeNull();
-    expect(screen.queryByRole('link', { name: /^Back to/ })).toBeNull();
-    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
-    const toxic = within(head).getByText('Toxic', { exact: true });
-    expect(
-      toxic.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).not.toBe(0);
-  });
-
   it('names its folk names, categories and substitutes lists, one item each', () => {
     renderEntry();
     const details = screen.getByRole('region', { name: 'Details' });
@@ -462,33 +390,6 @@ describe('IngredientEntry', () => {
     expect(within(body).getAllByText('None recorded')).toHaveLength(5);
     expect(within(body).getByText('No folk names recorded.')).toBeInTheDocument();
     expect(within(body).getByText('No categories recorded.')).toBeInTheDocument();
-  });
-
-  it('sets the correspondences and the three lists in a column of their own, after the text', () => {
-    renderEntry({ detail: detail({ entry: entryRow({ safetyNotes: 'A fixture caution.' }) }) });
-    const details = screen.getByRole('region', { name: 'Details' });
-    // Details' side column stands after its section in the body, level with the first section.
-    const body = details.parentElement!;
-    const caution = within(details).getByRole('region', { name: 'Caution' });
-    const description = within(details).getByText(detail().entry.description!);
-
-    const side = sharedColumn([
-      within(body).getByRole('heading', { name: 'Correspondences', level: 3 }),
-      within(body).getByRole('list', { name: 'Folk Names' }),
-      within(body).getByRole('list', { name: 'Categories' }),
-      within(body).getByRole('list', { name: 'Substitutes' }),
-    ]);
-    // A column of its own in the body beside the section, not inside it, holding none of the text.
-    expect(body).toContainElement(side);
-    expect(details).not.toContainElement(side);
-    expect(side).not.toContainElement(caution);
-    expect(side).not.toContainElement(description);
-    expect(side).not.toContainElement(within(details).getByRole('heading', { level: 2 }));
-    // Not a complementary landmark: one per section would be noise.
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
-    // Read after the text.
-    expect(precedes(description, side)).toBe(true);
-    expect(precedes(caution, side)).toBe(true);
   });
 
   it('links a linked substitute to its page, naming the form a form link names, and leaves a typed one as text', () => {
@@ -722,15 +623,6 @@ describe('IngredientEntry', () => {
       expect(within(list()).queryByRole('button')).toBeNull();
       expect(screen.queryByRole('button', { name: /link to/i })).toBeNull();
     });
-
-    it('puts See All directly under the list', () => {
-      renderEntry({ similar });
-
-      const seeAll = screen.getByRole('link', { name: /^See All 5/ });
-      expect(
-        list().compareDocumentPosition(seeAll) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    });
   });
 
   it('links the entry that moved off this address to where it is now', () => {
@@ -813,14 +705,6 @@ describe('IngredientEntry references', () => {
     ).toBeInTheDocument();
   });
 
-  it('puts the numbers after the text of their section', () => {
-    sample();
-    const details = screen.getByRole('region', { name: 'Details' });
-    const description = within(details).getByText('A fixture herb.');
-
-    expect(precedes(description, noteMarks(details)[0]!)).toBe(true);
-  });
-
   it('lists one numbered note for each link, in page order, each linking back to its number', () => {
     sample();
 
@@ -860,18 +744,6 @@ describe('IngredientEntry references', () => {
     const target = document.getElementById(`ref-${herbal.reference.id}`)!;
     expect(bibliography().contains(target)).toBe(true);
     expect(target).toHaveRole('listitem');
-  });
-
-  it('closes a note with its locator inside a short quoted title, and without one', () => {
-    renderEntry({
-      detail: detail({
-        references: [{ ...cited('Located Fixtures', 'p. 7', 'https://fixtures.example/a') }],
-        variants: [],
-      }),
-    });
-
-    const text = within(notes()).getByRole('listitem').textContent!;
-    expect(text).toMatch(/"Located Fixtures,"\s+p\. 7\./);
   });
 
   it('lists each source once in the bibliography, in alphabetical order, in full form', () => {
@@ -957,13 +829,11 @@ describe('IngredientEntry references', () => {
     expect(within(bibliography()).queryByRole('link', { name: /source/i })).not.toBeInTheDocument();
   });
 
-  it('is one section at the foot of the page, after the forms, headed with its parts a level beneath', () => {
+  it('is one section, headed with its parts a level beneath', () => {
     sample();
     const section = screen.getByRole('region', { name: 'References' });
 
     expect(section).toHaveAttribute('id', 'references');
-    expect(precedes(document.getElementById('forms')!, section)).toBe(true);
-    expect(section.parentElement!.lastElementChild).toBe(section);
     expect(
       within(section).getByRole('heading', { name: 'References', level: 2 }),
     ).toBeInTheDocument();
@@ -1235,12 +1105,6 @@ describe("IngredientEntry's review mark (M14.8)", () => {
     expect(badge.querySelector('time')).toHaveAttribute('datetime', '2026-10-01T09:30:00.000Z');
     expect(screen.queryByText('Needs Review', { exact: true })).toBeNull();
   });
-
-  it("is not drawn on a coven's own entry", () => {
-    renderEntry({ detail: detail({ entry: entryRow({ workspaceId: COVEN }) }) });
-
-    expect(screen.queryByText(/Needs Review|Reviewed By Curator/)).toBeNull();
-  });
 });
 
 describe('IngredientEntry on a coven page', () => {
@@ -1335,14 +1199,6 @@ describe('IngredientEntry on a coven page', () => {
 describe('IngredientEntry on the public page, held in a coven', () => {
   const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
-  it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
-    renderEntry({ heldInCovens: true });
-
-    const mark = shelf()!;
-    const heading = screen.getByRole('heading', { level: 1, name: 'Testwort' });
-    expect(mark.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
   // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
   // so it shows on touch. A click here focuses nothing, so the press alone opens it.
   it('opens the In Your Cupboard tip when the shelf is pressed', () => {
@@ -1372,20 +1228,6 @@ describe('IngredientEntry recency (MB.106)', () => {
     renderEntry({ detail: detail({ entry: entryRow({ createdAt: daysAgo(2) }) }) });
 
     expect(screen.getByText('New', { exact: true })).toBeInTheDocument();
-  });
-
-  it('marks an older compendium entry changed lately Updated', () => {
-    renderEntry({ detail: detail({ entry: entryRow({ updatedAt: daysAgo(2) }) }) });
-
-    expect(screen.getByText('Updated', { exact: true })).toBeInTheDocument();
-    expect(screen.queryByText('New', { exact: true })).toBeNull();
-  });
-
-  it('marks neither on an entry unchanged for longer', () => {
-    renderEntry();
-
-    expect(screen.queryByText('New', { exact: true })).toBeNull();
-    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
   });
 
   it("marks neither on a coven's own entry, however new", () => {

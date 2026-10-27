@@ -116,23 +116,17 @@ describe('CupboardActions', () => {
 
   // The icons at the end of the name's row (the owner's call, 2026-10-20), the cards' own: on a
   // coven's page the main one is Annotate, a link to the page's `?annotate`, named for the entry
-  // with its tip; then the three dots, a menu. No plain Annotate or Edit.
-  it('draws Annotate as the main icon, a link named for the entry with its tip, then the three dots', async () => {
+  // (its tip is IconTip's to prove); then the three dots, a menu. No plain Annotate or Edit.
+  it('draws Annotate as the main icon, a link named for the entry, then the three dots', async () => {
     renderActions({ held: true });
 
     const annotate = screen.getByRole('link', { name: 'Annotate Testwort' });
     expect(annotate).toHaveAttribute('href', ANNOTATE.href);
     expect(screen.queryByRole('link', { name: 'Annotate' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
-    fireEvent.mouseEnter(annotate);
-    // After the 300ms a hover waits for (IconTip).
-    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent('Annotate');
-    fireEvent.mouseLeave(annotate);
 
     const more = screen.getByRole('button', { name: 'More for Testwort' });
     expect(more).toHaveAttribute('aria-haspopup', 'menu');
-    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
-    // press: inside an async act, so that update is awaited rather than left outside it.
     await act(async () => {
       fireEvent.click(more);
     });
@@ -246,15 +240,6 @@ describe('CupboardActions', () => {
 
     expect(screen.queryByRole('link', { name: /^(Annotate|Edit)/ })).not.toBeInTheDocument();
     expect(button('More for Testwort')).toBeInTheDocument();
-  });
-
-  it("offers Annotate as a link to the page's ?annotate address", () => {
-    renderActions({ held: true, annotate: ANNOTATE });
-
-    expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toHaveAttribute(
-      'href',
-      ANNOTATE.href,
-    );
   });
 
   it('offers Annotate alone as a link, not a button, where it is the one write permitted', () => {

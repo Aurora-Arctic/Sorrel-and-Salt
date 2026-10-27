@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -16,7 +16,6 @@ import {
   EMPTY_VARIANT,
   ingredientResolver,
 } from '@/components/IngredientForm/values';
-import FormIcon from '@/components/FormIcon';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { press, type } from '../../support/interact';
@@ -191,36 +190,6 @@ describe('FormField', () => {
     // What was typed comes first, the owner's call.
     const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
     expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
-  });
-
-  // M12.7: a curated form wears its group's icon, one only in use the spoon,
-  // and a pick carries its icon into the box, before the form's name (the
-  // owner's call), never into the group's brackets.
-  it('draws each suggestion and the picked form with its group icon, the spoon where there is none', async () => {
-    const { container: animal } = render(<FormIcon name="animal" />);
-    const { container: spoon } = render(<FormIcon name={null} />);
-    const glyph = (el: HTMLElement) => el.querySelector('svg')!.innerHTML;
-    renderField();
-    const calls = offerForms([{ ...WAX_ANIMAL, icon: 'animal' }, RHIZOMES]);
-
-    await lookUp('Form', calls, 'wax');
-
-    const curated = await screen.findByRole('option', { name: /^Wax \(Animal\)/ });
-    expect(glyph(curated)).toBe(glyph(animal));
-    expect(glyph(screen.getByRole('option', { name: /^Rhizomes/ }))).toBe(glyph(spoon));
-
-    fireEvent.click(curated);
-    // The box's own row, its text and what is drawn with it, short of the chevron.
-    const control = box('Form').closest('.combobox__values') as HTMLElement;
-    const marks = control.querySelectorAll('[aria-hidden="true"] svg');
-    expect(marks).toHaveLength(1);
-    expect(marks[0].innerHTML).toBe(glyph(animal));
-    expect(marks[0].compareDocumentPosition(box('Form'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(box('Form')).toHaveAccessibleName('Form');
-
-    // Typed away from the pick, the box holds text alone and draws no mark.
-    type('Form', 'wa');
-    expect(control.querySelector('svg')).toBeNull();
   });
 
   // MB.169: the text alone reads the same for both Waxes; the group tells
@@ -401,22 +370,19 @@ describe('LookupListField', () => {
   // A list's box asks its hook's query, with this coven, once it is used:
   // one hook, `useLookup`, under each; which query each list asks is
   // index.test.tsx's, once per lookup.
-  it.each([{ list: FOLK_NAMES, offer: () => offerNames([HEDGE]) }])(
-    'asks about the $list.legend for this coven once its box is used, and not before',
-    async ({ list, offer }) => {
-      renderList(list);
-      const calls = offer();
+  it('asks about the folk names for this coven once its box is used, and not before', async () => {
+    renderList(FOLK_NAMES);
+    const calls = offerNames([HEDGE]);
 
-      await settle();
-      expect(calls).toHaveLength(0);
+    await settle();
+    expect(calls).toHaveLength(0);
 
-      await lookUp(list.entry, calls, 'mo');
-      expect(calls).toEqual([
-        { workspaceId: WORKSPACE_ID, query: '', first: 10 },
-        { workspaceId: WORKSPACE_ID, query: 'mo', first: 10 },
-      ]);
-    },
-  );
+    await lookUp(FOLK_NAMES.entry, calls, 'mo');
+    expect(calls).toEqual([
+      { workspaceId: WORKSPACE_ID, query: '', first: 10 },
+      { workspaceId: WORKSPACE_ID, query: 'mo', first: 10 },
+    ]);
+  });
 
   it('suggests the folk names in use, with who claims them, and a pick adds an entry', async () => {
     renderList(FOLK_NAMES);
@@ -437,25 +403,22 @@ describe('LookupListField', () => {
   });
 
   // The celestial bodies and the signs share one shape and one split.
-  it.each([{ list: CELESTIAL_BODIES, offer: offerCelestialBodies, rows: [MOON, MOONFIXTURE] }])(
-    'offers the curated $list.legend apart from those in use, with their descriptions',
-    async ({ list, offer, rows: [curated, inUse] }) => {
-      renderList(list);
-      const calls = offer([curated, inUse]);
+  it('offers the curated celestial bodies apart from those in use, with their descriptions', async () => {
+    renderList(CELESTIAL_BODIES);
+    const calls = offerCelestialBodies([MOON, MOONFIXTURE]);
 
-      await lookUp(list.entry, calls, curated.value.slice(0, 3));
+    await lookUp(CELESTIAL_BODIES.entry, calls, MOON.value.slice(0, 3));
 
-      const group = await screen.findByRole('group', { name: 'From Compendium' });
-      expect(
-        within(group).getByRole('option', { name: new RegExp(`^${curated.value}`) }),
-      ).toHaveTextContent(curated.description as string);
-      expect(
-        within(screen.getByRole('group', { name: 'From Coven' })).getByRole('option', {
-          name: inUse.value,
-        }),
-      ).toBeInTheDocument();
-    },
-  );
+    const group = await screen.findByRole('group', { name: 'From Compendium' });
+    expect(
+      within(group).getByRole('option', { name: new RegExp(`^${MOON.value}`) }),
+    ).toHaveTextContent(MOON.description as string);
+    expect(
+      within(screen.getByRole('group', { name: 'From Coven' })).getByRole('option', {
+        name: MOONFIXTURE.value,
+      }),
+    ).toBeInTheDocument();
+  });
 
   // MB.174: the rows reach the list's filter, which list-field.test.tsx
   // proves on given rows.

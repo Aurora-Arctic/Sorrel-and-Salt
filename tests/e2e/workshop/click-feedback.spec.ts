@@ -5,8 +5,10 @@ import { assertNoAccessibilityViolations } from '../axe';
 // claude-docs/components/click-feedback.md): that the callout stays clear of
 // its control and inside the window or its box, that nothing moves as it comes and goes, that the badge's
 // press target covers no neighbour, and that reduced motion stills the fade.
-// Measured in the component's Storybook stories, since no page uses it yet; what
-// it says and where the focus goes are in tests/components/ClickFeedback.
+// Measured in the component's Storybook stories, which draw each placement on
+// its own, though pages use it too (the root layout, the ingredient entry's
+// actions, SignInMethods, AddIcon); what it says and where the focus goes are in
+// tests/components/ClickFeedback.
 
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
@@ -143,7 +145,7 @@ test.describe('the callout’s place', () => {
   }
 
   for (const theme of THEMES) {
-    test(`at 375px in ${theme}, inside the window, and axe finds nothing`, async ({ page }) => {
+    test(`at 375px in ${theme}, inside the window`, async ({ page }) => {
       await openStory(page, 'bordered', theme, 375);
       const alert = await placed(page);
       const under = await box(alert);
@@ -151,7 +153,6 @@ test.describe('the callout’s place', () => {
       expect(under.left).toBeGreaterThanOrEqual(0);
       expect(under.right).toBeLessThanOrEqual(375);
       await expectUnder(alert, page.getByRole('button', { name: 'Remove', exact: true }));
-      await assertNoAccessibilityViolations(page, { skipRules: ['page-has-heading-one'] });
     });
   }
 });

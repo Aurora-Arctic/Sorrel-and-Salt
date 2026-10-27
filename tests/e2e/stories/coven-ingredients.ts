@@ -136,7 +136,7 @@ export async function localIngredient(
 /** The units the stories stock in, each with the dimension the row must agree with. */
 const DIMENSION_OF = { g: 'weight', ml: 'volume', piece: 'count' } as const;
 
-export type StockUnit = keyof typeof DIMENSION_OF;
+type StockUnit = keyof typeof DIMENSION_OF;
 
 export interface Stock {
   quantity: number;
@@ -206,7 +206,7 @@ export async function insertSpell(
   });
 }
 
-export interface GraphqlAnswer {
+interface GraphqlAnswer {
   data?: Record<string, unknown> | null;
   errors?: { message: string; extensions?: { code?: string } }[];
 }

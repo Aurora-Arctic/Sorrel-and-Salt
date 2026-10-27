@@ -19,7 +19,9 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 // panel lists the viewer's covens by name, a pick narrows the list to the entries those covens
 // hold and is kept in the address, Not In lists the entries none of them holds, a foreign
 // coven's id in the address narrows nothing, under In or Not In, and a visitor signed out is
-// offered no such filter. A viewer's coven counts as the viewer's.
+// offered no such filter. A viewer's coven counts as the viewer's. Picking several covens, and
+// the plus's count of the covens holding an entry, are the held-in service's
+// (tests/modules/ingredients/services/compendium-held-in.test.ts) and the compendium page test's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -125,25 +127,13 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
     expect(await shown(page)).toEqual([HELD]);
   });
 
-  await test.step('picking a second coven lists the entries held in either', async () => {
-    const panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'In My Covens' }).click();
-    await page.getByRole('option', { name: VIEWER_OF }).click();
-    await applyFilters(page, panel);
-    expect(new URL(page.url()).searchParams.getAll('covens').sort()).toEqual(
-      [mine.id, viewed.id].sort(),
-    );
-    await expect(rowOf(compendiumList(page), VIEWED)).toBeVisible();
-    expect(await shown(page)).toEqual([HELD, VIEWED].sort());
-  });
-
   await test.step('Not In lists the entries none of the picked covens holds, or none of the viewer’s', async () => {
     const panel = await openFilters(page);
     await chooseChip(panel.getByRole('group', { name: 'Covens' }), 'Not In');
     await applyFilters(page, panel);
     expect(new URL(page.url()).searchParams.get('covensNot')).toBe('1');
     await expect(rowOf(compendiumList(page), HELD)).toHaveCount(0);
-    expect(await shown(page)).toEqual([FOREIGN, FREE].sort());
+    expect(await shown(page)).toEqual([FOREIGN, FREE, VIEWED].sort());
 
     // With no coven picked: none of the viewer's covens, the one A only views included.
     await page.goto(`/compendium?query=${QUERY}&covensNot=1`);
@@ -161,16 +151,6 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
     expect(await shown(page)).toEqual([...ALL].sort());
     await open(page, [mine.id, elsewhere.id]);
     expect(await shown(page)).toEqual([HELD]);
-  });
-
-  await test.step('the plus counts and names every coven of the viewer’s that holds the entry', async () => {
-    await open(page);
-    // Held only in the coven A views: the plus still offers A's own coven, and says the other holds it.
-    await expect(
-      rowOf(compendiumList(page), VIEWED).getByRole('button', {
-        name: new RegExp(`In 1 coven: ${VIEWER_OF}$`),
-      }),
-    ).toBeVisible();
   });
 
   await test.step('a visitor signed out is offered no In My Covens, and the address filters nothing', async () => {

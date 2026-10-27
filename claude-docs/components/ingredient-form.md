@@ -2050,12 +2050,11 @@ few it needs. It covers:
   test, on Save Ingredient, asserts both held down and the pressed one's
   `aria-busy` until the answer.
 - **Resolver errors**: beside the field, focused, invalid and described, with
-  no request sent, and cleared once the field is corrected; an element list
-  given a repeat, as an edit would hold it, refused on the Element control.
+  no request sent, and cleared once the field is corrected.
   An issue with a variant's pick, or with its text, landing on its `form`,
   a variant's list entry, and a box still holding text are the resolver's
-  own test, `tests/modules/ingredients/validation/ingredient-resolver.test.ts`,
-  beside `fieldNameOf`'s rows for a variant's paths.
+  own test, `tests/components/IngredientForm/values.test.ts`, mirroring
+  `values.ts`, beside `fieldNameOf`'s rows for a variant's paths.
 - **Server errors** — `fieldNameOf`'s routing: beside the field its path
   names, focused; on the list entry its path names; and one pathed to one
   element on the whole Element control. A variant's are `variants.test.tsx`'s.
@@ -2091,8 +2090,6 @@ few it needs. It covers:
   each of the five list boxes asking its own lookup about this coven, none
   before it is used, a pick from each sent in its shape — text for folk
   names, celestial bodies and signs, a deity's id, a substitute's ingredient id.
-- **An element list given its values**, as an edit would hold them: chips in
-  the order held, the rest alone offered.
 
 A linked substitute rendered only `ListField`, so its refused link, named by
 its formal name too, is `list-field.test.tsx`'s; how a picked one reads and
@@ -2137,7 +2134,13 @@ Create Anyway read with the warning; a save inside the debounce asking about
 the name it sends and holding on what it finds; the hold lifted by editing
 the name; Create Anyway clearing the warning and the name's error, focusing
 the name, and the next save going; and the matches set aside staying gone
-while a new one returns.
+while a new one returns. A compendium match's + once its add has worked
+(M12.48): AddIcon's check held `ADDED_HOLD_MS` and pressing it doing nothing,
+then the eye on the same button, at once under reduced motion and faded in
+otherwise; the row moving under In This Coven only once the eye shows, the
+warning busy meanwhile and the focus going to the new row's eye, or staying
+where it was moved to while the check showed. What the form sends for the +,
+its status-region words and a refusal stay in `index.test.tsx`.
 
 `tests/components/IngredientForm/list-field.test.tsx` renders `ListField`
 alone, in a `FormProvider` on the form's resolver with a Name box beside it,
@@ -2145,10 +2148,11 @@ its suggestions given rather than looked up, as `LookupListField` gives them.
 The behaviours independent of which list it is run over the two ways an
 entry gets in — a plain list and a pick-only one, given a source since a pick
 is its only way in: one empty box and no
-entries at first, Add offered only where text is added; an entry added inside
-the box ahead of the text, the box emptied and kept focused, and announced by name; an
-entry removed by its ×, the focus back in the box; the last taken on Backspace
-in the empty box and none with text in it; Clear taking every entry; and an
+entries at first, Add offered only where text is added; and an entry added,
+the box emptied and kept focused, and announced by name. Once an entry is in
+the two share every path, so these run on the plain list alone: an entry
+removed by its ×, the focus back in the box; the last taken on Backspace in
+the empty box and none with text in it; Clear taking every entry; and an
 error naming an entry marking that entry alone, cleared once it is removed.
 Once, on a typed box: Enter adding without saving the form; a blank box
 adding nothing; a save refused while the box holds text, until it is added
@@ -2175,6 +2179,10 @@ the repeat, named with its tradition; and a refused substitute link marked
 beside its pill, named by its formal name too (MB.140). `tests/support/sortable.ts`'s real 60 ms waits stay:
 fake timers would couple to the dnd sensor.
 
+The same file renders `MultiSelectField` alone, given its elements as an edit
+would hold them: chips in the order held, the rest alone offered, and a repeat
+the schema refuses marked on the Element control.
+
 **The references** are `tests/components/IngredientForm/references.test.tsx`
 (MB.154), which renders `ReferencesField` alone (MB.182), in a
 `QueryClientProvider` and a form on the form's resolver, as `lookups.test.tsx`
@@ -2183,7 +2191,7 @@ hands the submit: the search asking about this coven only once the box is
 used; each source by its citation and tier, none already listed and no typed
 row, then "New Reference" last; a pick adding a row
 beneath the box showing its short form, announced, the box emptied and
-focused; a row's title in real italics, its buttons named by its short form
+focused; a row's buttons named by its short form
 and described by its whole citation, and, closed, its locator after the
 short form, open, the citation whole; a row kept to one
 line until its edit opens it (`aria-expanded`, the Locator focused) and
@@ -2208,7 +2216,7 @@ references branch and the form's focus, which no list entry's test reaches.
 `ReferencePanel` alone, asked for again by a rerender that raises its
 `summons`, as "New Reference" does: Kind focused and nothing else shown as it
 opens, and Kind focused again, what was typed kept, when it is asked for
-again; each of the five kinds showing exactly its fields in order, the
+again; each of the five kinds showing exactly its fields, the
 required ones marked; a resolver error beside its field, focused, with nothing
 sent, and a server field error on the element it uses; a refusal naming no
 field as an alert inside it; a save sending the coven and only the chosen
@@ -2226,9 +2234,8 @@ web page with no address or day, and a published date with no year — with the 
 (M5.5), holding only what the mode changes (MB.182), with the compendium
 mutations answered by MSW. A new entry: the classification marked required and
 a save refused without one, then a create sent with `categoryIds: []` and
-`'open'`, Save & Add Another kept; Cancel, and where a near match links, taken
-from the page, Cancel after Discard Changes since a name typed is a change;
-and, in a modal, Cancel and Escape asking before a change is discarded. The lookups: every one asked with a null `workspaceId`, the
+`'open'`, Save & Add Another kept; where a near match links, taken
+from the page; and, in a modal, Cancel and Escape asking before a change is discarded. The lookups: every one asked with a null `workspaceId`, the
 New Form box offering no typed row; substitutes
 from `compendium`, less the entry itself. A variant's Form box and a deity's box
 alone, on `compendiumResolver`: the Form box offering the curated forms alone,
@@ -2239,8 +2246,7 @@ entry given: its values shown, one save, off until something changes, and the
 update sent whole, its categories carried through; the duplicate warning
 leaving the entry out, and a rename near another entry naming it but saving
 at once, with no Create Anyway; MB.82's question, Keep It sending nothing and End
-Redirect & Save sending again with `endRedirect: true`; and a delete kept by
-Keep It, a refused delete's alert, and a confirmed delete calling `onDeleted`.
+Redirect & Save sending again with `endRedirect: true`; and a refused delete's alert, and a confirmed delete calling `onDeleted`.
 In a modal, the delete's and MB.82's questions are asked over the form: the
 form inert while each asks, the focus on Keep It, both given back on Keep It,
 and Delete deleting from over the form.

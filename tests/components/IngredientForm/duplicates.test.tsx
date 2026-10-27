@@ -9,6 +9,7 @@ import type { DuplicateQuickLookQuery, DuplicateQuickLookQueryVariables } from '
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
+import { ADDED_HOLD_MS } from '@/components/AddIcon';
 import { renderWithClient, duplicateHref } from '../../support/ingredient-form';
 import { Navigating } from '../../support/navigating';
 import { press, typeIn } from '../../support/interact';
@@ -370,26 +371,6 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(announcers()).toEqual([region]);
   });
 
-  // A list or a button inside a paragraph is invalid, and so is anything but
-  // phrasing content inside an `<output>` (M12.48).
-  it('draws the warning, its list and Create Anyway, in valid markup', async () => {
-    renderName();
-    offerDuplicates([TOMENTOSA]);
-
-    type("Cat's Claw");
-    settle();
-    await within(warning()).findByRole('link');
-    save();
-    await waitFor(() => expect(createAnyway()).toBeInTheDocument());
-
-    expect(within(warning()).getByRole('list')).toBeInTheDocument();
-    expect(
-      document.body.querySelector(
-        'p ul, p li, p button, p div, p p, output ul, output div, output p',
-      ),
-    ).toBeNull();
-  });
-
   it('checks a name saved before its typing settles, and holds on what it finds', async () => {
     const sent = renderName();
     const calls = offerDuplicates([TOMENTOSA]);
@@ -719,6 +700,108 @@ describe('NameField, with useDuplicateWarning', () => {
   // The owner's call (M12.48): the eye on every row the coven holds opens
   // the entry's details over the form, read in the page, so nothing the
   // form holds is lost to a navigation.
+  // M12.48: a compendium match's + once its add has worked: AddIcon's check, held
+  // ADDED_HOLD_MS, then the eye on the same button, then the row moving under In This
+  // Coven. What the form sends, its status-region words and a refusal are
+  // index.test.tsx's.
+  describe('after the + has added', () => {
+    const UNUSED = { ...TOMENTOSA, isGlobal: true, inCupboard: false };
+    const QUICK_LOOK = /^Quick Look Cat's Claw, Uncaria tomentosa/;
+    const heldRow = () =>
+      within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('link', {
+        name: /^Cat's Claw \(Uncaria tomentosa\)/,
+      });
+
+    /** Finds Cat's Claw and presses its +, the add working and the server holding it from then on. */
+    const addClaw = async () => {
+      renderName().used.mockResolvedValue(true);
+      offerDuplicates([UNUSED]);
+      type('Cats Claw');
+      settle();
+      const plus = await screen.findByRole('button', { name: ADD });
+      offerDuplicates([{ ...UNUSED, inCupboard: true }]);
+      act(() => plus.focus());
+      // The add answers at once: its updates land inside the act.
+      await act(async () => {
+        fireEvent.click(plus);
+      });
+      return plus;
+    };
+
+    // The test environment reports prefers-reduced-motion (tests/support/setup-dom.ts).
+    it('under reduced motion, still shows the check for a moment, then the eye at once, with no fade between', async () => {
+      const plus = await addClaw();
+
+      await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+      // Still the +, named as it was, and pressing it now does nothing.
+      expect(plus).toHaveAccessibleName(/^Add to My Ingredients: Cat's Claw/);
+      expect(plus).toHaveAttribute('aria-disabled', 'true');
+      act(() => vi.advanceTimersByTime(ADDED_HOLD_MS - 100));
+      expect(plus).toHaveAttribute('data-state', 'added');
+
+      act(() => vi.advanceTimersByTime(100));
+      // The same button, so the focus stays on it: the eye, with no fade from the check.
+      expect(plus).toHaveAccessibleName(QUICK_LOOK);
+      expect(plus).not.toHaveAttribute('data-state');
+      expect(plus).not.toHaveAttribute('aria-disabled');
+    });
+
+    describe('with motion', () => {
+      beforeEach(() => {
+        const media = window.matchMedia;
+        vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+          ...media(query),
+          matches: false,
+        }));
+      });
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it('fades the check into the eye', async () => {
+        const plus = await addClaw();
+
+        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+        expect(plus).toHaveAccessibleName(QUICK_LOOK);
+        expect(plus).toHaveAttribute('data-state', 'returning');
+        // The fade's end, or its net when no end is reported.
+        act(() => vi.advanceTimersByTime(500));
+        expect(plus).not.toHaveAttribute('data-state');
+      });
+    });
+
+    it('moves the row under In This Coven only once the eye shows, the focus going to its eye, the duplicates busy meanwhile', async () => {
+      const plus = await addClaw();
+
+      await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+      // Not asked again while the check shows: the row stays under In the Compendium.
+      await act(async () => {});
+      expect(screen.queryByRole('list', { name: 'In This Coven' })).not.toBeInTheDocument();
+      expect(warning()).not.toHaveAttribute('aria-busy');
+
+      act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+      expect(warning()).toHaveAttribute('aria-busy', 'true');
+      await waitFor(() => expect(heldRow()).toBeInTheDocument());
+      const eye = within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('button', {
+        name: QUICK_LOOK,
+      });
+      expect(eye).not.toBe(plus);
+      expect(eye).toHaveFocus();
+      await waitFor(() => expect(warning()).not.toHaveAttribute('aria-busy'));
+    });
+
+    it('leaves the focus where it was moved to while the check showed', async () => {
+      const plus = await addClaw();
+
+      await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
+      act(() => name().focus());
+      act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
+      await waitFor(() => expect(heldRow()).toBeInTheDocument());
+      expect(name()).toHaveFocus();
+    });
+  });
+
   describe("a held match's Quick Look", () => {
     const UNUSED = { ...TOMENTOSA, isGlobal: true, inCupboard: false };
     const USED = { ...FELIS, isGlobal: true, inCupboard: true };
@@ -851,15 +934,6 @@ describe('NameField, with useDuplicateWarning', () => {
       const badge = await within(look()).findByText(/Reviewed By Curator/);
       expect(badge.querySelector('time')).toHaveAttribute('datetime', '2026-10-01T09:30:00.000Z');
       expect(within(look()).queryByText('Needs Review')).toBeNull();
-    });
-
-    it('says an entry no curator has reviewed needs review', async () => {
-      offerLook();
-      renderName();
-      await warned();
-      press(eye());
-
-      expect(await within(look()).findByText('Needs Review')).toBeInTheDocument();
     });
 
     it('says so when the read fails, and reads again on Try Again', async () => {

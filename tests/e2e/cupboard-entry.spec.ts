@@ -9,14 +9,14 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 
 // A compendium entry in a coven's cupboard (M12.16): the coven's page shows
 // the coven's label and changes with the marks, and the public page of the
-// same entry shows neither. A coven's own entry with no formal name lists the
-// compendium entries it might be (M12.22) and offers nothing to convert it (M12.42).
+// same entry shows neither, and a coven's own entry with no formal name passes
+// the scan with its list of the compendium entries it might be (M12.22).
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('a member sees a held compendium entry with the coven’s label and marks, and the public page shows neither', async ({
+test('a member sees a held compendium entry with the coven’s label and marks, the public page shows neither, and an own entry of the name lists it as similar', async ({
   page,
   browser,
   baseURL,
@@ -94,50 +94,17 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
       .filter({ hasNotText: /Review/ }),
   ).toHaveCount(0);
   await expect(page.getByText('Fixture Our Hedgewort')).toHaveCount(0);
-});
 
-test('an own entry with no formal name lists the compendium entries it might be, and offers no way to convert it', async ({
-  page,
-  browser,
-  baseURL,
-}) => {
-  const coven = await seedCoven(page, 'Fixture Coven Similar', 'coven-similar.test', {
-    A: 'owner',
-  });
-  const admin = await browser.newPage({ baseURL });
-  let slug: string;
-  try {
-    const { userId } = await signInAs(admin, 'admin@coven-similar.test', ['discord'], 'admin');
-    slug = await withSql(async (sql) => {
-      const id = await insertIngredient(
-        sql,
-        makeIngredient({ name: 'Fixture Similar Wort', nomenclature: 'none' }),
-        userId,
-      );
-      const [row] = await sql<{ slug: string }[]>`select slug from ingredients where id = ${id}`;
-      return row.slug;
-    });
-  } finally {
-    await admin.close();
-  }
+  // The coven's own entry of the same name, with no formal name, lists the compendium's as
+  // Similar (M12.22): the scan of that page state. What the list holds, and that it offers
+  // nothing to convert the entry (M12.42), are the entry page's and IngredientEntry's tests'.
   const own = await withSql((sql) =>
     localIngredient(sql, coven.id, coven.users.A, {
-      name: 'Fixture Similar Wort',
+      name: 'Fixture Reference Wort',
       nomenclature: 'none',
     }),
   );
-
   await page.goto(`/coven/${coven.slug}/ingredients/${own.ingredientId}`);
-
   await expect(page.getByRole('heading', { name: 'Similar in the Compendium' })).toBeVisible();
-  // Exact: the entry's own Edit pencil is named "Edit Fixture Similar Wort" and is not this link.
-  await expect(
-    page.getByRole('link', { name: 'Fixture Similar Wort', exact: true }),
-  ).toHaveAttribute('href', `/compendium/ingredients/${slug}`);
-  await expect(page.getByRole('heading', { name: 'In the Compendium', exact: true })).toHaveCount(
-    0,
-  );
-  await expect(page.getByRole('radio')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /link/i })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 });

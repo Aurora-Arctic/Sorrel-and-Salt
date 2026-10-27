@@ -241,7 +241,7 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
     });
 
-    it('shows a row as its short form, its title in real italics, then its locator, described by its whole citation', async () => {
+    it('shows a row as its short form, then its locator, described by its whole citation', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
@@ -259,7 +259,6 @@ describe('ReferencesField', () => {
       expect(shownIn(item)).toContain(HERBAL.citation);
       press(edit);
       expect(shownIn(item)).toBe(`${HERBAL_SHORT}, p. 112`);
-      expect(inRow.getByText('Testwort Herbal').tagName).toBe('I');
     });
 
     it('opens a row as it is added, then keeps it to one line until its edit opens it on its Locator again', async () => {

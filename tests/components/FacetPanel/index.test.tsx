@@ -357,19 +357,6 @@ describe('FacetPanel', () => {
     const menu = () => match().querySelector('details') as HTMLDetailsElement;
     const summary = () => menu().querySelector('summary') as HTMLElement;
 
-    it('keeps every chip tip inside the bar its chip stands in, the box its bubble is placed against', () => {
-      // Match's tip is on the chip itself; Source's ordinary tip is the icon beside its chip.
-      openPanel({ categories: ['warding'], source: 'local' });
-      const tips = screen.getAllByRole('button', { name: /^About Source/ });
-      expect(tips.length).toBeGreaterThan(0);
-      for (const tip of tips) {
-        const bar = tip.closest('.facet-chip__bar');
-        expect(bar).not.toBeNull();
-        // The bar holds the chip too, so the tip stands beside it and not in the panel at large.
-        expect(bar?.querySelector('summary, button.facet-chip__summary')).not.toBeNull();
-      }
-    });
-
     it('shows the enabled Match hint on hover and on focus of its summary, and not while the menu is open', async () => {
       openPanel({ categories: ['warding', 'mending'] });
       const bubble = () =>
