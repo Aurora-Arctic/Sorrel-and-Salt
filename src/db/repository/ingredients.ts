@@ -138,6 +138,26 @@ export function findReadableVariant(
 }
 
 /**
+ * `findReadableVariant` for many ids in one statement, live tiers only: the
+ * forms a spell's new steps may lay (M10.10). An id that is not such a form
+ * is simply absent from the answer, so the caller compares lengths.
+ */
+export function findReadableVariants(
+  memberships: readonly Membership[],
+  ids: readonly string[],
+): Promise<(typeof ingredientVariants.$inferSelect)[]> {
+  if (ids.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    ingredientVariants,
+    and(
+      notSoftDeleted(ingredientVariants),
+      inArray(ingredientVariants.id, [...ids]),
+      inUseIngredientParent(memberships, ingredientVariants.ingredientId, undefined),
+    ),
+  );
+}
+
+/**
  * The live rows these variants own — one form's categories, say — readable
  * exactly when the variant and its ingredient are: the variant live, and its
  * ingredient live and in the compendium or a coven one of `memberships`

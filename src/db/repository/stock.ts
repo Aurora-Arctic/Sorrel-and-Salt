@@ -43,6 +43,18 @@ export function findStockOfIngredients(
 }
 
 /**
+ * The coven's live jars of these forms, at most one each: the spell save's
+ * unit check reads every step's jar in one read (M13.2).
+ */
+export function findStockOfVariants(
+  membership: Membership,
+  variantIds: readonly string[],
+): Promise<StockRow[]> {
+  if (variantIds.length === 0) return Promise.resolve([]);
+  return findManyStock(membership, inArray(inventoryItems.variantId, [...variantIds]));
+}
+
+/**
  * The coven's live jars under `where`, each of a live form of an ingredient
  * the proof may read, or of a retired compendium entry its cupboard still
  * names (`inUseVariantParent`, M12.24), so the coven goes on reading, changing
