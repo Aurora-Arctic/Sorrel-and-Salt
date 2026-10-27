@@ -4,6 +4,8 @@ import { spellSteps } from '../schema/spell-steps';
 import { ValidationError } from '../../../lib/errors';
 import type { ValidationIssue } from '../../../lib/types';
 import type { Membership } from '@/modules/coven';
+import { jarsOfForms, unitConvert } from '@/modules/ingredients';
+import type { Unit } from '../../ingredients/schema/units';
 import type { SpellStepRow } from '../types';
 import type { z } from 'zod';
 import type { SpellStepInput } from '../validation/spell-step';
@@ -99,7 +101,54 @@ export async function checkRecipe(
     }
   }
 
+  issues.push(...(await unmeasurableSteps(membership, steps, saved)));
   if (issues.length > 0) throw new ValidationError(issues);
+}
+
+/**
+ * Whether an amount in `unit` can be taken out of a jar kept in `jarUnit`:
+ * `unitConvert` accepts the pair, which it does within weight and within
+ * volume, or the two are one count unit, since `unitConvert` refuses every
+ * count pair and a working subtracts a count without it (M13.5).
+ */
+function measurable(unit: Unit, jarUnit: Unit): boolean {
+  return unit === jarUnit || unitConvert(1, unit, jarUnit).ok;
+}
+
+/**
+ * Story 77 (M13.2): a step laying a form the coven holds a jar of, in a unit
+ * that jar cannot be measured in, so a working could not take it out of stock.
+ * One read for every step's jar, under the caller's proof, so only this
+ * coven's live jars count. A custom step, a step with no unit, a form with no
+ * jar and a jar with no unit are not checked; nor is a saved step whose form
+ * and unit are unchanged, so a jar whose unit changed after the spell was
+ * saved does not refuse its next save (the working warns of it instead).
+ */
+async function unmeasurableSteps(
+  membership: Membership,
+  steps: readonly ParsedStep[],
+  saved: ReadonlyMap<string, SpellStepRow>,
+): Promise<ValidationIssue[]> {
+  const toMeasure = steps.flatMap((step, index) => {
+    if (step.variantId == null || step.unit == null) return [];
+    const row = step.id == null ? undefined : saved.get(step.id);
+    if (row && row.variantId === step.variantId && row.unit === step.unit) return [];
+    return [{ index, variantId: step.variantId, unit: step.unit }];
+  });
+  if (toMeasure.length === 0) return [];
+
+  const jars = await jarsOfForms(membership, [...new Set(toMeasure.map((step) => step.variantId))]);
+  const jarUnitOf = new Map(jars.map((jar) => [jar.variantId, jar.unit]));
+  return toMeasure.flatMap(({ index, variantId, unit }) => {
+    const jarUnit = jarUnitOf.get(variantId);
+    if (jarUnit == null || measurable(unit, jarUnit)) return [];
+    return [
+      {
+        path: ['steps', index, 'unit'],
+        message: 'Choose a unit your coven’s stock of this can be measured in',
+      },
+    ];
+  });
 }
 
 /**

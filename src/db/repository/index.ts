@@ -69,6 +69,7 @@ export {
   findStockById,
   findStockByIds,
   findStockOfIngredients,
+  findStockOfVariants,
 } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
