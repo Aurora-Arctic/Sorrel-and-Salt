@@ -42,13 +42,26 @@ const countGrimoire = vi.fn();
 const assignedCategoriesOf = vi.fn();
 vi.mock('@/modules/grimoire', () => ({ listGrimoire, countGrimoire, assignedCategoriesOf }));
 
+const displayNamesOf = vi.fn();
+vi.mock('@/modules/identity', () => ({ displayNamesOf }));
+
+const EDITED_AT = new Date('2026-09-01T12:00:00.000Z');
+
 const { default: SpellsPage } = await import('@/app/(shell)/coven/[slug]/grimoire/(list)/page');
 const { default: DraftsPage } =
   await import('@/app/(shell)/coven/[slug]/grimoire/(list)/drafts/page');
 const { default: Layout } = await import('@/app/(shell)/coven/[slug]/grimoire/(list)/layout');
 
 const spell = (id: string, title: string | null, status = 'complete') => ({
-  node: { id, workspaceId: COVEN.id, title, intent: null, status },
+  node: {
+    id,
+    workspaceId: COVEN.id,
+    title,
+    intent: null,
+    status,
+    updatedAt: EDITED_AT,
+    updatedBy: `editor-${id}`,
+  },
   cursor: { key: ['2026-01-01T00:00:00.000Z'], id },
 });
 
@@ -76,6 +89,9 @@ beforeEach(() => {
   listGrimoire.mockResolvedValue([spell('s1', 'Fixture Working'), spell('s2', 'Testwort Charm')]);
   countGrimoire.mockResolvedValue({ totalCount: 2, countBefore: null });
   assignedCategoriesOf.mockResolvedValue([[{ id: 'c1', name: 'Testwarding' }], []]);
+  displayNamesOf.mockImplementation(async (_s: unknown, ids: string[]) =>
+    ids.map((id) => (id === 'editor-s1' ? 'Fixture A' : null)),
+  );
 });
 
 describe('the Grimoire tabs', () => {
@@ -139,6 +155,22 @@ describe('the Grimoire tabs', () => {
     const first = within(list).getByRole('listitem', { name: 'Fixture Working' });
     expect(within(first).getByText('Testwarding')).toBeInTheDocument();
     expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+  });
+
+  it('says on each card who last edited it and when, the editors named in one batch', async () => {
+    await renderTab(SpellsPage);
+    expect(displayNamesOf).toHaveBeenCalledTimes(1);
+    expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
+    const list = screen.getByRole('list', { name: 'Grimoire' });
+    const edited = (name: string) =>
+      within(within(list).getByRole('listitem', { name })).getByRole('button', {
+        name: /^Edited/,
+      });
+    expect(edited('Fixture Working')).toHaveAccessibleDescription(
+      'Last edited by Fixture A on 1 September 2026',
+    );
+    // An editor the viewer cannot name still leaves the edit's time.
+    expect(edited('Testwort Charm')).toHaveAccessibleDescription('Last edited on 1 September 2026');
   });
 
   it('throws a refused category batch rather than drawing a card without its categories', async () => {

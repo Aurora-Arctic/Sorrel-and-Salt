@@ -8,6 +8,7 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { requireSession } from '@/lib/request-session';
 import { assignedCategoriesOf, countGrimoire, listGrimoire } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
+import { displayNamesOf } from '@/modules/identity';
 
 // The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
 // spells are the coven's, so the read goes through the services for the signed-in
@@ -20,7 +21,8 @@ type Query = Parameters<typeof listGrimoire>[3];
 
 /**
  * One page of `CARD_PAGE_SIZE` spells of one status, with its count, each spell with the
- * categories its author assigned it: one batch for the page, whatever its length. Newest
+ * categories its author assigned it and the name of whoever last edited it: one batch each
+ * for the page, whatever its length. Newest
  * edit first, or best match first while a search is in force (the service's rule).
  */
 export const readGrimoire = cache(
@@ -40,12 +42,18 @@ export const readGrimoire = cache(
       (start) => countGrimoire(session, workspaceId, query, start),
       CARD_PAGE_SIZE,
     );
-    const [answers, known] = await Promise.all([
+    const [answers, known, editors] = await Promise.all([
       assignedCategoriesOf(
         session,
         page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId })),
       ),
       readCategories(),
+      // A server component reads through the service, not GraphQL's user loader, so the
+      // page's editors are one `displayNamesOf` call; null for one the viewer cannot name.
+      displayNamesOf(
+        session,
+        page.edges.map(({ node }) => node.updatedBy),
+      ),
     ]);
     const byId = new Map(known.map((category) => [category.id, category]));
     const spells = page.edges.map(({ node }, i): GrimoireSpell => {
@@ -60,6 +68,7 @@ export const readGrimoire = cache(
           const category = byId.get(id);
           return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
         }),
+        lastEdit: { by: editors[i] ?? null, at: node.updatedAt.toISOString() },
       };
     });
     return { ...page, spells };

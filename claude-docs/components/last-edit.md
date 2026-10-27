@@ -50,6 +50,8 @@ ahead of the reader's clock, it reads "just now". An unparseable `at` draws noth
 - `IngredientEntry` ([`ingredient-entry.md`](ingredient-entry.md)): above the names, in the
   head. Quick Look (the details modal) draws it in the same place through the Modal's
   `aboveName` slot ([`modal.md`](modal.md)); the spacing is one shared rule in `index.scss`.
+- `SpellCard`'s `lastEdit` prop ([`spell-card.md`](spell-card.md)): in the card's foot, under
+  the categories (M10.11).
 
 The caller works out which edit is the latest; this component only shows it. The ink is
 `$last-edit-ink` (M12.56): in dark the placeholder mix (the muted ink 85% into the card), 7.37:1;

@@ -1833,6 +1833,7 @@ _Story 56 — As a workspace member, I want to read a saved spell on its own pag
 The page also carries:
 
 - `requireSession()`, called in the page, since the `(shell)` layout does not.
+- The grimoire's `SpellCard` gains its link to this page, through `PendingLink` as `IngredientCard`'s name does: M10.11 left the card unlinked, since a link with no page behind it would ship broken ([`components/spell-card.md`](../components/spell-card.md), "No link yet").
 - `LastEdit` under the title ([`components/last-edit.md`](../components/last-edit.md)).
 - No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the edit route, M13.11 adds the Delete control with `deleteSpell`, and M13.20 adds the Duplicate control with `duplicateSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
 - If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
@@ -1851,6 +1852,7 @@ _Acceptance criteria:_
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
 - A custom, one-off ingredient (MB.40) renders its own name and form in `position` order with the rest, marked as one-off, and links to no ingredient page
 - The page calls `requireSession()` and shows `LastEdit` under the title
+- A spell's card in the grimoire list links to this page
 - The page has no Edit or Delete control; M13.10 and M13.11 each add their own
 - The loading skeleton is shape `page`
 - The page is the only view M10.22 styles for print

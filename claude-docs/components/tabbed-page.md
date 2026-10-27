@@ -13,12 +13,12 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 
 `TabbedPageProps` (`types.ts`):
 
-| Prop       | What it is                                                                           |
-| ---------- | ------------------------------------------------------------------------------------ |
-| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"             |
-| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions") and `filtered`, in row order |
-| `action`   | Optional: the open tab's one action, at the end of the heading's line                |
-| `children` | The open tab's content                                                               |
+| Prop       | What it is                                                                                    |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                      |
+| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered` and `shape`, in row order |
+| `action`   | Optional: the open tab's one action, at the end of the heading's line                         |
+| `children` | The open tab's content                                                                        |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
@@ -30,7 +30,7 @@ shared [`Skeleton`](skeleton.md) that the content area shows while a pressed tab
 to draw a filter row. A list reuses it, with no filter row, while a filter
 or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
 imports its own stylesheet, `index.scss`, and its shapes are drawn wherever
-it renders.
+it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table.
 
 ## Contracts
 
@@ -121,8 +121,10 @@ it renders.
   place, which these are not. The row is a `nav` named by the page's title,
   and the open tab's link carries `aria-current="page"`, found from the
   address by `usePathname()` with the admin nav's rule (`isAtPath` in
-  `src/lib/at-path.ts`): the tab's own address or one beneath it, the
-  first such tab. It looks like a small group of pills, and is still a nav: a
+  `src/lib/at-path.ts`): the tab's own address or one beneath it, and of
+  those the most specific, the longest address. The grimoire's Drafts tab lies
+  beneath Spells' address, so on Drafts both are at it, and Drafts is the open one
+  (M10.11). It looks like a small group of pills, and is still a nav: a
   look does not change what pressing a tab does. So `tab-links.tsx` is the
   one client part; the rest renders on the server.
 - **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/(shell)/admin/layout.tsx`
@@ -272,7 +274,7 @@ too, each with its tab's action.
 the heading inside `main` with the action beside it, neither a tab nor the
 content, the tabs on the heading's line between the two, a link per tab at its own address in order, no tablist, the content
 shown; which tab is open for a given address, its own,
-one beneath it, and none for an address in no tab; a tab marked pressed
+one beneath it, and none for an address in no tab; the most specific tab when one lies beneath another; a tab marked pressed
 while a pointer, a touch included, is down on it, and not once it lifts or
 the touch turns into a scroll. A press on another tab,
 through the shared `Navigating` helper (`tests/support/navigating.tsx`),

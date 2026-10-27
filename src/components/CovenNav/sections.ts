@@ -38,6 +38,8 @@ const sectionsOf = (slug: string, canReadMembers: boolean): readonly SectionNavI
           // Its Invitations tab belongs to the same section.
           matches: [route(`/coven/${slug}/invitations`)],
           icon: 'members',
+          // Its own group, as People is in the admin nav: the coven's people, not its contents.
+          apart: true,
         } as const,
       ]
     : []),
