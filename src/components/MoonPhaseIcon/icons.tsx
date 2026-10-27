@@ -25,15 +25,16 @@ export const LIT_PARTS: Record<SingleMoonPhase, ReactElement | null> = {
 // reads as spreading from the side it grows from. The crescent is the lit part, drawn as
 // a single phase draws it, so it is the same colour as Full Moon's; only the bands beyond
 // it, the shadow, step darker (the owner, 2026-10-27). The two bands' opacities are the
-// owner's pick, "H2, Darker" (2026-10-27); each layer's maria take its opacity too.
+// owner's (2026-10-27): the gibbous 0.25 under the quarter 0.4, so the quarter band shows
+// about 55% lit and the gibbous band 25%. Each layer's maria take its opacity too.
 export const HALVES: Record<HalfMoonPhase, readonly MoonLayer[]> = {
   'Waxing Moon': [
-    ['Waxing Gibbous', 0.35],
+    ['Waxing Gibbous', 0.25],
     ['First Quarter', 0.4],
     ['Waxing Crescent', 1],
   ],
   'Waning Moon': [
-    ['Waning Gibbous', 0.35],
+    ['Waning Gibbous', 0.25],
     ['Last Quarter', 0.4],
     ['Waning Crescent', 1],
   ],
