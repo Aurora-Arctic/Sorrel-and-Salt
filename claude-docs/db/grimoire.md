@@ -297,8 +297,12 @@ that checks it ("Saving a recipe" below).
   the form. `intent`, `jarSize`,
   `sealWaxColor`, `moonPhase`, `dayOfWeek` and `note` are all nullable
   free text — §5's rule that a vocabulary a member writes is text, and there is
-  no curated list of moon phases or wax colours anywhere in the design to make a
-  foreign key out of.
+  no curated vocabulary table of moon phases, days or wax colours to make a
+  foreign key out of. The spell builder suggests the eight moon phases and the
+  seven days from constants in code and still saves whatever is typed, so the
+  columns stay free text and hold values written before the lists, such as
+  "Full" (the owner, 2026-10-27;
+  [`../components/spell-builder.md`](../components/spell-builder.md)).
 - **`spell_steps.unit` is M9.2's `inventory_unit`**, the same Postgres
   type and not a second copy of it: a tablespoon in a spell is the tablespoon a
   jar is measured in, and M9.5 converts between them. The type keeps its

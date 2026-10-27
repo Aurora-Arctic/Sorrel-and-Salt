@@ -16,6 +16,8 @@ import {
 } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
+import { SpellSuggestField } from './suggest-field';
 import { SpellInput } from '@/modules/grimoire/validation/spell';
 import type {
   SpellBuilderField,
@@ -26,12 +28,13 @@ import type {
 
 // The spell builder (M10.12): a spell's title, intent, jar and note, on the
 // new-spell page now and on the edit page once M13.10 opens it with a saved
-// spell. No field is required: a draft may be saved with any of them, and a
-// title is asked for only when the spell is marked complete (M10.20). Save
-// creates the spell once and the builder then holds its id and revision, so
-// every later Save updates that spell, as the autosave adapter will
-// (claude-docs/design-decisions/m13.14-plan.md). A Back link on the page, not
-// Cancel, leaves it. See claude-docs/components/spell-builder.md.
+// spell. Moon phase and day of the week suggest a fixed list and still take
+// what is typed (./constants). No field is required: a draft may be saved
+// with any of them, and a title is asked for only when the spell is marked
+// complete (M10.20). Save creates the spell once and the builder then holds
+// its id and revision, so every later Save updates that spell, as the
+// autosave adapter will (claude-docs/design-decisions/m13.14-plan.md). A Back
+// link on the page, not Cancel, leaves it. See claude-docs/components/spell-builder.md.
 
 const CreateSpellDocument = graphql(`
   mutation CreateSpell($workspaceId: ID!, $input: SpellInput!) {
@@ -194,17 +197,17 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
             placeholder="Add a colour"
             autoComplete="off"
           />
-          <TextField<SpellBuilderValues>
+          <SpellSuggestField
             name="moonPhase"
             label="Moon Phase"
             placeholder="Add a phase"
-            autoComplete="off"
+            options={MOON_PHASES}
           />
-          <TextField<SpellBuilderValues>
+          <SpellSuggestField
             name="dayOfWeek"
             label="Day of the Week"
             placeholder="Add a day"
-            autoComplete="off"
+            options={DAYS_OF_THE_WEEK}
           />
           <TextField<SpellBuilderValues>
             name="note"

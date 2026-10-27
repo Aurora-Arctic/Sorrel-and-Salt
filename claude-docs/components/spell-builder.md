@@ -66,12 +66,26 @@ Undo and redo are the shared `FormHistoryButtons` (M12.9).
 
 ## The fields
 
-Plain text fields, each with a one- or two-word placeholder and no info tip,
-since none states a rule a person could trip on
-([`info-tip.md`](info-tip.md), "When a field gets a tip"). The jar fields are
-free text: there is no curated list of jar sizes, wax colours, moon phases
-or days ([`../db/grimoire.md`](../db/grimoire.md)). Intent and Note are
-multi-line. Every field but those two is `autoComplete="off"`.
+Each field has a one- or two-word placeholder and no info tip, since none
+states a rule a person could trip on
+([`info-tip.md`](info-tip.md), "When a field gets a tip"). Every value is
+stored as typed: the columns are free text
+([`../db/grimoire.md`](../db/grimoire.md)).
+
+- **Moon Phase and Day of the Week** are comboboxes
+  ([`combobox.md`](combobox.md)), `SpellSuggestField` in
+  `suggest-field.tsx`. Each suggests a fixed list from `constants.ts`,
+  narrowed to what is typed: the eight phases of Wikipedia's "Lunar phase",
+  New Moon to Waning Crescent, and the seven days, Monday first, with no
+  planet beside them. A pick fills the box with the name; anything else typed
+  is kept as typed, so a value saved before the lists existed ("Full") opens
+  unchanged. The lists are constants rather than vocabulary tables: each set
+  is closed, and adding a name is a one-line change, unlike the celestial
+  bodies (MB.91), which keep growing (the owner, 2026-10-27).
+- **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
+  the owner's decision (2026-10-27).
+- **Intent and Note** are multi-line. Title, Jar Size and Seal Wax Colour are
+  `autoComplete="off"`.
 
 ## Styling
 

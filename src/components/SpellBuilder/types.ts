@@ -1,3 +1,5 @@
+import type { FieldProps } from '../Field/types';
+
 /** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
 export type SpellBuilderField =
   'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note';
@@ -17,4 +19,12 @@ export interface SpellBuilderProps {
   workspaceId: string;
   /** A saved spell to edit; left out, the builder opens empty and its first save creates one. */
   spell?: SpellBuilderSpell;
+}
+
+export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint'> {
+  name: SpellBuilderField;
+  /** A short action shown, muted, while the box is empty: "Add a phase". */
+  placeholder?: string;
+  /** What the box suggests, narrowed to what is typed; anything else typed is kept as typed. */
+  options: readonly string[];
 }

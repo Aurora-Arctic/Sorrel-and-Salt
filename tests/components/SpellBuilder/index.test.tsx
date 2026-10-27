@@ -31,7 +31,9 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   );
 }
 
-const field = (name: string) => screen.getByRole('textbox', { name });
+// Moon phase and day of the week are boxes that suggest (comboboxes); the rest are text boxes.
+const field = (name: string) =>
+  screen.queryByRole('textbox', { name }) ?? screen.getByRole('combobox', { name });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const type = (name: string, value: string) => fireEvent.change(field(name), { target: { value } });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
@@ -285,6 +287,101 @@ describe('SpellBuilder', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot write spells');
     expect(save()).toBeEnabled();
+  });
+
+  // Moon phase and day of the week suggest a fixed list and still take what is
+  // typed (the owner, 2026-10-27): the columns stay free text.
+  describe('the moon phase and day of the week suggestions', () => {
+    const listed = () => screen.getAllByRole('option').map((option) => option.textContent);
+
+    it('offers the eight moon phases and the seven days', () => {
+      renderBuilder();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
+      expect(listed()).toEqual([
+        'New Moon',
+        'Waxing Crescent',
+        'First Quarter',
+        'Waxing Gibbous',
+        'Full Moon',
+        'Waning Gibbous',
+        'Last Quarter',
+        'Waning Crescent',
+      ]);
+      fireEvent.click(screen.getByRole('button', { name: 'Show Moon Phase suggestions' }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Show Day of the Week suggestions' }));
+      expect(listed()).toEqual([
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ]);
+    });
+
+    it('narrows the list to what is typed', () => {
+      renderBuilder();
+
+      type('Moon Phase', 'wan');
+
+      expect(listed()).toEqual(expect.arrayContaining(['Waning Gibbous', 'Waning Crescent']));
+      expect(listed()).not.toContain('Full Moon');
+    });
+
+    it('saves a picked suggestion', async () => {
+      const calls = acceptCreate();
+      renderBuilder();
+
+      type('Moon Phase', 'full');
+      fireEvent.click(screen.getByRole('option', { name: 'Full Moon' }));
+      type('Day of the Week', 'fri');
+      fireEvent.click(screen.getByRole('option', { name: 'Friday' }));
+
+      expect(field('Moon Phase')).toHaveValue('Full Moon');
+      expect(field('Day of the Week')).toHaveValue('Friday');
+      submit();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ moonPhase: 'Full Moon', dayOfWeek: 'Friday' });
+    });
+
+    it('saves typed text that no suggestion holds, as typed', async () => {
+      const calls = acceptCreate();
+      renderBuilder();
+
+      type('Moon Phase', 'Blue moon');
+      type('Day of the Week', 'Any dark night');
+      submit();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({
+        moonPhase: 'Blue moon',
+        dayOfWeek: 'Any dark night',
+      });
+    });
+
+    it('opens a saved value the list does not hold, unchanged', () => {
+      renderBuilder({
+        spell: {
+          id: 's3',
+          revision: 1,
+          title: null,
+          intent: null,
+          jarSize: null,
+          sealWaxColor: null,
+          moonPhase: 'Full',
+          dayOfWeek: 'saturday',
+          note: null,
+        },
+      });
+
+      expect(field('Moon Phase')).toHaveValue('Full');
+      expect(field('Day of the Week')).toHaveValue('saturday');
+      expect(save()).toBeDisabled();
+    });
   });
 
   describe('guarding typed changes', () => {
