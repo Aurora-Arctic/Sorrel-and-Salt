@@ -113,5 +113,5 @@ part of a name; the box and the entries an error names, each described; the
 status read with the box; the counts (name and count read together, a zero row left out only when asked, the x named by its noun with or without the count, a chosen zero pick still removable); and a pick not yet named held while the read is
 on, then drawn by its id. The ×, Backspace and Clear themselves are
 Combobox's, the colours presentation. The filter use is proved in
-`tests/components/CompendiumList/index.test.tsx` and, in a browser, in
+`tests/components/CompendiumList/filter.test.tsx` and, in a browser, in
 `tests/e2e/admin-compendium.spec.ts` (AND, reload, focus, 375px, axe).
