@@ -61,8 +61,9 @@ variables, so a search and its categories live in the address and combine.
   characters (M10.11's floor in the query). Its suggestions come from the coven's spells on
   this tab, by title. Until MB.6, picking a suggestion applies its title as the search, since
   the spell has no page to open. MB.6 makes a pick open the spell's recipe page through
-  `IngredientSearch`'s `pickHref`, as a pick on the coven's Ingredients page opens the
-  entry's page.
+  `IngredientSearch`'s `pickHref`, and M13.21 then makes it open the spell's Quick Look
+  instead, as a pick on the coven's Ingredients page opens the entry's Quick Look (the
+  owner's rule of 2026-10-27).
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
   ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, nothing
   else. Each category shows how many spells on this tab, under the search, the viewer can
