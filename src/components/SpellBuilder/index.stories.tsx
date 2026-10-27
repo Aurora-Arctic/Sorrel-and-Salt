@@ -1,0 +1,75 @@
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import { setInputValue, submitForm, useSteps } from '../../../.storybook/press';
+import SpellBuilder from '.';
+import type { SpellBuilderSpell } from './types';
+
+// Render-only; behaviour is asserted in tests/components/SpellBuilder. The
+// builder talks to the network only on Save, so nothing is mocked: a save in
+// the workshop fails into the notice. The TanStack Query client comes from the
+// workshop's global provider (.storybook/components.tsx).
+const meta = {
+  title: 'Grimoire / Spell Builder',
+} satisfies Meta;
+export default meta;
+// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
+type Story = StoryObj<{ state?: ReactNode }>;
+
+const SAVED: SpellBuilderSpell = {
+  id: 'fixture-spell',
+  revision: 3,
+  title: 'Fixture Working',
+  intent: 'To see clearly',
+  jarSize: '4 oz',
+  sealWaxColor: 'Blue',
+  moonPhase: 'Waxing gibbous',
+  dayOfWeek: 'Monday',
+  note: null,
+};
+
+// Inside the page's frame and head, as src/app/(shell)/coven/[slug]/grimoire/new/page.tsx
+// writes them, so the workshop shows what the page shows.
+const Page = ({
+  steps = [],
+  spell,
+}: {
+  steps?: readonly (() => void)[];
+  spell?: SpellBuilderSpell;
+}) => {
+  useSteps(steps);
+  return (
+    <ShellFrame area="coven" open="/coven/fixture-coven/grimoire/new">
+      <main className="page-frame__section page-frame--narrow">
+        <a href="/coven/fixture-coven/grimoire">Back to Grimoire</a>
+        <div className="header">
+          <h1>New Spell</h1>
+        </div>
+        <SpellBuilder workspaceId="fixture-coven" spell={spell} />
+      </main>
+    </ShellFrame>
+  );
+};
+
+const typeTitle = () => {
+  const input = document.querySelector<HTMLInputElement>('input[name="title"]');
+  if (input) setInputValue(input, 'Fixture Working');
+};
+
+const BUILDER_STATES: Record<string, ReactNode> = {
+  // The usual visit: every field empty, nothing to save until one holds something.
+  Empty: <Page />,
+  'Title Typed': <Page steps={[typeTitle]} />,
+  // A saved spell, as M13.10's edit page will open it: its values, nothing to save yet.
+  'Saved Spell': <Page spell={SAVED} />,
+  // The workshop reaches no server, so the save fails into the notice.
+  'Refused After Saving': <Page steps={[typeTitle, () => submitForm('form.form')]} />,
+};
+
+export const States: Story = {
+  args: { state: 'Empty' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(BUILDER_STATES), mapping: BUILDER_STATES },
+  },
+  render: ({ state }) => <div key={String(state)}>{state}</div>,
+};
