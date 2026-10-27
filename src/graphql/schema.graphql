@@ -13,6 +13,15 @@ type Category {
   slug: String!
 }
 
+"""A spell's assigned categories set beside its ingredients', both ways."""
+type CategoryComparison {
+  """Assigned to the spell, but carried by no ingredient in it."""
+  intendedNotPresent: [Category!]!
+
+  """Carried by an ingredient in the spell, but not assigned to it."""
+  presentNotIntended: [Category!]!
+}
+
 type CategoryGroup {
   colorDark: String!
   colorLight: String!
@@ -1165,6 +1174,11 @@ type Query {
   """
   deityTraditions(after: String, before: String, first: Int, last: Int): QueryDeityTraditionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
+
+  """
+  A coven's spells, newest first: the shared ones and the caller's own private ones.
+  """
+  grimoire(after: String, before: String, first: Int, last: Int, workspaceId: ID!): QueryGrimoireConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """
@@ -1201,6 +1215,7 @@ type Query {
   """
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
+  spell(id: ID!, workspaceId: ID!): Spell!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
@@ -1453,6 +1468,16 @@ type QueryFormSuggestionsConnectionEdge {
   node: FormSuggestion!
 }
 
+type QueryGrimoireConnection {
+  edges: [QueryGrimoireConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryGrimoireConnectionEdge {
+  cursor: String!
+  node: Spell!
+}
+
 type QueryIngredientFormGroupsConnection {
   edges: [QueryIngredientFormGroupsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -1686,6 +1711,69 @@ type SourceFacetCount {
 
   """local or compendium, as source takes it."""
   value: IngredientSource!
+}
+
+"""A coven's working: what it intends, and the recipe that makes it."""
+type Spell {
+  audit: AuditInfo!
+
+  """What the spell intends: the categories its author assigned."""
+  categories: [Category!]!
+  categoryGaps: CategoryComparison!
+
+  """
+  What the spell is made of: every category its linked ingredients and their forms carry. A one-off row contributes none.
+  """
+  derivedCategories: [Category!]!
+  id: ID!
+  intent: String
+  note: String
+  status: SpellStatus!
+
+  """The recipe: every step in position order, instructions included."""
+  steps: [SpellStep!]!
+  title: String!
+  visibility: SpellVisibility!
+}
+
+enum SpellStatus {
+  complete
+  draft
+}
+
+"""One step of a recipe: an ingredient laid, an instruction, or both."""
+type SpellStep {
+  audit: AuditInfo!
+
+  """The instruction; null on an ingredient-only step."""
+  body: String
+
+  """The linked form's name; the one-off row's free text otherwise."""
+  form: String
+  id: ID!
+
+  """
+  The ingredient laid, kept once deleted; null on a one-off row and an instruction-only step.
+  """
+  ingredient: Ingredient
+
+  """
+  The linked ingredient's name in this coven; the one-off row's own otherwise; null on an instruction-only step.
+  """
+  name: String
+  note: String
+  position: Int!
+  quantity: Float
+  unit: InventoryUnit
+
+  """The form laid, on a linked step; null once that form alone is deleted."""
+  variant: IngredientVariant
+}
+
+"""Who reads a spell: its author alone, or every member of its coven."""
+enum SpellVisibility {
+  private
+  workspace
 }
 
 input StockInput {
