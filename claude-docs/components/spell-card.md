@@ -1,13 +1,15 @@
 # SpellCard
 
 `src/components/SpellCard/` draws one spell in the grimoire's list (M10.11, story 56). It
-shows four things:
+shows five things:
 
 - the spell's title, or "Untitled Spell" when it has none (`UNTITLED_SPELL`), since a draft
   may have no title;
 - its intent, the member's own sentence saying what the spell is for;
 - a Draft badge, on a draft only;
-- the categories its author assigned it, as `CategoryChips`.
+- the categories its author assigned it, as `CategoryChips`;
+- who last edited it and when, as `LastEdit` ([last-edit.md](last-edit.md)), in the card's
+  foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27).
 
 The card is presentational: it takes props and works nothing out from the data, as
 [ingredient-card.md](ingredient-card.md) is.
@@ -21,6 +23,7 @@ The card is presentational: it takes props and works nothing out from the data, 
 | `intent`     | The intent, or null. Without one the card draws no paragraph                                  |
 | `status`     | `draft` or `complete`                                                                         |
 | `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5) |
+| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line       |
 | `level`      | The title's heading level, 2 by default                                                       |
 
 ## Its name

@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react';
 import CategoryChips from '../CategoryChips';
+import LastEdit from '../LastEdit';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
 // One spell in the grimoire's list (M10.11): its title, its intent, a Draft badge on
-// a draft, and the categories its author assigned it. Presentational, in IngredientCard's
+// a draft, the categories its author assigned it, and who last edited it. Presentational, in IngredientCard's
 // pattern: the Foundations specimen for the layout and the card's surface, with no
 // drawer, since nothing opens from it yet. Not a link until the spell page exists
 // (MB.6), so the title is plain text. claude-docs/components/spell-card.md.
@@ -21,6 +22,7 @@ const SpellCard = ({
   intent,
   status,
   categories,
+  lastEdit,
   level = 2,
 }: SpellCardProps): ReactElement => {
   const Heading = `h${level}` as const;
@@ -42,6 +44,12 @@ const SpellCard = ({
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
+      {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
+      {lastEdit != null && (
+        <div className="specimen__foot">
+          <LastEdit by={lastEdit.by} at={lastEdit.at} />
+        </div>
+      )}
     </article>
   );
 };

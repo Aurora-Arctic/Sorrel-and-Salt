@@ -28,7 +28,10 @@ draws the tab row; `page.tsx` and `drafts/page.tsx` set their titles and each ca
 `grimoireTab()` (`grimoire-tab.tsx`) with its status. `grimoireTab` is an async function the
 page returns, rather than a component, so a page test can await the page whole. It reads the
 address through `GRIMOIRE_PARAMS`, the page through `readNumberedPage` at `CARD_PAGE_SIZE`
-(24), and each card's assigned categories in one batch (`reads.ts`).
+(24), and each card's assigned categories in one batch (`reads.ts`). The page's editors are
+named in one batch too: the page reads through the services rather than GraphQL, so it calls
+`displayNamesOf` (`@/modules/identity`) once with every spell's `updatedBy`, and each card's
+`lastEdit` is that name, or null for an editor the viewer cannot name, with `updatedAt`.
 
 ## Props
 
@@ -92,7 +95,8 @@ Tokens only, before the section's design review. `index.scss` sets the two empty
   regions, the title search's address and the category pick applied as a slug.
 - `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`: the membership guard on
   both tabs and the layout, each tab's status and page size, the address read into the
-  query, the tab's status winning, the categories read in one batch, and the pager's link.
+  query, the tab's status winning, the categories and the editors each read in one batch,
+  and the pager's link.
 - `tests/components/CovenNav/index.test.tsx`: the Grimoire link, current on Drafts too.
 - `tests/e2e/stories/06-grimoire.spec.ts`: story 56 in the browser, a private spell listed
   for its author alone.
