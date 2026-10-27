@@ -30,7 +30,7 @@ describe('FormHistoryButtons', () => {
     expect(redoButton()).toBeEnabled();
   });
 
-  it('undoes on a click and moves the focus to the field it changed', () => {
+  it('undoes and redoes on a click and moves the focus to the field it changed', () => {
     let kind = '';
     render(
       <HistoryProbe
@@ -46,19 +46,6 @@ describe('FormHistoryButtons', () => {
 
     expect(kind).toBe('one');
     expect(document.activeElement).toBe(byLabel('Kind', '[role="combobox"]'));
-  });
-
-  it('redoes on a click', () => {
-    let kind = '';
-    render(
-      <HistoryProbe
-        onHandles={({ methods }) => {
-          kind = methods.getValues('kind');
-        }}
-      />,
-    );
-    choose('Kind', 'Two');
-    press('Undo');
 
     press('Redo');
 

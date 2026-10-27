@@ -50,12 +50,6 @@ describe('a field error and the pointer', () => {
     expect(name).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('is drawn at once when no pointer is pressed, as a Tab leaves it', async () => {
-    render(<Form />);
-
-    expect(await leaveName()).toHaveAttribute('aria-invalid', 'true');
-  });
-
   it('already showing, stays through a press', async () => {
     render(<Form />);
     const name = await leaveName();

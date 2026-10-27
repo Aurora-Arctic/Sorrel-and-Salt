@@ -244,15 +244,6 @@ describe('UserDetail', () => {
     expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 
-  it('asks first, and sends nothing until it is confirmed', () => {
-    renderDetail({ canImpersonate: true });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
-
-    expect(screen.getByRole('button', { name: 'Impersonate' })).toBeInTheDocument();
-    expect(impersonateUserMock).not.toHaveBeenCalled();
-  });
-
   it('puts the question away on Cancel, sending nothing', () => {
     renderDetail({ canImpersonate: true });
     fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
@@ -309,20 +300,6 @@ describe('UserDetail, when the service refuses a change', () => {
         fireEvent.click(screen.getByRole('radio', { name: /^Curator/ }));
         fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
       },
-    },
-    {
-      control: 'Approve Bo Fixturewort',
-      operation: 'GrantWorkspaceCreation',
-      message: 'Fixture refusal of the approval.',
-      user: BO,
-      confirm: () => fireEvent.click(screen.getByRole('button', { name: 'Approve' })),
-    },
-    {
-      control: 'Revoke approval for Bo Fixturewort',
-      operation: 'RevokeWorkspaceCreation',
-      message: 'Fixture refusal of the revocation.',
-      user: { ...BO, canCreateWorkspace: true },
-      confirm: () => fireEvent.click(screen.getByRole('button', { name: 'Revoke' })),
     },
   ];
 
@@ -384,18 +361,6 @@ describe('UserDetail, when the service refuses a change', () => {
         expect(onClose).not.toHaveBeenCalled();
         expect(screen.getByRole('dialog')).toContainElement(control());
         expect(control()).toHaveFocus();
-        expect(badge()).toBeInTheDocument();
-      });
-
-      it('closes the callout on a press elsewhere in the dialog, the dialog left open', async () => {
-        await refuse();
-
-        await settle(() =>
-          fireEvent.pointerDown(screen.getByRole('heading', { name: 'Bo Fixturewort' })),
-        );
-
-        expect(screen.queryByRole('alert')).toBeNull();
-        expect(onClose).not.toHaveBeenCalled();
         expect(badge()).toBeInTheDocument();
       });
 

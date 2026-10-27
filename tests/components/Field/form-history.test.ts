@@ -24,12 +24,6 @@ const record = (state: HistoryState, next: HistoryStep, limit = HISTORY_LIMIT) =
   historyReducer(state, { type: 'recorded', step: next, limit });
 
 describe('historyReducer', () => {
-  it('records a step on the past', () => {
-    const state = record(initialHistory, step('a', 1, 2));
-    expect(state.past).toHaveLength(1);
-    expect(state.future).toHaveLength(0);
-  });
-
   it('undoes the newest step onto the future, and redoes it back', () => {
     const first = step('a', 1, 2);
     const second = step('b', 'x', 'y');

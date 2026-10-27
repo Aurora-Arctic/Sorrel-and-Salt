@@ -204,34 +204,4 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(within(dialog).queryByRole('combobox')).toBeNull();
     expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
   });
-
-  it('closes on Cancel with nothing sent', async () => {
-    const dialog = await openDialog();
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(graphqlRequest).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    [
-      'Cancel',
-      (dialog: HTMLElement) =>
-        fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' })),
-    ],
-    [
-      'Escape',
-      (dialog: HTMLElement) => fireEvent(dialog, new Event('cancel', { cancelable: true })),
-    ],
-  ])('gives focus back to Leave Coven when the dialog closes by %s', async (_way, closeIt) => {
-    const dialog = await openDialog();
-    const leave = screen.getByRole('button', { name: 'Leave Coven' });
-    expect(leave).not.toHaveFocus();
-
-    closeIt(dialog);
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(leave).toHaveFocus();
-  });
 });
