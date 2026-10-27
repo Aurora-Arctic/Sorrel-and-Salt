@@ -1185,9 +1185,9 @@ type Query {
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
 
   """
-  A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given.
+  A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given, matching `query` when given and ranked best match first.
   """
-  grimoire(after: String, before: String, first: Int, last: Int, orderBy: GrimoireOrder! = UPDATED_DESC, status: SpellStatus, workspaceId: ID!): QueryGrimoireConnection!
+  grimoire(after: String, before: String, first: Int, last: Int, orderBy: GrimoireOrder! = UPDATED_DESC, query: String, status: SpellStatus, workspaceId: ID!): QueryGrimoireConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """

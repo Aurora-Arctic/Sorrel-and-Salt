@@ -867,6 +867,7 @@ type Query {
     workspaceId: ID!
     orderBy: GrimoireOrder! = UPDATED_DESC
     status: SpellStatus
+    query: String # title and intent, best match first; under 2 characters no search (M10.11)
     first: Int
     after: String
   ): QueryGrimoireConnection! # workspace-visible + own private spells; status filters in SQL

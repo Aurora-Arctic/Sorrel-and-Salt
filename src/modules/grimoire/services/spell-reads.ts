@@ -16,6 +16,7 @@ import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
 import { stepsInSpells } from './step-views';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { assertMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';
@@ -26,6 +27,17 @@ import type { SpellKey, SpellRow, SpellStepView } from '../types';
 // coven, `spell: ['read']`, and every row comes through the finders that keep
 // a private spell its author's (claude-docs/db/spell-visibility.md), so a
 // spell this reader may not see is `NotFound` by id and absent from a batch.
+
+/**
+ * The query with a search shorter than `MIN_QUERY_LENGTH` dropped, counted in
+ * composed code points as the compendium counts it: one character matches
+ * nearly every spell, so it is no search at all.
+ */
+function searchable(query: GrimoireQuery): GrimoireQuery {
+  const text = query.query?.trim();
+  const long = text !== undefined && Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
+  return { ...query, query: long ? text : undefined };
+}
 
 /**
  * One page of the coven's grimoire in `order`: its shared spells and the
@@ -41,7 +53,7 @@ export async function listGrimoire(
   query: GrimoireQuery,
 ): Promise<PageEntry<SpellRow>[]> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-  return findGrimoirePage(membership, page, query);
+  return findGrimoirePage(membership, page, searchable(query));
 }
 
 /**
@@ -58,7 +70,7 @@ export async function countGrimoire(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-  return findGrimoireCount(membership, query, start);
+  return findGrimoireCount(membership, searchable(query), start);
 }
 
 /**

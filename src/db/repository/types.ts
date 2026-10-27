@@ -1157,7 +1157,8 @@ export interface GrimoireQuery {
   /**
    * Only the spells whose title or intent holds this text as a word or part of
    * one, accents and case set aside (M10.11); absent or blank means no search.
-   * It narrows and leaves the order as asked.
+   * It narrows the list and ranks it best match first, the asked-for order
+   * breaking a tie.
    */
   query?: string;
   /** Only the spells assigned these categories, by id; absent or empty means no filter. */
