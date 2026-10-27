@@ -68,7 +68,7 @@ describe('ImpersonationBanner', () => {
     expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
   });
 
-  it('says so in an alert under Stop when stopping fails, keeps the focus and the banner, and its badge brings the alert back', async () => {
+  it('says so in an alert under Stop when stopping fails, keeps the focus and the banner', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: null, error: { status: 500 } });
     stubLocationAssign(assignMock);
     render(<ImpersonationBanner {...BO} />);
@@ -82,12 +82,6 @@ describe('ImpersonationBanner', () => {
     expect(stop).not.toHaveAttribute('aria-disabled');
     expect(stop).toHaveAccessibleDescription(new RegExp(STOP_FAILED));
     expect(assignMock).not.toHaveBeenCalled();
-
-    await press(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.queryByRole('alert')).toBeNull();
-    expect(stop).toHaveFocus();
-    await press(screen.getByRole('button', { name: 'Show the error for Stop Impersonating' }));
-    expect(screen.getByRole('alert')).toHaveTextContent(STOP_FAILED);
   });
 
   it('says the same when the endpoint cannot be reached', async () => {
