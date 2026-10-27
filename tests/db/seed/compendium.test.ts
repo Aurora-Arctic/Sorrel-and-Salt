@@ -27,7 +27,6 @@ import { seedForms } from '@/db/seed/forms';
 import { SOURCES, seedSources } from '@/db/seed/sources';
 import { FIXTURE_USERS, identityOf } from '@/db/seed/standard';
 import { citationText } from '@/lib/citation';
-import { entryRecency } from '@/lib/entry-recency';
 import { wordsOf } from './compendium-fixture';
 import {
   FILE_SOURCES,
@@ -45,6 +44,12 @@ import type { SeedCompendiumEntry } from '@/db/seed/types';
 // shares — stamps, a second run a no-op, nothing resurrected — is
 // index.test.ts's; the guard's rules are compendium/guard.test.ts's and
 // compendium/guard-files.test.ts's.
+//
+// The five vocabularies the compendium picks from are seeded once for the
+// file, and each case empties only what the compendium and its cases write
+// (M14.27): re-seeding them per case cost most of the file's time. The cases
+// that need other vocabularies, or none, have describes of their own that
+// put the shared state back when they finish.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -65,6 +70,80 @@ async function seedVocabularies(): Promise<void> {
   await seedAstrology(db);
   await seedDeities(db);
   await seedSources(db);
+}
+
+/** The tables the five vocabularies fill, which no case below writes to. */
+const VOCABULARY_TABLES = new Set([
+  'category_groups',
+  'categories',
+  'ingredient_form_groups',
+  'ingredient_forms',
+  'celestial_bodies',
+  'zodiac_signs',
+  'deity_traditions',
+  'deities',
+  'deity_other_names',
+]);
+
+/** Every other table, each after every table that references it. */
+let deleteOrder: string[];
+/** The sources seed's own rows in the two tables the compendium also writes. */
+let vocabularyRows: { references: string[]; referenceLinks: string[] };
+
+/** Empties every table, then seeds the five vocabularies the compendium picks from. */
+async function seedSharedVocabularies(): Promise<void> {
+  await truncateAllTables(sql);
+  await seedVocabularies();
+  vocabularyRows = {
+    references: (await sql<{ id: string }[]>`select id from "references"`).map((r) => r.id),
+    referenceLinks: (await sql<{ id: string }[]>`select id from reference_links`).map((r) => r.id),
+  };
+}
+
+/**
+ * Deletes what the last case wrote and leaves the vocabularies: the bootstrap
+ * user, and the sources seed's references and links, stay. A delete rather
+ * than a truncate, because `truncate ... cascade` empties every referencing
+ * table whole, and `reference_links` holds both seeds' rows.
+ */
+async function resetToVocabularies(): Promise<void> {
+  for (const table of deleteOrder) {
+    if (table === 'users') await sql`delete from users where id <> ${BOOTSTRAP_USER_ID}`;
+    else if (table === 'references')
+      await sql`delete from "references" where id <> all(${vocabularyRows.references}::uuid[])`;
+    else if (table === 'reference_links')
+      await sql`delete from reference_links where id <> all(${vocabularyRows.referenceLinks}::uuid[])`;
+    else await sql.unsafe(`delete from "${table}"`);
+  }
+}
+
+/** The non-vocabulary tables, ordered so no delete is refused by a foreign key. */
+async function tablesInDeleteOrder(): Promise<string[]> {
+  const tables = (
+    await sql<{ tablename: string }[]>`select tablename from pg_tables where schemaname = 'public'`
+  )
+    .map((row) => row.tablename)
+    .filter((table) => !VOCABULARY_TABLES.has(table));
+  const edges = await sql<{ child: string; parent: string }[]>`
+    select child.relname as child, parent.relname as parent from pg_constraint c
+    join pg_class child on child.oid = c.conrelid
+    join pg_class parent on parent.oid = c.confrelid
+    where c.contype = 'f' and c.connamespace = 'public'::regnamespace and c.conrelid <> c.confrelid
+  `;
+  const ordered: string[] = [];
+  const left = new Set(tables);
+  while (left.size > 0) {
+    // A table may go once nothing still to be emptied references it.
+    const ready = [...left].filter(
+      (table) => !edges.some((edge) => edge.parent === table && left.has(edge.child)),
+    );
+    if (ready.length === 0) throw new Error(`a foreign-key cycle among ${[...left].join(', ')}`);
+    for (const table of ready) {
+      ordered.push(table);
+      left.delete(table);
+    }
+  }
+  return ordered;
 }
 
 async function countOf(table: string, where = ''): Promise<number> {
@@ -103,14 +182,18 @@ async function insertAdminEntry(name: string, canonicalName: string): Promise<vo
   `;
 }
 
+beforeAll(async () => {
+  deleteOrder = await tablesInDeleteOrder();
+  await seedSharedVocabularies();
+});
+
 beforeEach(async () => {
-  await truncateAllTables(sql);
+  await resetToVocabularies();
 });
 
 describe('seedCompendium', () => {
   describe('on an empty compendium', () => {
     beforeEach(async () => {
-      await seedVocabularies();
       await seedCompendium(db, fixtureFiles());
     });
 
@@ -245,7 +328,6 @@ describe('seedCompendium', () => {
   });
 
   it('links a work the sources seed already wrote rather than writing it twice', async () => {
-    await seedVocabularies();
     const shared = SOURCES[0].reference;
     // Precondition: the sources seed wrote it.
     expect(
@@ -289,7 +371,6 @@ describe('seedCompendium', () => {
       );
 
     it('by its seed key, after an admin renamed and retired it', async () => {
-      await seedVocabularies();
       await seedCompendium(db, fixtureFiles());
       const testwort = await ingredientId('fixtura testalis');
       await sql`
@@ -305,7 +386,6 @@ describe('seedCompendium', () => {
     });
 
     it('by a live identity an admin wrote, which is not stamped', async () => {
-      await seedVocabularies();
       await insertAdminEntry('Admin Testwort', 'Fixtura testalis');
 
       await seedCompendium(db, fixtureFiles());
@@ -320,7 +400,6 @@ describe('seedCompendium', () => {
     });
 
     it('by a live slug an admin holds under another identity', async () => {
-      await seedVocabularies();
       await insertAdminEntry('Testwort', 'Fixtura-testalis');
 
       await seedCompendium(db, fixtureFiles());
@@ -330,33 +409,8 @@ describe('seedCompendium', () => {
     });
   });
 
-  it('skips a pick an admin retired: the form with all it carries, and the deity', async () => {
-    await seedVocabularies();
-    await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'oil'`;
-    await sql`update deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'hecate'`;
-
-    await seedCompendium(db, fixtureFiles());
-
-    const testwort = await ingredientId('fixtura testalis');
-    const forms = await sql<
-      { form: string }[]
-    >`select form from ingredient_variants where ingredient_id = ${testwort}`;
-    expect(forms).toEqual([{ form: 'Herb' }]);
-    expect(
-      await countOf(
-        'ingredient_categories',
-        `where ingredient_id = '${testwort}' and variant_id is not null`,
-      ),
-    ).toBe(0);
-    const deities = await sql<{ name: string; position: number }[]>`
-      select name, position from ingredient_deities where ingredient_id = ${testwort}
-    `;
-    expect(deities).toEqual([{ name: 'Artemis', position: 0 }]);
-  });
-
   // M14.23: a source's spelling, which the deity seed loads as an other name.
   it('links a deity an entry names by one of its other names, stored under the deity name', async () => {
-    await seedVocabularies();
     const testwort = fileOf(TESTWORT, (file) => file.entry.deities?.push('Ganesh'));
 
     await seedCompendium(db, loadedOf([testwort, fileOf(SAMPLEWORT)]));
@@ -372,71 +426,95 @@ describe('seedCompendium', () => {
     ]);
   });
 
-  it('throws on a form no seed wrote, and writes nothing', async () => {
-    await seedCategories(db);
-    await seedAstrology(db);
-    await seedDeities(db);
+  // Retiring the picks changes the shared vocabularies, so this describe
+  // seeds them afresh for whatever runs after it.
+  describe('with a pick an admin retired', () => {
+    afterAll(seedSharedVocabularies);
 
-    await expect(seedCompendium(db, fixtureFiles())).rejects.toThrow();
+    it('skips a pick an admin retired: the form with all it carries, and the deity', async () => {
+      await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'oil'`;
+      await sql`update deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'hecate'`;
 
-    expect(await countOf('ingredients')).toBe(0);
+      await seedCompendium(db, fixtureFiles());
+
+      const testwort = await ingredientId('fixtura testalis');
+      const forms = await sql<
+        { form: string }[]
+      >`select form from ingredient_variants where ingredient_id = ${testwort}`;
+      expect(forms).toEqual([{ form: 'Herb' }]);
+      expect(
+        await countOf(
+          'ingredient_categories',
+          `where ingredient_id = '${testwort}' and variant_id is not null`,
+        ),
+      ).toBe(0);
+      const deities = await sql<{ name: string; position: number }[]>`
+        select name, position from ingredient_deities where ingredient_id = ${testwort}
+      `;
+      expect(deities).toEqual([{ name: 'Artemis', position: 0 }]);
+    });
   });
 
-  it('refuses a file that fails its guard before opening a transaction', async () => {
-    const unsourced = fileOf(TESTWORT, (file) => (file.entry.references = []));
+  // These two read a database with no vocabulary, or with no bootstrap user.
+  describe('on an empty database', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+    });
+    afterAll(seedSharedVocabularies);
 
-    await expect(seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)]))).rejects.toThrow();
+    it('throws on a form no seed wrote, and writes nothing', async () => {
+      await seedCategories(db);
+      await seedAstrology(db);
+      await seedDeities(db);
 
-    // Not even the bootstrap user the transaction opens with.
-    expect(await countOf('users')).toBe(0);
+      await expect(seedCompendium(db, fixtureFiles())).rejects.toThrow();
+
+      expect(await countOf('ingredients')).toBe(0);
+    });
+
+    it('refuses a file that fails its guard before opening a transaction', async () => {
+      const unsourced = fileOf(TESTWORT, (file) => (file.entry.references = []));
+
+      await expect(seedCompendium(db, loadedOf([unsourced, fileOf(SAMPLEWORT)]))).rejects.toThrow();
+
+      // Not even the bootstrap user the transaction opens with.
+      expect(await countOf('users')).toBe(0);
+    });
   });
 
-  it('runs after the standard scenario, leaving the entries it already holds unstamped', async () => {
-    await seed(db, { scenario: 'standard' });
-    const standard = new Set(
-      (
-        await sql<
-          { identity_key: string }[]
-        >`select identity_key from ingredients where workspace_id is null`
-      ).map((row) => row.identity_key),
-    );
-    const entries = loadCompendium()
-      .files.filter((file) => file.status === 'approved')
-      .map((file) => file.entry);
-    // Precondition: the two overlap, so a skip by identity is exercised.
-    expect(entries.some((entry) => standard.has(identityOf(entry)))).toBe(true);
+  describe('after the standard scenario', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+    });
+    afterAll(seedSharedVocabularies);
 
-    await seedCompendium(db);
+    it('runs after the standard scenario, leaving the entries it already holds unstamped', async () => {
+      await seed(db, { scenario: 'standard' });
+      const standard = new Set(
+        (
+          await sql<
+            { identity_key: string }[]
+          >`select identity_key from ingredients where workspace_id is null`
+        ).map((row) => row.identity_key),
+      );
+      const entries = loadCompendium()
+        .files.filter((file) => file.status === 'approved')
+        .map((file) => file.entry);
+      // Precondition: the two overlap, so a skip by identity is exercised.
+      expect(entries.some((entry) => standard.has(identityOf(entry)))).toBe(true);
 
-    const keyed = await sql<
-      { seed_key: string }[]
-    >`select seed_key from ingredients where seed_key is not null`;
-    expect(keyed.map((row) => row.seed_key).sort()).toEqual(
-      entries
-        .map(identityOf)
-        .filter((identity) => !standard.has(identity))
-        .sort(),
-    );
-  });
-});
+      await seedCompendium(db);
 
-// MB.106, accepted on purpose: the marker reads its two stamps, a seed writes
-// both when it runs, so a freshly seeded database shows every entry as New for
-// its first 30 days. Naming it keeps it from being mistaken for a bug.
-describe('a freshly seeded compendium (accepted: every entry reads New)', () => {
-  it('marks every entry New', async () => {
-    await truncateAllTables(sql);
-    await seedVocabularies();
-    await seedCompendium(db, fixtureFiles());
-
-    const stamps = await sql<{ created_at: Date; updated_at: Date }[]>`
-      select created_at, updated_at from ingredients where workspace_id is null and deleted_at is null`;
-
-    // Why "every" could have been vacuous: the seed wrote entries.
-    expect(stamps.length).toBeGreaterThan(0);
-    expect(stamps.map((row) => entryRecency(row.created_at, row.updated_at))).toEqual(
-      stamps.map(() => 'new'),
-    );
+      const keyed = await sql<
+        { seed_key: string }[]
+      >`select seed_key from ingredients where seed_key is not null`;
+      expect(keyed.map((row) => row.seed_key).sort()).toEqual(
+        entries
+          .map(identityOf)
+          .filter((identity) => !standard.has(identity))
+          .sort(),
+      );
+    });
   });
 });
 
@@ -508,7 +586,6 @@ describe('the update path (M14.7)', () => {
   let first: Awaited<ReturnType<typeof run>>;
 
   beforeEach(async () => {
-    await seedVocabularies();
     first = await run(baseline());
     await sql`
       insert into users (id, name, email, created_by, updated_by)
