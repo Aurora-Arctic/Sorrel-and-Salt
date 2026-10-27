@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { seedCoven, withSql } from './stories/coven-ingredients';
@@ -17,6 +18,27 @@ test.beforeAll(async () => {
 });
 
 test.use({ viewport: { width: 320, height: 640 } });
+
+type Box = NonNullable<Awaited<ReturnType<Locator['boundingBox']>>>;
+
+/**
+ * The tip's box once its fade and first placement have settled: two polled
+ * reads in a row that agree, rather than a fixed sleep that guesses how long
+ * the settling takes.
+ */
+async function settledBox(tip: Locator): Promise<Box | null> {
+  const read: { last: string; box: Box | null } = { last: '', box: null };
+  await expect
+    .poll(async () => {
+      read.box = await tip.boundingBox();
+      const now = JSON.stringify(read.box);
+      const same = read.box !== null && now === read.last;
+      read.last = now;
+      return same;
+    })
+    .toBe(true);
+  return read.box;
+}
 
 test('every tip in the Add Ingredient dialog opens inside a 320px viewport', async ({ page }) => {
   await seedCoven(page, 'Fixture Coven Tips', 'tip-placement.test', { A: 'owner' });
@@ -42,9 +64,7 @@ test('every tip in the Add Ingredient dialog opens inside a 320px viewport', asy
     const tip = page.getByRole('tooltip');
     await expect(tip).toHaveCount(1);
     await expect(tip).toBeVisible();
-    // Let the fade and the first position settle before measuring.
-    await page.waitForTimeout(300);
-    const box = await tip.boundingBox();
+    const box = await settledBox(tip);
     const at = await button.boundingBox();
     if (!box || !at) throw new Error('A tip or its button has no box');
     edges.push(at.x);
@@ -113,9 +133,7 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
     await button.focus();
     const tip = page.getByRole('tooltip');
     await expect(tip).toBeVisible();
-    // Let the fade and the first position settle before measuring.
-    await page.waitForTimeout(300);
-    const box = await tip.boundingBox();
+    const box = await settledBox(tip);
     if (!box) throw new Error(`The tip on ${address} has no box`);
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(390);
@@ -140,8 +158,7 @@ test('the formal name\u2019s tip opens inside a 390px viewport on a coven\u2019s
     await button.focus();
     const tip = page.getByRole('tooltip').filter({ hasText: 'Its botanical name' });
     await expect(tip).toBeVisible();
-    await page.waitForTimeout(300);
-    const box = await tip.boundingBox();
+    const box = await settledBox(tip);
     if (!box) throw new Error(`The Quick Look tip at ${width}px has no box`);
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(width);
