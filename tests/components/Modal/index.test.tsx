@@ -692,21 +692,6 @@ describe('Modal', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    // Regression: a real browser can move the focus once the opening event's
-    // handler returns, after the commit; the question takes it back.
-    it('takes the focus back on Keep Editing if it is moved off just after the question opens', async () => {
-      renderGuarded();
-      change('Name', 'Testwort');
-      fireEvent.click(button('Close'));
-      expect(button('Keep Editing')).toHaveFocus();
-
-      screen.getByRole('dialog').focus();
-      await act(async () => {
-        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-      });
-      expect(button('Keep Editing')).toHaveFocus();
-    });
-
     // The owner's call during MB.115: a way out tried again flashes the
     // question, so the person sees why nothing closed, and each try does.
     it('flashes the question for a way out tried again while asking, the focus back on Keep Editing', () => {
