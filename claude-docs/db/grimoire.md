@@ -200,6 +200,30 @@ later task's.
 - **Guards:** `tests/db/revision-trigger.test.ts` fails a table that carries
   the column without the trigger, and proves the counter's behaviour.
 
+### The grimoire search
+
+The grimoire list's search (M10.11) matches a spell's title or intent as a word or
+part of one, with accents and case set aside: `findGrimoirePage` in
+`src/db/repository/grimoire.ts` runs `weightedSearch`, with one arm per field.
+Each arm tests `unaccent_immutable($1) <% unaccent_immutable(column)`, the
+compendium search's fold ([The compendium read](compendium-read.md)).
+
+- **`spells_unaccent_trgm`** (`0085_spells-unaccent-trgm.sql`) is the index
+  each arm starts from: a GIN trigram index (`gin_trgm_ops`) over
+  `unaccent_immutable(title)` and `unaccent_immutable(intent)`. It is an
+  expression index because a fold reaches a trigram index only through an index
+  over the same expression, and it is one index over both columns because a
+  multicolumn GIN index serves a test on either column alone, as
+  `ingredients_unaccent_trgm` does. It is not partial, because it reserves
+  nothing; only a unique index must be partial.
+- **Guard:** `tests/db/repository/grimoire-search-query.test.ts` explains the
+  page read the finder sends over about 20,000 spells and expects both arms to
+  start from the index. Like the compendium's plan test, it turns sequential
+  scans off, so it asks whether the index can be reached, not what the planner
+  prefers. With sequential scans allowed, the planner still starts both arms
+  from the index; it reads the coven's spells in full only to join the matches
+  back to them, a hash join that costs less than the search.
+
 ### The rest of the calls, and the ones not made
 
 - **`status` is a `spell_status` enum defaulting to `draft`**, on the column

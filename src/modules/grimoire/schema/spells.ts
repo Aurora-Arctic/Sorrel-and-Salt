@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { check, index, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns, revisionColumn } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { idColumn } from '../../../db/schema-parts';
@@ -59,6 +59,16 @@ export const spells = pgTable(
     check(
       'spells_complete_has_title',
       sql`${table.status} <> 'complete' OR ${table.title} IS NOT NULL`,
+    ),
+    // The grimoire search's fold, `unaccent_immutable($1) <% unaccent_immutable(title)`
+    // and the same over intent, reaches a trigram index only through an
+    // expression index over the same fold, as `ingredients_unaccent_trgm` does
+    // (claude-docs/db/grimoire.md, "The grimoire search"). One index over both
+    // columns serves either arm. Not partial: it reserves nothing.
+    index('spells_unaccent_trgm').using(
+      'gin',
+      sql`unaccent_immutable(${table.title}) gin_trgm_ops`,
+      sql`unaccent_immutable(${table.intent}) gin_trgm_ops`,
     ),
   ],
 );
