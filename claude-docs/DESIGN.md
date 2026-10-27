@@ -862,7 +862,13 @@ type Query {
     first: Int
     after: String
   ): QueryWorkspaceIngredientsConnection!
-  grimoire(workspaceId: ID!, first: Int, after: String): QueryGrimoireConnection! # workspace-visible + own private spells
+  grimoire(
+    workspaceId: ID!
+    orderBy: GrimoireOrder! = UPDATED_DESC
+    status: SpellStatus
+    first: Int
+    after: String
+  ): QueryGrimoireConnection! # workspace-visible + own private spells; status filters in SQL
   spell(id: ID!, workspaceId: ID!): Spell! # NOT_FOUND for a spell this reader may not see
 }
 
@@ -1199,6 +1205,12 @@ enum FormGroupIcon {
   substance
   fluid
   curio
+}
+
+enum GrimoireOrder {
+  UPDATED_DESC # last edited first, the default
+  CREATED_DESC # newest first
+  TITLE_ASC # by title, untitled spells last
 }
 
 enum Nomenclature {
