@@ -22,6 +22,15 @@ body .collapsible-section {
     border-bottom: 1px solid $hairline;
   }
 
+  // A section set among a form's fields, as the spell builder's When to Work
+  // It is, is parted from the field after it too. Its own rule, not added to
+  // :last-child's, so a browser without :has still closes a run of sections;
+  // that browser draws no line beneath this one, and loses nothing else. A
+  // variant's last section, followed by its Done, is left open as before.
+  &:has(+ .field) {
+    border-bottom: 1px solid $hairline;
+  }
+
   // A section holding an error takes the field's error edge along its top.
   &.is-invalid {
     border-top-color: $secondary;

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { CollapsibleSection } from '../CollapsibleSection';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
@@ -82,6 +83,9 @@ const FIELDS: readonly SpellBuilderField[] = [
   'note',
 ];
 
+/** The fields When to Work It folds. */
+const WHEN_FIELDS: readonly SpellBuilderField[] = ['moonPhase', 'dayOfWeek'];
+
 /** The fields as the save sends them: trimmed, and null for blank, as the schema reads them. */
 type SpellBuilderInput = Record<SpellBuilderField, string | null>;
 
@@ -138,6 +142,19 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
     (field, index) => (typed[index] ?? '').trim() !== (defaultValues?.[field] ?? '').trim(),
   );
 
+  // When to Work It opens shut, a new spell's and a saved one's alike: its line
+  // says what it holds, and a save refused on one of its fields opens it.
+  const [whenOpen, setWhenOpen] = useState(false);
+  const whenInvalid = WHEN_FIELDS.some((field) => errors[field] !== undefined);
+  const whenLine =
+    WHEN_FIELDS.map((field) => (typed[FIELDS.indexOf(field)] ?? '').trim())
+      .filter(Boolean)
+      .join(' · ') || 'Nothing yet';
+  /** Opens When to Work It when one of its fields now holds an error, so the error is seen. */
+  const openWhenErred = () => {
+    if (WHEN_FIELDS.some((field) => methods.getFieldState(field).invalid)) setWhenOpen(true);
+  };
+
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, { root });
 
@@ -181,10 +198,14 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
       placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
         rest.length === 0 && isField(field) ? field : undefined,
       );
+      openWhenErred();
     }
   };
 
-  const submit = handleSubmit(send, () => closeGuard.refused());
+  const submit = handleSubmit(send, () => {
+    closeGuard.refused();
+    openWhenErred();
+  });
   const closeGuard = useSaveOnClose(dirty, isSubmitting, () => void submit());
 
   return (
@@ -219,10 +240,16 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
             autoComplete="off"
           />
           {/* The recipe's timing: when to work the spell, not when it was worked,
-              which a working's own date gives (M13.4). The shared .fieldset
-              primitive, so the legend names the group to a screen reader. */}
-          <fieldset className="fieldset">
-            <legend className="fieldset__legend">When to Work It</legend>
+              which a working's own date gives (M13.4). */}
+          <CollapsibleSection
+            title="When to Work It"
+            summary={whenLine}
+            fold={{
+              open: whenOpen,
+              invalid: whenInvalid,
+              onToggle: () => setWhenOpen((open) => !open),
+            }}
+          >
             <SpellSuggestField
               name="moonPhase"
               label="Moon Phase"
@@ -236,7 +263,7 @@ const SpellBuilder = ({ workspaceId, spell, onCreated }: SpellBuilderProps): Rea
               placeholder="Add a day"
               options={DAYS_OF_THE_WEEK}
             />
-          </fieldset>
+          </CollapsibleSection>
           <TextField<SpellBuilderValues>
             name="note"
             label="Note"

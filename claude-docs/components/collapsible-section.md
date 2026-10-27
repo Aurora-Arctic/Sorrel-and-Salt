@@ -61,7 +61,11 @@ a card in a card reads as nesting the form does not have. Each heading block
 is `space(3)` deep above and below, its `h3` in the display face at 1.25rem,
 a step under `h4`, the summary in the muted ink at the caption size, weight
 300, and the flag in the error red; open, the fields follow at the form's
-gap, `space(5)` short of the next hairline. The rules are nested under `body`
+gap, `space(5)` short of the next hairline. The last of a run of sections
+closes with a hairline beneath it, and so does a section followed by a
+field (`:has(+ .field)`), as the spell builder's When to Work It is; a
+browser without `:has` draws no line beneath that one. A variant's last
+section, followed by its Done, has none. The rules are nested under `body`
 to outweigh layout-base's bare `body section` and typography's `body h3`. A
 variant's tighter sections are set in `IngredientForm/index.scss`.
 

@@ -86,9 +86,13 @@ states a rule a person could trip on
 stored as typed: the columns are free text
 ([`../db/grimoire.md`](../db/grimoire.md)).
 
-- **Moon Phase and Day of the Week** sit together in a group headed "When to
-  Work It": a `<fieldset className="fieldset">` whose legend names the group
-  to a screen reader. They are the recipe's timing, meaning when to work the
+- **Moon Phase and Day of the Week** sit together in a section headed "When
+  to Work It", a `CollapsibleSection` at `h3`
+  ([`collapsible-section.md`](collapsible-section.md)). It opens shut, for a
+  new spell and a saved one alike, so the form reads short; shut, its line
+  names the values it holds, joined by a middle dot ("Waxing Moon · Monday"),
+  or reads "Nothing yet". A save refused on either field opens it, flagged
+  "Has an error to fix". They are the recipe's timing, meaning when to work the
   spell, not a record of when it was worked. A working's own day and moon
   phase follow from its `workedOn` date (M13.4). Both are comboboxes
   ([`combobox.md`](combobox.md)), `SpellSuggestField` in
@@ -151,7 +155,9 @@ Open Again to look once more after Close.
 
 `tests/components/SpellBuilder/index.test.tsx` uses role and label queries
 against MSW, which answers in the route's own error shape. It covers the
-empty fields and no Instructions box, no Cancel, nothing to save until a
+empty fields and no Instructions box, When to Work It opening shut with its
+line, opening from its heading, keeping what was typed across a shut, and
+opening when a save is refused on one of its fields, no Cancel, nothing to save until a
 field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
