@@ -5,12 +5,6 @@ import { CLIENT_ONLY_PARAMS, withoutClientOnlyParams } from '../../src/db/connec
 const BASE = 'postgresql://testuser:testpass@ep-fixture-host-pooler.example.test/testdb';
 
 describe('withoutClientOnlyParams', () => {
-  it.each(CLIENT_ONLY_PARAMS)('removes %s', (name) => {
-    const url = withoutClientOnlyParams(`${BASE}?sslmode=require&${name}=require`);
-    expect(new URL(url).searchParams.has(name)).toBe(false);
-    expect(new URL(url).searchParams.get('sslmode')).toBe('require');
-  });
-
   it('removes every listed parameter at once and leaves the rest', () => {
     const query = CLIENT_ONLY_PARAMS.map((name) => `${name}=x`).join('&');
     const url = new URL(withoutClientOnlyParams(`${BASE}?${query}&sslmode=require`));
