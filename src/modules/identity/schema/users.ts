@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, boolean, pgEnum, index, check, timestamp } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  boolean,
+  pgEnum,
+  index,
+  check,
+  timestamp,
+  integer,
+} from 'drizzle-orm/pg-core';
 import { auditStampColumnsReferencing, deletionColumnsReferencing } from '../../../db/audit';
 import type { UsersIdReference } from '../../../db/types';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
@@ -14,6 +23,14 @@ export const auditStampColumns = auditStampColumnsReferencing(usersId);
 // The four stamps plus two, spread from the same instance, so the six-column
 // set has one definition and the two cannot drift (CLAUDE.md rule 3).
 export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencing(usersId) };
+
+// A counter the database adds one to on every UPDATE, through the shared
+// `bump_revision()` trigger function each table carrying it attaches in its
+// own migration (0084). A save names the revision it read and is refused if
+// the row has moved since. Named `revision`, not `version`, which v2 keeps
+// for a saved snapshot a person can open (claude-docs/db/grimoire.md,
+// "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
+export const revisionColumn = () => integer('revision').notNull().default(1);
 
 // Admins curate the global vocabularies and manage the people page; curators
 // curate the same vocabularies and reach no people page (M11.20). A closed set

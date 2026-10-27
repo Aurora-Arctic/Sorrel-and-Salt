@@ -6,7 +6,9 @@ import {
   findManyInSpell,
   findManyOfIngredients,
   findManyOfSpellIngredientsIncludingSoftDeleted,
+  findManySpells,
   findOneIngredient,
+  findOneSpell,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -85,6 +87,23 @@ const spellHolding = (
   );
 
 const idsOf = (rows: { id: string }[]) => rows.map((row) => row.id).sort();
+
+// M13.15: a save names the revision it read, so every finder that hands back a
+// spell row hands back its revision with it.
+describe('the spell finders', () => {
+  it('return the revision the row is at', async () => {
+    const id = await spellHolding([]);
+    await sql`update spells set intent = 'One' where id = ${id}`;
+    await sql`update spells set intent = 'Two' where id = ${id}`;
+    const membership = await proofFor(B);
+
+    const one = await findOneSpell(membership, id);
+    const many = await findManySpells(membership);
+
+    expect(one?.revision).toBe(3);
+    expect(many.map((row) => [row.id, row.revision])).toEqual([[id, 3]]);
+  });
+});
 
 describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
   it('hands every member what a shared spell holds, a deleted ingredient tombstone and all', async () => {

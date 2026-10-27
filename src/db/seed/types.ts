@@ -129,6 +129,9 @@ export type SeedSpell = Pick<
   'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note' | 'status'
 > & {
   id: string;
+  // The table lets a draft go untitled (M13.15), but every seeded spell is
+  // titled: the seed names a spell by its title when it reports a fault.
+  title: string;
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
   categories: string[];
   steps: SeedStep[];
