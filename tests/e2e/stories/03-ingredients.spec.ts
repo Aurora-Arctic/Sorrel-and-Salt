@@ -403,14 +403,14 @@ async function jarsOf(coven: Coven, name: string) {
 }
 
 test(
-  "a member edits an ingredient's stock in one dialog, by mouse or keyboard, adding and removing forms, and a refused save keeps what was typed",
+  "a member edits an ingredient's stock in one dialog, by mouse or keyboard, adding and removing forms",
   { tag: '@story-24' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 24', 'story-24.test', {
       A: 'owner',
       C: 'viewer',
     });
-    const { testwortStock, rosemaryOil } = await withSql(async (sql) => {
+    const { testwortStock } = await withSql(async (sql) => {
       const testwort = await localIngredient(sql, coven.id, coven.users.A);
       const testwortStock = await insertStock(
         sql,
@@ -422,9 +422,7 @@ test(
       await stockJars(sql, coven, [
         { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
       ]);
-      // Rosemary's other form, which the coven does not hold yet.
-      const rosemaryOil = await compendiumVariant(sql, 'Rosemary', 'Oil');
-      return { testwortStock, rosemaryOil };
+      return { testwortStock };
     });
     const path = listPath(coven);
     await signInAgainAs(page, coven.users.A);
@@ -568,38 +566,6 @@ test(
       expect(await stockOf(testwortStock)).toEqual({ quantity: 6, unit: 'piece', threshold: 3 });
     });
 
-    await test.step('a refused save keeps what was typed and says which form it was', async () => {
-      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
-      await editor.open.click();
-      await editor.add('Oil');
-      await editor.jar('Oil').quantity.fill('12');
-      // Why it is refused: another member stocked Oil while the dialog was open, and a form is
-      // held once, so this add finds it held (the batch's own message, on that row).
-      await withSql(async (sql) => {
-        await insertStock(
-          sql,
-          coven.id,
-          rosemaryOil,
-          { quantity: 1, unit: 'ml', threshold: 0 },
-          coven.users.A,
-        );
-      });
-      await editor.save.click();
-
-      // The refusal is the form's own, said on its jar, which is chosen to show it.
-      await expect(editor.jar('Oil').group).toContainText('already holds this form');
-      await expect(editor.dialog).toBeVisible();
-      await expect(editor.jar('Oil').quantity).toHaveValue('12');
-      // The refusal wrote nothing of the batch.
-      expect(await jarsOf(coven, 'Rosemary')).toEqual([
-        { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
-        { form: 'Oil', quantity: 1, unit: 'ml', threshold: 0 },
-      ]);
-      await editor.cancel.click();
-      await page.getByRole('button', { name: 'Discard Changes' }).click();
-      await expect(editor.dialog).toHaveCount(0);
-    });
-
     await test.step('a save that fails on the network puts nothing on the page and explains', async () => {
       // The network fails the write and nothing else, so the page's own
       // reads still answer: a failure the member could meet on a train.
@@ -660,6 +626,59 @@ test(
       await expect(stockEditor(details, 'Rosemary').open).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
     });
+  },
+);
+
+// Its own test, not a step of the one above: that test ran close to the 30 s
+// timeout on CI, and this case needs only a held jar and a form not yet held.
+test(
+  "a member's refused stock save keeps what was typed and says which form it was",
+  { tag: '@story-24' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Story 24 Refusal', 'story-24-refusal.test', {
+      A: 'owner',
+    });
+    const rosemaryOil = await withSql(async (sql) => {
+      await stockJars(sql, coven, [
+        { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
+      ]);
+      // Rosemary's other form, which the coven does not hold yet.
+      return compendiumVariant(sql, 'Rosemary', 'Oil');
+    });
+    await signInAgainAs(page, coven.users.A);
+    await page.goto(listPath(coven));
+    const list = ingredientList(page);
+    await expect(rowOf(list, 'Rosemary')).toBeVisible();
+
+    const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+    await editor.open.click();
+    await editor.add('Oil');
+    await editor.jar('Oil').quantity.fill('12');
+    // Why it is refused: another member stocked Oil while the dialog was open, and a form is
+    // held once, so this add finds it held (the batch's own message, on that row).
+    await withSql(async (sql) => {
+      await insertStock(
+        sql,
+        coven.id,
+        rosemaryOil,
+        { quantity: 1, unit: 'ml', threshold: 0 },
+        coven.users.A,
+      );
+    });
+    await editor.save.click();
+
+    // The refusal is the form's own, said on its jar, which is chosen to show it.
+    await expect(editor.jar('Oil').group).toContainText('already holds this form');
+    await expect(editor.dialog).toBeVisible();
+    await expect(editor.jar('Oil').quantity).toHaveValue('12');
+    // The refusal wrote nothing of the batch.
+    expect(await jarsOf(coven, 'Rosemary')).toEqual([
+      { form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
+      { form: 'Oil', quantity: 1, unit: 'ml', threshold: 0 },
+    ]);
+    await editor.cancel.click();
+    await page.getByRole('button', { name: 'Discard Changes' }).click();
+    await expect(editor.dialog).toHaveCount(0);
   },
 );
 
