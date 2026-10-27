@@ -7,6 +7,7 @@ export * from './services/spell-reads';
 export * from './loaders/spell-children';
 export * from './graphql/spell';
 export type {
+  GrimoireOrder,
   SpellDetail,
   SpellInput,
   SpellKey,
@@ -15,6 +16,7 @@ export type {
   SpellStepIngredient,
   SpellStepRow,
   SpellStepUpdate,
+  SpellStatus,
   SpellStepVariant,
   SpellStepView,
   SpellUpdate,

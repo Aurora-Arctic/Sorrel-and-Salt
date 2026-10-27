@@ -35,17 +35,17 @@ shows with the database client replaced by one that throws.
 
 Nine finders read through it, seven of them in `spells.ts`:
 
-| Finder                                                                             | Reads                                                                  |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `findManySpells(membership)`                                                       | every spell of the coven this member may read                          |
-| `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell              |
-| `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                  |
-| `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)    |
-| `findPageInReadableSpells(membership, table, order, page, where?)` (`finders.ts`)  | a cursor page of `spells` or a `spell_id` table (M10.9)                |
-| `findGrimoirePage(membership, page)` (`grimoire.ts`)                               | the grimoire's page, newest first, through the one above               |
-| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)   |
-| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above |
-| `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | those ingredients' forms, deleted or not (M10.9)                       |
+| Finder                                                                             | Reads                                                                          |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `findManySpells(membership)`                                                       | every spell of the coven this member may read                                  |
+| `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell                      |
+| `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                          |
+| `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)            |
+| `findPageInReadableSpells(membership, table, order, page, where?)` (`finders.ts`)  | a cursor page of `spells` or a `spell_id` table (M10.9)                        |
+| `findGrimoirePage(membership, page, query)` (`grimoire.ts`)                        | the grimoire's page in `query.order`, of `query.status`, through the one above |
+| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)           |
+| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above         |
+| `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | those ingredients' forms, deleted or not (M10.9)                               |
 
 **Proved as one matrix, held by one guard (M10.6).**
 `tests/db/repository/readable-spells.test.ts` runs every relationship against

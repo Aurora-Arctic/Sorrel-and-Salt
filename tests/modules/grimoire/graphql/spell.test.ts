@@ -50,8 +50,20 @@ const SPELL = `
 
 const ONE = `query ($workspaceId: ID!, $id: ID!) { spell(workspaceId: $workspaceId, id: $id) { ${SPELL} } }`;
 
-const PAGE = `query ($workspaceId: ID!, $first: Int, $after: String) {
-  grimoire(workspaceId: $workspaceId, first: $first, after: $after) {
+const PAGE = `query (
+  $workspaceId: ID!
+  $first: Int
+  $after: String
+  $orderBy: GrimoireOrder
+  $status: SpellStatus
+) {
+  grimoire(
+    workspaceId: $workspaceId
+    first: $first
+    after: $after
+    orderBy: $orderBy
+    status: $status
+  ) {
     edges { node { ${SPELL} } }
     pageInfo { hasNextPage endCursor }
   }
@@ -194,7 +206,7 @@ describe('spell', () => {
 });
 
 describe('grimoire', () => {
-  it('pages newest first, leaving out another author’s private spell', async () => {
+  it('pages last edited first by default, leaving out another author’s private spell', async () => {
     const titles = ['First Working', 'Second Working', 'Third Working'];
     for (const title of titles) {
       await insertSpell(sql, makeSpell({ workspaceId: WORKSPACE_W_ID, title }), B.id);
@@ -220,6 +232,32 @@ describe('grimoire', () => {
     });
     expect(second.data!.grimoire.edges.map((edge) => edge.node.title)).toEqual(['First Working']);
     expect(second.data!.grimoire.pageInfo.hasNextPage).toBe(false);
+  });
+
+  it('takes the order and the status it is asked for', async () => {
+    for (const [title, status] of [
+      ['Cedar Knot', 'complete'],
+      ['Alder Jar', 'complete'],
+      ['Birch Charm', 'draft'],
+    ] as const) {
+      await insertSpell(sql, makeSpell({ workspaceId: WORKSPACE_W_ID, title, status }), B.id);
+    }
+    const titles = (page: { data?: Page | null }) =>
+      page.data!.grimoire.edges.map((edge) => edge.node.title);
+
+    const byTitle = await run<Page>(asUser(A), PAGE, {
+      workspaceId: WORKSPACE_W_ID,
+      orderBy: 'TITLE_ASC',
+    });
+    expect(byTitle.errors).toBeUndefined();
+    expect(titles(byTitle)).toEqual(['Alder Jar', 'Birch Charm', 'Cedar Knot']);
+
+    const complete = await run<Page>(asUser(A), PAGE, {
+      workspaceId: WORKSPACE_W_ID,
+      orderBy: 'TITLE_ASC',
+      status: 'complete',
+    });
+    expect(titles(complete)).toEqual(['Alder Jar', 'Cedar Knot']);
   });
 
   it('refuses a non-member FORBIDDEN', async () => {

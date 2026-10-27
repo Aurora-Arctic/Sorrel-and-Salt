@@ -1,10 +1,13 @@
 import type { IngredientRow } from '@/db/repository';
 import type { IngredientVariantRow } from '@/modules/ingredients';
 import type { spellSteps } from './schema/spell-steps';
-import type { spells } from './schema/spells';
+import type { GRIMOIRE_ORDERS, spells } from './schema/spells';
 
 /** `'draft' | 'complete'`, read off the column rather than restated. */
 export type SpellStatus = (typeof spells.$inferSelect)['status'];
+
+/** How a grimoire page is ordered: `'UPDATED_DESC' | 'CREATED_DESC' | 'TITLE_ASC'`. */
+export type GrimoireOrder = (typeof GRIMOIRE_ORDERS)[number];
 
 /** `'private' | 'workspace'`, read off the column rather than restated. */
 export type SpellVisibility = (typeof spells.$inferSelect)['visibility'];

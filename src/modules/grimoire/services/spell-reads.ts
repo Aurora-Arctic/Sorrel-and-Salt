@@ -5,6 +5,7 @@ import {
   findManyInSpells,
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findOneSpell,
+  type GrimoireQuery,
 } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -26,8 +27,8 @@ import type { SpellKey, SpellRow, SpellStepView } from '../types';
 // spell this reader may not see is `NotFound` by id and absent from a batch.
 
 /**
- * One page of the coven's grimoire, newest first: its shared spells and the
- * caller's own private ones.
+ * One page of the coven's grimoire in `order`: its shared spells and the
+ * caller's own private ones, only those of `status` when it is given.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -35,9 +36,10 @@ export async function listGrimoire(
   session: Session,
   workspaceId: string,
   page: PageRequest,
+  query: GrimoireQuery,
 ): Promise<PageEntry<SpellRow>[]> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-  return findGrimoirePage(membership, page);
+  return findGrimoirePage(membership, page, query);
 }
 
 /**

@@ -1053,11 +1053,27 @@ through the finders that keep a private spell its author's
 never reaches a resolver: it is left out of a list in SQL, and by id it is
 `NOT_FOUND`, the same answer as a spell that does not exist.
 
-- **`grimoire(workspaceId, first, after)`** is a cursor page (a page that
-  resumes from the last row it gave, rather than counting rows to skip) of the
-  coven's shared spells and the caller's own private ones, newest first. It is
-  declared with `t.pagedConnection` and reads through `findGrimoirePage`, so
-  the order is `createdAt`, not the title, which M13.15 makes optional.
+- **`grimoire(workspaceId, orderBy, status, first, after)`** is a cursor page
+  (a page that resumes from the last row it gave, rather than counting rows to
+  skip) of the coven's shared spells and the caller's own private ones. It is
+  declared with `t.pagedConnection` and reads through `findGrimoirePage`.
+  - `orderBy` is the `GrimoireOrder` enum, and each order's cursor key ends
+    in the spell's id, so spells that tie on the rest still page once each:
+
+    | Value                    | Order                                  |
+    | ------------------------ | -------------------------------------- |
+    | `UPDATED_DESC` (default) | last edited first, by `updatedAt`      |
+    | `CREATED_DESC`           | newest first, by `createdAt`           |
+    | `TITLE_ASC`              | by title, A to Z, untitled spells last |
+
+    A title is required today, but M13.15 lets a draft go untitled, so
+    `TITLE_ASC` is already written for a missing title: it sorts on whether
+    the title is missing first, then on the title read as empty when missing.
+    A cursor compares its key as one row value, which a null part would break.
+
+  - `status` is the `SpellStatus` enum, `draft` or `complete`. Given, it
+    keeps only the spells of that status, filtered in SQL; left out, the page
+    holds both. The grimoire page (M10.11) reads its Drafts tab through it.
 - **`spell(id, workspaceId): Spell!`** is one spell. It takes the coven as
   `ingredient(id, workspaceId)` does, so the membership check runs before any
   read. A spell in another coven, or another author's private spell, is
@@ -1082,7 +1098,8 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
 
 - **`SpellStep`** is one step. `ingredient` is the linked ingredient, kept and
   answered even once it has been deleted, and `variant` the form it lays,
-  `null` when that form alone has been deleted. `name` and `form` read the
+  answered too once that form alone has been deleted, through
+  `findFormsInSpellsIncludingSoftDeleted` (M10.9). `name` and `form` read the
   linked row's when there is one and the step's own text otherwise.
   `quantity` is a `Float`, turned from Postgres's `numeric` text, and `unit`
   the stock's `InventoryUnit` enum.
@@ -1094,7 +1111,8 @@ named. A coven the caller is not in refuses at the field, `FORBIDDEN` with the
 field's path.
 
 `tests/modules/grimoire/graphql/spell.test.ts` holds the transport's half: the
-fields, the gaps both ways, the refusal codes by direct id, the paging, and the
+fields, the gaps both ways, the refusal codes by direct id, the paging, the
+`orderBy` and `status` arguments, and the
 read count for a page of one and of four. Which reader sees which spell is
 `services/spell-reads.test.ts`'s, and the loaders' read counts
 `loaders/spell-children.test.ts`'s.

@@ -5,17 +5,18 @@ import {
   findManyInSpells,
   findOneSpell,
   findPageInReadableSpells,
+  type GrimoireQuery,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '@/modules/grimoire';
 import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
-import { spells } from '@/modules/grimoire/schema/spells';
+import { GRIMOIRE_ORDERS, spells } from '@/modules/grimoire/schema/spells';
 import { A, B, D, asUser } from '../../support/as-user';
 import { useTestDatabase } from '../../support/db/database';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
-import type { PageRequest } from '@/lib/types';
+import type { Cursor, PageRequest } from '@/lib/types';
 
 // M10.9: the cursor-page reader for spells and the tables hung off a spell,
 // `findPageInReadableSpells`. It ANDs `readableSpells` (M10.6) itself, so a
@@ -136,17 +137,84 @@ describe('findPageInReadableSpells', () => {
 });
 
 describe('findGrimoirePage', () => {
-  it('pages the readable spells newest first, and never by title, which M13.15 makes nullable', async () => {
-    const older = await spellBy(A, 'Zinnia Bowl', 'workspace');
-    const hidden = await spellBy(B, 'Yarrow Pouch', 'private');
-    const newer = await spellBy(A, 'Alder Jar', 'workspace');
-    await sql`update spells set created_at = now() - interval '2 days' where id = ${older}`;
-    await sql`update spells set created_at = now() - interval '1 day' where id = ${hidden}`;
+  /**
+   * Sets spells' stamps, the `updated_at` trigger off so the value holds. One
+   * statement, so spells stamped together share `now()` to the microsecond.
+   */
+  const stamp = (ids: string | string[], created: string, updated: string) =>
+    sql.begin(async (tx) => {
+      await tx`alter table spells disable trigger set_updated_at`;
+      await tx`
+        update spells
+        set created_at = now() - ${created}::interval, updated_at = now() - ${updated}::interval
+        where id in ${sql([ids].flat())}`;
+    });
+
+  /** Three of A's shared spells whose three orders all differ, and B's private one. */
+  async function grimoire() {
+    const birch = await spellBy(A, 'Birch Charm', 'workspace');
+    const alder = await spellBy(A, 'Alder Jar', 'workspace');
+    const cedar = await spellBy(A, 'Cedar Knot', 'workspace');
+    const hidden = await spellBy(B, 'Ash Ward', 'private');
+    // Before the stamps, which the trigger would otherwise overwrite.
+    await sql`update spells set status = 'complete' where id in ${sql([birch, cedar])}`;
+    await stamp(birch, '4 days', '1 day');
+    await stamp(alder, '3 days', '3 days');
+    await stamp(cedar, '2 days', '2 days');
+    // The precondition: B reads their own spell, which A's pages leave out.
     expect(await findOneSpell(await proofFor(B), hidden)).toMatchObject({ id: hidden });
+    return { birch, alder, cedar };
+  }
 
-    const page = await findGrimoirePage(await proofFor(A), FIRST_PAGE);
+  const pageOf = async (query: GrimoireQuery, page: PageRequest = FIRST_PAGE) =>
+    (await findGrimoirePage(await proofFor(A), page, query)).map((entry) => entry.node.id);
 
-    expect(page.map((entry) => entry.node.id)).toEqual([newer, older]);
+  it.each([
+    ['UPDATED_DESC', ['birch', 'cedar', 'alder']],
+    ['CREATED_DESC', ['cedar', 'alder', 'birch']],
+    ['TITLE_ASC', ['alder', 'birch', 'cedar']],
+  ] as const)('pages the readable spells in %s order', async (order, expected) => {
+    const ids = await grimoire();
+
+    expect(await pageOf({ order })).toEqual(expected.map((name) => ids[name]));
+  });
+
+  it.each(GRIMOIRE_ORDERS)(
+    'pages spells that tie on every %s key once each, by id, one at a time',
+    async (order) => {
+      const tied: string[] = [];
+      for (let i = 0; i < 3; i++) tied.push(await spellBy(A, 'Testing Jar', 'workspace'));
+      await stamp(tied, '1 day', '1 day');
+
+      const walked: string[] = [];
+      let after: Cursor | undefined;
+      for (;;) {
+        const [entry, ...rest] = await findGrimoirePage(
+          await proofFor(A),
+          { limit: 1, inverted: false, after },
+          { order },
+        );
+        expect(rest).toEqual([]);
+        if (!entry) break;
+        walked.push(entry.node.id);
+        after = entry.cursor;
+      }
+
+      expect(walked).toEqual(await pageOf({ order }));
+      expect(walked).toEqual([...tied].sort());
+    },
+  );
+
+  it.each([
+    ['complete', ['birch', 'cedar']],
+    ['draft', ['alder']],
+    [undefined, ['birch', 'cedar', 'alder']],
+  ] as const)('keeps only the spells of status %s, in SQL', async (status, expected) => {
+    const ids = await grimoire();
+
+    expect(await pageOf({ order: 'UPDATED_DESC', status })).toEqual(
+      expected.map((name) => ids[name]),
+    );
   });
 });
 

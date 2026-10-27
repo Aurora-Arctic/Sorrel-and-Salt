@@ -349,6 +349,15 @@ type FormSuggestion {
 }
 
 """
+How a grimoire page is ordered: UPDATED_DESC, last edited first (the default); CREATED_DESC, newest first; or TITLE_ASC, by title, untitled spells last.
+"""
+enum GrimoireOrder {
+  CREATED_DESC
+  TITLE_ASC
+  UPDATED_DESC
+}
+
+"""
 A curated deity or category, by id, and how many entries it would list.
 """
 type IdFacetCount {
@@ -1176,9 +1185,9 @@ type Query {
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
 
   """
-  A coven's spells, newest first: the shared ones and the caller's own private ones.
+  A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given.
   """
-  grimoire(after: String, before: String, first: Int, last: Int, workspaceId: ID!): QueryGrimoireConnection!
+  grimoire(after: String, before: String, first: Int, last: Int, orderBy: GrimoireOrder! = UPDATED_DESC, status: SpellStatus, workspaceId: ID!): QueryGrimoireConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """

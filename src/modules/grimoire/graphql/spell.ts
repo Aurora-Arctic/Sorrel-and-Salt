@@ -3,7 +3,7 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { compareSpellCategories } from '../categories/compare';
 import { listGrimoire, readSpell } from '../services/spell-reads';
-import { spellStatus, spellVisibility } from '../schema/spells';
+import { GRIMOIRE_ORDERS, spellStatus, spellVisibility } from '../schema/spells';
 import type { SpellRow, SpellStepView } from '../types';
 import { IngredientRef, IngredientVariantRef, InventoryUnitEnum } from '@/modules/ingredients';
 import { CategoryRef, type CategoryRow } from '@/modules/vocabulary';
@@ -22,6 +22,13 @@ const SpellVisibilityEnum = builder.enumType('SpellVisibility', {
 });
 
 const SpellStatusEnum = builder.enumType('SpellStatus', { values: spellStatus.enumValues });
+
+// How a grimoire page is ordered (M10.9), an argument rather than a field.
+const GrimoireOrderEnum = builder.enumType('GrimoireOrder', {
+  values: GRIMOIRE_ORDERS,
+  description:
+    'How a grimoire page is ordered: UPDATED_DESC, last edited first (the default); CREATED_DESC, newest first; or TITLE_ASC, by title, untitled spells last.',
+});
 
 /** `numeric` text as Postgres returns it, as a number; null stays null. */
 const amount = (value: string | null) => (value === null ? null : Number(value));
@@ -140,10 +147,18 @@ builder.queryField('grimoire', (t) =>
   t.pagedConnection({
     type: SpellRef,
     description:
-      "A coven's spells, newest first: the shared ones and the caller's own private ones.",
-    args: { workspaceId: t.arg.id({ required: true }) },
-    resolve: (_root, { workspaceId }, page, context) =>
-      listGrimoire(sessionOf(context), workspaceId, page),
+      "A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given.",
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      orderBy: t.arg({ type: GrimoireOrderEnum, required: true, defaultValue: 'UPDATED_DESC' }),
+      // Absent means both.
+      status: t.arg({ type: SpellStatusEnum }),
+    },
+    resolve: (_root, { workspaceId, orderBy, status }, page, context) =>
+      listGrimoire(sessionOf(context), workspaceId, page, {
+        order: orderBy,
+        status: status ?? undefined,
+      }),
   }),
 );
 

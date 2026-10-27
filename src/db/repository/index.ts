@@ -139,6 +139,7 @@ export type {
   CommonNameSuggestion,
   CompendiumFacets,
   CompendiumScore,
+  GrimoireQuery,
   SuggestionGroup,
   SuggestionGroupTag,
   CupboardEntryRow,

@@ -31,6 +31,8 @@ beforeEach(async () => {
 });
 
 const PAGE = { limit: 26, inverted: false };
+// Newest first: each fixture spell is written after the last.
+const NEWEST = { order: 'CREATED_DESC' } as const;
 
 /** A spell in `workspaceId`, written by `author`, as setup rather than through the service. */
 function seed(
@@ -71,14 +73,12 @@ describe('listGrimoire', () => {
     const hidden = await seed(B, 'private', { title: 'Private Working' });
     const newer = await seed(A, 'workspace', { title: 'Newer Working' });
     // Why the private spell's absence is the rule's: its author lists it.
-    expect(ids((await listGrimoire(asUser(B), WORKSPACE_W_ID, PAGE)).map((e) => e.node))).toEqual([
-      newer,
-      hidden,
-      older,
-    ]);
+    expect(
+      ids((await listGrimoire(asUser(B), WORKSPACE_W_ID, PAGE, NEWEST)).map((e) => e.node)),
+    ).toEqual([newer, hidden, older]);
 
     for (const reader of [A, C]) {
-      const page = await listGrimoire(asUser(reader), WORKSPACE_W_ID, PAGE);
+      const page = await listGrimoire(asUser(reader), WORKSPACE_W_ID, PAGE, NEWEST);
       expect(ids(page.map((entry) => entry.node))).toEqual([newer, older]);
     }
   });
@@ -88,13 +88,13 @@ describe('listGrimoire', () => {
     // Why this could have succeeded: D lists their own coven's grimoire.
     const own = await seed(D, 'workspace', {}, WORKSPACE_X_ID);
     expect(
-      ids((await listGrimoire(asUser(D), WORKSPACE_X_ID, PAGE)).map((entry) => entry.node)),
+      ids((await listGrimoire(asUser(D), WORKSPACE_X_ID, PAGE, NEWEST)).map((entry) => entry.node)),
     ).toEqual([own]);
 
     for (const reader of [D, E, F]) {
-      await expect(listGrimoire(asUser(reader), WORKSPACE_W_ID, PAGE)).rejects.toBeInstanceOf(
-        Forbidden,
-      );
+      await expect(
+        listGrimoire(asUser(reader), WORKSPACE_W_ID, PAGE, NEWEST),
+      ).rejects.toBeInstanceOf(Forbidden);
     }
   });
 });
