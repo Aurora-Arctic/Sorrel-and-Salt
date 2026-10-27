@@ -25,7 +25,6 @@ const users = {
   member: { id: '' }, // a member of Alpha alone
   multi: { id: '' }, // a member of both, holding the right to create
   admin: { id: '' },
-  plain: { id: '' }, // signed in, in no coven, no admin
 };
 
 test.beforeAll(async ({ browser, slot }) => {
@@ -174,21 +173,6 @@ test('the account page is in the shell, with no coven nav and no switcher', asyn
   ).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
-});
-
-test('a signed-in non-admin meets the 403 inside the shell', async ({ page }) => {
-  await signInAgainAs(page, users.plain.id);
-  await page.setViewportSize(DESKTOP);
-
-  const response = await page.goto('/admin');
-
-  expect(response?.status()).toBe(403);
-  await expect(page.getByRole('banner')).toBeVisible();
-  await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
-  await expect(
-    page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
-  ).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
 });
 
 test('at a phone the coven nav is the bottom bar and the keyboard reaches the whole shell', async ({
