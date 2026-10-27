@@ -1,10 +1,12 @@
 ## Tests
 
-- `tests/app/api/auth/[...all]/route.test.ts` — calls the exported `GET`
-  against `/api/auth/ok` and asserts a real `200`/`{ ok: true }`, not a 404.
-  Chosen specifically because it's the one built-in endpoint that never
-  touches the database, so it exercises real route mounting without needing
-  Postgres.
+- The route at `/api/auth/[...all]` has no Vitest test: it hands every request
+  to Better Auth, and every e2e run proves it is mounted —
+  `tests/e2e/database.ts` reads `/api/auth/get-session` from the worker's
+  server each time a spec recreates its database and throws unless it answers
+  200, and `tests/e2e/sign-in-configured-providers.spec.ts` routes
+  `/api/auth/sign-in`. Its unit test, which called `/api/auth/ok`, was
+  deleted in M14.27 as a second proof of the same thing.
 - `tests/lib/auth.test.ts` — asserts importing `@/lib/auth` throws when
   `BETTER_AUTH_SECRET` is unset at `NODE_ENV=production`, and doesn't
   throw when unset outside it; asserts `socialProviders()` registers a
@@ -144,9 +146,9 @@
   settles that by construction rather than by convention.
 - **No automated test for the sign-in redirect, and not for the same reason as
   the introspection gap below.** A `POST /api/auth/sign-in/social` case lived in
-  `route.test.ts` briefly and broke CI: unlike `/ok`, that endpoint persists a
+  the auth route's unit test (deleted in M14.27) briefly and broke CI: unlike `/ok`, that endpoint persists a
   `verifications` row (PKCE state) before redirecting, so it needs schema that
-  is really there. `route.test.ts` is a **`unit`** test, so it reads the plain
+  is really there. That file was a **`unit`** test, so it read the plain
   `sorrel` database — the per-worker `sorrel_test_<n>` clone is
   `db`-project-only and was never in this test's path, which also means M1.27's
   seeded template does not reach it. It passed locally only because this session

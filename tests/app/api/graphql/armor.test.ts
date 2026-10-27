@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, afterEach } from 'vitest';
+import { describe, expect, it, vi, afterAll, beforeAll } from 'vitest';
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
@@ -37,15 +37,20 @@ vi.mock('@/graphql/schema', async () => {
 
 // Staging and every preview run at NODE_ENV=production, and the depth and cost
 // limits read no environment (src/graphql/armor.ts), so one environment is
-// the whole of their behaviour.
-async function loadRoute() {
-  vi.resetModules();
+// the whole of their behaviour. The route is loaded once for the file: loading it builds
+// the schema, about 1.5 s, and every case reads the same environment.
+let POST: (typeof import('@/app/api/graphql/route'))['POST'];
+
+beforeAll(async () => {
   vi.stubEnv('NODE_ENV', 'production');
-  return import('@/app/api/graphql/route');
-}
+  ({ POST } = await import('@/app/api/graphql/route'));
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 async function query(source: string, variables?: Record<string, unknown>) {
-  const { POST } = await loadRoute();
   const response = await POST(
     new Request(ENDPOINT, {
       method: 'POST',
@@ -71,17 +76,11 @@ function paged(size: string): string {
   return `{ nodes${size} { edges { node { children${size} { edges { node { name } } } } } } }`;
 }
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
 describe('graphql-armor', () => {
   describe('depth', () => {
     // The precondition: the schema answers seven levels, so a refusal one
-    // level further is the limit and not a schema that stops short. It is the
-    // file's first request, so it pays for loading the route and building the
-    // schema: about 1.5 s alone, past the 5 s default in a busy full run.
-    it('answers a query seven levels deep', { timeout: 20_000 }, async () => {
+    // level further is the limit and not a schema that stops short.
+    it('answers a query seven levels deep', async () => {
       const result = await query(nested(7));
 
       expect(result.errors).toBeUndefined();

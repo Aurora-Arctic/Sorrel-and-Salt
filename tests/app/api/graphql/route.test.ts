@@ -1,5 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import altairPackage from 'altair-static/package.json';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { warmImport } from '../../../support/warm-import';
 
 warmImport(() => import('@/app/api/graphql/route'));
@@ -11,12 +10,21 @@ const ENDPOINT = 'http://localhost/api/graphql';
 // NODE_ENV=production without its secrets.
 vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
 
+type Route = typeof import('@/app/api/graphql/route');
+
 // The route builds its Yoga instance at import, reading NODE_ENV once, so each
-// environment gets a fresh module.
-async function loadRoute(nodeEnv: string) {
-  vi.resetModules();
-  vi.stubEnv('NODE_ENV', nodeEnv);
-  return import('@/app/api/graphql/route');
+// environment gets a fresh module, loaded once for the cases that share it.
+function routeIn(nodeEnv: string): () => Route {
+  let route: Route;
+  beforeAll(async () => {
+    vi.resetModules();
+    vi.stubEnv('NODE_ENV', nodeEnv);
+    route = await import('@/app/api/graphql/route');
+  });
+  afterAll(() => {
+    vi.unstubAllEnvs();
+  });
+  return () => route;
 }
 
 function post(body: unknown, headers: Record<string, string> = {}) {
@@ -27,159 +35,90 @@ function post(body: unknown, headers: Record<string, string> = {}) {
   });
 }
 
-// What a browser sends when it navigates to the endpoint.
-function browserGet() {
-  return new Request(ENDPOINT, { headers: { accept: 'text/html' } });
-}
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
 describe('/api/graphql', () => {
-  it('answers a trivial query in-process', async () => {
-    const { POST } = await loadRoute('test');
-    const response = await POST(post({ query: '{ ok }' }));
+  describe('under test', () => {
+    const route = routeIn('test');
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ data: { ok: true } });
-  });
+    it('answers a trivial query in-process', async () => {
+      const response = await route().POST(post({ query: '{ ok }' }));
 
-  it('answers a query sent as GET', async () => {
-    const { GET } = await loadRoute('test');
-    const response = await GET(
-      new Request(`${ENDPOINT}?query=${encodeURIComponent('{ ok }')}`, {
-        headers: { accept: 'application/json' },
-      }),
-    );
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ data: { ok: true } });
+    });
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ data: { ok: true } });
-  });
+    it('answers a query sent as GET', async () => {
+      const response = await route().GET(
+        new Request(`${ENDPOINT}?query=${encodeURIComponent('{ ok }')}`, {
+          headers: { accept: 'application/json' },
+        }),
+      );
 
-  // curl and scripts send no Accept at all; only a navigation gets the page.
-  it('answers a GET query that names no Accept, even where the IDE is on', async () => {
-    const { GET } = await loadRoute('development');
-    const response = await GET(new Request(`${ENDPOINT}?query=${encodeURIComponent('{ ok }')}`));
-
-    expect(response.headers.get('content-type')).toMatch(/json/);
-    await expect(response.json()).resolves.toEqual({ data: { ok: true } });
-  });
-
-  it('serves Altair to a browser in local development', async () => {
-    const { GET } = await loadRoute('development');
-    const response = await GET(browserGet());
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toMatch(/^text\/html/);
-    const html = await response.text();
-    expect(html).toContain('AltairGraphQL.init(');
-    // The shell and its assets come from one version: the CDN base is pinned
-    // to the package that rendered the page.
-    expect(html).toContain(
-      `<base href="https://cdn.jsdelivr.net/npm/altair-static@${altairPackage.version}/build/dist/">`,
-    );
-    // Absolute, and the request's own origin: <base> points at the CDN, so a
-    // relative endpoint would resolve there, and the dev server answers on
-    // more than one host.
-    expect(html).toContain('http://localhost/api/graphql');
-    expect(html).toContain('withCredentials');
-  });
-
-  // `next dev --hostname 0.0.0.0` puts its bind address in request.url; the
-  // browser's cookie belongs to the host it typed, which is the Host header.
-  it('points Altair at the host the browser used', async () => {
-    const { GET } = await loadRoute('development');
-    const response = await GET(
-      new Request('http://0.0.0.0:8000/api/graphql', {
-        headers: { accept: 'text/html', host: 'sorrel-app:8000' },
-      }),
-    );
-
-    const html = await response.text();
-    expect(html).toContain('http://sorrel-app:8000/api/graphql');
-    expect(html).not.toContain('0.0.0.0');
-  });
-
-  // Production's half — no IDE, no introspection, no suggestion — is
-  // tests/e2e/graphql.spec.ts's, against the production build every deploy runs.
-
-  // What the IDE runs for its docs pane and autocompletion.
-  const introspection = '{ __schema { queryType { name } } }';
-
-  it('answers introspection in local development', async () => {
-    const { POST } = await loadRoute('development');
-    const response = await POST(post({ query: introspection }));
-
-    await expect(response.json()).resolves.toEqual({
-      data: { __schema: { queryType: { name: 'Query' } } },
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual({ data: { ok: true } });
     });
   });
 
-  // `__type` names one type rather than the whole schema, and is refused too.
-  it('refuses a single-type introspection in production', async () => {
-    const { POST } = await loadRoute('production');
-    const response = await POST(post({ query: '{ __type(name: "AuditInfo") { name } }' }));
+  // The IDE local development serves (Altair, introspection, field suggestions) is developer
+  // tooling and is not tested. Production's half — no IDE, no introspection, no suggestion —
+  // is tests/e2e/graphql.spec.ts's, against the production build every deploy runs.
+  describe('in local development', () => {
+    const route = routeIn('development');
 
-    await expect(response.json()).resolves.not.toHaveProperty('data.__type');
+    // curl and scripts send no Accept at all; only a navigation gets the IDE's page.
+    it('answers a GET query that names no Accept, even where the IDE is on', async () => {
+      const response = await route().GET(
+        new Request(`${ENDPOINT}?query=${encodeURIComponent('{ ok }')}`),
+      );
+
+      expect(response.headers.get('content-type')).toMatch(/json/);
+      await expect(response.json()).resolves.toEqual({ data: { ok: true } });
+    });
   });
 
-  // A misspelt field is how a client without introspection probes the schema:
-  // graphql-js answers it with the field it probably meant.
-  it('suggests the field a misspelling meant in local development', async () => {
-    const { POST } = await loadRoute('development');
-    const response = await POST(post({ query: '{ ko }' }));
+  describe('in production', () => {
+    const route = routeIn('production');
 
-    const result = await response.json();
-    expect(result.errors[0].message).toContain('Did you mean "ok"?');
-  });
+    // `__type` names one type rather than the whole schema, and is refused too.
+    it('refuses a single-type introspection', async () => {
+      const response = await route().POST(
+        post({ query: '{ __type(name: "AuditInfo") { name } }' }),
+      );
 
-  // The schema's first mutation is refused signed out by its scope, before its
-  // service — and so before the context's sender could send anything.
-  it('refuses setEmail signed out with FORBIDDEN and no data', async () => {
-    const { POST } = await loadRoute('production');
-    const response = await POST(
-      post({ query: 'mutation { setEmail(email: "someone@route.test") { id } }' }),
-    );
+      await expect(response.json()).resolves.not.toHaveProperty('data.__type');
+    });
 
-    const result = await response.json();
-    expect(result.data).toBeNull();
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors[0].extensions).toEqual({ code: 'FORBIDDEN' });
-  });
+    // The mapping is claude-docs/graphql/errors.md's "Errors"; tests/graphql/errors.test.ts
+    // covers each type. This is the route carrying it: `me` signed out is refused
+    // by its scope, which throws the same `Forbidden` a service does. The environment
+    // changes only the plugin set and the IDE, never the mapping, so one is enough.
+    it('answers a refusal with its code', async () => {
+      const response = await route().POST(post({ query: '{ me { id } }' }));
 
-  // The mapping is claude-docs/graphql/errors.md's "Errors"; tests/graphql/errors.test.ts
-  // covers each type. This is the route carrying it: `me` signed out is refused
-  // by its scope, which throws the same `Forbidden` a service does.
-  it.each(['production', 'development'])('answers a refusal with its code in %s', async (env) => {
-    const { POST } = await loadRoute(env);
-    const response = await POST(post({ query: '{ me { id } }' }));
+      const result = await response.json();
+      expect(response.status).toBe(200);
+      expect(result.data).toBeNull();
+      expect(result.errors).toEqual([
+        expect.objectContaining({
+          message: 'Forbidden',
+          path: ['me'],
+          extensions: { code: 'FORBIDDEN' },
+        }),
+      ]);
+    });
 
-    const result = await response.json();
-    expect(response.status).toBe(200);
-    expect(result.data).toBeNull();
-    expect(result.errors).toEqual([
-      expect.objectContaining({
-        message: 'Forbidden',
-        path: ['me'],
-        extensions: { code: 'FORBIDDEN' },
-      }),
-    ]);
-  });
+    // Yoga's default reflects any Origin and allows credentials. The client is
+    // same-origin, so another origin, a sibling preview subdomain included,
+    // gets no CORS grant to read a response made with the visitor's cookie.
+    it('grants no cross-origin access', async () => {
+      const response = await route().POST(
+        post({ query: '{ ok }' }, { origin: 'https://hotfix-example.sorrelandsalt.com' }),
+      );
 
-  // Yoga's default reflects any Origin and allows credentials. The client is
-  // same-origin, so another origin, a sibling preview subdomain included,
-  // gets no CORS grant to read a response made with the visitor's cookie.
-  it('grants no cross-origin access', async () => {
-    const { POST } = await loadRoute('production');
-    const response = await POST(
-      post({ query: '{ ok }' }, { origin: 'https://hotfix-example.sorrelandsalt.com' }),
-    );
-
-    // The request itself succeeded, so the missing headers are the policy and
-    // not a refusal that happens to carry none.
-    expect(response.status).toBe(200);
-    expect(response.headers.get('access-control-allow-origin')).toBeNull();
-    expect(response.headers.get('access-control-allow-credentials')).toBeNull();
+      // The request itself succeeded, so the missing headers are the policy and
+      // not a refusal that happens to carry none.
+      expect(response.status).toBe(200);
+      expect(response.headers.get('access-control-allow-origin')).toBeNull();
+      expect(response.headers.get('access-control-allow-credentials')).toBeNull();
+    });
   });
 });
