@@ -10,7 +10,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 // goes are in tests/components/UserDetail.
 
 const WIDTHS = [1280, 375] as const;
-const SHOTS = process.env.M12_31_SHOTS;
 
 async function openDialog(page: Page, width: number): Promise<Locator> {
   await page.setViewportSize({ width, height: 800 });
@@ -89,9 +88,6 @@ for (const width of WIDTHS) {
       expect(under!.x).toBeGreaterThanOrEqual(box!.x);
       expect(under!.x + under!.width).toBeLessThanOrEqual(box!.x + box!.width);
       await expectOnTop(alert);
-      if (SHOTS && name === 'Change Role') {
-        await page.screenshot({ path: `${SHOTS}/userdetail-callout-${width}.png` });
-      }
 
       // Escape closes the callout, not the dialog; the focus back on the control.
       await expect(button).toBeFocused();
@@ -164,9 +160,6 @@ for (const [width, height] of SIZES) {
           dialogLeft: box.x,
         }),
       });
-      if (SHOTS && name === 'Change Role') {
-        await page.screenshot({ path: `${SHOTS}/frame-userdetail-${width}x${height}.png` });
-      }
 
       expect(under.x).toBeGreaterThanOrEqual(box.x);
       expect(under.x + under.width).toBeLessThanOrEqual(box.x + box.width);
