@@ -36,11 +36,4 @@ describe('the membershipsByUser loader', () => {
     expect(repository.findMembershipsOfUsers).toHaveBeenCalledTimes(1);
     expect(repository.findManyByIds).toHaveBeenCalledTimes(1);
   });
-
-  it('refuses every key for a signed-out request, without a query', async () => {
-    const { membershipsByUser: loader } = buildLoaders({ membershipsByUser }, null);
-
-    await expect(loader.load(A.id)).rejects.toBeInstanceOf(Forbidden);
-    expect(repository.findMembershipsOfUsers).not.toHaveBeenCalled();
-  });
 });

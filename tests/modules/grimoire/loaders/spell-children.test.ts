@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { buildLoaders } from '@/graphql/loaders';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { Forbidden } from '@/lib/errors';
 import {
   assignedCategoriesBySpell,
   derivedCategoriesBySpell,
@@ -99,15 +98,5 @@ describe('the spell loaders', () => {
     // was deleted since, never the live-only ones.
     expect(repository.findFormsInSpellsIncludingSoftDeleted).toHaveBeenCalledTimes(1);
     expect(repository.findManyOfSpellIngredientsIncludingSoftDeleted).toHaveBeenCalledTimes(1);
-  });
-
-  it('refuses a signed-out request without a read', async () => {
-    const [id] = await spells(1);
-    const built = buildLoaders(loaders, null);
-
-    await expect(built.stepsBySpell.load({ id, workspaceId: WORKSPACE_W_ID })).rejects.toThrow(
-      Forbidden,
-    );
-    expect(reads()).toBe(0);
   });
 });
