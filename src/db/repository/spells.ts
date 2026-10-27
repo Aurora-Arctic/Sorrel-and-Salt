@@ -65,11 +65,25 @@ export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>
   table: TTable,
   spellId: string,
 ): Promise<TTable['$inferSelect'][]> {
+  return findManyInSpells(membership, table, [spellId]);
+}
+
+/**
+ * The same, for many spells in one statement: a loader's batch read (M10.9).
+ * A spell among `spellIds` the reader may not read contributes no rows, so a
+ * batch that names one learns nothing of it.
+ */
+export function findManyInSpells<TTable extends PgTable & SpellScoped & Unscoped>(
+  membership: Membership,
+  table: TTable,
+  spellIds: readonly string[],
+): Promise<TTable['$inferSelect'][]> {
+  if (spellIds.length === 0) return Promise.resolve([]);
   return selectFrom(
     table,
     and(
       notSoftDeleted(table),
-      eq(table.spellId, spellId),
+      inArray(table.spellId, [...spellIds]),
       existsIn(spells, and(eq(spells.id, table.spellId), readableSpells(membership))),
     ),
   );

@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { findOneSpell, findPageInReadableSpells } from '@/db/repository';
+import {
+  findGrimoirePage,
+  findManyInSpells,
+  findOneSpell,
+  findPageInReadableSpells,
+} from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '@/modules/grimoire';
@@ -127,5 +132,47 @@ describe('findPageInReadableSpells', () => {
       after: first.cursor,
     });
     expect(next.map((entry) => entry.node.title)).toEqual(['Birch Charm']);
+  });
+});
+
+describe('findGrimoirePage', () => {
+  it('pages the readable spells newest first, and never by title, which M13.15 makes nullable', async () => {
+    const older = await spellBy(A, 'Zinnia Bowl', 'workspace');
+    const hidden = await spellBy(B, 'Yarrow Pouch', 'private');
+    const newer = await spellBy(A, 'Alder Jar', 'workspace');
+    await sql`update spells set created_at = now() - interval '2 days' where id = ${older}`;
+    await sql`update spells set created_at = now() - interval '1 day' where id = ${hidden}`;
+    expect(await findOneSpell(await proofFor(B), hidden)).toMatchObject({ id: hidden });
+
+    const page = await findGrimoirePage(await proofFor(A), FIRST_PAGE);
+
+    expect(page.map((entry) => entry.node.id)).toEqual([newer, older]);
+  });
+});
+
+describe('findManyInSpells', () => {
+  it('reads the rows of every readable spell named, and none of a spell the reader may not read, named by id', async () => {
+    const shared = await spellBy(A, 'Ash Ward', 'workspace');
+    const own = await spellBy(A, 'Birch Charm', 'private');
+    const bPrivate = await spellBy(B, 'Cedar Knot', 'private');
+    const elsewhere = await spellBy(D, 'Damson Seal', 'workspace', WORKSPACE_X_ID);
+    // The precondition: B reads their own spell's step, D theirs.
+    expect(await findManyInSpells(await proofFor(B), spellSteps, [bPrivate])).toHaveLength(1);
+    expect(
+      await findManyInSpells(await proofFor(D, WORKSPACE_X_ID), spellSteps, [elsewhere]),
+    ).toHaveLength(1);
+
+    const rows = await findManyInSpells(await proofFor(A), spellSteps, [
+      shared,
+      own,
+      bPrivate,
+      elsewhere,
+    ]);
+
+    expect(rows.map((row) => row.spellId).sort()).toEqual([shared, own].sort());
+  });
+
+  it('reads nothing for no ids', async () => {
+    expect(await findManyInSpells(await proofFor(A), spellSteps, [])).toEqual([]);
   });
 });

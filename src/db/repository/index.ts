@@ -28,10 +28,12 @@ export {
 export {
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpell,
+  findManyInSpells,
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findManySpells,
   findOneSpell,
 } from './spells';
+export { findGrimoirePage } from './grimoire';
 export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
