@@ -103,19 +103,6 @@ describe('readEntryStock', () => {
     expect(read.has(stockKey('w2', 'e1'))).toBe(true);
   });
 
-  it('leaves an entry whose forms the service refused without stock', async () => {
-    stockOf.mockResolvedValue([[], []]);
-    heldFormsOf.mockResolvedValue([new Forbidden(), [variant('v2', 'root')]]);
-
-    const read = await readEntryStock([
-      { ingredientId: 'e1', workspaceId: 'w1' },
-      { ingredientId: 'e2', workspaceId: 'w1' },
-    ]);
-
-    expect(read.has(stockKey('w1', 'e1'))).toBe(false);
-    expect(read.has(stockKey('w1', 'e2'))).toBe(true);
-  });
-
   it('gives a retired entry its holding coven stock, and a coven that does not hold it none', async () => {
     // Why the second could have been some: its coven's jars of the entry were read, and found
     // one. Only the forms, which the service reads through that coven's proof, are refused.

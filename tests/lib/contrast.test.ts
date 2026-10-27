@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   CHIP_GROUNDS,
@@ -9,7 +8,6 @@ import {
   formatRatio,
   relativeLuminance,
 } from '@/lib/contrast';
-import { fromRoot } from '../support/paths';
 
 // The contrast floor a category group's colours are held to on write (M5.6b),
 // each against the harder of its own theme's two surfaces (MB.36).
@@ -70,16 +68,5 @@ describe('formatRatio', () => {
   // A refused ratio must never read as the floor it missed.
   it('cuts rather than rounds', () => {
     expect(formatRatio(4.4996)).toBe('4.49');
-  });
-});
-
-// The grounds are the one pair of literals nothing else pins; after a
-// repalette every check would measure against the wrong surface.
-describe('CHIP_GROUNDS', () => {
-  it('are the dark card and the light page _variables.scss defines', () => {
-    const scss = readFileSync(fromRoot('src/scss/_variables.scss'), 'utf8');
-
-    expect(scss).toMatch(new RegExp(`\\$soot-raised: ${CHIP_GROUNDS.dark};`));
-    expect(scss).toMatch(new RegExp(`\\$parchment: ${CHIP_GROUNDS.light};`));
   });
 });

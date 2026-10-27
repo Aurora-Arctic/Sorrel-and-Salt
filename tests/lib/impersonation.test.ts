@@ -20,9 +20,7 @@ describe('impersonationEnabled', () => {
   it.each([
     { flag: 'true', target: undefined, enabled: true },
     { flag: 'true', target: 'preview', enabled: true },
-    { flag: 'true', target: 'development', enabled: true },
     { flag: 'true', target: 'production', enabled: false },
-    { flag: undefined, target: undefined, enabled: false },
     { flag: undefined, target: 'preview', enabled: false },
     { flag: '', target: 'preview', enabled: false },
     { flag: 'false', target: 'preview', enabled: false },

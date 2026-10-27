@@ -16,9 +16,9 @@ relative one would resolve against that `<base>`, and the dev server answers as
 
 Every deploy, including staging and each hotfix preview, runs at
 `NODE_ENV=production`, and so does the e2e server (`next start`). The rule
-therefore reads "on only where the app is not publicly reachable". Two tests pin
-it: a unit test with `NODE_ENV` stubbed each way, and
-`tests/e2e/graphql.spec.ts` against the production build. Each fails when the
-IDE is forced on. Introspection and field suggestions follow the same rule
+therefore reads "on only where the app is not publicly reachable". One test pins
+it: `tests/e2e/graphql.spec.ts`, against the production build, which fails when
+the IDE is forced on. The IDE itself, in local development, is developer tooling
+and has no test (M14.27). Introspection and field suggestions follow the same rule
 (["Protections"](protections.md)). Using it — and querying by hand where it is
 off — is [`manual-api-testing.md`](../manual-api-testing.md).

@@ -69,6 +69,6 @@ depth or cost limit. It runs depth and cost at `production` only, since
 neither limit reads the environment, each next to the same query shape just
 inside the limit, to show that the refusal comes from the limit, and prices a
 variable `first` the same as a literal one. `tests/graphql/pagination.test.ts`
-pins the pricing itself. `route.test.ts` checks that local development answers
-introspection and suggests a misspelt field; that production does neither, and
-serves no IDE, is `tests/e2e/graphql.spec.ts`'s, against `next start`.
+pins the pricing itself. That production answers no introspection and suggests no field, and serves no
+IDE, is `tests/e2e/graphql.spec.ts`'s, against `next start`. Local
+development's half is developer tooling and has no test (M14.27).
