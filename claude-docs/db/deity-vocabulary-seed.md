@@ -77,6 +77,10 @@ Mother Earth (a title any earth goddess bears). A Fante name keeps the name and
 drops the people: Asase Efua, Tando. A name that differs from the deity's own
 only in case is not repeated (`uNkulunkulu`): the match folds case.
 
+The ruling is held by review, not by a test (M14.27): a change to `otherNames`
+is checked against it by hand, so that no other name is the name of a deity
+of its own tradition — Luna stays off Selene and Cronus off Saturn.
+
 The seed adds a name only where the deity has never held it and no live deity
 of its tradition holds it, so an admin's removal stands and the service's
 refusal holds; it adds nothing to a deity an admin retired, and updates nothing.

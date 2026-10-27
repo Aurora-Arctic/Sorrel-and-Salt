@@ -1545,7 +1545,7 @@ Undo exactly as it was. `Modal` exports `HeaderSlotContext` for this.
 
 ## Forms are shown in title case
 
-A variant's `form` is stored as typed. Wherever the site shows one, it passes through `formLabel` (`src/modules/ingredients/validation/form-label.ts`), which calls `titleCase` in `src/lib/text.ts`: each word and each hyphenated part is capitalised, the small words (of, and, in, on, the, a, an, or, for, to, with, at, by, from) stay lowercase unless first, and a word with an inner capital is left alone. This is display only. A field the user is typing into keeps their text, a suggestion fills the stored text, and the GraphQL output, the services and the seeds are unchanged. A label folds (`lower(btrim(x))`) to the same identity as the stored text, apart from a run of inner spaces, which the label collapses. `tests/guards/form-label.test.ts` flags a component that renders `.form` without it.
+A variant's `form` is stored as typed. Wherever the site shows one, it passes through `formLabel` (`src/modules/ingredients/validation/form-label.ts`), which calls `titleCase` in `src/lib/text.ts`: each word and each hyphenated part is capitalised, the small words (of, and, in, on, the, a, an, or, for, to, with, at, by, from) stay lowercase unless first, and a word with an inner capital is left alone. This is display only. A field the user is typing into keeps their text, a suggestion fills the stored text, and the GraphQL output, the services and the seeds are unchanged. A label folds (`lower(btrim(x))`) to the same identity as the stored text, apart from a run of inner spaces, which the label collapses. the lint rule `sorrel/form-shown-through-form-label` flags a component that renders `.form` without it.
 
 ## On the compendium
 
@@ -1931,11 +1931,11 @@ review. Its shape is `Modal`'s, the wide dialog less the modal gap
 
 ## Testing
 
-Ten files hold the form's own tests, split along the owning layer (MB.181,
+Thirteen files hold the form's own tests, split along the owning layer (MB.181,
 MB.182; [`testing/layer-ownership.md`](../testing/layer-ownership.md), "The
 owning layer"): `index.test.tsx` for what needs the whole form,
 `compendium.test.tsx` for what the compendium's mode changes,
-`variants.test.tsx` for the Variants section, `sections.test.tsx` for the
+`variants.test.tsx` and the three beside it for the Variants section, `sections.test.tsx` for the
 folding sections, and six for
 parts of it on their own — `list-field.test.tsx` for a list field,
 `lookups.test.tsx` for the Form box and a list's box with their lookups,
@@ -1972,38 +1972,53 @@ section is open: the other files open one first through
 `tests/support/ingredient-sections.ts`'s `openSections`, by its heading, as a
 person would, and a variant's through its `openSectionsIn`, within the card.
 
-`tests/components/IngredientForm/variants.test.tsx` mounts the whole form for
-the Variants section (MB.221): an edit's variants all closed, a field out of
-reach until Edit opens it (`aria-expanded`, its region shown, the focus on
-its Identity heading); Done folding it back with the focus on Edit and what was
-typed kept; one open at a time; a variant added opened, the other closed;
-a save finding an error in a closed variant opening it, its field focused
-(MB.115); a variant added listed first, after the New Form box (MB.115); an
-open variant's `h4` section headings in the ingredient's order, each field
-in its own section (MB.115); those sections folding (MB.115): an edit's
-variant opened with every one closed, each heading described by its line,
-the variant's own data in it; a variant added here with every one open; a
-heading opening its own section alone, the ingredient's of the same name
-left as it was; a save opening the closed section holding the schema's
-error, the server's, or a link naming no form, in the variant it opens, its
-field focused; and Close All and Open All reaching each variant's; and copying from the ingredient (MB.115): a
-button per copied field, named for it, a `type="button"`; each shut while
-the ingredient's field is empty and opened as it gains a value; lists
-gaining what they lack after their own, none removed and none repeated,
-the focus kept and Save opened; an empty text box filled and a filled one
-added to after a blank line; and substitutes linking the same form where
-the linked ingredient has one, the ingredient alone where not, and a name
-as a name; a variant added from the New Form box listed as
-its own fieldset and sent in `variants`, with no top-level `form`; a
-compendium pick carried into the variant's Form box; a typed compendium form
-refused beside its box, focused, with nothing sent; a variant removed by its
-own button once confirmed, kept open as it was on Keep It, and its question
-stepping aside while the unsaved changes' asks; a repeat form refused at Add, no second fieldset added; a server
-issue at `['variants', 1, 'form']` on that variant's box alone; an edit's
-variant sent back by its `id`; and a variant's substitutes ranked for its
-form, offered form by form after an any-form row, a form row sending
-`substituteVariantId` and an any-form row none, the variant itself never
-offered (MB.115).
+The Variants section's tests are four files (MB.221). Three render
+`VariantsField` alone, inside a form provider with a Description box and a
+Save button, from `tests/components/IngredientForm/variants-harness.tsx`,
+which also holds their fixtures and locators; the fourth mounts the whole
+form for what `index.tsx` adds around the section.
+
+`variants-field.test.tsx` holds the section's own behaviour: an edit's
+variants all closed, a field out of reach until Edit opens it
+(`aria-expanded`, its region shown, the focus on its Identity heading); Done
+folding it back with the focus on Edit and what was typed kept; one open at
+a time; a variant added from the New Form box opened, the other closed,
+listed first after the New Form box (MB.115), and sent in `variants` with no
+top-level `form`; Add refusing a form not picked, and a repeat form, with no
+second fieldset added; a variant removed by its own button once confirmed,
+and kept open as it was on Keep It; an open variant's `h4` section headings
+in the ingredient's order (MB.115); those sections folding (MB.115): an
+edit's variant opened with every one closed, each heading described by its
+line, the variant's own data in it; a variant added here with every one
+open; a heading opening its own section alone, the ingredient's of the same
+name left as it was; a form an admin has renamed refusing the save at the
+Form field until Use or Keep settles it; and `useVariantFolds` carrying each
+row's folds across an undo's restore, matching rows one to one.
+
+`substitutes.test.tsx` holds a variant's substitute offers (MB.115): ranked
+for its form, offered form by form after an any-form row, a typed name sent
+as a name, the variant itself never offered. `copy.test.tsx` holds copying
+from the ingredient (MB.115): a button per copied field, named for it; each
+shut while the ingredient's field is empty and opened as it gains a value;
+an empty text box filled and a filled one added to after a blank line;
+substitutes linking the same form, one in no such form skipped and named,
+and a name kept as a name; Copy Anyway adding the skipped as names; and the
+notice taken away.
+
+`variants.test.tsx` mounts the whole form: a compendium pick carried into
+the variant's Form box; a typed compendium form refused beside its box,
+focused, with nothing sent; a variant's remove question stepping aside while
+the unsaved changes' asks; an edit's variant sent back by its `id`; a save
+finding the schema's error in a closed variant opening it and its section,
+the open one closed, its field focused (MB.115); a server issue at
+`['variants', 1, 'form']` on that variant's box alone, its variant and
+section opened; Close All and Open All reaching each variant's; a form row
+sending `substituteVariantId` and an any-form row none; a link naming no form
+refused on that entry alone, Relations opened; the copied lists gaining what
+they lack after their own, none removed and none repeated, the focus kept,
+Save opened, and every copy button the variant's; and undo and redo: an added
+variant taken out and given back, the closed variant and section an undone
+change was made in opened, and where the focus lands after one.
 
 `tests/components/IngredientForm/index.test.tsx` mounts the whole form and
 answers `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a

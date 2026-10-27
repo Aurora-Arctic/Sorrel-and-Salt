@@ -236,108 +236,113 @@ describe("the order of each kind's values (M12.52)", () => {
       }
     }
 
-    it('orders forms by name, case set aside and an accent beside its plain letter, whatever the counts', async () => {
-      await seedEntries();
+    // Both reads share one `orderBy` that takes no membership, so the order
+    // is proved on the compendium's read alone (M14.27). The coven's columns
+    // come from its membership, so the signs-and-bodies case runs on both.
+    if (workspaceId === undefined) {
+      it('orders forms by name, case set aside and an accent beside its plain letter, whatever the counts', async () => {
+        await seedEntries();
 
-      const read = await facets({});
+        const read = await facets({});
 
-      expect(read.forms.map(({ value }) => value)).toEqual([
-        'Alphaform',
-        'betaform',
-        'Cetaform',
-        'Eclatform',
-        'Éclatform',
-        'Ecluseform',
-        'Fimbleform',
-        'zedform',
-      ]);
-      // Why a count order would have read otherwise: the counts fall as the names rise.
-      expect(counts(read, 'forms')).toEqual({
-        zedform: 6,
-        Fimbleform: 5,
-        Ecluseform: 4,
-        Éclatform: 3,
-        Eclatform: 3,
-        Cetaform: 2,
-        betaform: 1,
-        Alphaform: 1,
-      });
-    });
-
-    it('orders categories by group name, then by name, both alphabetical', async () => {
-      await seedEntries();
-
-      const read = await facets({});
-
-      expect(read.categories.map(({ value }) => value)).toEqual(
-        idsOf('Zestmark', 'Brackenmark', 'quillmark', 'Ashmark', 'émbermark'),
-      );
-      // Why a count order, or a flat name order, would have read otherwise.
-      expect(read.categories.map(({ count }) => count)).toEqual([1, 2, 3, 5, 4]);
-    });
-
-    it('orders deities by tradition name, then by name, both alphabetical', async () => {
-      await seedEntries();
-
-      const read = await facets({});
-
-      expect(read.deities.map(({ value }) => value)).toEqual(
-        idsOf('Yorrow', 'Annoch', 'bellith', 'Céleth', 'Dunmar'),
-      );
-      expect(read.deities.map(({ count }) => count)).toEqual([1, 2, 3, 4, 5]);
-    });
-
-    it('keeps each list in the same order when a narrowing changes the counts', async () => {
-      await seedEntries();
-      const whole = await facets({});
-      const narrowed = await facets({ categoryIds: idsOf('Brackenmark') });
-      // Why the order could have moved: the narrowing changed the counts.
-      expect(counts(narrowed, 'forms')).not.toEqual(counts(whole, 'forms'));
-
-      for (const kind of ['forms', 'categories', 'deities'] as const) {
-        const listed = new Set(narrowed[kind].map(({ value }) => value));
-        expect({ kind, order: narrowed[kind].map(({ value }) => value) }).toEqual({
-          kind,
-          order: whole[kind].map(({ value }) => value).filter((value) => listed.has(value)),
+        expect(read.forms.map(({ value }) => value)).toEqual([
+          'Alphaform',
+          'betaform',
+          'Cetaform',
+          'Eclatform',
+          'Éclatform',
+          'Ecluseform',
+          'Fimbleform',
+          'zedform',
+        ]);
+        // Why a count order would have read otherwise: the counts fall as the names rise.
+        expect(counts(read, 'forms')).toEqual({
+          zedform: 6,
+          Fimbleform: 5,
+          Ecluseform: 4,
+          Éclatform: 3,
+          Eclatform: 3,
+          Cetaform: 2,
+          betaform: 1,
+          Alphaform: 1,
         });
-      }
-    });
+      });
 
-    it('lists a chosen form, deity or category counting nothing in its alphabetical place, not last', async () => {
-      await seedEntries();
+      it('orders categories by group name, then by name, both alphabetical', async () => {
+        await seedEntries();
 
-      const forms = await facets({ forms: ['Dovetailform'] });
-      const deityRead = await facets({ deityIds: idsOf('Bryndel') });
-      const categoryRead = await facets({ categoryIds: idsOf('Corvmark'), categoryMode: 'any' });
+        const read = await facets({});
 
-      expect(forms.forms.map(({ value, count }) => [value, count])).toEqual([
-        ['Alphaform', 1],
-        ['betaform', 1],
-        ['Cetaform', 2],
-        ['Dovetailform', 0],
-        ['Eclatform', 3],
-        ['Éclatform', 3],
-        ['Ecluseform', 4],
-        ['Fimbleform', 5],
-        ['zedform', 6],
-      ]);
-      expect(deityRead.deities.map(({ value, count }) => [value, count])).toEqual([
-        [ids.get('Yorrow'), 1],
-        [ids.get('Annoch'), 2],
-        [ids.get('bellith'), 3],
-        [ids.get('Bryndel'), 0],
-        [ids.get('Céleth'), 4],
-        [ids.get('Dunmar'), 5],
-      ]);
-      expect(categoryRead.categories.map(({ value, count }) => [value, count])).toEqual([
-        [ids.get('Zestmark'), 1],
-        [ids.get('Brackenmark'), 2],
-        [ids.get('quillmark'), 3],
-        [ids.get('Ashmark'), 5],
-        [ids.get('Corvmark'), 0],
-        [ids.get('émbermark'), 4],
-      ]);
-    });
+        expect(read.categories.map(({ value }) => value)).toEqual(
+          idsOf('Zestmark', 'Brackenmark', 'quillmark', 'Ashmark', 'émbermark'),
+        );
+        // Why a count order, or a flat name order, would have read otherwise.
+        expect(read.categories.map(({ count }) => count)).toEqual([1, 2, 3, 5, 4]);
+      });
+
+      it('orders deities by tradition name, then by name, both alphabetical', async () => {
+        await seedEntries();
+
+        const read = await facets({});
+
+        expect(read.deities.map(({ value }) => value)).toEqual(
+          idsOf('Yorrow', 'Annoch', 'bellith', 'Céleth', 'Dunmar'),
+        );
+        expect(read.deities.map(({ count }) => count)).toEqual([1, 2, 3, 4, 5]);
+      });
+
+      it('keeps each list in the same order when a narrowing changes the counts', async () => {
+        await seedEntries();
+        const whole = await facets({});
+        const narrowed = await facets({ categoryIds: idsOf('Brackenmark') });
+        // Why the order could have moved: the narrowing changed the counts.
+        expect(counts(narrowed, 'forms')).not.toEqual(counts(whole, 'forms'));
+
+        for (const kind of ['forms', 'categories', 'deities'] as const) {
+          const listed = new Set(narrowed[kind].map(({ value }) => value));
+          expect({ kind, order: narrowed[kind].map(({ value }) => value) }).toEqual({
+            kind,
+            order: whole[kind].map(({ value }) => value).filter((value) => listed.has(value)),
+          });
+        }
+      });
+
+      it('lists a chosen form, deity or category counting nothing in its alphabetical place, not last', async () => {
+        await seedEntries();
+
+        const forms = await facets({ forms: ['Dovetailform'] });
+        const deityRead = await facets({ deityIds: idsOf('Bryndel') });
+        const categoryRead = await facets({ categoryIds: idsOf('Corvmark'), categoryMode: 'any' });
+
+        expect(forms.forms.map(({ value, count }) => [value, count])).toEqual([
+          ['Alphaform', 1],
+          ['betaform', 1],
+          ['Cetaform', 2],
+          ['Dovetailform', 0],
+          ['Eclatform', 3],
+          ['Éclatform', 3],
+          ['Ecluseform', 4],
+          ['Fimbleform', 5],
+          ['zedform', 6],
+        ]);
+        expect(deityRead.deities.map(({ value, count }) => [value, count])).toEqual([
+          [ids.get('Yorrow'), 1],
+          [ids.get('Annoch'), 2],
+          [ids.get('bellith'), 3],
+          [ids.get('Bryndel'), 0],
+          [ids.get('Céleth'), 4],
+          [ids.get('Dunmar'), 5],
+        ]);
+        expect(categoryRead.categories.map(({ value, count }) => [value, count])).toEqual([
+          [ids.get('Zestmark'), 1],
+          [ids.get('Brackenmark'), 2],
+          [ids.get('quillmark'), 3],
+          [ids.get('Ashmark'), 5],
+          [ids.get('Corvmark'), 0],
+          [ids.get('émbermark'), 4],
+        ]);
+      });
+    }
 
     it('orders signs in calendar order and bodies in solar-system order, then the unpositioned by name', async () => {
       await seedEntries();

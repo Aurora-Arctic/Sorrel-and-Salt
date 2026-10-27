@@ -4,10 +4,10 @@ import { failureOf, useTestDatabase } from '../support/db/database';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // What `deity_other_names` rows may hold (M14.22): a name that is not blank,
-// once per deity whatever its case, and a soft-deleted name reserves nothing.
-// The catalogue sweep in partial-unique-indexes.test.ts proves the predicate
-// for every index alike; this file proves the index folds case and is keyed
-// per deity.
+// once per deity whatever its case. The catalogue sweep in
+// partial-unique-indexes.test.ts proves for every index alike that a
+// soft-deleted row reserves nothing; this file proves the index folds case and
+// is keyed per deity.
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const UNIQUE_INDEX = 'deity_other_names_unique';
@@ -81,18 +81,5 @@ describe('deity_other_names', () => {
     }
     // Keyed per deity: another deity may hold the same name at this layer.
     expect(await outcomeOf(addOtherName(MOCKARA, 'Testa the Elder'))).toBe('admitted');
-  });
-
-  it('lets a soft-deleted name reserve nothing', async () => {
-    const first = await addOtherName(TESTARA, 'Testa of the Fen');
-    // Precondition: while the first row is live, the index refuses the second.
-    expect(await outcomeOf(addOtherName(TESTARA, 'testa of the fen'))).toBe(UNIQUE_INDEX);
-
-    await sql`
-      update deity_other_names set deleted_at = now(), deleted_by = ${AUTHOR}
-      where id = ${first}
-    `;
-
-    expect(await outcomeOf(addOtherName(TESTARA, 'testa of the fen'))).toBe('admitted');
   });
 });
