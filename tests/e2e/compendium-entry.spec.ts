@@ -2,7 +2,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
-import { localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
+import { withSql } from './stories/coven-ingredients';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
@@ -10,11 +10,11 @@ import { slugify } from '@/lib/slugify';
 
 // The public compendium entry page (M8.19; MB.80): what it answers a visitor
 // with no account. Each test here proves what no story walks. Story 14 reads
-// the page signed out; story 17 shows a non-admin its content with no Edit.
-// These are the two answers a story does not reach: the 404 for a coven's own
-// slug, and the 308 for a slug that has moved. Every test reads as the
-// signed-out visitor, which is the `page`; the rows are written by a user made
-// on a page of its own.
+// the page signed out and answers a coven's own slug with a 404; story 17
+// shows a non-admin its content with no Edit. What a story does not reach: the
+// 308 for a slug that has moved, and the page at a phone's width. Every test
+// reads as the signed-out visitor, which is the `page`; the rows are written
+// by a user made on a page of its own.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -33,44 +33,6 @@ async function authorOf(
     await author.close();
   }
 }
-
-test('a coven’s own ingredient has no public page: its slug answers 404 to a visitor', async ({
-  page,
-  browser,
-  baseURL,
-}) => {
-  const maker = await browser.newPage({ baseURL });
-  const [coven, row] = await (async () => {
-    try {
-      const seeded = await seedCoven(
-        maker,
-        'Fixture Coven Entry 404',
-        'compendium-entry-404.test',
-        {
-          A: 'owner',
-        },
-      );
-      const rows = await withSql(async (sql) => {
-        const held = await localIngredient(sql, seeded.id, seeded.users.A, {
-          name: 'Fixture Wroot Hidden',
-          nomenclature: 'none',
-        });
-        return sql<{ slug: string; workspace_id: string | null }[]>`
-          select slug, workspace_id from ingredients where id = ${held.ingredientId}`;
-      });
-      return [seeded, rows[0]] as const;
-    } finally {
-      await maker.close();
-    }
-  })();
-  // Why the 404 could have been a 200: the row is live, and it is the coven's own, not the compendium's.
-  expect(row.workspace_id).toBe(coven.id);
-
-  const response = await page.goto(`/compendium/ingredients/${row.slug}`);
-
-  expect(response?.status()).toBe(404);
-  await expect(page.getByText('Fixture Wroot Hidden')).toHaveCount(0);
-});
 
 test('a slug an entry has moved off answers 308 to its current address', async ({
   page,
@@ -115,41 +77,11 @@ test('a slug an entry has moved off answers 308 to its current address', async (
   expect(headers['last-modified']).toBeUndefined();
 });
 
-test('a visitor reads an entry with its details and each form, on a page that fits a phone', async ({
-  page,
-  browser,
-  baseURL,
-}) => {
-  const author = await authorOf(browser, baseURL, 'author@compendium-entry-page.test');
-  const name = 'Fixture Public Bramble';
-  const slug = slugify(name);
-  await withSql((sql) =>
-    insertIngredient(
-      sql,
-      makeIngredient({
-        name,
-        nomenclature: 'none',
-        variants: [makeVariant({ form: 'Fixture Root' })],
-      }),
-      author,
-    ),
-  );
-
-  const response = await page.goto(`/compendium/ingredients/${slug}`);
-
-  expect(response?.status()).toBe(200);
-  await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Details' })).toBeVisible();
-  await expect(page.locator(`#form-${slugify('Fixture Root')}`)).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-  await assertNoSidewaysScroll(page);
-});
-
 // A citation prints its url as plain text, Chicago's form, and a url with no
 // hyphen or space is one long word with nowhere a line may break: unbroken, a
 // long one ran past a phone's column (MB.120). The bibliography lets it break
 // anywhere instead.
-test('a source with a long url wraps inside the column on a phone', async ({
+test('a visitor reads an entry with its details and each form on a phone, a long source url wrapping inside the column', async ({
   page,
   browser,
   baseURL,
@@ -160,7 +92,11 @@ test('a source with a long url wraps inside the column on a phone', async ({
   await withSql(async (sql) => {
     const ingredient = await insertIngredient(
       sql,
-      makeIngredient({ name, nomenclature: 'none', variants: [] }),
+      makeIngredient({
+        name,
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Fixture Root' })],
+      }),
       author,
     );
     const reference = await insertReference(
@@ -177,13 +113,18 @@ test('a source with a long url wraps inside the column on a phone', async ({
   });
 
   await page.setViewportSize({ width: 375, height: 700 });
-  await page.goto(`/compendium/ingredients/${slugify(name)}`);
+  const response = await page.goto(`/compendium/ingredients/${slugify(name)}`);
 
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Details' })).toBeVisible();
+  await expect(page.locator(`#form-${slugify('Fixture Root')}`)).toBeVisible();
   const bibliography = page.getByRole('list', { name: 'Bibliography' });
   await expect(bibliography).toContainText(url);
   await expect(bibliography.getByRole('link', { name: /^Open the Source/ })).toHaveAttribute(
     'href',
     url,
   );
+  await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
