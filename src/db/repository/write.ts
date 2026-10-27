@@ -15,12 +15,14 @@ import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
-import { existsIn } from './select';
+import { existsIn, selectFrom } from './select';
+import { StaleWrite } from '@/lib/errors';
 import type { Membership } from '@/modules/coven';
 import type {
   AuditWriter,
   ColumnMatch,
   Identified,
+  Revisioned,
   TwoTier,
   WorkspaceScoped,
   WriterContext,
@@ -72,6 +74,33 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     id: string,
   ) => and(scopedTo(membership, table), eq(table.id, id));
 
+  // The revision check rides in the UPDATE's own WHERE, so two saves racing
+  // for one revision cannot both land: the second's statement waits on the
+  // first's row lock, then re-reads the row and no longer matches. Only a
+  // refused write reads again, under FOR UPDATE, to tell a stale revision
+  // from a row that is not there; the read takes the same `where`, so a row
+  // the update could never have reached answers `[]` as an update does.
+  const updateAtRevision = async (
+    table: PgTable & Identified & Revisioned,
+    where: SQL | undefined,
+    expectedRevision: number | null,
+    values: object,
+  ): Promise<never> => {
+    if (expectedRevision === null) return update(table, values, where);
+    const written: unknown[] = await update(
+      table,
+      values,
+      and(where, eq(table.revision, expectedRevision)),
+    );
+    if (written.length > 0) return written as never;
+    const [current] = await selectFrom(table, and(notSoftDeleted(table), where), {
+      lockIn: tx,
+      lockOrder: table.id,
+    });
+    if (current) throw new StaleWrite((current as { revision: number }).revision);
+    return [] as never;
+  };
+
   // What a marked table's named writes are built from, in the repository file
   // beside its finders (MB.198): spread in below, so a new marked table adds
   // its writes there rather than here.
@@ -92,6 +121,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       update(table, values, and(scopedTo(membership, table), where)),
     updateByIdInWorkspace: (membership, table, id, values) =>
       update(table, values, inWorkspaceById(membership, table, id)),
+    updateRevisioned: (membership, table, id, expectedRevision, values) =>
+      updateAtRevision(table, inWorkspaceById(membership, table, id), expectedRevision, values),
     softDelete,
     softDeleteByIds: (table, ids) =>
       ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),

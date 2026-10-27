@@ -33,6 +33,8 @@ The actor's GUC goes out as `select set_config('app.current_user_id', $1, true)`
 
 **`updated_at` is the database's, not the application's** (M1.18): one `set_updated_at()` trigger overwrites whatever `applyAudit` sends, while `updated_by` stays the session's — the database owns _when_, rule 3 owns _who_ (claude-docs/db/updated-at.md). **A new audited table adds its own `CREATE OR REPLACE TRIGGER` line in its own migration**, since `sorrel` may not create the event trigger that would attach one, and `tests/db/updated-at-trigger.test.ts` fails a table that forgets it.
 
+**A revisioned write** (M13.16). A table carrying `revision` satisfies `Revisioned`, and a save that must not overwrite another person's goes through `write.updateRevisioned(membership, table, id, expectedRevision, values)`. The revision check rides in the UPDATE's own WHERE, so two saves racing for one revision cannot both land; a live row of the proof's coven that has moved on throws `StaleWrite` with its revision now, `null` writes regardless, and a row the proof cannot reach answers `[]`, never `StaleWrite`, which would tell another coven the row exists (claude-docs/components/autosave.md, "The server's half").
+
 ## Rule 4 — soft-delete filtering happens in the repository
 
 A writer leaves a deleted row alone because the way back is v2's restore, then an ordinary edit (DESIGN.md §13); a unique index carries the predicate because without it, deleting a record permanently reserves its name.

@@ -90,6 +90,10 @@ export type VariantScoped = { variantId: AnyPgColumn };
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
 
+// A table carrying `revisionColumn()`, the counter `bump_revision()` moves on
+// every update (M13.15), which a revisioned write checks (M13.16).
+export type Revisioned = { revision: AnyPgColumn };
+
 // A table addressed by a slug of its own: the curated vocabularies and their groups.
 export type Slugged = { slug: AnyPgColumn };
 
@@ -346,6 +350,22 @@ export interface AuditWriter {
     membership: Membership,
     table: TTable,
     id: string,
+    values: Partial<WritableInWorkspace<TTable>>,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * `updateByIdInWorkspace` for a table carrying `revision`, written only
+   * while the row is still at `expectedRevision` (M13.16). A live row of the
+   * proof's workspace that has moved on throws `StaleWrite` with its revision
+   * now; `null` writes whatever the row holds, the client's choice to keep its
+   * own version over another save. No live row of the proof's workspace with
+   * this id answers `[]`, as the update above does, never `StaleWrite`, which
+   * would tell another coven's reader that the row exists.
+   */
+  updateRevisioned<TTable extends PgTable & WorkspaceScoped & Generic & Identified & Revisioned>(
+    membership: Membership,
+    table: TTable,
+    id: string,
+    expectedRevision: number | null,
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /**

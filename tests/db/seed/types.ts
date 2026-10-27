@@ -11,15 +11,15 @@ export interface SeedEntry {
   prepare?: (handle: SeedDatabase) => Promise<void>;
   /** The seed itself, which a dry run rolls back (M14.26). */
   seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<void>;
+  /**
+   * The seed the fill sweep runs in place of `seed`, when the other sweeps
+   * take a smaller input: the compendium's real files, where they take the
+   * fixture (M14.27).
+   */
+  fillSeed?: (handle: SeedDatabase) => Promise<void>;
   /** `prepare`, then `seed`. */
   run: (handle: SeedDatabase) => Promise<void>;
   tables: string[];
-  /**
-   * The tables whose rows the no-resurrection sweep retires one of, when not
-   * every table in `tables`: an entry whose later seed follows the earlier
-   * ones' vocabularies names only the tables a retirement reaches nothing beyond.
-   */
-  retires?: string[];
 }
 
 /** A `celestial_bodies` or `zodiac_signs` row. */

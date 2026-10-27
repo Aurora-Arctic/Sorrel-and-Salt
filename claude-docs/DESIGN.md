@@ -714,15 +714,16 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 ### Errors — one shape, so a message can land beside its field
 
-Services throw rather than answering with an empty list or a success that did nothing — §11 asserts it as "not a silent no-op", and `auth/service-session.md` carries the full argument. Three types live in `src/lib/errors.ts`: `Forbidden`, `NotFound`, and `ValidationError`, which carries `issues: { path: (string | number)[]; message: string }[]`. None of the three carries a status code or a GraphQL error code — a service called from a seed or a script has no use for one — so the mapping below belongs to the transport, and MB.43 is where it lives.
+Services throw rather than answering with an empty list or a success that did nothing — §11 asserts it as "not a silent no-op", and `auth/service-session.md` carries the full argument. Three types live in `src/lib/errors.ts`: `Forbidden`, `NotFound`, and `ValidationError`, which carries `issues: { path: (string | number)[]; message: string }[]`. A fourth, `StaleWrite` (M13.16), carries `currentRevision`: a revisioned write named a revision the row has since moved past (`components/autosave.md`). None of them carries a status code or a GraphQL error code — a service called from a seed or a script has no use for one — so the mapping below belongs to the transport, and MB.43 is where it lives.
 
-Yoga maps them on the way out through `maskedErrors.maskError`, which keeps masking on: anything that is _not_ one of the three leaves as "Unexpected error", so no stack trace and no constraint name reaches a client. M11.10 makes the same promise for pages.
+Yoga maps them on the way out through `maskedErrors.maskError`, which keeps masking on: anything that is _not_ one of the four leaves as "Unexpected error", so no stack trace and no constraint name reaches a client. M11.10 makes the same promise for pages.
 
 | Thrown            | `extensions.code` | Also carries                              |
 | ----------------- | ----------------- | ----------------------------------------- |
 | `ValidationError` | `VALIDATION`      | `extensions.fieldErrors`, from its issues |
 | `Forbidden`       | `FORBIDDEN`       | —                                         |
 | `NotFound`        | `NOT_FOUND`       | —                                         |
+| `StaleWrite`      | `STALE_WRITE`     | `extensions.currentRevision`              |
 | anything else     | masked            | —                                         |
 
 The message is the service's, verbatim. That is what carries M5.6b's "which column failed and what the ratio was", M5.2's duplicate naming the colliding entry, and M10.3's explaining refusal all the way to the person reading the form — a rewrite at the transport is how those become "Invalid input" again.
@@ -1475,7 +1476,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, so a v1 count is 52 stories (1–34, 47–64).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 80 (a spell's steps) and 81 (autosave) after them, so a v1 count is 54 stories (1–34, 47–64, 80, 81).
 
 ### Grimoire
 

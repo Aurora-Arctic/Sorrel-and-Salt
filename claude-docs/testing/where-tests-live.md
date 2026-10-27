@@ -54,7 +54,35 @@ client and `drizzle-orm`, `dataloader`, deep module imports, `slugify`,
 `lint/sorrel-lint.js`, an oxlint JS plugin: `no-use-server`,
 `service-server-only`, `route-allowlist`, `pagination-helper` and
 `module-boundaries`. Each was proved once, by a probe file `npm run lint`
-rejected in the PR that added it. What stays in `tests/guards/` reads the
+rejected in the PR that added it.
+
+Seven more were Vitest guards that read the source as text or as a syntax
+tree (M14.27). They are rules in `lint/source-sweeps.js`, spread into the same
+plugin, each proved by one passing and one failing case in
+`tests/lint/source-sweeps.test.ts` (oxlint's `RuleTester`, in the `unit`
+project) and by the whole tree passing `npm run lint`:
+
+- `no-bare-router-navigation` — was `navigation.test.ts`: no `router.push`,
+  `replace` or `refresh` outside `src/lib/navigation/` (M12.33).
+- `form-shown-through-form-label` — was `form-label.test.ts`: a variant's
+  form is shown through `formLabel`.
+- `spell-visibility-read-in-one-place` — was `readable-spells-guard.test.ts`:
+  only `readableSpells` compares a spell's visibility to decide a read (rule 7).
+- `compendium-review-mark-switch-only` — was `compendium-review-mark.test.ts`:
+  only `setCompendiumEntryReviewed` sets the review mark (M14.8).
+- `modal-focus-return-through-modal` — was `focus-return.test.ts`: no
+  hand-built `.focus()` return beside a dialog (M8.17).
+- `long-form-guards-leaving` — was `leave-guard.test.ts`: every form calls
+  `useDiscardGuard` or `useLeaveGuard` (M13.14).
+- `e2e-chained-tests-serial` — was `e2e-serial-chains.test.ts`: a Playwright
+  spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E").
+  `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts` alone.
+
+The two that keep an allowance list (`modal-focus-return-through-modal` and
+`long-form-guards-leaving`) also report a listed file that no longer needs its
+place, so the list can only shrink.
+
+What stays in `tests/guards/` reads the
 schema, the repository's source, the config or the module graph, which lint
 cannot:
 
@@ -67,10 +95,9 @@ cannot:
   two exemption-count pins, six files and one, plus one probe each that the
   ban still fires.
 - `test-location.test.ts` — above.
-- `e2e-serial-chains.test.ts` — a Playwright spec whose tests chain, one
-  assigning a variable declared outside it for a later test to read, is
-  serial, since a file's tests otherwise spread across workers with their own
-  databases (M11.18; claude-docs/testing/e2e.md, "E2E").
+- `browser-floor.test.ts` — a web API past Baseline Widely Available is used
+  in JavaScript only behind a `typeof` or `in` check; it reads the
+  `web-features` package, which lint cannot (M10.24).
 - `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
   rules of the two CI scripts that guard production's migrations.
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment

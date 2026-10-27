@@ -49,12 +49,16 @@ export interface SchemaTypes {
   };
 }
 
-export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND';
+export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE';
 
-/** What a mapped error carries under `extensions`; `fieldErrors` only on VALIDATION. */
+/**
+ * What a mapped error carries under `extensions`: `fieldErrors` only on
+ * VALIDATION, `currentRevision` only on STALE_WRITE (M13.16).
+ */
 export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
+  currentRevision?: number;
 }
 
 /**

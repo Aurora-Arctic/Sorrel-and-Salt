@@ -187,7 +187,7 @@ gives the focus back inside it.
 A modal that left the focus somewhere else, on a page it navigated to, say,
 is left alone: the return never steals the focus. An owner never calls
 `.focus()` to bring the focus back itself.
-`tests/guards/focus-return.test.ts` fails a file that draws a dialog and
+The lint rule `sorrel/modal-focus-return-through-modal` (`lint/source-sweeps.js`) fails a file that draws a dialog and
 does, bar three named exceptions: the Filters panel (`FacetPanel`), a
 dialog of its own; the confirmation asked over a modal's form
 (`ConfirmOverlay`), which gives the focus back inside the modal that stays
@@ -310,10 +310,10 @@ the tab, reloading, and on a page form a link (see the last point below).
     becomes hidden (`visibilitychange` to `hidden`), the one moment phones
     report reliably, where `beforeunload` often never fires. Nothing passes it
     yet; M13.16's autosave will, to save at once.
-  - **Every form is held to it** by `tests/guards/leave-guard.test.ts`: a
+  - **Every form is held to it** by the lint rule `sorrel/long-form-guards-leaving` (`lint/source-sweeps.js`): a
     component that draws a `<form>`, renders `FormActions` or calls
     react-hook-form's `useForm` must call `useDiscardGuard` or
-    `useLeaveGuard`, or be named in that test's list with why. `NameForm`
+    `useLeaveGuard`, or be named in that rule's list with why. `NameForm`
     and `EmailForm`, one short field each, are on it.
 
 ## Asking over the form

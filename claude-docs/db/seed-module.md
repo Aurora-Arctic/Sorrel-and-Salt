@@ -123,7 +123,7 @@ seeded **verified** (MB.268), as fixtures A–F in `standard` are: an
 unverified account reaches no page but `/account/email`, so a developer could
 browse the dev site as no seeded user otherwise. The system user stays
 unverified for the reason above; the dev site's unverified account to sign in
-as is `standard`'s fixture G (`tests/db/seed/verified-users.test.ts` pins both). Both
+as is `standard`'s fixture G. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
 truncating: a re-run adds nothing, and nothing is dropped — the reset that

@@ -409,11 +409,10 @@ before the two indexes are created. Run the pre-flight query before
 deploying it; it must return no row:
 `select workspace_id, lower(coalesce(canonical_name, name)), count(*) from
 ingredients where deleted_at is null group by 1, 2 having count(*) > 1`.
-`tests/db/migrations/0062-ingredient-variants-fill.test.ts` re-runs the
-migration's own guard, and retires once `0062` is in production's journal
-(claude-docs/testing/layer-ownership.md, "What a test may assert", rule 7).
-Its fill tests retired with MB.223, which dropped the `form` column the fill
-reads, so no migrated database can run the fill again.
+The migration's data tests retired once `0062` reached production's journal
+(claude-docs/testing/layer-ownership.md, "What a test may assert", rule 7;
+M14.27). Its fill tests had already retired with MB.223, which dropped the
+`form` column the fill reads, so no migrated database can run the fill again.
 
 **MB.217: what names a variant, as built.** Migration `0063_variant-children.sql`
 gives four tables a `variant_id` held to their `ingredient_id` by a composite

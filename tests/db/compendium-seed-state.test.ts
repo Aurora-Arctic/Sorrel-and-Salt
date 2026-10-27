@@ -49,43 +49,6 @@ beforeEach(async () => {
 });
 
 describe('the compendium seed state columns', () => {
-  it('exist on ingredients, each nullable, with the stated types', async () => {
-    const columns = await sql<{ column_name: string; data_type: string; is_nullable: string }[]>`
-      select column_name, data_type, is_nullable from information_schema.columns
-      where table_schema = 'public' and table_name = 'ingredients'
-        and column_name in ('seed_content_hash', 'curator_reviewed_at', 'curator_reviewed_by')
-      order by column_name
-    `;
-    expect(columns).toEqual([
-      {
-        column_name: 'curator_reviewed_at',
-        data_type: 'timestamp with time zone',
-        is_nullable: 'YES',
-      },
-      { column_name: 'curator_reviewed_by', data_type: 'uuid', is_nullable: 'YES' },
-      { column_name: 'seed_content_hash', data_type: 'text', is_nullable: 'YES' },
-    ]);
-  });
-
-  it('carry the two CHECKs and the reviewer’s reference to users', async () => {
-    const constraints = await sql<{ conname: string; contype: string; definition: string }[]>`
-      select conname, contype, pg_get_constraintdef(oid) as definition from pg_constraint
-      where conrelid = 'ingredients'::regclass
-        and conname in (
-          'ingredients_seed_content_hash_is_sha256',
-          'ingredients_curator_review_both_or_neither',
-          'ingredients_curator_reviewed_by_users_id_fk'
-        )
-      order by conname
-    `;
-    expect(constraints.map((c) => [c.conname, c.contype])).toEqual([
-      ['ingredients_curator_review_both_or_neither', 'c'],
-      ['ingredients_curator_reviewed_by_users_id_fk', 'f'],
-      ['ingredients_seed_content_hash_is_sha256', 'c'],
-    ]);
-    expect(constraints[1].definition).toContain('REFERENCES users(id)');
-  });
-
   describe('refuse', () => {
     it('a hash of 63 characters', async () => {
       const error = await failureOf(insertBackdated({ seed_content_hash: 'a'.repeat(63) }));

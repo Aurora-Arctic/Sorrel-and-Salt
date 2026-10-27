@@ -75,7 +75,8 @@ types the table as `NamedWrites`, `{ readonly $writes: 'named' }`, and adds no
 property, so drizzle-kit and every query see the same object. Every generic
 writer method takes `Generic`, `{ $writes?: never }`, which a marked table
 cannot satisfy: the six unscoped ones (`insert`, `update`, `updateById`,
-`softDelete`, `softDeleteByIds`, `delete`), the five workspace-scoped ones
+`softDelete`, `softDeleteByIds`, `delete`), the six workspace-scoped ones
+(`updateRevisioned` among them, M13.16)
 and the three compendium-tier ones, so a marked two-tier table is off the
 proof-scoped methods too. `$writes` is a phantom key beside Drizzle's
 `$inferSelect`, so no column can be named like it. Both types are in
