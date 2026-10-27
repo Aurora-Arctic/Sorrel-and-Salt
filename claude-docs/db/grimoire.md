@@ -34,8 +34,8 @@ contracts it, three things from before stay:
   `layer_order` alone and a `NOT NULL` would refuse its inserts; `0083` filled
   `position` from `layer_order` for the rows already there.
 - **`spells.instructions`**, the old name of `spells.note`, filled into it by
-  `0083`. The saves write both, the same text, from M10.10 on ("Saving a
-  recipe" below), so a deploy that still reads `instructions` reads the note.
+  `0083`. The saves write `note` alone and leave `instructions` as it was
+  ("Saving a recipe" below).
 
 `tests/db/schema-drift.test.ts` lists all three in `PENDING_DROPS`.
 

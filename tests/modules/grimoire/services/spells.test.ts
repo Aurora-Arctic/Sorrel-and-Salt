@@ -381,7 +381,7 @@ describe('createSpell, with its recipe', () => {
     expect(await countSpells()).toBe(before);
   });
 
-  it('writes the spell’s fields, and its note beside the old instructions column', async () => {
+  it('writes the spell’s fields, its note alone and never the old instructions column', async () => {
     const spell = await createSpell(asUser(B), WORKSPACE_W_ID, {
       title: 'Hearth Ward',
       intent: 'Keep the hearth safe',
@@ -400,7 +400,7 @@ describe('createSpell, with its recipe', () => {
       moon_phase: 'Waxing',
       day_of_week: 'Sunday',
       note: 'Do it at dusk.',
-      instructions: 'Do it at dusk.',
+      instructions: null,
     });
   });
 
@@ -643,11 +643,13 @@ describe('updateSpell, with its recipe', () => {
     expect((await liveRecipe(id)).map((step) => step.id)).toEqual(ids);
   });
 
-  it('writes the note beside the old instructions column', async () => {
+  it('writes the note alone, leaving the old instructions column as it was', async () => {
     const { id } = await saved([]);
+    // A row the deploy before M13.1 wrote, whose old column holds text.
+    await sql`update spells set instructions = 'Old words' where id = ${id}`;
     await updateSpell(asUser(B), WORKSPACE_W_ID, id, { expectedRevision: null, note: 'At dusk' });
     const [row] = await sql`select note, instructions from spells where id = ${id}`;
-    expect(row).toEqual({ note: 'At dusk', instructions: 'At dusk' });
+    expect(row).toEqual({ note: 'At dusk', instructions: 'Old words' });
   });
 
   it('lets a draft drop its title and refuses completing without one', async () => {

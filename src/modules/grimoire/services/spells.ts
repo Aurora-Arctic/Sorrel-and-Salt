@@ -34,7 +34,11 @@ async function readableSpell(membership: Membership, spellId: string): Promise<S
   return spell;
 }
 
-/** The spell row's own columns a save names: `note` written beside the old `instructions`. */
+/**
+ * The spell row's own columns a save names. The free text goes to `note`
+ * alone: the old `instructions` column is left as it was until M13.9 drops it
+ * (DESIGN.md §5, `spells`).
+ */
 function spellColumns(input: {
   title?: string | null;
   intent?: string | null;
@@ -60,12 +64,9 @@ function spellColumns(input: {
     visibility,
   };
   // Left out is unchanged: a key whose value is `undefined` is not written.
-  const named = Object.fromEntries(
+  return Object.fromEntries(
     Object.entries(columns).filter(([, value]) => value !== undefined),
   ) as Partial<typeof columns>;
-  // `instructions` is the old name of `note`, kept until M13.9 drops it; the
-  // deploy before this one still reads it (the schema's comment says more).
-  return note === undefined ? named : { ...named, instructions: note };
 }
 
 /**
