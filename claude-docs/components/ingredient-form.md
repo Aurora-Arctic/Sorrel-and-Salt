@@ -2038,8 +2038,8 @@ few it needs. It covers:
   no request sent, and cleared once the field is corrected.
   An issue with a variant's pick, or with its text, landing on its `form`,
   a variant's list entry, and a box still holding text are the resolver's
-  own test, `tests/modules/ingredients/validation/ingredient-resolver.test.ts`,
-  beside `fieldNameOf`'s rows for a variant's paths.
+  own test, `tests/components/IngredientForm/values.test.ts`, mirroring
+  `values.ts`, beside `fieldNameOf`'s rows for a variant's paths.
 - **Server errors** — `fieldNameOf`'s routing: beside the field its path
   names, focused; on the list entry its path names; and one pathed to one
   element on the whole Element control. A variant's are `variants.test.tsx`'s.
