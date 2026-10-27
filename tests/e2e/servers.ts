@@ -42,7 +42,7 @@ const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
 
-export const serverEnv = (
+const serverEnv = (
   port: number,
   database: string,
   providers: Record<string, string>,
@@ -89,7 +89,7 @@ export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
 // so its two availability states need two servers — and in a database of its
 // own, since whichever slot ran beside it would otherwise reseed it.
 // claude-docs/components/sign-in-panel.md, "Testing".
-export const configuredProvidersServer = {
+const configuredProvidersServer = {
   command: 'npm run start',
   url: serverUrl(CONFIGURED_PROVIDERS_PORT),
   reuseExistingServer: !process.env.CI,
@@ -100,7 +100,7 @@ export const configuredProvidersServer = {
 // One more, whose data cache holds (M8.6): the one place a spec sees a read
 // answered from the cache rather than Postgres. Its database is its own and
 // never reseeded, since a reseed would leave the cache behind it.
-export const compendiumCacheServer = {
+const compendiumCacheServer = {
   command: 'npm run start',
   url: serverUrl(COMPENDIUM_CACHE_PORT),
   reuseExistingServer: !process.env.CI,

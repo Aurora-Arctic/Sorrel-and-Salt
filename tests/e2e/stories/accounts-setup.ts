@@ -12,7 +12,7 @@ import { signInAs } from '../session';
 // the browser. Kept beside the two specs that share it rather than in
 // tests/e2e/, which holds the harness every spec uses.
 
-export type CovenRole = 'owner' | 'member' | 'viewer';
+type CovenRole = 'owner' | 'member' | 'viewer';
 
 /** A raw client on this worker's slot database, closed after `fn`. */
 export async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise<T> {
@@ -87,10 +87,7 @@ export async function seatsOf(covenId: string): Promise<Record<string, CovenRole
  * names the spec gave, since the current user's cell also carries a "You"
  * mark. Read through `expect.poll` after an action, which this does not wait for.
  */
-export async function rollOf(
-  page: Page,
-  names: readonly string[],
-): Promise<Record<string, string>> {
+async function rollOf(page: Page, names: readonly string[]): Promise<Record<string, string>> {
   const table = page.getByRole('table', { name: 'Members' });
   const rows = await table.getByRole('row').all();
   // The Role column found by its heading, since an owner's table has the
