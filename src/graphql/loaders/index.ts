@@ -1,4 +1,9 @@
 import { memberEmailsByMember, membershipsByUser } from '@/modules/coven';
+import {
+  assignedCategoriesBySpell,
+  derivedCategoriesBySpell,
+  stepsBySpell,
+} from '@/modules/grimoire';
 import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
@@ -50,6 +55,9 @@ const LOADERS = {
   ingredientFormsById,
   deityTraditionsById,
   otherNamesByDeity,
+  stepsBySpell,
+  assignedCategoriesBySpell,
+  derivedCategoriesBySpell,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 export type Loaders = Built<typeof LOADERS>;

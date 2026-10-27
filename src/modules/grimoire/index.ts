@@ -4,6 +4,7 @@
 export * from './services/spell-visibility';
 export * from './services/spells';
 export * from './services/spell-reads';
+export * from './loaders/spell-children';
 export type {
   SpellDetail,
   SpellInput,
