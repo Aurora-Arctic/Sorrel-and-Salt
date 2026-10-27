@@ -15,6 +15,7 @@ import {
   useFormHistory,
 } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import MoonPhaseIcon from '../MoonPhaseIcon';
 import Notice from '../Notice';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
 import { SpellSuggestField } from './suggest-field';
@@ -101,6 +102,12 @@ const resolver = zodResolver(SpellInput) as unknown as Resolver<
   unknown,
   SpellBuilderInput
 >;
+
+// A moon phase's drawing beside its name, null for a phase typed outside
+// the eight so the box draws no empty mark. Module-level so the field's
+// suggestions are not rebuilt each render.
+const moonPhaseIcon = (phase: string): ReactElement | null =>
+  (MOON_PHASES as readonly string[]).includes(phase) ? <MoonPhaseIcon phase={phase} /> : null;
 
 const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement => {
   // The spell this builder saves to: the one it opened, else the one its first save created.
@@ -207,6 +214,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
               label="Moon Phase"
               placeholder="Add a phase"
               options={MOON_PHASES}
+              icon={moonPhaseIcon}
             />
             <SpellSuggestField
               name="dayOfWeek"

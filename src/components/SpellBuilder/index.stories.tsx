@@ -60,8 +60,11 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   // The usual visit: every field empty, nothing to save until one holds something.
   Empty: <Page />,
   'Title Typed': <Page steps={[typeTitle]} />,
-  // A saved spell, as M13.10's edit page will open it: its values, nothing to save yet.
+  // A saved spell, as M13.10's edit page will open it: its values, nothing to
+  // save yet. Its moon phase is one of the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} />,
+  // A moon phase saved before the list existed: its words, with no icon.
+  'Phase Outside the List': <Page spell={{ ...SAVED, moonPhase: 'Dark' }} />,
   // The workshop reaches no server, so the save fails into the notice.
   'Refused After Saving': <Page steps={[typeTitle, () => submitForm('form.form')]} />,
 };

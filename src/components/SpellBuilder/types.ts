@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FieldProps } from '../Field/types';
 
 /** The builder's fields, M10.12's: what the spell is called, what it is for, and its jar. */
@@ -27,4 +28,9 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
   placeholder?: string;
   /** What the box suggests, narrowed to what is typed; anything else typed is kept as typed. */
   options: readonly string[];
+  /**
+   * A decorative mark for a value, drawn before it in the list and in the
+   * box; `null` for a value with none, such as one typed outside the list.
+   */
+  icon?: (value: string) => ReactNode;
 }

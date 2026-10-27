@@ -1,0 +1,9 @@
+// Sized as FormIcon is (src/components/FormIcon/index.scss): one and a
+// quarter em square, sunk a quarter em, so it takes the size of the line it
+// sits in, and `flex: none` keeps a flex row from squeezing it.
+.moon-phase-icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.25em;
+}

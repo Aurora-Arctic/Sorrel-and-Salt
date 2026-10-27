@@ -86,6 +86,17 @@ stored as typed: the columns are free text
   unchanged. The lists are constants rather than vocabulary tables: each set
   is closed, and adding a name is a one-line change, unlike the celestial
   bodies (MB.91), which keep growing (the owner, 2026-10-27).
+
+  Each moon phase shows a small drawing of the moon beside its name, in the
+  open list and in the closed box (`MoonPhaseIcon`, in
+  `src/components/MoonPhaseIcon/`). The drawings follow the northern
+  hemisphere, where a waxing moon is lit on its right and a waning one on its
+  left. They are drawn as the form icons are, in the text's own colour: the
+  lit part solid and the shadowed part the same colour faint, so both read in
+  either theme. They are hidden from screen readers, since the name always
+  stands beside them. A phase typed outside the eight, such as "Dark", shows
+  its words with no drawing (the owner, 2026-10-27).
+
 - **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by
   the owner's decision (2026-10-27).
 - **Intent and Note** are multi-line. Title, Jar Size and Seal Wax Colour are

@@ -20,6 +20,7 @@ export function SpellSuggestField({
   hint,
   placeholder,
   options,
+  icon,
 }: SpellSuggestFieldProps): ReactElement {
   const { control } = useFormContext<SpellBuilderValues>();
   const { field } = useController({ control, name });
@@ -29,10 +30,10 @@ export function SpellSuggestField({
     () => ({
       options: options
         .filter((option) => matchesLabelOrGroup(option, undefined, text))
-        .map((value) => ({ value })),
+        .map((value) => ({ value, icon: icon?.(value) })),
       pending: false,
     }),
-    [options, text],
+    [options, text, icon],
   );
   return (
     <FieldShell label={label} hint={hint} {...shell}>
@@ -46,6 +47,9 @@ export function SpellSuggestField({
         onPick={(value) => field.onChange(value)}
         suggestions={suggestions}
         offerTyped
+        // The value's own mark in the box, there while the text is a listed
+        // name: a value typed outside the list draws none.
+        icon={icon?.(text)}
         placeholder={placeholder}
         inputRef={field.ref}
         name={field.name}
