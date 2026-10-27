@@ -126,12 +126,25 @@ export type SeedStep =
 
 export type SeedSpell = Pick<
   typeof spells.$inferInsert,
-  'title' | 'intent' | 'jarSize' | 'sealWaxColor' | 'moonPhase' | 'dayOfWeek' | 'note' | 'status'
+  | 'title'
+  | 'intent'
+  | 'jarSize'
+  | 'sealWaxColor'
+  | 'moonPhase'
+  | 'dayOfWeek'
+  | 'note'
+  | 'status'
+  | 'visibility'
 > & {
   id: string;
-  // The table lets a draft go untitled (M13.15), but every seeded spell is
-  // titled: the seed names a spell by its title when it reports a fault.
-  title: string;
+  // The table lets a draft go untitled (M13.15), so one demo draft is; a fault
+  // names an untitled spell by its id.
+  title: string | null;
+  /**
+   * The member who wrote it, for a private spell, which only its author reads.
+   * Absent, the bootstrap user wrote it, as it writes every other seeded row.
+   */
+  author?: string;
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
   categories: string[];
   steps: SeedStep[];

@@ -19,6 +19,29 @@ badge (M10.20) has to have both to show, and one layer carries no quantity at
 all — a sprig laid on top is not a measurement, and `quantity`/`unit` are
 nullable precisely so it does not have to be one.
 
+### The grimoire shelf
+
+Beside the two jars, `demo` seeds 54 more spells in W (ids `…0003` to
+`…0056`) so the grimoire page (M10.11) has a real shelf to show. It pages 24
+cards at a time (`CARD_PAGE_SIZE`), and a member reads 26 complete spells and
+26 drafts, so both the Spells and the Drafts tabs run past one page.
+
+- **Ranking titles.** Several titles share "Hearth" (Hearth Fire Blessing, Cold
+  Hearth Cleansing, Banked Hearth Candle, Hearthstone Luck Charm and others),
+  and Threshold Salt Line matches "hearth" only through its intent, so a search
+  shows a title match ranked above an intent match.
+- **An accented title.** Rêverie Pillow Mist is a draft, so a search for
+  "reverie" shows the accent-folding match.
+- **An untitled draft.** Spell `…0030` has no title, which the table allows for
+  a draft only (`spells_complete_has_title`, M13.15).
+- **Private spells.** Four spells are Fixture B's own and `private`: Private
+  Hearth Vow and Quiet Nerves Jar (complete), Hearth Ward of My Own and Letter
+  to the Sea (drafts). Only B reads them. A, the owner, does not, so signing in
+  as A shows what an ordinary member sees. A private spell is written as its
+  author, so its `created_by` is B; every other spell is the bootstrap user's.
+- **Categories.** The assigned categories are spread across several groups, so
+  the category filter has more than one group to offer.
+
 **The curated compendium comes with it.** After `seedStandardContent`, in the
 same transaction, `demo` calls `seedCompendiumContent(tx, COMPENDIUM)`, so a
 person exploring the app finds the real compendium (every curated entry and
