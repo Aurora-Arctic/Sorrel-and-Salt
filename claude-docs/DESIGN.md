@@ -1482,7 +1482,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 80 (a spell's steps) and 81 (autosave) after them, so a v1 count is 54 stories (1–34, 47–64, 80, 81).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 77 (step units), 80 (a spell's steps) and 81 (autosave) after them, so a v1 count is 55 stories (1–34, 47–64, 77, 80, 81).
 
 ### Grimoire
 
@@ -1513,6 +1513,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 ### References (MB.151)
 
 64. As a reader of the compendium, see where an entry's information came from, so that I can judge a claim and read further.
+
+### Step units (M13.2)
+
+77. Give a step that lays a form my coven holds stock of a unit that stock can be measured in (any weight against weight, any volume against volume, the same unit for a count), so that making the spell can take it out of stock.
 
 ### Spell steps (M13.1)
 

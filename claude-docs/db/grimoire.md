@@ -132,6 +132,24 @@ The checks, before anything is written:
   kept step whose link did not change is not checked again, so a step laying
   an ingredient deleted since survives the save ("What a spell holds" in
   [spell-visibility.md](spell-visibility.md)).
+- **A step's unit must fit the coven's jar of its form (M13.2, story 77).** A
+  jar is a stock row: what the coven holds of one form, counted in one unit.
+  When the coven holds a live jar of the form a step lays, the step's unit must
+  be one `unitConvert` can turn into the jar's unit (any weight against a
+  weight jar, any volume against a volume jar) or, for a count unit (`piece`,
+  `drop`, `pinch`), exactly the jar's unit. For example, a `tsp` step against a
+  jar in `ml` saves, while a `g` step against it, or a `pinch` step against a
+  jar in `piece`, is refused with a `VALIDATION` error at `steps[i].unit`.
+  Without this, making the spell could not take the step out of stock.
+  - Not checked: a custom step, a form the coven holds no live jar of, a step
+    or a jar with no unit, and a kept step whose form and unit did not change.
+  - The jars are read in one query for every linked form in the recipe,
+    through `jarsOfForms` in `@/modules/ingredients`, under the caller's
+    `Membership`, so only the caller's coven's jars are read. Every role that
+    writes a spell may also read stock.
+  - A jar whose unit changes after the spell is saved does not block a later
+    save of that step. Warning about that drift is M13.5's job, when a
+    working takes the spell out of stock.
 
 The write, inside one `withAudit` transaction:
 

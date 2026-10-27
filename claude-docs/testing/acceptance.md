@@ -13,7 +13,7 @@ checklist of the v1 user stories, one line each:
 [-] Story 12: View my stock … — skipped
 [ ] Story 28: … — no test yet
 
-1 of 54 stories passing · 2 failing · 1 skipped · 50 without a test
+1 of 55 stories passing · 2 failing · 1 skipped · 51 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
@@ -26,7 +26,7 @@ decisions make it hold:
   meaning to the checklist. `tests/e2e/stories/README.md` has the file table.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section (54 today, 1–34, 47–64, 80 and 81), so a
+  "## 10. User stories" and the next section (55 today, 1–34, 47–64, 77, 80 and 81), so a
   story added to §10 joins the checklist without a harness edit. The harness
   has no tests of its own (MB.224): a broken checklist is seen by whoever runs
   it.
@@ -34,8 +34,9 @@ decisions make it hold:
   `tests/support/story-sections.ts` maps a story number to a name such as
   `Coven - Spells - Ingredients`, and the checklist (terminal and CI) groups the
   stories under those names, in name order. The map is separate from §10 so the
-  spec stays plain prose. `tests/guards/story-sections.test.ts` fails when a
-  story in §10 has no section, so a new story needs a line there.
+  spec stays plain prose. Nothing checks the map since M14.27 deleted its
+  guard: a story in §10 with no section is listed under "Other", so a new
+  story still wants a line there.
 - **A story's status is the state of every test tagged with it.** Any failure
   is _failing_; otherwise any skip is _skipped_; otherwise _passing_. An
   interrupted test reads as failing, so it can never look green.

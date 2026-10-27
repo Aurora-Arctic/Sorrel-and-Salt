@@ -7,6 +7,7 @@ import {
   findStockById,
   findStockByIds,
   findStockOfIngredients,
+  findStockOfVariants,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
@@ -410,6 +411,19 @@ async function formsHeldBy(
     }),
   );
   return forms;
+}
+
+/**
+ * The live jars `membership`'s coven holds of these forms, one read for the
+ * lot: what the grimoire's save measures a step's unit against (M13.2). The
+ * caller has checked the proof's permission; every role that writes a spell
+ * also reads stock (src/modules/coven/services/access-control.ts).
+ */
+export function jarsOfForms(
+  membership: Membership,
+  variantIds: readonly string[],
+): Promise<StockRow[]> {
+  return findStockOfVariants(membership, variantIds);
 }
 
 /** One coven's live jars of these ingredients, or the refusal its proof threw. */
