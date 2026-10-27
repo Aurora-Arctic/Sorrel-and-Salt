@@ -46,6 +46,7 @@ with an empty list, a null, or a success that did nothing.
 | `Forbidden`       | The thing exists and you may not have it.                              |
 | `NotFound`        | There is nothing here under that id.                                   |
 | `ValidationError` | The input broke a rule; `issues` says which field and why, one by one. |
+| `StaleWrite`      | A revisioned save lost a race; `currentRevision` is the row's now.     |
 
 A `ValidationError`'s `issues` are `{ path, message }[]`. `path` names the
 input field in the shape of the operation's input, such as `['canonicalName']`
@@ -69,7 +70,8 @@ invariants). None of the three carries a status code or a GraphQL error code:
 the transport renders a refusal, and a service called from a script has no use
 for one. Over GraphQL, the code is attached on the way out by
 `src/graphql/errors.ts`, the route's `maskedErrors` mapping (MB.43). Each type
-leaves as `VALIDATION` (with `fieldErrors`), `FORBIDDEN` or `NOT_FOUND`, with
+leaves as `VALIDATION` (with `fieldErrors`), `FORBIDDEN`, `NOT_FOUND` or
+`STALE_WRITE` (with `currentRevision`; M13.16), with
 the service's message verbatim, and anything else leaves masked
 (`graphql/errors.md`, "Errors").
 
