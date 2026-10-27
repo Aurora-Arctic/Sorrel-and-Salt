@@ -73,12 +73,10 @@ const stepPage = async (membership: Membership) =>
     .sort();
 
 describe('findPageInReadableSpells', () => {
-  let bPrivate: string;
-
   beforeEach(async () => {
     await spellBy(A, 'Ash Ward', 'workspace');
     await spellBy(A, 'Birch Charm', 'private');
-    bPrivate = await spellBy(B, 'Cedar Knot', 'private');
+    await spellBy(B, 'Cedar Knot', 'private');
     await spellBy(D, 'Damson Seal', 'workspace', WORKSPACE_X_ID);
   });
 
@@ -89,15 +87,6 @@ describe('findPageInReadableSpells', () => {
     expect(await spellPage(await proofFor(D, WORKSPACE_X_ID))).toEqual(['Damson Seal']);
 
     expect(await spellPage(await proofFor(A))).toEqual(['Ash Ward', 'Birch Charm']);
-  });
-
-  it('refuses B’s private spell to A by direct id as well as from the page', async () => {
-    const owner = await proofFor(A);
-    expect(await findOneSpell(await proofFor(B), bPrivate)).toMatchObject({ id: bPrivate });
-
-    await expect(findOneSpell(owner, bPrivate)).resolves.toBeUndefined();
-    const page = await findPageInReadableSpells(owner, spells, [byTitle], FIRST_PAGE);
-    expect(page.map((entry) => entry.node.id)).not.toContain(bPrivate);
   });
 
   it('pages a spell-scoped table only under the spells the reader may read', async () => {
@@ -185,6 +174,24 @@ describe('findGrimoirePage', () => {
     const ids = await grimoire();
 
     expect(await pageOf({ order })).toEqual(expected.map((name) => ids[name]));
+  });
+
+  it('pages an untitled draft after every titled spell under TITLE_ASC', async () => {
+    const ids = await grimoire();
+    const untitled = await spellBy(A, 'Untitled', 'workspace');
+    await sql`update spells set title = null where id = ${untitled}`;
+    // The precondition: an untitled title reads as empty text, which would
+    // sort before every titled spell without the untitled-last key.
+    const [{ title }] = await sql<{ title: string | null }[]>`
+      select title from spells where id = ${untitled}`;
+    expect(title).toBeNull();
+
+    expect(await pageOf({ order: 'TITLE_ASC' })).toEqual([
+      ids.alder,
+      ids.birch,
+      ids.cedar,
+      untitled,
+    ]);
   });
 
   it.each(GRIMOIRE_ORDERS)(

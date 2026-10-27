@@ -146,3 +146,61 @@ MB.96's sizing of the Blacksmith tier, at the ~245 runs a month counted then (hi
 | vitest on 4 vCPU              | ~3 min                                | ~750                 | Fits comfortably; three workers, so only the image cache |
 | vitest + playwright on 8 vCPU | ~9 min                                | ~2,200 (73%)         | Fits only while MB.98 holds; the second step             |
 | Every job on Blacksmith       | ~15+ min                              | ~3,700               | Over, on legs that are free today                        |
+
+## Splitting the Vitest job
+
+M14.27 split `vitest.yml` from one job into four, so a PR that touches only
+the backend sees its answer sooner and a timeout in one kind of test no longer
+fails the others.
+
+| Job           | Runs                                  | Postgres service |
+| ------------- | ------------------------------------- | ---------------- |
+| `vitest-dom`  | `--project dom` (happy-dom)           | No               |
+| `vitest-node` | `--project unit --project rsc`        | No               |
+| `vitest-db`   | `--project db --project db-mocking`   | Yes              |
+| `vitest`      | Merges the three; applies the 80% bar | No               |
+
+- **Each part writes a blob.** `vitest run … --coverage --reporter=blob`
+  writes the part's results and its coverage map to
+  `.reports/blobs/blob-<part>.json`, uploaded as the artifact
+  `vitest-blob-<part>`. A part switches the four coverage thresholds off
+  (`--coverage.thresholds.*=0`): it sees only its own projects' share of
+  `src/`, so it would fail an 80% bar that only the whole tree meets.
+- **Why a merge job.** `vitest run --mergeReports .reports/blobs --coverage`
+  joins the three coverage maps, so the 80% thresholds apply once over the
+  whole tree, and writes the same JSON the single job did (per-file
+  `startTime` and `endTime` included, checked locally), so
+  `summarize-vitest.mjs` and `lib/slowest-files.mjs` are unchanged. It runs
+  no tests. It is named `vitest` because the caller's job is also `vitest`,
+  which makes the required check `vitest / vitest`; the ruleset needs no change.
+  The parts are `vitest / vitest-dom` and so on, and are not required checks.
+- **A doc-only PR skips the whole run, never one part.** `should-run` is false
+  for every job, so each completes under its own name. A single part is never
+  path-skipped: the merge needs all three blobs and fails when one is missing.
+- **`npm run test:coverage` is unchanged** for local use: one run, one lock.
+
+### Measured: the first gate run of the split
+
+Run 40562273451, 27 October 2026, with the images already cached (the image
+pulls took 14 s and 21 s):
+
+| Job              | Wall time |
+| ---------------- | --------- |
+| `vitest-node`    | 1m 37s    |
+| `vitest-dom`     | 3m 38s    |
+| `vitest-db`      | 3m 56s    |
+| `vitest` (merge) | 53s       |
+
+The three parts started together at 18:42:16 and the merge ended at 18:47:08,
+so the required check took 4m 52s from the caller job's start. The single job
+it replaced took 6m 34s (`design-decisions/m14.27-test-audit.md`, section 8).
+
+**Conclusion: `vitest-db` is the critical path, not `vitest-dom`.** The audit
+expected `dom` to be the long pole, but `db` finished 18 s after it. Sharding
+`vitest-dom` (`--shard 1/2` and `2/2`, with the shard in the blob name; the
+merge job takes any number of blobs) would shorten a job that is not the
+slowest, so it buys nothing yet. `vitest-db` is not worth sharding, because
+each shard would build its own template database. What shortens it is the db
+lane's cuts of the two seed tests, `tests/db/seed/index.test.ts` (48s on the
+old job) and `tests/db/seed/compendium.test.ts` (40s). Re-measure after those
+merge, then decide on sharding `dom`.

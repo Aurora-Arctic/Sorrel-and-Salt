@@ -180,10 +180,9 @@ describe('findAstrologyValues', () => {
     expect(ids).not.toContain(mars.id);
   });
 
-  it('narrows by a name fragment, case-insensitively, reading % and _ literally', async () => {
-    await sql`
-      insert into celestial_bodies (name, slug, description, created_by, updated_by)
-      values ('Fixture 100%', 'fixture-100', 'A test body', ${A.id}, ${A.id})`;
+  // The literal reading of % and _ is proved once, on the traditions' read below:
+  // all three reads share one helper, `containsText` (M14.27).
+  it('narrows by a name fragment, case-insensitively', async () => {
     const names = async (query: string) => {
       const page = await resolvePage({ first: 100 }, (request) =>
         findAstrologyValues(celestialBodies, { query }, request),
@@ -192,8 +191,6 @@ describe('findAstrologyValues', () => {
     };
 
     expect(await names('NODE')).toEqual(['North Node', 'South Node']);
-    expect(await names('%')).toEqual(['Fixture 100%']);
-    expect(await names('_')).toEqual([]);
   });
 });
 
@@ -293,7 +290,7 @@ describe('findDeityPage and findDeityCount', () => {
     });
   });
 
-  it('narrows by a name fragment read literally, and by a tradition, alone and together', async () => {
+  it('narrows by a name fragment, and by a tradition, alone and together', async () => {
     const greek = await traditionId('Greek');
     await sql`
       insert into deities (name, slug, description, tradition_id, created_by, updated_by)
@@ -307,7 +304,6 @@ describe('findDeityPage and findDeityCount', () => {
       where tradition_id = ${greek} and deleted_at is null`;
 
     expect(await names({ query: '100%' })).toEqual(['Fixture 100% Herm']);
-    expect(await names({ query: '_' })).toEqual([]);
     expect(await names({ query: 'HERM', traditionId: greek })).toEqual([
       'Fixture 100% Herm',
       'Hermes',

@@ -134,10 +134,10 @@ mark and nothing else: `assertCurator` (an admin or a curator), then
 both alone for a write that changes only the mark, so the mark never
 reads as an edit, and the service test asserts both stay put. A coven's own
 entry, a deleted one and an id that names nothing are `NotFound`.
-`tests/guards/compendium-review-mark.test.ts` reads every service's
-compendium-tier insert or update of `ingredients` as text and fails one that
-neither calls `reviewMark(` nor writes `NEEDS_REVIEW`, so a new writer cannot
-forget the mark.
+The lint rule `sorrel/compendium-review-mark-switch-only`
+(`lint/source-sweeps.js`) fails a service file that names the mark's columns
+(`curatorReviewedAt`, `curatorReviewedBy`) or calls `setReviewInCompendium`
+outside `setCompendiumEntryReviewed`, so a new writer cannot set the mark.
 
 **A deleted entry is gone from every read and frees what it held** (M5.3).
 The service test's `READS` table asks every exported read an entry reaches
