@@ -1834,7 +1834,7 @@ The page also carries:
 
 - `requireSession()`, called in the page, since the `(shell)` layout does not.
 - `LastEdit` under the title ([`components/last-edit.md`](../components/last-edit.md)).
-- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the edit route, and M13.11 adds the Delete control with `deleteSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
+- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the edit route, M13.11 adds the Delete control with `deleteSpell`, and M13.20 adds the Duplicate control with `duplicateSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
 - If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
 - A `Skeleton` of shape `page`, through a `PARTS_OF_SECTION` entry in `src/lib/coven-path.ts`, so the loading shape matches.
 - The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
@@ -4307,7 +4307,7 @@ Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoi
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the review also covers the step editor (M13.3), the Record a Working dialog with its deduction preview (M13.7), and the recipe page's Workings section (M13.8). M13.9 follows it.
 
-The review list also covers: `SpellCard` and the card list's empty states (M10.11), the `Skeleton` shapes for the list and the recipe page, the focus ring (M12.45), click feedback (M12.31) and the tooltip triage (M12.43, a tooltip only for a rule or format trap). After a step is added, removed or reordered, focus placement and the `aria-live` message are asserted in the story spec, since axe does not check them.
+The review list also covers: `SpellCard` and the card list's empty states (M10.11), the `Skeleton` shapes for the list and the recipe page, the focus ring (M12.45), click feedback (M12.31), the tooltip triage (M12.43, a tooltip only for a rule or format trap) and the recipe page's Duplicate control (M13.20). After a step is added, removed or reordered, focus placement and the `aria-live` message are asserted in the story spec, since axe does not check them.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 

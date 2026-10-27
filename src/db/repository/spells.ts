@@ -21,8 +21,14 @@ import type {
  * this reader's private ones. `created_by` is the author — §5 gives spells no
  * separate author column — so the proof supplies both halves and a caller has
  * no id to pass that could disagree with it.
+ *
+ * Exported for the repository's own finders — M13.5's and M13.6's workings
+ * reach their spell through it — and not from the index: above the
+ * repository nothing builds SQL (MB.33). It builds a condition and runs
+ * nothing, and `tests/guards/readable-spells-guard.test.ts` fails a
+ * `spells.visibility` comparison written anywhere else.
  */
-function readableSpells(membership: Membership): SQL | undefined {
+export function readableSpells(membership: Membership): SQL | undefined {
   return and(
     scopedTo(membership, spells),
     notSoftDeleted(spells),

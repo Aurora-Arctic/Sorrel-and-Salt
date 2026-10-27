@@ -14,6 +14,15 @@ goes through Node (`node -e`), the npm scripts, or `jq`, `grep` and `sed`.
 still fail CI on the 80% threshold (lines, branches, functions, statements)
 alone.
 
+**`npm run test` and `npm run test:coverage` take the Vitest lock themselves.**
+Each runs under `flock /tmp/sorrel-vitest.lock`, so two runs from different
+sessions wait for each other instead of colliding on the shared Postgres. Do
+not wrap either in `flock` yourself: the outer `flock` holds the lock, the
+inner one waits for it, and the run deadlocks forever. A direct
+`npx vitest run …` takes no lock, so wrap that one by hand:
+`flock /tmp/sorrel-vitest.lock npx vitest run …`. `test:debug` and `test:ui`
+take no lock. [`testing/e2e.md`](testing/e2e.md) explains the locks.
+
 **Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the
 Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to
 `main` (production) or `staging` (preview, aliased to the staging domain), and
@@ -117,7 +126,7 @@ Keep run output small, and never mask an exit code with a pipe: see [`token-effi
 
 | npm (`make`)                                       | Purpose                                                                                                                                                                                                                                                                                                                                                 |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run test:coverage`                            | `vitest run --coverage` — the `unit` (node), `dom` (happy-dom), `db` and `db-mocking` (node/Postgres) and `rsc` projects, 80% threshold                                                                                                                                                                                                                 |
+| `npm run test:coverage`                            | `vitest run --coverage` under the Vitest lock — the `unit` (node), `dom` (happy-dom), `db` and `db-mocking` (node/Postgres) and `rsc` projects, 80% threshold                                                                                                                                                                                           |
 | `npm run test:stories` (`make test-stories`)       | The story suite only (Playwright flows in `tests/e2e/stories/`, on `playwright.stories.config.ts`), printed as a checklist of the 52 v1 stories from DESIGN.md §10, read from the `@story-N` tags — passing, failing (flaky counts), skipped or _no test yet_ (M9.1). Shares the e2e lock and ports; no coverage                                        |
 | `npm run test:debug` (`make test-debug`)           | Vitest under `--inspect-brk` on **9230**, one worker, halted until a debugger attaches                                                                                                                                                                                                                                                                  |
 | `npm run test:ui` (`make test-ui`)                 | The Vitest UI on its default port                                                                                                                                                                                                                                                                                                                       |

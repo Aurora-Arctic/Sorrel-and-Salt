@@ -10,7 +10,7 @@ import {
   updateSpell,
   updateSpellStep,
 } from '@/modules/grimoire';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertSpell } from '../../../support/db/insert-spell';
@@ -230,6 +230,28 @@ describe('reading', () => {
     }
     expect((await listSpells(asUser(D), WORKSPACE_X_ID)).map((spell) => spell.id)).toEqual([own]);
     await expect(listSpells(asUser(D), WORKSPACE_W_ID)).rejects.toBeInstanceOf(Forbidden);
+  });
+
+  // A site admin or curator curates the compendium and reaches no coven's
+  // grimoire (M6.6), whatever the spell's visibility.
+  it('refuses a site admin and a site curator at either visibility, by direct id and in the list', async () => {
+    const shared = await seed(B);
+    const hidden = await seed(B, 'private');
+    // Why this could have succeeded: both spells are there and their author
+    // reads them, and each session carries a site role above a member's.
+    expect((await listSpells(asUser(B), WORKSPACE_W_ID)).map((spell) => spell.id).sort()).toEqual(
+      [shared, hidden].sort(),
+    );
+    expect([asUser(E).role, asUser(F).role]).toEqual(['admin', 'curator']);
+
+    for (const curator of [E, F]) {
+      for (const id of [shared, hidden]) {
+        await expect(getSpell(asUser(curator), WORKSPACE_W_ID, id)).rejects.toBeInstanceOf(
+          Forbidden,
+        );
+      }
+      await expect(listSpells(asUser(curator), WORKSPACE_W_ID)).rejects.toBeInstanceOf(Forbidden);
+    }
   });
 });
 
