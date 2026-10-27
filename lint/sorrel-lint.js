@@ -1,4 +1,5 @@
 import { posix, relative, sep } from 'node:path';
+import { rules as sweepRules } from './source-sweeps.js';
 
 // The architecture rules lint can carry, as oxlint JS-plugin rules loaded by
 // `.oxlintrc.json`'s `jsPlugins` (claude-docs/testing/layer-ownership.md,
@@ -23,6 +24,7 @@ const moduleOf = (path) => /^src\/modules\/([^/]+)\/?(.*)$/.exec(path);
 export default {
   meta: { name: 'sorrel' },
   rules: {
+    ...sweepRules,
     // CLAUDE.md rule 1: no third access path. A directive, not an import, so
     // `no-restricted-imports` cannot see it.
     'no-use-server': {

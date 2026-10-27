@@ -51,7 +51,11 @@ cited by number in the PR table of the task that applies it.
    written, and **code used only by Claude agents is never tested** —
    `scripts/task-board.mjs`, the doc-splitting and citation tools, skills
    tooling, the CI summarizers: a bug there is seen by the agent that runs it,
-   not by a user.
+   not a user. Two tests of the harness stay on purpose (M14.27):
+   `tests/e2e/axe.spec.ts`, the only proof that every axe assertion can fail
+   (its second case is MB.265's regression test), and
+   `tests/guards/no-tracked-books.test.ts`, which reads repository content:
+   a committed book stays published because the repository is public.
 2. **State, never copy.** After an action, assert that the `status`,
    `alert`, `tooltip`, row, chip or description is present, or carries the
    data the action used. Never a heading, label, caption, column heading,
@@ -93,6 +97,20 @@ cited by number in the PR table of the task that applies it.
    `Pager` owns paging, so a list asserts only the hrefs it builds; a filter's
    loading state and reset are tested once, in `CompendiumList`, its full
    load in `UserList`.
+   **A page or parent test does not render its children.** It mocks its heavy
+   children, or awaits `Page(...)` and walks the returned element tree (as
+   `tests/app/(public)/compendium/held.test.tsx` does), and it owns only what
+   it passes down and what it asks the services for. A form field is proved
+   in a `FormProvider` harness (as
+   `tests/components/IngredientForm/list-field.test.tsx` does), not by
+   rendering the whole form. The reason: whole-tree renders are most of the
+   suite's CPU and every timeout the 2026-10-27 audit found.
+   **A rollback test fails the child write, never the parent's.** To prove a
+   child write rolls back with its parent, make the child write fail (a
+   trigger refusing it, as
+   `tests/modules/ingredients/services/ingredient-categories.test.ts` does).
+   If the parent write fails first, no child is ever written and the test
+   cannot fail.
 7. **A migration's data tests retire** once the migration is in production's
    journal. The shape tests of the tables it leaves stay.
 8. **No guard for a rule lint can carry.** Import bans, `server-only`,
@@ -100,8 +118,12 @@ cited by number in the PR table of the task that applies it.
    oxlint rules (`.oxlintrc.json`, `lint/sorrel-lint.js`) or conventions. A
    Vitest sweep stays only where it reads the schema, the catalogue or the
    module graph: the GraphQL field classification, every finder filtering
-   soft-delete, the audit columns, the `updated_at` trigger, the partial
-   unique indexes, the two exemption-count pins, and the test-location check
+   soft-delete, the audit columns, the `updated_at` trigger, the
+   `bump_revision` trigger (`tests/db/revision-trigger.test.ts`: every table
+   with a `revision` column carries it), the browser floor
+   (`tests/guards/browser-floor.test.ts`: it reads the `web-features` package,
+   not source text, so no lint rule can carry it), the partial unique indexes, the two
+   exemption-count pins, and the test-location check
    ([`where-tests-live.md`](where-tests-live.md), "Where tests live").
 9. **A user story is proved by a browser flow** (M9.1, replacing M9.17's
    browser column and the old "never re-runs a flow" half of this rule): the
@@ -109,7 +131,8 @@ cited by number in the PR table of the task that applies it.
    tags it `@story-N`. The gate suite (`tests/e2e/*.spec.ts`) keeps only what
    no story walks and only a real server can prove: cookies, mail, the cache,
    the production build's config, the GraphQL route, and one axe scan per
-   page. A gate spec a story flow proves is deleted. A service rule keeps its
+   page state (a dialog or an open menu adds markup the plain page scan never
+   sees). A gate spec a story flow proves is deleted. A service rule keeps its
    own Vitest test, with its direct-id refusal; a story flow does not replace
    it, because a flow shows the control is absent and the rule shows the
    service refuses.
@@ -222,3 +245,8 @@ Each later task corrects the doc that names what it changes, in its own PR
 MB.224 adds "What a test may assert" and the four rows after "A guard's
 scan"; MB.225 to MB.230 apply them, one directory set each, scoped together in
 [`mb.224-plan.md`](../design-decisions/mb.224-plan.md).
+
+M14.27 (the 2026-10-27 test-suite audit,
+[`m14.27-test-audit.md`](../design-decisions/m14.27-test-audit.md)) adds to
+rule 1 its two named exceptions, to rule 6 the page-test and rollback-test
+clauses, to rule 8 the `bump_revision` sweep and the browser-floor guard, and to rule 9 "per page state".
