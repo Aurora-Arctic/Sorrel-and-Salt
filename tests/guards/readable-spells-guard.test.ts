@@ -13,6 +13,12 @@ import { fromRoot } from '../support/paths';
 // `.visibility` handed to a Drizzle operator), the word inside a raw sql``
 // template, and a JavaScript comparison of a row's `.visibility`. Comments are
 // stripped first, so prose may name the column freely.
+//
+// The first three scan all of src/. The JavaScript comparison scans only
+// src/db/ and src/modules/, where read decisions live: a component or a
+// GraphQL resolver compares `spell.visibility` to draw a private badge or a
+// read-only control (M10.11, M10.13), on a spell the service has already let
+// the viewer read. That is a display decision, not who may read the spell.
 
 const PREDICATE_FILE = 'src/db/repository/spells.ts';
 const PREDICATE = 'readableSpells';
@@ -28,7 +34,10 @@ const ALLOWED = {
   text: "spell.visibility === 'workspace'",
 };
 
-const PATTERNS: { name: string; pattern: RegExp }[] = [
+/** Where read decisions live, and so the only place a JavaScript comparison is one. */
+const DECIDING = /^src\/(?:db|modules)\//;
+
+const PATTERNS: { name: string; pattern: RegExp; scope?: RegExp }[] = [
   { name: 'the spells.visibility column', pattern: /\bspells\.visibility\b/g },
   {
     name: 'a visibility column handed to a Drizzle operator',
@@ -39,6 +48,7 @@ const PATTERNS: { name: string; pattern: RegExp }[] = [
   {
     name: 'a JavaScript comparison of a row’s visibility',
     pattern: /\.visibility\s*[!=]==?|[!=]==?\s*[\w.?]+\.visibility\b/g,
+    scope: DECIDING,
   },
 ];
 
@@ -78,7 +88,8 @@ function hits(): Hit[] {
     // src/gql/ is codegen output from the SDL, typing the field rather than reading it.
     if (!/^src\/.*\.tsx?$/.test(file) || file.startsWith('src/gql/')) continue;
     const text = stripComments(readFileSync(fromRoot(file), 'utf8'));
-    for (const { name, pattern } of PATTERNS) {
+    for (const { name, pattern, scope } of PATTERNS) {
+      if (scope && !scope.test(file)) continue;
       for (const match of text.matchAll(pattern)) {
         const index = match.index ?? 0;
         const line = text.slice(0, index).split('\n').length;

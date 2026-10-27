@@ -55,7 +55,11 @@ A site admin and a site curator are refused at the service, by `getSpell` and
 `tests/guards/readable-spells-guard.test.ts` reads `src/` as text and fails a
 spell's visibility compared anywhere outside `readableSpells`: the column in a
 query, the word in a raw `sql` template, or a JavaScript comparison of a
-fetched row. It allows one comparison, `setSpellVisibility`'s check of the
+fetched row. The JavaScript check covers only `src/db/` and `src/modules/`,
+where read decisions live: a component or a GraphQL resolver compares
+`spell.visibility` to draw a private badge or a read-only control (M10.11,
+M10.13) on a spell the service has already let the viewer read, which is a
+display decision rather than who may read it. It allows one comparison, `setSpellVisibility`'s check of the
 spell it has already read, which decides a write rather than who reads.
 `spellStepWrites` scopes by coven alone and skips visibility on purpose: it
 moves steps because their form is going, whoever may read the spell.
