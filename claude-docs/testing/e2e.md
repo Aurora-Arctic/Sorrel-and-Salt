@@ -439,8 +439,14 @@ rebuilds, even when their ports differ, and a second session's run may be
 invisible to `ps`. So a run from a session is
 `flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=… npx playwright test …`;
 `npm run e2e:audit` takes the lock itself, and the path is fixed so that
-every session takes the same one. Vitest's `db` project does the same on
-`/tmp/sorrel-vitest.lock`, for the same reason.
+every session takes the same one. Vitest serialises on
+`/tmp/sorrel-vitest.lock`, for the same reason: its `db` project shares one
+Postgres. `npm run test` and `npm run test:coverage` take that lock
+themselves, the same way `e2e:audit` takes its own, so never wrap either of
+them, or `e2e:audit`, `test:stories` and `test:stories:audit`, in `flock`:
+the outer `flock` holds the lock, the inner one waits for it, and the run
+deadlocks forever. A direct `npx vitest run …` takes no lock and still needs
+the wrapper: `flock /tmp/sorrel-vitest.lock npx vitest run …`.
 
 ### Where a run's time goes (M11.18)
 
