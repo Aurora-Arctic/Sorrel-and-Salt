@@ -26,7 +26,7 @@ import type {
  * Exported for the repository's own finders — M13.5's and M13.6's workings
  * reach their spell through it — and not from the index: above the
  * repository nothing builds SQL (MB.33). It builds a condition and runs
- * nothing, and `tests/guards/readable-spells-guard.test.ts` fails a
+ * nothing, and the lint rule `sorrel/spell-visibility-read-in-one-place` fails a
  * `spells.visibility` comparison written anywhere else.
  */
 export function readableSpells(membership: Membership): SQL | undefined {

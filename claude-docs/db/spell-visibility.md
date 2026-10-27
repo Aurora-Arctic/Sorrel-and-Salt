@@ -56,7 +56,7 @@ of a soft-deleted spell — and requires `findOneSpell`, `findManySpells` and
 A site admin and a site curator are refused at the service, by `getSpell` and
 `listSpells` (`tests/modules/grimoire/services/spells.test.ts`), because
 `assertMembership` refuses anyone outside the coven before a finder runs.
-`tests/guards/readable-spells-guard.test.ts` reads `src/` as text and fails a
+The lint rule `sorrel/spell-visibility-read-in-one-place` (`lint/source-sweeps.js`) reads `src/` as text and fails a
 spell's visibility compared anywhere outside `readableSpells`: the column in a
 query, the word in a raw `sql` template, or a JavaScript comparison of a
 fetched row. The JavaScript check covers only `src/db/` and `src/modules/`,
