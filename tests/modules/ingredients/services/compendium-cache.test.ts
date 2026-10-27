@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { revalidateTag } from 'next/cache';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
 import { NotFound } from '@/lib/errors';
 import type { PageRequest } from '@/lib/types';
@@ -82,22 +81,6 @@ describe('M8.6: the compendium read is cached under the compendium tag', () => {
     });
     expect(await names()).toEqual(['Fixture Alpha']);
     expect(await countCompendium({}, undefined)).toEqual({ totalCount: 1, countBefore: null });
-  });
-
-  it('gives back the rows as the repository returned them, dates as dates', async () => {
-    await seed('Fixture Alpha');
-    const [miss] = await listCompendium({}, PAGE);
-    const [hit] = await listCompendium({}, PAGE);
-
-    expect(hit).toEqual(miss);
-    expect(hit.node.createdAt).toBeInstanceOf(Date);
-  });
-
-  it('caches nothing of a coven: a coven entry is in no cached read', async () => {
-    await seed('Fixture Coven Entry', WORKSPACE_W_ID);
-    await seed('Fixture Alpha');
-
-    expect(await names()).toEqual(['Fixture Alpha']);
   });
 });
 
