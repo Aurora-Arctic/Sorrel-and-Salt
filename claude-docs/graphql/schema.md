@@ -1126,9 +1126,15 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
     out is removed. On `updateSpell`, leaving `steps` out leaves the recipe
     as it is. [`db/grimoire.md`](../db/grimoire.md), "Saving a recipe", has
     the rules and the checks.
+  - `categoryIds` (M10.14) is the whole set of categories the spell is
+    assigned: one left out is unassigned, and `[]` empties the set. On
+    `updateSpell`, leaving it out leaves the set as it is. An id that names
+    no live category is `VALIDATION` at `['categoryIds', index]`.
+    [`db/grimoire.md`](../db/grimoire.md), "Saving its categories", has the rules.
   - Every other field is nullable. On `updateSpell`, a field left out keeps
-    its value, and null clears it. A `status`, `visibility` or `steps` sent
-    as null is read as left out, since none of the three can be cleared.
+    its value, and null clears it. A `status`, `visibility`, `steps` or
+    `categoryIds` sent as null is read as left out, since none of the four
+    can be cleared that way.
   - `expectedRevision` is the revision the save was written against. GraphQL
     cannot require a field that may be null, so the schema has it as a
     nullable `Int`, and the service refuses a save that leaves it out as
