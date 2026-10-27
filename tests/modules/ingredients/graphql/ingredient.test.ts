@@ -79,13 +79,13 @@ describe('ingredient', () => {
     });
   });
 
-  it("answers a coven's own entry to its members, viewers included, when they name the coven", async () => {
-    for (const member of [B, C]) {
-      const result = await run(asUser(member), { id: localId, workspaceId: WORKSPACE_W_ID });
+  // Which roles read the entry is services/compendium.test.ts's; a viewer, the
+  // narrowest reader, stands for them here.
+  it("answers a coven's own entry to a member who names the coven", async () => {
+    const result = await run(asUser(C), { id: localId, workspaceId: WORKSPACE_W_ID });
 
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
-    }
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
   });
 
   // The transport's half of M12.24: `retired` reaches the wire. Who reads a

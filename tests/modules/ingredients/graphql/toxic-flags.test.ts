@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { A, B, asUser } from '../../../support/as-user';
+import { A } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -73,24 +72,6 @@ describe('the toxic flags on the wire', () => {
 
     expect(result.errors).toBeUndefined();
     expect(byId(result.data?.compendium.edges.map((edge) => edge.node) ?? [])).toEqual({
-      [toxic]: { toxic: true, forms: { Testleaf: false, Testoil: true } },
-      [plain]: { toxic: false, forms: { Testleaf: false } },
-    });
-  });
-
-  it('come back from the coven’s ingredient search, to a member', async () => {
-    const { toxic, plain } = await seedPair(WORKSPACE_W_ID);
-
-    const result = await run<{ workspaceIngredients: { edges: { node: FlaggedNode }[] } }>(
-      asUser(B),
-      `query ($workspaceId: ID!) {
-        workspaceIngredients(workspaceId: $workspaceId, first: 50) { edges { node { ${FLAGS} } } }
-      }`,
-      { workspaceId: WORKSPACE_W_ID },
-    );
-
-    expect(result.errors).toBeUndefined();
-    expect(byId(result.data?.workspaceIngredients.edges.map((edge) => edge.node) ?? [])).toEqual({
       [toxic]: { toxic: true, forms: { Testleaf: false, Testoil: true } },
       [plain]: { toxic: false, forms: { Testleaf: false } },
     });

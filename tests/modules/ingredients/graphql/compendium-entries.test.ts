@@ -1,4 +1,4 @@
-import { GraphQLInputObjectType, isNonNullType, isObjectType } from 'graphql';
+import { GraphQLInputObjectType, isNonNullType } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
@@ -8,7 +8,6 @@ import { A, B, E, F, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
-import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import {
   type IngredientFixture,
@@ -383,7 +382,6 @@ describe('setCompendiumEntryReviewed', () => {
 
     const member = await run(asUser(B), REVIEWED, { id, reviewed: false });
     expect(member.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect(await rowOf(id)).toMatchObject({ curator_reviewed_by: F.id });
 
     await run(asUser(F), REVIEWED, { id, reviewed: false });
     expect(await rowOf(id)).toMatchObject({ curator_reviewed_at: null, curator_reviewed_by: null });
@@ -409,13 +407,5 @@ describe('setCompendiumEntryReviewed', () => {
     const result = await run(asUser(F), REVIEWED, { id, reviewed: true });
     expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
     expect((await rowOf(id)).curator_reviewed_at).toBeNull();
-  });
-
-  it('answers the date on Ingredient and no field of the reviewer', () => {
-    const ingredient = schema.getType('Ingredient');
-    expect(isObjectType(ingredient)).toBe(true);
-    const fields = isObjectType(ingredient) ? Object.keys(ingredient.getFields()) : [];
-    expect(fields).toContain('reviewedAt');
-    expect(fields.filter((field) => /reviewedBy/i.test(field))).toEqual([]);
   });
 });

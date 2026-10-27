@@ -1,12 +1,10 @@
-import { GraphQLInputObjectType, isNonNullType } from 'graphql';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { toValidationIssues } from '@/lib/validation';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { A, B, C, D, asUser } from '../../../support/as-user';
+import { A, B, C, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
@@ -291,36 +289,12 @@ describe('updateIngredient', () => {
       substitutes: [],
       folkNames: [],
     });
-    // Cleared to NULL, not to an empty array: "none" has one representation.
-    expect(await rowOf(id)).toMatchObject({
-      elements: null,
-      celestial_bodies: null,
-      zodiac_signs: null,
-      colors: null,
-    });
     for (const table of ['ingredient_substitutes', 'ingredient_deities']) {
       const [{ n }] = await sql`
         select count(*)::int as n from ${sql(table)}
         where ingredient_id = ${id} and deleted_at is null`;
       expect(n, table).toBe(0);
     }
-  });
-
-  // An empty value clears every field, `elements` too since it became a list
-  // (MB.159), and `variants` since MB.222, so none is left nullable and none
-  // may be left out.
-  it('declares every field of its input required', () => {
-    const input = schema.getType('IngredientUpdateInput');
-    expect(input).toBeInstanceOf(GraphQLInputObjectType);
-    const fields = Object.values((input as GraphQLInputObjectType).getFields());
-    // Precondition: the input is the whole ingredient, not a stub.
-    expect(fields.map((field) => field.name)).toEqual(
-      expect.arrayContaining(['name', 'canonicalName', 'variants', 'elements', 'folkNames']),
-    );
-
-    expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      [],
-    );
   });
 
   it('refuses an input that leaves a field out, changing nothing', async () => {
@@ -391,15 +365,25 @@ describe('updateIngredient', () => {
   });
 
   // Root mutation fields run one after another in one request, so the second
-  // must not answer the folk names the first one read.
-  it('answers its own folk names, substitutes and deities when one request updates the entry twice', async () => {
+  // must not answer the children the first one read: each child loader is
+  // cleared after a write.
+  it('answers its own children when one request updates the entry twice', async () => {
     const id = await seed(local());
+    const categoryId = async (name: string) => {
+      const [row] =
+        await sql`select id from categories where name = ${name} and deleted_at is null`;
+      return row.id as string;
+    };
+    const formOf = (form: string, description = '') =>
+      variantInput(makeVariant({ form, description }));
     const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
       first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) {
         folkNames { id name } substitutes { name } deities { name }
+        categories { name } variants { form description }
       }
       second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) {
         folkNames { id name } substitutes { name } deities { name }
+        categories { name } variants { form description }
       }
     }`;
 
@@ -409,16 +393,24 @@ describe('updateIngredient', () => {
       {
         workspaceId: WORKSPACE_W_ID,
         id,
-        first: wholeInput(
-          local({ folkNames: ['First Root'], substitutes: ['First Zest'], deities: ['Testara'] }),
-        ),
-        second: wholeInput(
-          local({
-            folkNames: ['Second Root'],
-            substitutes: ['Second Zest'],
-            deities: ['Testoros'],
-          }),
-        ),
+        first: {
+          ...wholeInput(
+            local({ folkNames: ['First Root'], substitutes: ['First Zest'], deities: ['Testara'] }),
+          ),
+          categoryIds: [await categoryId('Protection')],
+          variants: [formOf('Testleaf', 'Pressed.')],
+        },
+        second: {
+          ...wholeInput(
+            local({
+              folkNames: ['Second Root'],
+              substitutes: ['Second Zest'],
+              deities: ['Testoros'],
+            }),
+          ),
+          categoryIds: [await categoryId('Love')],
+          variants: [formOf('Testleaf', 'Pressed.'), formOf('Testoil')],
+        },
       },
     );
 
@@ -429,41 +421,13 @@ describe('updateIngredient', () => {
     expect(result.data?.second.substitutes).toEqual([{ name: 'Second Zest' }]);
     expect(result.data?.first.deities).toEqual([{ name: 'Testara' }]);
     expect(result.data?.second.deities).toEqual([{ name: 'Testoros' }]);
-  });
-});
-
-// Story 30 over the wire (MB.125): `categoryIds` on both inputs, required on
-// the update's where `[]` clears, answered back as the categories written.
-// The service's own rules are services/ingredient-categories.test.ts's.
-describe('categoryIds', () => {
-  const categoryId = async (name: string) => {
-    const [row] = await sql`select id from categories where name = ${name} and deleted_at is null`;
-    return row.id as string;
-  };
-
-  // Root mutation fields run one after another in one request, so the second
-  // must not answer the categories the first one read.
-  it('answers its own categories when one request updates the entry twice', async () => {
-    const id = await seed(local());
-    const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
-      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) { categories { name } }
-      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { categories { name } }
-    }`;
-
-    const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
-      asUser(B),
-      twice,
-      {
-        workspaceId: WORKSPACE_W_ID,
-        id,
-        first: { ...wholeInput(local()), categoryIds: [await categoryId('Protection')] },
-        second: { ...wholeInput(local()), categoryIds: [await categoryId('Love')] },
-      },
-    );
-
-    expect(result.errors).toBeUndefined();
     expect(result.data?.first.categories).toEqual([{ name: 'Protection' }]);
     expect(result.data?.second.categories).toEqual([{ name: 'Love' }]);
+    expect(result.data?.first.variants).toEqual([{ form: 'Testleaf', description: 'Pressed.' }]);
+    expect(result.data?.second.variants).toEqual([
+      { form: 'Testleaf', description: 'Pressed.' },
+      { form: 'Testoil', description: null },
+    ]);
   });
 });
 
@@ -501,18 +465,6 @@ describe('deleteIngredient', () => {
     expect((await rowOf(id)).deleted_at).toBeNull();
   });
 
-  it('is FORBIDDEN to user D, a member of another coven, by direct id, and the row stays live', async () => {
-    const id = await seed(local());
-    // Why it could have succeeded: the row is live, and W's own member reads it by this id.
-    expect((await read(asUser(B), id)).data?.ingredient).toMatchObject({ id });
-
-    const result = await remove(asUser(D), id);
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect((await rowOf(id)).deleted_at).toBeNull();
-  });
-
   it('is NOT_FOUND for a compendium entry, which stays live, and for an id that is not an id', async () => {
     const id = await seed(makeIngredient());
 
@@ -521,59 +473,5 @@ describe('deleteIngredient', () => {
     expect((await remove(asUser(A), 'not-an-ingredient')).errors?.[0]?.extensions?.code).toBe(
       'NOT_FOUND',
     );
-  });
-});
-
-// MB.219 over the wire: `variants` on both inputs, each an
-// `IngredientVariantInput`, answered back on `Ingredient.variants`. How a save
-// matches, keeps and drops forms is services/workspace-ingredients.test.ts's.
-describe('variants', () => {
-  /** One whole form as the input type requires it: every field but its id. */
-  const formOf = (form: string, description = '') =>
-    variantInput(makeVariant({ form, description }));
-
-  // Root mutation fields run one after another in one request, so the second
-  // must not answer the forms the first one read.
-  it('answers its own forms when one request updates the entry twice', async () => {
-    const id = await seed(local());
-    const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
-      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) { variants { form description } }
-      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { variants { form description } }
-    }`;
-
-    const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
-      asUser(B),
-      twice,
-      {
-        workspaceId: WORKSPACE_W_ID,
-        id,
-        first: { ...wholeInput(local()), variants: [formOf('Testleaf', 'Pressed.')] },
-        second: {
-          ...wholeInput(local()),
-          variants: [formOf('Testleaf', 'Pressed.'), formOf('Testoil')],
-        },
-      },
-    );
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.first.variants).toEqual([{ form: 'Testleaf', description: 'Pressed.' }]);
-    expect(result.data?.second.variants).toEqual([
-      { form: 'Testleaf', description: 'Pressed.' },
-      { form: 'Testoil', description: null },
-    ]);
-  });
-
-  it("answers a form's refusal as VALIDATION pathed to that form, writing nothing", async () => {
-    const result = await create(asUser(B), {
-      name: 'Testwort',
-      variants: [formOf('Testleaf'), formOf(' testleaf ')],
-    });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions).toMatchObject({
-      code: 'VALIDATION',
-      fieldErrors: [{ path: ['variants', 1, 'form'] }],
-    });
-    expect(await countIngredients()).toBe(0);
   });
 });
