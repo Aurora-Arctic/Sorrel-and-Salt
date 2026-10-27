@@ -10,12 +10,20 @@ import { entryFilePath } from '@/db/seed/compendium/parse-entry';
 import { REASONS } from '@/db/seed/compendium/update';
 import { identityOf } from '@/db/seed/standard';
 import { wordsOf } from './compendium-fixture';
-import { SAMPLEWORT, TESTWORT, fileOf, loadedOf, parsed } from './compendium/files-fixture';
+import {
+  SAMPLEWORT,
+  TESTWORT,
+  fileOf,
+  fixtureFiles,
+  loadedOf,
+  parsed,
+} from './compendium/files-fixture';
 
 // M14.26: the six reference seeds in one transaction, which a dry run rolls
 // back once. Each seed's own shape (stamps, idempotence, nothing resurrected,
 // a dry run writing nothing) is index.test.ts's; force's per-refusal cases are
-// compendium.test.ts's. This file proves only what running them together adds.
+// compendium.test.ts's. This file proves only what running them together adds,
+// over the two-entry fixture: the real files' content is reviewed, not tested.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -59,7 +67,11 @@ describe('seedReferenceData', () => {
     const before = await snapshot();
     expect(before.deity_traditions, 'the database starts empty').toEqual([]);
 
-    const report = await seedReferenceData(db, { dryRun: true });
+    const report = await seedReferenceData(db, {
+      compendium: fixtureFiles(),
+      manifest: null,
+      dryRun: true,
+    });
 
     // The compendium was decided against the vocabularies the same run wrote.
     expect(report.inserted).toBeGreaterThan(0);
@@ -68,7 +80,7 @@ describe('seedReferenceData', () => {
   });
 
   it('writes all six on a real run', async () => {
-    const report = await seedReferenceData(db);
+    const report = await seedReferenceData(db, { compendium: fixtureFiles(), manifest: null });
 
     expect(report.inserted).toBeGreaterThan(0);
     for (const table of [

@@ -120,9 +120,8 @@ be (MB.162); without it, as for `demo`'s coven entries, a form is typed. It
 keys on the entry and the folded form, `(ingredient_id, lower(form))`, the
 variant's unique index, through `insertMissingBy`: a variant an admin removed
 counts as present and is not restored, and one already there is not
-rewritten. `tests/db/seed/demo.test.ts` proves, after a `demo` run with
-`standard` inside it, that every seeded entry holds exactly the live variants
-its literal names, Rosemary's `Herb` and `Oil` among them, and that a second run writes no variant.
+rewritten. Every seeded entry holds exactly the live variants its literal
+names, Rosemary's `Herb` and `Oil` among them, and a second run writes no variant.
 
 ### W's cupboard
 
@@ -164,7 +163,7 @@ Chamomile to W's rows ([demo-scenario.md](demo-scenario.md)).
 | Comfrey (Leaf)    | `…0010` | 30 g     | Under a threshold of its own (50 g) in place of the default 10 g.               |
 | Sea Salt (Salt)   | `…0011` | 500 g    | A well-stocked jar, with a source.                                              |
 
-A jar that sets no threshold gets its unit's default, from `defaultThreshold` in `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock` reads too. Idempotency is the pair the live-unique index guards, W and the variant, ignoring `deleted_at`, so a jar the coven threw out stays out and one it edited is not written over. A test that inserts a jar on one of these six variants in W meets that index, so it needs a coven of its own or a different form. `tests/db/seed/standard-stock.test.ts` holds the list. X and every coven a test creates start with no stock.
+A jar that sets no threshold gets its unit's default, from `defaultThreshold` in `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock` reads too. Idempotency is the pair the live-unique index guards, W and the variant, ignoring `deleted_at`, so a jar the coven threw out stays out and one it edited is not written over. A test that inserts a jar on one of these six variants in W meets that index, so it needs a coven of its own or a different form. X and every coven a test creates start with no stock.
 
 ### One transaction, every vocabulary
 
