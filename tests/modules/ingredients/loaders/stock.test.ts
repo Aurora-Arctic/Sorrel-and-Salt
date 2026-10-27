@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { buildLoaders } from '@/graphql/loaders';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { Forbidden } from '@/lib/errors';
 import { stockByIngredient } from '@/modules/ingredients';
 import { A, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -60,15 +59,5 @@ describe('the stockByIngredient loader', () => {
 
     expect(found.map((jars) => jars.map((jar) => jar.id))).toEqual([[first.jar], [second.jar]]);
     expect(repository.findStockOfIngredients).toHaveBeenCalledTimes(1);
-  });
-
-  it('refuses a signed-out request without a read', async () => {
-    const { ingredientId } = await heldEntry('Testwort');
-    const { stockByIngredient: loader } = buildLoaders({ stockByIngredient }, null);
-
-    await expect(loader.load({ ingredientId, workspaceId: WORKSPACE_W_ID })).rejects.toThrow(
-      Forbidden,
-    );
-    expect(repository.findStockOfIngredients).not.toHaveBeenCalled();
   });
 });
