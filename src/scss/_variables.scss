@@ -254,6 +254,20 @@ $badge-palettes: (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
+    ),
+  // A spell still being written (M10.11): a fact about it, not a warning, so
+  // Retired's muted tint and its checked inks.
+  'draft': (
+      treatment: tinted,
+      dark: $chalk-muted,
+      light: $ink-muted,
+    ),
+  // A finished spell (M10.11): Local's tinted accent inks, already
+  // contrast-checked, so it reads apart from a draft by colour as well as word.
+  'complete': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
     )
 );
 
