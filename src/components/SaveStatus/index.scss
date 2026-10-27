@@ -1,0 +1,44 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Inline beside the form's primary action: one line of small muted text, or
+// the alert or notice that replaces it.
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-inline-size: 0;
+  font-size: type-size('caption');
+}
+
+.save-status__text {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+}
+
+.save-status__failed {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  margin: 0;
+}
+
+.save-status__conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
+.save-status__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: space(2);
+}
+
+// The live region is for screen readers alone: the line above is what shows.
+.save-status__announced {
+  @include visually-hidden;
+}
