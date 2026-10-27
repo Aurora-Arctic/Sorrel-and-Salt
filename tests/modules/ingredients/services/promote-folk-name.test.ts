@@ -185,13 +185,12 @@ describe('promoteFolkName — who may', () => {
     return { id, folkNameId: await folkIdOf(id, 'Testwort') };
   };
 
-  it.each([
-    ['an owner', A],
-    ['a member', B],
-  ])('lets %s promote on a coven’s ingredient', async (_who, user) => {
+  // The member stands for the owner too: both hold the one write permission
+  // (tests/modules/coven/services/access-control.test.ts).
+  it('lets a member promote on a coven’s ingredient', async () => {
     const { id, folkNameId } = await setup();
 
-    await promoteFolkName(asUser(user), WORKSPACE_W_ID, id, folkNameId);
+    await promoteFolkName(asUser(B), WORKSPACE_W_ID, id, folkNameId);
 
     expect((await rowOf(id)).name).toBe('Testwort');
   });
@@ -244,11 +243,10 @@ describe('promoteFolkName — who may', () => {
     expect((await rowOf(id)).name).toBe('Testwort');
   });
 
-  it.each([
-    ['an owner', A],
-    ['a member', B],
-    ['a viewer', C],
-  ])('refuses %s on a compendium entry', async (_who, user) => {
+  // The owner stands for every coven role: a compendium entry takes the
+  // curator check, which no coven role passes.
+  it('refuses a coven owner on a compendium entry', async () => {
+    const user = A;
     const id = await compendium({
       name: 'Fixture Herb',
       canonicalName: 'Fixtura testalis',

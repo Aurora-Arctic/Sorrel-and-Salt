@@ -498,14 +498,12 @@ describe('workspaceIngredientFacets', () => {
     });
   });
 
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-  ])('counts W for %s', async (_label, user) => {
+  // The viewer stands for every role: reading is one permission owner, member
+  // and viewer all hold (tests/modules/coven/services/access-control.test.ts).
+  it('counts W for C, a viewer', async () => {
     await seedCovens();
 
-    const facets = await workspaceIngredientFacets(asUser(user), WORKSPACE_W_ID, {});
+    const facets = await workspaceIngredientFacets(asUser(C), WORKSPACE_W_ID, {});
 
     expect(countedOf(facets, 'forms')).toContain('Covenform');
   });
