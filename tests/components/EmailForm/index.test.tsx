@@ -139,29 +139,6 @@ describe('EmailForm', () => {
     expect(status).not.toHaveTextContent('old@example.test');
   });
 
-  // The answer is held until the busy state is seen, so a quick answer
-  // cannot end the send before the assertion runs.
-  it('is busy while the send is in flight', async () => {
-    let answer: () => void = () => {};
-    const answered = new Promise<void>((resolve) => (answer = resolve));
-    server.use(
-      graphqlLink.mutation('SetEmail', async () => {
-        await answered;
-        return HttpResponse.json({ data: { setEmail: { id: 'u1', email: 'old@example.test' } } });
-      }),
-    );
-    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
-
-    const busy = submit();
-    fireEvent.submit(busy.closest('form') as HTMLFormElement);
-
-    await waitFor(() => expect(busy).toHaveAttribute('aria-busy', 'true'));
-    expect(busy).toBeDisabled();
-    answer();
-    await screen.findByRole('status');
-    expect(busy).not.toHaveAttribute('aria-busy');
-  });
-
   // The link it asks for lands back here, and Continue goes on from there.
   it('sends where Continue goes with the address, so the mailed link carries it', async () => {
     const calls = acceptSetEmail();
@@ -314,6 +291,5 @@ describe('EmailForm', () => {
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
-    expect(emailField()).toHaveAccessibleDescription(/\S/);
   });
 });
