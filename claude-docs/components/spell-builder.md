@@ -106,9 +106,11 @@ stored as typed: the columns are free text
   New Moon is the shadowed disc; Dark Moon is the outline alone, with no
   shadow inside, so the two read apart. Waxing Moon and Waning Moon each stack
   their half's three lit parts, bottom to top: the gibbous at 35% strength,
-  the quarter at 40% and the crescent at 85%, each with its maria at the same
-  strength, so the light reads as spreading from the side it grows from
-  (`HALVES` in `icons.tsx`). A phase typed outside the list, such as "Dark",
+  the quarter at 40% and the crescent at full strength, each with its maria at
+  the same strength, so the light reads as spreading from the side it grows
+  from (`HALVES` in `icons.tsx`). The crescent is the lit part and is the
+  same colour as Full Moon's lit part; only the bands beyond it, the shadow,
+  step darker (the owner, 2026-10-27). A phase typed outside the list, such as "Dark",
   shows its words with no drawing (the owner, 2026-10-27).
 
 - **Jar Size and Seal Wax Colour** stay plain text boxes, with no list, by

@@ -10,7 +10,7 @@ import './index.scss';
 // the maria clipped to the lit part. The outline is the text's ink. Dark
 // Moon is the outline alone, with no shadowed disc, so it reads apart from
 // New Moon (the owner, 2026-10-27). Waxing Moon and Waning Moon stack their
-// half's three lit parts at rising strength (icons.tsx, HALVES). Hidden from assistive technology, since
+// half's three lit parts at rising strength, the crescent at full (icons.tsx, HALVES). Hidden from assistive technology, since
 // the phase's name always stands beside it.
 // claude-docs/components/spell-builder.md, "The fields".
 
