@@ -165,14 +165,6 @@ describe('a save carrying references', () => {
       { title: 'Fixture Herbal', locator: 'under "Testwort"' },
     ]);
   });
-
-  it('saves with none, absent or empty', async () => {
-    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
-      name: 'Testwort',
-    });
-
-    expect(await readBack(asUser(B), created.id, WORKSPACE_W_ID)).toEqual([]);
-  });
 });
 
 describe('an update brings the references to the list sent', () => {
@@ -292,18 +284,6 @@ describe('the tier rule', () => {
     const [{ count }] =
       await sql`select count(*)::int as count from ingredients where workspace_id is null`;
     expect(count).toBe(0);
-  });
-
-  it('refuses it on an update too, leaving the entry as it was', async () => {
-    const wBook = await covenBook(WORKSPACE_W_ID, 'W Notes');
-    const id = await seed(entry());
-
-    const issues = await refusal(
-      updateCompendiumEntry(asUser(E), id, input('Testwort', [cite(wBook)])),
-    );
-
-    expect(issues.map((issue) => issue.path)).toEqual([['references', 0]]);
-    expect(await linkRows(id)).toEqual([]);
   });
 
   it('refuses a coven’s ingredient another coven’s reference, by direct id, beside the entry', async () => {

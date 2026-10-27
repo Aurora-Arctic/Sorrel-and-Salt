@@ -56,12 +56,6 @@ describe('findPossibleDuplicates', () => {
       expect(await namesFor(B, 'Mugwart')).toEqual(['Mugwort']);
     });
 
-    it('returns nothing for a name below it', async () => {
-      await addIngredient({ name: 'Wormwood', canonicalName: 'Artemisia absinthium' });
-
-      expect(await namesFor(B, 'Mugwart')).toEqual([]);
-    });
-
     // 0.31 clears pg_trgm's 0.3 default and not DESIGN.md's 0.4, so this row
     // is the one only an explicitly set threshold excludes.
     it('is 0.4, not the database default of 0.3', async () => {

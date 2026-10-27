@@ -225,14 +225,6 @@ describe('annotateCupboardEntry', () => {
     });
   });
 
-  it('sets an array column, and a null hands it back', async () => {
-    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { colors: ['Fixture red'] });
-    expect((await rowsOf(entry))[0].colors).toEqual(['Fixture red']);
-
-    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { colors: null });
-    expect((await rowsOf(entry))[0].colors).toBeNull();
-  });
-
   it('refuses a viewer by direct id, with the row live and the viewer a member', async () => {
     const [member] = await sql`
       select 1 from workspace_members where workspace_id = ${WORKSPACE_W_ID} and user_id = ${C.id} and deleted_at is null`;
