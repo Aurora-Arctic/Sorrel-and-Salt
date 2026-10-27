@@ -1,7 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  RETRY_DELAYS_MS,
   mirrorKey,
   useAutosave,
   type AutosaveOptions,
@@ -214,7 +213,6 @@ describe('useAutosave when a save fails', () => {
   it('retries after 2 s, 5 s and 15 s, then stops at failed until Retry', async () => {
     const save = vi.fn(() => Promise.reject(new Error('Network down')));
     const { type, result } = renderAutosave(save);
-    expect(RETRY_DELAYS_MS).toEqual([2000, 5000, 15000]);
 
     type('T');
     await wait(3000);

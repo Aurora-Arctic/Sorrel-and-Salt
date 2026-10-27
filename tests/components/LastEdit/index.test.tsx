@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import LastEdit from '@/components/LastEdit';
-import { relativePhrase } from '@/components/LastEdit/relative';
+import { clockTime, relativePhrase } from '@/components/LastEdit/relative';
 
 // M6.18: the line is compact. Its visible text is the short date on the server and the relative
 // phrase once hydrated; the full sentence is the tip, which the button describes.
@@ -89,5 +89,13 @@ describe('relativePhrase', () => {
   it('reads just now under a minute and for a moment ahead of the clock', () => {
     expect(relativePhrase(ago(10_000), now)).toBe('just now');
     expect(relativePhrase(new Date(now.getTime() + 5 * MIN), now)).toBe('just now');
+  });
+});
+
+describe('clockTime', () => {
+  it('reads the time of day as hours and minutes on a 12-hour clock, with am or pm', () => {
+    expect(clockTime(new Date(2026, 9, 27, 14, 2, 59))).toBe('2:02 pm');
+    expect(clockTime(new Date(2026, 9, 27, 9, 5))).toBe('9:05 am');
+    expect(clockTime(new Date(2026, 9, 27, 0, 30))).toBe('12:30 am');
   });
 });

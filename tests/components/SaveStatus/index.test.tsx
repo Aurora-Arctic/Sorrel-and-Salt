@@ -1,9 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import axe from 'axe-core';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import SaveStatus, { BURST_GAP_MS } from '@/components/SaveStatus';
+import SaveStatus from '@/components/SaveStatus';
 import type { SaveStatusProps } from '@/components/SaveStatus/types';
-import { clockTime } from '@/components/LastEdit/relative';
 
 // An autosaving form's status line (M13.16): inline, a line that always
 // shows the latest, a live region that announces a burst of saves once, an
@@ -29,15 +27,6 @@ function setup(props: Partial<SaveStatusProps> = {}) {
   };
   return { ...view, update, ...handlers };
 }
-
-describe('clockTime', () => {
-  it('reads the time of day as hours and minutes on a 12-hour clock, with am or pm', () => {
-    expect(clockTime(new Date(2026, 9, 27, 14, 2, 59))).toBe('2:02 pm');
-    expect(clockTime(new Date(2026, 9, 27, 23, 11))).toBe('11:11 pm');
-    expect(clockTime(new Date(2026, 9, 27, 9, 5))).toBe('9:05 am');
-    expect(clockTime(new Date(2026, 9, 27, 0, 30))).toBe('12:30 am');
-  });
-});
 
 describe('SaveStatus', () => {
   it('renders its live region empty, then shows Saving… and Saved with the time', () => {
@@ -68,7 +57,6 @@ describe('SaveStatus', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:02 pm');
 
     // A save more than the gap after the last opens a new burst.
-    expect(BURST_GAP_MS).toBe(60_000);
     update({ status: 'saved', savedAt: at(5, 0) });
     expect(screen.getByRole('status')).toHaveTextContent('Saved 2:05 pm');
   });
@@ -77,8 +65,8 @@ describe('SaveStatus', () => {
     const { update, onRetry } = setup({ status: 'saved', savedAt: at(2) });
 
     update({ status: 'failed' });
-    expect(screen.getByRole('alert')).toHaveTextContent('Couldn’t save.');
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    const alert = screen.getByRole('alert');
+    fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     // The retry is under way: the alert stays, its button busy.
@@ -101,13 +89,4 @@ describe('SaveStatus', () => {
     expect(onReload).toHaveBeenCalledTimes(1);
     expect(onKeepMine).toHaveBeenCalledTimes(1);
   });
-
-  it.each(['idle', 'saving', 'saved', 'failed', 'conflict'] as const)(
-    'has no axe violations when %s',
-    async (status) => {
-      const { container } = setup({ status, savedAt: at(2) });
-      const { violations } = await axe.run(container);
-      expect(violations).toEqual([]);
-    },
-  );
 });

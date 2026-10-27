@@ -118,7 +118,11 @@ describe('graphqlRequest', () => {
   it('throws the GraphQL error rather than resolving to partial data', async () => {
     refuseOk();
 
-    await expect(graphqlRequest(OkDocument)).rejects.toBeInstanceOf(GraphQLClientError);
+    const error = await graphqlRequest(OkDocument).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(GraphQLClientError);
+    // Only STALE_WRITE is a StaleWriteError; any other code stays plain.
+    expect(error).not.toBeInstanceOf(StaleWriteError);
   });
 
   it('throws StaleWriteError, carrying the revision the row is at now, for STALE_WRITE', async () => {
@@ -132,12 +136,6 @@ describe('graphqlRequest', () => {
     // Still a GraphQLClientError, so the form readers and the retry policy read it as one.
     expect(error).toBeInstanceOf(GraphQLClientError);
     expect((error as StaleWriteError).currentRevision).toBe(7);
-  });
-
-  it('throws a plain GraphQLClientError for any other code', async () => {
-    refuseOk();
-
-    await expect(graphqlRequest(OkDocument)).rejects.not.toBeInstanceOf(StaleWriteError);
   });
 
   it('refuses to run outside the browser, where no session cookie rides along', async () => {

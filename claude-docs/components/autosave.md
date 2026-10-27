@@ -180,10 +180,15 @@ M13.18 builds the conflict path end to end on it.
 - `tests/lib/autosave/mirror.test.tsx`: the key, the day limit, unreadable
   copies, storage throwing.
 - `tests/components/SaveStatus/index.test.tsx`: each state by role and label,
-  the once-per-burst announcement, axe through `axe-core` in each state.
+  and the once-per-burst announcement. Axe is not run here: it runs in
+  Playwright, once per page state, on the spell builder (M13.17), as
+  layer-ownership rule 9 sets out
+  (`claude-docs/testing/layer-ownership.md`).
 - `tests/db/repository/revisioned-writes.test.ts`: the write in the `db`
   project.
 - `tests/graphql/errors.test.ts` and `tests/lib/graphql-client.test.tsx`:
   `STALE_WRITE` and `StaleWriteError`.
 
-The workshop's States story (`Feedback / Save Status`) renders every state.
+The workshop's States story (`Feedback / Save Status`) renders every state,
+and the workshop's every-story check (`npm run workshop:check`) scans it with
+axe.
