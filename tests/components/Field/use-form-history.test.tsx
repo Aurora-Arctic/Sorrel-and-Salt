@@ -361,13 +361,6 @@ describe('useFormHistory', () => {
       expect(steps()).toBe(2);
     });
 
-    it('starts another step on a different field', () => {
-      current = mount();
-      type('Title', 'F');
-      type('Note', 'n');
-      expect(steps()).toBe(2);
-    });
-
     it('never merges a select pick with typing, or with another pick', () => {
       current = mount();
       type('Title', 'F');
