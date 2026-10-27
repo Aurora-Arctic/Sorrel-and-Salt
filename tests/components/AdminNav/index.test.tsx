@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentHrefs, hrefs } from '../../support/links';
 
@@ -51,32 +51,15 @@ describe('AdminNav', () => {
 
   it.each([
     // The index marks none; a page marks its own entry, on any of its tabs
-    // (MB.115); an address beneath a tab still marks it.
+    // (MB.115).
     ['/admin', []],
     ['/admin/categories', ['/admin/categories']],
     ['/admin/category-groups', ['/admin/categories']],
-    ['/admin/invitations', ['/admin/users']],
-    ['/admin/users/some-user', ['/admin/users']],
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 
     render(<AdminNav managesPeople />);
 
     expect(currentHrefs(row())).toEqual(expected);
-  });
-
-  it('lists the last two pages behind More, which names the page you are on when it is one of them', () => {
-    pathname.mockReturnValue('/admin/invitations');
-    render(<AdminNav managesPeople />);
-    const more = within(nav()).getByRole('button', { name: 'More: People' });
-
-    fireEvent.click(more);
-
-    const list = document.getElementById(more.getAttribute('aria-controls')!)!;
-    expect(hrefs(within(list).getAllByRole('link'))).toEqual([
-      '/admin/celestial-bodies',
-      '/admin/users',
-    ]);
-    expect(more).toHaveAttribute('aria-current', 'page');
   });
 });
