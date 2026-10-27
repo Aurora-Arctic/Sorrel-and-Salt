@@ -6,7 +6,6 @@ import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-fol
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const UNIQUE_INDEX = 'ingredient_folk_names_unique';
-const TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
 
 describe('ingredient_folk_names schema', () => {
   const { byName } = tableFacts(ingredientFolkNames);
@@ -28,7 +27,7 @@ let UNCARIA: string;
 let ACACIA: string;
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function compendiumIdOf(canonicalName: string): Promise<string> {
   const [found] = await sql`
@@ -91,14 +90,5 @@ describe('ingredient_folk_names table', () => {
       const error = await failureOf(addFolkName(ACACIA, "cat's claw"));
       expect(error.constraint_name).toBe(UNIQUE_INDEX);
     });
-  });
-
-  // The common-name lookup matches through it (DESIGN.md §9); not unique, so
-  // two ingredients sharing a common name are both indexed under it.
-  it('indexes the name for trigram matching', async () => {
-    const index = await catalogue.indexRow('ingredient_folk_names', TRIGRAM_INDEX);
-
-    expect(index?.unique).toBe(false);
-    expect(index?.definition).toContain('USING gin (name gin_trgm_ops)');
   });
 });

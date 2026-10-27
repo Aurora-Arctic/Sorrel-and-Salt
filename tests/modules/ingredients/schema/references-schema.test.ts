@@ -157,18 +157,13 @@ describe('references table', () => {
 
     // The refusal above, for every other text column: each CHECK reads its
     // own column, so a copied CHECK naming the wrong one fails here.
-    it('carries a blank CHECK on each text column, over that column', async () => {
-      const rows = await sql`
-        select conname, pg_get_constraintdef(oid) as definition from pg_constraint
-        where conrelid = '"references"'::regclass and contype = 'c'
-          and conname like '%_not_blank'
-      `;
-      const definitionOf = Object.fromEntries(rows.map((row) => [row.conname, row.definition]));
-
+    it('refuses a blank value in each text column, by that column’s CHECK', async () => {
       for (const column of NOT_BLANK) {
-        expect(definitionOf[notBlankCheck(column)], column).toContain(`btrim(${column})`);
+        const error = await failureOf(addReference({ ...MINIMAL.chapter, [column]: '   ' }));
+
+        expect(error.code, column).toBe('23514');
+        expect(error.constraint_name, column).toBe(notBlankCheck(column));
       }
-      expect(rows).toHaveLength(NOT_BLANK.length);
     });
 
     it('refuses a blank url as not absolute', async () => {

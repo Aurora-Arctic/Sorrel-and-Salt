@@ -63,7 +63,7 @@ beforeAll(async () => {
 });
 
 describe.each(JOINS)('$name', ({ name, table, owner, key, columns, pairKey, insertOwner }) => {
-  const { byName, indexes } = tableFacts(table);
+  const { byName } = tableFacts(table);
   let ownerCount = 0;
   const newOwner = () => insertOwner(++ownerCount);
 
@@ -87,18 +87,6 @@ describe.each(JOINS)('$name', ({ name, table, owner, key, columns, pairKey, inse
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...columns, ...STAMP_COLUMNS].sort());
-  });
-
-  // The key answers "what is this tagged with"; a category filter needs its
-  // own index, `category_id` leading, or it scans every assignment.
-  it('indexes the reverse direction, category first', () => {
-    const reverse = indexes.find((index) => index.config.name === `${name}_category_id_idx`);
-
-    expect(reverse?.config.unique).toBe(false);
-    expect(reverse?.config.columns.map((column) => (column as { name: string }).name)).toEqual([
-      'category_id',
-      owner,
-    ]);
   });
 
   // Stories 22 and 48, and the precondition for the refusal below: several

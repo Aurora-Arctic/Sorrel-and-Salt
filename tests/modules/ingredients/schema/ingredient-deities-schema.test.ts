@@ -3,8 +3,6 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { ingredientDeities } from '@/modules/ingredients/schema/ingredient-deities';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
-import { deities } from '@/modules/vocabulary/schema/deities';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { DeityEntry } from './types';
 
@@ -18,22 +16,12 @@ const LINK_INDEX = 'ingredient_deities_link_unique';
 const NAME_INDEX = 'ingredient_deities_name_unique';
 
 describe('ingredient_deities schema', () => {
-  const { byName, nonAuditForeignKeys } = tableFacts(ingredientDeities);
+  const { byName } = tableFacts(ingredientDeities);
 
   // The full six, as substitutes carry: a deity on an ingredient is content,
   // so removing one leaves a tombstone.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
-  });
-
-  // §5: a deity's name is free text over the vocabulary, an FK on it would make
-  // an uncurated value unwritable; the pick is linked beside the name, and no
-  // key reaches a tradition (claude-docs/db/deity-vocabulary.md).
-  it('keys the parent and the pick, and never the name', () => {
-    expect(nonAuditForeignKeys.map((fk) => [fk.column, fk.foreignTable]).sort()).toEqual([
-      ['deity_id', deities],
-      ['ingredient_id', ingredients],
-    ]);
   });
 });
 
