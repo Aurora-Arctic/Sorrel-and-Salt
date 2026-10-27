@@ -10,10 +10,17 @@ import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertReference } from '../support/db/insert-reference';
+import { insertSpell } from '../support/db/insert-spell';
 import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
 import { noSender } from '../support/email-verification';
-import { makeIngredient, makeVariant, makeWorkspace, workspaceColumns } from '../support/fixtures';
+import {
+  makeIngredient,
+  makeSpell,
+  makeVariant,
+  makeWorkspace,
+  workspaceColumns,
+} from '../support/fixtures';
 import type { Context } from '@/graphql/types';
 import type { InvitationSender } from '@/modules/identity';
 import type { Answer, WorkspaceIdProbe } from './types';
@@ -57,6 +64,8 @@ let heldEntryId: string;
 let removableEntryId: string;
 // A compendium entry W holds, for the probe that makes it W's own.
 let ownableEntryId: string;
+// A shared spell of W, which the spell probe reads.
+let spellId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -142,6 +151,11 @@ beforeAll(async () => {
     values ('revoked@workspace-ids.test', 'workspace-ids-hash', ${WORKSPACE_W_ID}, 'viewer', ${A.id}, ${A.id})
     returning id`;
   revocableInvitationId = invitation.id as string;
+  spellId = await insertSpell(
+    sql,
+    makeSpell({ workspaceId: WORKSPACE_W_ID, visibility: 'workspace' }),
+    A.id,
+  );
   await sql.end();
 });
 
@@ -197,6 +211,16 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source:
       'query ($workspaceId: ID, $id: ID!) { ingredient(workspaceId: $workspaceId, id: $id) { id } }',
     variables: () => ({ id: ingredientId }),
+  },
+  grimoire: {
+    source: `query ($workspaceId: ID!) {
+      grimoire(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+  },
+  spell: {
+    source:
+      'query ($workspaceId: ID!, $id: ID!) { spell(workspaceId: $workspaceId, id: $id) { id } }',
+    variables: () => ({ id: spellId }),
   },
   createWorkspaceIngredient: {
     source: `mutation ($workspaceId: ID!, $input: IngredientInput!) {
