@@ -434,14 +434,12 @@ describe('listWorkspaceIngredients', () => {
     ).toEqual(['Mugfixture', 'Oilfixture']);
   });
 
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-  ])('lists W to %s', async (_label, user) => {
+  // The viewer stands for every role: reading the list is one permission
+  // that owner, member and viewer all hold (tests/modules/coven/services/access-control.test.ts).
+  it('lists W to C, a viewer', async () => {
     await add('Covenwort', { workspaceId: WORKSPACE_W_ID });
 
-    expect(await listed(asUser(user))).toEqual(['Covenwort']);
+    expect(await listed(asUser(C))).toEqual(['Covenwort']);
   });
 
   it('refuses D, who belongs to X, naming W', async () => {
@@ -496,59 +494,40 @@ describe('listWorkspaceIngredients', () => {
     expect(await countOf('categories', byCategory, love.id)).toBe(0);
   });
 
-  // M11.22's five facets each sit under the coven's proof: the row in W
-  // matches every one of them, and so does X's, so a facet read past the
-  // proof would list W's row to D, or X's row to B. Each coven also holds a
-  // row matching none, so a facet the read ignored would list it.
-  describe('under each facet', () => {
-    let hecate: string;
+  // M11.22's facets all read through the one coven scope
+  // (`workspaceListScopeIncludingSoftDeleted`), and their arms are the
+  // compendium list's, which tests/db/repository/ingredients.test.ts proves.
+  // So one facet stands for all five: the deity facet, the one that reaches
+  // through a link table. W's row matches it and so does X's, so a facet read
+  // past the proof would list W's row to D. Each coven also holds a row
+  // matching none, so a facet the read ignored would list it.
+  describe('under a facet', () => {
     let covenRow: string;
     let elseRow: string;
+    let byDeity: Parameters<typeof listWorkspaceIngredients>[2];
 
     beforeEach(async () => {
       const [deity] = await sql`
         select id from deities where name = 'Hecate' and deleted_at is null`;
-      hecate = deity.id as string;
-      const matching = {
-        toxic: true,
-        celestialBodies: ['Fixture Sun'],
-        zodiacSigns: ['Fixture Ram'],
-        elements: ['fire', 'air'] as ('fire' | 'air')[],
-        variants: [makeVariant({ form: 'Fixture Oil' })],
-      };
-      covenRow = await add('Facetfixture', { ...matching, workspaceId: WORKSPACE_W_ID });
-      await insertDeityLink(sql, covenRow, hecate, 0, A.id);
-      elseRow = await add('Elsefixture', { ...matching, workspaceId: WORKSPACE_X_ID });
-      await insertDeityLink(sql, elseRow, hecate, 0, A.id);
+      byDeity = { deityIds: [deity.id as string] };
+      covenRow = await add('Facetfixture', { workspaceId: WORKSPACE_W_ID });
+      await insertDeityLink(sql, covenRow, deity.id as string, 0, A.id);
+      elseRow = await add('Elsefixture', { workspaceId: WORKSPACE_X_ID });
+      await insertDeityLink(sql, elseRow, deity.id as string, 0, A.id);
       for (const workspaceId of [WORKSPACE_W_ID, WORKSPACE_X_ID]) {
-        await add('Plainfixture', {
-          workspaceId,
-          variants: [makeVariant({ form: 'Fixture Root' })],
-        });
+        await add('Plainfixture', { workspaceId });
       }
     });
 
-    const facets: [string, () => Parameters<typeof listWorkspaceIngredients>[2]][] = [
-      ['forms', () => ({ forms: ['fixture oil'] })],
-      ['deityIds', () => ({ deityIds: [hecate] })],
-      ['zodiacSigns', () => ({ zodiacSigns: ['fixture ram'] })],
-      ['celestialBodies', () => ({ celestialBodies: ['fixture sun'] })],
-      ['elements', () => ({ elements: ['air', 'water'] })],
-      ['toxic', () => ({ toxic: 'toxic' })],
-    ];
+    it('lists the row to B by its id and refuses D naming W', async () => {
+      // Unfiltered, W lists both its rows, so the facet is what narrows.
+      expect(await idsListed(asUser(B), WORKSPACE_W_ID, {})).toHaveLength(2);
+      // Why the read could have answered D: the facet matches W's row, D is
+      // admitted to a coven, and the same facet lists X's row to D there.
+      expect(await idsListed(asUser(B), WORKSPACE_W_ID, byDeity)).toEqual([covenRow]);
+      expect(await idsListed(asUser(D), WORKSPACE_X_ID, byDeity)).toEqual([elseRow]);
 
-    it.each(facets)(
-      'under %s, lists the row to B by its id and refuses D naming W',
-      async (_facet, facet) => {
-        // Unfiltered, W lists both its rows, so the facet is what narrows.
-        expect(await idsListed(asUser(B), WORKSPACE_W_ID, {})).toHaveLength(2);
-        // Why the read could have answered D: the facet matches W's row, D is
-        // admitted to a coven, and the same facet lists X's row to D there.
-        expect(await idsListed(asUser(B), WORKSPACE_W_ID, facet())).toEqual([covenRow]);
-        expect(await idsListed(asUser(D), WORKSPACE_X_ID, facet())).toEqual([elseRow]);
-
-        await expect(idsListed(asUser(D), WORKSPACE_W_ID, facet())).rejects.toThrow(Forbidden);
-      },
-    );
+      await expect(idsListed(asUser(D), WORKSPACE_W_ID, byDeity)).rejects.toThrow(Forbidden);
+    });
   });
 });
