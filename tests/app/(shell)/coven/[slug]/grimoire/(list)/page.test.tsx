@@ -43,7 +43,12 @@ const assignedCategoriesOf = vi.fn();
 vi.mock('@/modules/grimoire', () => ({ listGrimoire, countGrimoire, assignedCategoriesOf }));
 
 const displayNamesOf = vi.fn();
-vi.mock('@/modules/identity', () => ({ displayNamesOf }));
+// Partial: the layout reads `rolePermits` from @/modules/coven, whose GraphQL
+// types extend identity's `UserRef`.
+vi.mock('@/modules/identity', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/identity')>()),
+  displayNamesOf,
+}));
 
 const EDITED_AT = new Date('2026-09-01T12:00:00.000Z');
 
