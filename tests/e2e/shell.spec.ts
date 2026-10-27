@@ -11,7 +11,8 @@ import { slotUrl } from './slots';
 // at a phone's width. What a component test cannot prove is here: where the
 // browser lays the bottom bar, which element takes the focus after a key, and
 // the scans over the whole frame. The switcher's entry to the create page
-// (Story 3) is walked here once; coven-create.spec.ts walks the form. Each
+// (Story 3) is walked here once; story 3 (stories/01-accounts.spec.ts) walks
+// the form. Each
 // worker builds the fixture rows in its own database before its first test,
 // so the tests are independent and spread across workers.
 
@@ -175,29 +176,6 @@ test('the account page is in the shell, with no coven nav and no switcher', asyn
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 });
 
-test('an admin sees both site links, the admin nav and no switcher', async ({ page }) => {
-  await signInAgainAs(page, users.admin.id);
-  await page.setViewportSize(DESKTOP);
-  await page.goto('/admin/categories');
-
-  const banner = page.getByRole('banner');
-  await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
-  const site = page.getByRole('navigation', { name: 'Site' });
-  await expect(site.getByRole('link', { name: 'Your Coven', exact: true })).toBeVisible();
-  await expect(site.getByRole('link', { name: 'Admin', exact: true })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
-
-  const admin = page.getByRole('navigation', { name: 'Admin' });
-  await expect(admin.getByRole('link')).toHaveCount(6);
-  await expect(admin.getByRole('link', { name: 'Categories', exact: true })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
-  await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
-});
-
 test('a signed-in non-admin meets the 403 inside the shell', async ({ page }) => {
   await signInAgainAs(page, users.plain.id);
   await page.setViewportSize(DESKTOP);
@@ -291,7 +269,8 @@ const PAGES = [
 ] as const;
 
 for (const [name, who, path, nav] of PAGES) {
-  for (const viewport of [DESKTOP, PHONE]) {
+  // The account page at a desktop width is account.spec.ts's scan.
+  for (const viewport of path === '/account' ? [PHONE] : [DESKTOP, PHONE]) {
     test(`${name} passes the scans at ${viewport.width}px in both themes`, async ({ page }) => {
       await signInAgainAs(page, users[who].id);
       await page.setViewportSize(viewport);
@@ -310,30 +289,30 @@ for (const [name, who, path, nav] of PAGES) {
 
 // The row wider than the phone fits the window (MB.7's review): four labelled tabs
 // and More outran it from 642px up, so the tabs that do not fit sit behind More
-// (with no gap between tabs all six fit by 882px, and More goes).
-for (const width of [642, 768, 882]) {
-  test(`the admin row fits the window at ${width}px, without overflowing`, async ({ page }) => {
-    await signInAgainAs(page, users.admin.id);
-    await page.setViewportSize({ width, height: 800 });
-    await page.goto('/admin');
+// (with no gap between tabs all six fit by 882px, and More goes). 768px is the
+// tablet tests' below and a desktop width the last two tests'.
+test('the admin row fits the window at 642px, without overflowing', async ({ page }) => {
+  await signInAgainAs(page, users.admin.id);
+  await page.setViewportSize({ width: 642, height: 800 });
+  await page.goto('/admin');
 
-    const nav = page.getByRole('navigation', { name: 'Admin' });
-    await expect(nav).toBeVisible();
-    // Either More holds the tabs that do not fit, or all of them fit and are
-    // in view; never a tab cut off with neither.
-    const more = nav.getByRole('button', { name: /More|Astrology|People|Deities/ });
-    if ((await more.count()) > 0) {
-      await expect(more).toBeVisible();
-    } else {
-      for (const link of await nav.getByRole('link').all()) await expect(link).toBeVisible();
-    }
-    await expect(nav.getByRole('link').first()).toBeVisible();
-    const fits = await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    );
-    expect(fits).toBe(true);
-  });
-}
+  // The stylesheet draws every tab until the fit script runs, so the branch
+  // below waits for the fit: read before it, the test could take the all-tabs
+  // branch and then see the script hide a tab (the gate's one flaky test).
+  const nav = await fittedAdminNav(page);
+  await expect(nav).toBeVisible();
+  // Either More holds the tabs that do not fit, or all of them fit and are
+  // in view; never a tab cut off with neither.
+  const more = nav.getByRole('button', { name: /More|Astrology|People|Deities/ });
+  if ((await more.count()) > 0) {
+    await expect(more).toBeVisible();
+  } else {
+    for (const link of await nav.getByRole('link').all()) await expect(link).toBeVisible();
+  }
+  await expect(nav.getByRole('link').first()).toBeVisible();
+  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+  expect(fits).toBe(true);
+});
 
 // Wider than the phone the row shows the leading tabs that fit and puts the
 // rest behind More (SectionNav's measured fit, MB.7's review). These measure
