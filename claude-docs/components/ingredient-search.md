@@ -24,16 +24,17 @@ ingredients list (M9.6) and the spell builder follow.
 `IngredientSearchForm` (a client component, re-exported from `index.tsx`) is
 the filter row. Its props (`IngredientSearchFormProps`):
 
-| Prop          | What it is                                                                     |
-| ------------- | ------------------------------------------------------------------------------ |
-| `label`       | The form's accessible name, title case                                         |
-| `action`      | The page itself: the form's GET target, and the unfiltered page Clear opens    |
-| `query`       | The text the list shows now, which the box starts from                         |
-| `shown`       | Each filter value the page shows; Clear is drawn while any is set              |
-| `searchHref`  | The list with the query set to a text, other filters kept, from the first page |
-| `pickHref`    | Where a picked match opens                                                     |
-| `pickHeading` | Optional: the route modal's heading; given, a pick opens a route modal         |
-| `children`    | Optional: the consumer's other fields, after the search box                    |
+| Prop          | What it is                                                                      |
+| ------------- | ------------------------------------------------------------------------------- |
+| `label`       | The form's accessible name, title case                                          |
+| `action`      | The page itself: the form's GET target, and the unfiltered page Clear opens     |
+| `query`       | The text the list shows now, which the box starts from                          |
+| `shown`       | Each filter value the page shows; Clear is drawn while any is set               |
+| `searchHref`  | The list with the query set to a text, other filters kept, from the first page  |
+| `pickHref`    | Where a picked match opens                                                      |
+| `pickHeading` | Optional: the route modal's heading; given, a pick opens a route modal          |
+| `pickPlace`   | Optional: the route modal's place, as `RouteModalProps.place` (`DETAILS_PLACE`) |
+| `children`    | Optional: the consumer's other fields, after the search box                     |
 
 `useSearchText()` returns the text in the box now, searched or not, for a field
 in the filter slot to carry.
@@ -123,14 +124,27 @@ in the filter slot to carry.
   show; once anything is typed it says "Keep typing to search" instead, at once
   and announced by the status region, so one character is not met by silence
   (the owner, 2026-10-16). It is a message rather than a label, so sentence case.
-- **Given a `workspaceId`, the type-ahead suggests from the cupboard, not the
-  compendium.** `IngredientSearchForm` and the box take it as an optional prop
-  (M9.6). The box then asks `workspaceIngredients(workspaceId:, query:, first: 25)`
-  (the `IngredientSearchCupboardMatches` document) and never the compendium
-  query; without it, the reverse. Both answers become the same
+- **The `source` prop says what the type-ahead suggests from.** It is a
+  `SearchSource`: `{ kind: 'compendium' }`, the default when left out;
+  `{ kind: 'cupboard', workspaceId }`, a coven's own ingredients (M9.6); or
+  `{ kind: 'grimoire', workspaceId, status }`, a coven's spells (M10.11).
+  `IngredientSearchForm` passes it to the box. The box asks one document for
+  the source and never the others.
+- **A cupboard source suggests from the cupboard, not the compendium.** The box asks `workspaceIngredients(workspaceId:, query:, first: 25)`
+  (the `IngredientSearchCupboardMatches` document). Both answers become the same
   `IngredientSearchMatch`, and where the coven's cupboard entry sets a label
   (`cupboardEntry(workspaceId:)`), the label is the row's name. Everything
   else about the box, the floor, the 25 rows and See all results., is the same.
+- **A grimoire source suggests spells by title.** The box asks
+  `grimoire(workspaceId:, query:, status:, first: 25)` (the
+  `GrimoireSearchMatches` document), so a tab suggests only its own status,
+  ranked best match first over title and intent
+  ([`graphql/schema.md`](../graphql/schema.md)). Its words change with it:
+  the hidden label is "Title", the placeholder "Search titles & intents", the
+  clear "Clear Title". A row is the spell's title, and an untitled draft reads
+  "Untitled Spell". No spell has a page until MB.6, so a pick applies the
+  row's title as the search, and an untitled row the text typed. The floor,
+  the 25 rows and See all results. are as for an ingredient.
 - **The dropdown shows at most 25 rows, the first page, in the server's
   order.** It never asks for a second. When there is another page, a last row, See all results., ends the
   listbox and applies the debounced text to the list. It is selectable like
@@ -140,13 +154,19 @@ in the filter slot to carry.
   "No Matches" sits in the dropdown, and Escape closes it without closing the
   modal around the box. They are the combobox's `action` and
   `empty` ([`combobox.md`](combobox.md)).
-- **A pick opens the match.** With `pickHeading`, through the route modal
+- **A pick opens the match**, when the consumer gives a `pickHref`. With `pickHeading`, through the route modal
   opener, so the modal shows its heading at once while its page loads, as the
   list's own edit links do. Without it, a plain `router.push`. Neither goes
   through the list frame's transition, which would grey the list and swap it
   for a skeleton. The heading is opt-in so a consumer whose pick is a page
-  (M8.18) does not show a loading modal.
-- **The source is the compendium, or the coven’s cupboard.** Given a `workspaceId` the box reads the cupboard (above); the coven Ingredients page does so.
+  (M8.18) does not show a loading modal. On every ingredient list with a Quick Look a pick
+  opens that entry's Quick Look over the list as shown, the filter and the page kept: the
+  list gives `pickHeading={detailsHeading}` and `pickPlace={DETAILS_PLACE}`, and the href is
+  the list's `?entry=` address ([`ingredient-entry.md`](ingredient-entry.md), "The details
+  modal"; the owner's rule of 2026-10-27, from the M10.11 review).
+- **Which page uses which source.** The compendium pages leave `source` out,
+  the coven Ingredients page passes the cupboard, and the coven Grimoire page
+  passes the grimoire with its tab's status (above).
 
 ## The parameter table
 

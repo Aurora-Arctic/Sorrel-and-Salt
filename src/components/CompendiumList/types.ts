@@ -57,6 +57,8 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   position?: PagePosition;
   /** How many entries the filter finds in all, which the search sentence leads with. */
   total: number;
+  /** The cursor of the page shown, which a pick's Quick Look opens over and closes back to. */
+  cursor?: SearchCursor;
 }
 
 /** What turns the counts the panel asks for into choices: every live deity, and each curated form's group icon by its name folded to lower case. */
@@ -178,7 +180,7 @@ export type CovenListDialog = { edit: string } | { annotate: string };
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
-  'facets' | 'categories' | 'vocabulary'
+  'facets' | 'categories' | 'vocabulary' | 'cursor'
 > & {
   /**
    * The filter the page shows. A coven list's also carries its Source, In Stock and Low Stock Only
@@ -188,11 +190,11 @@ export type CompendiumListFilterProps = Pick<
     Partial<Pick<CompendiumListFilter, 'reviewed'>> &
     Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
   /**
-   * Who the filter is for. The admin's (the default) opens an entry's edit modal on a pick, offers
-   * No Refs, and submits to `/admin/compendium`; the public one (M8.18) links a pick to the entry's
-   * page, has no No Refs, and submits to `/compendium`; a coven's (M9.6) submits to
-   * `/coven/<covenSlug>/ingredients`, links a pick to the entry's page there, suggests from the
-   * coven's cupboard, and adds Source, In Stock and Low Stock Only. A flag and plain data, not
+   * Who the filter is for. Each opens a pick's Quick Look over the list as it stands, keyed as the
+   * list's own eye keys it. The admin's (the default) offers No Refs and submits to
+   * `/admin/compendium`; the public one (M8.18) has no No Refs and submits to `/compendium`; a
+   * coven's (M9.6) submits to `/coven/<covenSlug>/ingredients`, suggests from the coven's
+   * cupboard, and adds Source, In Stock and Low Stock Only. A flag and plain data, not
    * functions, since the filter is a client component its server page passes props to.
    */
   audience?: 'admin' | 'public' | 'coven';

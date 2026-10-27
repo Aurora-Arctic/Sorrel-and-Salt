@@ -39,6 +39,14 @@ describe('CovenNav', () => {
     );
   });
 
+  it('links the grimoire, current on its Drafts tab too', () => {
+    pathname.mockReturnValue(`/coven/${SLUG}/grimoire/drafts`);
+    render(<CovenNav slug={SLUG} canReadMembers />);
+    const link = within(nav()).getByRole('link', { name: 'Grimoire' });
+    expect(link).toHaveAttribute('href', `/coven/${SLUG}/grimoire`);
+    expect(link).toHaveAttribute('aria-current', 'page');
+  });
+
   it('links the members page for a caller who may read members', () => {
     render(<CovenNav slug={SLUG} canReadMembers />);
     expect(within(nav()).getByRole('link', { name: 'Members' })).toHaveAttribute(

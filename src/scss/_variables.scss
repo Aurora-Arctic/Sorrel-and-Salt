@@ -254,6 +254,14 @@ $badge-palettes: (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
+    ),
+  // A spell still being written (M10.11): a fact about it, not a warning, so
+  // Retired's muted tint and its checked inks. A complete spell takes no badge:
+  // complete is the default, so marking it says nothing (the owner, 2026-10-27).
+  'draft': (
+      treatment: tinted,
+      dark: $chalk-muted,
+      light: $ink-muted,
     )
 );
 

@@ -24,11 +24,15 @@ on the page you are on.
 | ----------- | --------------------------- | ----------- | ---------------------------- | -------- |
 | Overview    | `/coven/[slug]`             | overview    | every role                   | M9.15    |
 | Ingredients | `/coven/[slug]/ingredients` | ingredients | every role                   | M9.6     |
+| Grimoire    | `/coven/[slug]/grimoire`    | grimoire    | every role                   | M10.11   |
 | Members     | `/coven/[slug]/members`     | members     | roles holding `member: read` | M6.13    |
 
 Members stays the open section on `/coven/[slug]/invitations` too, since
-Invitations is a tab on the same page (its `matches`, M7.6). Today an owner and
-a member see all three sections and a viewer sees Overview and Ingredients.
+Invitations is a tab on the same page (its `matches`, M7.6). Members is
+`apart`, a group of its own behind a hairline, as People is in the admin nav:
+it is the coven's people, not its contents (M10.11). Today an owner and a
+member see all four sections and a viewer sees Overview, Ingredients and
+Grimoire.
 
 `sections.ts` holds the list as `covenSections(slug, canReadMembers)`, each
 entry a `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx`
@@ -48,7 +52,7 @@ use the same mapping. What the target does is
 ## Contracts
 
 - **Each later section is added by the task that builds its page.**
-  Ingredients (M9.6, added) and Grimoire (M10.11) each add their row to
+  Ingredients (M9.6, added) and Grimoire (M10.11, added) each add their row to
   `sections.ts` in their own PR, with the icon already drawn,
   because `typedRoutes`, Next's check that a link points at a built page,
   refuses a link to a route the build does not contain. The coven's four

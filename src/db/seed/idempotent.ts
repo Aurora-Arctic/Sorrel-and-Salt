@@ -3,6 +3,7 @@ import type { AnyPgColumn, PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { applyAudit, publishActor } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
+import type { AuditSession } from '../types';
 import type { FlatTable, GroupTable, ItemTable } from '../vocabularies';
 import type { InsertStamps, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
@@ -79,23 +80,26 @@ export async function insertMissing<TTable extends PgTable, W, K>(
     existing,
     keyOf,
     toRow,
+    session,
   }: {
     existing: (tx: SeedTransaction) => Promise<Iterable<K>>;
     keyOf: (item: W) => K;
     toRow: (item: W) => Omit<PgInsertValue<TTable>, InsertStamps>;
+    /** Who the rows are stamped by: the bootstrap user unless a seeded row is a member's own. */
+    session?: AuditSession;
   },
 ): Promise<void> {
   const present = new Set(await existing(tx));
   const missing = wanted.filter((item) => !present.has(keyOf(item)));
 
-  await insertStamped(tx, table, missing.map(toRow));
+  await insertStamped(tx, table, missing.map(toRow), session);
 }
 
 /** Rows per INSERT: a statement binds at most 65,535 parameters, and a row binds one per column. */
 export const INSERT_CHUNK = 1000;
 
 /**
- * Inserts `rows`, each stamped by the bootstrap user, `INSERT_CHUNK` to a
+ * Inserts `rows`, each stamped by the bootstrap user or by `session`, `INSERT_CHUNK` to a
  * statement so a seed of any size stays under Postgres's parameter limit, and
  * returns every inserted row in order. Nothing is checked for presence: that
  * is the caller's.
@@ -104,13 +108,14 @@ export async function insertStamped<TTable extends PgTable>(
   tx: SeedTransaction,
   table: TTable,
   rows: readonly Omit<PgInsertValue<TTable>, InsertStamps>[],
+  session: AuditSession = BOOTSTRAP_SESSION,
 ): Promise<TTable['$inferSelect'][]> {
   const inserted: TTable['$inferSelect'][] = [];
   for (let start = 0; start < rows.length; start += INSERT_CHUNK) {
     const chunk = rows.slice(start, start + INSERT_CHUNK).map(
       // `Omit` of a generic loses the row's type for TS; `applyAudit` puts
       // back exactly the four stamps `InsertStamps` took out.
-      (row) => applyAudit('insert', row, BOOTSTRAP_SESSION) as PgInsertValue<TTable>,
+      (row) => applyAudit('insert', row, session) as PgInsertValue<TTable>,
     );
     inserted.push(
       ...((await tx.insert(table).values(chunk).returning()) as TTable['$inferSelect'][]),
@@ -142,11 +147,13 @@ export async function insertMissingBy<
     fold = {},
     where,
     toRow,
+    session,
   }: {
     columns: readonly K[];
     fold?: { [Column in K]?: (value: string) => string };
     where?: SQL;
     toRow: (item: W) => Omit<PgInsertValue<TTable>, InsertStamps>;
+    session?: AuditSession;
   },
 ): Promise<void> {
   const tableColumns: Record<string, AnyPgColumn> = getTableColumns(table);
@@ -179,6 +186,7 @@ export async function insertMissingBy<
     },
     keyOf,
     toRow,
+    session,
   });
 }
 

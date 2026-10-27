@@ -22,6 +22,7 @@ export {
   findOneInWorkspace,
   findPage,
   findPageCount,
+  findPageCountInReadableSpells,
   findPageInReadableSpells,
   findPageInWorkspace,
 } from './finders';
@@ -33,7 +34,7 @@ export {
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findOneSpell,
 } from './spells';
-export { findGrimoirePage } from './grimoire';
+export { findGrimoireCategoryCounts, findGrimoireCount, findGrimoirePage } from './grimoire';
 export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,

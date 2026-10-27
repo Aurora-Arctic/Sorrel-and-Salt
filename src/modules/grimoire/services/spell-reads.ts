@@ -1,5 +1,8 @@
 import 'server-only';
 import {
+  type FacetCount,
+  findGrimoireCategoryCounts,
+  findGrimoireCount,
   findGrimoirePage,
   findManyByIds,
   findManyInSpells,
@@ -9,26 +12,39 @@ import {
 } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { summarizeSpellCategories } from '../categories/summarize';
 import { spellCategories } from '../schema/spell-categories';
 import { spellSteps } from '../schema/spell-steps';
 import { stepsInSpells } from './step-views';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { assertMembership, type Membership } from '@/modules/coven';
 import type { CategoryRow } from '@/modules/vocabulary';
 import type { SpellKey, SpellRow, SpellStepView } from '../types';
 
-// The grimoire's reads for the API (M10.9): the paged list, one spell, and
+// The grimoire's reads (M10.9): the paged list and its count (M10.11), one spell, and
 // the batches a spell's fields load through. Every read is a reader's of the
 // coven, `spell: ['read']`, and every row comes through the finders that keep
 // a private spell its author's (claude-docs/db/spell-visibility.md), so a
 // spell this reader may not see is `NotFound` by id and absent from a batch.
 
 /**
+ * The query with a search shorter than `MIN_QUERY_LENGTH` dropped, counted in
+ * composed code points as the compendium counts it: one character matches
+ * nearly every spell, so it is no search at all.
+ */
+function searchable(query: GrimoireQuery): GrimoireQuery {
+  const text = query.query?.trim();
+  const long = text !== undefined && Array.from(text.normalize('NFC')).length >= MIN_QUERY_LENGTH;
+  return { ...query, query: long ? text : undefined };
+}
+
+/**
  * One page of the coven's grimoire in `order`: its shared spells and the
- * caller's own private ones, only those of `status` when it is given.
+ * caller's own private ones, narrowed by the query's status, search and
+ * categories.
  *
  * @throws {Forbidden} the caller is not a member of this coven.
  */
@@ -39,7 +55,41 @@ export async function listGrimoire(
   query: GrimoireQuery,
 ): Promise<PageEntry<SpellRow>[]> {
   const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
-  return findGrimoirePage(membership, page, query);
+  return findGrimoirePage(membership, page, searchable(query));
+}
+
+/**
+ * How many spells `listGrimoire` lists under `query`, and how many of them
+ * come before `start`: the count the numbered pager reads (M10.11). A private
+ * spell counts for its author alone, as it lists.
+ *
+ * @throws {Forbidden} the caller is not a member of this coven.
+ */
+export async function countGrimoire(
+  session: Session,
+  workspaceId: string,
+  query: GrimoireQuery,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
+  return findGrimoireCount(membership, searchable(query), start);
+}
+
+/**
+ * How many spells `listGrimoire` would list in each category under the rest
+ * of `query`: the Categories filter's counts (M10.11), each a category's id
+ * and its count, a category no readable spell carries absent. A private
+ * spell counts for its author alone, as it lists.
+ *
+ * @throws {Forbidden} the caller is not a member of this coven.
+ */
+export async function countGrimoireCategories(
+  session: Session,
+  workspaceId: string,
+  query: GrimoireQuery,
+): Promise<FacetCount[]> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['read'] });
+  return findGrimoireCategoryCounts(membership, searchable(query));
 }
 
 /**

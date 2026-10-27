@@ -10,6 +10,8 @@ export interface PageTab {
    * draws a filter row above the table; left out, it draws none.
    */
   filtered?: boolean;
+  /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs (M10.11). */
+  shape?: 'table' | 'cards';
 }
 
 export interface TabbedPageProps {

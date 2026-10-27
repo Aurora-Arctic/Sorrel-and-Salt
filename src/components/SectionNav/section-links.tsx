@@ -47,10 +47,14 @@ const inTabletBandNever = (): boolean => false;
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 // What is measured of the row with every tab showing: each tab's width with
-// its margin, the gap between tabs, More's own width, the gap inside its
-// button and its chevron's.
+// its margin, which tab is the current page's and its width without the
+// margin, the gap between tabs, More's own width, the gap inside its button
+// and its chevron's.
 type Natural = {
   widths: number[];
+  // -1 when no tab is the current page's.
+  current: number;
+  currentWidth: number;
   gap: number;
   more: number;
   buttonGap: number;
@@ -66,11 +70,14 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   );
   // No layout (happy-dom, a hidden nav): there is nothing to fit, so keep the default.
   if (widths.length === 0 || widths.some((width) => width === 0)) return null;
+  const current = items.findIndex((item) => item.querySelector('[aria-current="page"]'));
   const more = list.querySelector<HTMLElement>(':scope > .section-nav__more');
   const chevron = more?.querySelector<HTMLElement>('.section-nav__chevron');
   const moreButton = more?.querySelector<HTMLElement>('.section-nav__more-button');
   return {
     widths,
+    current,
+    currentWidth: current === -1 ? 0 : items[current]!.offsetWidth,
     gap: pixels(getComputedStyle(list).columnGap),
     more: more?.offsetWidth ?? 0,
     buttonGap: moreButton ? pixels(getComputedStyle(moreButton).columnGap) : 0,
@@ -80,17 +87,19 @@ const measureNatural = (list: HTMLElement): Natural | null => {
 
 // The most leading tabs, never fewer than one, that fit `available` beside
 // More; all of them when they fit without it. More is reserved at its own
-// width or, since it wears a hidden current page's label, the widest tab it
-// would hide plus the gap inside the button and the chevron, whichever is
-// more: not the widest tab of all, which tucked tabs away while the row still
-// had room for them.
+// width, unless the current page's tab is among those it would hide: then More
+// wears that tab's label, so it is reserved at that tab's width plus the gap
+// inside the button and the chevron, or at its own if that is wider. Not at the
+// widest tab it would hide, which tucked a tab away while the row still had
+// room for it (M10.11): More wears no other tab's label, and a navigation
+// measures the row afresh.
 const countThatFit = (
-  { widths, gap, more, buttonGap, chevron }: Natural,
+  { widths, current, currentWidth, gap, more, buttonGap, chevron }: Natural,
   available: number,
 ): number => {
   for (let count = widths.length; count > 1; count -= 1) {
     const tabs = widths.slice(0, count).reduce((sum, width) => sum + width, 0) + gap * (count - 1);
-    const reserve = Math.max(more, Math.max(...widths.slice(count)) + buttonGap + chevron);
+    const reserve = current >= count ? Math.max(more, currentWidth + buttonGap + chevron) : more;
     if (tabs + (count < widths.length ? gap + reserve : 0) <= available) return count;
   }
   return 1;

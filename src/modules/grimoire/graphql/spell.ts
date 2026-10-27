@@ -161,17 +161,20 @@ builder.queryField('grimoire', (t) =>
   t.pagedConnection({
     type: SpellRef,
     description:
-      "A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given.",
+      "A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given, matching `query` when given and ranked best match first.",
     args: {
       workspaceId: t.arg.id({ required: true }),
       orderBy: t.arg({ type: GrimoireOrderEnum, required: true, defaultValue: 'UPDATED_DESC' }),
       // Absent means both.
       status: t.arg({ type: SpellStatusEnum }),
+      // Searches title and intent; under two characters it is no search.
+      query: t.arg.string(),
     },
-    resolve: (_root, { workspaceId, orderBy, status }, page, context) =>
+    resolve: (_root, { workspaceId, orderBy, status, query }, page, context) =>
       listGrimoire(sessionOf(context), workspaceId, page, {
         order: orderBy,
         status: status ?? undefined,
+        query: query ?? undefined,
       }),
   }),
 );

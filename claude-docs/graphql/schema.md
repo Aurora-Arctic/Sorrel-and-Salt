@@ -1053,7 +1053,7 @@ through the finders that keep a private spell its author's
 never reaches a resolver: it is left out of a list in SQL, and by id it is
 `NOT_FOUND`, the same answer as a spell that does not exist.
 
-- **`grimoire(workspaceId, orderBy, status, first, after)`** is a cursor page
+- **`grimoire(workspaceId, orderBy, status, query, first, after)`** is a cursor page
   (a page that resumes from the last row it gave, rather than counting rows to
   skip) of the coven's shared spells and the caller's own private ones. It is
   declared with `t.pagedConnection` and reads through `findGrimoirePage`.
@@ -1073,6 +1073,15 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
   - `status` is the `SpellStatus` enum, `draft` or `complete`. Given, it
     keeps only the spells of that status, filtered in SQL; left out, the page
     holds both. The grimoire page (M10.11) reads its Drafts tab through it.
+  - `query` searches the title and the intent (M10.11), through the
+    weighted search the ingredient lists use
+    ([`db/compendium-read.md`](../db/compendium-read.md)): a title match
+    counts for twice an intent match, and the best match comes first, with
+    `orderBy` breaking a tie. A search under two characters
+    (`MIN_QUERY_LENGTH`, counted in composed code points) is no search, the
+    same floor the compendium keeps; `listGrimoire` and `countGrimoire` drop
+    it, so the page and its count agree. The grimoire page's type-ahead reads
+    through it.
 - **`spell(id, workspaceId): Spell!`** is one spell. It takes the coven as
   `ingredient(id, workspaceId)` does, so the membership check runs before any
   read. A spell in another coven, or another author's private spell, is
@@ -1135,7 +1144,7 @@ field's path.
 
 `tests/modules/grimoire/graphql/spell.test.ts` holds the transport's half: the
 fields, the gaps both ways, the refusal codes by direct id, the paging, the
-`orderBy` and `status` arguments, and the read count for a page of one and
+`orderBy`, `status` and `query` arguments, and the read count for a page of one and
 of four, which is also where the loaders' batching is proved. Which reader
 sees which spell is `services/spell-reads.test.ts`'s. The saves' transport half is
 `tests/modules/grimoire/graphql/spell-saves.test.ts`: the answer and its

@@ -56,6 +56,7 @@ const PAGE = `query (
   $after: String
   $orderBy: GrimoireOrder
   $status: SpellStatus
+  $query: String
 ) {
   grimoire(
     workspaceId: $workspaceId
@@ -63,6 +64,7 @@ const PAGE = `query (
     after: $after
     orderBy: $orderBy
     status: $status
+    query: $query
   ) {
     edges { node { ${SPELL} } }
     pageInfo { hasNextPage endCursor }
@@ -238,6 +240,41 @@ describe('grimoire', () => {
       status: 'complete',
     });
     expect(titles(complete)).toEqual(['Alder Jar', 'Cedar Knot']);
+  });
+
+  it('narrows to a search, the title match ranked above the intent match', async () => {
+    for (const [title, intent] of [
+      ['Threshold Line', 'Keep the testroot hearth warm.'],
+      ['Testroot Charm', null],
+      ['Birch Jar', 'Nothing to find here.'],
+    ] as const) {
+      await insertSpell(sql, makeSpell({ workspaceId: WORKSPACE_W_ID, title, intent }), B.id);
+    }
+
+    const found = await run<Page>(asUser(A), PAGE, {
+      workspaceId: WORKSPACE_W_ID,
+      orderBy: 'TITLE_ASC',
+      query: 'testroot',
+    });
+    expect(found.errors).toBeUndefined();
+    // By title alone Threshold Line would come second; the search puts the title match first.
+    expect(found.data!.grimoire.edges.map((edge) => edge.node.title)).toEqual([
+      'Testroot Charm',
+      'Threshold Line',
+    ]);
+
+    // One character is no search (MIN_QUERY_LENGTH): the whole shelf, in the asked-for order.
+    const short = await run<Page>(asUser(A), PAGE, {
+      workspaceId: WORKSPACE_W_ID,
+      orderBy: 'TITLE_ASC',
+      query: 't',
+    });
+    expect(short.errors).toBeUndefined();
+    expect(short.data!.grimoire.edges.map((edge) => edge.node.title)).toEqual([
+      'Birch Jar',
+      'Testroot Charm',
+      'Threshold Line',
+    ]);
   });
 
   // M13.15 lets a draft go untitled, so the title reads as null rather than

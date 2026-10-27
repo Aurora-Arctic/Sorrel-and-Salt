@@ -176,6 +176,27 @@ export interface KeysetCount {
   start: Cursor | undefined;
 }
 
+/** One field a `weightedSearch` scores: its own `UNION ALL` arm. */
+export interface SearchField {
+  /** The listed row the field belongs to, which the search joins on. */
+  id: AnyPgColumn;
+  /** The text matched and scored. */
+  text: AnyPgColumn;
+  /** What a match here counts towards the rank, against the other fields. */
+  weight: number;
+  /** The relation the arm reads, the field's table or an alias of it. */
+  from: SQLWrapper;
+  /** What else a row must be to count: live, or in the reader's coven. */
+  live?: SQL;
+}
+
+/** A best-match search, as `weightedSearch` builds it: the join, and each joined row's rank and position. */
+export interface WeightedSearch {
+  join: { source: SQL; on: SQL };
+  score: SQL<number>;
+  position: SQL<number>;
+}
+
 /** A search's accent-folded word match, as `foldedWordMatch` builds it for one query. */
 export interface WordMatch {
   /** The query is word-similar (`<%`) to `text`. */
@@ -1133,6 +1154,17 @@ export interface GrimoireQuery {
   order: (typeof GRIMOIRE_ORDERS)[number];
   /** Only the spells of this status; absent means both. */
   status?: (typeof spells.$inferSelect)['status'];
+  /**
+   * Only the spells whose title or intent holds this text as a word or part of
+   * one, accents and case set aside (M10.11); absent or blank means no search.
+   * It narrows the list and ranks it best match first, the asked-for order
+   * breaking a tie.
+   */
+  query?: string;
+  /** Only the spells assigned these categories, by id; absent or empty means no filter. */
+  categoryIds?: readonly string[];
+  /** Whether a spell needs every chosen category ('all', the default) or any of them. */
+  categoryMode?: CategoryMode;
 }
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */

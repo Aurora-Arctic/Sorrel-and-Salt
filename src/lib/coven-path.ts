@@ -84,13 +84,15 @@ export function pathInCoven(
 /**
  * What each section's page draws while it is on its way (M12.33): the page
  * that arrives, its heading and then what it holds. Ingredients is its cards
- * under a filter; the people pages are a table under the tab row (Members and,
+ * under a filter, and the grimoire its cards under the tab row (Spells and
+ * Drafts) and a filter; the people pages are a table under the tab row (Members and,
  * for an owner, Invitations; the row draws for a lone tab too). The Invite
  * action is an owner's alone and the address does not say who is asking, so
  * it is left out.
  */
 const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
   ingredients: { shape: 'cards', title: true, filter: true },
+  grimoire: { shape: 'cards', title: true, filter: true, tabs: true },
   members: { shape: 'table', title: true, tabs: true },
   invitations: { shape: 'table', title: true, tabs: true },
 };
@@ -111,5 +113,8 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   if (slug && section === 'ingredients' && beneath)
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
+  // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.
+  if (slug && section === 'grimoire' && beneath && beneath !== 'drafts')
+    return { region: 'coven', shape: 'page' };
   return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

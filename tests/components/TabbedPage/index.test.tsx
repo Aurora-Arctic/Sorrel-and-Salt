@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -78,6 +79,35 @@ describe('TabbedPage', () => {
 
     expect(open()).toEqual(expected);
   });
+
+  // The grimoire's Drafts tab lies beneath Spells' address, so both are at the path on
+  // Drafts; the open tab is the most specific, while a tab stays open beneath its own address.
+  const NESTED = [
+    { href: '/coven/fixture-coven/grimoire' as Route, label: 'Spells' },
+    { href: '/coven/fixture-coven/grimoire/drafts' as Route, label: 'Drafts' },
+  ] as const;
+  it.each([
+    ['/coven/fixture-coven/grimoire/drafts', ['/coven/fixture-coven/grimoire/drafts']],
+    ['/coven/fixture-coven/grimoire/drafts/more', ['/coven/fixture-coven/grimoire/drafts']],
+    ['/coven/fixture-coven/grimoire', ['/coven/fixture-coven/grimoire']],
+    ['/coven/fixture-coven/grimoire/s1', ['/coven/fixture-coven/grimoire']],
+  ])(
+    'marks the most specific tab open at %s, when one tab lies beneath another',
+    (path, expected) => {
+      pathname.mockReturnValue(path);
+
+      render(
+        <TabbedPage title="Grimoire" tabs={NESTED}>
+          <p>Content</p>
+        </TabbedPage>,
+      );
+
+      const links = within(screen.getByRole('navigation', { name: 'Grimoire' })).getAllByRole(
+        'link',
+      );
+      expect(currentHrefs(links)).toEqual(expected);
+    },
+  );
 
   // Users is open; Invitations is pressed, and Next has not yet rendered it.
   const renderNavigating = () =>

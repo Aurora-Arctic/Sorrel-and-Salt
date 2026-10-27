@@ -26,7 +26,8 @@ export const IngredientSearchForm = ({
   searchHref,
   pickHref,
   pickHeading,
-  workspaceId,
+  pickPlace,
+  source,
   clear,
   className,
   children,
@@ -49,7 +50,8 @@ export const IngredientSearchForm = ({
           searchHref={searchHref}
           pickHref={pickHref}
           pickHeading={pickHeading}
-          workspaceId={workspaceId}
+          pickPlace={pickPlace}
+          source={source}
         />
         {children}
       </FilterForm>

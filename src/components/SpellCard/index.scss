@@ -1,0 +1,25 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
+// this adds IngredientCard's surface and padding, and the title's size. Tokens only.
+.spell-card {
+  @include modal-surface($shadow-floating);
+
+  padding: space(4);
+}
+
+// h3's size, as an ingredient card's name: one of many in a grid.
+.spell-card__title {
+  flex: 1 1 0;
+  max-width: 100%;
+  margin-bottom: 0;
+  font-size: heading-size(3);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.spell-card__intent {
+  margin: 0;
+  color: $text-muted;
+}

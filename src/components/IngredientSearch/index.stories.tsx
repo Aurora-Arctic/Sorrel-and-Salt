@@ -96,7 +96,7 @@ const Shell = ({
           action={PATH}
           query={query}
           shown={query ? [query] : []}
-          workspaceId={coven ? 'fixture-coven' : undefined}
+          source={coven ? { kind: 'cupboard', workspaceId: 'fixture-coven' } : undefined}
           searchHref={(text) =>
             (text ? `${PATH}?query=${encodeURIComponent(text)}` : PATH) as Route
           }

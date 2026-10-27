@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import type { CompendiumFacetCounts, ReviewSetting } from '../CompendiumList/types';
+import type { PickerCategory } from '../CategoryPicker/types';
 
 /**
  * What the panel shows as chosen. Every facet but the last three is a list of
@@ -68,4 +70,45 @@ export interface FacetPanelProps {
    * is not drawn: a visitor signed out, a viewer in no coven, and the admin and coven lists.
    */
   covens?: readonly { id: string; name: string }[];
+}
+
+/** The Filters shell (M10.11): the button, Clear All and the panel, around a list's own filters. */
+export interface FacetShellProps {
+  /** How many filters are chosen, shown on the button; above nought, the bar's Clear All shows too. */
+  count: number;
+  /** Where the Clear All links go: the list with no filter chosen. */
+  clearHref: string;
+  /** Called once hydrated when the panel shuts, by whatever means other than Apply Filters (which submits the form) or Clear All: the caller applies what it holds. */
+  onApply?: () => void;
+  /** Called once hydrated when either Clear All is pressed: the caller empties what it holds and applies at once. Without it the links are plain. */
+  onClear?: () => void;
+  /** Joins the dialog's class. */
+  className?: string;
+  /** The filters, drawn between the panel's head and its Apply Filters, Close and Clear All. */
+  children: ReactNode;
+}
+
+/**
+ * One category the Categories line offers: its slug as `value`, its name as `label`, and its
+ * group's colours. `count` is how many rows picking it would leave, where the list reads one;
+ * without it the line shows every category and no number (the grimoire, M10.11).
+ */
+export interface CategoryLineChoice {
+  value: string;
+  label: string;
+  group: PickerCategory['group'];
+  count?: number;
+}
+
+/** The Categories line: the picker and its Match chip, the one line every list's filters share. */
+export interface CategoryLineProps {
+  categories: readonly CategoryLineChoice[];
+  /** The chosen categories' slugs. */
+  values: readonly string[];
+  mode: CategoryMode;
+  /** What the list holds, with its article, for Match's tip: "an ingredient", "a spell". */
+  noun: string;
+  /** The counts are still being read. */
+  loading?: boolean;
+  onChange: (patch: { categories?: string[]; categoryMode?: CategoryMode }) => void;
 }

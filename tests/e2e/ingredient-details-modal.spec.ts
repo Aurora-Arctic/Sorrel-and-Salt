@@ -9,6 +9,7 @@ import { ingredientSlug } from '@/lib/slugify';
 import {
   ingredientList,
   localIngredient,
+  nameSearch,
   rowOf,
   seedCoven,
   withSql,
@@ -366,6 +367,43 @@ test.describe("on a coven's Ingredients", () => {
       await expect(rowOf(ingredientList(page), RENAMED)).toHaveCount(1);
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
     });
+  });
+
+  // The owner's rule of 2026-10-27: a pick from the search opens its Quick Look, not its page.
+  test('a pick from the search opens the details over the list, the filter kept, and a close gives the search box its focus back', async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Details Pick', 'details-pick.test', {
+      A: 'owner',
+    });
+    const { ingredientId } = await withSql((sql) =>
+      localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL }),
+    );
+    await page.goto(`/coven/${coven.slug}/ingredients?source=local`);
+    // Hydrated first: before it, the box is a plain text field with no dropdown.
+    await page.waitForLoadState('networkidle');
+
+    const search = nameSearch(page);
+    await search.fill('lookwort');
+    const option = page.getByRole('option', { name: new RegExp(`^${NAME}`) });
+    await expect(option).toBeVisible();
+    // Why the address below could have carried the typed text: it was not applied while typing.
+    await expect(page).not.toHaveURL(/query=/);
+    await option.click();
+
+    const details = detailsDialog(page);
+    await expect(details).toBeVisible();
+    await expect(page).toHaveURL(
+      new RegExp(`/coven/${coven.slug}/ingredients\\?.*entry=${ingredientId}(&|$)`),
+    );
+    await expect(page).toHaveURL(/[?&]source=local(&|$)/);
+    await expect(page).not.toHaveURL(/query=/);
+
+    await page.keyboard.press('Escape');
+    await expect(details).toHaveCount(0);
+    await expect(page).not.toHaveURL(/entry=/);
+    await expect(page).toHaveURL(/[?&]source=local(&|$)/);
+    await expect(search).toBeFocused();
   });
 
   test('the open details pass axe and hold at a phone width', async ({ page }) => {
