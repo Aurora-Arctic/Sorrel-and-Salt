@@ -23,7 +23,7 @@ const SAVED: SpellBuilderSpell = {
   intent: 'To see clearly',
   jarSize: '4 oz',
   sealWaxColor: 'Blue',
-  moonPhase: 'Waxing gibbous',
+  moonPhase: 'Waxing Gibbous',
   dayOfWeek: 'Monday',
   note: null,
 };
