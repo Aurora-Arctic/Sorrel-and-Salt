@@ -21,7 +21,8 @@ import type { SwitchFieldProps } from './types';
  * cancelled and answered with a click, which flips the checkbox and fires its
  * change whether it is controlled or not, the one path a press takes.
  * A `hint` stands in an InfoTip beside the label, read with the toggle, as
- * `FieldShell` draws one; a filter switch takes none.
+ * `FieldShell` draws one; a filter switch takes none. A `note` is a line under
+ * the toggle, read with it as `RadioGroupField`'s is: what its state means.
  */
 export function SwitchField({
   label,
@@ -32,9 +33,12 @@ export function SwitchField({
   onChange,
   disabled,
   hint,
+  note,
 }: SwitchFieldProps): ReactElement {
   const id = useId();
   const hintId = `${id}-hint`;
+  const noteId = `${id}-note`;
+  const describedBy = [hint && hintId, note && noteId].filter(Boolean).join(' ') || undefined;
   const labelElement = (
     <label className="field__label" htmlFor={id} {...pressFeedback}>
       {label}
@@ -66,7 +70,7 @@ export function SwitchField({
           checked={checked}
           defaultChecked={defaultChecked}
           disabled={disabled}
-          aria-describedby={hint ? hintId : undefined}
+          aria-describedby={describedBy}
           onChange={(event) => onChange(event.target.checked)}
           onKeyDown={(event) => {
             if (event.key !== 'Enter') return;
@@ -76,6 +80,11 @@ export function SwitchField({
           {...pressFeedback}
         />
       </div>
+      {note && (
+        <p id={noteId} className="field__hint">
+          {note}
+        </p>
+      )}
     </div>
   );
 }

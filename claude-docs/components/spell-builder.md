@@ -49,24 +49,27 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 ## Visibility
 
 Who can see the spell (M10.13): `SpellVisibilityField`, in
-`visibility-field.tsx`, drawn after Note. It is a `RadioGroupField`
-([`field.md`](field.md)) with the legend Visibility and two choices, each with
-a line saying what it means: **Coven** (`workspace`), which every member of
-the coven can see, and **Only Me** (`private`), which only its author can.
+`visibility-field.tsx`, drawn after Note. It is a `SwitchField`
+([`field.md`](field.md)) labelled Share With the Coven (the owner's call,
+2026-10-27): on is the coven (`workspace`), which every member can see, and
+off is private (`private`), which only its author can. A line under the
+switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
+ingredient form's Toxic switch does, rather than centred as in a filter bar
+(`index.scss`, on the form's `spell-builder` class).
 The rule it follows is DESIGN.md §5's: visibility only widens.
 
-- **A new spell** opens on Coven, the database's default, and either may be
-  chosen. The choice goes out with the first save. A choice alone is not
+- **A new spell** opens with the switch on, the coven being the database's
+  default, and it may be turned either way. The choice goes out with the first save. A choice alone is not
   something to save: Save Spell stays disabled until a field holds
   something, and the discard question does not ask about it.
-- **A saved private spell** keeps both choices open. Choosing Coven asks
+- **A saved private spell** keeps the switch open. Turning it on asks
   "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
   Share saves the whole form with `visibility: workspace` at once, so the
   spell is shared in one action. Any other unsaved changes go with it, which
   the question says. A refusal lands in the `Notice` and the spell stays
   private.
-- **A spell shared with the coven** shows the control disabled, with the
-  group's note: "Shared with the coven, so it cannot be made private again.
+- **A spell shared with the coven** shows the switch on and disabled, with
+  the note: "Shared with the coven, so it cannot be made private again.
   Duplicate makes a private copy." Duplicate is M13.20. A new spell saved for
   the coven shuts the control the same way, as soon as the save answers.
 
@@ -175,7 +178,7 @@ field holds something, a draft saved with its intent alone, the trimmed
 values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
 surfaces, and the discard question. `visibility-field.test.tsx` covers the
-visibility control: Coven by default and sent with a create, Only Me sent and
+visibility control: on by default and sent with a create, off sent as private and
 left open, a choice alone not saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the
 control shut with its reason on a shared spell. The page is

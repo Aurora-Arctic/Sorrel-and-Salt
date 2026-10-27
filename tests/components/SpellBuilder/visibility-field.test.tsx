@@ -29,9 +29,8 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   );
 }
 
-const group = () => screen.getByRole('group', { name: 'Visibility' });
-const coven = () => within(group()).getByRole('radio', { name: /^Coven/ });
-const onlyMe = () => within(group()).getByRole('radio', { name: /^Only Me/ });
+// A switch (the owner's call, 2026-10-27): on is the coven, off is private.
+const toggle = () => screen.getByRole('switch', { name: 'Share With the Coven' });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
@@ -109,15 +108,17 @@ const NARROWING_REFUSED =
   'Delete it instead if it should not be there.';
 
 describe('SpellBuilder visibility', () => {
-  it('opens a new spell shared with the coven, each choice saying what it means', () => {
+  it('opens a new spell shared with the coven, saying what each state means', () => {
     renderBuilder();
 
-    expect(coven()).toBeChecked();
-    expect(onlyMe()).not.toBeChecked();
-    expect(coven()).toBeEnabled();
-    expect(onlyMe()).toBeEnabled();
-    expect(coven()).toHaveAccessibleDescription(/every member/i);
-    expect(onlyMe()).toHaveAccessibleDescription(/only you/i);
+    expect(toggle()).toBeChecked();
+    expect(toggle()).toBeEnabled();
+    expect(toggle()).toHaveAccessibleDescription(/every member/i);
+
+    fireEvent.click(toggle());
+
+    expect(toggle()).not.toBeChecked();
+    expect(toggle()).toHaveAccessibleDescription(/only you/i);
   });
 
   it('creates the spell for the coven when nothing else is chosen', async () => {
@@ -131,11 +132,11 @@ describe('SpellBuilder visibility', () => {
     expect(calls[0]?.input).toMatchObject({ visibility: 'workspace' });
   });
 
-  it('creates the spell private when Only Me is chosen, and keeps the choice open', async () => {
+  it('creates the spell private when the switch is turned off, and keeps the choice open', async () => {
     const calls = acceptCreate();
     renderBuilder();
 
-    fireEvent.click(onlyMe());
+    fireEvent.click(toggle());
     fireEvent.change(title(), { target: { value: 'Fixture Working' } });
     submit();
 
@@ -143,17 +144,17 @@ describe('SpellBuilder visibility', () => {
     expect(calls[0]?.input).toMatchObject({ visibility: 'private' });
     await waitFor(() => expect(save()).toBeDisabled());
     // Still private, and still free to be shared.
-    expect(onlyMe()).toBeChecked();
-    expect(coven()).toBeEnabled();
+    expect(toggle()).not.toBeChecked();
+    expect(toggle()).toBeEnabled();
   });
 
   // Who can see it is not a spell in itself: a choice alone creates nothing.
   it('has nothing to save when only the choice has changed', () => {
     renderBuilder();
 
-    fireEvent.click(onlyMe());
+    fireEvent.click(toggle());
 
-    expect(onlyMe()).toBeChecked();
+    expect(toggle()).not.toBeChecked();
     expect(save()).toBeDisabled();
   });
 
@@ -161,9 +162,9 @@ describe('SpellBuilder visibility', () => {
     it('asks before sharing it, and Keep It Private sends nothing', () => {
       const calls = acceptUpdate();
       renderBuilder({ spell: SPELL });
-      expect(onlyMe()).toBeChecked();
+      expect(toggle()).not.toBeChecked();
 
-      fireEvent.click(coven());
+      fireEvent.click(toggle());
 
       const question = sharing();
       expect(question).toBeInTheDocument();
@@ -172,7 +173,7 @@ describe('SpellBuilder visibility', () => {
       );
 
       expect(sharing()).toBeNull();
-      expect(onlyMe()).toBeChecked();
+      expect(toggle()).not.toBeChecked();
       expect(calls).toHaveLength(0);
     });
 
@@ -180,7 +181,7 @@ describe('SpellBuilder visibility', () => {
       const calls = acceptUpdate();
       renderBuilder({ spell: SPELL });
 
-      fireEvent.click(coven());
+      fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
 
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -190,9 +191,8 @@ describe('SpellBuilder visibility', () => {
         input: { visibility: 'workspace', expectedRevision: 4 },
       });
       await waitFor(() => expect(sharing()).toBeNull());
-      expect(coven()).toBeChecked();
-      expect(coven()).toBeDisabled();
-      expect(onlyMe()).toBeDisabled();
+      expect(toggle()).toBeChecked();
+      expect(toggle()).toBeDisabled();
     });
 
     it('stays private when the share is refused, with the refusal in the notice', async () => {
@@ -202,13 +202,13 @@ describe('SpellBuilder visibility', () => {
       });
       renderBuilder({ spell: SPELL });
 
-      fireEvent.click(coven());
+      fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot write spells');
       await waitFor(() => expect(sharing()).toBeNull());
-      expect(onlyMe()).toBeChecked();
-      expect(coven()).toBeEnabled();
+      expect(toggle()).not.toBeChecked();
+      expect(toggle()).toBeEnabled();
     });
 
     // The spell was shared from elsewhere since this builder read it, so this
@@ -219,7 +219,7 @@ describe('SpellBuilder visibility', () => {
       renderBuilder({ spell: SPELL });
       // Why the save could have gone through: the builder holds the spell as
       // private, and the save carries that choice.
-      expect(onlyMe()).toBeChecked();
+      expect(toggle()).not.toBeChecked();
 
       fireEvent.change(title(), { target: { value: 'Fixture Working Again' } });
       submit();
@@ -234,11 +234,10 @@ describe('SpellBuilder visibility', () => {
     it('opens the control read-only, saying why and naming Duplicate', () => {
       renderBuilder({ spell: { ...SPELL, visibility: 'workspace' } });
 
-      expect(coven()).toBeChecked();
-      expect(coven()).toBeDisabled();
-      expect(onlyMe()).toBeDisabled();
-      expect(group()).toHaveAccessibleDescription(/cannot be made private/i);
-      expect(group()).toHaveAccessibleDescription(/Duplicate/);
+      expect(toggle()).toBeChecked();
+      expect(toggle()).toBeDisabled();
+      expect(toggle()).toHaveAccessibleDescription(/cannot be made private/i);
+      expect(toggle()).toHaveAccessibleDescription(/Duplicate/);
     });
 
     it('becomes read-only once a new spell is saved for the coven', async () => {
@@ -248,9 +247,8 @@ describe('SpellBuilder visibility', () => {
       fireEvent.change(title(), { target: { value: 'Fixture Working' } });
       submit();
 
-      await waitFor(() => expect(coven()).toBeDisabled());
-      expect(onlyMe()).toBeDisabled();
-      expect(group()).toHaveAccessibleDescription(/Duplicate/);
+      await waitFor(() => expect(toggle()).toBeDisabled());
+      expect(toggle()).toHaveAccessibleDescription(/Duplicate/);
     });
   });
 });

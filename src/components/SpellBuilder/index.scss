@@ -1,0 +1,12 @@
+// The Share With the Coven switch (M10.13) stands at the start of its column,
+// its label and the note under it at the start too, as the ingredient form's
+// Toxic switch does (the owner's call, 2026-10-16). Not the primitive's
+// centring, which lines a filter bar's switch up under its label among boxes;
+// here it sits alone on its row beneath full-width fields.
+.spell-builder .switch {
+  align-items: flex-start;
+
+  .field__label {
+    text-align: start;
+  }
+}

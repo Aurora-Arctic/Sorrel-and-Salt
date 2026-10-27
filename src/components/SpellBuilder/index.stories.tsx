@@ -57,7 +57,7 @@ const typeTitle = () => {
   if (input) setInputValue(input, 'Fixture Working');
 };
 
-// Choosing Coven on a private spell, which asks before it shares.
+// Turning Share With the Coven on for a private spell, which asks before it shares.
 const pickCoven = () =>
   document.querySelector<HTMLInputElement>('input[name="visibility"][value="workspace"]')?.click();
 

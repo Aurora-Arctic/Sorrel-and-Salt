@@ -28,6 +28,7 @@ import type {
   SpellBuilderSpell,
   SpellBuilderValues,
 } from './types';
+import './index.scss';
 
 // The spell builder (M10.12): a spell's title, intent, jar and note, on the
 // new-spell page now and on the edit page once M13.10 opens it with a saved
@@ -186,7 +187,7 @@ const SpellBuilder = ({ workspaceId, spell }: SpellBuilderProps): ReactElement =
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} className="form" onSubmit={handleSubmit(send)} noValidate>
+        <form ref={root} className="form spell-builder" onSubmit={handleSubmit(send)} noValidate>
           <FormHistoryButtons />
           {errors.root?.message && <Notice kind="error">{errors.root.message}</Notice>}
           <TextField<SpellBuilderValues>

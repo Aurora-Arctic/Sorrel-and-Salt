@@ -61,6 +61,24 @@ describe('SwitchField', () => {
     expect(screen.getByRole('switch', { name: 'No Refs' })).not.toHaveAccessibleDescription();
   });
 
+  // A note is a line under the toggle saying what its state means (M10.13), read with it.
+  it('is described by its note, which shows under it', () => {
+    render(
+      <SwitchField
+        label="Share With the Coven"
+        name="x"
+        value="1"
+        onChange={vi.fn()}
+        note="Only you can see it."
+      />,
+    );
+
+    expect(screen.getByText('Only you can see it.')).toBeVisible();
+    expect(
+      screen.getByRole('switch', { name: 'Share With the Coven' }),
+    ).toHaveAccessibleDescription('Only you can see it.');
+  });
+
   it('does not turn while disabled', () => {
     const onChange = vi.fn();
     render(<SwitchField label="No Refs" name="x" value="1" onChange={onChange} disabled />);

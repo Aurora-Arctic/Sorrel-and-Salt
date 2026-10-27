@@ -24,13 +24,12 @@ test('a member writes a spell private, then shares it with the coven for good', 
   await signInAgainAs(page, coven.users.B);
   await page.goto(`/coven/${coven.slug}/grimoire/new`);
 
-  const visibility = page.getByRole('group', { name: 'Visibility' });
-  const covenChoice = visibility.getByRole('radio', { name: /^Coven/ });
-  const onlyMe = visibility.getByRole('radio', { name: /^Only Me/ });
+  // A switch (the owner's call, 2026-10-27): on is the coven, off is private.
+  const visibility = page.getByRole('switch', { name: 'Share With the Coven', exact: true });
   const save = page.getByRole('button', { name: 'Save Spell' });
-  await expect(covenChoice).toBeChecked();
+  await expect(visibility).toBeChecked();
 
-  await onlyMe.check();
+  await visibility.uncheck();
   await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Hidden Working');
   await save.click();
   await expect(save).toBeDisabled();
@@ -44,18 +43,17 @@ test('a member writes a spell private, then shares it with the coven for good', 
     );
   expect(await stored()).toEqual([{ visibility: 'private' }]);
   // Still private, and still free to be shared.
-  await expect(onlyMe).toBeChecked();
-  await expect(covenChoice).toBeEnabled();
+  await expect(visibility).not.toBeChecked();
+  await expect(visibility).toBeEnabled();
 
-  await covenChoice.click();
+  await visibility.click();
   const question = page.getByRole('group', { name: /Share With the Coven/ });
   await expect(question).toBeVisible();
   await question.getByRole('button', { name: 'Share', exact: true }).click();
   await expect(question).toBeHidden();
 
-  await expect(covenChoice).toBeChecked();
-  await expect(covenChoice).toBeDisabled();
-  await expect(onlyMe).toBeDisabled();
+  await expect(visibility).toBeChecked();
+  await expect(visibility).toBeDisabled();
   await expect(visibility).toHaveAccessibleDescription(/cannot be made private again/);
   await expect(visibility).toHaveAccessibleDescription(/Duplicate/);
   expect(await stored()).toEqual([{ visibility: 'workspace' }]);

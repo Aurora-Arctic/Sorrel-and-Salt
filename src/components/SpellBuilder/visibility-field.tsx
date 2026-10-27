@@ -2,33 +2,27 @@
 
 import { type ReactElement, useState } from 'react';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
-import { RadioGroupField } from '../Field';
+import { SwitchField } from '../Field';
 import { ConfirmQuestion } from '../Modal';
 import type { SpellBuilderInput, SpellBuilderValues, SpellVisibilityFieldProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
 // Who can see a spell (M10.13): its author alone, or every member of the coven.
-// A radio group, as the members page's role control is, each choice with a line
-// saying what it means. A new spell takes either, the coven by default (§5), and
+// A switch, Share With the Coven, on for the coven and off for private (the owner's
+// call, 2026-10-27), with a line under it saying what its state means. A new spell
+// takes either, the coven by default (§5), and
 // the choice goes out with its first save. A saved private spell is shared by
-// choosing Coven, which asks first and then saves at once, so that one action
+// switching it on, which asks first and then saves at once, so that one action
 // with its confirmation shares it. A spell shared with the coven never goes back
 // (DESIGN.md §5's one-way rule, held by the service), so the control then reads
 // only and says so, rather than leave a person to find out from a refusal.
 // claude-docs/components/spell-builder.md, "Visibility".
 
-const OPTIONS = [
-  {
-    value: 'workspace',
-    label: 'Coven',
-    description: 'Every member of the coven can see it. Once shared, it stays shared.',
-  },
-  {
-    value: 'private',
-    label: 'Only Me',
-    description: 'Only you can see it, until you share it with the coven.',
-  },
-] as const satisfies readonly { value: SpellVisibility; label: string; description: string }[];
+/** What each state means, said under the switch. */
+const MEANS = {
+  workspace: 'Every member of the coven can see it. Once shared, it stays shared.',
+  private: 'Only you can see it, until you share it with the coven.',
+} as const satisfies Record<SpellVisibility, string>;
 
 /** Said under the shut control: why it is shut, and the way to a private copy (M13.20). */
 const SHARED_FOR_GOOD =
@@ -48,7 +42,8 @@ export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProp
   // The saved spell's visibility is the last save's, which the form starts from.
   const shared = created && defaultValues?.visibility === 'workspace';
 
-  const choose = (visibility: SpellVisibility) => {
+  const choose = (on: boolean) => {
+    const visibility: SpellVisibility = on ? 'workspace' : 'private';
     // A saved private spell is shared by a confirmed save, never by a pick left pending.
     if (created && visibility === 'workspace') setAsking(true);
     else field.onChange(visibility);
@@ -68,14 +63,14 @@ export function SpellVisibilityField({ created, save }: SpellVisibilityFieldProp
 
   return (
     <>
-      <RadioGroupField<SpellVisibility>
-        legend="Visibility"
+      <SwitchField
+        label="Share With the Coven"
         name="visibility"
-        options={OPTIONS}
-        value={shared ? 'workspace' : field.value}
+        value="workspace"
+        checked={shared || field.value === 'workspace'}
         onChange={choose}
         disabled={shared}
-        note={shared ? SHARED_FOR_GOOD : undefined}
+        note={shared ? SHARED_FOR_GOOD : MEANS[field.value]}
       />
       {asking && (
         <ConfirmQuestion
