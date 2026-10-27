@@ -103,6 +103,20 @@ cannot:
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
 
+Two guards were deleted in M14.27, under rule 1, because neither proved what
+the app does:
+
+- `story-sections.test.ts` pinned the story reporter's table of site areas
+  (`tests/support/story-sections.ts`) to the list of v1 stories. That list is
+  not written down a second time: `tests/support/stories.ts` parses it out of
+  DESIGN.md §10, so the story count cannot drift from the spec. A story missing
+  from the table is listed under "Other" in the story report, which is where
+  the gap shows.
+- `tasks-md.test.ts` tested `readEntry` in `scripts/tasks-md.mjs`, the
+  parser `task-board.mjs sync` uses. Nothing tests it now, and that is
+  deliberate: task-board tooling is not tested (rule 1), because a fault in it
+  shows at once to whoever runs the command.
+
 **The guards share one scan** (MB.184). `tests/support/unit-global-setup.ts`,
 the `unit` project's `globalSetup`, runs `git ls-files --cached --others
 --exclude-standard` once, drops what is in the index but gone from the
