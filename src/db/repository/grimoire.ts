@@ -1,4 +1,5 @@
-import { and, eq, inArray, or, type SQL, sql } from 'drizzle-orm';
+import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { categories } from '../../modules/vocabulary/schema/categories';
@@ -6,9 +7,10 @@ import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInReadableSpells, findPageInReadableSpells } from './finders';
 import { pointsLive } from './ingredients';
-import { foldedWordMatch } from './predicates';
+import { scopedTo } from './predicates';
 import { existsIn } from './select';
-import type { GrimoireQuery, ListOrder, SortPart } from './types';
+import type { GrimoireQuery, ListOrder, SortPart, WeightedSearch } from './types';
+import { weightedSearch } from './weighted-search';
 
 // The grimoire list's read (M10.9), with its search and category filter
 // (M10.11). In a file of its own rather than in `spells.ts`, because
@@ -40,28 +42,67 @@ const GRIMOIRE_ORDER: Record<GrimoireQuery['order'], readonly SortPart[]> = {
 };
 
 /**
- * The order a query reads under. A search holds a `<%` word match, which
- * only finds a fragment of a longer word under the search's own threshold,
- * so its read is flagged `wordMatch` and runs in a transaction that sets it
- * (`select.ts`). The order itself stays the one asked for: the search
- * narrows the list rather than ranking it.
+ * How much a match in each field counts towards a search's rank, as
+ * `SEARCH_WEIGHTS` does for an ingredient: a title is what a spell is
+ * called, and an intent is a sentence about it, so a title match ranks above
+ * an equally close intent match.
  */
-function orderOf(query: GrimoireQuery): ListOrder {
-  return { sort: GRIMOIRE_ORDER[query.order], wordMatch: Boolean(query.query?.trim()) };
-}
+const GRIMOIRE_SEARCH_WEIGHTS = { title: 1, intent: 0.5 } as const;
 
 /**
  * Title or intent holds the search as a word or part of one, accents and
- * case set aside, as the ingredient search matches a name: `<%` for a near
- * word, and the plain substring for an exact one the trigrams score low.
- * A null title or intent matches nothing.
+ * case set aside, ranked as the ingredient search ranks (`weightedSearch`):
+ * one arm per field, over this coven's spells, each scoring its field. A null
+ * title or intent matches nothing. Blank means no search.
  */
-function searchArm(text: string | undefined): SQL | undefined {
+function searchMatch(membership: Membership, text: string | undefined): WeightedSearch | undefined {
   const trimmed = text?.trim();
   if (!trimmed) return undefined;
-  const { matches, contains } = foldedWordMatch(trimmed);
-  const fields = [spells.title, spells.intent];
-  return or(...fields.flatMap((field) => [matches(field), contains(field)]));
+  const candidate = alias(spells, 'candidate');
+  const from = sql`${spells} as ${candidate}`;
+  const live = scopedTo(membership, candidate);
+  return weightedSearch(
+    trimmed,
+    [
+      {
+        id: candidate.id,
+        text: candidate.title,
+        weight: GRIMOIRE_SEARCH_WEIGHTS.title,
+        from,
+        live,
+      },
+      {
+        id: candidate.id,
+        text: candidate.intent,
+        weight: GRIMOIRE_SEARCH_WEIGHTS.intent,
+        from,
+        live,
+      },
+    ],
+    spells.id,
+  );
+}
+
+/**
+ * The order a query reads under. Without a search, the one asked for. With
+ * one, best match first — `[-rank, position]`, as the ingredient search keys
+ * it — and the asked-for order breaks a tie, so a page and its count read the
+ * same rows in the same order. A search holds a `<%` word match, which only
+ * finds a fragment of a longer word under the search's own threshold, so its
+ * read is flagged `wordMatch` and runs in a transaction that sets it
+ * (`select.ts`).
+ */
+function orderOf(query: GrimoireQuery, match: WeightedSearch | undefined): ListOrder {
+  if (!match) return { sort: GRIMOIRE_ORDER[query.order] };
+  return {
+    sort: [
+      { expression: sql`-${match.score}`, type: 'real' },
+      { expression: match.position, type: 'integer' },
+      ...GRIMOIRE_ORDER[query.order],
+    ],
+    wordMatch: true,
+    join: match.join,
+  };
 }
 
 /**
@@ -86,11 +127,14 @@ function categoryArms({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery)
     : categoryIds.map((categoryId) => carries(eq(spellCategories.categoryId, categoryId)));
 }
 
-/** Everything a query narrows by, ANDed: status, search and categories each filter in SQL (rule 7). */
+/**
+ * Everything a query narrows by besides the search, ANDed: status and
+ * categories each filter in SQL (rule 7). The search narrows through its
+ * join, which holds only the spells that match.
+ */
 function whereOf(query: GrimoireQuery): SQL | undefined {
   return and(
     query.status === undefined ? undefined : eq(spells.status, query.status),
-    searchArm(query.query),
     ...categoryArms(query),
   );
 }
@@ -106,7 +150,8 @@ export function findGrimoirePage(
   page: PageRequest,
   query: GrimoireQuery,
 ): Promise<PageEntry<typeof spells.$inferSelect>[]> {
-  return findPageInReadableSpells(membership, spells, orderOf(query), page, whereOf(query));
+  const order = orderOf(query, searchMatch(membership, query.query));
+  return findPageInReadableSpells(membership, spells, order, page, whereOf(query));
 }
 
 /**
@@ -119,5 +164,6 @@ export function findGrimoireCount(
   query: GrimoireQuery,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInReadableSpells(membership, spells, orderOf(query), start, whereOf(query));
+  const order = orderOf(query, searchMatch(membership, query.query));
+  return findPageCountInReadableSpells(membership, spells, order, start, whereOf(query));
 }

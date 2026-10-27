@@ -44,6 +44,12 @@ on the second:
   holding that form, so a bare "oil" ranks each entry with an oil variant at
   0.6, below any entry whose own name holds the word; the form filter (M8.13)
   is the precise tool for that question, and the search is not.
+  `weightedSearch` (`src/db/repository/weighted-search.ts`) builds the arms
+  from a list of fields and their weights, and the grimoire's search (M10.11)
+  builds its own from the same function: two arms over a coven's spells, the
+  title weighted 1 and the intent 0.5, keyed `[-rank, position]` and then the
+  order the reader chose, so a title match ranks above an equally close
+  intent match.
 - **The score is the row's best weighted word similarity** across the
   arms, and it is the search's order, its rank. Each field the search reads
   carries a weight, `SEARCH_WEIGHTS` beside `searchMatch` in

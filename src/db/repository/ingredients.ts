@@ -56,7 +56,10 @@ import {
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
 import { curated, inLiveGroup } from './vocabularies';
+import { weightedSearch } from './weighted-search';
 import type {
+  SearchField,
+  WeightedSearch,
   CompendiumReviewRow,
   CompendiumScore,
   CupboardEntryRow,
@@ -819,7 +822,7 @@ const SEARCH_WEIGHTS = {
  * form or description of a live variant (MB.218), each side folded through
  * `unaccent_immutable` so the expression indexes of migration 0027 and
  * `ingredient_variants_unaccent_trgm` answer the match; the threshold is the
- * keyset read's (`wordMatch`). The five fields are five arms of a `UNION ALL`,
+ * keyset read's (`wordMatch`). The five fields are five arms of `weightedSearch`'s `UNION ALL`,
  * for `findSimilarIngredients`'s reason, one field each, so each arm's
  * `where` is that field's own indexed match and the position an arm reports
  * belongs to the field it scored. An arm scores its field's `word_similarity`
@@ -838,66 +841,58 @@ const SEARCH_WEIGHTS = {
 function searchMatch(
   query: string | undefined,
   cupboardOf?: Membership,
-): { join: { source: SQL; on: SQL }; score: SQL<number>; position: SQL<number> } | undefined {
+): WeightedSearch | undefined {
   const trimmed = query?.trim();
   if (!trimmed) return undefined;
-  const { matches, similarity, contains, position } = foldedWordMatch(trimmed);
   const candidate = alias(ingredients, 'candidate');
-  const arms = sql.identifier('arms');
-  const matched = sql.identifier('matched');
-  // One field's arm: the entry it belongs to, the field's weighted score —
-  // its word similarity, or 1 where it holds the query verbatim, since word
-  // similarity scores a fragment inside a longer word by the trigrams it
-  // shares — and where it holds the query. The arm's `where` is the field's
-  // match, so every row it reads scored. The weight and the 1 are cast to
-  // `real`: `real` times a bare number is `double precision`, and the rank
-  // carried onto the edge is not cast as the keyset's sort is.
-  const arm = (id: AnyPgColumn, text: AnyPgColumn, weight: number, from: SQLWrapper, live?: SQL) =>
-    sql`select ${id} as id,
-        greatest(${similarity(text)}, case when ${contains(text)} then 1::real end) * ${weight}::real as score,
-        ${position(text)} as position
-      from ${from}
-      where ${and(matches(text), live)}`;
   const entries = sql`${ingredients} as ${candidate}`;
-  // With a coven's proof, a sixth arm: the label that coven gave a compendium
-  // entry it holds, ranked as a label is (M12.19). That coven's live rows only.
-  const cupboardArm = cupboardOf
-    ? sql`
-      union all
-      ${arm(
-        workspaceCompendiumEntries.ingredientId,
-        workspaceCompendiumEntries.label,
-        SEARCH_WEIGHTS.name,
-        workspaceCompendiumEntries,
-        and(
-          scopedTo(cupboardOf, workspaceCompendiumEntries),
-          notSoftDeleted(workspaceCompendiumEntries),
-        ),
-      )}`
-    : sql``;
-  // The position is the best-scoring arm's, not `min(position)`: a weaker
-  // field holding the query earlier — a folk name starting with it, under a
-  // label holding it mid-word — must not move the entry it did not rank.
-  const source = sql`(
-    select ${arms}.id, max(${arms}.score) as score,
-      (array_agg(${arms}.position order by ${arms}.score desc, ${arms}.position))[1] as position
-    from (
-      ${arm(candidate.id, candidate.name, SEARCH_WEIGHTS.name, entries)}
-      union all
-      ${arm(candidate.id, candidate.canonicalName, SEARCH_WEIGHTS.canonicalName, entries)}
-      union all
-      ${arm(ingredientFolkNames.ingredientId, ingredientFolkNames.name, SEARCH_WEIGHTS.folkName, ingredientFolkNames, notSoftDeleted(ingredientFolkNames))}
-      union all
-      ${arm(ingredientVariants.ingredientId, ingredientVariants.form, SEARCH_WEIGHTS.form, ingredientVariants, notSoftDeleted(ingredientVariants))}
-      union all
-      ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}${cupboardArm}
-    ) as ${arms}
-    group by ${arms}.id) as ${matched}`;
-  return {
-    join: { source, on: eq(sql`${matched}.id`, ingredients.id) },
-    score: sql<number>`${matched}.score`,
-    position: sql<number>`${matched}.position`,
-  };
+  const fields: SearchField[] = [
+    { id: candidate.id, text: candidate.name, weight: SEARCH_WEIGHTS.name, from: entries },
+    {
+      id: candidate.id,
+      text: candidate.canonicalName,
+      weight: SEARCH_WEIGHTS.canonicalName,
+      from: entries,
+    },
+    {
+      id: ingredientFolkNames.ingredientId,
+      text: ingredientFolkNames.name,
+      weight: SEARCH_WEIGHTS.folkName,
+      from: ingredientFolkNames,
+      live: notSoftDeleted(ingredientFolkNames),
+    },
+    {
+      id: ingredientVariants.ingredientId,
+      text: ingredientVariants.form,
+      weight: SEARCH_WEIGHTS.form,
+      from: ingredientVariants,
+      live: notSoftDeleted(ingredientVariants),
+    },
+    {
+      id: ingredientVariants.ingredientId,
+      text: ingredientVariants.description,
+      weight: SEARCH_WEIGHTS.description,
+      from: ingredientVariants,
+      live: notSoftDeleted(ingredientVariants),
+    },
+    // With a coven's proof, a sixth arm: the label that coven gave a compendium
+    // entry it holds, ranked as a label is (M12.19). That coven's live rows only.
+    ...(cupboardOf
+      ? [
+          {
+            id: workspaceCompendiumEntries.ingredientId,
+            text: workspaceCompendiumEntries.label,
+            weight: SEARCH_WEIGHTS.name,
+            from: workspaceCompendiumEntries,
+            live: and(
+              scopedTo(cupboardOf, workspaceCompendiumEntries),
+              notSoftDeleted(workspaceCompendiumEntries),
+            ),
+          },
+        ]
+      : []),
+  ];
+  return weightedSearch(trimmed, fields, ingredients.id);
 }
 
 /**

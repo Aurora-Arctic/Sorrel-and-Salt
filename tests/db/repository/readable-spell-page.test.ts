@@ -319,6 +319,39 @@ describe('the grimoire search and category filter (M10.11)', () => {
     expect(await countOf(A, { order: 'UPDATED_DESC', query: 'hearth' })).toBe(2);
   });
 
+  it('ranks a search best match first, whatever the chosen order, and counts before a cursor in that rank', async () => {
+    // Written oldest first, so newest first would list them in reverse.
+    const inIntent = await spellWith(A, 'Moon Jar', { intent: 'To keep the hearth calm' });
+    const later = await spellWith(A, 'Old Hearth');
+    const early = await spellWith(A, 'Hearth Charm');
+    const ranked = async (order: GrimoireQuery['order']) =>
+      (await findGrimoirePage(await proofFor(A), FIRST_PAGE, { order, query: 'hearth' })).map(
+        (entry) => entry.node.id,
+      );
+    // Why the order is the rank's: without a search, newest first lists them the other way.
+    expect(
+      (await findGrimoirePage(await proofFor(A), FIRST_PAGE, { order: 'CREATED_DESC' })).map(
+        (entry) => entry.node.id,
+      ),
+    ).toEqual([early, later, inIntent]);
+
+    // A title outranks an intent; between two titles, the earlier hit leads.
+    for (const order of ['CREATED_DESC', 'TITLE_ASC'] as const) {
+      expect(await ranked(order)).toEqual([early, later, inIntent]);
+    }
+    const page = await findGrimoirePage(await proofFor(A), FIRST_PAGE, {
+      order: 'CREATED_DESC',
+      query: 'hearth',
+    });
+    await expect(
+      findGrimoireCount(
+        await proofFor(A),
+        { order: 'CREATED_DESC', query: 'hearth' },
+        page[2].cursor,
+      ),
+    ).resolves.toEqual({ totalCount: 3, countBefore: 2 });
+  });
+
   it('folds accents and case as the ingredient search does', async () => {
     const ids = await grimoire();
 
