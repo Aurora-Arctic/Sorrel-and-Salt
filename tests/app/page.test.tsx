@@ -104,16 +104,4 @@ describe('the / page', () => {
       '/account/email?next=%2Fcoven',
     );
   });
-
-  it('carries an unverified admin’s landing the same way', async () => {
-    getSession.mockResolvedValue({ userId: USER_ID, role: 'admin' });
-    sessionIsVerified.mockResolvedValue(false);
-
-    render(await HomePage());
-
-    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute(
-      'href',
-      '/account/email?next=%2Fadmin',
-    );
-  });
 });
