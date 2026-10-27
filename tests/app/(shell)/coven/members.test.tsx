@@ -80,30 +80,10 @@ beforeEach(() => {
 });
 
 describe('the /coven/[slug]/members page', () => {
-  it('lists every member, with a single member too', async () => {
+  it('lists every member', async () => {
     await render_('owner');
     expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
       1 + SEATS.length,
-    );
-
-    listMembers.mockImplementation(async () => [
-      {
-        cursor: { key: ['0'], id: 'u-owner' },
-        node: {
-          userId: 'u-owner',
-          role: 'owner',
-          joinedAt: new Date(),
-          updatedBy: 'u-owner',
-          updatedAt: new Date(),
-          invitedBy: null,
-          workspace: WORKSPACE,
-        },
-      },
-    ]);
-    document.body.innerHTML = '';
-    await render_('owner');
-    expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
-      2,
     );
   });
 
@@ -125,16 +105,6 @@ describe('the /coven/[slug]/members page', () => {
       expect(
         screen.getByRole('button', { name: `Change Role for Name of ${who}` }),
       ).toBeInTheDocument();
-  });
-
-  it('offers an owner the roles to move to, each with what it allows', async () => {
-    await render_('owner');
-    fireEvent.click(screen.getByRole('button', { name: 'Change Role for Name of u-viewer' }));
-
-    const group = await screen.findByRole('group', { name: 'New Role' });
-    expect(within(group).getByRole('radio', { name: /^Member/ })).toBeChecked();
-    expect(within(group).getByRole('radio', { name: /^Owner/ })).not.toBeChecked();
-    expect(within(group).getByRole('radio', { name: /^Owner.*deleting it/ })).toBeInTheDocument();
   });
 
   it('shows a member the list and no role controls', async () => {

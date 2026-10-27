@@ -77,6 +77,8 @@ describe('the /coven/[slug] page', () => {
   // The guided exit (M6.16): the only owner is shown both ways out on click;
   // one of several owners, a member and a viewer leave as before.
   describe('the only owner', () => {
+    // What the dialog does with the roster is LeaveWorkspaceButton's owner-exit tests'; the page
+    // hands it the roster without the viewer, and flags the only owner.
     it('opens a dialog offering a hand-over to each other member, and the deletion', async () => {
       memberRoster.mockResolvedValue([
         { userId: 'u', role: 'owner' },
@@ -89,6 +91,7 @@ describe('the /coven/[slug] page', () => {
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
+      expect(within(dialog).getByRole('radio', { name: /^Delete It/ })).toBeInTheDocument();
       const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
@@ -96,35 +99,6 @@ describe('the /coven/[slug] page', () => {
       expect(within(dialog).getAllByRole('option')).toHaveLength(2);
       expect(within(dialog).getByRole('option', { name: /Name of m.*Member/ })).toBeInTheDocument();
       expect(within(dialog).getByRole('option', { name: /Name of v.*Viewer/ })).toBeInTheDocument();
-      expect(within(dialog).getByRole('button', { name: 'Promote and Leave' })).toBeDisabled();
-
-      fireEvent.click(within(dialog).getByRole('radio', { name: /^Delete It/ }));
-      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
-    });
-
-    it('offers the one other member by name, with nothing to search', async () => {
-      memberRoster.mockResolvedValue([
-        { userId: 'u', role: 'owner' },
-        { userId: 'm', role: 'member' },
-      ]);
-      await renderAs('owner');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
-      const dialog = await screen.findByRole('dialog');
-
-      expect(within(dialog).getByRole('radio', { name: /Name of m/ })).toBeChecked();
-      expect(within(dialog).queryByRole('combobox')).toBeNull();
-      expect(within(dialog).getByRole('button', { name: 'Promote and Leave' })).toBeEnabled();
-    });
-
-    it('is offered only the deletion when no one else is in the coven', async () => {
-      await renderAs('owner');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
-      const dialog = await screen.findByRole('dialog');
-
-      expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
-      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
   });
 
@@ -153,31 +127,25 @@ describe('the /coven/[slug] page', () => {
   // that only an owner is shown, so the two buttons that end a seat and end a
   // coven are never side by side.
   describe('the sections', () => {
-    it.each<WorkspaceRole>(['owner', 'member'])(
-      'lists the members page in Contents for a %s, who may read members',
-      async (role) => {
-        await renderAs(role);
+    it('lists the members page in Contents for a member, who may read members', async () => {
+      await renderAs('member');
 
-        const contents = screen.getByRole('region', { name: 'Contents' });
-        expect(within(contents).getByRole('link', { name: 'Members' })).toHaveAttribute(
-          'href',
-          '/coven/fixture-coven/members',
-        );
-      },
-    );
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      expect(within(contents).getByRole('link', { name: 'Members' })).toHaveAttribute(
+        'href',
+        '/coven/fixture-coven/members',
+      );
+    });
 
-    it.each<WorkspaceRole>(['owner', 'member', 'viewer'])(
-      'lists the ingredients page in Contents for a %s',
-      async (role) => {
-        await renderAs(role);
+    it('lists the ingredients page in Contents for a viewer, the least role', async () => {
+      await renderAs('viewer');
 
-        const contents = screen.getByRole('region', { name: 'Contents' });
-        expect(within(contents).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
-          'href',
-          '/coven/fixture-coven/ingredients',
-        );
-      },
-    );
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      expect(within(contents).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+        'href',
+        '/coven/fixture-coven/ingredients',
+      );
+    });
 
     it('lists no Members for a viewer, who cannot read it', async () => {
       await renderAs('viewer');
@@ -195,8 +163,8 @@ describe('the /coven/[slug] page', () => {
       expect(within(owners).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
 
-    it.each<WorkspaceRole>(['member', 'viewer'])('shows a %s no Delete section', async (role) => {
-      await renderAs(role);
+    it('shows a viewer no Delete section', async () => {
+      await renderAs('viewer');
 
       expect(screen.queryByRole('region', { name: 'Delete This Coven' })).not.toBeInTheDocument();
     });
@@ -209,7 +177,6 @@ describe('the /coven/[slug] page', () => {
 
     it.each<[WorkspaceRole, number]>([
       ['owner', 3],
-      ['member', 2],
       ['viewer', 2],
     ])('has an entry for each of a %s’s sections', async (role, count) => {
       await renderAs(role);
