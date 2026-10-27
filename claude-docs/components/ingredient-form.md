@@ -2035,8 +2035,7 @@ few it needs. It covers:
   test, on Save Ingredient, asserts both held down and the pressed one's
   `aria-busy` until the answer.
 - **Resolver errors**: beside the field, focused, invalid and described, with
-  no request sent, and cleared once the field is corrected; an element list
-  given a repeat, as an edit would hold it, refused on the Element control.
+  no request sent, and cleared once the field is corrected.
   An issue with a variant's pick, or with its text, landing on its `form`,
   a variant's list entry, and a box still holding text are the resolver's
   own test, `tests/modules/ingredients/validation/ingredient-resolver.test.ts`,
@@ -2076,8 +2075,6 @@ few it needs. It covers:
   each of the five list boxes asking its own lookup about this coven, none
   before it is used, a pick from each sent in its shape — text for folk
   names, celestial bodies and signs, a deity's id, a substitute's ingredient id.
-- **An element list given its values**, as an edit would hold them: chips in
-  the order held, the rest alone offered.
 
 A linked substitute rendered only `ListField`, so its refused link, named by
 its formal name too, is `list-field.test.tsx`'s; how a picked one reads and
@@ -2122,7 +2119,13 @@ Create Anyway read with the warning; a save inside the debounce asking about
 the name it sends and holding on what it finds; the hold lifted by editing
 the name; Create Anyway clearing the warning and the name's error, focusing
 the name, and the next save going; and the matches set aside staying gone
-while a new one returns.
+while a new one returns. A compendium match's + once its add has worked
+(M12.48): AddIcon's check held `ADDED_HOLD_MS` and pressing it doing nothing,
+then the eye on the same button, at once under reduced motion and faded in
+otherwise; the row moving under In This Coven only once the eye shows, the
+warning busy meanwhile and the focus going to the new row's eye, or staying
+where it was moved to while the check showed. What the form sends for the +,
+its status-region words and a refusal stay in `index.test.tsx`.
 
 `tests/components/IngredientForm/list-field.test.tsx` renders `ListField`
 alone, in a `FormProvider` on the form's resolver with a Name box beside it,
@@ -2130,10 +2133,11 @@ its suggestions given rather than looked up, as `LookupListField` gives them.
 The behaviours independent of which list it is run over the two ways an
 entry gets in — a plain list and a pick-only one, given a source since a pick
 is its only way in: one empty box and no
-entries at first, Add offered only where text is added; an entry added inside
-the box ahead of the text, the box emptied and kept focused, and announced by name; an
-entry removed by its ×, the focus back in the box; the last taken on Backspace
-in the empty box and none with text in it; Clear taking every entry; and an
+entries at first, Add offered only where text is added; and an entry added,
+the box emptied and kept focused, and announced by name. Once an entry is in
+the two share every path, so these run on the plain list alone: an entry
+removed by its ×, the focus back in the box; the last taken on Backspace in
+the empty box and none with text in it; Clear taking every entry; and an
 error naming an entry marking that entry alone, cleared once it is removed.
 Once, on a typed box: Enter adding without saving the form; a blank box
 adding nothing; a save refused while the box holds text, until it is added
@@ -2159,6 +2163,10 @@ substitute, as `{ name }`; the same deity listed twice, given, refused beside
 the repeat, named with its tradition; and a refused substitute link marked
 beside its pill, named by its formal name too (MB.140). `tests/support/sortable.ts`'s real 60 ms waits stay:
 fake timers would couple to the dnd sensor.
+
+The same file renders `MultiSelectField` alone, given its elements as an edit
+would hold them: chips in the order held, the rest alone offered, and a repeat
+the schema refuses marked on the Element control.
 
 **The references** are `tests/components/IngredientForm/references.test.tsx`
 (MB.154), which renders `ReferencesField` alone (MB.182), in a

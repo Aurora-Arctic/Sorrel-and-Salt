@@ -2,8 +2,9 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Suggestions } from '@/components/Combobox/types';
-import { ListField } from '@/components/IngredientForm/fields';
+import { ListField, MultiSelectField } from '@/components/IngredientForm/fields';
 import type {
+  IngredientElement,
   IngredientFormInput,
   IngredientFormValues,
   ListOption,
@@ -163,22 +164,23 @@ describe('ListField', () => {
       else expect(adds).toBeInTheDocument();
     });
 
-    it('adds an entry inside the box, ahead of the text, clearing and keeping the box focused, and says so', () => {
+    it('adds an entry, clearing and keeping the box focused, and says so', () => {
       renderList(variant);
 
       add(variant, '  First Fixture ');
 
       expect(entries(legend)).toEqual(['Remove First Fixture']);
-      const inside = box(entry).closest('.combobox__control') as HTMLElement;
-      expect(inside).toContainElement(removeButton('First Fixture'));
-      expect(
-        removeButton('First Fixture').compareDocumentPosition(box(entry)) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
       expect(box(entry)).toHaveValue('');
       expect(box(entry)).toHaveFocus();
       expect(changes(legend)).toHaveTextContent('First Fixture');
     });
+  });
+
+  // Once an entry is in, a plain list and a pick-only one share every path: removing,
+  // Backspace, Clear and an error on one entry run once, on the plain list.
+  describe('the plain list', () => {
+    const variant = PLAIN;
+    const { legend, entry, name } = variant;
 
     it('removes an entry from its x, returning the focus to the box, and says so', () => {
       renderList(variant);
@@ -679,6 +681,64 @@ describe('ListField', () => {
     expect(box(PLAIN.entry)).toHaveAccessibleDescription(
       expect.stringContaining('Mockleaf (Fixtura testalis)'),
     );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+// The pick-only multi-select beside the lists, given its elements as an edit would be:
+// drawn as chips in the order held, and a repeat refused on the control itself.
+describe('MultiSelectField, given its values', () => {
+  function renderElements(elements: IngredientElement[]) {
+    const onSubmit = vi.fn();
+    const Harness = () => {
+      const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+        defaultValues: { ...EMPTY_VALUES, name: 'Testwort', elements },
+        resolver: ingredientResolver,
+      });
+      return (
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(onSubmit)}>
+            <MultiSelectField
+              name="elements"
+              label="Element"
+              placeholder="Choose elements"
+              options={[
+                { value: 'earth', label: 'Earth' },
+                { value: 'air', label: 'Air' },
+                { value: 'fire', label: 'Fire' },
+                { value: 'water', label: 'Water' },
+                { value: 'spirit', label: 'Spirit' },
+              ]}
+            />
+            <button type="submit">Save Ingredient</button>
+          </form>
+        </FormProvider>
+      );
+    };
+    render(<Harness />);
+    return onSubmit;
+  }
+
+  it('prefills them as chips, in the order held, and offers only the rest', () => {
+    renderElements(['water', 'earth']);
+
+    expect(
+      screen
+        .getAllByRole('button', { name: /^Remove / })
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(['Remove Water', 'Remove Earth']);
+    fireEvent.click(box('Element'));
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+    expect(screen.queryByRole('option', { name: 'Water' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Earth' })).not.toBeInTheDocument();
+  });
+
+  it('shows a repeat the schema refuses on the Element control', async () => {
+    const onSubmit = renderElements(['fire', 'fire']);
+
+    save();
+
+    await waitFor(() => expectErrorOn(box('Element')));
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
