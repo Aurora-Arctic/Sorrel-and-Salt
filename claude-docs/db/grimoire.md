@@ -303,6 +303,9 @@ that checks it ("Saving a recipe" below).
   columns stay free text and hold values written before the lists, such as
   "Full" (the owner, 2026-10-27;
   [`../components/spell-builder.md`](../components/spell-builder.md)).
+  `moonPhase` and `dayOfWeek` are the recipe's timing, meaning when to work
+  the spell, not a record of when it was worked. A working's own day and moon
+  phase follow from its `workedOn` date (M13.4).
 - **`spell_steps.unit` is M9.2's `inventory_unit`**, the same Postgres
   type and not a second copy of it: a tablespoon in a spell is the tablespoon a
   jar is measured in, and M9.5 converts between them. The type keeps its

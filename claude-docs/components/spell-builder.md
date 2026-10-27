@@ -72,7 +72,11 @@ states a rule a person could trip on
 stored as typed: the columns are free text
 ([`../db/grimoire.md`](../db/grimoire.md)).
 
-- **Moon Phase and Day of the Week** are comboboxes
+- **Moon Phase and Day of the Week** sit together in a group headed "When to
+  Work It": a `<fieldset className="fieldset">` whose legend names the group
+  to a screen reader. They are the recipe's timing, meaning when to work the
+  spell, not a record of when it was worked. A working's own day and moon
+  phase follow from its `workedOn` date (M13.4). Both are comboboxes
   ([`combobox.md`](combobox.md)), `SpellSuggestField` in
   `suggest-field.tsx`. Each suggests a fixed list from `constants.ts`,
   narrowed to what is typed: the eight phases of Wikipedia's "Lunar phase",
