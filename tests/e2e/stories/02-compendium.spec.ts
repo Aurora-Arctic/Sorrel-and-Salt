@@ -139,7 +139,7 @@ test(
       await expect(rowOf(compendiumList(page), "Cat's Claw", 'Uncaria guianensis')).toBeVisible();
     });
 
-    await test.step("picking Devil's Shoestring opens its entry, with its folk name and categories", async () => {
+    await test.step("picking Devil's Shoestring opens its Quick Look, and through it its entry, with its folk name and categories", async () => {
       const [entry] = await withSql(
         (sql) => sql<{ slug: string }[]>`
           select slug from ingredients
@@ -147,8 +147,13 @@ test(
       );
       await page.goto('/compendium');
       await compendiumSearch(page).fill("Devil's Shoestring");
-      // Picking a row in the dropdown opens its entry (M8.10).
+      // Picking a row in the dropdown opens its Quick Look over the list (the owner's rule of
+      // 2026-10-27), and the Quick Look's link goes on to the entry's page.
       await page.getByRole('option', { name: /^Devil's Shoestring/ }).click();
+      const details = page.getByRole('dialog', { name: "Devil's Shoestring", exact: true });
+      await expect(details).toBeVisible();
+      await expect(page).toHaveURL(/\/compendium\?(.*&)?entry=/);
+      await details.getByRole('link', { name: 'See in Compendium' }).click();
 
       await expect(page).toHaveURL(new RegExp(`/compendium/ingredients/${entry.slug}$`));
       await expect(

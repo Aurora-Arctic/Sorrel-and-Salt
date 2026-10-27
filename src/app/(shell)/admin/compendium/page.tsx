@@ -171,6 +171,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}
+        cursor={{ after, before }}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
       {/* The details a Quick Look opens, in their own place beneath the edit modal's,

@@ -130,6 +130,7 @@ const IngredientSearchBox = ({
   searchHref,
   pickHref,
   pickHeading,
+  pickPlace,
   source = { kind: 'compendium' },
 }: IngredientSearchBoxProps): ReactElement => {
   const wording = source.kind === 'grimoire' ? WORDING.spell : WORDING.ingredient;
@@ -238,7 +239,7 @@ const IngredientSearchBox = ({
       return;
     }
     const href = pickHref(option.match);
-    if (modal && pickHeading) modal.open(href, pickHeading(option.match));
+    if (modal && pickHeading) modal.open(href, pickHeading(option.match), pickPlace);
     else {
       const target = ingredientLinkTarget(href);
       navigate(href, target ? { target } : {});
