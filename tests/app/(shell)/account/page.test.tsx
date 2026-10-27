@@ -110,17 +110,13 @@ describe('the /account page', () => {
     );
   });
 
-  it('lists the invitations waiting for the session’s address, each with its Accept', async () => {
+  // The rows and their Accept are ReceivedInvitations' own tests'; the page reads them.
+  it('reads the invitations waiting for the session’s address', async () => {
     listReceivedInvitations.mockResolvedValue([invitation(0), invitation(1)]);
     countReceivedInvitations.mockResolvedValue({ totalCount: 2, countBefore: 0 });
 
     await renderPage();
 
-    const invitations = section('Invitations');
-    expect(within(invitations).getAllByRole('row')).toHaveLength(3);
-    expect(
-      within(invitations).getByRole('button', { name: 'Accept the invitation to Fixture Coven 1' }),
-    ).toBeEnabled();
     expect(listReceivedInvitations).toHaveBeenCalledWith(SESSION, expect.anything());
   });
 
