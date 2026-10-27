@@ -31,7 +31,6 @@ export {
   findManyInSpell,
   findManyInSpells,
   findManyOfSpellIngredientsIncludingSoftDeleted,
-  findManySpells,
   findOneSpell,
 } from './spells';
 export { findGrimoirePage } from './grimoire';

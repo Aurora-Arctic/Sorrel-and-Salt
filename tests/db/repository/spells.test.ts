@@ -134,8 +134,8 @@ describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
   });
 
   // Who may read which spell is readableSpells, the rule
-  // tests/db/repository/readable-spells.test.ts proves over findManySpells, findOneSpell
-  // and findManyInSpell. What this finder adds is that it ANDs that rule in,
+  // tests/db/repository/readable-spells.test.ts proves over findOneSpell and
+  // findManyInSpell. What this finder adds is that it ANDs that rule in,
   // proved once for each half — the visibility here, the proof's workspace
   // below; a deleted spell is existsIn's, which ANDs a parent's filter by
   // construction (tests/guards/soft-delete-finder-guard.test.ts).

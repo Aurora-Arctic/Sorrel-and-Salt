@@ -37,11 +37,6 @@ export function readableSpells(membership: Membership): SQL | undefined {
   );
 }
 
-/** Every spell of this coven this member may read. */
-export function findManySpells(membership: Membership): Promise<(typeof spells.$inferSelect)[]> {
-  return selectFrom(spells, readableSpells(membership));
-}
-
 /**
  * One spell by id, or `undefined` — which is also the answer for another
  * coven's spell and for a private spell that is not this reader's. A caller
