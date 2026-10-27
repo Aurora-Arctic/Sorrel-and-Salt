@@ -39,31 +39,28 @@ async function addIngredientStep(page: Page, name: string): Promise<Locator> {
   return stepList(page).getByRole('listitem').filter({ hasText: name });
 }
 
-test.fixme(
-  'a member names a spell and states its intent',
-  {
-    tag: '@story-47',
-    annotation: { type: 'fixme', description: 'M10.12 builds /coven/[slug]/grimoire/new' },
-  },
-  async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Forty-Seven', 'story-47.test', {
-      A: 'owner',
-      B: 'member',
-    });
-    await signInAgainAs(page, coven.users.B);
-    await openBuilder(page, coven.slug);
-    const save = page.getByRole('button', { name: 'Save' });
-    await expect(save).toBeDisabled();
-    await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
-    await page.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
-    await expect(save).toBeEnabled();
-    await save.click();
-    await page.goto(`/coven/${coven.slug}/grimoire`);
-    await expect(
-      grimoireList(page).getByRole('listitem', { name: /Fixture Working/ }),
-    ).toBeVisible();
-  },
-);
+test('a member names a spell and states its intent', { tag: '@story-47' }, async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Forty-Seven', 'story-47.test', {
+    A: 'owner',
+    B: 'member',
+  });
+  await signInAgainAs(page, coven.users.B);
+  await openBuilder(page, coven.slug);
+  const save = page.getByRole('button', { name: 'Save' });
+  await expect(save).toBeDisabled();
+  await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+  await page.getByRole('textbox', { name: 'Intent' }).fill('To see clearly');
+  await expect(save).toBeEnabled();
+  await save.click();
+  // Saved: nothing left to save, so leaving asks nothing.
+  await expect(save).toBeDisabled();
+  await expect(save).not.toHaveAttribute('aria-busy', 'true');
+  // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
+  await page.goto(`/coven/${coven.slug}/grimoire`);
+  await page.getByRole('link', { name: 'Drafts' }).click();
+  await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
+  await expect(grimoireList(page).getByText('Fixture Working')).toBeVisible();
+});
 
 test.fixme(
   'a member assigns categories describing what the spell is meant to do',
