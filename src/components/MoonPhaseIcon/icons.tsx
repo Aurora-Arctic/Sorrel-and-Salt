@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import type { DrawnMoonPhase } from './types';
+import type { HalfMoonPhase, MoonLayer, SingleMoonPhase } from './types';
 
 // The lit part of the moon in each phase, on a disc of radius 8 centred on
 // (12, 12). Drawn for the northern hemisphere, where a waxing moon is lit on
@@ -8,7 +8,7 @@ import type { DrawnMoonPhase } from './types';
 // of the disc (12, 4) to its foot (12, 20), 4.5 wide. New Moon and Dark
 // Moon have no lit part: New Moon is the shadowed disc, and Dark Moon the
 // outline alone with no shadow inside (index.tsx; the owner, 2026-10-27).
-export const LIT_PARTS: Record<DrawnMoonPhase, ReactElement | null> = {
+export const LIT_PARTS: Record<SingleMoonPhase, ReactElement | null> = {
   'New Moon': null,
   'Dark Moon': null,
   'Waxing Crescent': <path d="M12 4A8 8 0 0 1 12 20A4.5 8 0 0 0 12 4Z" />,
@@ -18,6 +18,24 @@ export const LIT_PARTS: Record<DrawnMoonPhase, ReactElement | null> = {
   'Waning Gibbous': <path d="M12 4A8 8 0 0 0 12 20A4.5 8 0 0 0 12 4Z" />,
   'Last Quarter': <path d="M12 4A8 8 0 0 0 12 20Z" />,
   'Waning Crescent': <path d="M12 4A8 8 0 0 0 12 20A4.5 8 0 0 1 12 4Z" />,
+};
+
+// The cycle's two halves, each its three lit phases laid over one another,
+// bottom to top: the gibbous faintest, the crescent strongest, so the light
+// reads as spreading from the side it grows from. The opacities are the
+// owner's pick, "H2, Darker" (2026-10-27); each layer's maria take its
+// opacity too.
+export const HALVES: Record<HalfMoonPhase, readonly MoonLayer[]> = {
+  'Waxing Moon': [
+    ['Waxing Gibbous', 0.35],
+    ['First Quarter', 0.4],
+    ['Waxing Crescent', 0.85],
+  ],
+  'Waning Moon': [
+    ['Waning Gibbous', 0.35],
+    ['Last Quarter', 0.4],
+    ['Waning Crescent', 0.85],
+  ],
 };
 
 /*

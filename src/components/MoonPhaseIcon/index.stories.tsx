@@ -5,9 +5,7 @@ import MoonPhaseIcon from '.';
 import './index.stories.scss';
 
 // Render-only, for the owner's review of the drawings: each phase in the
-// list's order with its name beneath, the maria on its lit part. Waxing Moon
-// and Waning Moon show their names with no drawing until theirs are chosen.
-// The toolbar's theme control shows each theme's colours.
+// list's order with its name beneath, the maria on its lit part. The toolbar's theme control shows each theme's colours.
 const meta = {
   title: 'Surfaces / Moon Phase Icon',
 } satisfies Meta;
