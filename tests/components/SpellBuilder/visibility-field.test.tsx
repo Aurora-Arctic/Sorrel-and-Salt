@@ -148,13 +148,19 @@ describe('SpellBuilder visibility', () => {
     expect(toggle()).toBeEnabled();
   });
 
-  // Who can see it is not a spell in itself: a choice alone creates nothing.
-  it('has nothing to save when only the choice has changed', () => {
+  // A choice of who can see it is something to save (the owner's call, 2026-10-27).
+  it('has something to save once only the choice has changed, and nothing once it is back', () => {
     renderBuilder();
+    // Why Save could stay off: no field holds anything.
+    expect(save()).toBeDisabled();
 
     fireEvent.click(toggle());
 
     expect(toggle()).not.toBeChecked();
+    expect(save()).toBeEnabled();
+
+    fireEvent.click(toggle());
+
     expect(save()).toBeDisabled();
   });
 

@@ -59,9 +59,10 @@ ingredient form's Toxic switch does, rather than centred as in a filter bar
 The rule it follows is DESIGN.md §5's: visibility only widens.
 
 - **A new spell** opens with the switch on, the coven being the database's
-  default, and it may be turned either way. The choice goes out with the first save. A choice alone is not
-  something to save: Save Spell stays disabled until a field holds
-  something, and the discard question does not ask about it.
+  default, and it may be turned either way. The choice goes out with the first save. A choice alone is
+  something to save (the owner's call, 2026-10-27): a visibility other than
+  the last save's makes the form dirty, so Save Spell enables and the discard
+  question asks before a link leaves it.
 - **A saved private spell** keeps the switch open. Turning it on asks
   "Share With the Coven?" (`ConfirmQuestion`, Share or Keep It Private), and
   Share saves the whole form with `visibility: workspace` at once, so the
@@ -179,7 +180,7 @@ values sent, Save busy then disabled, a second save as an update at the
 revision, a saved spell opened and an emptied field cleared, both error
 surfaces, and the discard question. `visibility-field.test.tsx` covers the
 visibility control: on by default and sent with a create, off sent as private and
-left open, a choice alone not saveable, the share question kept and
+left open, a choice alone saveable, the share question kept and
 confirmed, a refused share, a refused narrowing shown in the notice, and the
 control shut with its reason on a shared spell. The page is
 `tests/app/(shell)/coven/[slug]/grimoire/new/page.test.tsx`: the builder for an
