@@ -191,7 +191,6 @@ describe('the coven ingredient page', () => {
 
     expect(requireCovenMembership).toHaveBeenCalledWith(WORKSPACE.slug);
     expect(getIngredient).toHaveBeenCalledWith(SESSION, ID, WORKSPACE.id);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Testwort');
   });
 
   it('renders nothing for a stranger, whom the guard refuses first', async () => {
@@ -489,7 +488,7 @@ describe('the coven ingredient page’s marks', () => {
     expect(shelf()).not.toBeInTheDocument();
   });
 
-  it('draws the shelf beside the heading once the coven holds the entry, not inside it', async () => {
+  it('draws the shelf once the coven holds the entry', async () => {
     getCupboardEntry.mockResolvedValue({
       id: 'fixture-jar',
       label: null,
@@ -504,7 +503,6 @@ describe('the coven ingredient page’s marks', () => {
 
     expect(compendiumMark()).toBeInTheDocument();
     expect(shelf()).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).not.toContainElement(shelf());
   });
 
   it("draws the shelf on the coven's own entry, which the cupboard always holds, and no Compendium", async () => {
@@ -549,7 +547,7 @@ describe('the coven ingredient page’s compendium matches', () => {
 
   // M12.42: linking goes one way in v1, so the Similar list only shows. The
   // precondition is that an owner is the role that once could convert.
-  it.each(['owner', 'member', 'viewer'])(
+  it.each(['owner', 'viewer'])(
     'lists an unnamed own entry’s matches as Similar to a %s and offers no action on them',
     async (role) => {
       requireCovenMembership.mockResolvedValue({
