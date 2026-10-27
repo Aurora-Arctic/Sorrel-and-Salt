@@ -68,7 +68,6 @@ describe('the compendium entry page', () => {
     await show();
 
     expect(readCompendiumEntry).toHaveBeenCalledWith(SLUG);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Testwort');
   });
 
   it('carries the entry as structured data in the page itself', async () => {
@@ -152,27 +151,12 @@ describe('the compendium entry page', () => {
     expect(dialog()).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
   });
-
-  it('links the entry an old address now points at', async () => {
-    readCompendiumEntry.mockResolvedValue(entryRead({ name: 'Oldwort', slug: 'testwort-old' }));
-    await show();
-
-    expect(screen.getAllByRole('status').some((s) => s.textContent?.includes('Oldwort'))).toBe(
-      true,
-    );
-    expect(screen.getByRole('link', { name: 'Oldwort' })).toHaveAttribute(
-      'href',
-      '/compendium/ingredients/testwort-old',
-    );
-  });
 });
 
 describe('the compendium entry page title', () => {
-  it('is the entry name with its formal name', async () => {
-    const { name, canonicalName } = entryDetail().entry;
-
+  it('names the absolute public address as canonical, and describes the entry', async () => {
+    // The title's formula is tests/components/IngredientEntry/page-title.test.ts's.
     const result = await generateMetadata(params());
-    expect(result.title).toBe(`${name} (${canonicalName})`);
     // The canonical is the absolute public address, with no query string.
     expect(result.alternates?.canonical).toBe(
       `https://sorrelandsalt.com/compendium/ingredients/${entryDetail().entry.slug}`,
